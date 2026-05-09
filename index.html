@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Design × Code Lab — 设计 × 代码 实验室</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,300..900&family=Geist:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Noto+Sans+SC:wght@300;400;500;700;900&family=Noto+Serif+SC:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f3eee5;
+    --bg-2: #ebe4d4;
+    --ink: #16161d;
+    --ink-soft: #4a4a55;
+    --ink-mute: #8a8a92;
+    --line: #d5cdba;
+    --line-soft: #e3dcca;
+    --accent: #ff4d2e;
+    --accent-soft: #ffe4dc;
+    --blue: #0a4cff;
+    --blue-soft: #dde6ff;
+    --green: #1f6b3a;
+    --green-soft: #d4ecdb;
+    --yellow: #ffcf3d;
+    --paper: #faf7f0;
+    --shadow: 0 1px 0 rgba(0,0,0,0.04), 0 8px 24px rgba(22,22,29,0.06);
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'Geist', 'Noto Sans SC', system-ui, -apple-system, sans-serif;
+    font-size: 16px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    background-image:
+      radial-gradient(circle at 1px 1px, rgba(22,22,29,0.05) 1px, transparent 0);
+    background-size: 24px 24px;
+  }
+
+  .display-cn { font-family: 'Noto Serif SC', 'Fraunces', serif; font-weight: 900; letter-spacing: -0.01em; }
+  .display-en { font-family: 'Fraunces', 'Noto Serif SC', serif; font-weight: 600; font-style: italic; letter-spacing: -0.02em; }
+  .mono { font-family: 'JetBrains Mono', monospace; }
+  .label { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-mute); }
+
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 0 32px; }
+
+  .topbar {
+    border-bottom: 1px dashed var(--line);
+    padding: 16px 0;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    backdrop-filter: blur(8px);
+    background: rgba(243, 238, 229, 0.85);
+  }
+  .topbar-inner { display: flex; justify-content: space-between; align-items: center; gap: 24px; }
+  .brand { font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 600; }
+  .brand .dot { display: inline-block; width: 8px; height: 8px; background: var(--accent); border-radius: 50%; margin-right: 8px; vertical-align: middle; animation: pulse 2s ease-in-out infinite; }
+  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+  .nav-links { display: flex; gap: 20px; font-size: 13px; }
+  .nav-links a { color: var(--ink-soft); text-decoration: none; transition: color 0.2s; }
+  .nav-links a:hover { color: var(--accent); }
+  .nav-links a.current { color: var(--accent); font-weight: 600; }
+
+  .hero { padding: 120px 0 100px; position: relative; overflow: hidden; }
+  .hero-meta { display: flex; gap: 24px; margin-bottom: 32px; align-items: center; flex-wrap: wrap; }
+  .hero-meta .pill { padding: 6px 12px; border: 1px solid var(--ink); border-radius: 100px; font-size: 11px; font-family: 'JetBrains Mono', monospace; letter-spacing: 0.05em; }
+  .hero-meta .pill.fill { background: var(--ink); color: var(--bg); }
+  .hero h1 {
+    font-family: 'Noto Serif SC', 'Fraunces', serif;
+    font-weight: 900;
+    font-size: clamp(56px, 9vw, 124px);
+    line-height: 0.92;
+    letter-spacing: -0.04em;
+    margin: 0 0 32px;
+  }
+  .hero h1 .em { font-family: 'Fraunces', serif; font-style: italic; font-weight: 500; color: var(--accent); }
+  .hero h1 .x { display: inline-block; transform: translateY(-0.05em); margin: 0 0.05em; color: var(--ink-mute); font-weight: 300; }
+  .hero p.lede { font-size: 22px; line-height: 1.5; max-width: 640px; color: var(--ink-soft); margin: 0 0 48px; }
+  .hero p.lede .em { font-family: 'Fraunces', serif; font-style: italic; color: var(--accent); }
+  .hero-grid { display: grid; grid-template-columns: 1.4fr 1fr; gap: 48px; align-items: end; }
+  @media (max-width: 880px) { .hero-grid { grid-template-columns: 1fr; } }
+  .hero-side {
+    border-left: 1px dashed var(--line);
+    padding-left: 24px;
+    font-size: 13px;
+    color: var(--ink-soft);
+  }
+  .hero-side .row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px dashed var(--line); }
+  .hero-side .row:last-child { border-bottom: none; }
+  .hero-side .row .k { color: var(--ink-mute); font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.05em; text-transform: uppercase; }
+  .hero-side .row .v { font-weight: 500; }
+
+  section { padding: 80px 0; border-top: 1px solid var(--line); position: relative; }
+  .section-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 56px; flex-wrap: wrap; gap: 16px; }
+  .section-num { font-family: 'JetBrains Mono', monospace; font-size: 13px; color: var(--ink-mute); letter-spacing: 0.1em; }
+  .section-num strong { color: var(--accent); }
+  .section-title {
+    font-family: 'Noto Serif SC', serif;
+    font-weight: 900;
+    font-size: clamp(32px, 4.5vw, 52px);
+    line-height: 1.05;
+    letter-spacing: -0.02em;
+    margin: 0;
+    max-width: 18ch;
+  }
+  .section-title .em { font-family: 'Fraunces', serif; font-style: italic; font-weight: 500; color: var(--accent); }
+  .section-sub { color: var(--ink-soft); font-size: 17px; max-width: 38ch; line-height: 1.55; margin: 0; }
+
+  .lineup-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 28px;
+  }
+  @media (max-width: 880px) { .lineup-grid { grid-template-columns: 1fr; } }
+
+  .lineup-card {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 36px 32px 28px;
+    text-decoration: none;
+    color: inherit;
+    display: block;
+    position: relative;
+    transition: all 0.25s ease;
+    overflow: hidden;
+  }
+  .lineup-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    background: var(--accent);
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .lineup-card:hover::before { transform: scaleX(1); }
+  .lineup-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow);
+    border-color: var(--ink);
+  }
+  .lineup-card .num {
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    font-weight: 300;
+    font-size: 64px;
+    line-height: 1;
+    color: var(--accent);
+    letter-spacing: -0.02em;
+  }
+  .lineup-card .en {
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    font-weight: 400;
+    font-size: 14px;
+    color: var(--ink-mute);
+    margin: 14px 0 4px;
+  }
+  .lineup-card h3 {
+    font-family: 'Noto Serif SC', serif;
+    font-weight: 900;
+    font-size: 30px;
+    line-height: 1.15;
+    letter-spacing: -0.02em;
+    margin: 4px 0 14px;
+  }
+  .lineup-card h3 .x { color: var(--ink-mute); font-weight: 300; margin: 0 0.06em; font-family: 'Fraunces', serif; font-style: italic; }
+  .lineup-card .desc {
+    color: var(--ink-soft);
+    font-size: 14px;
+    line-height: 1.6;
+    margin: 0 0 24px;
+  }
+  .lineup-card .meta {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--ink-mute);
+    letter-spacing: 0.04em;
+    padding-top: 16px;
+    border-top: 1px dashed var(--line);
+  }
+  .lineup-card .meta .game-tag {
+    color: var(--accent);
+    font-weight: 600;
+  }
+  .lineup-card .status {
+    position: absolute;
+    top: 24px; right: 24px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    padding: 3px 9px;
+    border-radius: 100px;
+    background: var(--green-soft);
+    color: var(--green);
+    border: 1px solid var(--green);
+  }
+
+  .future-list {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 24px;
+  }
+  @media (max-width: 880px) { .future-list { grid-template-columns: 1fr; } }
+
+  .future-card {
+    border: 1px dashed var(--line);
+    border-radius: 8px;
+    padding: 28px;
+    background: rgba(255,255,255,0.3);
+  }
+  .future-card .label { margin-bottom: 12px; }
+  .future-card h4 {
+    font-family: 'Noto Serif SC', serif;
+    font-weight: 900;
+    font-size: 22px;
+    margin: 0 0 14px;
+    letter-spacing: -0.01em;
+  }
+  .future-card h4 .em { font-family: 'Fraunces', serif; font-style: italic; font-weight: 500; color: var(--accent); }
+  .future-card .topics {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    font-size: 14px;
+    color: var(--ink-soft);
+    line-height: 1.85;
+  }
+  .future-card .topics li { padding-left: 18px; position: relative; }
+  .future-card .topics li::before {
+    content: '·';
+    color: var(--accent);
+    position: absolute;
+    left: 0;
+    font-weight: 900;
+    font-size: 18px;
+    line-height: 1.4;
+  }
+  .future-card .topics .game {
+    color: var(--ink-mute);
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    font-size: 13px;
+  }
+
+  .manifesto {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 48px;
+    margin-top: 24px;
+    position: relative;
+  }
+  .manifesto::before, .manifesto::after {
+    content: '';
+    position: absolute;
+    width: 16px; height: 16px;
+    border: 1px solid var(--accent);
+  }
+  .manifesto::before { top: 16px; left: 16px; border-right: none; border-bottom: none; }
+  .manifesto::after { bottom: 16px; right: 16px; border-left: none; border-top: none; }
+  .manifesto h3 {
+    font-family: 'Noto Serif SC', serif;
+    font-weight: 900;
+    font-size: 28px;
+    margin: 0 0 24px;
+    letter-spacing: -0.02em;
+  }
+  .manifesto h3 .em { font-family: 'Fraunces', serif; font-style: italic; font-weight: 500; color: var(--accent); }
+  .manifesto p {
+    font-size: 16px;
+    line-height: 1.7;
+    color: var(--ink-soft);
+    margin: 0 0 16px;
+    max-width: 60ch;
+  }
+  .manifesto p:last-child { margin-bottom: 0; }
+  .manifesto strong { color: var(--ink); font-weight: 600; }
+  .manifesto .em { font-family: 'Fraunces', serif; font-style: italic; color: var(--accent); }
+
+  footer {
+    border-top: 1px solid var(--line);
+    padding: 60px 0 80px;
+    background: var(--bg-2);
+    margin-top: 60px;
+  }
+  .byline { display: flex; gap: 20px; align-items: center; margin-bottom: 40px; }
+  .avatar { width: 64px; height: 64px; border-radius: 50%; border: 1px solid var(--line); object-fit: cover; }
+  .byline-meta { flex: 1; }
+  .byline-label { font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.1em; color: var(--ink-mute); margin-bottom: 4px; }
+  .byline-label .dot { display: inline-block; width: 6px; height: 6px; background: var(--accent); border-radius: 50%; margin-right: 6px; vertical-align: middle; }
+  .byline-name { font-family: 'Noto Serif SC', serif; font-weight: 900; font-size: 20px; margin: 0 0 4px; }
+  .byline-name .em { font-family: 'Fraunces', serif; font-style: italic; color: var(--accent); font-weight: 500; }
+  .byline-tag { font-size: 13px; color: var(--ink-soft); margin: 0; line-height: 1.5; }
+  .footer-meta { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ink-mute); letter-spacing: 0.05em; padding-top: 24px; border-top: 1px dashed var(--line); }
+  .footer-meta .heart { color: var(--accent); margin: 0 4px; animation: heartbeat 2s ease-in-out infinite; display: inline-block; }
+  @keyframes heartbeat { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.2); } }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="wrap topbar-inner">
+    <div class="brand"><span class="dot"></span>DESIGN × CODE LAB</div>
+    <div class="nav-links">
+      <a href="index.html" class="current">合集</a>
+      <a href="box-figma.html">01 盒子</a>
+      <a href="components-figma.html">02 组件</a>
+    </div>
+  </div>
+</div>
+
+<header class="hero">
+  <div class="wrap">
+    <div class="hero-meta">
+      <span class="pill fill">合集 · COLLECTION</span>
+      <span class="pill">2026 / 实验室</span>
+      <span class="label">设计师 × 前端</span>
+    </div>
+    <div class="hero-grid">
+      <div>
+        <h1>
+          <span class="display-en">Design</span>
+          <span class="x">×</span>
+          <span class="display-en">Code</span><br>
+          <span class="display-cn">实验室</span>
+        </h1>
+        <p class="lede">
+          给设计师的代码侧基础。<br>
+          一篇讲一件事，配一个能玩的<span class="em">小游戏</span>。<br>
+          不深，但管用 —— 让你跟前端说同一种语言。
+        </p>
+      </div>
+      <div class="hero-side">
+        <div class="row"><span class="k">已发布</span><span class="v">2 篇</span></div>
+        <div class="row"><span class="k">含互动</span><span class="v">实时联动控件</span></div>
+        <div class="row"><span class="k">作者</span><span class="v">范米花儿</span></div>
+        <div class="row"><span class="k">下次更新</span><span class="v">视觉系统</span></div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<section id="manifesto">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>00</strong> / 缘起</div>
+        <h2 class="section-title">为什么<br>做这个 <span class="em">合集</span>？</h2>
+      </div>
+      <p class="section-sub">
+        AI 时代，设计师和前端的距离反而更近了 —— 但也更需要互相理解。
+      </p>
+    </div>
+
+    <div class="manifesto">
+      <h3>每篇讲一件事，配一个能玩的<span class="em">小游戏</span>。</h3>
+      <p>
+        作为设计师，我经常在 AI 生成的稿子前发愁 —— 看着对，拆开错；改一个字，整页崩溃。
+        问题不在 AI，<strong>是设计稿本身没结构</strong>。
+        而设计稿有没有结构，本质上取决于设计师懂不懂代码侧的"骨架"。
+      </p>
+      <p>
+        这个合集就想讲清楚这些"骨架" —— Auto Layout、组件、Token、状态……
+        每篇都把 Figma 的概念和代码的概念<strong>一一对应</strong>，
+        然后配一个独有的小游戏让你亲手玩一遍。
+      </p>
+      <p>
+        不深，但管用。学完你不会写代码，但你会跟前端说同一种语言 ——
+        <span class="em">这就够了。</span>
+      </p>
+    </div>
+  </div>
+</section>
+
+<section id="lineup">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>已发布</strong> / 2 篇</div>
+        <h2 class="section-title">先把 <span class="em">骨架</span><br>立起来。</h2>
+      </div>
+      <p class="section-sub">
+        Auto Layout 决定"东西怎么摆、窗口变了怎么变"，组件决定"一个东西有几种长相"。
+        这两件事懂了，你的设计稿 AI 才能真的还原。
+      </p>
+    </div>
+
+    <div class="lineup-grid">
+      <a class="lineup-card" href="box-figma.html">
+        <span class="status">已发布</span>
+        <div class="num">01</div>
+        <div class="en">Box × Auto Layout · Responsive</div>
+        <h3>盒子 <span class="x">×</span> 自动布局</h3>
+        <p class="desc">每个元素都是一个盒子。content / padding / border / margin 四件套，对应 Figma Auto Layout 几乎一一对应。<strong>含响应式</strong> —— Hug / Fill / Fixed 就是窗口变了谁让步。</p>
+        <div class="meta">
+          <span class="game-tag">游戏 · 拖滑块 + 闯关 6 关</span>
+          <span>≈ 12 分钟</span>
+        </div>
+      </a>
+
+      <a class="lineup-card" href="components-figma.html">
+        <span class="status">已发布</span>
+        <div class="num">02</div>
+        <div class="en">Components · One Button, Many Faces</div>
+        <h3>组件 <span class="x">×</span> Variants &amp; Props</h3>
+        <p class="desc">为什么我做了 18 个 Variants，前端说"这只要 4 个 prop"？因为 Variant 不是组件，是组件的某个轴。整页只玩一个按钮 —— 三联动面板贯穿全篇。</p>
+        <div class="meta">
+          <span class="game-tag">游戏 · Figma↔代码 实时联动</span>
+          <span>≈ 12 分钟</span>
+        </div>
+      </a>
+    </div>
+  </div>
+</section>
+
+<section id="future">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>下一期</strong> / 即将到来</div>
+        <h2 class="section-title">下一篇<br>正在 <span class="em">路上</span>。</h2>
+      </div>
+      <p class="section-sub">
+        摆好了、复用了，下一步就是让设计稿"会动" —— 状态、Token、插槽。
+      </p>
+    </div>
+
+    <div class="future-list">
+      <div class="future-card">
+        <div class="label">下一篇 · 系列 C 之二</div>
+        <h4>状态 <span class="em">×</span> Interactive Component</h4>
+        <ul class="topics">
+          <li>hover / focus / active / disabled <span class="game">— 5 态在 Figma 和代码里有什么不同</span></li>
+          <li>键盘 vs 鼠标 <span class="game">— 为什么 focus 不是 hover</span></li>
+          <li>真实输入触发 <span class="game">— 用身体动作学概念</span></li>
+        </ul>
+      </div>
+
+      <div class="future-card">
+        <div class="label">系列 B · 视觉系统</div>
+        <h4>设计 <span class="em">Token</span> / 颜色 / 字号 / 间距</h4>
+        <ul class="topics">
+          <li>Token × Variables <span class="game">— 切主题找硬编码</span></li>
+          <li>颜色 × HSL <span class="game">— 锁色相调到对比度合规</span></li>
+          <li>字号 × Type Scale <span class="game">— 一参数变气质</span></li>
+          <li>间距 × 4/8 系统 <span class="game">— 节拍磁吸</span></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div class="byline">
+      <img class="avatar" src="author.jpg" alt="范米花儿">
+      <div class="byline-meta">
+        <div class="byline-label"><span class="dot"></span>主理人 · CURATOR</div>
+        <h3 class="byline-name">嗨，我是 <span class="em">范米花儿</span></h3>
+        <p class="byline-tag">一个关于设计师该懂的代码侧基础的实验合集 ——<br>每篇一件事，每篇一个能玩的小游戏。</p>
+      </div>
+    </div>
+    <div class="footer-meta">
+      做于 <span class="mono">2026</span> · 用 <span class="heart">●</span> 写给 <span class="mono">DESIGNERS &amp; DEVELOPERS</span>
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>

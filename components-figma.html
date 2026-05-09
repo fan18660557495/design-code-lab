@@ -1,0 +1,3093 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>组件 × Variants & Props — 一个按钮的 N 种长相</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,300..900&family=Geist:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Noto+Sans+SC:wght@300;400;500;700;900&family=Noto+Serif+SC:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f3eee5;
+    --bg-2: #ebe4d4;
+    --ink: #16161d;
+    --ink-soft: #4a4a55;
+    --ink-mute: #8a8a92;
+    --line: #d5cdba;
+    --line-soft: #e3dcca;
+    --accent: #ff4d2e;
+    --accent-soft: #ffe4dc;
+    --blue: #0a4cff;
+    --blue-soft: #dde6ff;
+    --green: #1f6b3a;
+    --green-soft: #d4ecdb;
+    --yellow: #ffcf3d;
+    --paper: #faf7f0;
+    --shadow: 0 1px 0 rgba(0,0,0,0.04), 0 8px 24px rgba(22,22,29,0.06);
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'Geist', 'Noto Sans SC', system-ui, -apple-system, sans-serif;
+    font-size: 16px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    background-image: radial-gradient(circle at 1px 1px, rgba(22,22,29,0.05) 1px, transparent 0);
+    background-size: 24px 24px;
+  }
+
+  .display-cn { font-family: 'Noto Serif SC', 'Fraunces', serif; font-weight: 900; letter-spacing: -0.01em; }
+  .display-en { font-family: 'Fraunces', 'Noto Serif SC', serif; font-weight: 600; font-style: italic; letter-spacing: -0.02em; }
+  .mono { font-family: 'JetBrains Mono', monospace; }
+  .label { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-mute); }
+  .em-italic { font-family: 'Fraunces', serif; font-style: italic; font-weight: 500; color: var(--accent); }
+
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 0 32px; }
+
+  /* topbar */
+  .topbar {
+    border-bottom: 1px dashed var(--line);
+    padding: 16px 0;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    backdrop-filter: blur(8px);
+    background: rgba(243, 238, 229, 0.85);
+  }
+  .topbar-inner { display: flex; justify-content: space-between; align-items: center; gap: 24px; flex-wrap: wrap; }
+  .brand { font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 600; }
+  .brand .dot { display: inline-block; width: 8px; height: 8px; background: var(--accent); border-radius: 50%; margin-right: 8px; vertical-align: middle; animation: pulse 2s ease-in-out infinite; }
+  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+  .nav-links { display: flex; gap: 18px; font-size: 13px; flex-wrap: wrap; }
+  .nav-links a { color: var(--ink-soft); text-decoration: none; transition: color 0.2s; }
+  .nav-links a:hover { color: var(--accent); }
+  .nav-links a.current { color: var(--accent); font-weight: 600; }
+
+  /* hero */
+  .hero { padding: 100px 0 80px; position: relative; overflow: hidden; }
+  .hero-meta { display: flex; gap: 24px; margin-bottom: 32px; align-items: center; flex-wrap: wrap; }
+  .hero-meta .pill { padding: 6px 12px; border: 1px solid var(--ink); border-radius: 100px; font-size: 11px; font-family: 'JetBrains Mono', monospace; letter-spacing: 0.05em; }
+  .hero-meta .pill.fill { background: var(--ink); color: var(--bg); }
+  .hero h1 {
+    font-family: 'Noto Serif SC', 'Fraunces', serif;
+    font-weight: 900;
+    font-size: clamp(48px, 7vw, 92px);
+    line-height: 0.95;
+    letter-spacing: -0.03em;
+    margin: 0 0 24px;
+  }
+  .hero h1 .em { font-family: 'Fraunces', serif; font-style: italic; font-weight: 500; color: var(--accent); }
+  .hero h1 .x { display: inline-block; transform: translateY(-0.05em); margin: 0 0.05em; color: var(--ink-mute); font-weight: 300; }
+  .hero p.lede { font-size: 20px; line-height: 1.5; max-width: 640px; color: var(--ink-soft); margin: 0 0 40px; }
+  .hero-grid { display: grid; grid-template-columns: 1.4fr 1fr; gap: 48px; align-items: end; }
+  @media (max-width: 880px) { .hero-grid { grid-template-columns: 1fr; } }
+  .hero-side { border-left: 1px dashed var(--line); padding-left: 24px; font-size: 13px; color: var(--ink-soft); }
+  .hero-side .row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px dashed var(--line); }
+  .hero-side .row:last-child { border-bottom: none; }
+  .hero-side .row .k { color: var(--ink-mute); font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.05em; text-transform: uppercase; }
+  .hero-side .row .v { font-weight: 500; }
+
+  /* section */
+  section { padding: 80px 0; border-top: 1px solid var(--line); position: relative; }
+  .section-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 48px; flex-wrap: wrap; gap: 16px; }
+  .section-num { font-family: 'JetBrains Mono', monospace; font-size: 13px; color: var(--ink-mute); letter-spacing: 0.1em; }
+  .section-num strong { color: var(--accent); }
+  .section-title {
+    font-family: 'Noto Serif SC', serif;
+    font-weight: 900;
+    font-size: clamp(32px, 4.5vw, 52px);
+    line-height: 1.05;
+    letter-spacing: -0.02em;
+    margin: 0;
+    max-width: 18ch;
+  }
+  .section-title .em { font-family: 'Fraunces', serif; font-style: italic; font-weight: 500; color: var(--accent); }
+  .section-sub { color: var(--ink-soft); font-size: 17px; max-width: 38ch; line-height: 1.55; margin: 0; }
+
+  /* problem cards */
+  .problem-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; margin-top: 24px; }
+  @media (max-width: 880px) { .problem-grid { grid-template-columns: 1fr; } }
+  .problem-card {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 28px;
+    position: relative;
+  }
+  .problem-card.bad { border-color: var(--accent); background: var(--accent-soft); }
+  .problem-card.good { border-color: var(--green); background: var(--green-soft); }
+  .problem-card .tag {
+    position: absolute; top: -12px; left: 24px;
+    background: var(--bg); padding: 2px 10px;
+    font-family: 'JetBrains Mono', monospace; font-size: 11px;
+    letter-spacing: 0.1em;
+  }
+  .problem-card.bad .tag { color: var(--accent); border: 1px solid var(--accent); }
+  .problem-card.good .tag { color: var(--green); border: 1px solid var(--green); }
+  .problem-card h3 { font-family: 'Noto Serif SC', serif; font-size: 22px; margin: 0 0 12px; font-weight: 700; }
+  .problem-card p { margin: 0 0 12px; color: var(--ink-soft); font-size: 14px; line-height: 1.55; }
+  .problem-card p:last-child { margin-bottom: 0; }
+
+  /* variants matrix mini (section 01) */
+  .v-matrix-mini {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 4px;
+    margin-top: 14px;
+  }
+  .v-matrix-mini .vm {
+    aspect-ratio: 2 / 1;
+    background: white;
+    border: 1px solid var(--line);
+    border-radius: 3px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 8px;
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--ink-mute);
+  }
+  .v-matrix-mini .vm-btn {
+    width: 70%;
+    height: 50%;
+    border-radius: 2px;
+  }
+
+  /* code in problem-card */
+  .pc-code {
+    background: var(--ink);
+    color: #e8e8ec;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    line-height: 1.6;
+    padding: 12px 14px;
+    border-radius: 4px;
+    margin-top: 14px;
+  }
+  .pc-code .ckey { color: #ff8a6e; }
+  .pc-code .cstr { color: #a8e6a3; }
+  .pc-code .ctag { color: #c9a0ff; }
+  .pc-code .ccom { color: #6e6e7a; font-style: italic; }
+
+  /* axis viz (section 02) */
+  .axis-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-top: 24px; }
+  @media (max-width: 880px) { .axis-grid { grid-template-columns: 1fr; } }
+  .axis-card { background: var(--paper); border: 1px solid var(--line); border-radius: 6px; padding: 22px 24px; }
+  .axis-card .axis-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--accent);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+  .axis-card h4 {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 20px;
+    margin: 0 0 14px;
+    font-weight: 700;
+  }
+  .axis-line { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-bottom: 10px; }
+  .axis-pill {
+    padding: 6px 14px;
+    background: white;
+    border: 1px solid var(--line);
+    border-radius: 100px;
+    font-size: 13px;
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .axis-card .axis-note { color: var(--ink-soft); font-size: 13px; margin: 0; line-height: 1.5; }
+
+  /* mapping table */
+  .mapping {
+    display: grid;
+    grid-template-columns: 1fr 60px 1fr;
+    gap: 0;
+    margin-top: 16px;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    overflow: hidden;
+    background: var(--paper);
+  }
+  .mapping-head { display: contents; }
+  .mapping-head > div {
+    background: var(--ink);
+    color: var(--bg);
+    padding: 14px 20px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+  .mapping-head > div:nth-child(2) { text-align: center; }
+  .mapping-row { display: contents; }
+  .mapping-row > div {
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--line);
+    background: var(--paper);
+  }
+  .mapping-row:last-child > div { border-bottom: none; }
+  .mapping-row > div:nth-child(1) { border-right: 1px dashed var(--line); }
+  .mapping-row > div:nth-child(2) {
+    border-right: 1px dashed var(--line);
+    text-align: center;
+    color: var(--accent);
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    font-size: 18px;
+    background: var(--bg);
+  }
+  .mapping-row .css-name { font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 500; color: var(--blue); }
+  .mapping-row .css-name + .desc { color: var(--ink-soft); font-size: 13px; margin-top: 4px; }
+  .mapping-row .figma-name { font-weight: 600; font-size: 14px; }
+  .mapping-row .figma-name + .desc { color: var(--ink-soft); font-size: 13px; margin-top: 4px; }
+
+  /* === 三联动面板 (核心) === */
+  .triple-frame {
+    margin-top: 16px;
+  }
+  .triple-frame .triple-label {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 14px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--ink-mute);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+  .triple-frame .triple-label .dot {
+    width: 6px; height: 6px;
+    background: var(--accent);
+    border-radius: 50%;
+    animation: pulse 2s ease-in-out infinite;
+  }
+  .triple {
+    display: grid;
+    grid-template-columns: 240px 1fr 460px;
+    gap: 0;
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  @media (max-width: 1024px) { .triple { grid-template-columns: 1fr; } }
+
+  /* Figma-side panel (left) */
+  .triple-figma {
+    background: #2c2c2c;
+    color: #e8e8e8;
+    padding: 22px 18px;
+    font-family: 'Geist', system-ui, sans-serif;
+    font-size: 12px;
+    border-right: 1px solid #1a1a1a;
+  }
+  @media (max-width: 1024px) { .triple-figma { border-right: none; border-bottom: 1px solid #1a1a1a; } }
+  .tf-header {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 16px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid #404040;
+  }
+  .tf-title {
+    font-size: 11px; color: #999; letter-spacing: 0.05em;
+    text-transform: uppercase; font-weight: 600;
+  }
+  .tf-add {
+    width: 22px; height: 22px;
+    background: transparent;
+    border: none;
+    color: #999;
+    cursor: not-allowed;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px;
+    border-radius: 3px;
+    line-height: 1;
+  }
+  .tf-prop { margin-bottom: 14px; }
+  .tf-prop:last-child { margin-bottom: 0; }
+  .tf-prop-label {
+    display: flex; justify-content: space-between; align-items: baseline;
+    margin-bottom: 8px;
+    font-size: 11px;
+    color: #aaa;
+  }
+  .tf-prop-name {
+    font-family: 'Geist', sans-serif;
+    color: #e8e8e8;
+    font-weight: 500;
+    font-size: 12px;
+  }
+  .tf-prop-type {
+    font-size: 9px;
+    color: #777;
+    font-family: 'JetBrains Mono', monospace;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+  .tf-toggle-group {
+    display: flex;
+    background: #1e1e1e;
+    border-radius: 4px;
+    padding: 2px;
+    gap: 2px;
+  }
+  .tf-toggle {
+    flex: 1;
+    background: transparent;
+    border: none;
+    color: #999;
+    padding: 7px 0;
+    cursor: pointer;
+    border-radius: 3px;
+    font-size: 11px;
+    font-family: 'Geist', sans-serif;
+    transition: all 0.15s;
+  }
+  .tf-toggle:hover { color: white; background: #383838; }
+  .tf-toggle.active { background: #0d99ff; color: white; }
+  .tf-bool {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 4px 0;
+  }
+  .tf-bool-label { color: #e8e8e8; font-weight: 500; font-size: 12px; }
+  .tf-switch {
+    position: relative;
+    width: 32px; height: 18px;
+    background: #1e1e1e;
+    border: none;
+    border-radius: 100px;
+    cursor: pointer;
+    transition: background 0.2s;
+    padding: 0;
+  }
+  .tf-switch::after {
+    content: '';
+    position: absolute;
+    top: 2px; left: 2px;
+    width: 14px; height: 14px;
+    background: #888;
+    border-radius: 50%;
+    transition: all 0.2s;
+  }
+  .tf-switch.on { background: #0d99ff; }
+  .tf-switch.on::after { left: 16px; background: white; }
+
+  /* canvas (middle) */
+  .triple-canvas {
+    background: var(--paper);
+    background-image:
+      linear-gradient(to right, var(--line-soft) 1px, transparent 1px),
+      linear-gradient(to bottom, var(--line-soft) 1px, transparent 1px);
+    background-size: 16px 16px;
+    padding: 64px 32px;
+    min-height: 280px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+  }
+  .triple-canvas::after {
+    content: 'Instance · 实例';
+    position: absolute;
+    top: 12px; left: 16px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--ink-mute);
+    letter-spacing: 0.05em;
+  }
+
+  /* The actual button */
+  .demo-btn {
+    display: inline-flex;
+    align-items: center;
+    border: 1.5px solid;
+    border-radius: 6px;
+    cursor: pointer;
+    font-family: 'Geist', sans-serif;
+    font-weight: 500;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    user-select: none;
+    white-space: nowrap;
+    background: transparent;
+  }
+  .demo-btn .btn-icon {
+    display: inline-flex;
+    align-items: center;
+    margin-right: 8px;
+  }
+  .demo-btn .btn-icon svg { display: block; }
+  .demo-btn[data-size="sm"] { padding: 6px 12px; font-size: 13px; }
+  .demo-btn[data-size="sm"] .btn-icon { margin-right: 6px; }
+  .demo-btn[data-size="md"] { padding: 10px 18px; font-size: 14px; }
+  .demo-btn[data-size="md"] .btn-icon { margin-right: 8px; }
+  .demo-btn[data-size="lg"] { padding: 14px 24px; font-size: 16px; }
+  .demo-btn[data-size="lg"] .btn-icon { margin-right: 10px; }
+
+  .demo-btn[data-variant="primary"] { background: var(--accent); border-color: var(--accent); color: white; }
+  .demo-btn[data-variant="secondary"] { background: white; border-color: var(--ink); color: var(--ink); }
+  .demo-btn[data-variant="ghost"] { background: transparent; border-color: transparent; color: var(--accent); }
+  .demo-btn[data-variant="primary"]:hover:not([data-disabled="true"]) { filter: brightness(0.92); }
+  .demo-btn[data-variant="secondary"]:hover:not([data-disabled="true"]) { background: var(--bg-2); }
+  .demo-btn[data-variant="ghost"]:hover:not([data-disabled="true"]) { background: var(--accent-soft); }
+
+  .demo-btn[data-disabled="true"] { opacity: 0.5; cursor: not-allowed; }
+  .demo-btn[data-icon="false"] .btn-icon { display: none; }
+
+  /* code panel (right) */
+  .triple-code {
+    background: var(--ink);
+    color: #e8e8ec;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    line-height: 1.7;
+    padding: 30px 20px 18px;
+    position: relative;
+    overflow: auto;
+  }
+  .triple-code::before {
+    content: '';
+    position: absolute;
+    top: 12px; left: 14px;
+    width: 8px; height: 8px; border-radius: 50%;
+    background: #ff5f56;
+    box-shadow: 14px 0 0 #ffbd2e, 28px 0 0 #27c93f;
+  }
+  .triple-code .filename {
+    position: absolute; top: 10px; right: 14px;
+    font-size: 10px; color: #6e6e7a; letter-spacing: 0.05em;
+  }
+  .triple-code .ckey { color: #ff8a6e; }
+  .triple-code .cval { color: #ffd166; }
+  .triple-code .cstr { color: #a8e6a3; }
+  .triple-code .ccom { color: #6e6e7a; font-style: italic; }
+  .triple-code .ctag { color: #c9a0ff; }
+  .code-line {
+    display: block;
+    padding: 0 8px;
+    margin: 0 -8px;
+    border-radius: 3px;
+    transition: background 0.5s ease;
+    white-space: pre;
+  }
+  .code-line.hl { background: rgba(255, 209, 102, 0.22); }
+  .code-line.hidden { display: none; }
+
+  /* === Property 4 色编码 — 全局对照 === */
+  .tag-variant  { color: #c9a0ff; }
+  .tag-size     { color: #8ec5ff; }
+  .tag-icon     { color: #a8e6a3; }
+  .tag-disabled { color: #ff8a6e; }
+  .triple-figma .tf-prop[data-prop-block="variant"]  .tf-prop-name,
+  .triple-figma .tf-prop[data-prop-block="variant"]  .tf-bool-label { color: #c9a0ff; }
+  .triple-figma .tf-prop[data-prop-block="size"]     .tf-prop-name,
+  .triple-figma .tf-prop[data-prop-block="size"]     .tf-bool-label { color: #8ec5ff; }
+  .triple-figma .tf-prop[data-prop-block="icon"]     .tf-prop-name,
+  .triple-figma .tf-prop[data-prop-block="icon"]     .tf-bool-label { color: #a8e6a3; }
+  .triple-figma .tf-prop[data-prop-block="disabled"] .tf-prop-name,
+  .triple-figma .tf-prop[data-prop-block="disabled"] .tf-bool-label { color: #ff8a6e; }
+
+  /* === 切 Property 时三处一起脉冲，然后持续高亮 === */
+  [data-prop-block].pulse { border-radius: 3px; }
+  [data-prop-block="variant"].pulse  { animation: pulse-variant  0.7s ease-out; }
+  [data-prop-block="size"].pulse     { animation: pulse-size     0.7s ease-out; }
+  [data-prop-block="icon"].pulse     { animation: pulse-icon     0.7s ease-out; }
+  [data-prop-block="disabled"].pulse { animation: pulse-disabled 0.7s ease-out; }
+  @keyframes pulse-variant  { 0% { background: rgba(201, 160, 255, 0.36); box-shadow: 0 0 0 4px rgba(201, 160, 255, 0.20); } 100% { background: rgba(201, 160, 255, 0.14); box-shadow: 0 0 0 0 transparent; } }
+  @keyframes pulse-size     { 0% { background: rgba(142, 197, 255, 0.36); box-shadow: 0 0 0 4px rgba(142, 197, 255, 0.20); } 100% { background: rgba(142, 197, 255, 0.14); box-shadow: 0 0 0 0 transparent; } }
+  @keyframes pulse-icon     { 0% { background: rgba(168, 230, 163, 0.36); box-shadow: 0 0 0 4px rgba(168, 230, 163, 0.20); } 100% { background: rgba(168, 230, 163, 0.14); box-shadow: 0 0 0 0 transparent; } }
+  @keyframes pulse-disabled { 0% { background: rgba(255, 138, 110, 0.36); box-shadow: 0 0 0 4px rgba(255, 138, 110, 0.20); } 100% { background: rgba(255, 138, 110, 0.14); box-shadow: 0 0 0 0 transparent; } }
+
+  /* 当前选中的 Property 持续高亮（直到切到下一个 Property） */
+  [data-prop-block].prop-active { border-radius: 3px; transition: background 0.25s ease; }
+  [data-prop-block="variant"].prop-active  { background: rgba(201, 160, 255, 0.14); }
+  [data-prop-block="size"].prop-active     { background: rgba(142, 197, 255, 0.14); }
+  [data-prop-block="icon"].prop-active     { background: rgba(168, 230, 163, 0.14); }
+  [data-prop-block="disabled"].prop-active { background: rgba(255, 138, 110, 0.14); }
+
+  /* === 双视图代码区 === */
+  .triple-code .code-section + .code-section {
+    margin-top: 18px;
+    padding-top: 18px;
+    border-top: 1px dashed rgba(255,255,255,0.12);
+  }
+  .triple-code .code-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: #8a8a92;
+    letter-spacing: 0.04em;
+    margin-bottom: 6px;
+    font-style: italic;
+  }
+  /* === §03 工作流对照模块 === */
+  .wf-frame {
+    margin-top: 16px;
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 28px;
+  }
+  .wf-progress {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    margin-bottom: 28px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  .wf-step-pill {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 14px;
+    background: white;
+    border: 1.5px solid var(--line);
+    border-radius: 100px;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-size: 12px;
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--ink-soft);
+    user-select: none;
+  }
+  .wf-step-pill:hover { border-color: var(--ink); color: var(--ink); }
+  .wf-step-pill.active {
+    background: var(--ink);
+    color: var(--bg);
+    border-color: var(--ink);
+  }
+  .wf-step-pill.done {
+    background: var(--green-soft);
+    border-color: var(--green);
+    color: var(--green);
+  }
+  .wf-step-pill .wf-step-num {
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    font-weight: 500;
+    font-size: 16px;
+    line-height: 1;
+  }
+  .wf-step-pill:not(:last-child) { margin-right: 8px; }
+  .wf-step-pill:not(:last-child)::after {
+    content: '→';
+    margin-left: 8px;
+    color: var(--ink-mute);
+    font-size: 13px;
+  }
+
+  .wf-tableau {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 18px;
+    margin-bottom: 22px;
+  }
+  @media (max-width: 880px) { .wf-tableau { grid-template-columns: 1fr; } }
+  .wf-side {
+    border-radius: 6px;
+    padding: 20px 22px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    min-height: 280px;
+  }
+  .wf-figma-side {
+    background: white;
+    border: 1px solid var(--line);
+  }
+  .wf-code-side {
+    background: var(--ink);
+    border: 1px solid var(--ink);
+    color: #e8e8ec;
+  }
+  .wf-side-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--ink-mute);
+    padding-bottom: 8px;
+    border-bottom: 1px dashed var(--line);
+  }
+  .wf-code-side .wf-side-tag {
+    color: #888;
+    border-color: rgba(255,255,255,0.1);
+  }
+  .wf-side-title {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 18px;
+    margin: 0;
+    font-weight: 700;
+    color: var(--ink);
+  }
+  .wf-code-side .wf-side-title { color: var(--bg); }
+  .wf-side-desc {
+    font-size: 13px;
+    line-height: 1.6;
+    color: var(--ink-soft);
+    margin: 0;
+  }
+  .wf-code-block {
+    background: rgba(255,255,255,0.05);
+    color: #e8e8ec;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    line-height: 1.75;
+    padding: 14px 16px;
+    border-radius: 4px;
+    margin: 0;
+    overflow-x: auto;
+    white-space: pre;
+    flex: 1;
+  }
+  .wf-code-block .ckey { color: #ff8a6e; }
+  .wf-code-block .ctag { color: #c9a0ff; }
+  .wf-code-block .cstr { color: #a8e6a3; }
+  .wf-code-block .ccom { color: #6e6e7a; font-style: italic; }
+  .wf-code-block .tag-variant { color: #c9a0ff; }
+  .wf-code-block .tag-size { color: #8ec5ff; }
+  .wf-code-block .tag-icon { color: #a8e6a3; }
+  .wf-code-block .tag-disabled { color: #ff8a6e; }
+  .wf-side-result {
+    font-size: 12px;
+    line-height: 1.5;
+    padding: 10px 12px;
+    background: var(--bg-2);
+    border-radius: 4px;
+    border-left: 2px solid var(--accent);
+    color: var(--ink);
+    font-family: 'Geist', 'Noto Sans SC', sans-serif;
+  }
+  .wf-code-side .wf-side-result {
+    background: rgba(255,255,255,0.06);
+    color: #e8e8ec;
+    border-left-color: #c9a0ff;
+  }
+
+  .wf-controls {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    margin-bottom: 12px;
+  }
+  .wf-btn {
+    padding: 10px 18px;
+    background: white;
+    border: 1.5px solid var(--ink);
+    border-radius: 6px;
+    font-family: 'Geist', 'Noto Sans SC', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    color: var(--ink);
+    transition: all 0.15s;
+  }
+  .wf-btn:hover:not(:disabled) { background: var(--bg-2); }
+  .wf-btn:disabled { opacity: 0.35; cursor: not-allowed; border-color: var(--line); color: var(--ink-mute); }
+  .wf-btn.primary {
+    background: var(--accent);
+    color: white;
+    border-color: var(--accent);
+  }
+  .wf-btn.primary:hover { filter: brightness(0.92); }
+  .wf-step-info {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--ink-mute);
+    min-width: 80px;
+    text-align: center;
+  }
+  .wf-done {
+    margin-top: 14px;
+    padding: 16px 20px;
+    background: var(--green-soft);
+    border-left: 3px solid var(--green);
+    border-radius: 4px;
+  }
+  .wf-done strong {
+    display: block;
+    font-family: 'Noto Serif SC', serif;
+    font-size: 16px;
+    color: var(--green);
+    margin-bottom: 6px;
+  }
+  .wf-done p {
+    font-size: 13px;
+    color: var(--ink-soft);
+    margin: 0;
+    line-height: 1.55;
+  }
+
+  /* === Workflow Figma mock UI === */
+  .wf-figma-mock {
+    display: none;
+    flex-direction: column;
+    gap: 12px;
+    flex: 1;
+  }
+  .wf-figma-mock.active { display: flex; }
+
+  .wfm-canvas {
+    background: var(--bg);
+    background-image:
+      linear-gradient(to right, var(--line-soft) 1px, transparent 1px),
+      linear-gradient(to bottom, var(--line-soft) 1px, transparent 1px);
+    background-size: 12px 12px;
+    border: 1px dashed var(--line);
+    border-radius: 4px;
+    padding: 28px 18px;
+    min-height: 100px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+  .wfm-frame {
+    border: 1.5px dashed #888;
+    padding: 14px 18px;
+    border-radius: 4px;
+    position: relative;
+    background: white;
+    flex-shrink: 0;
+  }
+  .wfm-frame.component { border-color: #9333ea; }
+  .wfm-frame.instance {
+    border-color: #9333ea;
+    border-style: solid;
+  }
+  .wfm-frame-label {
+    position: absolute;
+    top: -9px; left: 8px;
+    background: var(--bg);
+    padding: 0 6px;
+    font-size: 9px;
+    font-family: 'JetBrains Mono', monospace;
+    color: #888;
+    letter-spacing: 0.05em;
+    white-space: nowrap;
+  }
+  .wfm-frame.component .wfm-frame-label,
+  .wfm-frame.instance .wfm-frame-label { color: #9333ea; font-weight: 600; }
+
+  .wfm-context-menu {
+    background: white;
+    border: 1px solid var(--line);
+    border-radius: 5px;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+    padding: 4px 0;
+    min-width: 180px;
+    font-size: 11px;
+    font-family: 'Geist', system-ui, sans-serif;
+    flex-shrink: 0;
+  }
+  .wfm-menu-item {
+    padding: 6px 14px;
+    color: var(--ink);
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+  }
+  .wfm-menu-item.highlight {
+    background: #0d99ff;
+    color: white;
+  }
+  .wfm-menu-item .wfm-shortcut {
+    color: var(--ink-mute);
+    font-size: 10px;
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .wfm-menu-item.highlight .wfm-shortcut { color: rgba(255,255,255,0.85); }
+
+  .wfm-properties-panel {
+    background: #2c2c2c;
+    border-radius: 6px;
+    padding: 14px 16px;
+    font-family: 'Geist', system-ui, sans-serif;
+  }
+  .wfm-panel-title {
+    font-size: 11px;
+    color: #999;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #404040;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-weight: 600;
+  }
+  .wfm-add-btn {
+    width: 20px; height: 20px;
+    background: transparent;
+    border: 1px solid #404040;
+    border-radius: 3px;
+    color: #999;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 500;
+  }
+  .wfm-property {
+    padding: 8px 0;
+    border-bottom: 1px solid #404040;
+  }
+  .wfm-property:last-child { border-bottom: none; }
+  .wf-figma-mock.active .wfm-property.new {
+    animation: wfm-prop-pulse 1.2s ease-out;
+    border-radius: 4px;
+  }
+  @keyframes wfm-prop-pulse {
+    0%   { background: rgba(13, 153, 255, 0.35); box-shadow: 0 0 0 4px rgba(13, 153, 255, 0.15); }
+    100% { background: transparent; box-shadow: 0 0 0 0 transparent; }
+  }
+  .wfm-property-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 6px;
+  }
+  .wfm-property-name {
+    color: #e8e8e8;
+    font-size: 12px;
+    font-weight: 500;
+  }
+  .wfm-property-type {
+    font-size: 9px;
+    color: #888;
+    font-family: 'JetBrains Mono', monospace;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+  .wfm-property-values {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: #aaa;
+    background: #1e1e1e;
+    padding: 6px 10px;
+    border-radius: 3px;
+  }
+  .wfm-property-value {
+    font-size: 11px;
+    color: #e8e8e8;
+    background: #1e1e1e;
+    padding: 3px 10px;
+    border-radius: 3px;
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .wfm-toggle-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+  }
+  .wfm-toggle {
+    font-size: 16px;
+    color: #888;
+    line-height: 1;
+  }
+  .wfm-toggle-label {
+    color: #888;
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .wfm-action-hint {
+    background: var(--accent-soft);
+    color: var(--accent);
+    padding: 7px 12px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-family: 'JetBrains Mono', monospace;
+    text-align: center;
+    border-left: 2px solid var(--accent);
+  }
+
+  /* §03 combo grid — 可点击切换 */
+  .combo-cell { cursor: pointer; }
+
+  /* ================================================== */
+  /* 视觉关 / 代码关 / 值的旅行 — 共用样式               */
+  /* ================================================== */
+
+  /* Game intro 顶部条 */
+  .game-intro-bar {
+    background: var(--ink);
+    color: var(--bg);
+    border-radius: 6px;
+    padding: 22px 26px;
+    margin-bottom: 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 24px;
+    flex-wrap: wrap;
+  }
+  .game-intro-bar.code { background: #1f1612; }
+  .game-intro-bar h3 {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 20px;
+    margin: 0 0 4px;
+    font-weight: 700;
+  }
+  .game-intro-bar p { margin: 0; color: rgba(255, 255, 255, 0.7); font-size: 13px; line-height: 1.5; max-width: 56ch; }
+  .game-intro-bar p strong { color: var(--accent); font-weight: 600; }
+  .game-stats { display: flex; gap: 20px; }
+  .game-stat .v {
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    font-size: 32px;
+    line-height: 1;
+    color: var(--accent);
+  }
+  .game-stat .l {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 0.1em;
+    opacity: 0.6;
+    text-transform: uppercase;
+    margin-top: 4px;
+  }
+
+  /* Level card (用于视觉关 + 代码关) */
+  .vg-level, .cg-level {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 24px 28px;
+    margin-bottom: 16px;
+    transition: all 0.3s;
+  }
+  .vg-level.solved, .cg-level.solved {
+    border-color: var(--green);
+    background: var(--green-soft);
+  }
+  .vg-level-head, .cg-level-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .vg-level-head .meta, .cg-level-head .meta {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--ink-mute);
+    letter-spacing: 0.05em;
+  }
+  .vg-level-head h3, .cg-level-head h3 {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 18px;
+    margin: 4px 0 0;
+    font-weight: 700;
+  }
+  .vg-level-head .status, .cg-level-head .status {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    padding: 3px 9px;
+    border-radius: 100px;
+    background: var(--bg-2);
+    color: var(--ink-mute);
+    border: 1px solid var(--line);
+  }
+  .vg-level.solved .status, .cg-level.solved .status {
+    background: var(--green);
+    color: white;
+    border-color: var(--green);
+  }
+
+  /* 视觉关 — TARGET / YOURS 双 canvas */
+  .vg-tableau {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    margin-bottom: 16px;
+  }
+  @media (max-width: 720px) { .vg-tableau { grid-template-columns: 1fr; } }
+  .vg-canvas {
+    background: var(--bg);
+    border: 1.5px dashed var(--line);
+    border-radius: 4px;
+    padding: 38px 24px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100px;
+    position: relative;
+  }
+  .vg-canvas::before {
+    content: attr(data-label);
+    position: absolute;
+    top: 8px;
+    left: 12px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+  .vg-canvas.target { border-color: var(--ink); background: var(--paper); border-style: solid; }
+  .vg-canvas.target::before { color: var(--ink); }
+  .vg-canvas.yours { border-color: var(--line); }
+  .vg-canvas.yours::before { color: var(--ink-mute); }
+  .vg-canvas.yours.match { border-color: var(--green); background: var(--green-soft); }
+  .vg-canvas.yours.match::before { color: var(--green); }
+
+  /* 视觉关 mini Figma 控件 */
+  .vg-controls {
+    background: #2c2c2c;
+    border-radius: 6px;
+    padding: 14px 16px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px 18px;
+  }
+  @media (max-width: 720px) { .vg-controls { grid-template-columns: 1fr; } }
+  .vg-ctrl-row {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .vg-ctrl-label {
+    font-size: 10px;
+    font-family: 'JetBrains Mono', monospace;
+    color: #aaa;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+  .vg-ctrl-row .tf-toggle-group { background: #1e1e1e; }
+  .vg-ctrl-row .tf-bool { padding: 0; }
+  .vg-ctrl-row .tf-bool-label { color: #e8e8e8; font-size: 12px; font-weight: 500; }
+
+  /* 视觉关 通关反馈代码 */
+  .vg-feedback, .cg-feedback {
+    margin-top: 14px;
+    padding: 12px 16px;
+    background: var(--ink);
+    color: #e8e8ec;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    line-height: 1.6;
+    border-radius: 4px;
+    display: none;
+    white-space: pre;
+  }
+  .vg-level.solved .vg-feedback,
+  .cg-level.solved .cg-feedback {
+    display: block;
+  }
+  .vg-feedback .ckey, .cg-feedback .ckey { color: #ff8a6e; }
+  .vg-feedback .cval, .cg-feedback .cval { color: #ffd166; }
+  .vg-feedback .cstr, .cg-feedback .cstr { color: #a8e6a3; }
+  .vg-feedback .ccom, .cg-feedback .ccom { color: #6e6e7a; font-style: italic; }
+  .vg-feedback .ctag, .cg-feedback .ctag { color: #c9a0ff; }
+
+  /* 代码关 — 代码侧选 prop 值 */
+  .cg-tableau {
+    display: grid;
+    grid-template-columns: 1fr 1.2fr;
+    gap: 14px;
+    margin-bottom: 12px;
+  }
+  @media (max-width: 720px) { .cg-tableau { grid-template-columns: 1fr; } }
+  .cg-code {
+    background: var(--ink);
+    color: #e8e8ec;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    line-height: 1.85;
+    padding: 16px 20px;
+    border-radius: 4px;
+    white-space: pre;
+    overflow-x: auto;
+  }
+  .cg-code .ckey { color: #ff8a6e; }
+  .cg-code .cstr { color: #a8e6a3; }
+  .cg-code .ctag { color: #c9a0ff; }
+  .cg-code .ccom { color: #6e6e7a; font-style: italic; }
+  .cg-code select {
+    background: var(--accent);
+    color: white;
+    border: none;
+    padding: 2px 8px;
+    font-family: inherit;
+    font-size: 12px;
+    border-radius: 3px;
+    cursor: pointer;
+    font-weight: 600;
+  }
+  .cg-code select:focus { outline: 2px solid var(--accent-soft); }
+  .cg-code .cg-bool {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: var(--accent);
+    color: white;
+    padding: 2px 8px;
+    border-radius: 3px;
+    cursor: pointer;
+    user-select: none;
+    font-weight: 600;
+  }
+  .cg-code .cg-bool input { margin: 0; cursor: pointer; accent-color: white; }
+  .cg-code .cg-bool .ckey { color: white; }
+  .cg-code select { color: white !important; }
+
+  /* 值的旅行 — 6 阶段流向图 */
+  .vj-frame {
+    margin-top: 16px;
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 28px;
+  }
+  .vj-controls {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 28px;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+  .vj-controls .vj-trigger-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--ink-soft);
+    letter-spacing: 0.05em;
+    margin-right: 12px;
+  }
+  .vj-pill {
+    padding: 7px 14px;
+    background: white;
+    border: 1.5px solid var(--line);
+    border-radius: 100px;
+    font-size: 12px;
+    font-family: 'JetBrains Mono', monospace;
+    cursor: pointer;
+    transition: all 0.15s;
+    color: var(--ink-soft);
+  }
+  .vj-pill:hover { border-color: var(--ink); color: var(--ink); }
+  .vj-pill.active { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+  .vj-flow {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 22px;
+    align-items: stretch;
+    position: relative;
+  }
+  @media (max-width: 1024px) { .vj-flow { grid-template-columns: 1fr 1fr; gap: 32px 16px; } }
+  @media (max-width: 600px) { .vj-flow { grid-template-columns: 1fr; gap: 28px; } }
+  .vj-step {
+    background: white;
+    border: 1.5px solid var(--line);
+    border-radius: 6px;
+    padding: 14px 12px;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    transition: all 0.3s ease;
+  }
+  .vj-step.lit {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 4px var(--accent-soft);
+    transform: translateY(-2px);
+    z-index: 2;
+  }
+  .vj-step .vj-step-num {
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    font-weight: 300;
+    font-size: 24px;
+    color: var(--accent);
+    line-height: 1;
+  }
+  .vj-step .vj-step-title {
+    font-size: 12px;
+    color: var(--ink);
+    font-weight: 600;
+    font-family: 'Geist', 'Noto Sans SC', sans-serif;
+    letter-spacing: 0.01em;
+  }
+  .vj-step .vj-step-where {
+    font-size: 9px;
+    color: var(--ink-mute);
+    letter-spacing: 0.05em;
+    font-family: 'JetBrains Mono', monospace;
+    text-transform: uppercase;
+    margin-top: -4px;
+  }
+  .vj-step .vj-step-content {
+    background: var(--bg-2);
+    border-radius: 3px;
+    padding: 8px 10px;
+    font-size: 10.5px;
+    line-height: 1.55;
+    color: var(--ink-soft);
+    font-family: 'JetBrains Mono', monospace;
+    flex: 1;
+    word-break: break-word;
+    min-height: 56px;
+  }
+  .vj-step .vj-step-content .vj-val {
+    color: var(--accent);
+    font-weight: 600;
+  }
+  /* 流向箭头 */
+  .vj-step::after {
+    content: '→';
+    position: absolute;
+    right: -16px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 14px;
+    color: var(--ink-mute);
+    font-weight: 600;
+    z-index: 1;
+    opacity: 0.5;
+    transition: opacity 0.2s, color 0.2s;
+  }
+  .vj-step.lit::after { opacity: 1; color: var(--accent); }
+  .vj-step:last-child::after { display: none; }
+  @media (max-width: 1024px) {
+    .vj-step::after { display: none; }
+  }
+  /* nth-child(2n) 在 2 列布局下不需要箭头 */
+  @media (min-width: 600px) and (max-width: 1024px) {
+    .vj-flow .vj-step:nth-child(2n)::after { display: none; }
+  }
+  .vj-explain {
+    margin-top: 18px;
+    padding: 14px 18px;
+    background: var(--bg);
+    border-radius: 6px;
+    border-left: 3px solid var(--accent);
+    font-size: 13px;
+    line-height: 1.65;
+    color: var(--ink-soft);
+  }
+  .vj-explain strong { color: var(--ink); font-weight: 600; }
+
+  /* 合并版 §08 实操 + 实践 — 上下两块 */
+  .merged-section .merged-block + .merged-block {
+    margin-top: 56px;
+    padding-top: 40px;
+    border-top: 1px dashed var(--line);
+  }
+  .merged-section .merged-block-head {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--accent);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 18px;
+  }
+
+  /* matrix grid (section 05) */
+  .combo-section { margin-top: 8px; }
+  .combo-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 16px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--ink-soft);
+  }
+  .combo-meta .num { color: var(--accent); font-weight: 700; font-size: 18px; font-family: 'Fraunces', serif; font-style: italic; }
+  .combo-grid {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 8px;
+  }
+  @media (max-width: 880px) { .combo-grid { grid-template-columns: repeat(4, 1fr); } }
+  .combo-cell {
+    aspect-ratio: 1.6 / 1;
+    background: white;
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    padding: 4px;
+    transition: all 0.15s;
+    overflow: hidden;
+    position: relative;
+  }
+  .combo-cell:hover {
+    border-color: var(--ink);
+    transform: scale(1.05);
+    z-index: 2;
+    box-shadow: var(--shadow);
+  }
+  .combo-cell.active {
+    border-color: var(--accent);
+    border-width: 2px;
+    background: var(--accent-soft);
+  }
+  .combo-cell.active::after {
+    content: '✓';
+    position: absolute;
+    top: 2px; right: 4px;
+    font-size: 9px;
+    color: var(--accent);
+    font-weight: 700;
+  }
+  .combo-cell .demo-btn {
+    transform: scale(0.5);
+    transform-origin: center;
+    pointer-events: none;
+  }
+  .combo-axis {
+    display: flex;
+    gap: 16px;
+    margin-top: 16px;
+    flex-wrap: wrap;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--ink-mute);
+  }
+  .combo-axis span strong { color: var(--ink); }
+
+  /* property type cards (section 06) */
+  .ptype-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 24px; }
+  @media (max-width: 880px) { .ptype-grid { grid-template-columns: 1fr; } }
+  .ptype-card {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 24px;
+  }
+  .ptype-card .ptype-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--accent);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+  .ptype-card h4 {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 20px;
+    margin: 0 0 8px;
+    font-weight: 700;
+  }
+  .ptype-card .ptype-desc {
+    color: var(--ink-soft);
+    font-size: 14px;
+    line-height: 1.55;
+    margin: 0 0 16px;
+  }
+  .ptype-codes { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  @media (max-width: 600px) { .ptype-codes { grid-template-columns: 1fr; } }
+  .ptype-mini {
+    background: var(--ink);
+    color: #e8e8ec;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    padding: 12px 14px;
+    border-radius: 4px;
+    line-height: 1.6;
+  }
+  .ptype-mini .lbl {
+    display: block;
+    color: #6e6e7a;
+    font-size: 9px;
+    letter-spacing: 0.1em;
+    margin-bottom: 6px;
+    text-transform: uppercase;
+  }
+  .ptype-mini .ckey { color: #ff8a6e; }
+  .ptype-mini .cstr { color: #a8e6a3; }
+  .ptype-mini .ctag { color: #c9a0ff; }
+  .ptype-mini .ccom { color: #6e6e7a; font-style: italic; }
+  .ptype-card .ptype-link {
+    margin-top: 14px;
+    display: inline-block;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--accent);
+    text-decoration: none;
+    cursor: pointer;
+    border-bottom: 1px dashed var(--accent);
+  }
+  .ptype-card .ptype-link:hover { background: var(--accent-soft); }
+
+  /* ptype-axes — 类型卡里展示该类型在按钮上的具体轴 */
+  .ptype-card .ptype-axes {
+    margin: 4px 0 18px;
+    padding: 14px 16px;
+    background: var(--bg);
+    border-radius: 6px;
+    border: 1px dashed var(--line);
+  }
+  .ptype-card .ptype-axes-label {
+    display: block;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--ink-mute);
+    letter-spacing: 0.05em;
+    margin-bottom: 10px;
+    text-transform: uppercase;
+  }
+  .ptype-card .ptype-axis {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 8px;
+    flex-wrap: wrap;
+  }
+  .ptype-card .ptype-axis:last-child { margin-bottom: 0; }
+  .ptype-card .ptype-axis-name {
+    font-size: 12px;
+    color: var(--ink);
+    font-weight: 600;
+    min-width: 78px;
+    font-family: 'Geist', 'Noto Sans SC', sans-serif;
+  }
+  .ptype-card .ptype-axis .axis-line { flex: 1; }
+
+  /* Figma steps (section 07) */
+  .steps-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 18px; margin-top: 24px; }
+  @media (max-width: 880px) { .steps-grid { grid-template-columns: 1fr; } }
+  .step-card {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 22px 24px;
+    position: relative;
+  }
+  .step-card .step-num {
+    position: absolute;
+    top: 16px; right: 22px;
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    font-weight: 300;
+    font-size: 36px;
+    color: var(--accent);
+    line-height: 1;
+  }
+  .step-card h4 {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 17px;
+    margin: 0 0 8px;
+    font-weight: 700;
+    padding-right: 50px;
+  }
+  .step-card .step-desc { color: var(--ink-soft); font-size: 13px; margin: 0 0 14px; line-height: 1.55; }
+  .step-card .step-mock {
+    background: white;
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    padding: 10px 12px;
+    margin-bottom: 12px;
+    font-family: 'Geist', sans-serif;
+    font-size: 11px;
+  }
+  .step-card .step-mock .mock-row {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 5px 0;
+  }
+  .step-card .step-mock .mock-row + .mock-row { border-top: 1px dashed var(--line); }
+  .step-card .step-mock .mock-key { color: var(--ink-mute); font-size: 10px; font-family: 'JetBrains Mono', monospace; }
+  .step-card .step-mock .mock-val { color: var(--ink); font-weight: 500; }
+  .step-card .step-mock .mock-btn {
+    display: inline-block; padding: 2px 8px;
+    background: #0d99ff; color: white;
+    border-radius: 3px; font-size: 10px;
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .step-card .step-mock .mock-add {
+    display: inline-block;
+    width: 16px; height: 16px;
+    line-height: 14px;
+    text-align: center;
+    background: var(--blue-soft); color: var(--blue);
+    border-radius: 50%; font-size: 12px;
+    font-weight: 700;
+  }
+  .step-card .step-code {
+    background: var(--ink);
+    color: #e8e8ec;
+    padding: 10px 12px;
+    border-radius: 4px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    line-height: 1.55;
+  }
+  .step-card .step-code .ccom { color: #6e6e7a; font-style: italic; }
+  .step-card .step-code .ckey { color: #ff8a6e; }
+  .step-card .step-code .cstr { color: #a8e6a3; }
+  .step-card .step-code .ctag { color: #c9a0ff; }
+
+  /* tips */
+  .tips-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; margin-top: 24px; }
+  @media (max-width: 880px) { .tips-grid { grid-template-columns: 1fr; } }
+  .tip { background: var(--paper); border: 1px solid var(--line); border-radius: 6px; padding: 28px; }
+  .tip-num {
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    font-weight: 300;
+    font-size: 36px;
+    color: var(--accent);
+    line-height: 1;
+    margin-bottom: 12px;
+  }
+  .tip h4 { font-family: 'Noto Serif SC', serif; font-size: 18px; margin: 0 0 10px; font-weight: 700; }
+  .tip p { color: var(--ink-soft); font-size: 14px; margin: 0; line-height: 1.6; }
+  .tip code { background: var(--bg-2); padding: 1px 5px; border-radius: 2px; font-size: 12px; font-family: 'JetBrains Mono', monospace; }
+
+  /* next-up notice */
+  .next-up {
+    margin-top: 32px;
+    padding: 24px 28px;
+    background: var(--paper);
+    border: 1px dashed var(--accent);
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+  .next-up .nu-meta {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--accent);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+  .next-up .nu-title {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 18px;
+    font-weight: 700;
+    margin: 0;
+  }
+  .next-up .nu-title .em { font-family: 'Fraunces', serif; font-style: italic; color: var(--accent); font-weight: 500; }
+  .next-up .nu-desc { color: var(--ink-soft); font-size: 13px; margin: 4px 0 0; }
+
+  /* footer */
+  footer {
+    border-top: 1px solid var(--line);
+    padding: 60px 0 80px;
+    background: var(--bg-2);
+    margin-top: 60px;
+  }
+  .byline { display: flex; gap: 20px; align-items: center; margin-bottom: 40px; }
+  .avatar { width: 64px; height: 64px; border-radius: 50%; border: 1px solid var(--line); object-fit: cover; }
+  .byline-meta { flex: 1; }
+  .byline-label { font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.1em; color: var(--ink-mute); margin-bottom: 4px; }
+  .byline-label .dot { display: inline-block; width: 6px; height: 6px; background: var(--accent); border-radius: 50%; margin-right: 6px; vertical-align: middle; }
+  .byline-name { font-family: 'Noto Serif SC', serif; font-weight: 900; font-size: 20px; margin: 0 0 4px; }
+  .byline-name .em { font-family: 'Fraunces', serif; font-style: italic; color: var(--accent); font-weight: 500; }
+  .byline-tag { font-size: 13px; color: var(--ink-soft); margin: 0; line-height: 1.5; }
+  .footer-meta { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ink-mute); letter-spacing: 0.05em; padding-top: 24px; border-top: 1px dashed var(--line); }
+  .footer-meta .heart { color: var(--accent); margin: 0 4px; animation: heartbeat 2s ease-in-out infinite; display: inline-block; }
+  @keyframes heartbeat { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.2); } }
+
+  /* arrow connector for hero to triple */
+  .scroll-hint {
+    text-align: center;
+    margin-top: 64px;
+    color: var(--ink-mute);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.1em;
+  }
+  .scroll-hint .arrow {
+    display: block;
+    margin: 8px auto 0;
+    font-size: 18px;
+    animation: bounce 1.6s ease-in-out infinite;
+  }
+  @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(4px); } }
+</style>
+</head>
+<body>
+
+<!-- Top bar -->
+<div class="topbar">
+  <div class="wrap topbar-inner">
+    <div class="brand"><span class="dot"></span>DESIGN × CODE LAB</div>
+    <div class="nav-links">
+      <a href="index.html">合集</a>
+      <a href="box-figma.html">01 盒子</a>
+      <a href="components-figma.html" class="current">02 组件</a>
+    </div>
+  </div>
+</div>
+
+<!-- Hero -->
+<header class="hero">
+  <div class="wrap">
+    <div class="hero-meta">
+      <span class="pill fill">实验互动 · INTERACTIVE</span>
+      <span class="pill">2026 / 设计 × 代码</span>
+      <span class="label">阅读时长 ≈ 12 分钟</span>
+    </div>
+    <div class="hero-grid">
+      <div>
+        <h1>
+          <span class="display-cn">组件</span><br>
+          <span class="x">×</span>
+          <span class="em">Variants &amp; Props</span><br>
+          <span class="display-cn">一个按钮的 N 种长相</span>
+        </h1>
+        <p class="lede">
+          为什么我做了 18 个 Variants，前端说"这只要 4 个 prop"？<br>
+          因为 <span class="em-italic">Variant 不是组件</span>，是组件的某个轴。<br>
+          这一页讲清楚 Figma Properties 和 React props 怎么对应。
+        </p>
+      </div>
+      <div class="hero-side">
+        <div class="row"><span class="k">本页讲什么</span><span class="v">Variants & Props</span></div>
+        <div class="row"><span class="k">含互动</span><span class="v">三联动面板贯穿全篇</span></div>
+        <div class="row"><span class="k">面向</span><span class="v">设计师 / 前端</span></div>
+        <div class="row"><span class="k">前置知识</span><span class="v">用过 Figma Component</span></div>
+      </div>
+    </div>
+    <div class="scroll-hint">
+      整页只玩一个按钮 · ONE BUTTON
+      <span class="arrow">↓</span>
+    </div>
+  </div>
+</header>
+
+<!-- Section 01: 问题 -->
+<section id="problem">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>01</strong> / 问题</div>
+        <h2 class="section-title">18 个 Variants <br>= <span class="em">几个组件</span>？</h2>
+      </div>
+      <p class="section-sub">
+        设计师做了一个按钮，加了 3 个 Variant、3 个 Size、2 个 Disabled —— 共 18 个变体。
+        前端打开代码看完，说："就一个组件，3 个 prop。"
+      </p>
+    </div>
+
+    <div class="problem-grid">
+      <div class="problem-card bad">
+        <span class="tag">设计师视角</span>
+        <h3>"我做了 18 个变体"</h3>
+        <p>在 Figma Variants 矩阵里看见 18 格，每格都是一个独立的 frame。心里默念：18 个组件 = 18 件事。</p>
+        <div class="v-matrix-mini" id="v18-mini"></div>
+      </div>
+      <div class="problem-card good">
+        <span class="tag">前端视角</span>
+        <h3>"这是 1 个组件 + 3 个 prop"</h3>
+        <p>代码里只有一个函数。3 个参数的排列组合 = 18 种长相。改一个共用样式只改一处。</p>
+        <div class="pc-code">
+<span class="ckey">function</span> <span class="ctag">Button</span>({
+  variant, size, disabled
+}) { <span class="ccom">/* ... */</span> }
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Section 02: 类型 × 一个按钮的 4 个轴 -->
+<section id="types">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>02</strong> / 类型</div>
+        <h2 class="section-title">Property 有<br><span class="em">4 种类型</span>，<br>按钮的 4 个轴。</h2>
+      </div>
+      <p class="section-sub">
+        Figma 加 Property 时让你选类型 —— 4 种全部用上了。
+        我们的按钮恰好用了 4 个轴，每个轴对应一种类型。
+      </p>
+    </div>
+
+    <div class="ptype-grid">
+      <!-- 类型 1: Variant Property -->
+      <div class="ptype-card">
+        <div class="ptype-tag">类型 1 · 多选枚举</div>
+        <h4>Variant Property</h4>
+        <p class="ptype-desc">几个互斥的"档位"。Figma 里列出所有可能值（用逗号分隔），代码里就是 enum 字符串。</p>
+
+        <div class="ptype-axes">
+          <span class="ptype-axes-label">↓ 本页 Button 用了 2 个</span>
+          <div class="ptype-axis">
+            <span class="ptype-axis-name">Variant —</span>
+            <div class="axis-line">
+              <span class="axis-pill">primary</span>
+              <span class="axis-pill">secondary</span>
+              <span class="axis-pill">ghost</span>
+            </div>
+          </div>
+          <div class="ptype-axis">
+            <span class="ptype-axis-name">Size —</span>
+            <div class="axis-line">
+              <span class="axis-pill">sm</span>
+              <span class="axis-pill">md</span>
+              <span class="axis-pill">lg</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="ptype-codes">
+          <div class="ptype-mini">
+            <span class="lbl">Figma</span>
+            <span class="ckey">Name:</span> Variant<br>
+            <span class="ckey">Values:</span><br>
+            &nbsp;&nbsp;<span class="cstr">primary,</span><br>
+            &nbsp;&nbsp;<span class="cstr">secondary,</span><br>
+            &nbsp;&nbsp;<span class="cstr">ghost</span>
+          </div>
+          <div class="ptype-mini">
+            <span class="lbl">React</span>
+            <span class="ckey">variant</span>:<br>
+            &nbsp;&nbsp;<span class="cstr">"primary"</span> |<br>
+            &nbsp;&nbsp;<span class="cstr">"secondary"</span> |<br>
+            &nbsp;&nbsp;<span class="cstr">"ghost"</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 类型 2: Boolean Property -->
+      <div class="ptype-card">
+        <div class="ptype-tag">类型 2 · 开关</div>
+        <h4>Boolean Property</h4>
+        <p class="ptype-desc">true / false 两态。Figma 里加一个 Boolean Property 可以控制某图层的"显示 / 隐藏"。代码里就是布尔 prop。</p>
+
+        <div class="ptype-axes">
+          <span class="ptype-axes-label">↓ 本页 Button 用了 2 个</span>
+          <div class="ptype-axis">
+            <span class="ptype-axis-name">Icon —</span>
+            <div class="axis-line">
+              <span class="axis-pill">on</span>
+              <span class="axis-pill">off</span>
+            </div>
+          </div>
+          <div class="ptype-axis">
+            <span class="ptype-axis-name">Disabled —</span>
+            <div class="axis-line">
+              <span class="axis-pill">on</span>
+              <span class="axis-pill">off</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="ptype-codes">
+          <div class="ptype-mini">
+            <span class="lbl">Figma</span>
+            <span class="ckey">Name:</span> Icon<br>
+            <span class="ckey">Default:</span> false<br>
+            <span class="ccom">// 控制图标图层<br>// 的显示 / 隐藏</span>
+          </div>
+          <div class="ptype-mini">
+            <span class="lbl">React</span>
+            <span class="ckey">icon</span>?:<br>
+            &nbsp;&nbsp;<span class="cstr">boolean</span><br>
+            <span class="ccom">// 简化写法<br>// &lt;Button icon /&gt;</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 类型 3: Text Property -->
+      <div class="ptype-card">
+        <div class="ptype-tag">类型 3 · 文本</div>
+        <h4>Text Property</h4>
+        <p class="ptype-desc">让某段文字变成可改的参数。设计师不用每次都进组件改文字，调用方填什么就显示什么。代码里是 string prop 或 children。</p>
+
+        <div class="ptype-axes">
+          <span class="ptype-axes-label">↓ 本页 Button 上的应用</span>
+          <div class="ptype-axis">
+            <span class="ptype-axis-name">Label —</span>
+            <div class="axis-line">
+              <span class="axis-pill">"Click me"</span>
+              <span class="axis-pill" style="color:var(--ink-mute)">"Submit"</span>
+              <span class="axis-pill" style="color:var(--ink-mute)">"取消"</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="ptype-codes">
+          <div class="ptype-mini">
+            <span class="lbl">Figma</span>
+            <span class="ckey">Name:</span> Label<br>
+            <span class="ckey">Default:</span> <span class="cstr">"Click me"</span>
+          </div>
+          <div class="ptype-mini">
+            <span class="lbl">React</span>
+            <span class="ctag">&lt;Button&gt;</span><br>
+            &nbsp;&nbsp;Click me<br>
+            <span class="ctag">&lt;/Button&gt;</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 类型 4: Instance Swap -->
+      <div class="ptype-card">
+        <div class="ptype-tag">类型 4 · 替换子组件</div>
+        <h4>Instance Swap Property</h4>
+        <p class="ptype-desc">让"图标"这个位置可以换成任意别的图标组件。代码里是 slot / ReactNode。这是组件复用的精髓。</p>
+
+        <div class="ptype-axes">
+          <span class="ptype-axes-label">↓ 本页 Button 上的应用</span>
+          <div class="ptype-axis">
+            <span class="ptype-axis-name">Icon —</span>
+            <div class="axis-line">
+              <span class="axis-pill">★ Star</span>
+              <span class="axis-pill">→ Arrow</span>
+              <span class="axis-pill">+ Plus</span>
+              <span class="axis-pill" style="color:var(--ink-mute)">…任意</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="ptype-codes">
+          <div class="ptype-mini">
+            <span class="lbl">Figma</span>
+            <span class="ckey">Name:</span> Icon<br>
+            <span class="ckey">Type:</span> Instance Swap<br>
+            <span class="ccom">// 可换成<br>// 任意 icon 组件</span>
+          </div>
+          <div class="ptype-mini">
+            <span class="lbl">React</span>
+            <span class="ckey">icon</span>?:<br>
+            &nbsp;&nbsp;<span class="cstr">ReactNode</span><br>
+            <span class="ccom">// &lt;Button<br>// &nbsp;&nbsp;icon={&lt;Star /&gt;}<br>// /&gt;</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Section 03: 工作流对照 — 跟我做一个 Button -->
+<section id="workflow">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>03</strong> / 工作流</div>
+        <h2 class="section-title">跟我做<br>一个 <span class="em">Button</span>。</h2>
+      </div>
+      <p class="section-sub">
+        4 步走完 —— 左 Figma 操作、右代码同步。
+        点格子 / 点「下一步」推进，看代码逐渐"长"出来。
+      </p>
+    </div>
+
+    <div class="wf-frame">
+      <div class="wf-progress">
+        <div class="wf-step-pill active" data-wf-step="0">
+          <span class="wf-step-num">①</span>
+          <span class="wf-step-name">Create Component</span>
+        </div>
+        <div class="wf-step-pill" data-wf-step="1">
+          <span class="wf-step-num">②</span>
+          <span class="wf-step-name">Add Variant</span>
+        </div>
+        <div class="wf-step-pill" data-wf-step="2">
+          <span class="wf-step-num">③</span>
+          <span class="wf-step-name">Add Boolean</span>
+        </div>
+        <div class="wf-step-pill" data-wf-step="3">
+          <span class="wf-step-num">④</span>
+          <span class="wf-step-name">Use Instance</span>
+        </div>
+      </div>
+
+      <div class="wf-tableau">
+        <div class="wf-side wf-figma-side">
+          <div class="wf-side-tag">FIGMA 操作</div>
+
+          <!-- Step 1 mock: Create Component（右键菜单）-->
+          <div class="wf-figma-mock active" data-wf-mock="0">
+            <div class="wfm-canvas">
+              <div class="wfm-frame">
+                <div class="wfm-frame-label">Frame 247</div>
+                <button class="demo-btn" data-variant="primary" data-size="md" data-icon="false" data-disabled="false">
+                  <span>Click me</span>
+                </button>
+              </div>
+              <div class="wfm-context-menu">
+                <div class="wfm-menu-item">Group selection</div>
+                <div class="wfm-menu-item highlight"><span>⬢ Create Component</span><span class="wfm-shortcut">⌥⌘K</span></div>
+                <div class="wfm-menu-item">Bring to Front</div>
+                <div class="wfm-menu-item">Send to Back</div>
+              </div>
+            </div>
+            <div class="wfm-action-hint">→ 右键选 Create Component，把 Frame 变成"主组件"</div>
+          </div>
+
+          <!-- Step 2 mock: Add Variant Property -->
+          <div class="wf-figma-mock" data-wf-mock="1">
+            <div class="wfm-canvas">
+              <div class="wfm-frame component">
+                <div class="wfm-frame-label">⬢ Button (Component)</div>
+                <button class="demo-btn" data-variant="primary" data-size="md" data-icon="false" data-disabled="false">
+                  <span>Click me</span>
+                </button>
+              </div>
+            </div>
+            <div class="wfm-properties-panel">
+              <div class="wfm-panel-title">Properties <span class="wfm-add-btn">+</span></div>
+              <div class="wfm-property new">
+                <div class="wfm-property-row">
+                  <span class="wfm-property-name">Variant</span>
+                  <span class="wfm-property-type">Variant</span>
+                </div>
+                <div class="wfm-property-values">primary, secondary, ghost</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Step 3 mock: Add Boolean Property -->
+          <div class="wf-figma-mock" data-wf-mock="2">
+            <div class="wfm-canvas">
+              <div class="wfm-frame component">
+                <div class="wfm-frame-label">⬢ Button (Component)</div>
+                <button class="demo-btn" data-variant="primary" data-size="md" data-icon="false" data-disabled="false">
+                  <span>Click me</span>
+                </button>
+              </div>
+            </div>
+            <div class="wfm-properties-panel">
+              <div class="wfm-panel-title">Properties <span class="wfm-add-btn">+</span></div>
+              <div class="wfm-property">
+                <div class="wfm-property-row">
+                  <span class="wfm-property-name">Variant</span>
+                  <span class="wfm-property-type">Variant</span>
+                </div>
+              </div>
+              <div class="wfm-property new">
+                <div class="wfm-property-row">
+                  <span class="wfm-property-name">disabled</span>
+                  <span class="wfm-property-type">Boolean</span>
+                </div>
+                <div class="wfm-toggle-row">
+                  <span class="wfm-toggle">◯</span>
+                  <span class="wfm-toggle-label">false</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Step 4 mock: Drag Instance + 选值 -->
+          <div class="wf-figma-mock" data-wf-mock="3">
+            <div class="wfm-canvas">
+              <div class="wfm-frame instance">
+                <div class="wfm-frame-label">◇ Button (Instance)</div>
+                <button class="demo-btn" data-variant="primary" data-size="md" data-icon="false" data-disabled="false">
+                  <span>Click me</span>
+                </button>
+              </div>
+            </div>
+            <div class="wfm-properties-panel">
+              <div class="wfm-panel-title">Properties · Instance</div>
+              <div class="wfm-property new">
+                <div class="wfm-property-row">
+                  <span class="wfm-property-name">Variant</span>
+                  <span class="wfm-property-value">primary ▾</span>
+                </div>
+              </div>
+              <div class="wfm-property">
+                <div class="wfm-property-row">
+                  <span class="wfm-property-name">disabled</span>
+                </div>
+                <div class="wfm-toggle-row">
+                  <span class="wfm-toggle">◯</span>
+                  <span class="wfm-toggle-label">false</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="wf-side wf-code-side">
+          <div class="wf-side-tag">CODE 同步</div>
+          <h4 class="wf-side-title" id="wf-code-title"></h4>
+          <pre class="wf-code-block" id="wf-code-content"></pre>
+          <div class="wf-side-result" id="wf-code-desc"></div>
+        </div>
+      </div>
+
+      <div class="wf-controls">
+        <button class="wf-btn" id="wf-prev">← 上一步</button>
+        <span class="wf-step-info" id="wf-step-info">Step 1 / 4</span>
+        <button class="wf-btn primary" id="wf-next">下一步 →</button>
+      </div>
+
+      <div class="wf-done" id="wf-done" style="display:none;">
+        <strong>✓ 完成 — 你刚才在 Figma 做的 4 步，等价于这段代码。</strong>
+        <p>设计师做的事 = 工程师写的代码。同一件事，两种表达。</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Section 04: 排列组合数学 -->
+<section id="combos">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>04</strong> / 数学</div>
+        <h2 class="section-title">36 种长相 <br>= <span class="em">4 个 prop</span> 的排列。</h2>
+      </div>
+      <p class="section-sub">
+        3 × 3 × 2 × 2 = 36。下面是按钮的全部 36 种长相 ——
+        点任意一格，下方的三联动会切到那个状态。
+      </p>
+    </div>
+
+    <div class="combo-section">
+      <div class="combo-meta">
+        <span>第 <span class="num" id="combo-active-num">1</span> / 36 种长相</span>
+        <span class="mono" style="color:var(--ink-mute);">↓ 点格子 → 下面三联动跟着切到那一格</span>
+      </div>
+      <div class="combo-grid" id="combo-grid"></div>
+      <div class="combo-axis">
+        <span><strong>横轴：</strong>Variant × Size = 9 种</span>
+        <span><strong>纵轴：</strong>Icon × Disabled = 4 种</span>
+        <span><strong>合计：</strong>9 × 4 = 36</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Section 04: 三联动面板 ⭐ -->
+<section id="triple">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>05</strong> / 互动 · 主菜</div>
+        <h2 class="section-title">动一动 Figma 面板，<br><span class="em">看代码同步变</span>。</h2>
+      </div>
+      <p class="section-sub">
+        左：Figma Properties 面板（仿 Figma UI）。<br>
+        中：实例渲染。<br>
+        右：React 代码 —— 你切哪个 Property，对应那行就高亮变。
+      </p>
+    </div>
+
+    <div class="triple-frame">
+      <div class="triple-label">
+        <span class="dot"></span>
+        三联动面板 · TRIPLE-PANEL · 整页贯穿同一个 Button
+      </div>
+      <div class="triple" id="triple-main">
+        <!-- Figma Properties 面板 -->
+        <div class="triple-figma">
+          <div class="tf-header">
+            <div class="tf-title">Properties</div>
+            <button class="tf-add" title="Figma 里的添加按钮">+</button>
+          </div>
+
+          <div class="tf-prop" data-prop-block="variant">
+            <div class="tf-prop-label">
+              <span class="tf-prop-name">Variant</span>
+              <span class="tf-prop-type">Variant</span>
+            </div>
+            <div class="tf-toggle-group" data-prop="variant">
+              <button class="tf-toggle active" data-value="primary">Primary</button>
+              <button class="tf-toggle" data-value="secondary">Secondary</button>
+              <button class="tf-toggle" data-value="ghost">Ghost</button>
+            </div>
+          </div>
+
+          <div class="tf-prop" data-prop-block="size">
+            <div class="tf-prop-label">
+              <span class="tf-prop-name">Size</span>
+              <span class="tf-prop-type">Variant</span>
+            </div>
+            <div class="tf-toggle-group" data-prop="size">
+              <button class="tf-toggle" data-value="sm">SM</button>
+              <button class="tf-toggle active" data-value="md">MD</button>
+              <button class="tf-toggle" data-value="lg">LG</button>
+            </div>
+          </div>
+
+          <div class="tf-prop" data-prop-block="icon">
+            <div class="tf-bool">
+              <span class="tf-bool-label">Icon</span>
+              <button class="tf-switch" data-prop="icon" aria-label="Toggle Icon"></button>
+            </div>
+            <div class="tf-prop-label" style="margin-top:4px;margin-bottom:0;">
+              <span></span>
+              <span class="tf-prop-type">Boolean</span>
+            </div>
+          </div>
+
+          <div class="tf-prop" data-prop-block="disabled">
+            <div class="tf-bool">
+              <span class="tf-bool-label">Disabled</span>
+              <button class="tf-switch" data-prop="disabled" aria-label="Toggle Disabled"></button>
+            </div>
+            <div class="tf-prop-label" style="margin-top:4px;margin-bottom:0;">
+              <span></span>
+              <span class="tf-prop-type">Boolean</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 渲染区 -->
+        <div class="triple-canvas">
+          <button class="demo-btn" data-variant="primary" data-size="md" data-icon="false" data-disabled="false" id="main-button">
+            <span class="btn-icon">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                <path d="M8 2L10 6L14 6.5L11 9.5L11.8 14L8 11.8L4.2 14L5 9.5L2 6.5L6 6L8 2Z" fill="currentColor"/>
+              </svg>
+            </span>
+            <span class="btn-label">Click me</span>
+          </button>
+        </div>
+
+        <!-- 代码区 (双视图) -->
+        <div class="triple-code">
+          <span class="filename">Button.tsx</span>
+
+          <div class="code-section">
+            <div class="code-label">// 组件定义 — props 在这里被声明</div>
+            <span class="code-line"><span class="ckey">function</span> <span class="ctag">Button</span>({</span>
+            <span class="code-line" data-prop-block="variant">  <span class="tag-variant">variant</span> = <span class="cstr">"primary"</span>,</span>
+            <span class="code-line" data-prop-block="size">  <span class="tag-size">size</span> = <span class="cstr">"md"</span>,</span>
+            <span class="code-line" data-prop-block="icon">  <span class="tag-icon">icon</span>,</span>
+            <span class="code-line" data-prop-block="disabled">  <span class="tag-disabled">disabled</span>,</span>
+            <span class="code-line">  children</span>
+            <span class="code-line">}) {</span>
+            <span class="code-line">  <span class="ckey">return</span> (</span>
+            <span class="code-line">    <span class="ctag">&lt;button</span></span>
+            <span class="code-line">      className={`btn ${<span class="tag-variant">variant</span>} ${<span class="tag-size">size</span>}`}</span>
+            <span class="code-line">      <span class="tag-disabled">disabled</span>={<span class="tag-disabled">disabled</span>}</span>
+            <span class="code-line">    <span class="ctag">&gt;</span></span>
+            <span class="code-line">      {<span class="tag-icon">icon</span> &amp;&amp; <span class="ctag">&lt;Icon /&gt;</span>}</span>
+            <span class="code-line">      {children}</span>
+            <span class="code-line">    <span class="ctag">&lt;/button&gt;</span></span>
+            <span class="code-line">  );</span>
+            <span class="code-line">}</span>
+          </div>
+
+          <div class="code-section">
+            <div class="code-label">// 实际调用 — 切上面的控件，这里同步</div>
+            <span class="code-line"><span class="ctag">&lt;Button</span></span>
+            <span class="code-line" data-prop-block="variant" data-line="variant">  <span class="tag-variant">variant</span>=<span class="cstr">"<span data-bind="variant">primary</span>"</span></span>
+            <span class="code-line" data-prop-block="size" data-line="size">  <span class="tag-size">size</span>=<span class="cstr">"<span data-bind="size">md</span>"</span></span>
+            <span class="code-line hidden" data-prop-block="icon" data-line="icon">  <span class="tag-icon">icon</span></span>
+            <span class="code-line hidden" data-prop-block="disabled" data-line="disabled">  <span class="tag-disabled">disabled</span></span>
+            <span class="code-line"><span class="ctag">&gt;</span></span>
+            <span class="code-line">  Click me</span>
+            <span class="code-line"><span class="ctag">&lt;/Button&gt;</span></span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- Section 06 已合并到 §02，删除 -->
+<section id="_ptypes_removed" style="display:none;">
+  <div class="ptype-grid">
+      <div class="ptype-card">
+        <div class="ptype-tag">类型 1 · 多选枚举</div>
+        <h4>Variant Property</h4>
+        <p class="ptype-desc">几个互斥的"档位"。Figma 里你列出所有可能值（用逗号分隔）。代码里就是 enum 字符串。<br>本页例子：Variant、Size。</p>
+        <div class="ptype-codes">
+          <div class="ptype-mini">
+            <span class="lbl">Figma</span>
+            <span class="ckey">Name:</span> Variant<br>
+            <span class="ckey">Values:</span><br>
+            &nbsp;&nbsp;<span class="cstr">primary,</span><br>
+            &nbsp;&nbsp;<span class="cstr">secondary,</span><br>
+            &nbsp;&nbsp;<span class="cstr">ghost</span>
+          </div>
+          <div class="ptype-mini">
+            <span class="lbl">React</span>
+            <span class="ckey">variant</span>:<br>
+            &nbsp;&nbsp;<span class="cstr">"primary"</span> |<br>
+            &nbsp;&nbsp;<span class="cstr">"secondary"</span> |<br>
+            &nbsp;&nbsp;<span class="cstr">"ghost"</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="ptype-card">
+        <div class="ptype-tag">类型 2 · 开关</div>
+        <h4>Boolean Property</h4>
+        <p class="ptype-desc">true / false 两态。在 Figma 里加一个 Boolean Property，可以控制某个图层的"显示 / 隐藏"。代码里就是布尔 prop。<br>本页例子：Icon、Disabled。</p>
+        <div class="ptype-codes">
+          <div class="ptype-mini">
+            <span class="lbl">Figma</span>
+            <span class="ckey">Name:</span> Icon<br>
+            <span class="ckey">Default:</span> false<br>
+            <span class="ccom">// 控制图标图层<br>// 的显示 / 隐藏</span>
+          </div>
+          <div class="ptype-mini">
+            <span class="lbl">React</span>
+            <span class="ckey">icon</span>?:<br>
+            &nbsp;&nbsp;<span class="cstr">boolean</span><br>
+            <span class="ccom">// 简化写法<br>// &lt;Button icon /&gt;</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="ptype-card">
+        <div class="ptype-tag">类型 3 · 文本</div>
+        <h4>Text Property</h4>
+        <p class="ptype-desc">让按钮文案变成可改的参数。设计师不用每次都进组件改文字。代码里是 string prop 或 children。<br>本页例子：按钮文案 "Click me"。</p>
+        <div class="ptype-codes">
+          <div class="ptype-mini">
+            <span class="lbl">Figma</span>
+            <span class="ckey">Name:</span> Label<br>
+            <span class="ckey">Default:</span> <span class="cstr">"Click me"</span>
+          </div>
+          <div class="ptype-mini">
+            <span class="lbl">React</span>
+            <span class="ctag">&lt;Button&gt;</span><br>
+            &nbsp;&nbsp;Click me<br>
+            <span class="ctag">&lt;/Button&gt;</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="ptype-card">
+        <div class="ptype-tag">类型 4 · 替换子组件</div>
+        <h4>Instance Swap Property</h4>
+        <p class="ptype-desc">让"图标"这个位置可以换成任意别的图标组件。代码里是 slot / ReactNode。这是组件复用的精髓。<br>下一篇会专门讲 slot。</p>
+        <div class="ptype-codes">
+          <div class="ptype-mini">
+            <span class="lbl">Figma</span>
+            <span class="ckey">Name:</span> Icon<br>
+            <span class="ckey">Type:</span> Instance Swap<br>
+            <span class="ccom">// 可换成<br>// 任意 icon 组件</span>
+          </div>
+          <div class="ptype-mini">
+            <span class="lbl">React</span>
+            <span class="ckey">icon</span>?:<br>
+            &nbsp;&nbsp;<span class="cstr">ReactNode</span><br>
+            <span class="ccom">// &lt;Button<br>// &nbsp;&nbsp;icon={&lt;Star /&gt;}<br>// /&gt;</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Section 06: 代码关 — 选对那个 prop -->
+<section id="cg">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>06</strong> / 代码关</div>
+        <h2 class="section-title">这次<br>从 <span class="em">代码侧</span> 改。</h2>
+      </div>
+      <p class="section-sub">
+        刚才你在 Figma 控件里调，现在改成在代码里点橙色的下拉/勾选框选值。
+        同样 3 关 —— 不同入口，让你看到"两边是同一件事"。
+      </p>
+    </div>
+
+    <div class="game-intro-bar code">
+      <div>
+        <h3>视觉关的代码版</h3>
+        <p>看 TARGET → 改代码里的 <strong>橙色 prop 值</strong> → YOURS 跟着变 → 匹配 TARGET 通关</p>
+      </div>
+      <div class="game-stats">
+        <div class="game-stat">
+          <div class="v" id="cg-solved">0</div>
+          <div class="l">已通关</div>
+        </div>
+        <div class="game-stat">
+          <div class="v">3</div>
+          <div class="l">总数</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="cg-level" data-cgl="1">
+      <div class="cg-level-head">
+        <div>
+          <div class="meta">关 1 · ★☆☆ · 选 1 个值</div>
+          <h3>选对 Variant</h3>
+        </div>
+        <span class="status">未通关</span>
+      </div>
+      <div class="vg-tableau">
+        <div class="vg-canvas target" data-label="TARGET">
+          <button class="demo-btn" data-cgl-target="1">Click me</button>
+        </div>
+        <div class="vg-canvas yours" data-label="YOURS">
+          <button class="demo-btn" data-cgl-yours="1">Click me</button>
+        </div>
+      </div>
+      <div class="cg-code" data-cgl-code="1"></div>
+      <div class="cg-feedback" data-cgl-feedback="1"></div>
+    </div>
+
+    <div class="cg-level" data-cgl="2">
+      <div class="cg-level-head">
+        <div>
+          <div class="meta">关 2 · ★★☆ · 选 2 个值</div>
+          <h3>Variant + Icon</h3>
+        </div>
+        <span class="status">未通关</span>
+      </div>
+      <div class="vg-tableau">
+        <div class="vg-canvas target" data-label="TARGET">
+          <button class="demo-btn" data-cgl-target="2">Click me</button>
+        </div>
+        <div class="vg-canvas yours" data-label="YOURS">
+          <button class="demo-btn" data-cgl-yours="2">Click me</button>
+        </div>
+      </div>
+      <div class="cg-code" data-cgl-code="2"></div>
+      <div class="cg-feedback" data-cgl-feedback="2"></div>
+    </div>
+
+    <div class="cg-level" data-cgl="3">
+      <div class="cg-level-head">
+        <div>
+          <div class="meta">关 3 · ★★★ · 选 4 个全部</div>
+          <h3>4 个 prop 都要选对</h3>
+        </div>
+        <span class="status">未通关</span>
+      </div>
+      <div class="vg-tableau">
+        <div class="vg-canvas target" data-label="TARGET">
+          <button class="demo-btn" data-cgl-target="3">Click me</button>
+        </div>
+        <div class="vg-canvas yours" data-label="YOURS">
+          <button class="demo-btn" data-cgl-yours="3">Click me</button>
+        </div>
+      </div>
+      <div class="cg-code" data-cgl-code="3"></div>
+      <div class="cg-feedback" data-cgl-feedback="3"></div>
+    </div>
+  </div>
+</section>
+
+<!-- Section 07: 值的旅行 — 6 阶段流向 -->
+<section id="vj">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>07</strong> / 旅行</div>
+        <h2 class="section-title">一个值的 <span class="em">旅行</span>。</h2>
+      </div>
+      <p class="section-sub">
+        切一个 prop，看它从 Figma 走到屏幕的 6 站。
+        进阶节 —— 揭示 prop 是怎么"传"的。
+      </p>
+    </div>
+
+    <div class="vj-frame">
+      <div class="vj-controls">
+        <span class="vj-trigger-label">点一个 prop 看它的旅行 →</span>
+        <button class="vj-pill" data-vj-prop="variant">Variant</button>
+        <button class="vj-pill" data-vj-prop="size">Size</button>
+        <button class="vj-pill" data-vj-prop="icon">Icon</button>
+        <button class="vj-pill" data-vj-prop="disabled">Disabled</button>
+      </div>
+
+      <div class="vj-flow" id="vj-flow">
+        <div class="vj-step" data-step="1">
+          <div class="vj-step-num">①</div>
+          <div class="vj-step-where">在 Figma 面板</div>
+          <div class="vj-step-title">设计师选值</div>
+          <div class="vj-step-content" data-vj-content="figma">点一个 prop 看 →</div>
+        </div>
+        <div class="vj-step" data-step="2">
+          <div class="vj-step-num">②</div>
+          <div class="vj-step-where">在调用代码</div>
+          <div class="vj-step-title">填进 prop</div>
+          <div class="vj-step-content" data-vj-content="call">&lt;Button .../&gt;</div>
+        </div>
+        <div class="vj-step" data-step="3">
+          <div class="vj-step-num">③</div>
+          <div class="vj-step-where">在组件参数</div>
+          <div class="vj-step-title">组件接收</div>
+          <div class="vj-step-content" data-vj-content="param">function Button(...)</div>
+        </div>
+        <div class="vj-step" data-step="4">
+          <div class="vj-step-num">④</div>
+          <div class="vj-step-where">在 className</div>
+          <div class="vj-step-title">参与 class 拼接</div>
+          <div class="vj-step-content" data-vj-content="classname">`btn ...`</div>
+        </div>
+        <div class="vj-step" data-step="5">
+          <div class="vj-step-num">⑤</div>
+          <div class="vj-step-where">在 CSS</div>
+          <div class="vj-step-title">选中样式规则</div>
+          <div class="vj-step-content" data-vj-content="css">.btn... { ... }</div>
+        </div>
+        <div class="vj-step" data-step="6">
+          <div class="vj-step-num">⑥</div>
+          <div class="vj-step-where">在屏幕</div>
+          <div class="vj-step-title">最终渲染</div>
+          <div class="vj-step-content" data-vj-content="render">[按钮]</div>
+        </div>
+      </div>
+
+      <div class="vj-explain">
+        <strong>这 6 站就是 prop 的工作机制。</strong>
+        设计师在 Figma 选的值，最终决定屏幕上你看到的颜色 / 大小 / 图标。
+        中间经过的"调用代码"、"组件参数"、"className"、"CSS 规则" —— 都是 React 代码里实实在在的"中转站"。
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Section 07: mapping 速查表 -->
+<section id="mapping">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>08</strong> / 速查</div>
+        <h2 class="section-title">Figma <span class="em">↔</span> React<br>对照表。</h2>
+      </div>
+      <p class="section-sub">
+        给你带走的速查表 —— 概念名词怎么对应。
+      </p>
+    </div>
+
+    <div class="mapping">
+      <div class="mapping-head">
+        <div>Figma 概念</div>
+        <div>≈</div>
+        <div>React 概念</div>
+      </div>
+      <div class="mapping-row">
+        <div>
+          <div class="figma-name">Component（主组件）</div>
+          <div class="desc">右键 Create Component 创造的"原型"</div>
+        </div>
+        <div>≈</div>
+        <div>
+          <div class="css-name">function Button(props)</div>
+          <div class="desc">代码里的组件函数定义</div>
+        </div>
+      </div>
+      <div class="mapping-row">
+        <div>
+          <div class="figma-name">Instance（实例）</div>
+          <div class="desc">从主组件拖出来用的副本</div>
+        </div>
+        <div>≈</div>
+        <div>
+          <div class="css-name">&lt;Button ... /&gt;</div>
+          <div class="desc">在页面里被调用的标签</div>
+        </div>
+      </div>
+      <div class="mapping-row">
+        <div>
+          <div class="figma-name">Variant Property</div>
+          <div class="desc">多选枚举（如 primary / ghost）</div>
+        </div>
+        <div>≈</div>
+        <div>
+          <div class="css-name">variant: "primary" | "ghost"</div>
+          <div class="desc">枚举类型的 prop</div>
+        </div>
+      </div>
+      <div class="mapping-row">
+        <div>
+          <div class="figma-name">Boolean Property</div>
+          <div class="desc">开关（如 disabled）</div>
+        </div>
+        <div>≈</div>
+        <div>
+          <div class="css-name">disabled: boolean</div>
+          <div class="desc">布尔类型的 prop</div>
+        </div>
+      </div>
+      <div class="mapping-row">
+        <div>
+          <div class="figma-name">Text Property</div>
+          <div class="desc">可改的文字（按钮文案）</div>
+        </div>
+        <div>≈</div>
+        <div>
+          <div class="css-name">label: string / children</div>
+          <div class="desc">字符串类型的 prop / children</div>
+        </div>
+      </div>
+      <div class="mapping-row">
+        <div>
+          <div class="figma-name">Instance Swap Property</div>
+          <div class="desc">替换内部子组件（左侧图标）</div>
+        </div>
+        <div>≈</div>
+        <div>
+          <div class="css-name">icon: ReactNode</div>
+          <div class="desc">slot / children prop</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div class="byline">
+      <img class="avatar" src="author.jpg" alt="范米花儿">
+      <div class="byline-meta">
+        <div class="byline-label"><span class="dot"></span>作者 · WRITTEN BY</div>
+        <h3 class="byline-name">嗨，我是 <span class="em">范米花儿</span></h3>
+        <p class="byline-tag">一份关于 Variants 和 Props 的实验讲解 ——<br>整页只玩一个按钮，玩明白你就懂了。</p>
+      </div>
+    </div>
+    <div class="footer-meta">
+      做于 <span class="mono">2026</span> · 用 <span class="heart">●</span> 写给 <span class="mono">DESIGNERS &amp; DEVELOPERS</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+  // ==========================================================
+  //  全局状态 — 整页一个按钮
+  // ==========================================================
+  const state = {
+    variant: 'primary',
+    size: 'md',
+    icon: false,
+    disabled: false
+  };
+
+  const VARIANTS = ['primary', 'secondary', 'ghost'];
+  const SIZES = ['sm', 'md', 'lg'];
+
+  // ==========================================================
+  //  渲染同步
+  // ==========================================================
+  function syncAll(changedProp) {
+    // 1. 同步 Figma 面板（左）
+    document.querySelectorAll('.tf-toggle-group').forEach(group => {
+      const prop = group.dataset.prop;
+      group.querySelectorAll('.tf-toggle').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.value === state[prop]);
+      });
+    });
+    document.querySelectorAll('.tf-switch').forEach(sw => {
+      const prop = sw.dataset.prop;
+      sw.classList.toggle('on', !!state[prop]);
+    });
+
+    // 2. 同步主按钮渲染（中）
+    const btn = document.getElementById('main-button');
+    btn.dataset.variant = state.variant;
+    btn.dataset.size = state.size;
+    btn.dataset.icon = state.icon;
+    btn.dataset.disabled = state.disabled;
+
+    // 3. 同步代码（右）
+    document.querySelectorAll('[data-bind]').forEach(el => {
+      const prop = el.dataset.bind;
+      if (state[prop] !== undefined) el.textContent = state[prop];
+    });
+    // boolean props: show / hide
+    const iconLine = document.querySelector('[data-line="icon"]');
+    const disabledLine = document.querySelector('[data-line="disabled"]');
+    iconLine.classList.toggle('hidden', !state.icon);
+    disabledLine.classList.toggle('hidden', !state.disabled);
+
+    // 4. 三处脉冲 + 持续高亮：先清旧的 prop-active，再给当前 prop 加 pulse + prop-active
+    if (changedProp) {
+      // 清掉上一次的持续高亮
+      document.querySelectorAll('[data-prop-block].prop-active').forEach(el => el.classList.remove('prop-active'));
+      // 给当前 prop 的所有元素加脉冲（短）+ prop-active（持续）
+      document.querySelectorAll(`[data-prop-block="${changedProp}"]`).forEach(el => {
+        if (el.classList.contains('hidden')) return;
+        el.classList.remove('pulse');
+        void el.offsetWidth; // 重启动画
+        el.classList.add('pulse', 'prop-active');
+        clearTimeout(el._pulseTimer);
+        el._pulseTimer = setTimeout(() => el.classList.remove('pulse'), 750);
+      });
+    }
+
+    // 5. 同步 §05 矩阵的 active
+    syncCombo();
+  }
+
+  // ==========================================================
+  //  绑定 Figma 面板控件
+  // ==========================================================
+  // Variant / Size toggle groups
+  document.querySelectorAll('.tf-toggle-group').forEach(group => {
+    const prop = group.dataset.prop;
+    group.querySelectorAll('.tf-toggle').forEach(btn => {
+      btn.addEventListener('click', () => {
+        state[prop] = btn.dataset.value;
+        syncAll(prop);
+      });
+    });
+  });
+
+  // Boolean switches
+  document.querySelectorAll('.tf-switch').forEach(sw => {
+    const prop = sw.dataset.prop;
+    sw.addEventListener('click', () => {
+      state[prop] = !state[prop];
+      syncAll(prop);
+    });
+  });
+
+  // ==========================================================
+  //  Section 05 — 36 格组合矩阵
+  // ==========================================================
+  const comboGrid = document.getElementById('combo-grid');
+
+  // 6 × 6 矩阵布局：
+  // 列：Variant (3) × Size (3) = 9 → 用 6 列 × 6 行 = 36
+  // 排列方式：(variant, size) 在 9 列轮换；(icon, disabled) 在 4 行轮换
+  // 但为了视觉规整，用 6 列 × 6 行 = 36 格
+  // 顺序：i = variant * 12 + size * 4 + icon * 2 + disabled
+  const combos = [];
+  for (const v of VARIANTS) {
+    for (const s of SIZES) {
+      for (const ic of [false, true]) {
+        for (const dis of [false, true]) {
+          combos.push({ variant: v, size: s, icon: ic, disabled: dis });
+        }
+      }
+    }
+  }
+  // 36 总数
+
+  combos.forEach((c, i) => {
+    const cell = document.createElement('div');
+    cell.className = 'combo-cell';
+    cell.dataset.idx = i;
+
+    const btn = document.createElement('button');
+    btn.className = 'demo-btn';
+    btn.dataset.variant = c.variant;
+    btn.dataset.size = 'sm';  // 矩阵里用 sm 尺寸方便排布
+    btn.dataset.icon = c.icon;
+    btn.dataset.disabled = c.disabled;
+    btn.innerHTML = `
+      <span class="btn-icon">
+        <svg width="10" height="10" viewBox="0 0 16 16" fill="none">
+          <path d="M8 2L10 6L14 6.5L11 9.5L11.8 14L8 11.8L4.2 14L5 9.5L2 6.5L6 6L8 2Z" fill="currentColor"/>
+        </svg>
+      </span>
+      <span style="font-size:10px;">Btn</span>
+    `;
+    cell.appendChild(btn);
+
+    // 点格子 → 切换全局 state，下面三联动跟着变 + 平滑滚动
+    cell.addEventListener('click', () => {
+      Object.assign(state, c);
+      syncAll();
+      const triple = document.getElementById('triple-main');
+      if (triple) triple.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    });
+
+    comboGrid.appendChild(cell);
+  });
+
+  function syncCombo() {
+    const cells = comboGrid.querySelectorAll('.combo-cell');
+    let activeIdx = -1;
+    combos.forEach((c, i) => {
+      const match = c.variant === state.variant
+                 && c.size === state.size
+                 && c.icon === state.icon
+                 && c.disabled === state.disabled;
+      cells[i].classList.toggle('active', match);
+      if (match) activeIdx = i;
+    });
+    document.getElementById('combo-active-num').textContent = activeIdx + 1;
+  }
+
+  // ==========================================================
+  //  Section 01 — 18 格 Variants matrix mini
+  // ==========================================================
+  const v18 = document.getElementById('v18-mini');
+  if (v18) {
+    // 3 variants × 3 sizes × 2 disabled = 18
+    const colors = ['var(--accent)', 'var(--ink)', 'var(--accent)'];
+    const heights = [4, 7, 10];
+    const opacities = [1, 0.4];
+    let idx = 0;
+    for (let v = 0; v < 3; v++) {
+      for (let s = 0; s < 3; s++) {
+        for (let d = 0; d < 2; d++) {
+          const cell = document.createElement('div');
+          cell.className = 'vm';
+          const inner = document.createElement('div');
+          inner.className = 'vm-btn';
+          inner.style.height = heights[s] + 'px';
+          inner.style.background = v === 0 ? 'var(--accent)' : v === 1 ? 'white' : 'transparent';
+          inner.style.border = v === 1 ? '1px solid var(--ink)' : v === 2 ? '1px solid transparent' : 'none';
+          inner.style.opacity = opacities[d];
+          cell.appendChild(inner);
+          v18.appendChild(cell);
+          idx++;
+        }
+      }
+    }
+  }
+
+  // ==========================================================
+  //  初始化
+  // ==========================================================
+  syncAll();
+
+  // ==========================================================
+  //  视觉关 / 代码关 共用 — 渲染 demo 按钮
+  // ==========================================================
+  const ICON_SVG_VG = '<svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 2L10 6L14 6.5L11 9.5L11.8 14L8 11.8L4.2 14L5 9.5L2 6.5L6 6L8 2Z" fill="currentColor"/></svg>';
+
+  function renderDemoBtn(btn, st) {
+    if (!btn) return;
+    btn.dataset.variant = st.variant;
+    btn.dataset.size = st.size;
+    btn.dataset.icon = st.icon;
+    btn.dataset.disabled = st.disabled;
+    btn.innerHTML = '<span class="btn-icon">' + ICON_SVG_VG + '</span><span>Click me</span>';
+  }
+
+  function buildFeedbackCode(target, headline) {
+    const lines = ['<span class="ccom">// ' + headline + '</span>', '<span class="ctag">&lt;Button</span>'];
+    lines.push('  <span class="ckey">variant</span>=<span class="cstr">"' + target.variant + '"</span>');
+    lines.push('  <span class="ckey">size</span>=<span class="cstr">"' + target.size + '"</span>');
+    if (target.icon) lines.push('  <span class="ckey">icon</span>');
+    if (target.disabled) lines.push('  <span class="ckey">disabled</span>');
+    lines.push('<span class="ctag">&gt;</span>');
+    lines.push('  Click me');
+    lines.push('<span class="ctag">&lt;/Button&gt;</span>');
+    return lines.join('\n');
+  }
+
+  // ==========================================================
+  //  视觉关 (Visual Game) — target matching
+  // ==========================================================
+  const vgLevels = [
+    { id: 1, target: { variant: "ghost",     size: "md", icon: false, disabled: false }, init: { variant: "primary", size: "md", icon: false, disabled: false } },
+    { id: 2, target: { variant: "secondary", size: "lg", icon: false, disabled: false }, init: { variant: "primary", size: "md", icon: false, disabled: false } },
+    { id: 3, target: { variant: "ghost",     size: "sm", icon: true,  disabled: true  }, init: { variant: "primary", size: "md", icon: false, disabled: false } }
+  ];
+  const vgState = {};
+  let vgSolvedCount = 0;
+  const vgSolvedRec = { 1: false, 2: false, 3: false };
+
+  function vgRenderControls(levelId) {
+    const st = vgState[levelId];
+    const c = document.querySelector('[data-vgl-controls="' + levelId + '"]');
+    if (!c) return;
+    c.innerHTML =
+      '<div class="vg-ctrl-row"><span class="vg-ctrl-label">Variant</span>' +
+      '<div class="tf-toggle-group" data-vg-prop="variant">' +
+        ['primary','secondary','ghost'].map(v =>
+          '<button class="tf-toggle' + (st.variant === v ? ' active' : '') + '" data-value="' + v + '">' + v.charAt(0).toUpperCase() + v.slice(1) + '</button>'
+        ).join('') +
+      '</div></div>' +
+      '<div class="vg-ctrl-row"><span class="vg-ctrl-label">Size</span>' +
+      '<div class="tf-toggle-group" data-vg-prop="size">' +
+        ['sm','md','lg'].map(s =>
+          '<button class="tf-toggle' + (st.size === s ? ' active' : '') + '" data-value="' + s + '">' + s.toUpperCase() + '</button>'
+        ).join('') +
+      '</div></div>' +
+      '<div class="vg-ctrl-row"><span class="vg-ctrl-label">Icon</span>' +
+      '<div class="tf-bool"><span class="tf-bool-label">显示图标</span>' +
+      '<button class="tf-switch' + (st.icon ? ' on' : '') + '" data-vg-prop="icon"></button>' +
+      '</div></div>' +
+      '<div class="vg-ctrl-row"><span class="vg-ctrl-label">Disabled</span>' +
+      '<div class="tf-bool"><span class="tf-bool-label">禁用</span>' +
+      '<button class="tf-switch' + (st.disabled ? ' on' : '') + '" data-vg-prop="disabled"></button>' +
+      '</div></div>';
+
+    c.querySelectorAll('.tf-toggle-group').forEach(group => {
+      const prop = group.dataset.vgProp;
+      group.querySelectorAll('.tf-toggle').forEach(btn => {
+        btn.addEventListener('click', () => {
+          vgState[levelId][prop] = btn.dataset.value;
+          vgUpdate(levelId);
+        });
+      });
+    });
+    c.querySelectorAll('.tf-switch').forEach(sw => {
+      const prop = sw.dataset.vgProp;
+      sw.addEventListener('click', () => {
+        vgState[levelId][prop] = !vgState[levelId][prop];
+        vgUpdate(levelId);
+      });
+    });
+  }
+
+  function vgUpdate(levelId) {
+    const st = vgState[levelId];
+    const lv = vgLevels.find(l => l.id == levelId);
+    const yoursBtn = document.querySelector('[data-vgl-yours="' + levelId + '"]');
+    renderDemoBtn(yoursBtn, st);
+    vgRenderControls(levelId);
+    const match = JSON.stringify(st) === JSON.stringify(lv.target);
+    const yoursCanvas = yoursBtn ? yoursBtn.closest('.vg-canvas') : null;
+    if (yoursCanvas) yoursCanvas.classList.toggle('match', match);
+    if (match && !vgSolvedRec[levelId]) {
+      vgSolvedRec[levelId] = true;
+      vgSolvedCount++;
+      const lvEl = document.querySelector('[data-vgl="' + levelId + '"]');
+      lvEl.classList.add('solved');
+      lvEl.querySelector('.status').textContent = '已通关 ✓';
+      lvEl.querySelector('[data-vgl-feedback]').innerHTML = buildFeedbackCode(lv.target, '✓ 通关 — 你切对了所有 prop');
+      document.getElementById('vg-solved').textContent = vgSolvedCount;
+    }
+  }
+
+  vgLevels.forEach(lv => {
+    vgState[lv.id] = Object.assign({}, lv.init);
+    renderDemoBtn(document.querySelector('[data-vgl-target="' + lv.id + '"]'), lv.target);
+    renderDemoBtn(document.querySelector('[data-vgl-yours="' + lv.id + '"]'), lv.init);
+    vgRenderControls(lv.id);
+  });
+
+  // ==========================================================
+  //  代码关 (Code Game) — select prop values in code
+  // ==========================================================
+  const cgLevels = [
+    { id: 1, target: { variant: "secondary", size: "md", icon: false, disabled: false }, init: { variant: "primary", size: "md", icon: false, disabled: false }, interactive: ["variant"] },
+    { id: 2, target: { variant: "ghost",     size: "md", icon: true,  disabled: false }, init: { variant: "primary", size: "md", icon: false, disabled: false }, interactive: ["variant","icon"] },
+    { id: 3, target: { variant: "secondary", size: "lg", icon: true,  disabled: true  }, init: { variant: "primary", size: "md", icon: false, disabled: false }, interactive: ["variant","size","icon","disabled"] }
+  ];
+  const cgState = {};
+  let cgSolvedCount = 0;
+  const cgSolvedRec = { 1: false, 2: false, 3: false };
+
+  function cgRenderCode(levelId) {
+    const lv = cgLevels.find(l => l.id == levelId);
+    const st = cgState[levelId];
+    const c = document.querySelector('[data-cgl-code="' + levelId + '"]');
+    if (!c) return;
+    const propLine = (prop, value) => {
+      const inter = lv.interactive.indexOf(prop) !== -1;
+      if (prop === 'variant' || prop === 'size') {
+        const opts = prop === 'variant' ? ['primary','secondary','ghost'] : ['sm','md','lg'];
+        if (inter) {
+          return '  <span class="ckey">' + prop + '</span>=<span class="cstr">"</span><select data-cg-prop="' + prop + '">' +
+            opts.map(o => '<option value="' + o + '"' + (o === value ? ' selected' : '') + '>' + o + '</option>').join('') +
+            '</select><span class="cstr">"</span>';
+        } else {
+          return '  <span class="ckey">' + prop + '</span>=<span class="cstr">"' + value + '"</span>';
+        }
+      } else {
+        if (inter) {
+          return '  <label class="cg-bool"><input type="checkbox" data-cg-prop="' + prop + '"' + (value ? ' checked' : '') + '/><span class="ckey">' + prop + '</span></label>';
+        } else if (value) {
+          return '  <span class="ckey">' + prop + '</span>';
+        } else {
+          return null;
+        }
+      }
+    };
+    const lines = [
+      '<span class="ctag">&lt;Button</span>',
+      propLine('variant', st.variant),
+      propLine('size', st.size),
+      propLine('icon', st.icon),
+      propLine('disabled', st.disabled),
+      '<span class="ctag">&gt;</span>',
+      '  Click me',
+      '<span class="ctag">&lt;/Button&gt;</span>'
+    ].filter(l => l !== null);
+    c.innerHTML = lines.join('\n');
+
+    c.querySelectorAll('select[data-cg-prop]').forEach(sel => {
+      sel.addEventListener('change', () => {
+        cgState[levelId][sel.dataset.cgProp] = sel.value;
+        cgUpdate(levelId);
+      });
+    });
+    c.querySelectorAll('input[data-cg-prop]').forEach(inp => {
+      inp.addEventListener('change', () => {
+        cgState[levelId][inp.dataset.cgProp] = inp.checked;
+        cgUpdate(levelId);
+      });
+    });
+  }
+
+  function cgUpdate(levelId) {
+    const st = cgState[levelId];
+    const lv = cgLevels.find(l => l.id == levelId);
+    cgRenderCode(levelId);
+    const yoursBtn = document.querySelector('[data-cgl-yours="' + levelId + '"]');
+    renderDemoBtn(yoursBtn, st);
+    const match = JSON.stringify(st) === JSON.stringify(lv.target);
+    const yoursCanvas = yoursBtn ? yoursBtn.closest('.vg-canvas') : null;
+    if (yoursCanvas) yoursCanvas.classList.toggle('match', match);
+    if (match && !cgSolvedRec[levelId]) {
+      cgSolvedRec[levelId] = true;
+      cgSolvedCount++;
+      const lvEl = document.querySelector('[data-cgl="' + levelId + '"]');
+      lvEl.classList.add('solved');
+      lvEl.querySelector('.status').textContent = '已通关 ✓';
+      lvEl.querySelector('[data-cgl-feedback]').innerHTML = buildFeedbackCode(lv.target, '✓ 通关 — 你在代码侧选对了');
+      document.getElementById('cg-solved').textContent = cgSolvedCount;
+    }
+  }
+
+  cgLevels.forEach(lv => {
+    cgState[lv.id] = Object.assign({}, lv.init);
+    renderDemoBtn(document.querySelector('[data-cgl-target="' + lv.id + '"]'), lv.target);
+    renderDemoBtn(document.querySelector('[data-cgl-yours="' + lv.id + '"]'), lv.init);
+    cgRenderCode(lv.id);
+  });
+
+  // ==========================================================
+  //  值的旅行 (Value Journey) — 6 阶段时序流向
+  // ==========================================================
+  const vjStepContent = {
+    variant: {
+      figma: 'Variant: <span class="vj-val">primary</span>',
+      call: 'variant=<span class="vj-val">"primary"</span>',
+      param: '({ <span class="vj-val">variant</span> })',
+      classname: '`btn ${<span class="vj-val">variant</span>}`',
+      css: '.btn.<span class="vj-val">primary</span> { color: red }',
+      render: '<span class="vj-val">[红色按钮]</span>'
+    },
+    size: {
+      figma: 'Size: <span class="vj-val">md</span>',
+      call: 'size=<span class="vj-val">"md"</span>',
+      param: '({ <span class="vj-val">size</span> })',
+      classname: '`btn ${<span class="vj-val">size</span>}`',
+      css: '.btn.<span class="vj-val">md</span> { padding: 10px }',
+      render: '<span class="vj-val">[中号按钮]</span>'
+    },
+    icon: {
+      figma: 'Icon: <span class="vj-val">true</span>',
+      call: '<span class="vj-val">icon</span> <span class="ccom">(简写)</span>',
+      param: '({ <span class="vj-val">icon</span> })',
+      classname: '{<span class="vj-val">icon</span> &amp;&amp; &lt;Icon /&gt;}',
+      css: '.icon { display: inline }',
+      render: '<span class="vj-val">[★ 按钮]</span>'
+    },
+    disabled: {
+      figma: 'Disabled: <span class="vj-val">true</span>',
+      call: '<span class="vj-val">disabled</span>',
+      param: '({ <span class="vj-val">disabled</span> })',
+      classname: '<span class="vj-val">disabled</span>={disabled}',
+      css: '.btn[disabled] { opacity: .5 }',
+      render: '<span class="vj-val">[灰色按钮]</span>'
+    }
+  };
+
+  function vjPlay(prop) {
+    const steps = document.querySelectorAll('#vj-flow .vj-step');
+    const content = vjStepContent[prop];
+    steps.forEach(s => s.classList.remove('lit'));
+    steps.forEach(s => {
+      const target = s.querySelector('[data-vj-content]');
+      if (target) {
+        const where = target.dataset.vjContent;
+        if (content[where]) target.innerHTML = content[where];
+      }
+    });
+    steps.forEach((s, i) => {
+      setTimeout(() => s.classList.add('lit'), i * 180);
+    });
+    document.querySelectorAll('.vj-pill').forEach(p => {
+      p.classList.toggle('active', p.dataset.vjProp === prop);
+    });
+  }
+
+  document.querySelectorAll('.vj-pill').forEach(pill => {
+    pill.addEventListener('click', () => vjPlay(pill.dataset.vjProp));
+  });
+
+  // ==========================================================
+  //  工作流对照 (Workflow) — 4 步同步 Figma ↔ 代码
+  // ==========================================================
+  const wfSteps = [
+    {
+      figmaTitle: '① Create Component',
+      figmaDesc: '选中你的 Button 设计 → ⌥ ⌘ K（或右键 → Create Component）',
+      figmaResult: '⬢ 你的 Button 现在是个主组件',
+      codeTitle: 'function 声明',
+      code: '<span class="ckey">function</span> <span class="ctag">Button</span>() {\n  <span class="ckey">return</span> <span class="ctag">&lt;button&gt;</span>Click me<span class="ctag">&lt;/button&gt;</span>;\n}',
+      codeDesc: '空函数 — 还没接收 prop'
+    },
+    {
+      figmaTitle: '② Add Variant Property',
+      figmaDesc: 'Properties → + → Variant → 输入 "primary, secondary, ghost"',
+      figmaResult: '⬢ Variant Property 已添加（3 个值）',
+      codeTitle: '加上 variant 参数',
+      code: '<span class="ckey">function</span> <span class="ctag">Button</span>({ <span class="tag-variant">variant</span> }) {\n  <span class="ckey">return</span> (\n    <span class="ctag">&lt;button</span> className={`btn ${<span class="tag-variant">variant</span>}`}<span class="ctag">&gt;</span>\n      Click me\n    <span class="ctag">&lt;/button&gt;</span>\n  );\n}',
+      codeDesc: 'variant 进了参数 → 进了 className → 决定颜色'
+    },
+    {
+      figmaTitle: '③ Add Boolean Property',
+      figmaDesc: 'Properties → + → Boolean → 命名 "disabled" → 默认 false',
+      figmaResult: '⬢ Boolean Property "disabled" 已添加',
+      codeTitle: '加上 disabled 参数',
+      code: '<span class="ckey">function</span> <span class="ctag">Button</span>({ <span class="tag-variant">variant</span>, <span class="tag-disabled">disabled</span> }) {\n  <span class="ckey">return</span> (\n    <span class="ctag">&lt;button</span>\n      className={`btn ${<span class="tag-variant">variant</span>}`}\n      <span class="tag-disabled">disabled</span>={<span class="tag-disabled">disabled</span>}\n    <span class="ctag">&gt;</span>\n      Click me\n    <span class="ctag">&lt;/button</span><span class="ctag">&gt;</span>\n  );\n}',
+      codeDesc: 'disabled 进了参数 → 直接传给 HTML 的 button'
+    },
+    {
+      figmaTitle: '④ Drag Instance + 选值',
+      figmaDesc: '从 Assets 面板拖一个 Button 出来 → Properties 选 Variant=primary',
+      figmaResult: '◇ Instance · Variant: primary · disabled: false',
+      codeTitle: '调用方填值',
+      code: '<span class="ccom">// 调用方代码</span>\n<span class="ctag">&lt;Button</span>\n  <span class="tag-variant">variant</span>=<span class="cstr">"primary"</span>\n<span class="ctag">/&gt;</span>',
+      codeDesc: '这就是「使用」组件 — 等价于 Figma 拖出 Instance + 选值'
+    }
+  ];
+
+  let wfCurrent = 0;
+
+  function wfRender() {
+    const step = wfSteps[wfCurrent];
+    // 切换 Figma mock UI（左侧）
+    document.querySelectorAll('.wf-figma-mock').forEach((el, i) => {
+      el.classList.toggle('active', i === wfCurrent);
+    });
+    // 重新触发新加 property 的脉冲动画
+    const activeMock = document.querySelector('.wf-figma-mock.active');
+    if (activeMock) {
+      activeMock.querySelectorAll('.wfm-property.new').forEach(p => {
+        p.style.animation = 'none';
+        void p.offsetWidth;
+        p.style.animation = '';
+      });
+    }
+    document.getElementById('wf-code-title').textContent = step.codeTitle;
+    document.getElementById('wf-code-content').innerHTML = step.code;
+    document.getElementById('wf-code-desc').textContent = step.codeDesc;
+    document.querySelectorAll('.wf-step-pill').forEach((p, i) => {
+      p.classList.toggle('active', i === wfCurrent);
+      p.classList.toggle('done', i < wfCurrent);
+    });
+    document.getElementById('wf-step-info').textContent = 'Step ' + (wfCurrent + 1) + ' / ' + wfSteps.length;
+    document.getElementById('wf-prev').disabled = wfCurrent === 0;
+    document.getElementById('wf-next').textContent = wfCurrent === wfSteps.length - 1 ? '从头来一遍 ↻' : '下一步 →';
+    document.getElementById('wf-done').style.display = wfCurrent === wfSteps.length - 1 ? 'block' : 'none';
+  }
+
+  document.getElementById('wf-prev').addEventListener('click', () => {
+    if (wfCurrent > 0) { wfCurrent--; wfRender(); }
+  });
+  document.getElementById('wf-next').addEventListener('click', () => {
+    if (wfCurrent < wfSteps.length - 1) {
+      wfCurrent++;
+    } else {
+      wfCurrent = 0; // 从头来
+    }
+    wfRender();
+  });
+  document.querySelectorAll('.wf-step-pill').forEach((pill, i) => {
+    pill.addEventListener('click', () => {
+      wfCurrent = i;
+      wfRender();
+    });
+  });
+
+  wfRender();
+</script>
+
+</body>
+</html>
