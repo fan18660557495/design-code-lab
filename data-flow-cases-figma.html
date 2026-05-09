@@ -1,0 +1,2253 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>数据流实战 · 5 个真实场景 — Design × Code Lab</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,300..900&family=Geist:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Noto+Sans+SC:wght@300;400;500;700;900&family=Noto+Serif+SC:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f3eee5;
+    --bg-2: #ebe4d4;
+    --ink: #16161d;
+    --ink-soft: #4a4a55;
+    --ink-mute: #8a8a92;
+    --line: #d5cdba;
+    --line-soft: #e3dcca;
+    --accent: #ff4d2e;
+    --accent-soft: #ffe4dc;
+    --blue: #0a4cff;
+    --blue-soft: #dde6ff;
+    --green: #1f6b3a;
+    --green-soft: #d4ecdb;
+    --yellow: #ffcf3d;
+    --paper: #faf7f0;
+    --shadow: 0 1px 0 rgba(0,0,0,0.04), 0 8px 24px rgba(22,22,29,0.06);
+
+    /* data-flow specific */
+    --prop-color: #ff8a4a;
+    --state-color: #1f6b3a;
+    --context-color: #9333ea;
+    --context-soft: rgba(147, 51, 234, 0.12);
+    --drilling-color: #d4a017;
+
+    /* tree shading */
+    --tree-bg-1: #faf7f0;
+    --tree-bg-2: #f3ecdc;
+    --tree-bg-3: #ebe2cd;
+    --tree-bg-4: #e2d6bb;
+    --node-stroke: #c4b896;
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'Geist', 'Noto Sans SC', system-ui, -apple-system, sans-serif;
+    font-size: 16px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    background-image:
+      radial-gradient(circle at 1px 1px, rgba(22,22,29,0.05) 1px, transparent 0);
+    background-size: 24px 24px;
+  }
+
+  /* Typography */
+  .display-cn { font-family: 'Noto Serif SC', 'Fraunces', serif; font-weight: 900; letter-spacing: -0.01em; }
+  .display-en { font-family: 'Fraunces', 'Noto Serif SC', serif; font-weight: 600; font-style: italic; letter-spacing: -0.02em; }
+  .mono { font-family: 'JetBrains Mono', monospace; }
+  .label { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-mute); }
+
+  /* Layout */
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 0 32px; }
+
+  /* Top bar */
+  .topbar {
+    border-bottom: 1px dashed var(--line);
+    padding: 16px 0;
+    background: var(--bg);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    backdrop-filter: blur(8px);
+    background: rgba(243, 238, 229, 0.85);
+  }
+  .topbar-inner { display: flex; justify-content: space-between; align-items: center; gap: 24px; flex-wrap: wrap; }
+  .brand { font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 600; }
+  .brand .dot { display: inline-block; width: 8px; height: 8px; background: var(--accent); border-radius: 50%; margin-right: 8px; vertical-align: middle; animation: pulse 2s ease-in-out infinite; }
+  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+  .nav-links { display: flex; gap: 18px; font-size: 13px; flex-wrap: wrap; }
+  .nav-links a { color: var(--ink-soft); text-decoration: none; transition: color 0.2s; }
+  .nav-links a:hover { color: var(--accent); }
+  .nav-links a.current { color: var(--accent); font-weight: 600; }
+
+  /* Hero */
+  .hero { padding: 100px 0 80px; position: relative; overflow: hidden; }
+  .hero-meta { display: flex; gap: 24px; margin-bottom: 32px; align-items: center; flex-wrap: wrap; }
+  .hero-meta .pill { padding: 6px 12px; border: 1px solid var(--ink); border-radius: 100px; font-size: 11px; font-family: 'JetBrains Mono', monospace; letter-spacing: 0.05em; }
+  .hero-meta .pill.fill { background: var(--ink); color: var(--bg); }
+  .hero h1 {
+    font-family: 'Noto Serif SC', 'Fraunces', serif;
+    font-weight: 900;
+    font-size: clamp(48px, 7vw, 92px);
+    line-height: 0.95;
+    letter-spacing: -0.03em;
+    margin: 0 0 24px;
+  }
+  .hero h1 .em { font-family: 'Fraunces', serif; font-style: italic; font-weight: 500; color: var(--accent); }
+  .hero h1 .x { display: inline-block; transform: translateY(-0.05em); margin: 0 0.05em; color: var(--ink-mute); font-weight: 300; }
+  .hero p.lede {
+    font-size: 20px;
+    line-height: 1.5;
+    max-width: 640px;
+    color: var(--ink-soft);
+    margin: 0 0 40px;
+  }
+  .hero p.lede .em { font-family: 'Fraunces', serif; font-style: italic; color: var(--accent); }
+  .hero-grid {
+    display: grid;
+    grid-template-columns: 1.4fr 1fr;
+    gap: 48px;
+    align-items: end;
+  }
+  @media (max-width: 880px) { .hero-grid { grid-template-columns: 1fr; } }
+  .hero-side {
+    border-left: 1px dashed var(--line);
+    padding-left: 24px;
+    font-size: 13px;
+    color: var(--ink-soft);
+  }
+  .hero-side .row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px dashed var(--line); }
+  .hero-side .row:last-child { border-bottom: none; }
+  .hero-side .row .k { color: var(--ink-mute); font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.05em; text-transform: uppercase; }
+  .hero-side .row .v { font-weight: 500; }
+
+  /* Section */
+  section { padding: 80px 0; border-top: 1px solid var(--line); position: relative; }
+  .section-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 56px; flex-wrap: wrap; gap: 16px; }
+  .section-num { font-family: 'JetBrains Mono', monospace; font-size: 13px; color: var(--ink-mute); letter-spacing: 0.1em; }
+  .section-num strong { color: var(--accent); }
+  .section-title {
+    font-family: 'Noto Serif SC', serif;
+    font-weight: 900;
+    font-size: clamp(32px, 4.5vw, 52px);
+    line-height: 1.05;
+    letter-spacing: -0.02em;
+    margin: 0;
+    max-width: 18ch;
+  }
+  .section-title .em { font-family: 'Fraunces', serif; font-style: italic; font-weight: 500; color: var(--accent); }
+  .section-sub { color: var(--ink-soft); font-size: 17px; max-width: 38ch; line-height: 1.55; margin: 0; }
+
+  /* Problem block */
+  .problem-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 32px;
+  }
+  @media (max-width: 880px) { .problem-grid { grid-template-columns: 1fr; } }
+  .problem-card {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 28px;
+    position: relative;
+  }
+  .problem-card.bad { border-color: var(--accent); background: var(--accent-soft); }
+  .problem-card.good { border-color: var(--green); background: var(--green-soft); }
+  .problem-card .tag {
+    position: absolute; top: -12px; left: 24px;
+    background: var(--bg); padding: 2px 10px;
+    font-family: 'JetBrains Mono', monospace; font-size: 11px;
+    letter-spacing: 0.1em;
+  }
+  .problem-card.bad .tag { color: var(--accent); border: 1px solid var(--accent); }
+  .problem-card.good .tag { color: var(--green); border: 1px solid var(--green); }
+  .problem-card h3 { font-family: 'Noto Serif SC', serif; font-size: 20px; margin: 0 0 12px; font-weight: 700; }
+  .problem-card p { margin: 0 0 8px; color: var(--ink-soft); font-size: 14px; line-height: 1.6; }
+  .problem-card p:last-child { margin-bottom: 0; }
+  .problem-card strong { color: var(--ink); }
+
+  /* Quote */
+  .quote-box {
+    margin-top: 36px;
+    padding: 28px 36px;
+    background: var(--ink);
+    color: var(--bg);
+    border-radius: 6px;
+    position: relative;
+    font-family: 'Noto Serif SC', serif;
+    font-size: 22px;
+    line-height: 1.5;
+    font-weight: 500;
+  }
+  .quote-box .quote-mark {
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    font-size: 80px;
+    line-height: 1;
+    color: var(--accent);
+    position: absolute;
+    top: 8px; left: 18px;
+    opacity: 0.5;
+  }
+  .quote-box .quote-attr {
+    display: block;
+    margin-top: 8px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: rgba(255,255,255,0.5);
+    letter-spacing: 0.05em;
+    font-weight: 400;
+  }
+
+  /* Case header */
+  .case-meta {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 16px;
+    padding: 4px 10px 4px 6px;
+    background: var(--ink);
+    color: var(--bg);
+    border-radius: 100px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.08em;
+  }
+  .case-meta .num {
+    background: var(--accent);
+    color: white;
+    border-radius: 50%;
+    width: 22px; height: 22px;
+    display: inline-flex; align-items: center; justify-content: center;
+    font-weight: 700;
+  }
+  .case-question {
+    margin-top: 18px;
+    padding: 18px 22px;
+    background: var(--accent-soft);
+    border-left: 3px solid var(--accent);
+    border-radius: 4px;
+    font-size: 15px;
+    line-height: 1.6;
+  }
+  .case-question .q-tag {
+    display: inline-block;
+    background: var(--accent);
+    color: white;
+    padding: 2px 8px;
+    border-radius: 100px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    margin-right: 8px;
+    vertical-align: 1px;
+  }
+  .case-question strong { color: var(--ink); font-weight: 600; }
+
+  /* Case 1: drag data nodes to tree layers */
+  .c1-stage {
+    margin-top: 28px;
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    overflow: hidden;
+  }
+  .c1-grid {
+    display: grid;
+    grid-template-columns: 1fr 1.2fr;
+    gap: 0;
+  }
+  @media (max-width: 880px) { .c1-grid { grid-template-columns: 1fr; } }
+  .c1-pool {
+    padding: 24px;
+    border-right: 1px dashed var(--line);
+    background: var(--bg);
+  }
+  @media (max-width: 880px) { .c1-pool { border-right: none; border-bottom: 1px dashed var(--line); } }
+  .c1-pool-head {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    color: var(--ink-mute);
+    text-transform: uppercase;
+    margin-bottom: 16px;
+  }
+  .c1-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+  .c1-chip {
+    padding: 6px 12px;
+    background: white;
+    border: 1.5px solid var(--ink);
+    border-radius: 100px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    cursor: grab;
+    user-select: none;
+    transition: all 0.15s;
+    position: relative;
+  }
+  .c1-chip:hover { background: var(--accent-soft); border-color: var(--accent); transform: translateY(-1px); }
+  .c1-chip:active { cursor: grabbing; }
+  .c1-chip.placed { opacity: 0.35; pointer-events: none; text-decoration: line-through; }
+  .c1-chip.dragging { opacity: 0.5; }
+  .c1-chip .chip-icon {
+    display: inline-block;
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    margin-right: 6px;
+    vertical-align: middle;
+  }
+  .c1-tree {
+    padding: 24px;
+    background: var(--paper);
+  }
+  .c1-tree-head {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    color: var(--ink-mute);
+    text-transform: uppercase;
+    margin-bottom: 16px;
+  }
+  .c1-tree-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .c1-node {
+    border: 1.5px dashed var(--node-stroke);
+    border-radius: 6px;
+    padding: 12px 14px;
+    transition: all 0.2s;
+  }
+  .c1-node[data-depth="1"] { background: var(--tree-bg-1); margin-left: 0; }
+  .c1-node[data-depth="2"] { background: var(--tree-bg-2); margin-left: 16px; }
+  .c1-node[data-depth="3"] { background: var(--tree-bg-3); margin-left: 32px; }
+  .c1-node[data-depth="4"] { background: var(--tree-bg-4); margin-left: 48px; }
+  .c1-node-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 6px;
+    gap: 10px;
+  }
+  .c1-node-name {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    font-weight: 600;
+  }
+  .c1-node-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--ink-mute);
+    letter-spacing: 0.05em;
+  }
+  .c1-drop {
+    min-height: 44px;
+    border-radius: 4px;
+    background: rgba(255,255,255,0.45);
+    border: 1.5px dashed transparent;
+    padding: 6px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    align-items: center;
+    transition: all 0.15s;
+  }
+  .c1-drop:empty::before {
+    content: '↓ 拖数据到这层';
+    width: 100%;
+    text-align: center;
+    color: var(--ink-mute);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    opacity: 0.5;
+  }
+  .c1-drop.over { border-color: var(--accent); background: var(--accent-soft); }
+  .c1-drop.correct { border-color: var(--green); background: var(--green-soft); border-style: solid; }
+  .c1-drop.wrong { border-color: var(--accent); background: rgba(255, 77, 46, 0.1); animation: shake 0.4s; }
+  @keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-6px); }
+    75% { transform: translateX(6px); }
+  }
+  .c1-drop .placed-chip {
+    padding: 4px 10px;
+    border-radius: 100px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    background: white;
+    border: 1px solid var(--green);
+    color: var(--green);
+    font-weight: 600;
+  }
+  .c1-drop .placed-chip .chip-icon {
+    display: inline-block; width: 6px; height: 6px; border-radius: 50%;
+    background: var(--green); margin-right: 4px;
+  }
+
+  .c1-actions {
+    padding: 16px 24px;
+    background: var(--ink);
+    color: var(--bg);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+  .c1-progress {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: rgba(255,255,255,0.7);
+  }
+  .c1-progress strong { color: var(--accent); font-weight: 700; }
+  .c1-reset {
+    background: transparent;
+    border: 1px solid rgba(255,255,255,0.3);
+    color: var(--bg);
+    padding: 6px 14px;
+    border-radius: 100px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.05em;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .c1-reset:hover { background: rgba(255,255,255,0.1); border-color: var(--accent); color: var(--accent); }
+
+  .case-answer {
+    margin-top: 24px;
+    background: var(--ink);
+    color: var(--bg);
+    border-radius: 6px;
+    padding: 24px 28px;
+    position: relative;
+  }
+  .case-answer .ans-tag {
+    display: inline-block;
+    background: var(--accent);
+    color: white;
+    padding: 3px 10px;
+    border-radius: 100px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    margin-bottom: 14px;
+  }
+  .case-answer h4 {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 18px;
+    margin: 0 0 12px;
+    font-weight: 700;
+  }
+  .case-answer p { margin: 0 0 8px; color: rgba(255,255,255,0.8); font-size: 14px; line-height: 1.7; }
+  .case-answer p:last-child { margin-bottom: 0; }
+  .case-answer strong { color: var(--accent); font-weight: 600; }
+  .case-answer ul {
+    margin: 8px 0 0; padding-left: 20px; color: rgba(255,255,255,0.75); font-size: 14px;
+  }
+  .case-answer ul li { padding: 3px 0; }
+  .case-answer code {
+    background: rgba(255,255,255,0.08);
+    padding: 1px 6px;
+    border-radius: 3px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: #ffd166;
+  }
+
+  /* Case 2: state location */
+  .c2-stage {
+    margin-top: 28px;
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 28px;
+  }
+  .c2-tree {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+  .c2-node {
+    border: 1.5px dashed var(--node-stroke);
+    border-radius: 6px;
+    padding: 14px 18px;
+    transition: all 0.25s;
+    cursor: pointer;
+    position: relative;
+  }
+  .c2-node[data-depth="1"] { background: var(--tree-bg-1); margin-left: 0; }
+  .c2-node[data-depth="2"] { background: var(--tree-bg-2); margin-left: 24px; }
+  .c2-node[data-depth="3"] { background: var(--tree-bg-3); margin-left: 48px; }
+  .c2-node-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+  .c2-node-name {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    font-weight: 600;
+  }
+  .c2-node-meta {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--ink-mute);
+    letter-spacing: 0.05em;
+  }
+  .c2-state-slot {
+    margin-top: 10px;
+    min-height: 38px;
+    background: rgba(255,255,255,0.5);
+    border: 1.5px dashed transparent;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--ink-mute);
+    padding: 4px;
+  }
+  .c2-state-slot.over { border-color: var(--accent); background: var(--accent-soft); }
+  .c2-state-slot.correct {
+    border-color: var(--green);
+    background: var(--green-soft);
+    border-style: solid;
+    color: var(--green);
+    font-weight: 600;
+  }
+  .c2-state-slot.wrong {
+    border-color: var(--accent);
+    background: rgba(255, 77, 46, 0.1);
+    border-style: solid;
+    animation: shake 0.4s;
+  }
+  .c2-state-slot.has-chip { border-style: solid; padding: 6px; }
+  .c2-state-token {
+    padding: 4px 12px;
+    background: white;
+    border: 1.5px solid var(--state-color);
+    border-radius: 100px;
+    color: var(--state-color);
+    font-weight: 600;
+    cursor: grab;
+    user-select: none;
+  }
+  .c2-state-token.dragging { opacity: 0.4; }
+  .c2-state-token::before {
+    content: 'state';
+    display: inline-block;
+    background: var(--state-color);
+    color: white;
+    padding: 0 6px;
+    border-radius: 100px;
+    font-size: 9px;
+    margin-right: 6px;
+    vertical-align: 1px;
+    letter-spacing: 0.05em;
+  }
+  .c2-pool {
+    margin-top: 12px;
+    padding: 14px 18px;
+    background: var(--bg);
+    border: 1px dashed var(--line);
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+  .c2-pool-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--ink-mute);
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+  .c2-hint {
+    margin-top: 16px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--ink-soft);
+    line-height: 1.7;
+  }
+  .c2-hint .key { color: var(--accent); font-weight: 600; }
+
+  /* Case 3: theme nesting */
+  .c3-stage {
+    margin-top: 28px;
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 28px;
+  }
+  .c3-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 28px;
+    align-items: start;
+  }
+  @media (max-width: 880px) { .c3-grid { grid-template-columns: 1fr; } }
+  .c3-providers {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+  .c3-providers-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--ink-mute);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+  }
+  .c3-prov {
+    border: 1.5px solid var(--line);
+    border-radius: 6px;
+    padding: 14px 16px;
+    background: white;
+    cursor: grab;
+    user-select: none;
+    margin-bottom: 8px;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .c3-prov:hover { transform: translateY(-1px); box-shadow: var(--shadow); }
+  .c3-prov.dragging { opacity: 0.4; }
+  .c3-prov-handle {
+    color: var(--ink-mute);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14px;
+    cursor: grab;
+  }
+  .c3-prov-swatch {
+    width: 16px; height: 16px;
+    border-radius: 4px;
+    border: 1px solid var(--line);
+    flex-shrink: 0;
+  }
+  .c3-prov[data-theme="light"] { border-left: 4px solid #d5cdba; }
+  .c3-prov[data-theme="dark"] { border-left: 4px solid #16161d; }
+  .c3-prov[data-theme="brand"] { border-left: 4px solid var(--accent); }
+  .c3-prov[data-theme="light"] .c3-prov-swatch { background: #f3eee5; }
+  .c3-prov[data-theme="dark"] .c3-prov-swatch { background: #16161d; }
+  .c3-prov[data-theme="brand"] .c3-prov-swatch { background: var(--accent); }
+  .c3-prov-name {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    font-weight: 600;
+  }
+  .c3-prov-meta {
+    margin-left: auto;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--ink-mute);
+    letter-spacing: 0.05em;
+  }
+  .c3-output-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--ink-mute);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+  }
+  .c3-tree {
+    background: var(--bg);
+    border: 1px dashed var(--line);
+    border-radius: 6px;
+    padding: 16px;
+  }
+  .c3-tree-line {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    line-height: 2;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .c3-tree-line .indent {
+    display: inline-block;
+    color: var(--ink-mute);
+    width: 1.2ch;
+  }
+  .c3-tree-line .label {
+    color: var(--ink);
+    font-weight: 500;
+  }
+  .c3-tree-line .arrow {
+    color: var(--ink-mute);
+    margin: 0 6px;
+  }
+  .c3-tree-line .computed {
+    padding: 1px 10px;
+    border-radius: 100px;
+    font-size: 11px;
+    font-weight: 600;
+    border: 1.5px solid;
+    transition: all 0.3s ease;
+  }
+  .c3-tree-line .computed[data-out="light"] { background: #f3eee5; color: #16161d; border-color: #d5cdba; }
+  .c3-tree-line .computed[data-out="dark"] { background: #16161d; color: #f3eee5; border-color: #16161d; }
+  .c3-tree-line .computed[data-out="brand"] { background: var(--accent-soft); color: var(--accent); border-color: var(--accent); }
+  .c3-explain {
+    margin-top: 14px;
+    padding: 12px 14px;
+    background: var(--ink);
+    color: var(--bg);
+    border-radius: 4px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    line-height: 1.7;
+  }
+  .c3-explain .key { color: var(--accent); }
+  .c3-explain .lvl { color: #ffd166; }
+
+  /* Case 4: layered overrides */
+  .c4-stage {
+    margin-top: 28px;
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 28px;
+  }
+  .c4-layers {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+  .c4-layer {
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 18px 20px;
+    margin-bottom: 8px;
+    background: white;
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    gap: 16px;
+    align-items: center;
+    transition: all 0.2s;
+  }
+  .c4-layer.global { border-left: 4px solid var(--ink); }
+  .c4-layer.context { border-left: 4px solid var(--blue); }
+  .c4-layer.local { border-left: 4px solid var(--accent); }
+  .c4-layer-num {
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    font-size: 32px;
+    color: var(--ink-mute);
+    line-height: 1;
+    width: 28px;
+  }
+  .c4-layer.global .c4-layer-num { color: var(--ink); }
+  .c4-layer.context .c4-layer-num { color: var(--blue); }
+  .c4-layer.local .c4-layer-num { color: var(--accent); }
+  .c4-layer-info h5 {
+    font-family: 'Noto Serif SC', serif;
+    margin: 0 0 4px;
+    font-weight: 700;
+    font-size: 15px;
+  }
+  .c4-layer-info p {
+    margin: 0;
+    color: var(--ink-soft);
+    font-size: 13px;
+    line-height: 1.5;
+  }
+  .c4-layer-info code {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    background: var(--bg);
+    padding: 1px 6px;
+    border-radius: 3px;
+    color: var(--ink);
+  }
+  .c4-layer-val {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--ink);
+    padding: 6px 12px;
+    background: var(--bg);
+    border-radius: 100px;
+  }
+
+  .c4-preview {
+    margin-top: 24px;
+    padding: 24px;
+    background: var(--bg);
+    border: 1px dashed var(--line);
+    border-radius: 6px;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+  }
+  @media (max-width: 720px) { .c4-preview { grid-template-columns: 1fr; } }
+  .c4-prev-cell {
+    background: white;
+    padding: 18px 16px;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    text-align: center;
+    transition: all 0.3s;
+  }
+  .c4-prev-cell .lab {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--ink-mute);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+  .c4-prev-cell .demo {
+    background: var(--accent);
+    color: white;
+    font-family: 'Geist', sans-serif;
+    font-weight: 500;
+    font-size: 13px;
+    padding: 8px 16px;
+    margin: 0 auto 10px;
+    display: inline-block;
+    transition: border-radius 0.4s ease;
+  }
+  .c4-prev-cell .out {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--ink-soft);
+  }
+  .c4-prev-cell .out strong { color: var(--accent); font-weight: 600; }
+  .c4-prev-cell.global .demo { border-radius: 0; }
+  .c4-prev-cell.context .demo { border-radius: 0; }
+  .c4-prev-cell.local .demo { border-radius: 999px; }
+
+  .c4-toggle-row {
+    margin-top: 18px;
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .c4-tog {
+    border: 1.5px solid var(--ink);
+    background: white;
+    color: var(--ink);
+    padding: 8px 16px;
+    border-radius: 100px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.15s;
+    user-select: none;
+  }
+  .c4-tog .swatch {
+    display: inline-block;
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    margin-right: 6px;
+    vertical-align: 2px;
+  }
+  .c4-tog[data-tog="global"] .swatch { background: var(--ink); }
+  .c4-tog[data-tog="context"] .swatch { background: var(--blue); }
+  .c4-tog[data-tog="local"] .swatch { background: var(--accent); }
+  .c4-tog.off { opacity: 0.35; background: var(--bg); }
+
+  /* Case 5: minimum knowledge */
+  .c5-stage {
+    margin-top: 28px;
+  }
+  .c5-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+  }
+  @media (max-width: 880px) { .c5-grid { grid-template-columns: 1fr; } }
+
+  .c5-card {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 24px;
+    position: relative;
+  }
+  .c5-card.bad { border-color: var(--accent); background: var(--accent-soft); }
+  .c5-card.good { border-color: var(--green); background: var(--green-soft); }
+  .c5-card .verdict {
+    position: absolute;
+    top: -12px;
+    left: 20px;
+    padding: 3px 12px;
+    background: var(--bg);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.1em;
+  }
+  .c5-card.bad .verdict { color: var(--accent); border: 1px solid var(--accent); }
+  .c5-card.good .verdict { color: var(--green); border: 1px solid var(--green); }
+  .c5-card h4 {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 16px;
+    margin: 0 0 12px;
+    font-weight: 700;
+  }
+  .c5-code {
+    background: var(--ink);
+    color: #e8e8ec;
+    border-radius: 4px;
+    padding: 14px 16px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    line-height: 1.7;
+    overflow-x: auto;
+    white-space: pre;
+  }
+  .c5-code .ckey { color: #ff8a6e; }
+  .c5-code .cstr { color: #a8e6a3; }
+  .c5-code .ccom { color: #6e6e7a; font-style: italic; }
+  .c5-code .ctag { color: #c9b6ff; }
+  .c5-code .cattr { color: #ffd166; }
+  .c5-card .why {
+    margin-top: 14px;
+    font-size: 13px;
+    line-height: 1.6;
+    color: var(--ink-soft);
+  }
+  .c5-card .why strong { color: var(--ink); }
+
+  /* C5 OrderItem visual */
+  .c5-order {
+    margin-top: 28px;
+    padding: 18px 22px;
+    background: white;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    display: grid;
+    grid-template-columns: auto 1fr auto auto auto;
+    gap: 16px;
+    align-items: center;
+  }
+  @media (max-width: 720px) { .c5-order { grid-template-columns: auto 1fr; } }
+  .c5-avatar {
+    width: 40px; height: 40px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--accent), #ff8a6e);
+    color: white;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 600;
+    font-size: 14px;
+    font-family: 'Noto Sans SC', sans-serif;
+  }
+  .c5-info { display: flex; flex-direction: column; gap: 2px; }
+  .c5-info .order-id {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--ink-mute);
+  }
+  .c5-info .order-name { font-size: 14px; font-weight: 500; }
+  .c5-badge {
+    padding: 3px 10px;
+    border-radius: 100px;
+    font-size: 11px;
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 600;
+    background: var(--green-soft);
+    color: var(--green);
+  }
+  .c5-price {
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 700;
+    font-size: 14px;
+  }
+  .c5-menu {
+    width: 28px; height: 28px;
+    border-radius: 4px;
+    background: var(--bg);
+    color: var(--ink-mute);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+  }
+
+  .c5-toggle {
+    margin-top: 20px;
+    display: flex;
+    background: var(--bg-2);
+    padding: 4px;
+    border-radius: 6px;
+    width: fit-content;
+  }
+  .c5-toggle button {
+    background: transparent; border: none; cursor: pointer;
+    padding: 8px 16px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    border-radius: 4px;
+    color: var(--ink-soft);
+    transition: all 0.15s;
+  }
+  .c5-toggle button.active {
+    background: var(--ink); color: var(--bg);
+  }
+
+  /* Decision tree */
+  .dec-tree {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 32px 28px;
+    margin-bottom: 28px;
+  }
+  .dec-row {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+  .dec-q {
+    background: var(--ink);
+    color: var(--bg);
+    padding: 14px 20px;
+    border-radius: 100px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    text-align: center;
+    margin-bottom: 14px;
+    position: relative;
+  }
+  .dec-q::after {
+    content: '';
+    position: absolute;
+    bottom: -14px; left: 50%;
+    transform: translateX(-50%);
+    border: 7px solid transparent;
+    border-top-color: var(--ink);
+  }
+  .dec-branches {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+  }
+  @media (max-width: 880px) { .dec-branches { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 480px) { .dec-branches { grid-template-columns: 1fr; } }
+  .dec-branch {
+    padding: 16px 14px;
+    border: 1.5px solid var(--line);
+    border-radius: 6px;
+    background: white;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    transition: all 0.2s;
+  }
+  .dec-branch:hover { border-color: var(--accent); transform: translateY(-2px); box-shadow: var(--shadow); }
+  .dec-branch .head {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.05em;
+    color: var(--ink-mute);
+  }
+  .dec-branch .name {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 17px;
+    font-weight: 700;
+    margin: 0;
+  }
+  .dec-branch .name .em {
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    font-weight: 500;
+    color: var(--accent);
+  }
+  .dec-branch .why {
+    font-size: 12px;
+    color: var(--ink-soft);
+    line-height: 1.5;
+    margin: 0;
+  }
+  .dec-branch[data-kind="props"] { border-top: 4px solid var(--prop-color); }
+  .dec-branch[data-kind="state"] { border-top: 4px solid var(--state-color); }
+  .dec-branch[data-kind="context"] { border-top: 4px solid var(--context-color); }
+  .dec-branch[data-kind="local"] { border-top: 4px solid var(--accent); }
+
+  /* Take-aways */
+  .take-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 14px;
+  }
+  @media (max-width: 1024px) { .take-grid { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 480px) { .take-grid { grid-template-columns: 1fr; } }
+  .take {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 20px 18px;
+  }
+  .take-num {
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    font-size: 28px;
+    color: var(--accent);
+    line-height: 1;
+    margin-bottom: 10px;
+  }
+  .take h5 {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 14px;
+    margin: 0 0 8px;
+    font-weight: 700;
+    line-height: 1.3;
+  }
+  .take p {
+    margin: 0;
+    font-size: 12px;
+    line-height: 1.55;
+    color: var(--ink-soft);
+  }
+
+  /* Tip outro */
+  .tip-outro {
+    margin-top: 24px;
+    padding: 22px 26px;
+    background: var(--accent-soft);
+    border-left: 3px solid var(--accent);
+    border-radius: 4px;
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 20px;
+    align-items: start;
+  }
+  .tip-outro .outro-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    color: var(--accent);
+    text-transform: uppercase;
+    padding-top: 2px;
+    white-space: nowrap;
+  }
+  .tip-outro p {
+    margin: 0;
+    font-size: 14px;
+    line-height: 1.7;
+    color: var(--ink);
+  }
+  .tip-outro p + p { margin-top: 8px; color: var(--ink-soft); font-size: 13px; }
+  .tip-outro strong { color: var(--ink); font-weight: 600; }
+  @media (max-width: 720px) { .tip-outro { grid-template-columns: 1fr; gap: 8px; } }
+
+  /* Footer */
+  footer {
+    border-top: 1px solid var(--line);
+    padding: 56px 0 64px;
+    background: var(--bg);
+  }
+  .byline {
+    display: flex;
+    gap: 28px;
+    align-items: center;
+    padding-bottom: 32px;
+    border-bottom: 1px dashed var(--line);
+    margin-bottom: 24px;
+    position: relative;
+  }
+  .byline::before {
+    content: '';
+    position: absolute;
+    top: -56px; left: 0;
+    width: 32px; height: 1px;
+    background: var(--accent);
+  }
+  .byline .avatar {
+    width: 96px; height: 96px;
+    border-radius: 50%;
+    object-fit: cover;
+    flex-shrink: 0;
+    border: 3px solid var(--paper);
+    box-shadow: 0 0 0 1px var(--line), 0 6px 20px rgba(22,22,29,0.10);
+    background: var(--paper);
+  }
+  .byline-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--ink-mute);
+    letter-spacing: 0.18em;
+    margin-bottom: 8px;
+  }
+  .byline-label .dot {
+    display: inline-block;
+    width: 6px; height: 6px;
+    background: var(--accent);
+    border-radius: 50%;
+    margin-right: 6px;
+    vertical-align: 1px;
+  }
+  .byline-name {
+    font-family: 'Noto Serif SC', 'Fraunces', serif;
+    font-size: clamp(28px, 4vw, 40px);
+    font-weight: 700;
+    line-height: 1.05;
+    letter-spacing: -0.01em;
+    margin: 0 0 8px;
+  }
+  .byline-name .em { font-family: 'Fraunces', serif; font-style: italic; font-weight: 500; color: var(--accent); }
+  .byline-tag {
+    font-size: 14px;
+    color: var(--ink-soft);
+    line-height: 1.55;
+    margin: 0;
+    max-width: 52ch;
+  }
+  .footer-meta {
+    text-align: center;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--ink-mute);
+    letter-spacing: 0.05em;
+  }
+  .footer-meta .heart { color: var(--accent); }
+  .footer-meta .mono { color: var(--ink-soft); font-weight: 500; }
+  @media (max-width: 600px) {
+    .byline { flex-direction: column; text-align: center; align-items: center; gap: 16px; }
+    .byline-tag { margin-left: auto; margin-right: auto; }
+  }
+
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+  section { animation: fadeIn 0.6s ease-out backwards; }
+
+  /* Tiny toast */
+  .toast {
+    position: fixed;
+    bottom: 24px; left: 50%;
+    transform: translateX(-50%) translateY(120%);
+    background: var(--ink);
+    color: var(--bg);
+    padding: 10px 18px;
+    border-radius: 100px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 1000;
+    pointer-events: none;
+    box-shadow: var(--shadow);
+  }
+  .toast.show { transform: translateX(-50%) translateY(0); }
+  .toast.bad { background: var(--accent); color: white; }
+  .toast.good { background: var(--green); color: white; }
+</style>
+</head>
+<body>
+
+<!-- Top bar -->
+<div class="topbar">
+  <div class="wrap topbar-inner">
+    <div class="brand"><span class="dot"></span>DATA-FLOW CASES / 实战 5 题</div>
+    <nav class="nav-links">
+      <a href="index.html">合集</a>
+      <a href="box-figma.html">01 盒子</a>
+      <a href="components-figma.html">02 组件</a>
+      <a href="page-figma.html">03 拼页面</a>
+      <a href="data-flow-figma.html">04 数据流</a>
+    </nav>
+  </div>
+</div>
+
+<!-- Hero -->
+<header class="hero">
+  <div class="wrap">
+    <div class="hero-meta">
+      <span class="pill fill">实验互动 · INTERACTIVE</span>
+      <span class="pill">2026 / 设计 × 代码</span>
+      <span class="pill">B2 · 进阶 · 数据流实战</span>
+      <span class="label">进阶篇 · 阅读 ≈ 18 分钟</span>
+    </div>
+    <div class="hero-grid">
+      <div>
+        <h1>
+          <span class="display-cn">5 个</span><span class="em">真实</span><span class="display-cn">场景</span><br>
+          <span class="x">·</span>
+          <span class="display-cn">数据流</span><span class="em">实战</span>
+        </h1>
+        <p class="lede">
+          学完 <a href="data-flow-figma.html" style="color:var(--accent);">B1 数据流概念</a>，这篇是<span class="em">练习</span> ——<br>
+          5 个真实页面场景，决定每个数据该用 props / state / context、<br>
+          以及怎么覆盖。练完你会有<span class="em">决策直觉</span>。
+        </p>
+      </div>
+      <div class="hero-side">
+        <div class="row"><span class="k">本页讲什么</span><span class="v">5 个数据流案例</span></div>
+        <div class="row"><span class="k">含互动</span><span class="v">拖拽 · 选择 · 对比</span></div>
+        <div class="row"><span class="k">面向</span><span class="v">读完 B1 的你</span></div>
+        <div class="row"><span class="k">前置知识</span><span class="v">B1 数据流概念</span></div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- §01 问题 -->
+<section id="problem">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>01</strong> / 问题</div>
+        <h2 class="section-title">概念懂了，<br>真场景还是<span class="em">懵</span>。</h2>
+      </div>
+      <p class="section-sub">
+        知道 props 是 "父传子"、知道 context 是 "广播"，
+        但真的拿到一个商品页，还是不知道每个数据该放哪。
+      </p>
+    </div>
+
+    <div class="problem-grid">
+      <div class="problem-card bad">
+        <span class="tag">读完 B1 之后</span>
+        <h3>"我知道这些词，但用不上"</h3>
+        <p>props、state、context 这些名词都背下来了。但拿到一个真实需求 —— "做一个商品页加筛选" —— 你还是不知道：</p>
+        <p><strong>filterValue 该放哪？theme 是 props 还是 context？OrderItem 应该传整个 order 对象吗？</strong></p>
+        <p>这就是<strong>概念到决策</strong>之间的鸿沟 —— 没有反复练习，知识就停留在词汇表里。</p>
+      </div>
+      <div class="problem-card good">
+        <span class="tag">练完这 5 题之后</span>
+        <h3>"我有了决策直觉"</h3>
+        <p>遇到任何新组件，你能在 30 秒内回答：这个值该 props 还是 state？这个数据要不要 context？该传整个对象还是只传字段？</p>
+        <p>这种直觉来自<strong>把概念套到 5 个真实场景</strong>反复决策 —— 商品卡 / 筛选页 / 主题嵌套 / 全局配置 / 订单列表。</p>
+      </div>
+    </div>
+
+    <div class="quote-box">
+      <span class="quote-mark">"</span>
+      看懂语法只是第一步，能<span style="color:var(--accent);font-family:'Fraunces',serif;font-style:italic;font-weight:500;">在真实需求里做决策</span>，才是设计师懂代码的标志。
+      <span class="quote-attr">—— 从概念到直觉，靠 5 道题</span>
+    </div>
+  </div>
+</section>
+
+<!-- §02 案例 1 · 商品卡片数据流 -->
+<section id="case-1">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="case-meta"><span class="num">1</span><span>商品卡片数据流</span></div>
+        <div class="section-num"><strong>02</strong> / 案例 1</div>
+        <h2 class="section-title">这些数据，<br>分别从哪一<span class="em">层</span>传？</h2>
+      </div>
+      <p class="section-sub">
+        最经典的电商场景 —— 商品列表里的每张卡片。商品名、图、价、按钮状态，
+        看似都在 ProductCard 里，但它们的来源天差地别。
+      </p>
+    </div>
+
+    <div class="case-question">
+      <span class="q-tag">题目</span>
+      下面是商品页的组件树：<strong>App → ProductList → ProductCard → PriceTag / AddButton</strong>。
+      把右侧 5 个数据节点拖到正确的层级，使其在那一层产生（或被传递起点为该层）。
+    </div>
+
+    <div class="c1-stage">
+      <div class="c1-grid">
+        <!-- 左：数据池 -->
+        <div class="c1-pool">
+          <div class="c1-pool-head">↓ 拖动数据节点</div>
+          <div class="c1-chips" id="c1-pool">
+            <div class="c1-chip" draggable="true" data-id="products" data-target="App">
+              <span class="chip-icon" style="background:var(--accent);"></span>products[]
+            </div>
+            <div class="c1-chip" draggable="true" data-id="filterValue" data-target="ProductList">
+              <span class="chip-icon" style="background:var(--state-color);"></span>filterValue
+            </div>
+            <div class="c1-chip" draggable="true" data-id="product" data-target="ProductCard">
+              <span class="chip-icon" style="background:var(--accent);"></span>product
+            </div>
+            <div class="c1-chip" draggable="true" data-id="discount" data-target="PriceTag">
+              <span class="chip-icon" style="background:var(--accent);"></span>discount
+            </div>
+            <div class="c1-chip" draggable="true" data-id="loading" data-target="AddButton">
+              <span class="chip-icon" style="background:var(--state-color);"></span>loading
+            </div>
+          </div>
+          <div style="margin-top:16px;padding-top:16px;border-top:1px dashed var(--line);font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--ink-mute);line-height:1.7;">
+            <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--accent);vertical-align:middle;margin-right:6px;"></span>= 跨层传递的 props<br>
+            <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--state-color);vertical-align:middle;margin-right:6px;"></span>= 在该层产生的 state
+          </div>
+        </div>
+
+        <!-- 右：组件树 -->
+        <div class="c1-tree">
+          <div class="c1-tree-head">→ 商品页组件树</div>
+          <div class="c1-tree-list">
+            <div class="c1-node" data-depth="1">
+              <div class="c1-node-head">
+                <span class="c1-node-name">&lt;App /&gt;</span>
+                <span class="c1-node-tag">根 · 数据来源</span>
+              </div>
+              <div class="c1-drop" data-target="App"></div>
+            </div>
+            <div class="c1-node" data-depth="2">
+              <div class="c1-node-head">
+                <span class="c1-node-name">&lt;ProductList /&gt;</span>
+                <span class="c1-node-tag">列表 · 含筛选</span>
+              </div>
+              <div class="c1-drop" data-target="ProductList"></div>
+            </div>
+            <div class="c1-node" data-depth="3">
+              <div class="c1-node-head">
+                <span class="c1-node-name">&lt;ProductCard /&gt;</span>
+                <span class="c1-node-tag">单个商品卡</span>
+              </div>
+              <div class="c1-drop" data-target="ProductCard"></div>
+            </div>
+            <div class="c1-node" data-depth="4">
+              <div class="c1-node-head">
+                <span class="c1-node-name">&lt;PriceTag /&gt;</span>
+                <span class="c1-node-tag">价格 + 折扣</span>
+              </div>
+              <div class="c1-drop" data-target="PriceTag"></div>
+            </div>
+            <div class="c1-node" data-depth="4">
+              <div class="c1-node-head">
+                <span class="c1-node-name">&lt;AddButton /&gt;</span>
+                <span class="c1-node-tag">加购按钮</span>
+              </div>
+              <div class="c1-drop" data-target="AddButton"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="c1-actions">
+        <div class="c1-progress">
+          已放对 <strong id="c1-score">0</strong> / 5 个
+        </div>
+        <button class="c1-reset" onclick="c1Reset()">重置</button>
+      </div>
+    </div>
+
+    <div class="case-answer" id="c1-answer" style="display:none;">
+      <span class="ans-tag">答案解析</span>
+      <h4>每个数据为什么放在那一层 —</h4>
+      <ul>
+        <li><code>products[]</code> 放在 <strong>App</strong>：整个页面共享的数据，从 API 取来后，作为顶层数据源往下传。</li>
+        <li><code>filterValue</code> 放在 <strong>ProductList</strong>：只有列表自己关心的筛选状态。放 App 太高（其他模块用不上），放 ProductCard 太低（卡片之间无法共享筛选）。</li>
+        <li><code>product</code> 放在 <strong>ProductCard</strong>：每张卡片接收一个 product 对象（在 ProductList 里 .map 出来）。</li>
+        <li><code>discount</code> 放在 <strong>PriceTag</strong>：只有价格组件关心的字段，从 product 里取出来传给它。</li>
+        <li><code>loading</code> 放在 <strong>AddButton</strong>：加购按钮自己的临时状态（点击后到 API 返回前）。其他组件都不用知道。</li>
+      </ul>
+      <p style="margin-top:12px;"><strong>规律：</strong>跨多个组件用的数据，放在它们的<span style="color:white;">"共同祖先"</span>层；某个组件独有的临时状态，留在它自己里面。</p>
+    </div>
+  </div>
+</section>
+
+<!-- §03 案例 2 · 状态归属 + Drilling -->
+<section id="case-2">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="case-meta"><span class="num">2</span><span>找出 props drilling + 状态归属</span></div>
+        <div class="section-num"><strong>03</strong> / 案例 2</div>
+        <h2 class="section-title">filterValue<br>到底归 <span class="em">谁</span> 管？</h2>
+      </div>
+      <p class="section-sub">
+        FilterPanel 是产生筛选值的地方，但它跟 ProductList 是兄弟 ——
+        兄弟不能直接互传。state 该放在哪？这就是 "lifting state up"。
+      </p>
+    </div>
+
+    <div class="case-question">
+      <span class="q-tag">题目</span>
+      <strong>FilterPanel</strong> 让用户选筛选条件，<strong>ProductList</strong> 要拿这个值去过滤商品。
+      下面 3 个组件中，把 <code style="background:rgba(0,0,0,0.06);padding:1px 8px;border-radius:3px;font-family:'JetBrains Mono',monospace;">filterValue</code> state 拖到正确的层。
+      <strong style="color:var(--accent);">放错变红，放对变绿。</strong>
+    </div>
+
+    <div class="c2-stage">
+      <div class="c2-tree">
+        <div class="c2-node" data-depth="1" data-target="ProductPage">
+          <div class="c2-node-row">
+            <span class="c2-node-name">&lt;ProductPage /&gt;</span>
+            <span class="c2-node-meta">两个子组件的共同父</span>
+          </div>
+          <div class="c2-state-slot" data-slot="ProductPage">↓ 把 state 拖到这里</div>
+        </div>
+        <div class="c2-node" data-depth="2" data-target="FilterPanel">
+          <div class="c2-node-row">
+            <span class="c2-node-name">&lt;FilterPanel /&gt;</span>
+            <span class="c2-node-meta">用户在这里选筛选</span>
+          </div>
+          <div class="c2-state-slot" data-slot="FilterPanel">↓ 把 state 拖到这里</div>
+        </div>
+        <div class="c2-node" data-depth="2" data-target="ProductList">
+          <div class="c2-node-row">
+            <span class="c2-node-name">&lt;ProductList /&gt;</span>
+            <span class="c2-node-meta">需要 filterValue 过滤商品</span>
+          </div>
+          <div class="c2-state-slot" data-slot="ProductList">↓ 把 state 拖到这里</div>
+        </div>
+      </div>
+
+      <div class="c2-pool" id="c2-pool">
+        <span class="c2-pool-label">↓ 拖动:</span>
+        <div class="c2-state-token" draggable="true">filterValue</div>
+      </div>
+
+      <div class="c2-hint">
+        <span class="key">提示：</span> FilterPanel 和 ProductList 是兄弟。兄弟之间的数据共享，<br>
+        必须放到它们的<span class="key">共同父</span>，再分别 props 传下去。这叫 <strong>lifting state up</strong>。
+      </div>
+    </div>
+
+    <div class="case-answer" id="c2-answer" style="display:none;">
+      <span class="ans-tag">答案解析</span>
+      <h4>为什么放在 ProductPage —</h4>
+      <p><strong>×  FilterPanel：</strong> 它能产生 filterValue 没错。但 FilterPanel 内部的 state，ProductList 看不到（兄弟之间无法直接通信）。</p>
+      <p><strong>×  ProductList：</strong> 它能消费 filterValue 没错。但用户操作的是 FilterPanel —— 你没法在被消费的地方"凭空生出来"这个状态。</p>
+      <p><strong>√  ProductPage：</strong> 两个组件的共同父。state 放这里，往下传给 FilterPanel（含 setter）和 ProductList（含值）。这就是 <code>lifting state up</code>。</p>
+      <p style="margin-top:12px;"><strong>口诀：</strong> 兄弟想共享 → 提到最近的共同祖先。</p>
+    </div>
+  </div>
+</section>
+
+<!-- §04 案例 3 · 主题嵌套 -->
+<section id="case-3">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="case-meta"><span class="num">3</span><span>主题嵌套与覆盖</span></div>
+        <div class="section-num"><strong>04</strong> / 案例 3</div>
+        <h2 class="section-title">嵌套 3 层 Provider，<br>叶子读 <span class="em">哪</span> 个？</h2>
+      </div>
+      <p class="section-sub">
+        全站 Light，营销区 Dark，里面某个按钮 Brand —— 这是真实落地里
+        最常踩坑的场景。Context 离得越近，覆盖优先级越高。
+      </p>
+    </div>
+
+    <div class="case-question">
+      <span class="q-tag">题目</span>
+      左边 3 个 Provider 节点（Light · Dark · Brand）可以拖动调换<strong>嵌套顺序</strong>。
+      右边树里的 5 个叶子组件会实时显示自己读到的最终主题。
+      <strong style="color:var(--accent);">规则：从内向外找，最近的 Provider 赢。</strong>
+    </div>
+
+    <div class="c3-stage">
+      <div class="c3-grid">
+        <div>
+          <div class="c3-providers-label">→ 嵌套顺序（顶到底 = 外到内）</div>
+          <div class="c3-providers" id="c3-providers">
+            <div class="c3-prov" draggable="true" data-theme="light">
+              <span class="c3-prov-handle">⋮⋮</span>
+              <span class="c3-prov-swatch"></span>
+              <span class="c3-prov-name">ThemeProvider</span>
+              <span class="c3-prov-meta">light</span>
+            </div>
+            <div class="c3-prov" draggable="true" data-theme="dark">
+              <span class="c3-prov-handle">⋮⋮</span>
+              <span class="c3-prov-swatch"></span>
+              <span class="c3-prov-name">ThemeProvider</span>
+              <span class="c3-prov-meta">dark</span>
+            </div>
+            <div class="c3-prov" draggable="true" data-theme="brand">
+              <span class="c3-prov-handle">⋮⋮</span>
+              <span class="c3-prov-swatch"></span>
+              <span class="c3-prov-name">ThemeProvider</span>
+              <span class="c3-prov-meta">brand</span>
+            </div>
+          </div>
+
+          <div class="c3-explain">
+            <div>当前嵌套（外 → 内）：</div>
+            <div id="c3-stack" style="margin-top:6px;color:#ffd166;">light → dark → brand</div>
+            <div style="margin-top:10px;color:rgba(255,255,255,0.6);">
+              <span class="key">规则：</span> 离叶子最近的 Provider 赢
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <div class="c3-output-label">↓ 5 个叶子读到的主题</div>
+          <div class="c3-tree" id="c3-tree">
+            <div class="c3-tree-line" data-leaf="A" data-depth="0">
+              <span class="label">&lt;Header /&gt;</span>
+              <span class="arrow">→</span>
+              <span class="computed" data-out="light">读 light</span>
+            </div>
+            <div class="c3-tree-line" data-leaf="B" data-depth="1">
+              <span class="indent">└</span>
+              <span class="label">&lt;HeroBanner /&gt;</span>
+              <span class="arrow">→</span>
+              <span class="computed" data-out="dark">读 dark</span>
+            </div>
+            <div class="c3-tree-line" data-leaf="C" data-depth="2">
+              <span class="indent">　└</span>
+              <span class="label">&lt;BannerTitle /&gt;</span>
+              <span class="arrow">→</span>
+              <span class="computed" data-out="dark">读 dark</span>
+            </div>
+            <div class="c3-tree-line" data-leaf="D" data-depth="3">
+              <span class="indent">　　└</span>
+              <span class="label">&lt;CTAButton /&gt;</span>
+              <span class="arrow">→</span>
+              <span class="computed" data-out="brand">读 brand</span>
+            </div>
+            <div class="c3-tree-line" data-leaf="E" data-depth="0">
+              <span class="label">&lt;Footer /&gt;</span>
+              <span class="arrow">→</span>
+              <span class="computed" data-out="light">读 light</span>
+            </div>
+          </div>
+          <p style="margin-top:14px;font-size:13px;line-height:1.7;color:var(--ink-soft);">
+            试试把 <strong>Brand</strong> 拖到最外层 —— 你会发现所有叶子都变成 brand 了。
+            因为这时它没被任何更深的 Provider 覆盖。
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <div class="case-answer">
+      <span class="ans-tag">规律</span>
+      <h4>Context 嵌套：最近的赢 —</h4>
+      <p><strong>就近原则：</strong> 一个组件 useTheme() 时，React 从它往外找，碰到的第一个 ThemeProvider 就是答案。更外层的同名 Provider 都被屏蔽。</p>
+      <p><strong>这跟 Figma 里 Variable Mode 的覆盖完全一致：</strong> 当前 Frame 设了 dark mode，里面的元素就读 dark；外层 frame 是 light 也不影响。</p>
+      <p><strong>实战意义：</strong> 想让营销区整体变 Dark，包一层 ThemeProvider value="dark" 就行 —— 不用改任何子组件代码。</p>
+    </div>
+  </div>
+</section>
+
+<!-- §05 案例 4 · 局部 vs 全局 -->
+<section id="case-4">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="case-meta"><span class="num">4</span><span>局部配置 vs 全局</span></div>
+        <div class="section-num"><strong>05</strong> / 案例 4</div>
+        <h2 class="section-title">圆角到底用 <br>哪一<span class="em">层</span>？</h2>
+      </div>
+      <p class="section-sub">
+        全站圆角 8px，后台页所有元素 4px（更"严肃"），里面有个 Pill 徽章固定 999px ——
+        这个真实需求要靠三层覆盖叠出来。
+      </p>
+    </div>
+
+    <div class="case-question">
+      <span class="q-tag">题目</span>
+      下面三个值，你能说出每个该来自<strong>哪一层</strong>吗？
+      <span style="display:block;margin-top:8px;color:var(--ink-soft);">点下方按钮 toggle 各层 on/off，看 pill 徽章的圆角怎么变化。</span>
+    </div>
+
+    <div class="c4-stage">
+      <div class="c4-layers">
+        <div class="c4-layer global" id="c4-l-global">
+          <div class="c4-layer-num">①</div>
+          <div class="c4-layer-info">
+            <h5>全局 (theme.json / CSS variable)</h5>
+            <p>整个产品的默认圆角。一改全产品都跟着改。<code>--radius: 8px</code></p>
+          </div>
+          <div class="c4-layer-val">8px</div>
+        </div>
+        <div class="c4-layer context" id="c4-l-context">
+          <div class="c4-layer-num">②</div>
+          <div class="c4-layer-info">
+            <h5>区域 context (后台页 ThemeProvider)</h5>
+            <p>包一层 Provider，覆盖后台页所有元素的圆角，更"严肃"。<code>radius: 4px</code></p>
+          </div>
+          <div class="c4-layer-val">4px</div>
+        </div>
+        <div class="c4-layer local" id="c4-l-local">
+          <div class="c4-layer-num">③</div>
+          <div class="c4-layer-info">
+            <h5>组件特例 (Pill 徽章)</h5>
+            <p>这种组件视觉上必须是胶囊形，不参与全局圆角语言。<code>borderRadius: 999</code> 写在组件里。</p>
+          </div>
+          <div class="c4-layer-val">999px</div>
+        </div>
+      </div>
+
+      <div class="c4-toggle-row">
+        <button class="c4-tog" data-tog="global"><span class="swatch"></span>全局 8px</button>
+        <button class="c4-tog" data-tog="context"><span class="swatch"></span>后台 context 4px</button>
+        <button class="c4-tog" data-tog="local"><span class="swatch"></span>Pill 特例 999px</button>
+      </div>
+
+      <div class="c4-preview">
+        <div class="c4-prev-cell global">
+          <div class="lab">商品页 Button</div>
+          <div class="demo" id="c4-demo-1">默认按钮</div>
+          <div class="out">读到 → <strong id="c4-out-1">8px</strong></div>
+        </div>
+        <div class="c4-prev-cell context">
+          <div class="lab">后台 Button</div>
+          <div class="demo" id="c4-demo-2">后台按钮</div>
+          <div class="out">读到 → <strong id="c4-out-2">4px</strong></div>
+        </div>
+        <div class="c4-prev-cell local">
+          <div class="lab">后台里的 Pill 徽章</div>
+          <div class="demo" id="c4-demo-3" style="background:var(--blue);">已发布</div>
+          <div class="out">读到 → <strong id="c4-out-3">999px</strong></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="case-answer">
+      <span class="ans-tag">规律</span>
+      <h4>三层覆盖：从远到近，越近越赢 —</h4>
+      <p><strong>① 全局：</strong> 用 design tokens / CSS variables。改一处全产品都变 —— 这是设计师在 Figma 里改 Variable 的对应物。</p>
+      <p><strong>② 区域 context：</strong> 用 Provider 包一层。子树里所有元素自动读到新值，不用改组件代码。"营销区 dark" "后台 4px" 都是这种。</p>
+      <p><strong>③ 组件特例：</strong> 直接在组件里写死。某些视觉就是要打破系统（Pill / FAB / 圆形头像）—— 这些不该跟全局圆角联动。</p>
+      <p style="margin-top:12px;"><strong>判断口诀：</strong> "改一处影响多大？" 全产品都该变 → 全局；只改一片区域 → context；只这一种组件特立独行 → 写死。</p>
+    </div>
+  </div>
+</section>
+
+<!-- §06 案例 5 · OrderItem 最小知识 -->
+<section id="case-5">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="case-meta"><span class="num">5</span><span>OrderItem 数据传递</span></div>
+        <div class="section-num"><strong>06</strong> / 案例 5</div>
+        <h2 class="section-title">传整个 order，<br>还是只传 <span class="em">需要</span> 的？</h2>
+      </div>
+      <p class="section-sub">
+        订单列表项内部有 4 个子组件：状态徽章、价格、头像、菜单。
+        要不要把整个 order 对象一股脑塞给每个子组件？这是<strong>最小知识原则</strong>。
+      </p>
+    </div>
+
+    <div class="case-question">
+      <span class="q-tag">题目</span>
+      下面是同一个 OrderItem 的两种实现 ——
+      <strong>BAD 把整个 order 传给每个子组件</strong>，
+      <strong>GOOD 只传子组件需要的字段</strong>。哪种更好，为什么？
+    </div>
+
+    <!-- 视觉示例 -->
+    <div class="c5-order">
+      <div class="c5-avatar">王</div>
+      <div class="c5-info">
+        <span class="order-id">#OD-2026-0892</span>
+        <span class="order-name">王女士的订单</span>
+      </div>
+      <span class="c5-badge">已发货</span>
+      <span class="c5-price">¥ 689.00</span>
+      <div class="c5-menu">⋮</div>
+    </div>
+
+    <div class="c5-toggle">
+      <button class="active" data-mode="bad">BAD · 传整个 order</button>
+      <button data-mode="good">GOOD · 只传字段</button>
+    </div>
+
+    <div class="c5-stage">
+      <div class="c5-grid" id="c5-bad-view">
+        <div class="c5-card bad">
+          <span class="verdict">BAD · 反例</span>
+          <h4>每个子组件都收完整 order</h4>
+          <pre class="c5-code"><span class="ccom">// OrderItem.tsx — 反例</span>
+&lt;<span class="ctag">OrderItem</span> <span class="cattr">order</span>=<span class="cstr">{order}</span> /&gt;
+
+<span class="ccom">// 内部</span>
+&lt;<span class="ctag">StatusBadge</span> <span class="cattr">order</span>=<span class="cstr">{order}</span> /&gt;
+&lt;<span class="ctag">Avatar</span>      <span class="cattr">order</span>=<span class="cstr">{order}</span> /&gt;
+&lt;<span class="ctag">PriceLabel</span>  <span class="cattr">order</span>=<span class="cstr">{order}</span> /&gt;
+&lt;<span class="ctag">MoreMenu</span>    <span class="cattr">order</span>=<span class="cstr">{order}</span> /&gt;</pre>
+          <div class="why">
+            <strong>问题：</strong> StatusBadge 只用 order.status，但它能<strong>看见整个 order</strong>。
+            未来谁误用了 order.totalPrice，没人察觉。组件之间耦合到整个数据结构。
+          </div>
+        </div>
+
+        <div class="c5-card bad">
+          <span class="verdict">BAD · 后果</span>
+          <h4>改 order 字段名，所有组件都炸</h4>
+          <pre class="c5-code"><span class="ccom">// 后端把 status 改名成 state</span>
+<span class="ckey">需要</span> <span class="cstr">检查</span>:
+<span class="ckey">  StatusBadge</span> <span class="cstr">— 在用 order.status</span>
+<span class="ckey">  Avatar</span>      <span class="cstr">— 没在用 status，</span>
+                <span class="cstr">但收了 order，要排查</span>
+<span class="ckey">  PriceLabel</span>  <span class="cstr">— 同上</span>
+<span class="ckey">  MoreMenu</span>    <span class="cstr">— 同上</span>
+<span class="ckey">  </span><span class="cstr">→ 4 个组件都得开看</span></pre>
+          <div class="why">
+            <strong>耦合代价：</strong> 一个不该关心 status 的组件也"知道" status。
+            字段重命名 / 字段删除时，<strong>不知道哪些组件真的依赖它</strong> ——
+            只能逐个排查。
+          </div>
+        </div>
+      </div>
+
+      <div class="c5-grid" id="c5-good-view" style="display:none;">
+        <div class="c5-card good">
+          <span class="verdict">GOOD · 正例</span>
+          <h4>每个子组件只收需要的字段</h4>
+          <pre class="c5-code"><span class="ccom">// OrderItem.tsx — 正例</span>
+&lt;<span class="ctag">StatusBadge</span> <span class="cattr">status</span>=<span class="cstr">{order.status}</span> /&gt;
+&lt;<span class="ctag">Avatar</span>      <span class="cattr">name</span>=<span class="cstr">{order.user.name}</span> /&gt;
+&lt;<span class="ctag">PriceLabel</span>  <span class="cattr">amount</span>=<span class="cstr">{order.totalPrice}</span> /&gt;
+&lt;<span class="ctag">MoreMenu</span>    <span class="cattr">orderId</span>=<span class="cstr">{order.id}</span>
+              <span class="cattr">onAction</span>=<span class="cstr">{handleAction}</span> /&gt;</pre>
+          <div class="why">
+            <strong>好处：</strong> 每个子组件的<strong>"知识范围"</strong>都收窄了。
+            StatusBadge 只知道 status；Avatar 只知道 name。
+            它们能在任何地方复用，不依赖 order 这个外壳。
+          </div>
+        </div>
+
+        <div class="c5-card good">
+          <span class="verdict">GOOD · 收益</span>
+          <h4>改字段，影响范围一目了然</h4>
+          <pre class="c5-code"><span class="ccom">// 后端把 status 改名成 state</span>
+<span class="ckey">影响</span>:
+<span class="ckey">  StatusBadge</span> <span class="cstr">— 改 prop 名 status → state</span>
+<span class="ckey">  Avatar</span>      <span class="cstr">— 不影响 ✓</span>
+<span class="ckey">  PriceLabel</span>  <span class="cstr">— 不影响 ✓</span>
+<span class="ckey">  MoreMenu</span>    <span class="cstr">— 不影响 ✓</span>
+<span class="ckey">  </span><span class="cstr">→ 只改 1 处</span></pre>
+          <div class="why">
+            <strong>设计师视角：</strong> 这跟 Figma 里 Component Properties 是一回事 ——
+            一个 Badge 组件应该有 <strong>label / variant</strong> 这种语义化属性，
+            而不是塞进去整个 "Order" 对象。
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="case-answer">
+      <span class="ans-tag">原则</span>
+      <h4>最小知识原则 (Law of Demeter) —</h4>
+      <p><strong>简单说：</strong> 一个组件应该只<strong>知道它真正需要的</strong>，不要多给它一行代码用不到的信息。</p>
+      <p>给 Badge 组件传整个 order，等于在它身上挂了 10 个钩子 —— 任何字段改名都可能波及它，哪怕它根本没在用。</p>
+      <p><strong>什么时候可以传整个对象？</strong> 当组件确实是<strong>那个对象的"全权代表"</strong>时（比如 ProductCard 接收 product，因为它就是负责渲染整个 product 的）。叶子组件就别这么干了。</p>
+    </div>
+  </div>
+</section>
+
+<!-- §07 速查 + 完结 -->
+<section id="recap">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>07</strong> / 速查</div>
+        <h2 class="section-title">下一次<br>看到新数据，<span class="em">怎么决定</span>。</h2>
+      </div>
+      <p class="section-sub">
+        把这 5 道题的决策路径浓缩成一棵决策树。
+        遇到任何新场景，沿着这条路问下来就有答案。
+      </p>
+    </div>
+
+    <h3 style="font-family:'Noto Serif SC',serif;font-size:20px;margin:0 0 16px;font-weight:700;">决策树 · 这个数据该用什么？</h3>
+
+    <div class="dec-tree">
+      <div class="dec-q">这个数据 — <strong>谁需要它？</strong></div>
+
+      <div class="dec-branches">
+        <div class="dec-branch" data-kind="props">
+          <div class="head">→ 多个组件共享</div>
+          <h4 class="name">用 <span class="em">props</span></h4>
+          <p class="why">从共同祖先往下传。<br>例：products / product / 文案</p>
+        </div>
+        <div class="dec-branch" data-kind="state">
+          <div class="head">→ 这个组件独有</div>
+          <h4 class="name">用 <span class="em">state</span></h4>
+          <p class="why">谁用、谁产生 = 谁拥有。<br>例：loading / open / hover</p>
+        </div>
+        <div class="dec-branch" data-kind="context">
+          <div class="head">→ 跨多层都要用</div>
+          <h4 class="name">用 <span class="em">context</span></h4>
+          <p class="why">主题 / 用户 / 语言。<br>避免 props drilling 5+ 层。</p>
+        </div>
+        <div class="dec-branch" data-kind="local">
+          <div class="head">→ 视觉天然不参与系统</div>
+          <h4 class="name">本地 <span class="em">特例</span></h4>
+          <p class="why">写死或组件内 const。<br>例：Pill 圆角 999px</p>
+        </div>
+      </div>
+    </div>
+
+    <h3 style="font-family:'Noto Serif SC',serif;font-size:20px;margin:32px 0 16px;font-weight:700;">5 个案例的核心 take-away</h3>
+
+    <div class="take-grid">
+      <div class="take">
+        <div class="take-num">01</div>
+        <h5>商品卡 · 共同祖先原则</h5>
+        <p>跨组件共享的数据，往上提到所有用它的组件的"共同父"。</p>
+      </div>
+      <div class="take">
+        <div class="take-num">02</div>
+        <h5>状态归属 · Lifting state up</h5>
+        <p>兄弟组件想共享 state，必须放在它们的最近共同祖先里。</p>
+      </div>
+      <div class="take">
+        <div class="take-num">03</div>
+        <h5>主题嵌套 · 就近原则</h5>
+        <p>多层 Context 嵌套时，离消费者最近的那一层赢。</p>
+      </div>
+      <div class="take">
+        <div class="take-num">04</div>
+        <h5>覆盖 · 全局 → context → 局部</h5>
+        <p>三层叠加，越具体越优先 —— 跟 Figma Variable Mode 一致。</p>
+      </div>
+      <div class="take">
+        <div class="take-num">05</div>
+        <h5>OrderItem · 最小知识原则</h5>
+        <p>叶子组件只接收它真正需要的字段，不要接收整个对象。</p>
+      </div>
+    </div>
+
+    <div class="tip-outro">
+      <span class="outro-tag">本系列 · B 模块</span>
+      <div>
+        <p><strong>B0 (拼页面)</strong> · 把组件嵌进真实页面 → <strong>B1 (数据流概念)</strong> · 学组件之间怎么对话 → <strong>B2 (这一篇)</strong> · 5 道题练出决策直觉。</p>
+        <p>下一步：去看 <strong>C 模块 · 视觉系统</strong>。它跟这一篇的"全局 / context / 局部"覆盖直接呼应 —— Tokens / Variables / Theme 切换的代码侧机制。</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div class="byline">
+      <img class="avatar" src="author.jpg" alt="范米花儿">
+      <div class="byline-meta">
+        <div class="byline-label"><span class="dot"></span>作者 · WRITTEN BY</div>
+        <h3 class="byline-name">嗨，我是 <span class="em">范米花儿</span></h3>
+        <p class="byline-tag">B2 · 进阶 · 数据流实战 ——<br>5 道真实场景练完，你在新需求面前会更有底气。</p>
+      </div>
+    </div>
+    <div class="footer-meta">
+      做于 <span class="mono">2026</span> · 用 <span class="heart">●</span> 写给 <span class="mono">DESIGNERS &amp; DEVELOPERS</span>
+    </div>
+  </div>
+</footer>
+
+<div class="toast" id="toast">已重置</div>
+
+<script>
+  // ============================
+  //  Toast helper
+  // ============================
+  const toastEl = document.getElementById('toast');
+  let toastTimer;
+  function toast(msg, kind) {
+    toastEl.textContent = msg;
+    toastEl.className = 'toast show' + (kind ? ' ' + kind : '');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => { toastEl.className = 'toast'; }, 1600);
+  }
+
+  // ============================
+  //  CASE 1 — Drag chips into tree slots
+  // ============================
+  (function () {
+    const pool = document.getElementById('c1-pool');
+    if (!pool) return;
+    const chips = pool.querySelectorAll('.c1-chip');
+    const drops = document.querySelectorAll('.c1-drop');
+    const scoreEl = document.getElementById('c1-score');
+    const answerBox = document.getElementById('c1-answer');
+    let dragId = null;
+
+    chips.forEach(chip => {
+      chip.addEventListener('dragstart', e => {
+        dragId = chip.dataset.id;
+        chip.classList.add('dragging');
+        e.dataTransfer.effectAllowed = 'move';
+        try { e.dataTransfer.setData('text/plain', dragId); } catch (_) {}
+      });
+      chip.addEventListener('dragend', () => {
+        chip.classList.remove('dragging');
+        dragId = null;
+        drops.forEach(d => d.classList.remove('over'));
+      });
+    });
+
+    drops.forEach(drop => {
+      drop.addEventListener('dragover', e => {
+        e.preventDefault();
+        drop.classList.add('over');
+      });
+      drop.addEventListener('dragleave', () => drop.classList.remove('over'));
+      drop.addEventListener('drop', e => {
+        e.preventDefault();
+        drop.classList.remove('over');
+        const id = dragId || (e.dataTransfer ? e.dataTransfer.getData('text/plain') : null);
+        if (!id) return;
+        const chip = pool.querySelector('.c1-chip[data-id="' + id + '"]');
+        if (!chip || chip.classList.contains('placed')) return;
+
+        const expected = chip.dataset.target;
+        const slotKey = drop.dataset.target;
+        if (expected === slotKey) {
+          // correct
+          drop.classList.add('correct');
+          chip.classList.add('placed');
+          const newChip = document.createElement('span');
+          newChip.className = 'placed-chip';
+          newChip.innerHTML = '<span class="chip-icon"></span>' + chip.textContent.trim();
+          drop.appendChild(newChip);
+          updateScore();
+          toast('放对了 ✓', 'good');
+        } else {
+          drop.classList.add('wrong');
+          setTimeout(() => drop.classList.remove('wrong'), 500);
+          toast('放错位置，应该在 ' + expected + ' 层', 'bad');
+        }
+      });
+    });
+
+    function updateScore() {
+      const placed = pool.querySelectorAll('.c1-chip.placed').length;
+      scoreEl.textContent = placed;
+      if (placed === 5) {
+        answerBox.style.display = 'block';
+        setTimeout(() => answerBox.scrollIntoView({ behavior: 'smooth', block: 'center' }), 300);
+      }
+    }
+
+    window.c1Reset = function () {
+      drops.forEach(d => {
+        d.classList.remove('correct', 'wrong', 'over');
+        d.innerHTML = '';
+      });
+      chips.forEach(c => c.classList.remove('placed'));
+      scoreEl.textContent = '0';
+      answerBox.style.display = 'none';
+      toast('已重置');
+    };
+  })();
+
+  // ============================
+  //  CASE 2 — Drop filterValue state at correct node
+  // ============================
+  (function () {
+    const token = document.querySelector('.c2-state-token');
+    const slots = document.querySelectorAll('.c2-state-slot');
+    const answerBox = document.getElementById('c2-answer');
+    if (!token) return;
+
+    let dragging = false;
+
+    token.addEventListener('dragstart', e => {
+      dragging = true;
+      token.classList.add('dragging');
+      try { e.dataTransfer.setData('text/plain', 'filterValue'); } catch (_) {}
+      e.dataTransfer.effectAllowed = 'move';
+    });
+    token.addEventListener('dragend', () => {
+      dragging = false;
+      token.classList.remove('dragging');
+      slots.forEach(s => s.classList.remove('over'));
+    });
+
+    slots.forEach(slot => {
+      slot.addEventListener('dragover', e => {
+        e.preventDefault();
+        if (slot.classList.contains('correct')) return;
+        slot.classList.add('over');
+      });
+      slot.addEventListener('dragleave', () => slot.classList.remove('over'));
+      slot.addEventListener('drop', e => {
+        e.preventDefault();
+        slot.classList.remove('over');
+        if (slot.classList.contains('correct')) return;
+
+        const correct = slot.dataset.slot === 'ProductPage';
+        if (correct) {
+          // place token here
+          slot.classList.add('correct', 'has-chip');
+          slot.innerHTML = '';
+          const placed = document.createElement('div');
+          placed.className = 'c2-state-token';
+          placed.innerHTML = 'filterValue';
+          placed.draggable = false;
+          slot.appendChild(placed);
+          // remove other slots' wrong state
+          slots.forEach(s => {
+            if (s !== slot) s.classList.remove('wrong');
+          });
+          // hide pool token
+          token.style.display = 'none';
+          toast('放对了 ✓ — 兄弟想共享，要提到共同父', 'good');
+          answerBox.style.display = 'block';
+          setTimeout(() => answerBox.scrollIntoView({ behavior: 'smooth', block: 'center' }), 300);
+        } else {
+          slot.classList.add('wrong');
+          setTimeout(() => slot.classList.remove('wrong'), 500);
+          const reason = slot.dataset.slot === 'FilterPanel'
+            ? 'FilterPanel 是兄弟，ProductList 看不见它的 state'
+            : 'ProductList 不能凭空生出 filterValue（用户操作的是 FilterPanel）';
+          toast('× ' + reason, 'bad');
+        }
+      });
+    });
+  })();
+
+  // ============================
+  //  CASE 3 — Reorder ThemeProviders, leaves recompute
+  // ============================
+  (function () {
+    const list = document.getElementById('c3-providers');
+    if (!list) return;
+    const stackEl = document.getElementById('c3-stack');
+
+    let dragSrc = null;
+
+    function getOrder() {
+      return Array.from(list.children).map(el => el.dataset.theme);
+    }
+
+    // outer-to-inner = top-to-bottom
+    // each leaf has a depth meaning how deep the provider chain it sits in:
+    // depth 0 = inside outermost only
+    // depth 1 = inside outer + middle
+    // depth 2 = inside outer + middle (different child of middle)
+    // depth 3 = inside all three
+    // depth 0 = back outside (Footer, sibling of Header)
+
+    function recompute() {
+      const order = getOrder(); // [outer, middle, inner]
+      // each leaf reads its closest provider, given its depth
+      // mapping (chosen to make the question meaningful):
+      // Header  : depth 0 → reads order[0]   (outermost)
+      // HeroBanner : depth 1 → reads order[1]
+      // BannerTitle: depth 2 → reads order[1]   (still inside middle, not yet inside inner)
+      // CTAButton  : depth 3 → reads order[2]   (innermost)
+      // Footer  : depth 0 → reads order[0]
+      const leafReads = {
+        A: order[0],
+        B: order[1],
+        C: order[1],
+        D: order[2],
+        E: order[0]
+      };
+      Object.entries(leafReads).forEach(([k, theme]) => {
+        const el = document.querySelector('.c3-tree-line[data-leaf="' + k + '"] .computed');
+        if (!el) return;
+        el.dataset.out = theme;
+        el.textContent = '读 ' + theme;
+      });
+      // explain stack
+      stackEl.textContent = order.join(' → ');
+    }
+
+    // drag reorder
+    list.querySelectorAll('.c3-prov').forEach(item => {
+      item.addEventListener('dragstart', e => {
+        dragSrc = item;
+        item.classList.add('dragging');
+        try { e.dataTransfer.setData('text/plain', item.dataset.theme); } catch (_) {}
+        e.dataTransfer.effectAllowed = 'move';
+      });
+      item.addEventListener('dragend', () => {
+        item.classList.remove('dragging');
+        dragSrc = null;
+      });
+      item.addEventListener('dragover', e => {
+        e.preventDefault();
+        const target = e.currentTarget;
+        if (!dragSrc || dragSrc === target) return;
+        const rect = target.getBoundingClientRect();
+        const above = (e.clientY - rect.top) < rect.height / 2;
+        if (above) list.insertBefore(dragSrc, target);
+        else list.insertBefore(dragSrc, target.nextSibling);
+      });
+      item.addEventListener('drop', e => {
+        e.preventDefault();
+        recompute();
+      });
+    });
+
+    recompute();
+  })();
+
+  // ============================
+  //  CASE 4 — Layered overrides (toggle + visual update)
+  // ============================
+  (function () {
+    const togs = document.querySelectorAll('.c4-tog');
+    if (!togs.length) return;
+    const state = { global: true, context: true, local: true };
+
+    function compute(scope) {
+      // for each preview cell, find its "closest" available value
+      // scope: 'plain' (商品页) → looks at global only
+      // scope: 'admin' (后台 button) → looks at context, fall back to global
+      // scope: 'pill' (后台 pill) → looks at local, fall back to context, fall back to global
+      const fallbacks = {
+        plain: ['global'],
+        admin: ['context', 'global'],
+        pill:  ['local', 'context', 'global']
+      };
+      const values = { global: 8, context: 4, local: 999 };
+      for (const k of fallbacks[scope]) {
+        if (state[k]) return { value: values[k], from: k };
+      }
+      return null;
+    }
+
+    function apply() {
+      const pairs = [
+        { id: 'c4-demo-1', out: 'c4-out-1', scope: 'plain' },
+        { id: 'c4-demo-2', out: 'c4-out-2', scope: 'admin' },
+        { id: 'c4-demo-3', out: 'c4-out-3', scope: 'pill' }
+      ];
+      pairs.forEach(p => {
+        const demo = document.getElementById(p.id);
+        const out = document.getElementById(p.out);
+        const r = compute(p.scope);
+        if (!r) {
+          demo.style.borderRadius = '0';
+          out.textContent = '— 无值';
+        } else {
+          demo.style.borderRadius = r.value + 'px';
+          out.textContent = r.value + 'px (' + ({global:'全局', context:'context', local:'特例'}[r.from]) + ')';
+        }
+      });
+
+      // reflect tog state visually
+      togs.forEach(t => {
+        const k = t.dataset.tog;
+        t.classList.toggle('off', !state[k]);
+      });
+    }
+
+    togs.forEach(t => {
+      t.addEventListener('click', () => {
+        const k = t.dataset.tog;
+        state[k] = !state[k];
+        apply();
+      });
+    });
+
+    apply();
+  })();
+
+  // ============================
+  //  CASE 5 — Toggle BAD / GOOD example
+  // ============================
+  (function () {
+    const buttons = document.querySelectorAll('.c5-toggle button');
+    const badView = document.getElementById('c5-bad-view');
+    const goodView = document.getElementById('c5-good-view');
+    if (!buttons.length) return;
+
+    buttons.forEach(b => {
+      b.addEventListener('click', () => {
+        buttons.forEach(x => x.classList.remove('active'));
+        b.classList.add('active');
+        if (b.dataset.mode === 'bad') {
+          badView.style.display = '';
+          goodView.style.display = 'none';
+        } else {
+          badView.style.display = 'none';
+          goodView.style.display = '';
+        }
+      });
+    });
+  })();
+</script>
+
+</body>
+</html>

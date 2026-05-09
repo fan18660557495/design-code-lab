@@ -1,0 +1,2244 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Theme 切换实战 × Figma Modes — 一次讲清楚</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,300..900&family=Geist:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Noto+Sans+SC:wght@300;400;500;700;900&family=Noto+Serif+SC:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f3eee5;
+    --bg-2: #ebe4d4;
+    --ink: #16161d;
+    --ink-soft: #4a4a55;
+    --ink-mute: #8a8a92;
+    --line: #d5cdba;
+    --line-soft: #e3dcca;
+    --accent: #ff4d2e;
+    --accent-soft: #ffe4dc;
+    --blue: #0a4cff;
+    --blue-soft: #dde6ff;
+    --green: #1f6b3a;
+    --green-soft: #d4ecdb;
+    --yellow: #ffcf3d;
+    --purple: #6b46c1;
+    --purple-soft: #ede5ff;
+    --paper: #faf7f0;
+    --shadow: 0 1px 0 rgba(0,0,0,0.04), 0 8px 24px rgba(22,22,29,0.06);
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'Geist', 'Noto Sans SC', system-ui, -apple-system, sans-serif;
+    font-size: 16px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    background-image:
+      radial-gradient(circle at 1px 1px, rgba(22,22,29,0.05) 1px, transparent 0);
+    background-size: 24px 24px;
+  }
+
+  /* Typography */
+  .display-cn { font-family: 'Noto Serif SC', 'Fraunces', serif; font-weight: 900; letter-spacing: -0.01em; }
+  .display-en { font-family: 'Fraunces', 'Noto Serif SC', serif; font-weight: 600; font-style: italic; letter-spacing: -0.02em; }
+  .mono { font-family: 'JetBrains Mono', monospace; }
+  .label { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-mute); }
+
+  /* Layout */
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 0 32px; }
+
+  /* Top bar */
+  .topbar {
+    border-bottom: 1px dashed var(--line);
+    padding: 16px 0;
+    background: var(--bg);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    backdrop-filter: blur(8px);
+    background: rgba(243, 238, 229, 0.85);
+  }
+  .topbar-inner { display: flex; justify-content: space-between; align-items: center; gap: 24px; }
+  .brand { font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 600; }
+  .brand .dot { display: inline-block; width: 8px; height: 8px; background: var(--accent); border-radius: 50%; margin-right: 8px; vertical-align: middle; animation: pulse 2s ease-in-out infinite; }
+  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+  .nav-links { display: flex; gap: 20px; font-size: 13px; }
+  .nav-links a { color: var(--ink-soft); text-decoration: none; transition: color 0.2s; }
+  .nav-links a:hover { color: var(--accent); }
+  .nav-links a.current { color: var(--accent); font-weight: 600; }
+
+  /* Hero */
+  .hero { padding: 100px 0 80px; position: relative; overflow: hidden; }
+  .hero-meta { display: flex; gap: 24px; margin-bottom: 32px; align-items: center; flex-wrap: wrap; }
+  .hero-meta .pill { padding: 6px 12px; border: 1px solid var(--ink); border-radius: 100px; font-size: 11px; font-family: 'JetBrains Mono', monospace; letter-spacing: 0.05em; }
+  .hero-meta .pill.fill { background: var(--ink); color: var(--bg); }
+  .hero h1 {
+    font-family: 'Noto Serif SC', 'Fraunces', serif;
+    font-weight: 900;
+    font-size: clamp(48px, 7vw, 92px);
+    line-height: 0.95;
+    letter-spacing: -0.03em;
+    margin: 0 0 24px;
+  }
+  .hero h1 .em { font-family: 'Fraunces', serif; font-style: italic; font-weight: 500; color: var(--accent); }
+  .hero h1 .x { display: inline-block; transform: translateY(-0.05em); margin: 0 0.05em; color: var(--ink-mute); font-weight: 300; }
+  .hero p.lede {
+    font-size: 20px;
+    line-height: 1.5;
+    max-width: 640px;
+    color: var(--ink-soft);
+    margin: 0 0 40px;
+  }
+  .hero-grid {
+    display: grid;
+    grid-template-columns: 1.4fr 1fr;
+    gap: 48px;
+    align-items: end;
+  }
+  .hero-side {
+    border-left: 1px dashed var(--line);
+    padding-left: 24px;
+    font-size: 13px;
+    color: var(--ink-soft);
+  }
+  .hero-side .row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px dashed var(--line); }
+  .hero-side .row:last-child { border-bottom: none; }
+  .hero-side .row .k { color: var(--ink-mute); font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.05em; text-transform: uppercase; }
+  .hero-side .row .v { font-weight: 500; }
+
+  /* Hero theme triplet — 3 cards in 3 themes side-by-side */
+  .hero-themes {
+    margin-top: 48px;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+  }
+  @media (max-width: 720px) { .hero-themes { grid-template-columns: 1fr; } }
+  .hero-tcard {
+    border-radius: 8px;
+    padding: 20px;
+    border: 1px solid transparent;
+    position: relative;
+    overflow: hidden;
+    min-height: 130px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    transition: transform 0.3s ease;
+  }
+  .hero-tcard:hover { transform: translateY(-3px); }
+  .hero-tcard .ttag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    opacity: 0.8;
+  }
+  .hero-tcard .ttitle {
+    font-family: 'Noto Serif SC', serif;
+    font-weight: 700;
+    font-size: 18px;
+    line-height: 1.2;
+    margin-top: 6px;
+  }
+  .hero-tcard .tbtn {
+    align-self: flex-start;
+    padding: 8px 14px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 500;
+    font-family: 'Geist', sans-serif;
+  }
+  .hero-tcard.t-light { background: #faf7f0; color: #16161d; border-color: #d5cdba; }
+  .hero-tcard.t-light .tbtn { background: #16161d; color: #faf7f0; }
+  .hero-tcard.t-dark { background: #16161d; color: #f5f5f7; border-color: #2a2a36; }
+  .hero-tcard.t-dark .tbtn { background: #ff4d2e; color: white; }
+  .hero-tcard.t-brand { background: linear-gradient(135deg, #6b46c1 0%, #8b5cf6 100%); color: white; }
+  .hero-tcard.t-brand .tbtn { background: white; color: #6b46c1; }
+
+  /* Section */
+  section { padding: 80px 0; border-top: 1px solid var(--line); position: relative; }
+  .section-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 56px; flex-wrap: wrap; gap: 16px; }
+  .section-num { font-family: 'JetBrains Mono', monospace; font-size: 13px; color: var(--ink-mute); letter-spacing: 0.1em; }
+  .section-num strong { color: var(--accent); }
+  .section-title {
+    font-family: 'Noto Serif SC', serif;
+    font-weight: 900;
+    font-size: clamp(32px, 4.5vw, 52px);
+    line-height: 1.05;
+    letter-spacing: -0.02em;
+    margin: 0;
+    max-width: 18ch;
+  }
+  .section-title .em { font-family: 'Fraunces', serif; font-style: italic; font-weight: 500; color: var(--accent); }
+  .section-sub { color: var(--ink-soft); font-size: 17px; max-width: 38ch; line-height: 1.55; margin: 0; }
+
+  /* Problem comparison */
+  .problem-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 32px;
+    margin-top: 24px;
+  }
+  @media (max-width: 880px) { .problem-grid { grid-template-columns: 1fr; } }
+  .problem-card {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 28px;
+    position: relative;
+  }
+  .problem-card.bad { border-color: var(--accent); background: var(--accent-soft); }
+  .problem-card.good { border-color: var(--green); background: var(--green-soft); }
+  .problem-card .tag {
+    position: absolute; top: -12px; left: 24px;
+    background: var(--bg); padding: 2px 10px;
+    font-family: 'JetBrains Mono', monospace; font-size: 11px;
+    letter-spacing: 0.1em;
+  }
+  .problem-card.bad .tag { color: var(--accent); border: 1px solid var(--accent); }
+  .problem-card.good .tag { color: var(--green); border: 1px solid var(--green); }
+  .problem-card h3 { font-family: 'Noto Serif SC', serif; font-size: 22px; margin: 0 0 12px; font-weight: 700; }
+  .problem-card p { margin: 0 0 12px; color: var(--ink-soft); font-size: 14px; line-height: 1.55; }
+
+  /* §01 Crash mock — 浅色稿强行变暗的翻车现场 */
+  .crash-mock {
+    margin-top: 16px;
+    border-radius: 6px;
+    overflow: hidden;
+    border: 1px solid rgba(0,0,0,0.1);
+    position: relative;
+  }
+  .crash-mock.crash-good { border-color: var(--green); }
+  .crash-mock.crash-bad { background: #1a1a1a; padding: 22px 18px; }
+  .crash-mock.crash-good { background: #16161d; padding: 22px 18px; }
+  .crash-mock .cm-title {
+    color: white; /* 文字消失 */
+    color: rgba(255,255,255,0.06);
+    font-family: 'Noto Serif SC', serif;
+    font-size: 16px;
+    font-weight: 700;
+    margin-bottom: 8px;
+    line-height: 1.3;
+  }
+  .crash-mock.crash-good .cm-title { color: #f5f5f7; }
+  .crash-mock .cm-body {
+    color: #777; /* 还行 */
+    font-size: 12px;
+    line-height: 1.55;
+    margin-bottom: 12px;
+  }
+  .crash-mock.crash-good .cm-body { color: #b8b8c0; }
+  .crash-mock .cm-row { display: flex; gap: 8px; align-items: center; }
+  .crash-mock .cm-icon {
+    width: 22px; height: 22px;
+    background: #1a1a1a; /* 看不见 */
+    border-radius: 4px;
+    flex-shrink: 0;
+    border: 1px solid #1a1a1a;
+  }
+  .crash-mock.crash-good .cm-icon {
+    background: #ff7355;
+    border: 1px solid #ff7355;
+  }
+  .crash-mock .cm-btn {
+    background: #ffe4dc; /* 浅色稿的橙 soft, 在深色里太刺 */
+    color: #ff4d2e;
+    padding: 6px 12px;
+    border-radius: 3px;
+    font-size: 12px;
+    font-weight: 500;
+    font-family: 'Geist', sans-serif;
+  }
+  .crash-mock.crash-good .cm-btn {
+    background: #ff4d2e;
+    color: white;
+  }
+  .crash-mock .cm-warn {
+    position: absolute;
+    top: 8px; right: 10px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    color: #ff4d2e;
+    background: rgba(255, 77, 46, 0.12);
+    padding: 2px 7px;
+    border-radius: 100px;
+    letter-spacing: 0.05em;
+  }
+  .crash-mock .cm-ok {
+    position: absolute;
+    top: 8px; right: 10px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    color: #4ade80;
+    background: rgba(74, 222, 128, 0.12);
+    padding: 2px 7px;
+    border-radius: 100px;
+    letter-spacing: 0.05em;
+  }
+
+  /* Pain points list */
+  .pain-list { margin-top: 16px; padding: 0; list-style: none; }
+  .pain-list li {
+    padding: 10px 0;
+    border-bottom: 1px dashed rgba(255,77,46,0.3);
+    font-size: 13px;
+    color: var(--ink-soft);
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+  }
+  .pain-list li:last-child { border-bottom: none; }
+  .pain-list li::before {
+    content: '✕';
+    color: var(--accent);
+    font-weight: 700;
+    flex-shrink: 0;
+    width: 16px;
+  }
+  .gain-list { margin-top: 16px; padding: 0; list-style: none; }
+  .gain-list li {
+    padding: 10px 0;
+    border-bottom: 1px dashed rgba(31,107,58,0.3);
+    font-size: 13px;
+    color: var(--ink-soft);
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+  }
+  .gain-list li:last-child { border-bottom: none; }
+  .gain-list li::before {
+    content: '✓';
+    color: var(--green);
+    font-weight: 700;
+    flex-shrink: 0;
+    width: 16px;
+  }
+
+  /* §02 Modes ↔ CSS */
+  .modes-stage {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    margin-top: 24px;
+  }
+  @media (max-width: 880px) { .modes-stage { grid-template-columns: 1fr; } }
+
+  /* Figma Variables panel mode columns */
+  .fig-modes {
+    background: #2c2c2c;
+    color: #e8e8e8;
+    border-radius: 6px;
+    padding: 16px;
+    font-family: 'Geist', system-ui, sans-serif;
+    font-size: 12px;
+    overflow: hidden;
+  }
+  .fig-modes .fm-head {
+    font-size: 11px;
+    color: #999;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    font-weight: 600;
+    margin-bottom: 12px;
+  }
+  .fig-modes-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+  }
+  .fig-modes-table th {
+    text-align: left;
+    padding: 6px 10px;
+    color: #999;
+    font-weight: 500;
+    font-size: 10px;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    border-bottom: 1px solid #404040;
+  }
+  .fig-modes-table th.mode-col {
+    text-align: center;
+    width: 28%;
+  }
+  .fig-modes-table th.mode-col.active { color: #0d99ff; }
+  .fig-modes-table td {
+    padding: 8px 10px;
+    border-bottom: 1px solid #303030;
+  }
+  .fig-modes-table tr:last-child td { border-bottom: none; }
+  .fig-modes-table .vname {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: #c9b6ff;
+  }
+  .fig-modes-table .vcell {
+    text-align: center;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10.5px;
+  }
+  .fig-modes-table .vcell .swatch {
+    display: inline-block;
+    width: 10px; height: 10px;
+    border-radius: 2px;
+    margin-right: 5px;
+    vertical-align: middle;
+    border: 1px solid rgba(255,255,255,0.1);
+  }
+  .fig-modes-table .vcell.active {
+    background: rgba(13, 153, 255, 0.08);
+  }
+  .fig-modes-tabs {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 14px;
+    background: #1e1e1e;
+    padding: 3px;
+    border-radius: 4px;
+    width: fit-content;
+  }
+  .fig-modes-tabs button {
+    background: transparent;
+    border: none;
+    color: #999;
+    cursor: pointer;
+    padding: 5px 12px;
+    font-family: inherit;
+    font-size: 11px;
+    border-radius: 3px;
+    transition: all 0.15s;
+  }
+  .fig-modes-tabs button.active {
+    background: #0d99ff;
+    color: white;
+  }
+  .fig-modes-tabs button:hover:not(.active) {
+    color: white;
+    background: #404040;
+  }
+
+  /* CSS code that mirrors */
+  .css-modes {
+    background: var(--ink);
+    color: #e8e8ec;
+    border-radius: 6px;
+    padding: 0;
+    overflow: hidden;
+    box-shadow: 0 4px 16px rgba(22,22,29,0.12);
+  }
+  .css-modes .cm-head {
+    background: #1f1f29;
+    padding: 10px 14px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    border-bottom: 1px solid #2a2a36;
+  }
+  .css-modes .cm-dots {
+    display: inline-block;
+    width: 8px; height: 8px; border-radius: 50%;
+    background: #ff5f56;
+    box-shadow: 14px 0 0 #ffbd2e, 28px 0 0 #27c93f;
+    margin-right: 24px;
+  }
+  .css-modes .cm-name {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: #8a8a96;
+  }
+  .css-modes .cm-pill {
+    margin-left: auto;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    background: rgba(255, 77, 46, 0.12);
+    border: 1px solid rgba(255, 77, 46, 0.25);
+    border-radius: 100px;
+    padding: 3px 10px;
+    color: #ff8a6e;
+  }
+  .css-modes .cm-body {
+    padding: 16px 20px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12.5px;
+    line-height: 1.85;
+    overflow-x: auto;
+  }
+  .css-modes .ln { white-space: nowrap; }
+  .css-modes .ln.indent { padding-left: 2ch; }
+  .csel { color: #c9b6ff; }
+  .ckey { color: #ff8a6e; }
+  .cstr { color: #a8e6a3; }
+  .cnum { color: #8ec5ff; }
+  .ccom { color: #6e6e7a; font-style: italic; }
+  .css-modes .ln.dim { opacity: 0.32; transition: opacity 0.25s ease; }
+  .css-modes .ln.spot {
+    background-color: rgba(255, 138, 110, 0.14);
+    box-shadow: inset 2px 0 0 #ff8a6e;
+    border-radius: 0 3px 3px 0;
+  }
+
+  /* §02 Toggle demo - tiny live page */
+  .toggle-demo {
+    margin-top: 24px;
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 24px;
+    display: grid;
+    grid-template-columns: 1fr 280px;
+    gap: 24px;
+    align-items: stretch;
+  }
+  @media (max-width: 720px) { .toggle-demo { grid-template-columns: 1fr; } }
+  .toggle-stage {
+    border-radius: 6px;
+    padding: 28px;
+    transition: background 0.3s ease, color 0.3s ease;
+    min-height: 280px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    border: 1px solid;
+    position: relative;
+  }
+  .toggle-stage[data-theme="light"] {
+    background: #faf7f0;
+    color: #16161d;
+    border-color: #d5cdba;
+  }
+  .toggle-stage[data-theme="dark"] {
+    background: #16161d;
+    color: #f5f5f7;
+    border-color: #2a2a36;
+  }
+  .toggle-stage h4 {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 22px;
+    margin: 0;
+    font-weight: 700;
+  }
+  .toggle-stage p {
+    font-size: 13px;
+    line-height: 1.6;
+    opacity: 0.85;
+    margin: 0;
+  }
+  .toggle-stage .ts-card {
+    padding: 14px 16px;
+    border-radius: 6px;
+    border: 1px solid;
+    transition: all 0.3s ease;
+  }
+  .toggle-stage[data-theme="light"] .ts-card {
+    background: white;
+    border-color: #d5cdba;
+  }
+  .toggle-stage[data-theme="dark"] .ts-card {
+    background: #1f1f29;
+    border-color: #2a2a36;
+  }
+  .toggle-stage .ts-btn {
+    align-self: flex-start;
+    padding: 10px 18px;
+    border-radius: 4px;
+    border: none;
+    font-size: 13px;
+    font-weight: 500;
+    font-family: 'Geist', sans-serif;
+    cursor: pointer;
+  }
+  .toggle-stage[data-theme="light"] .ts-btn { background: #16161d; color: #faf7f0; }
+  .toggle-stage[data-theme="dark"] .ts-btn { background: #ff4d2e; color: white; }
+  .toggle-stage .data-badge {
+    position: absolute;
+    top: 12px; right: 14px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    padding: 3px 8px;
+    border-radius: 100px;
+    letter-spacing: 0.05em;
+  }
+  .toggle-stage[data-theme="light"] .data-badge {
+    background: rgba(22,22,29,0.08);
+    color: #4a4a55;
+  }
+  .toggle-stage[data-theme="dark"] .data-badge {
+    background: rgba(255,255,255,0.08);
+    color: #b8b8c0;
+  }
+
+  .toggle-side {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  .toggle-side .lab {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--ink-mute);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+  .seg {
+    display: flex;
+    background: var(--bg-2);
+    padding: 3px;
+    border-radius: 4px;
+    margin-top: 4px;
+  }
+  .seg button {
+    flex: 1;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 8px 10px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--ink-soft);
+    border-radius: 3px;
+    transition: all 0.15s;
+    letter-spacing: 0.03em;
+  }
+  .seg button.active {
+    background: var(--ink);
+    color: var(--bg);
+    font-weight: 600;
+  }
+  .seg button:hover:not(.active) { color: var(--ink); }
+  .toggle-readout {
+    background: var(--ink);
+    color: #e8e8ec;
+    padding: 12px 14px;
+    border-radius: 4px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    line-height: 1.7;
+    margin-top: auto;
+  }
+  .toggle-readout .rk { color: #ff8a6e; }
+  .toggle-readout .rv { color: #ffd166; }
+
+  /* §03 Provider tree visualization */
+  .tree-stage {
+    margin-top: 24px;
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 36px 28px;
+    position: relative;
+  }
+  .tree-canvas {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0;
+    position: relative;
+  }
+  .tree-node {
+    background: white;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 12px 18px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    position: relative;
+    z-index: 2;
+    min-width: 180px;
+    text-align: center;
+  }
+  .tree-node.provider {
+    background: var(--purple-soft);
+    border: 2px solid var(--purple);
+    color: var(--purple);
+    font-weight: 600;
+    box-shadow: 0 0 0 6px rgba(107, 70, 193, 0.08), 0 0 0 14px rgba(107, 70, 193, 0.04);
+    position: relative;
+  }
+  .tree-node.provider::before {
+    content: '';
+    position: absolute;
+    inset: -22px;
+    border-radius: 16px;
+    border: 1px dashed var(--purple);
+    opacity: 0.4;
+    pointer-events: none;
+  }
+  .tree-node .tag {
+    display: block;
+    font-size: 9px;
+    letter-spacing: 0.1em;
+    color: var(--purple);
+    opacity: 0.7;
+    margin-bottom: 2px;
+  }
+  .tree-node.consumer {
+    background: white;
+    border-color: var(--blue);
+    color: var(--blue);
+  }
+  .tree-node.consumer .tag {
+    color: var(--blue);
+    opacity: 0.7;
+  }
+  .tree-row {
+    display: flex;
+    gap: 32px;
+    justify-content: center;
+    margin-top: 32px;
+    position: relative;
+    flex-wrap: wrap;
+  }
+  .tree-row::before {
+    content: '';
+    position: absolute;
+    top: -20px;
+    left: 50%;
+    width: 1px;
+    height: 16px;
+    background: var(--line);
+    transform: translateX(-50%);
+  }
+  .tree-row.deep { margin-top: 28px; gap: 14px; }
+  .tree-arrow {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--purple);
+    margin-top: 6px;
+    text-align: center;
+  }
+  .tree-arrow strong { color: var(--purple); font-weight: 600; }
+
+  .ctx-explain {
+    margin-top: 24px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+  }
+  @media (max-width: 720px) { .ctx-explain { grid-template-columns: 1fr; } }
+  .ctx-card {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 20px 22px;
+  }
+  .ctx-card h4 {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 16px;
+    margin: 0 0 8px;
+    font-weight: 700;
+  }
+  .ctx-card p {
+    font-size: 13px;
+    color: var(--ink-soft);
+    margin: 0;
+    line-height: 1.55;
+  }
+  .ctx-card .mn {
+    background: var(--ink);
+    color: #e8e8ec;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11.5px;
+    padding: 12px 14px;
+    border-radius: 4px;
+    margin-top: 12px;
+    overflow-x: auto;
+    line-height: 1.7;
+  }
+  .ctx-card .mn .ckey { color: #ff8a6e; }
+  .ctx-card .mn .cstr { color: #a8e6a3; }
+  .ctx-card .mn .ccom { color: #6e6e7a; font-style: italic; }
+
+  /* §04 Nested override */
+  .nest-stage {
+    margin-top: 24px;
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 32px 28px;
+    display: grid;
+    grid-template-columns: 1fr 280px;
+    gap: 32px;
+  }
+  @media (max-width: 880px) { .nest-stage { grid-template-columns: 1fr; } }
+
+  .nest-vis {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0;
+  }
+  .layer {
+    border-radius: 8px;
+    padding: 24px 22px 20px;
+    border: 2px solid;
+    position: relative;
+    transition: all 0.35s ease;
+  }
+  .layer + .layer {
+    margin-top: -8px;
+    margin-left: 28px;
+    margin-right: 28px;
+  }
+  .layer + .layer + .layer {
+    margin-left: 56px;
+    margin-right: 56px;
+  }
+  .layer-tag {
+    position: absolute;
+    top: -10px; left: 16px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    padding: 2px 8px;
+    background: var(--paper);
+    border-radius: 100px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    font-weight: 600;
+  }
+  .layer-1 { /* outer: light */
+    background: #faf7f0;
+    border-color: #d5cdba;
+    color: #16161d;
+  }
+  .layer-1 .layer-tag { color: #4a4a55; border: 1px solid #d5cdba; }
+  .layer-2 { /* mid: dark */
+    background: #16161d;
+    border-color: #2a2a36;
+    color: #f5f5f7;
+  }
+  .layer-2 .layer-tag { color: #ff4d2e; border: 1px solid #ff4d2e; }
+  .layer-3 { /* inner: brand */
+    background: linear-gradient(135deg, #6b46c1 0%, #8b5cf6 100%);
+    border-color: #6b46c1;
+    color: white;
+  }
+  .layer-3 .layer-tag { color: white; background: #6b46c1; border: 1px solid white; }
+  .layer h5 {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 15px;
+    margin: 0 0 6px;
+    font-weight: 700;
+  }
+  .layer p {
+    font-size: 12px;
+    margin: 0 0 12px;
+    opacity: 0.85;
+    line-height: 1.5;
+  }
+  .layer .leaf-btn {
+    align-self: flex-start;
+    padding: 7px 14px;
+    font-size: 12px;
+    font-weight: 500;
+    border-radius: 4px;
+    font-family: 'Geist', sans-serif;
+    border: none;
+    display: inline-block;
+  }
+  .layer-1 .leaf-btn { background: #16161d; color: #faf7f0; }
+  .layer-2 .leaf-btn { background: #ff4d2e; color: white; }
+  .layer-3 .leaf-btn { background: white; color: #6b46c1; }
+
+  .nest-side {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  .nest-side .nest-explain {
+    background: var(--ink);
+    color: #e8e8ec;
+    padding: 16px 18px;
+    border-radius: 6px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11.5px;
+    line-height: 1.85;
+  }
+  .nest-side .nest-explain .ckey { color: #ff8a6e; }
+  .nest-side .nest-explain .cstr { color: #a8e6a3; }
+  .nest-side .nest-explain .ccom { color: #8a8a96; font-style: italic; }
+  .nest-side .nest-explain .vname { color: #c9b6ff; }
+
+  .nest-toggle .lab {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--ink-mute);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+  .nest-toggle .seg button { font-size: 10.5px; }
+
+  /* §05 Full mock page */
+  .mock-stage {
+    margin-top: 16px;
+    border-radius: 8px;
+    border: 1px solid var(--line);
+    overflow: hidden;
+    background: var(--paper);
+  }
+  .mock-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--line);
+    background: var(--bg-2);
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .mock-bar .mock-name {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--ink-soft);
+    letter-spacing: 0.05em;
+  }
+  .mock-bar .mock-name strong { color: var(--ink); }
+  .mock-themes {
+    display: flex;
+    gap: 4px;
+    background: var(--ink);
+    padding: 3px;
+    border-radius: 6px;
+  }
+  .mock-themes button {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 8px 16px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11.5px;
+    color: rgba(255,255,255,0.6);
+    border-radius: 4px;
+    transition: all 0.18s;
+    font-weight: 500;
+    letter-spacing: 0.03em;
+  }
+  .mock-themes button:hover:not(.active) { color: white; }
+  .mock-themes button.active {
+    background: var(--accent);
+    color: white;
+  }
+  .mock-themes button .swatch {
+    display: inline-block;
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    margin-right: 6px;
+    vertical-align: middle;
+    border: 1px solid rgba(255,255,255,0.2);
+  }
+  .mock-themes button[data-mt="light"] .swatch { background: #faf7f0; }
+  .mock-themes button[data-mt="dark"] .swatch { background: #16161d; }
+  .mock-themes button[data-mt="brand"] .swatch { background: #6b46c1; }
+
+  /* The actual rendered page using CSS variables */
+  .mock-page {
+    --m-bg: #faf7f0;
+    --m-surface: #ffffff;
+    --m-text: #16161d;
+    --m-text-soft: #4a4a55;
+    --m-text-mute: #8a8a92;
+    --m-border: #d5cdba;
+    --m-primary: #ff4d2e;
+    --m-primary-text: #ffffff;
+    --m-accent: #0a4cff;
+    --m-radius: 6px;
+    background: var(--m-bg);
+    color: var(--m-text);
+    padding: 0;
+    transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    font-family: 'Geist', 'Noto Sans SC', sans-serif;
+  }
+  .mock-page[data-theme="light"] {
+    --m-bg: #faf7f0;
+    --m-surface: #ffffff;
+    --m-text: #16161d;
+    --m-text-soft: #4a4a55;
+    --m-text-mute: #8a8a92;
+    --m-border: #d5cdba;
+    --m-primary: #ff4d2e;
+    --m-primary-text: #ffffff;
+    --m-accent: #0a4cff;
+  }
+  .mock-page[data-theme="dark"] {
+    --m-bg: #16161d;
+    --m-surface: #1f1f29;
+    --m-text: #f5f5f7;
+    --m-text-soft: #b8b8c0;
+    --m-text-mute: #6e6e7a;
+    --m-border: #2a2a36;
+    --m-primary: #ff4d2e;
+    --m-primary-text: #ffffff;
+    --m-accent: #4a7eff;
+  }
+  .mock-page[data-theme="brand"] {
+    --m-bg: #2d1b69;
+    --m-surface: #4c2fa3;
+    --m-text: #ffffff;
+    --m-text-soft: #d6c8ff;
+    --m-text-mute: #a895d8;
+    --m-border: #6b46c1;
+    --m-primary: #ffd166;
+    --m-primary-text: #2d1b69;
+    --m-accent: #ff8a6e;
+  }
+  .mock-hero {
+    padding: 56px 40px 40px;
+    border-bottom: 1px solid var(--m-border);
+    transition: border-color 0.4s ease;
+  }
+  .mock-hero .mh-pill {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 100px;
+    border: 1px solid var(--m-border);
+    color: var(--m-text-soft);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10.5px;
+    letter-spacing: 0.05em;
+    margin-bottom: 16px;
+    background: var(--m-surface);
+    transition: all 0.4s ease;
+  }
+  .mock-hero h2 {
+    font-family: 'Noto Serif SC', serif;
+    font-size: clamp(28px, 4vw, 40px);
+    line-height: 1.1;
+    margin: 0 0 14px;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    color: var(--m-text);
+    transition: color 0.4s ease;
+  }
+  .mock-hero h2 .em {
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    font-weight: 500;
+    color: var(--m-primary);
+    transition: color 0.4s ease;
+  }
+  .mock-hero p {
+    color: var(--m-text-soft);
+    max-width: 56ch;
+    line-height: 1.55;
+    margin: 0 0 24px;
+    font-size: 14.5px;
+    transition: color 0.4s ease;
+  }
+  .mock-hero .mh-actions { display: flex; gap: 12px; flex-wrap: wrap; }
+  .mock-btn {
+    background: var(--m-primary);
+    color: var(--m-primary-text);
+    border: none;
+    padding: 10px 18px;
+    border-radius: var(--m-radius);
+    font-family: 'Geist', sans-serif;
+    font-size: 13.5px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.4s ease;
+  }
+  .mock-btn.secondary {
+    background: transparent;
+    color: var(--m-text);
+    border: 1px solid var(--m-border);
+  }
+
+  .mock-cards {
+    padding: 32px 40px 44px;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+  }
+  @media (max-width: 720px) { .mock-cards { grid-template-columns: 1fr; padding: 28px 24px; } }
+  .mock-card {
+    background: var(--m-surface);
+    border: 1px solid var(--m-border);
+    border-radius: var(--m-radius);
+    padding: 18px 18px 20px;
+    transition: all 0.4s ease;
+  }
+  .mock-card .mc-icon {
+    width: 32px; height: 32px;
+    background: var(--m-primary);
+    border-radius: 6px;
+    margin-bottom: 12px;
+    display: flex; align-items: center; justify-content: center;
+    color: var(--m-primary-text);
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    font-weight: 600;
+    font-size: 14px;
+    transition: all 0.4s ease;
+  }
+  .mock-card h3 {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 16px;
+    margin: 0 0 6px;
+    color: var(--m-text);
+    font-weight: 700;
+    transition: color 0.4s ease;
+  }
+  .mock-card p {
+    font-size: 12.5px;
+    line-height: 1.55;
+    margin: 0 0 14px;
+    color: var(--m-text-soft);
+    transition: color 0.4s ease;
+  }
+  .mock-card .mc-link {
+    color: var(--m-accent);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.05em;
+    text-decoration: none;
+    transition: color 0.4s ease;
+  }
+
+  .mock-readout {
+    background: var(--ink);
+    color: #e8e8ec;
+    padding: 18px 24px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    line-height: 1.85;
+    overflow-x: auto;
+  }
+  .mock-readout .ro-row {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    padding: 4px 0;
+  }
+  .mock-readout .ro-name { color: #ff8a6e; }
+  .mock-readout .ro-val {
+    color: #ffd166;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .mock-readout .ro-val .swatch {
+    display: inline-block;
+    width: 12px; height: 12px;
+    border-radius: 2px;
+    border: 1px solid rgba(255,255,255,0.15);
+  }
+  .mock-readout .ro-head {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: #6e6e7a;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+
+  /* §06 Checklist */
+  .checklist-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
+    margin-top: 24px;
+  }
+  @media (max-width: 880px) { .checklist-grid { grid-template-columns: 1fr; } }
+  .check-card {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 24px;
+  }
+  .check-card .cc-num {
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    font-size: 36px;
+    line-height: 1;
+    color: var(--accent);
+    margin-bottom: 8px;
+  }
+  .check-card h4 {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 17px;
+    margin: 0 0 14px;
+    font-weight: 700;
+  }
+  .check-card ul {
+    margin: 0; padding: 0; list-style: none;
+  }
+  .check-card li {
+    padding: 8px 0;
+    border-bottom: 1px dashed var(--line);
+    font-size: 13px;
+    color: var(--ink-soft);
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    line-height: 1.5;
+  }
+  .check-card li:last-child { border-bottom: none; }
+  .check-card li::before {
+    content: '☐';
+    color: var(--accent);
+    flex-shrink: 0;
+    width: 16px;
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .check-card li strong { color: var(--ink); font-weight: 600; }
+
+  .handoff {
+    margin-top: 32px;
+    background: var(--ink);
+    color: var(--bg);
+    border-radius: 6px;
+    padding: 28px 32px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 32px;
+  }
+  @media (max-width: 720px) { .handoff { grid-template-columns: 1fr; } }
+  .handoff h3 {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 22px;
+    margin: 0 0 16px;
+    font-weight: 700;
+    color: white;
+  }
+  .handoff h3 .em {
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    font-weight: 500;
+    color: var(--accent);
+  }
+  .handoff p {
+    font-size: 14px;
+    line-height: 1.7;
+    margin: 0 0 12px;
+    color: rgba(255,255,255,0.8);
+  }
+  .handoff ul {
+    margin: 0; padding: 0; list-style: none;
+  }
+  .handoff li {
+    padding: 6px 0;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: rgba(255,255,255,0.72);
+    line-height: 1.55;
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+  }
+  .handoff li::before {
+    content: '→';
+    color: var(--accent);
+    flex-shrink: 0;
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+  }
+  .handoff li strong { color: white; font-weight: 500; }
+
+  .outro-tip {
+    margin-top: 24px;
+    padding: 24px 28px;
+    background: var(--accent-soft);
+    border-left: 3px solid var(--accent);
+    border-radius: 4px;
+  }
+  .outro-tip .outro-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    color: var(--accent);
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+  .outro-tip p {
+    margin: 0 0 8px;
+    font-size: 14px;
+    line-height: 1.7;
+    color: var(--ink);
+  }
+  .outro-tip p:last-child { margin-bottom: 0; color: var(--ink-soft); font-size: 13px; }
+  .outro-tip strong { font-weight: 600; }
+  .outro-tip .mono {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    background: rgba(255,255,255,0.55);
+    padding: 1px 6px;
+    border-radius: 3px;
+  }
+
+  /* C-module wrap-up banner (since C2 is the C-module finale) */
+  .module-wrap {
+    margin-top: 32px;
+    padding: 32px 36px;
+    background: var(--ink);
+    color: var(--bg);
+    border-radius: 6px;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 24px;
+    align-items: center;
+  }
+  @media (max-width: 720px) { .module-wrap { grid-template-columns: 1fr; } }
+  .module-wrap .mw-head {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--accent);
+    letter-spacing: 0.12em;
+    margin-bottom: 8px;
+  }
+  .module-wrap h3 {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 26px;
+    margin: 0 0 8px;
+    font-weight: 700;
+  }
+  .module-wrap h3 .em {
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    font-weight: 500;
+    color: var(--accent);
+  }
+  .module-wrap p {
+    margin: 0;
+    font-size: 14px;
+    color: rgba(255,255,255,0.7);
+    line-height: 1.55;
+  }
+  .module-wrap .mw-trio {
+    display: flex;
+    gap: 8px;
+    flex-direction: column;
+  }
+  .module-wrap .mw-trio .mw-cell {
+    padding: 8px 14px;
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 4px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: rgba(255,255,255,0.8);
+    text-decoration: none;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 200px;
+  }
+  .module-wrap .mw-trio .mw-cell:hover {
+    border-color: var(--accent);
+    color: white;
+    background: rgba(255,77,46,0.08);
+  }
+  .module-wrap .mw-trio .mw-cell .code {
+    background: var(--accent);
+    color: white;
+    padding: 2px 8px;
+    border-radius: 100px;
+    font-weight: 600;
+    font-size: 10px;
+  }
+  .module-wrap .mw-trio .mw-cell.done .code {
+    background: var(--green);
+  }
+
+  /* Footer */
+  footer {
+    border-top: 1px solid var(--line);
+    padding: 56px 0 64px;
+    background: var(--bg);
+  }
+  .byline {
+    display: flex;
+    gap: 28px;
+    align-items: center;
+    padding-bottom: 32px;
+    border-bottom: 1px dashed var(--line);
+    margin-bottom: 24px;
+    position: relative;
+  }
+  .byline::before {
+    content: '';
+    position: absolute;
+    top: -56px; left: 0;
+    width: 32px; height: 1px;
+    background: var(--accent);
+  }
+  .byline .avatar {
+    width: 96px; height: 96px;
+    border-radius: 50%;
+    object-fit: cover;
+    flex-shrink: 0;
+    border: 3px solid var(--paper);
+    box-shadow: 0 0 0 1px var(--line), 0 6px 20px rgba(22,22,29,0.10);
+    background: var(--paper);
+  }
+  .byline-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--ink-mute);
+    letter-spacing: 0.18em;
+    margin-bottom: 8px;
+  }
+  .byline-label .dot {
+    display: inline-block;
+    width: 6px; height: 6px;
+    background: var(--accent);
+    border-radius: 50%;
+    margin-right: 6px;
+    vertical-align: 1px;
+  }
+  .byline-name {
+    font-family: 'Noto Serif SC', 'Fraunces', serif;
+    font-size: clamp(28px, 4vw, 40px);
+    font-weight: 700;
+    line-height: 1.05;
+    letter-spacing: -0.01em;
+    margin: 0 0 8px;
+  }
+  .byline-name .em {
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    font-weight: 500;
+    color: var(--accent);
+  }
+  .byline-tag {
+    font-size: 14px;
+    color: var(--ink-soft);
+    line-height: 1.55;
+    margin: 0;
+    max-width: 52ch;
+  }
+  .footer-meta {
+    text-align: center;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--ink-mute);
+    letter-spacing: 0.05em;
+  }
+  .footer-meta .heart { color: var(--accent); }
+  .footer-meta .mono { color: var(--ink-soft); font-weight: 500; }
+  @media (max-width: 600px) {
+    .byline { flex-direction: column; text-align: center; align-items: center; gap: 16px; }
+    .byline-tag { margin-left: auto; margin-right: auto; }
+  }
+
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+  section { animation: fadeIn 0.6s ease-out backwards; }
+
+</style>
+</head>
+<body>
+
+<!-- Top bar -->
+<div class="topbar">
+  <div class="wrap topbar-inner">
+    <div class="brand"><span class="dot"></span>THEME × FIGMA MODES / 实验讲解</div>
+    <nav class="nav-links">
+      <a href="index.html">合集</a>
+      <a href="box-figma.html">01 盒子</a>
+      <a href="components-figma.html">02 组件</a>
+      <a href="page-figma.html">03 拼页面</a>
+      <a href="data-flow-figma.html">04 数据流</a>
+    </nav>
+  </div>
+</div>
+
+<!-- Hero -->
+<header class="hero">
+  <div class="wrap">
+    <div class="hero-meta">
+      <span class="pill fill">实验互动 · INTERACTIVE</span>
+      <span class="pill">2026 / 设计 × 代码</span>
+      <span class="pill">C2 · 进阶 · Theme 切换</span>
+      <span class="label">阅读时长 ≈ 14 分钟</span>
+    </div>
+    <div class="hero-grid">
+      <div>
+        <h1>
+          <span class="display-cn">切换主题</span><br>
+          <span class="display-cn">不是改颜色</span><br>
+          <span class="em">那么简单。</span>
+        </h1>
+        <p class="lede">
+          Light → Dark → Brand。<br>
+          看似只是换色，背后是 Figma Modes 和 CSS Theme + Context 的全链路。<br>
+          这一篇带你做一次完整的 Theme 系统。
+        </p>
+      </div>
+      <div class="hero-side">
+        <div class="row"><span class="k">本页讲什么</span><span class="v">Theme 切换实战</span></div>
+        <div class="row"><span class="k">含互动</span><span class="v">完整 mock 页 3 主题</span></div>
+        <div class="row"><span class="k">面向</span><span class="v">设计师 + 前端</span></div>
+        <div class="row"><span class="k">前置知识</span><span class="v">C0 / C1 Tokens</span></div>
+      </div>
+    </div>
+
+    <!-- Quiet visual: 3 theme tasters -->
+    <div class="hero-themes">
+      <div class="hero-tcard t-light">
+        <div>
+          <div class="ttag">LIGHT MODE</div>
+          <div class="ttitle">默认浅色</div>
+        </div>
+        <div class="tbtn">查看详情</div>
+      </div>
+      <div class="hero-tcard t-dark">
+        <div>
+          <div class="ttag">DARK MODE</div>
+          <div class="ttitle">深色 · 夜间</div>
+        </div>
+        <div class="tbtn">查看详情</div>
+      </div>
+      <div class="hero-tcard t-brand">
+        <div>
+          <div class="ttag">BRAND MODE</div>
+          <div class="ttitle">品牌主题</div>
+        </div>
+        <div class="tbtn">查看详情</div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- §01 Problem: 切主题翻车现场 -->
+<section id="problem">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>01</strong> / 问题</div>
+        <h2 class="section-title">浅色稿改 Dark，<br>看着像是<br><span class="em">"鬼影一片"</span>。</h2>
+      </div>
+      <p class="section-sub">
+        最常见的翻车：把背景刷成 <span class="mono">#000</span>、文字刷成 <span class="mono">#fff</span>，
+        然后图标消失了、徽章看不清了、按钮太刺眼了。
+        因为颜色当初就是<strong>"散装的"</strong>，每个地方一个色码 —— 没有 Theme 这个概念。
+      </p>
+    </div>
+
+    <div class="problem-grid">
+      <div class="problem-card bad">
+        <span class="tag">BAD · 散装颜色硬切</span>
+        <h3>反白一刷，问题全冒出来</h3>
+        <p>底色直接换黑，文字直接换白。但所有"次要色"（图标背景、按钮背景、徽章背景）当初是按浅色背景配的。在深色里一下子全坏掉。</p>
+
+        <div class="crash-mock crash-bad">
+          <div class="cm-warn">3 处翻车</div>
+          <h4 class="cm-title">登录后开始你的旅程</h4>
+          <div class="cm-body">这段说明文字勉强能看，但已经偏灰太重，正文阅读不舒服。</div>
+          <div class="cm-row">
+            <div class="cm-icon"></div>
+            <div class="cm-btn">立即开始</div>
+          </div>
+        </div>
+
+        <ul class="pain-list">
+          <li>标题文字直接消失（深底 + 浅色稿配的灰文字）</li>
+          <li>图标背景和底色撞色（看不见）</li>
+          <li>主按钮 hover 色 <span class="mono">#ffe4dc</span> 在黑底上变成"高亮糖纸"</li>
+          <li>没有人知道哪些色"应该跟主题变"，哪些"不变"</li>
+        </ul>
+      </div>
+
+      <div class="problem-card good">
+        <span class="tag">GOOD · Theme Tokens</span>
+        <h3>每个颜色都有"语义"</h3>
+        <p>不再用 <span class="mono">#16161d</span>，而用 <span class="mono">--color-text</span>。
+        Theme 一切，<strong>每个 token 自己换值</strong> —— 该跟着变的跟着变，该不变的不变。</p>
+
+        <div class="crash-mock crash-good">
+          <div class="cm-ok">全部对位</div>
+          <h4 class="cm-title">登录后开始你的旅程</h4>
+          <div class="cm-body">说明文字用的是 <span style="color:#ff8a6e">--color-text-soft</span>，在 Dark 里换成柔和灰，可读性稳。</div>
+          <div class="cm-row">
+            <div class="cm-icon"></div>
+            <div class="cm-btn">立即开始</div>
+          </div>
+        </div>
+
+        <ul class="gain-list">
+          <li>每个色都有名字：<span class="mono">--color-bg / --color-text / --color-primary</span></li>
+          <li>Light / Dark 各定义一套值，<strong>组件不用改</strong></li>
+          <li>新增 Brand 主题，只是再加一组值的事</li>
+          <li>设计师在 Figma 改 Modes，前端在 CSS 改对应变量 —— 一一对应</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- §02 Figma Modes ↔ CSS Theme -->
+<section id="modes">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>02</strong> / 映射</div>
+        <h2 class="section-title">Figma <span class="em">Modes</span><br>和 CSS <span class="em">Theme</span>，<br>是同一件事。</h2>
+      </div>
+      <p class="section-sub">
+        Figma Variables 给一个变量挂多个 Mode（Light / Dark / Brand），切 Mode 就是切一组值。
+        CSS 把 <span class="mono">html[data-theme="dark"]</span> 当根选择器，下面定义同名变量但不同值 —— 概念完全一样。
+      </p>
+    </div>
+
+    <div class="modes-stage">
+      <!-- Figma side -->
+      <div class="fig-modes">
+        <div class="fm-head">VARIABLES · COLORS</div>
+        <div class="fig-modes-tabs" id="figModesTabs">
+          <button data-mode="light" class="active">Light</button>
+          <button data-mode="dark">Dark</button>
+          <button data-mode="brand">Brand</button>
+        </div>
+        <table class="fig-modes-table" id="figModesTable">
+          <thead>
+            <tr>
+              <th>Variable</th>
+              <th class="mode-col" data-col="light">Light</th>
+              <th class="mode-col" data-col="dark">Dark</th>
+              <th class="mode-col" data-col="brand">Brand</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="vname">color/bg</td>
+              <td class="vcell" data-col="light"><span class="swatch" style="background:#faf7f0"></span>#faf7f0</td>
+              <td class="vcell" data-col="dark"><span class="swatch" style="background:#16161d"></span>#16161d</td>
+              <td class="vcell" data-col="brand"><span class="swatch" style="background:#2d1b69"></span>#2d1b69</td>
+            </tr>
+            <tr>
+              <td class="vname">color/surface</td>
+              <td class="vcell" data-col="light"><span class="swatch" style="background:#ffffff"></span>#ffffff</td>
+              <td class="vcell" data-col="dark"><span class="swatch" style="background:#1f1f29"></span>#1f1f29</td>
+              <td class="vcell" data-col="brand"><span class="swatch" style="background:#4c2fa3"></span>#4c2fa3</td>
+            </tr>
+            <tr>
+              <td class="vname">color/text</td>
+              <td class="vcell" data-col="light"><span class="swatch" style="background:#16161d"></span>#16161d</td>
+              <td class="vcell" data-col="dark"><span class="swatch" style="background:#f5f5f7"></span>#f5f5f7</td>
+              <td class="vcell" data-col="brand"><span class="swatch" style="background:#ffffff"></span>#ffffff</td>
+            </tr>
+            <tr>
+              <td class="vname">color/text-soft</td>
+              <td class="vcell" data-col="light"><span class="swatch" style="background:#4a4a55"></span>#4a4a55</td>
+              <td class="vcell" data-col="dark"><span class="swatch" style="background:#b8b8c0"></span>#b8b8c0</td>
+              <td class="vcell" data-col="brand"><span class="swatch" style="background:#d6c8ff"></span>#d6c8ff</td>
+            </tr>
+            <tr>
+              <td class="vname">color/primary</td>
+              <td class="vcell" data-col="light"><span class="swatch" style="background:#ff4d2e"></span>#ff4d2e</td>
+              <td class="vcell" data-col="dark"><span class="swatch" style="background:#ff4d2e"></span>#ff4d2e</td>
+              <td class="vcell" data-col="brand"><span class="swatch" style="background:#ffd166"></span>#ffd166</td>
+            </tr>
+            <tr>
+              <td class="vname">color/border</td>
+              <td class="vcell" data-col="light"><span class="swatch" style="background:#d5cdba"></span>#d5cdba</td>
+              <td class="vcell" data-col="dark"><span class="swatch" style="background:#2a2a36"></span>#2a2a36</td>
+              <td class="vcell" data-col="brand"><span class="swatch" style="background:#6b46c1"></span>#6b46c1</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- CSS side -->
+      <div class="css-modes">
+        <div class="cm-head">
+          <span class="cm-dots"></span>
+          <span class="cm-name">theme.css</span>
+          <span class="cm-pill" id="cssActiveMode">Light · 当前</span>
+        </div>
+        <div class="cm-body" id="cssModesBody">
+          <div class="ln"><span class="csel">:root,</span></div>
+          <div class="ln"><span class="csel">html[data-theme="light"]</span> {</div>
+          <div class="ln indent" data-mode="light"><span class="ckey">--color-bg</span>:         <span class="cstr">#faf7f0</span>;</div>
+          <div class="ln indent" data-mode="light"><span class="ckey">--color-surface</span>:    <span class="cstr">#ffffff</span>;</div>
+          <div class="ln indent" data-mode="light"><span class="ckey">--color-text</span>:       <span class="cstr">#16161d</span>;</div>
+          <div class="ln indent" data-mode="light"><span class="ckey">--color-text-soft</span>:  <span class="cstr">#4a4a55</span>;</div>
+          <div class="ln indent" data-mode="light"><span class="ckey">--color-primary</span>:    <span class="cstr">#ff4d2e</span>;</div>
+          <div class="ln indent" data-mode="light"><span class="ckey">--color-border</span>:     <span class="cstr">#d5cdba</span>;</div>
+          <div class="ln">}</div>
+          <div class="ln">&nbsp;</div>
+          <div class="ln"><span class="csel">html[data-theme="dark"]</span> {</div>
+          <div class="ln indent" data-mode="dark"><span class="ckey">--color-bg</span>:         <span class="cstr">#16161d</span>;</div>
+          <div class="ln indent" data-mode="dark"><span class="ckey">--color-surface</span>:    <span class="cstr">#1f1f29</span>;</div>
+          <div class="ln indent" data-mode="dark"><span class="ckey">--color-text</span>:       <span class="cstr">#f5f5f7</span>;</div>
+          <div class="ln indent" data-mode="dark"><span class="ckey">--color-text-soft</span>:  <span class="cstr">#b8b8c0</span>;</div>
+          <div class="ln indent" data-mode="dark"><span class="ckey">--color-primary</span>:    <span class="cstr">#ff4d2e</span>;</div>
+          <div class="ln indent" data-mode="dark"><span class="ckey">--color-border</span>:     <span class="cstr">#2a2a36</span>;</div>
+          <div class="ln">}</div>
+          <div class="ln">&nbsp;</div>
+          <div class="ln"><span class="csel">html[data-theme="brand"]</span> {</div>
+          <div class="ln indent" data-mode="brand"><span class="ckey">--color-bg</span>:         <span class="cstr">#2d1b69</span>;</div>
+          <div class="ln indent" data-mode="brand"><span class="ckey">--color-surface</span>:    <span class="cstr">#4c2fa3</span>;</div>
+          <div class="ln indent" data-mode="brand"><span class="ckey">--color-text</span>:       <span class="cstr">#ffffff</span>;</div>
+          <div class="ln indent" data-mode="brand"><span class="ckey">--color-text-soft</span>:  <span class="cstr">#d6c8ff</span>;</div>
+          <div class="ln indent" data-mode="brand"><span class="ckey">--color-primary</span>:    <span class="cstr">#ffd166</span>;</div>
+          <div class="ln indent" data-mode="brand"><span class="ckey">--color-border</span>:     <span class="cstr">#6b46c1</span>;</div>
+          <div class="ln">}</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Inline toggle demo: tiny live page -->
+    <div class="toggle-demo">
+      <div class="toggle-stage" data-theme="light" id="toggleStage">
+        <div class="data-badge"><span class="mono">data-theme="light"</span></div>
+        <h4>切一下试试</h4>
+        <p>这里只换了 <span class="mono">html[data-theme]</span> 的值。整块 stage 的 background / color / 边框，都是通过 CSS Variables 自动跟随的 —— 没有写第二份 CSS。</p>
+        <div class="ts-card">
+          <strong style="font-size: 13px;">Card · 一个普通卡片</strong>
+          <div style="font-size: 12px; opacity: 0.75; margin-top: 4px;">用同一份 token 渲染，主题切走，它跟着走。</div>
+        </div>
+        <button class="ts-btn">查看更多</button>
+      </div>
+      <div class="toggle-side">
+        <div>
+          <div class="lab">主题切换 · TOGGLE</div>
+          <div class="seg" id="toggleSeg">
+            <button data-th="light" class="active">Light</button>
+            <button data-th="dark">Dark</button>
+          </div>
+        </div>
+        <div>
+          <div class="lab">原理 · 一行 JS</div>
+          <div class="toggle-readout" id="toggleReadout">
+            html.<span class="rk">setAttribute</span>(<br>
+            &nbsp;&nbsp;<span class="rv">'data-theme'</span>,<br>
+            &nbsp;&nbsp;<span class="rv">'light'</span><br>
+            )
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- §03 Theme + Context -->
+<section id="context">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>03</strong> / 配合</div>
+        <h2 class="section-title">Theme <span class="x">+</span> <br><span class="em">Context</span>，<br>怎么配合？</h2>
+      </div>
+      <p class="section-sub">
+        前面 B1 学过 React Context（"App 级别共享一个值"）。Theme 就是一个最经典的 Context 用法：
+        <strong>ThemeProvider 包整个 App</strong>，子组件用 <span class="mono">useContext</span> 读当前 theme，谁都不用通过 props 一层一层传。
+      </p>
+    </div>
+
+    <div class="tree-stage">
+      <div class="tree-canvas">
+        <div class="tree-node provider">
+          <span class="tag">PROVIDER</span>
+          ThemeProvider · theme="dark"
+        </div>
+        <div class="tree-arrow">↓ <strong>theme</strong> 通过 Context 广播给整棵树</div>
+        <div class="tree-row">
+          <div class="tree-node consumer">
+            <span class="tag">CONSUMER</span>
+            &lt;Header /&gt;
+          </div>
+          <div class="tree-node consumer">
+            <span class="tag">CONSUMER</span>
+            &lt;Sidebar /&gt;
+          </div>
+          <div class="tree-node consumer">
+            <span class="tag">CONSUMER</span>
+            &lt;Main /&gt;
+          </div>
+        </div>
+        <div class="tree-row deep">
+          <div class="tree-node consumer" style="font-size: 11px;">
+            <span class="tag">DEEP</span>
+            &lt;NavItem /&gt;
+          </div>
+          <div class="tree-node consumer" style="font-size: 11px;">
+            <span class="tag">DEEP</span>
+            &lt;UserMenu /&gt;
+          </div>
+          <div class="tree-node consumer" style="font-size: 11px;">
+            <span class="tag">DEEP</span>
+            &lt;Card /&gt;
+          </div>
+          <div class="tree-node consumer" style="font-size: 11px;">
+            <span class="tag">DEEP</span>
+            &lt;CTA /&gt;
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="ctx-explain">
+      <div class="ctx-card">
+        <h4>① 顶层放 Provider</h4>
+        <p>包住整个 App。Provider 内部把 <span class="mono">theme</span> 写到 <span class="mono">html[data-theme]</span>，CSS Variables 立刻生效。</p>
+        <div class="mn">
+<span class="ckey">function</span> App() {<br>
+&nbsp;&nbsp;<span class="ckey">const</span> [theme, setTheme] = useState(<span class="cstr">'light'</span>);<br>
+&nbsp;&nbsp;<span class="ckey">return</span> (<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&lt;ThemeProvider theme={theme}<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;setTheme={setTheme}&gt;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;Layout /&gt;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&lt;/ThemeProvider&gt;<br>
+&nbsp;&nbsp;);<br>
+}
+        </div>
+      </div>
+      <div class="ctx-card">
+        <h4>② 子组件就近读</h4>
+        <p>任何深度的子组件，<span class="mono">useTheme()</span> 一行就拿到当前主题。<strong>不用一层层 props 传</strong>。</p>
+        <div class="mn">
+<span class="ckey">function</span> ThemeToggle() {<br>
+&nbsp;&nbsp;<span class="ckey">const</span> { theme, setTheme } = useTheme();<br>
+&nbsp;&nbsp;<span class="ckey">return</span> (<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&lt;button onClick={() =&gt; setTheme(<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;theme === <span class="cstr">'light'</span> ? <span class="cstr">'dark'</span> : <span class="cstr">'light'</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;)}&gt;切换&lt;/button&gt;<br>
+&nbsp;&nbsp;);<br>
+}
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- §04 Nested override -->
+<section id="nested">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>04</strong> / 局部</div>
+        <h2 class="section-title">营销页里，<br>放一个<span class="em">不一样</span>的<br>CTA。</h2>
+      </div>
+      <p class="section-sub">
+        实际场景：整个 App 是 Light，营销 Banner 区想要 Dark，里面一个特殊 CTA 又想要 Brand 紫。
+        多层嵌套 Provider —— <strong>叶子永远跟着最近的那一层</strong>。
+      </p>
+    </div>
+
+    <div class="nest-stage">
+      <div class="nest-vis">
+        <div class="layer layer-1">
+          <span class="layer-tag">App · Light</span>
+          <h5>整站默认主题</h5>
+          <p>大部分页面用浅色，干净、可读。</p>
+          <div class="leaf-btn">普通按钮</div>
+        </div>
+        <div class="layer layer-2">
+          <span class="layer-tag">Banner · Dark</span>
+          <h5>营销区 · 局部 Dark</h5>
+          <p>这里用了第二层 ThemeProvider，里面所有元素都跟着 Dark。</p>
+          <div class="leaf-btn">Banner 内按钮</div>
+        </div>
+        <div class="layer layer-3">
+          <span class="layer-tag">CTA · Brand</span>
+          <h5>关键 CTA · 局部 Brand</h5>
+          <p>第三层 Provider 给一个特殊 CTA 打上品牌紫。它不知道外面是 Light 还是 Dark —— 它只读"最近那一层"。</p>
+          <div class="leaf-btn">立即领取 ↗</div>
+        </div>
+      </div>
+
+      <div class="nest-side">
+        <div class="nest-toggle">
+          <div class="lab">最里层主题 · INNER</div>
+          <div class="seg" id="nestSeg">
+            <button data-nth="brand" class="active">Brand</button>
+            <button data-nth="dark">Dark</button>
+            <button data-nth="light">Light</button>
+          </div>
+        </div>
+        <div class="nest-explain">
+<span class="ccom">// React 树结构</span><br>
+&lt;<span class="vname">ThemeProvider</span> theme=<span class="cstr">"light"</span>&gt;<br>
+&nbsp;&nbsp;&lt;App&gt;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="ccom">// ↓ 第二层覆盖</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&lt;<span class="vname">ThemeProvider</span> theme=<span class="cstr">"dark"</span>&gt;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;Banner&gt;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="ccom">// ↓ 第三层再覆盖</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;<span class="vname">ThemeProvider</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;theme=<span class="cstr">"brand"</span>&gt;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;CTA /&gt;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;/<span class="vname">ThemeProvider</span>&gt;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;/Banner&gt;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&lt;/<span class="vname">ThemeProvider</span>&gt;<br>
+&nbsp;&nbsp;&lt;/App&gt;<br>
+&lt;/<span class="vname">ThemeProvider</span>&gt;
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- §05 Full mock interactive -->
+<section id="full">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>05</strong> / 实战</div>
+        <h2 class="section-title">完整页面，<br>三主题<span class="em">一键切</span>。</h2>
+      </div>
+      <p class="section-sub">
+        整页（Hero / 三张卡片 / 按钮）。点顶部 Light / Dark / Brand，
+        所有元素都通过 <span class="mono">--m-bg / --m-text / --m-primary</span> 等 token 跟着变 ——
+        下面的"实时值"面板会同步显示当前每个 token 解析到什么颜色。
+      </p>
+    </div>
+
+    <div class="mock-stage">
+      <div class="mock-bar">
+        <div class="mock-name"><strong>Acme</strong> · 一个营销页 mock</div>
+        <div class="mock-themes" id="mockThemes">
+          <button data-mt="light" class="active"><span class="swatch"></span>Light</button>
+          <button data-mt="dark"><span class="swatch"></span>Dark</button>
+          <button data-mt="brand"><span class="swatch"></span>Brand</button>
+        </div>
+      </div>
+
+      <div class="mock-page" data-theme="light" id="mockPage">
+        <div class="mock-hero">
+          <div class="mh-pill">PRODUCT · NEW</div>
+          <h2>把你的稿子，<span class="em">一键变成代码</span>。</h2>
+          <p>同一套设计 Tokens，三种主题、零额外样式。设计师交付一份 Variables，工程师写一份 CSS —— 主题之间的差异，<strong>由 Mode 自己处理</strong>。</p>
+          <div class="mh-actions">
+            <button class="mock-btn">立即试用</button>
+            <button class="mock-btn secondary">查看文档</button>
+          </div>
+        </div>
+
+        <div class="mock-cards">
+          <div class="mock-card">
+            <div class="mc-icon">A</div>
+            <h3>Auto Layout</h3>
+            <p>盒子模型一一对应，AI 还原稿子也能拿出干净的 flex / grid。</p>
+            <a class="mc-link" href="#">了解更多 →</a>
+          </div>
+          <div class="mock-card">
+            <div class="mc-icon">T</div>
+            <h3>Tokens 系统</h3>
+            <p>颜色 / 字号 / 间距，都用名字。Theme 切换不用改组件。</p>
+            <a class="mc-link" href="#">了解更多 →</a>
+          </div>
+          <div class="mock-card">
+            <div class="mc-icon">M</div>
+            <h3>Modes 同步</h3>
+            <p>Figma 改 Mode = 代码改 data-theme。两端是同一件事。</p>
+            <a class="mc-link" href="#">了解更多 →</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="mock-readout" id="mockReadout">
+        <div class="ro-head">当前 Token 实时值 · LIVE TOKEN VALUES</div>
+        <div class="ro-row">
+          <span class="ro-name">--m-bg</span>
+          <span class="ro-val" data-token="m-bg"><span class="swatch" style="background:#faf7f0"></span>#faf7f0</span>
+        </div>
+        <div class="ro-row">
+          <span class="ro-name">--m-surface</span>
+          <span class="ro-val" data-token="m-surface"><span class="swatch" style="background:#ffffff"></span>#ffffff</span>
+        </div>
+        <div class="ro-row">
+          <span class="ro-name">--m-text</span>
+          <span class="ro-val" data-token="m-text"><span class="swatch" style="background:#16161d"></span>#16161d</span>
+        </div>
+        <div class="ro-row">
+          <span class="ro-name">--m-text-soft</span>
+          <span class="ro-val" data-token="m-text-soft"><span class="swatch" style="background:#4a4a55"></span>#4a4a55</span>
+        </div>
+        <div class="ro-row">
+          <span class="ro-name">--m-primary</span>
+          <span class="ro-val" data-token="m-primary"><span class="swatch" style="background:#ff4d2e"></span>#ff4d2e</span>
+        </div>
+        <div class="ro-row">
+          <span class="ro-name">--m-accent</span>
+          <span class="ro-val" data-token="m-accent"><span class="swatch" style="background:#0a4cff"></span>#0a4cff</span>
+        </div>
+        <div class="ro-row">
+          <span class="ro-name">--m-border</span>
+          <span class="ro-val" data-token="m-border"><span class="swatch" style="background:#d5cdba"></span>#d5cdba</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="outro-tip">
+      <div class="outro-tag">观察 · NOTE</div>
+      <p>切到 Brand 时，<strong>橙色品牌色变成了金黄</strong> —— 不是因为我们重写了组件，而是 <span class="mono">--m-primary</span> 这个 token 在 Brand 主题下的值就是金黄。组件代码一行没改。</p>
+      <p>同理，<span class="mono">--m-accent</span>（链接色）在 Dark 里变成更亮的蓝、在 Brand 里变成对比的橙 —— 让链接在不同底色上始终可读。</p>
+    </div>
+  </div>
+</section>
+
+<!-- §06 Checklist + outro -->
+<section id="checklist">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>06</strong> / 速查</div>
+        <h2 class="section-title">怎么<span class="em">真的把</span><br>Theme 系统<br>跑起来？</h2>
+      </div>
+      <p class="section-sub">
+        三个阶段 —— 设计、命名、覆盖。每一步都有"工程师/设计师都能照做"的清单。
+      </p>
+    </div>
+
+    <div class="checklist-grid">
+      <div class="check-card">
+        <div class="cc-num">01</div>
+        <h4>Tokens 设计阶段</h4>
+        <ul>
+          <li>先梳理"<strong>语义层</strong>"：bg / surface / text / primary —— 不是颜色名</li>
+          <li>每个语义 token 都要在<strong>每个 Mode 里有值</strong>，缺一个就翻车</li>
+          <li>不要在组件里用色码，全用 <span class="mono">var(--*)</span></li>
+          <li>截屏每个 Mode 验对比度，<strong>WCAG AA 是底线</strong></li>
+        </ul>
+      </div>
+
+      <div class="check-card">
+        <div class="cc-num">02</div>
+        <h4>Mode 命名规则</h4>
+        <ul>
+          <li>三个主题就用 <strong>light / dark / brand</strong>，别用 1 / 2 / 3</li>
+          <li>Figma Mode 名 = CSS <span class="mono">data-theme</span> 值，<strong>一字不差</strong></li>
+          <li>Variable 名用 <strong>"/"</strong> 分层（color/text/soft），代码侧用 <strong>"-"</strong>（--color-text-soft）</li>
+          <li>新增主题 = 新增一个 Mode + 对应 CSS 块。组件不改</li>
+        </ul>
+      </div>
+
+      <div class="check-card">
+        <div class="cc-num">03</div>
+        <h4>局部覆盖</h4>
+        <ul>
+          <li>大部分场景<strong>不需要</strong>嵌套 Provider，一层就够</li>
+          <li>真要嵌套：营销 Banner / 商品详情主图区 / 错误页这种"局部品牌时刻"</li>
+          <li>嵌套时把 <span class="mono">data-theme</span> 写在<strong>子节点的 div 上</strong>，不是 html 上</li>
+          <li>测试时<strong>三层都点一遍</strong>，确认每层切换互不干扰</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Designer handoff -->
+    <div class="handoff">
+      <div>
+        <h3>设计师 · <span class="em">交付清单</span></h3>
+        <p>把这份给前端，他/她不用回头问你任何颜色相关的事。</p>
+        <ul>
+          <li><strong>Variables 表</strong>：所有 color / spacing / radius，每个都有 Light/Dark/Brand 三栏值</li>
+          <li><strong>Mode 名</strong>：在 Figma 里就叫 light / dark / brand</li>
+          <li><strong>截屏</strong>：每个 Mode 一张全页截图，前端对照检查</li>
+          <li><strong>边界说明</strong>：哪些组件"<span class="mono">不跟主题变</span>"（比如 Logo）特别标出</li>
+        </ul>
+      </div>
+      <div>
+        <h3>工程师 · <span class="em">实施清单</span></h3>
+        <p>一份 theme.css + 一个 ThemeProvider，覆盖 90% 场景。</p>
+        <ul>
+          <li><strong>theme.css</strong>：三个 <span class="mono">html[data-theme]</span> 块，token 值一一对照</li>
+          <li><strong>ThemeProvider</strong>：用 Context 暴露 theme + setTheme，把值同步到 html</li>
+          <li><strong>localStorage</strong>：记住用户选择，刷新不重置</li>
+          <li><strong>系统偏好</strong>：默认读 <span class="mono">prefers-color-scheme</span>，跟随系统更友好</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- C-module wrap-up -->
+    <div class="module-wrap">
+      <div>
+        <div class="mw-head">模块 C 收官 · MODULE C COMPLETE</div>
+        <h3>视觉系统 <span class="em">三件套</span> 已经全过了一遍。</h3>
+        <p>从"什么是 Tokens"，到"Colors / Type / Spacing 怎么搭阶梯"，到"Theme 怎么切" —— 这一组讲完，AI 还原你的稿子时，颜色 / 字 / 间距三件最容易翻车的事都被收编了。下一步进 D 模块（状态与交互）。</p>
+      </div>
+      <div class="mw-trio">
+        <a href="tokens-figma.html" class="mw-cell done">
+          <span class="code">C0</span>
+          Variables / Tokens 入门
+        </a>
+        <a href="colors-type-figma.html" class="mw-cell done">
+          <span class="code">C1</span>
+          Colors / Type / Spacing
+        </a>
+        <a href="theme-switch-figma.html" class="mw-cell done">
+          <span class="code">C2</span>
+          Theme 切换实战 · 当前
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div class="byline">
+      <img class="avatar" src="author.jpg" alt="范米花儿">
+      <div class="byline-meta">
+        <div class="byline-label"><span class="dot"></span>作者 · WRITTEN BY</div>
+        <h3 class="byline-name">嗨，我是 <span class="em">范米花儿</span></h3>
+        <p class="byline-tag">C2 · 进阶 · Theme 切换实战 ——<br>把 Figma Modes 和 CSS Theme + Context 串成一条链路。</p>
+      </div>
+    </div>
+    <div class="footer-meta">
+      做于 <span class="mono">2026</span> · 用 <span class="heart">●</span> 写给 <span class="mono">DESIGNERS &amp; DEVELOPERS</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+// =============== §02 Figma Modes tabs ↔ CSS code highlight ===============
+(function() {
+  const tabs = document.querySelectorAll('#figModesTabs button');
+  const tableCols = document.querySelectorAll('#figModesTable .mode-col');
+  const tableCells = document.querySelectorAll('#figModesTable [data-col]');
+  const cssLines = document.querySelectorAll('#cssModesBody .ln[data-mode]');
+  const cssActiveMode = document.getElementById('cssActiveMode');
+  const labelMap = { light: 'Light · 当前', dark: 'Dark · 当前', brand: 'Brand · 当前' };
+
+  function setMode(mode) {
+    tabs.forEach(b => b.classList.toggle('active', b.dataset.mode === mode));
+    tableCols.forEach(c => c.classList.toggle('active', c.dataset.col === mode));
+    tableCells.forEach(c => c.classList.toggle('active', c.dataset.col === mode));
+    cssLines.forEach(l => {
+      l.classList.toggle('dim', l.dataset.mode !== mode);
+      l.classList.toggle('spot', l.dataset.mode === mode);
+    });
+    if (cssActiveMode) cssActiveMode.textContent = labelMap[mode] || (mode + ' · 当前');
+  }
+  tabs.forEach(b => b.addEventListener('click', () => setMode(b.dataset.mode)));
+  setMode('light');
+})();
+
+// =============== §02 Toggle stage demo ===============
+(function() {
+  const stage = document.getElementById('toggleStage');
+  const seg = document.getElementById('toggleSeg');
+  const readout = document.getElementById('toggleReadout');
+  if (!stage || !seg) return;
+  const badge = stage.querySelector('.data-badge .mono') || stage.querySelector('.data-badge');
+
+  seg.addEventListener('click', e => {
+    const btn = e.target.closest('button');
+    if (!btn) return;
+    const th = btn.dataset.th;
+    [...seg.children].forEach(b => b.classList.toggle('active', b === btn));
+    stage.dataset.theme = th;
+    if (badge) badge.textContent = `data-theme="${th}"`;
+    if (readout) {
+      readout.innerHTML =
+        'html.<span class="rk">setAttribute</span>(<br>' +
+        '&nbsp;&nbsp;<span class="rv">\'data-theme\'</span>,<br>' +
+        '&nbsp;&nbsp;<span class="rv">\'' + th + '\'</span><br>' +
+        ')';
+    }
+  });
+})();
+
+// =============== §04 Nested override toggle ===============
+(function() {
+  const seg = document.getElementById('nestSeg');
+  if (!seg) return;
+  const innerLayer = document.querySelector('.nest-vis .layer-3');
+  const innerTag = innerLayer ? innerLayer.querySelector('.layer-tag') : null;
+  const innerH = innerLayer ? innerLayer.querySelector('h5') : null;
+  const innerBtn = innerLayer ? innerLayer.querySelector('.leaf-btn') : null;
+  const styles = {
+    brand: {
+      tag: 'CTA · Brand',
+      h5: '关键 CTA · 局部 Brand',
+      bg: 'linear-gradient(135deg, #6b46c1 0%, #8b5cf6 100%)',
+      border: '#6b46c1',
+      color: 'white',
+      btnBg: 'white',
+      btnColor: '#6b46c1',
+      tagBg: '#6b46c1',
+      tagColor: 'white'
+    },
+    dark: {
+      tag: 'CTA · Dark',
+      h5: '关键 CTA · 局部 Dark',
+      bg: '#16161d',
+      border: '#2a2a36',
+      color: '#f5f5f7',
+      btnBg: '#ff4d2e',
+      btnColor: 'white',
+      tagBg: 'transparent',
+      tagColor: '#ff4d2e'
+    },
+    light: {
+      tag: 'CTA · Light',
+      h5: '关键 CTA · 局部 Light',
+      bg: '#faf7f0',
+      border: '#d5cdba',
+      color: '#16161d',
+      btnBg: '#16161d',
+      btnColor: '#faf7f0',
+      tagBg: 'transparent',
+      tagColor: '#4a4a55'
+    }
+  };
+  function setMode(m) {
+    if (!innerLayer) return;
+    const s = styles[m] || styles.brand;
+    innerLayer.style.background = s.bg;
+    innerLayer.style.borderColor = s.border;
+    innerLayer.style.color = s.color;
+    if (innerTag) {
+      innerTag.textContent = s.tag;
+      innerTag.style.background = s.tagBg;
+      innerTag.style.color = s.tagColor;
+      innerTag.style.borderColor = s.tagColor;
+    }
+    if (innerH) innerH.textContent = s.h5;
+    if (innerBtn) {
+      innerBtn.style.background = s.btnBg;
+      innerBtn.style.color = s.btnColor;
+    }
+  }
+  seg.addEventListener('click', e => {
+    const btn = e.target.closest('button');
+    if (!btn) return;
+    [...seg.children].forEach(b => b.classList.toggle('active', b === btn));
+    setMode(btn.dataset.nth);
+  });
+})();
+
+// =============== §05 Full mock page theme switcher ===============
+(function() {
+  const seg = document.getElementById('mockThemes');
+  const page = document.getElementById('mockPage');
+  const readout = document.getElementById('mockReadout');
+  if (!seg || !page || !readout) return;
+
+  function updateReadout() {
+    const cs = getComputedStyle(page);
+    readout.querySelectorAll('.ro-val[data-token]').forEach(el => {
+      const tok = el.dataset.token;
+      const val = cs.getPropertyValue('--' + tok).trim();
+      if (!val) return;
+      const sw = el.querySelector('.swatch');
+      if (sw) sw.style.background = val;
+      // Replace text node content (after the swatch)
+      const swEl = el.querySelector('.swatch');
+      el.innerHTML = '';
+      if (swEl) el.appendChild(swEl);
+      el.appendChild(document.createTextNode(val));
+    });
+  }
+
+  seg.addEventListener('click', e => {
+    const btn = e.target.closest('button');
+    if (!btn) return;
+    [...seg.children].forEach(b => b.classList.toggle('active', b === btn));
+    page.dataset.theme = btn.dataset.mt;
+    // wait one tick so transitions settle into computed values
+    requestAnimationFrame(() => requestAnimationFrame(updateReadout));
+  });
+
+  // Initial render
+  updateReadout();
+})();
+</script>
+
+</body>
+</html>

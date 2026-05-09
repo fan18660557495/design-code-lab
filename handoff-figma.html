@@ -1,0 +1,2118 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>设计师送给前端的 8 件礼物 — Handoff & 设计系统完整指南</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,300..900&family=Geist:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Noto+Sans+SC:wght@300;400;500;700;900&family=Noto+Serif+SC:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f3eee5;
+    --bg-2: #ebe4d4;
+    --ink: #16161d;
+    --ink-soft: #4a4a55;
+    --ink-mute: #8a8a92;
+    --line: #d5cdba;
+    --line-soft: #e3dcca;
+    --accent: #ff4d2e;
+    --accent-soft: #ffe4dc;
+    --blue: #0a4cff;
+    --blue-soft: #dde6ff;
+    --green: #1f6b3a;
+    --green-soft: #d4ecdb;
+    --yellow: #ffcf3d;
+    --paper: #faf7f0;
+    --shadow: 0 1px 0 rgba(0,0,0,0.04), 0 8px 24px rgba(22,22,29,0.06);
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'Geist', 'Noto Sans SC', system-ui, -apple-system, sans-serif;
+    font-size: 16px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    background-image:
+      radial-gradient(circle at 1px 1px, rgba(22,22,29,0.05) 1px, transparent 0);
+    background-size: 24px 24px;
+  }
+
+  /* Typography */
+  .display-cn { font-family: 'Noto Serif SC', 'Fraunces', serif; font-weight: 900; letter-spacing: -0.01em; }
+  .display-en { font-family: 'Fraunces', 'Noto Serif SC', serif; font-weight: 600; font-style: italic; letter-spacing: -0.02em; }
+  .mono { font-family: 'JetBrains Mono', monospace; }
+  .label { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-mute); }
+
+  /* Layout */
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 0 32px; }
+
+  /* Top bar */
+  .topbar {
+    border-bottom: 1px dashed var(--line);
+    padding: 16px 0;
+    background: var(--bg);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    backdrop-filter: blur(8px);
+    background: rgba(243, 238, 229, 0.85);
+  }
+  .topbar-inner { display: flex; justify-content: space-between; align-items: center; gap: 24px; }
+  .brand { font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 600; }
+  .brand .dot { display: inline-block; width: 8px; height: 8px; background: var(--accent); border-radius: 50%; margin-right: 8px; vertical-align: middle; animation: pulse 2s ease-in-out infinite; }
+  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+  .nav-links { display: flex; gap: 20px; font-size: 13px; }
+  .nav-links a { color: var(--ink-soft); text-decoration: none; transition: color 0.2s; }
+  .nav-links a:hover { color: var(--accent); }
+  .nav-links a.current { color: var(--accent); font-weight: 600; }
+
+  /* Hero */
+  .hero { padding: 100px 0 80px; position: relative; overflow: hidden; }
+  .hero-meta { display: flex; gap: 24px; margin-bottom: 32px; align-items: center; flex-wrap: wrap; }
+  .hero-meta .pill { padding: 6px 12px; border: 1px solid var(--ink); border-radius: 100px; font-size: 11px; font-family: 'JetBrains Mono', monospace; letter-spacing: 0.05em; }
+  .hero-meta .pill.fill { background: var(--ink); color: var(--bg); }
+  .hero h1 {
+    font-family: 'Noto Serif SC', 'Fraunces', serif;
+    font-weight: 900;
+    font-size: clamp(48px, 7vw, 92px);
+    line-height: 0.95;
+    letter-spacing: -0.03em;
+    margin: 0 0 24px;
+  }
+  .hero h1 .em { font-family: 'Fraunces', serif; font-style: italic; font-weight: 500; color: var(--accent); }
+  .hero h1 .x { display: inline-block; transform: translateY(-0.05em); margin: 0 0.05em; color: var(--ink-mute); font-weight: 300; }
+  .hero p.lede {
+    font-size: 20px;
+    line-height: 1.5;
+    max-width: 640px;
+    color: var(--ink-soft);
+    margin: 0 0 40px;
+  }
+  .hero-grid {
+    display: grid;
+    grid-template-columns: 1.4fr 1fr;
+    gap: 48px;
+    align-items: end;
+  }
+  .hero-side {
+    border-left: 1px dashed var(--line);
+    padding-left: 24px;
+    font-size: 13px;
+    color: var(--ink-soft);
+  }
+  .hero-side .row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px dashed var(--line); }
+  .hero-side .row:last-child { border-bottom: none; }
+  .hero-side .row .k { color: var(--ink-mute); font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.05em; text-transform: uppercase; }
+  .hero-side .row .v { font-weight: 500; }
+
+  /* Section */
+  section { padding: 80px 0; border-top: 1px solid var(--line); position: relative; animation: fadeIn 0.6s ease-out backwards; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+  .section-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 56px; flex-wrap: wrap; gap: 16px; }
+  .section-num { font-family: 'JetBrains Mono', monospace; font-size: 13px; color: var(--ink-mute); letter-spacing: 0.1em; }
+  .section-num strong { color: var(--accent); }
+  .section-title {
+    font-family: 'Noto Serif SC', serif;
+    font-weight: 900;
+    font-size: clamp(32px, 4.5vw, 52px);
+    line-height: 1.05;
+    letter-spacing: -0.02em;
+    margin: 0;
+    max-width: 18ch;
+  }
+  .section-title .em { font-family: 'Fraunces', serif; font-style: italic; font-weight: 500; color: var(--accent); }
+  .section-sub { color: var(--ink-soft); font-size: 17px; max-width: 38ch; line-height: 1.55; margin: 0; }
+
+  /* Problem comparison */
+  .problem-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 32px;
+    margin-top: 24px;
+  }
+  @media (max-width: 720px) { .problem-grid { grid-template-columns: 1fr; } }
+  .problem-card {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 28px;
+    position: relative;
+  }
+  .problem-card.bad { border-color: var(--accent); background: var(--accent-soft); }
+  .problem-card.good { border-color: var(--green); background: var(--green-soft); }
+  .problem-card .tag {
+    position: absolute; top: -12px; left: 24px;
+    background: var(--bg); padding: 2px 10px;
+    font-family: 'JetBrains Mono', monospace; font-size: 11px;
+    letter-spacing: 0.1em;
+  }
+  .problem-card.bad .tag { color: var(--accent); border: 1px solid var(--accent); }
+  .problem-card.good .tag { color: var(--green); border: 1px solid var(--green); }
+  .problem-card h3 { font-family: 'Noto Serif SC', serif; font-size: 22px; margin: 0 0 12px; font-weight: 700; }
+  .problem-card p { margin: 0 0 12px; color: var(--ink-soft); font-size: 14px; line-height: 1.6; }
+  .problem-card ul { margin: 0; padding-left: 20px; font-size: 14px; color: var(--ink-soft); line-height: 1.8; }
+  .problem-card ul li { margin-bottom: 4px; }
+  .problem-card ul li strong { color: var(--ink); font-weight: 600; }
+
+  /* Cost timeline visualisation */
+  .cost-line {
+    margin-top: 32px;
+    padding: 28px 32px;
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+  }
+  .cost-line h4 {
+    font-family: 'Noto Serif SC', serif; font-size: 18px;
+    margin: 0 0 18px; font-weight: 700;
+  }
+  .cost-bars {
+    display: flex; flex-direction: column; gap: 10px;
+  }
+  .cost-bar {
+    display: grid;
+    grid-template-columns: 100px 1fr 80px;
+    gap: 12px;
+    align-items: center;
+    font-size: 13px;
+  }
+  .cost-bar .lab { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ink-soft); letter-spacing: 0.05em; text-transform: uppercase; }
+  .cost-bar .track { height: 18px; background: var(--bg-2); border-radius: 2px; position: relative; overflow: hidden; }
+  .cost-bar .fill { position: absolute; top: 0; bottom: 0; left: 0; background: var(--accent); border-radius: 2px; transition: width 0.6s ease; }
+  .cost-bar .fill.good { background: var(--green); }
+  .cost-bar .v { font-family: 'JetBrains Mono', monospace; font-size: 12px; text-align: right; color: var(--ink-soft); font-variant-numeric: tabular-nums; }
+
+  /* Gift cards (8 pieces) */
+  .gift-marquee {
+    display: grid;
+    grid-template-columns: 80px 1fr;
+    gap: 24px;
+    margin-bottom: 32px;
+    align-items: start;
+  }
+  @media (max-width: 540px) { .gift-marquee { grid-template-columns: 1fr; } }
+  .gift-num {
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    font-size: 88px;
+    line-height: 0.85;
+    color: var(--accent);
+    text-align: right;
+    padding-top: 6px;
+  }
+  @media (max-width: 540px) { .gift-num { text-align: left; font-size: 64px; } }
+  .gift-summary { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ink-mute); letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 8px; }
+  .gift-marquee h3 {
+    font-family: 'Noto Serif SC', serif; font-size: 28px;
+    line-height: 1.1; font-weight: 700; margin: 0 0 12px;
+  }
+  .gift-marquee h3 .em { font-family: 'Fraunces', serif; font-style: italic; color: var(--accent); font-weight: 500; }
+  .gift-marquee p {
+    font-size: 16px; line-height: 1.6; color: var(--ink-soft);
+    margin: 0;
+    max-width: 64ch;
+  }
+
+  /* Naming reference table (gift 1) */
+  .naming-ref {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    overflow: hidden;
+    margin-top: 24px;
+  }
+  .naming-ref-head {
+    background: var(--ink);
+    color: var(--bg);
+    display: grid;
+    grid-template-columns: 220px 1fr 1fr;
+    padding: 14px 20px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+  .naming-row {
+    display: grid;
+    grid-template-columns: 220px 1fr 1fr;
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--line);
+    font-size: 13px;
+    align-items: center;
+  }
+  .naming-row:last-child { border-bottom: none; }
+  .naming-row .role { font-weight: 600; }
+  .naming-row .role .lab { display: block; font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--ink-mute); margin-top: 3px; letter-spacing: 0.05em; font-weight: 400; }
+  .naming-row .bad-name { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--accent); }
+  .naming-row .good-name { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--green); }
+  @media (max-width: 720px) {
+    .naming-ref-head, .naming-row { grid-template-columns: 1fr; gap: 4px; }
+    .naming-ref-head > *:not(:first-child) { display: none; }
+  }
+
+  .layer-tree-demo {
+    background: var(--ink);
+    color: #d8d8e0;
+    border-radius: 6px;
+    padding: 22px 24px;
+    margin-top: 24px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    line-height: 1.85;
+    overflow-x: auto;
+  }
+  .layer-tree-demo .lvl-0 { color: #ffd166; }
+  .layer-tree-demo .lvl-1 { padding-left: 2ch; color: #ff8a6e; }
+  .layer-tree-demo .lvl-2 { padding-left: 4ch; color: #a8e6a3; }
+  .layer-tree-demo .lvl-3 { padding-left: 6ch; color: #8ec5ff; }
+  .layer-tree-demo .lvl-4 { padding-left: 8ch; color: #c9b6ff; }
+  .layer-tree-demo .ccom { color: #6e6e7a; font-style: italic; }
+
+  /* Variables / Tokens panel */
+  .tokens-stage {
+    display: grid;
+    grid-template-columns: 1.1fr 1fr;
+    gap: 32px;
+    margin-top: 24px;
+  }
+  @media (max-width: 880px) { .tokens-stage { grid-template-columns: 1fr; } }
+  .tokens-figma {
+    background: #2c2c2c;
+    color: #e8e8e8;
+    border-radius: 6px;
+    padding: 20px 18px;
+    font-family: 'Geist', system-ui, sans-serif;
+    font-size: 12px;
+  }
+  .tokens-figma .tf-title {
+    font-size: 11px; color: #888;
+    margin-bottom: 14px; letter-spacing: 0.1em;
+    text-transform: uppercase; font-weight: 600;
+  }
+  .tokens-figma .tf-modes {
+    display: flex; gap: 4px; margin-bottom: 14px;
+    background: #1e1e1e; padding: 3px; border-radius: 4px;
+  }
+  .tokens-figma .tf-mode {
+    background: transparent; border: none; color: #999;
+    padding: 5px 10px; cursor: pointer; border-radius: 3px;
+    font-size: 11px; font-family: inherit;
+    flex: 1; transition: all 0.15s;
+  }
+  .tokens-figma .tf-mode.active { background: #0d99ff; color: white; }
+  .tokens-figma .tf-mode:hover:not(.active) { background: #404040; color: white; }
+  .tokens-figma .tf-table { font-family: 'JetBrains Mono', monospace; font-size: 11px; }
+  .tokens-figma .tf-row {
+    display: grid; grid-template-columns: 1fr auto;
+    padding: 7px 4px; align-items: center;
+    border-bottom: 1px solid #3a3a3a;
+    gap: 10px;
+  }
+  .tokens-figma .tf-row:last-child { border-bottom: none; }
+  .tokens-figma .tf-name { color: #d8d8d8; }
+  .tokens-figma .tf-val { display: flex; align-items: center; gap: 6px; color: #b8b8b8; }
+  .tokens-figma .tf-swatch { width: 14px; height: 14px; border-radius: 2px; border: 1px solid #555; }
+
+  .tokens-code {
+    background: var(--ink);
+    color: #d8d8e0;
+    border-radius: 6px;
+    padding: 22px 24px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    line-height: 1.85;
+    overflow-x: auto;
+  }
+  .tokens-code .ckey { color: #ff8a6e; }
+  .tokens-code .cval { color: #ffd166; }
+  .tokens-code .ccom { color: #6e6e7a; font-style: italic; }
+  .tokens-code .csel { color: #c9b6ff; }
+  .tokens-code .cstr { color: #a8e6a3; }
+
+  /* Variant matrix */
+  .variant-matrix {
+    margin-top: 24px;
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 28px;
+    overflow-x: auto;
+  }
+  .variant-matrix h4 {
+    font-family: 'Noto Serif SC', serif; font-size: 18px;
+    margin: 0 0 18px; font-weight: 700;
+  }
+  .vm-grid {
+    display: grid;
+    grid-template-columns: 100px repeat(5, 1fr);
+    gap: 12px;
+    align-items: center;
+  }
+  .vm-head, .vm-state-head {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px; color: var(--ink-mute);
+    letter-spacing: 0.08em; text-transform: uppercase;
+    text-align: center;
+  }
+  .vm-row-head {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px; color: var(--ink-soft);
+    letter-spacing: 0.05em;
+  }
+  .vm-cell {
+    background: var(--bg);
+    border: 1px dashed var(--line);
+    border-radius: 4px;
+    padding: 10px 8px;
+    display: flex; align-items: center; justify-content: center;
+    min-height: 56px;
+  }
+  .vm-btn {
+    padding: 8px 14px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 500;
+    font-family: 'Geist', sans-serif;
+    border: 1px solid transparent;
+    transition: all 0.2s;
+  }
+  .vm-btn-default { background: var(--accent); color: white; }
+  .vm-btn-hover { background: #d63d20; color: white; box-shadow: 0 4px 12px rgba(255,77,46,0.35); }
+  .vm-btn-active { background: #b32f15; color: white; }
+  .vm-btn-disabled { background: #d8d2c4; color: #999; cursor: not-allowed; }
+  .vm-btn-loading {
+    background: var(--accent); color: white;
+    position: relative;
+  }
+  .vm-btn-loading::before {
+    content: ''; display: inline-block;
+    width: 10px; height: 10px;
+    border: 2px solid rgba(255,255,255,0.3);
+    border-top-color: white;
+    border-radius: 50%;
+    margin-right: 6px;
+    vertical-align: -2px;
+    animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .vm-btn-secondary { background: white; color: var(--ink); border-color: var(--line); }
+  .vm-btn-secondary.vm-btn-hover { background: var(--bg-2); border-color: var(--ink-soft); }
+  .vm-btn-secondary.vm-btn-active { background: var(--bg-2); border-color: var(--ink); }
+  .vm-btn-secondary.vm-btn-disabled { background: white; color: var(--ink-mute); border-color: var(--line); }
+
+  .vm-btn-ghost { background: transparent; color: var(--ink); }
+  .vm-btn-ghost.vm-btn-hover { background: var(--bg-2); }
+  .vm-btn-ghost.vm-btn-active { background: var(--line-soft); }
+  .vm-btn-ghost.vm-btn-disabled { background: transparent; color: var(--ink-mute); }
+
+  .vm-props {
+    margin-top: 24px;
+    padding: 18px 22px;
+    background: var(--ink);
+    color: #d8d8e0;
+    border-radius: 6px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12.5px;
+    line-height: 1.85;
+    overflow-x: auto;
+  }
+  .vm-props .ckey { color: #ff8a6e; }
+  .vm-props .cval { color: #ffd166; }
+  .vm-props .ccom { color: #6e6e7a; font-style: italic; }
+
+  @media (max-width: 720px) {
+    .vm-grid { grid-template-columns: 80px repeat(2, 1fr); font-size: 11px; }
+    .vm-grid > .vm-head:nth-child(n+5),
+    .vm-grid > .vm-cell:nth-child(n) { /* keep all but adjust grid layout */ }
+  }
+
+  /* Annotation demo */
+  .anno-stage {
+    margin-top: 24px;
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 32px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 32px;
+  }
+  @media (max-width: 880px) { .anno-stage { grid-template-columns: 1fr; } }
+  .anno-card {
+    background: white;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 24px;
+    position: relative;
+    min-height: 280px;
+  }
+  .anno-card-tag {
+    position: absolute; top: -10px; left: 18px;
+    background: var(--bg);
+    border: 1px solid var(--ink);
+    color: var(--ink);
+    padding: 2px 10px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.08em;
+  }
+  .anno-card.bad .anno-card-tag { border-color: var(--accent); color: var(--accent); }
+  .anno-card.good .anno-card-tag { border-color: var(--green); color: var(--green); }
+  .anno-card h5 { font-family: 'Noto Serif SC', serif; font-size: 16px; margin: 0 0 14px; font-weight: 700; }
+
+  .login-form { display: flex; flex-direction: column; gap: 12px; }
+  .login-form input {
+    border: 1px solid var(--line); border-radius: 4px;
+    padding: 10px 12px; font-size: 13px;
+    font-family: inherit;
+  }
+  .login-form .btn {
+    background: var(--accent); color: white;
+    border: none; border-radius: 4px;
+    padding: 10px 16px; font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+  }
+  .anno-card.bad .login-form { opacity: 0.85; }
+
+  .anno-pin {
+    position: absolute;
+    width: 22px; height: 22px;
+    background: var(--accent);
+    color: white;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    font-weight: 600;
+    box-shadow: 0 2px 6px rgba(255,77,46,0.5);
+    z-index: 5;
+    cursor: pointer;
+  }
+  .anno-pin::after {
+    content: ''; position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    border: 2px solid var(--accent);
+    opacity: 0.5;
+    animation: pinPulse 2s ease-out infinite;
+  }
+  @keyframes pinPulse {
+    0% { transform: scale(1); opacity: 0.6; }
+    100% { transform: scale(1.8); opacity: 0; }
+  }
+
+  .anno-list {
+    margin-top: 18px;
+    padding: 16px 18px;
+    background: var(--bg);
+    border-radius: 4px;
+    border-left: 3px solid var(--accent);
+  }
+  .anno-list .anno-item {
+    display: grid;
+    grid-template-columns: 28px 1fr;
+    gap: 10px;
+    padding: 6px 0;
+    font-size: 13px;
+    line-height: 1.5;
+    color: var(--ink-soft);
+  }
+  .anno-list .anno-item:not(:last-child) { border-bottom: 1px dashed var(--line); }
+  .anno-list .anno-item .num {
+    width: 22px; height: 22px;
+    background: var(--accent); color: white;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    font-weight: 600;
+  }
+  .anno-list .anno-item strong { color: var(--ink); font-weight: 600; }
+
+  /* Empty/Loading/Error states */
+  .states-strip {
+    margin-top: 28px;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+  }
+  @media (max-width: 880px) { .states-strip { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 540px) { .states-strip { grid-template-columns: 1fr; } }
+  .state-card {
+    background: white;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 20px 18px;
+    min-height: 160px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    position: relative;
+  }
+  .state-card .state-tag {
+    position: absolute; top: 10px; left: 12px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    color: var(--ink-mute);
+    text-transform: uppercase;
+  }
+  .state-card .icon {
+    width: 36px; height: 36px;
+    margin-bottom: 12px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    background: var(--bg-2);
+    color: var(--ink-soft);
+    font-size: 18px;
+  }
+  .state-card.empty .icon { background: var(--bg-2); }
+  .state-card.loading .icon { background: var(--blue-soft); color: var(--blue); }
+  .state-card.error .icon { background: var(--accent-soft); color: var(--accent); }
+  .state-card.success .icon { background: var(--green-soft); color: var(--green); }
+  .state-card .h { font-size: 13px; font-weight: 600; margin-bottom: 4px; }
+  .state-card .d { font-size: 11px; color: var(--ink-mute); line-height: 1.5; }
+  .state-card .skeleton-line {
+    width: 60%; height: 6px; background: linear-gradient(90deg, var(--bg-2), var(--line-soft), var(--bg-2));
+    background-size: 200% 100%;
+    animation: shimmer 1.5s ease-in-out infinite;
+    border-radius: 3px; margin: 4px 0;
+  }
+  .state-card .skeleton-line.s2 { width: 40%; }
+  @keyframes shimmer {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+  }
+
+  /* Asset / icon export */
+  .assets-stage {
+    margin-top: 24px;
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 32px;
+  }
+  .assets-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 32px;
+    margin-bottom: 24px;
+  }
+  @media (max-width: 720px) { .assets-grid { grid-template-columns: 1fr; } }
+
+  .asset-block h5 {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px; color: var(--ink-soft);
+    letter-spacing: 0.1em; text-transform: uppercase;
+    margin: 0 0 12px;
+  }
+  .icon-grid {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 8px;
+  }
+  .icon-cell {
+    aspect-ratio: 1;
+    background: white;
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    display: flex; align-items: center; justify-content: center;
+    color: var(--ink-soft);
+    transition: all 0.2s;
+  }
+  .icon-cell:hover { border-color: var(--accent); color: var(--accent); transform: translateY(-1px); }
+  .icon-cell svg { width: 18px; height: 18px; }
+
+  .resolution-strip {
+    display: flex; gap: 12px; margin-top: 14px;
+  }
+  .res-card {
+    flex: 1;
+    background: white;
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    padding: 14px 12px;
+    text-align: center;
+  }
+  .res-card .res-x { font-family: 'Fraunces', serif; font-style: italic; font-size: 28px; color: var(--accent); line-height: 1; }
+  .res-card .res-name { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--ink-soft); margin-top: 6px; letter-spacing: 0.05em; }
+  .res-card .res-px { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ink); margin-top: 4px; }
+
+  .asset-name-rule {
+    margin-top: 18px;
+    padding: 14px 18px;
+    background: var(--ink);
+    color: #d8d8e0;
+    border-radius: 4px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    line-height: 1.85;
+    overflow-x: auto;
+  }
+  .asset-name-rule .ckey { color: #ff8a6e; }
+  .asset-name-rule .cstr { color: #a8e6a3; }
+  .asset-name-rule .cnum { color: #8ec5ff; }
+  .asset-name-rule .ccom { color: #6e6e7a; font-style: italic; }
+
+  /* Doc, responsive, animation triple */
+  .triple-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 32px;
+    margin-top: 24px;
+  }
+  .triple-card {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 28px;
+  }
+  .triple-card .triple-num {
+    font-family: 'Fraunces', serif; font-style: italic;
+    font-size: 12px; color: var(--accent);
+    letter-spacing: 0.1em; text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+  .triple-card h4 {
+    font-family: 'Noto Serif SC', serif; font-size: 22px;
+    margin: 0 0 8px; font-weight: 700;
+    letter-spacing: -0.01em;
+  }
+  .triple-card .triple-sub {
+    color: var(--ink-soft); font-size: 14px; line-height: 1.55;
+    margin: 0 0 20px; max-width: 60ch;
+  }
+
+  /* Doc page */
+  .doc-mock {
+    background: white;
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    padding: 24px 28px;
+    font-size: 13px;
+    color: var(--ink-soft);
+    line-height: 1.7;
+    box-shadow: 0 4px 16px rgba(22,22,29,0.04);
+  }
+  .doc-mock h6 {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 14px; color: var(--ink); font-weight: 700;
+    margin: 18px 0 6px;
+  }
+  .doc-mock h6:first-child { margin-top: 0; }
+  .doc-mock h6 .ico {
+    display: inline-block;
+    width: 18px; height: 18px;
+    background: var(--accent-soft); color: var(--accent);
+    border-radius: 50%; font-size: 10px;
+    text-align: center; line-height: 18px;
+    margin-right: 6px;
+  }
+  .doc-mock p { margin: 0 0 4px; }
+  .doc-mock .doc-tag {
+    display: inline-block;
+    padding: 2px 8px;
+    background: var(--bg-2);
+    color: var(--ink-soft);
+    border-radius: 100px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    margin-right: 4px;
+  }
+
+  /* Responsive breakpoints */
+  .resp-track {
+    display: grid;
+    grid-template-columns: 1fr 1.6fr 2.6fr;
+    gap: 16px;
+    margin-bottom: 12px;
+  }
+  @media (max-width: 720px) { .resp-track { grid-template-columns: 1fr; } }
+  .resp-bp {
+    background: white;
+    border: 1.5px dashed var(--blue);
+    padding: 14px 16px;
+    border-radius: 4px;
+    position: relative;
+  }
+  .resp-bp .bp-w {
+    font-family: 'Fraunces', serif; font-style: italic;
+    font-size: 28px; color: var(--blue);
+    line-height: 1;
+  }
+  .resp-bp .bp-name {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px; color: var(--ink-soft);
+    letter-spacing: 0.05em; margin-top: 4px;
+  }
+  .resp-bp .bp-grid {
+    margin-top: 12px;
+    display: flex; gap: 6px;
+  }
+  .resp-bp .bp-col {
+    flex: 1;
+    height: 8px;
+    background: var(--blue-soft);
+    border-radius: 1px;
+  }
+  .resp-note {
+    font-size: 13px; color: var(--ink-soft);
+    margin: 12px 0 0; line-height: 1.65;
+  }
+  .resp-note strong { color: var(--ink); font-weight: 600; }
+
+  /* Animation specs */
+  .anim-stage {
+    background: var(--bg);
+    border: 1px dashed var(--line);
+    border-radius: 4px;
+    padding: 28px 24px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    align-items: center;
+  }
+  @media (max-width: 720px) { .anim-stage { grid-template-columns: 1fr; } }
+  .anim-canvas {
+    height: 160px;
+    background: white;
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    position: relative;
+    overflow: hidden;
+  }
+  .anim-target {
+    position: absolute;
+    width: 56px; height: 56px;
+    background: var(--accent);
+    border-radius: 50%;
+    top: 50%; left: 24px;
+    transform: translateY(-50%);
+    cursor: pointer;
+    transition: transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  .anim-target.run { transform: translate(160px, -50%) scale(1.15); }
+  .anim-spec-list {
+    display: grid;
+    grid-template-columns: 110px 1fr;
+    gap: 8px 14px;
+    font-size: 13px;
+    line-height: 1.5;
+  }
+  .anim-spec-list .k {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--ink-mute);
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+  .anim-spec-list .v {
+    color: var(--ink);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+  }
+  .anim-spec-list .v.code-style {
+    background: var(--ink); color: #ffd166;
+    padding: 1px 6px; border-radius: 3px;
+    display: inline-block;
+    font-size: 11px;
+  }
+  .anim-replay {
+    margin-top: 12px;
+    background: var(--ink); color: var(--bg);
+    border: none; border-radius: 4px;
+    padding: 8px 16px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    cursor: pointer;
+    letter-spacing: 0.05em;
+    transition: all 0.15s;
+  }
+  .anim-replay:hover { background: var(--accent); }
+
+  /* ====== Checklist (final interaction) ====== */
+  .checklist-frame {
+    background: var(--ink);
+    color: var(--bg);
+    border-radius: 8px;
+    padding: 40px 36px;
+    margin-bottom: 32px;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 24px;
+    align-items: center;
+  }
+  @media (max-width: 720px) { .checklist-frame { grid-template-columns: 1fr; } }
+  .checklist-frame h3 {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 28px;
+    margin: 0 0 8px;
+    font-weight: 700;
+  }
+  .checklist-frame p {
+    margin: 0;
+    color: rgba(250, 247, 240, 0.7);
+    font-size: 14px;
+    line-height: 1.6;
+    max-width: 60ch;
+  }
+  .score-display {
+    text-align: center;
+  }
+  .score-display .score-num {
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    font-size: 72px;
+    line-height: 1;
+    color: var(--accent);
+    transition: color 0.3s ease;
+  }
+  .score-display.passing .score-num { color: var(--yellow); }
+  .score-display.master .score-num { color: #6ed98c; }
+  .score-display .score-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.15em;
+    color: rgba(250, 247, 240, 0.5);
+    text-transform: uppercase;
+    margin-top: 4px;
+  }
+
+  .checklist-list {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+  @media (max-width: 720px) { .checklist-list { grid-template-columns: 1fr; } }
+  .check-item {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 20px 22px;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    user-select: none;
+    position: relative;
+    overflow: hidden;
+  }
+  .check-item::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 4px; height: 100%;
+    background: transparent;
+    transition: background 0.25s ease;
+  }
+  .check-item:hover { transform: translateY(-1px); box-shadow: 0 4px 16px rgba(22,22,29,0.06); }
+  .check-item.checked {
+    background: var(--green-soft);
+    border-color: var(--green);
+  }
+  .check-item.checked::before { background: var(--green); }
+  .check-item .check-row {
+    display: flex; align-items: center; gap: 14px;
+  }
+  .check-item .check-box {
+    width: 22px; height: 22px;
+    border: 2px solid var(--ink-soft);
+    border-radius: 4px;
+    flex-shrink: 0;
+    background: white;
+    position: relative;
+    transition: all 0.2s ease;
+  }
+  .check-item.checked .check-box {
+    background: var(--green);
+    border-color: var(--green);
+  }
+  .check-item.checked .check-box::after {
+    content: '';
+    position: absolute;
+    left: 6px; top: 2px;
+    width: 5px; height: 10px;
+    border: solid white;
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg);
+  }
+  .check-item .check-content {
+    flex: 1;
+  }
+  .check-item .check-num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--ink-mute);
+    letter-spacing: 0.1em;
+  }
+  .check-item .check-title {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 16px;
+    font-weight: 600;
+    margin-top: 2px;
+    color: var(--ink);
+  }
+  .check-item .check-meta {
+    font-size: 12px;
+    color: var(--ink-soft);
+    margin-top: 4px;
+    line-height: 1.5;
+  }
+
+  .verdict {
+    margin-top: 32px;
+    padding: 24px 28px;
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    border-left: 3px solid var(--accent);
+    transition: all 0.4s ease;
+  }
+  .verdict.passing { border-left-color: var(--yellow); }
+  .verdict.master { border-left-color: var(--green); background: var(--green-soft); }
+  .verdict h4 {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 20px;
+    margin: 0 0 6px;
+    font-weight: 700;
+  }
+  .verdict h4 .em {
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    color: var(--accent);
+    font-weight: 500;
+  }
+  .verdict.master h4 .em { color: var(--green); }
+  .verdict p {
+    margin: 0;
+    font-size: 14px;
+    color: var(--ink-soft);
+    line-height: 1.6;
+  }
+
+  /* Outro / collection roadmap */
+  .outro-thanks {
+    margin-top: 32px;
+    padding: 36px 32px;
+    background: var(--accent-soft);
+    border-left: 3px solid var(--accent);
+    border-radius: 6px;
+  }
+  .outro-thanks h3 {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 26px;
+    margin: 0 0 12px;
+    font-weight: 700;
+    line-height: 1.2;
+  }
+  .outro-thanks h3 .em {
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    color: var(--accent);
+    font-weight: 500;
+  }
+  .outro-thanks p {
+    font-size: 15px;
+    line-height: 1.7;
+    color: var(--ink);
+    margin: 0 0 12px;
+    max-width: 64ch;
+  }
+  .outro-thanks p:last-child { margin-bottom: 0; }
+  .outro-thanks p strong { color: var(--accent); font-weight: 600; }
+
+  .roadmap {
+    margin-top: 32px;
+    padding: 32px;
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+  }
+  .roadmap h4 {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 20px;
+    margin: 0 0 8px;
+    font-weight: 700;
+  }
+  .roadmap .road-sub {
+    color: var(--ink-soft);
+    font-size: 14px;
+    margin: 0 0 24px;
+  }
+  .roadmap-track {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0;
+    border-left: 2px dashed var(--line);
+    padding-left: 0;
+  }
+  .road-step {
+    display: grid;
+    grid-template-columns: 32px 80px 1fr;
+    gap: 16px;
+    padding: 12px 0 12px 24px;
+    align-items: center;
+    position: relative;
+    border-bottom: 1px dashed var(--line-soft);
+  }
+  .road-step:last-child { border-bottom: none; }
+  .road-step::before {
+    content: '';
+    position: absolute;
+    left: -7px; top: 50%; transform: translateY(-50%);
+    width: 10px; height: 10px;
+    background: var(--bg);
+    border: 2px solid var(--line);
+    border-radius: 50%;
+  }
+  .road-step.done::before { background: var(--green); border-color: var(--green); }
+  .road-step.this::before { background: var(--accent); border-color: var(--accent); animation: pulse 2s ease-in-out infinite; }
+  .road-step .road-num {
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    font-size: 22px;
+    color: var(--ink-mute);
+  }
+  .road-step.done .road-num { color: var(--green); }
+  .road-step.this .road-num { color: var(--accent); }
+  .road-step .road-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--ink-mute);
+    letter-spacing: 0.08em;
+  }
+  .road-step .road-title {
+    font-size: 14px; color: var(--ink-soft);
+  }
+  .road-step.done .road-title { color: var(--ink); }
+  .road-step.this .road-title { color: var(--ink); font-weight: 600; }
+  .road-step .road-title strong { color: var(--ink); font-weight: 600; }
+  @media (max-width: 600px) {
+    .road-step { grid-template-columns: 28px 1fr; gap: 10px; }
+    .road-step .road-tag { display: none; }
+  }
+
+  /* Footer */
+  footer {
+    border-top: 1px solid var(--line);
+    padding: 56px 0 64px;
+    background: var(--bg);
+  }
+  .byline {
+    display: flex;
+    gap: 28px;
+    align-items: center;
+    padding-bottom: 32px;
+    border-bottom: 1px dashed var(--line);
+    margin-bottom: 24px;
+    position: relative;
+  }
+  .byline::before {
+    content: '';
+    position: absolute;
+    top: -56px; left: 0;
+    width: 32px; height: 1px;
+    background: var(--accent);
+  }
+  .byline .avatar {
+    width: 96px; height: 96px;
+    border-radius: 50%;
+    object-fit: cover;
+    flex-shrink: 0;
+    border: 3px solid var(--paper);
+    box-shadow: 0 0 0 1px var(--line), 0 6px 20px rgba(22,22,29,0.10);
+    background: var(--paper);
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Noto Serif SC', serif;
+    font-size: 32px;
+    color: var(--accent);
+    font-weight: 700;
+  }
+  .byline-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--ink-mute);
+    letter-spacing: 0.18em;
+    margin-bottom: 8px;
+  }
+  .byline-label .dot {
+    display: inline-block;
+    width: 6px; height: 6px;
+    background: var(--accent);
+    border-radius: 50%;
+    margin-right: 6px;
+    vertical-align: 1px;
+  }
+  .byline-name {
+    font-family: 'Noto Serif SC', 'Fraunces', serif;
+    font-size: clamp(28px, 4vw, 40px);
+    font-weight: 700;
+    line-height: 1.05;
+    letter-spacing: -0.01em;
+    margin: 0 0 8px;
+  }
+  .byline-name .em {
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    font-weight: 500;
+    color: var(--accent);
+  }
+  .byline-tag {
+    font-size: 14px;
+    color: var(--ink-soft);
+    line-height: 1.55;
+    margin: 0;
+    max-width: 52ch;
+  }
+  .footer-meta {
+    text-align: center;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--ink-mute);
+    letter-spacing: 0.05em;
+  }
+  .footer-meta .heart { color: var(--accent); }
+  .footer-meta .mono { color: var(--ink-soft); font-weight: 500; }
+  @media (max-width: 600px) {
+    .byline { flex-direction: column; text-align: center; align-items: center; gap: 16px; }
+    .byline-tag { margin-left: auto; margin-right: auto; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Top bar -->
+<div class="topbar">
+  <div class="wrap topbar-inner">
+    <div class="brand"><span class="dot"></span>HANDOFF / 进阶讲解 · E2</div>
+    <nav class="nav-links">
+      <a href="index.html">合集</a>
+      <a href="box-figma.html">01 盒子</a>
+      <a href="components-figma.html">02 组件</a>
+      <a href="page-figma.html">03 拼页面</a>
+      <a href="data-flow-figma.html">04 数据流</a>
+    </nav>
+  </div>
+</div>
+
+<!-- Hero -->
+<header class="hero">
+  <div class="wrap">
+    <div class="hero-meta">
+      <span class="pill fill">实验互动</span>
+      <span class="pill">2026</span>
+      <span class="pill">E2 · 进阶 · Handoff</span>
+    </div>
+    <div class="hero-grid">
+      <div>
+        <h1>设计师送给前端的<br><span class="em">8 件礼物</span></h1>
+        <p class="lede">一个交付到位的设计稿，能让前端工作量减半。这一篇是完整 handoff checklist —— 命名 / 标注 / Variables / 资源 / 文档，<strong>8 项一次讲透</strong>。</p>
+      </div>
+      <aside class="hero-side">
+        <div class="row"><span class="k">Module</span><span class="v">E · Process</span></div>
+        <div class="row"><span class="k">Level</span><span class="v">进阶</span></div>
+        <div class="row"><span class="k">Reading</span><span class="v">~12 min</span></div>
+        <div class="row"><span class="k">Series</span><span class="v">收官篇 · 13 / 13</span></div>
+      </aside>
+    </div>
+  </div>
+</header>
+
+<!-- §01 problem -->
+<section>
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>§01</strong> · PROBLEM</div>
+        <h2 class="section-title">交付不到位的<span class="em">代价</span></h2>
+      </div>
+      <p class="section-sub">设计稿一交出去，"是什么样"就不再由你控制。Handoff 决定了你的设计能在产品里还原到几分。</p>
+    </div>
+
+    <div class="problem-grid">
+      <div class="problem-card bad">
+        <span class="tag">BAD · 散装交付</span>
+        <h3>"我画完了，剩下就交给前端吧"</h3>
+        <p>截图发到群里，没有 Variables、没有命名、没有标注。前端只能照着图量颜色、猜间距、自己起类名。</p>
+        <ul>
+          <li><strong>追问 1：</strong>这个红色到底是 #FF4D2E 还是 #FF5236？</li>
+          <li><strong>追问 2：</strong>悬停态、加载态、禁用态都没画？</li>
+          <li><strong>追问 3：</strong>列表空了显示什么？</li>
+          <li><strong>追问 4：</strong>这按钮点了去哪？</li>
+        </ul>
+      </div>
+      <div class="problem-card good">
+        <span class="tag">GOOD · 系统化 Handoff</span>
+        <h3>"打开这份 Figma 你就知道怎么做"</h3>
+        <p>命名清晰、Variables 完整、Components 配齐 Variants、关键交互有标注、切图打包好。前端 0 追问就能动手。</p>
+        <ul>
+          <li><strong>设计 Tokens：</strong>颜色 / 字号 / 间距 / 圆角全部建库</li>
+          <li><strong>Components：</strong>所有状态画齐，含 Properties</li>
+          <li><strong>Annotations：</strong>跳转、校验、排序、异常态全标注</li>
+          <li><strong>Assets：</strong>SVG / @1x@2x@3x 命名一致打包</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="cost-line">
+      <h4>同一份设计稿 · 两种交付方式 · 工程时间对比</h4>
+      <div class="cost-bars">
+        <div class="cost-bar">
+          <span class="lab">散装交付</span>
+          <div class="track"><div class="fill" style="width:96%"></div></div>
+          <span class="v">~ 18d</span>
+        </div>
+        <div class="cost-bar">
+          <span class="lab">追问</span>
+          <div class="track"><div class="fill" style="width:48%"></div></div>
+          <span class="v">~ 4d</span>
+        </div>
+        <div class="cost-bar">
+          <span class="lab">系统 Handoff</span>
+          <div class="track"><div class="fill good" style="width:42%"></div></div>
+          <span class="v">~ 7d</span>
+        </div>
+        <div class="cost-bar">
+          <span class="lab">追问</span>
+          <div class="track"><div class="fill good" style="width:6%"></div></div>
+          <span class="v">~ 0.5d</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- §02 gift 1 — naming -->
+<section>
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>§02</strong> · GIFT 01 / 8</div>
+        <h2 class="section-title">完整图层<span class="em">命名</span></h2>
+      </div>
+      <p class="section-sub">承接 E0 命名规范。一份命名良好的稿子，前端打开 Layers 面板就能猜到 React 组件树长什么样。</p>
+    </div>
+
+    <div class="gift-marquee">
+      <div class="gift-num">01</div>
+      <div>
+        <div class="gift-summary">Gift · Layer Naming</div>
+        <h3>给每个图层一个<span class="em">"我能复述"</span>的名字</h3>
+        <p>不是 <code class="mono">Rectangle 47</code>。不是 <code class="mono">复制 23</code>。每个 Frame、Component、Instance 都应该能让外人一眼看懂"它是什么 / 它在哪 / 它做什么"。</p>
+      </div>
+    </div>
+
+    <div class="naming-ref">
+      <div class="naming-ref-head">
+        <div>角色 / 类型</div>
+        <div>BAD 命名</div>
+        <div>GOOD 命名</div>
+      </div>
+      <div class="naming-row">
+        <div class="role">Section / Page<span class="lab">页面级容器</span></div>
+        <div class="bad-name">Frame 12</div>
+        <div class="good-name">page/home</div>
+      </div>
+      <div class="naming-row">
+        <div class="role">Block / Section<span class="lab">页面段落</span></div>
+        <div class="bad-name">Group 2 Copy</div>
+        <div class="good-name">section/hero</div>
+      </div>
+      <div class="naming-row">
+        <div class="role">Component<span class="lab">组件</span></div>
+        <div class="bad-name">btn</div>
+        <div class="good-name">Button / Primary / Default</div>
+      </div>
+      <div class="naming-row">
+        <div class="role">Instance<span class="lab">组件实例</span></div>
+        <div class="bad-name">Rectangle 47</div>
+        <div class="good-name">btn-cta-checkout</div>
+      </div>
+      <div class="naming-row">
+        <div class="role">Icon<span class="lab">图标</span></div>
+        <div class="bad-name">Vector</div>
+        <div class="good-name">icon/arrow-right</div>
+      </div>
+      <div class="naming-row">
+        <div class="role">Text<span class="lab">文本节点</span></div>
+        <div class="bad-name">Lorem ipsum</div>
+        <div class="good-name">heading-h1</div>
+      </div>
+      <div class="naming-row">
+        <div class="role">Image / Asset<span class="lab">图像</span></div>
+        <div class="bad-name">img-2-final-final</div>
+        <div class="good-name">img-cover-product-hero</div>
+      </div>
+    </div>
+
+    <div class="layer-tree-demo">
+      <div class="lvl-0">page/checkout</div>
+      <div class="lvl-1">section/header</div>
+      <div class="lvl-2">Logo</div>
+      <div class="lvl-2">nav/main</div>
+      <div class="lvl-1">section/order-summary</div>
+      <div class="lvl-2">card/product</div>
+      <div class="lvl-3">img-product-thumb</div>
+      <div class="lvl-3">text/product-name</div>
+      <div class="lvl-3">text/product-price</div>
+      <div class="lvl-2">card/total</div>
+      <div class="lvl-1">section/payment</div>
+      <div class="lvl-2">form/payment</div>
+      <div class="lvl-3">input/card-number</div>
+      <div class="lvl-3">input/expiry</div>
+      <div class="lvl-3">input/cvc</div>
+      <div class="lvl-3">btn-primary-pay   <span class="ccom">// 这里前端能 1:1 映射成 &lt;PayButton /&gt;</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- §03 gift 2 — variables / tokens -->
+<section>
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>§03</strong> · GIFT 02 / 8</div>
+        <h2 class="section-title">完整 <span class="em">Variables</span><br>(Design Tokens)</h2>
+      </div>
+      <p class="section-sub">承接 C0 / C1 Tokens。颜色、字号、间距、圆角全部建 Variables，并配好 Light / Dark / Brand 三套 Modes。</p>
+    </div>
+
+    <div class="gift-marquee">
+      <div class="gift-num">02</div>
+      <div>
+        <div class="gift-summary">Gift · Design Variables</div>
+        <h3>每个数字都有<span class="em">名字</span>，每个名字都有<span class="em">理由</span></h3>
+        <p>把"Hex 字符串"换成"语义名"。这样的设计稿在切换深色模式、做品牌换肤时只需要切一个 Mode，前端在代码里也只是切一行 CSS Variable。</p>
+      </div>
+    </div>
+
+    <div class="tokens-stage">
+      <div class="tokens-figma">
+        <div class="tf-title">Variables · color</div>
+        <div class="tf-modes">
+          <button class="tf-mode active" data-mode="light">Light</button>
+          <button class="tf-mode" data-mode="dark">Dark</button>
+          <button class="tf-mode" data-mode="brand">Brand</button>
+        </div>
+        <div class="tf-table" id="tf-table">
+          <div class="tf-row"><span class="tf-name">color/bg/canvas</span><span class="tf-val"><span class="tf-swatch" style="background:#f3eee5"></span>#F3EEE5</span></div>
+          <div class="tf-row"><span class="tf-name">color/bg/elevated</span><span class="tf-val"><span class="tf-swatch" style="background:#faf7f0"></span>#FAF7F0</span></div>
+          <div class="tf-row"><span class="tf-name">color/text/primary</span><span class="tf-val"><span class="tf-swatch" style="background:#16161d"></span>#16161D</span></div>
+          <div class="tf-row"><span class="tf-name">color/text/secondary</span><span class="tf-val"><span class="tf-swatch" style="background:#4a4a55"></span>#4A4A55</span></div>
+          <div class="tf-row"><span class="tf-name">color/border/default</span><span class="tf-val"><span class="tf-swatch" style="background:#d5cdba"></span>#D5CDBA</span></div>
+          <div class="tf-row"><span class="tf-name">color/accent/primary</span><span class="tf-val"><span class="tf-swatch" style="background:#ff4d2e"></span>#FF4D2E</span></div>
+          <div class="tf-row"><span class="tf-name">color/accent/soft</span><span class="tf-val"><span class="tf-swatch" style="background:#ffe4dc"></span>#FFE4DC</span></div>
+        </div>
+      </div>
+
+      <div class="tokens-code">
+        <div><span class="csel">:root</span> {</div>
+        <div>&nbsp;&nbsp;<span class="ccom">/* color · semantic */</span></div>
+        <div>&nbsp;&nbsp;<span class="ckey">--bg-canvas</span>: <span class="cval">#f3eee5</span>;</div>
+        <div>&nbsp;&nbsp;<span class="ckey">--bg-elevated</span>: <span class="cval">#faf7f0</span>;</div>
+        <div>&nbsp;&nbsp;<span class="ckey">--text-primary</span>: <span class="cval">#16161d</span>;</div>
+        <div>&nbsp;&nbsp;<span class="ckey">--accent-primary</span>: <span class="cval">#ff4d2e</span>;</div>
+        <div>&nbsp;&nbsp;</div>
+        <div>&nbsp;&nbsp;<span class="ccom">/* type */</span></div>
+        <div>&nbsp;&nbsp;<span class="ckey">--text-h1</span>: <span class="cval">48px</span>;</div>
+        <div>&nbsp;&nbsp;<span class="ckey">--text-body</span>: <span class="cval">16px</span>;</div>
+        <div>&nbsp;&nbsp;</div>
+        <div>&nbsp;&nbsp;<span class="ccom">/* space · 4-grid */</span></div>
+        <div>&nbsp;&nbsp;<span class="ckey">--space-2</span>: <span class="cval">8px</span>;</div>
+        <div>&nbsp;&nbsp;<span class="ckey">--space-4</span>: <span class="cval">16px</span>;</div>
+        <div>&nbsp;&nbsp;<span class="ckey">--space-6</span>: <span class="cval">24px</span>;</div>
+        <div>&nbsp;&nbsp;</div>
+        <div>&nbsp;&nbsp;<span class="ccom">/* radius */</span></div>
+        <div>&nbsp;&nbsp;<span class="ckey">--radius-sm</span>: <span class="cval">4px</span>;</div>
+        <div>&nbsp;&nbsp;<span class="ckey">--radius-md</span>: <span class="cval">8px</span>;</div>
+        <div>}</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- §04 gift 3 — components + variants -->
+<section>
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>§04</strong> · GIFT 03 / 8</div>
+        <h2 class="section-title">完整 <span class="em">Components</span> + Variants</h2>
+      </div>
+      <p class="section-sub">承接 A2 组件。每个 Variants 状态都要齐全（default / hover / active / disabled / loading），并且加上 Properties 让前端能一一对应到 Props。</p>
+    </div>
+
+    <div class="gift-marquee">
+      <div class="gift-num">03</div>
+      <div>
+        <div class="gift-summary">Gift · Components & Variants</div>
+        <h3>"完整"不只是<span class="em">默认态</span>那一张图</h3>
+        <p>真实产品里，组件 80% 的时间不在 default。鼠标悬停、加载中、禁用、错误 —— 这些状态如果你不画，前端写出来的 UI 就只有半成品。</p>
+      </div>
+    </div>
+
+    <div class="variant-matrix">
+      <h4>Button · Variant Matrix</h4>
+      <div class="vm-grid">
+        <div></div>
+        <div class="vm-state-head">Default</div>
+        <div class="vm-state-head">Hover</div>
+        <div class="vm-state-head">Active</div>
+        <div class="vm-state-head">Disabled</div>
+        <div class="vm-state-head">Loading</div>
+
+        <div class="vm-row-head">variant/<br>primary</div>
+        <div class="vm-cell"><button class="vm-btn vm-btn-default">Submit</button></div>
+        <div class="vm-cell"><button class="vm-btn vm-btn-hover">Submit</button></div>
+        <div class="vm-cell"><button class="vm-btn vm-btn-active">Submit</button></div>
+        <div class="vm-cell"><button class="vm-btn vm-btn-disabled">Submit</button></div>
+        <div class="vm-cell"><button class="vm-btn vm-btn-loading">Loading</button></div>
+
+        <div class="vm-row-head">variant/<br>secondary</div>
+        <div class="vm-cell"><button class="vm-btn vm-btn-secondary">Cancel</button></div>
+        <div class="vm-cell"><button class="vm-btn vm-btn-secondary vm-btn-hover">Cancel</button></div>
+        <div class="vm-cell"><button class="vm-btn vm-btn-secondary vm-btn-active">Cancel</button></div>
+        <div class="vm-cell"><button class="vm-btn vm-btn-secondary vm-btn-disabled">Cancel</button></div>
+        <div class="vm-cell"><button class="vm-btn vm-btn-secondary vm-btn-loading">Loading</button></div>
+
+        <div class="vm-row-head">variant/<br>ghost</div>
+        <div class="vm-cell"><button class="vm-btn vm-btn-ghost">More</button></div>
+        <div class="vm-cell"><button class="vm-btn vm-btn-ghost vm-btn-hover">More</button></div>
+        <div class="vm-cell"><button class="vm-btn vm-btn-ghost vm-btn-active">More</button></div>
+        <div class="vm-cell"><button class="vm-btn vm-btn-ghost vm-btn-disabled">More</button></div>
+        <div class="vm-cell"><button class="vm-btn vm-btn-ghost vm-btn-loading">Loading</button></div>
+      </div>
+
+      <div class="vm-props">
+        <div><span class="ccom">// Component Properties — 一一对应到 React Props</span></div>
+        <div><span class="ckey">variant</span>: <span class="cval">'primary' | 'secondary' | 'ghost'</span></div>
+        <div><span class="ckey">size</span>: <span class="cval">'sm' | 'md' | 'lg'</span></div>
+        <div><span class="ckey">state</span>: <span class="cval">'default' | 'hover' | 'active' | 'disabled' | 'loading'</span></div>
+        <div><span class="ckey">icon</span>: <span class="cval">true | false</span></div>
+        <div><span class="ckey">iconPosition</span>: <span class="cval">'left' | 'right'</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- §05 gift 4 — annotations -->
+<section>
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>§05</strong> · GIFT 04 / 8</div>
+        <h2 class="section-title">关键<span class="em">标注</span></h2>
+      </div>
+      <p class="section-sub">间距、行高、字号 Figma 自动展示。但<strong>业务逻辑</strong>不会自己出现 —— 跳转、校验、排序、异常态都要你写下来。</p>
+    </div>
+
+    <div class="gift-marquee">
+      <div class="gift-num">04</div>
+      <div>
+        <div class="gift-summary">Gift · Behavior Annotations</div>
+        <h3>外形 Figma 替你说，<span class="em">逻辑</span>得你自己说</h3>
+        <p>这个 button 点了去哪？这个 input 校验规则是什么？这个 list 怎么排序？这些信息散在你脑子里，前端没有读心术。</p>
+      </div>
+    </div>
+
+    <div class="anno-stage">
+      <div class="anno-card bad">
+        <span class="anno-card-tag">BAD · 没有标注</span>
+        <h5>登录卡片 · 0 标注</h5>
+        <form class="login-form" onsubmit="return false;">
+          <input type="text" placeholder="邮箱" />
+          <input type="password" placeholder="密码" />
+          <button type="submit" class="btn">登录</button>
+        </form>
+        <div class="anno-list" style="margin-top: 24px;">
+          <div class="anno-item" style="grid-template-columns: 1fr; color: var(--accent);">
+            <em>前端能看到的：颜色、间距、字号。<br>看不到的：校验、错误提示、跳转、loading 时长……</em>
+          </div>
+        </div>
+      </div>
+
+      <div class="anno-card good">
+        <span class="anno-card-tag">GOOD · 4 处标注</span>
+        <h5>登录卡片 · 标注完整</h5>
+        <form class="login-form" onsubmit="return false;" style="position: relative;">
+          <div style="position: relative;">
+            <input type="text" placeholder="邮箱" />
+            <span class="anno-pin" style="top: -8px; right: -8px;">1</span>
+          </div>
+          <div style="position: relative;">
+            <input type="password" placeholder="密码" />
+            <span class="anno-pin" style="top: -8px; right: -8px;">2</span>
+          </div>
+          <div style="position: relative;">
+            <button type="submit" class="btn">登录</button>
+            <span class="anno-pin" style="top: -8px; right: -8px;">3</span>
+          </div>
+          <span class="anno-pin" style="bottom: -10px; left: 50%;">4</span>
+        </form>
+        <div class="anno-list">
+          <div class="anno-item">
+            <span class="num">1</span>
+            <span><strong>邮箱校验：</strong>失焦时校验，正则 RFC5322，错误状态文字"请输入有效的邮箱地址"</span>
+          </div>
+          <div class="anno-item">
+            <span class="num">2</span>
+            <span><strong>密码规则：</strong>最少 8 字符，含大小写 + 数字。错误时输入框红边 + 提示文字</span>
+          </div>
+          <div class="anno-item">
+            <span class="num">3</span>
+            <span><strong>跳转：</strong>登录成功 → /dashboard；失败 → 顶部 toast"账号或密码错误"</span>
+          </div>
+          <div class="anno-item">
+            <span class="num">4</span>
+            <span><strong>状态：</strong>请求中显示 loading 态（btn 变灰转圈），超时 8s 提示重试</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="states-strip">
+      <div class="state-card empty">
+        <span class="state-tag">Empty</span>
+        <div class="icon">⊘</div>
+        <div class="h">还没有数据</div>
+        <div class="d">空态 illustration<br>+ "新建" 按钮</div>
+      </div>
+      <div class="state-card loading">
+        <span class="state-tag">Loading</span>
+        <div class="icon" style="animation: spin 1.2s linear infinite;">◐</div>
+        <div class="skeleton-line"></div>
+        <div class="skeleton-line s2"></div>
+        <div class="d">骨架屏 / 转圈 / 进度条</div>
+      </div>
+      <div class="state-card error">
+        <span class="state-tag">Error</span>
+        <div class="icon">!</div>
+        <div class="h">网络异常</div>
+        <div class="d">错误说明 + 重试 CTA<br>错误码可选展示</div>
+      </div>
+      <div class="state-card success">
+        <span class="state-tag">Success</span>
+        <div class="icon">✓</div>
+        <div class="h">提交成功</div>
+        <div class="d">成功 toast / 跳转<br>停留多久？要否自动消失</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- §06 gift 5 — assets -->
+<section>
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>§06</strong> · GIFT 05 / 8</div>
+        <h2 class="section-title">切图 + <span class="em">资源</span></h2>
+      </div>
+      <p class="section-sub">SVG icon set、@1x/@2x/@3x 位图、字体文件 —— 所有不靠代码生成的素材都打包好。</p>
+    </div>
+
+    <div class="gift-marquee">
+      <div class="gift-num">05</div>
+      <div>
+        <div class="gift-summary">Gift · Assets & Resources</div>
+        <h3>所有"长在屏幕外"的东西，<span class="em">打包带走</span></h3>
+        <p>icon、illustration、photo、字体文件 —— 不要让前端自己去 Figma 一个个右键 export。命名一致、分辨率齐全、目录结构清晰。</p>
+      </div>
+    </div>
+
+    <div class="assets-stage">
+      <div class="assets-grid">
+        <div class="asset-block">
+          <h5>SVG ICON SET · 24×24 · stroke 1.5</h5>
+          <div class="icon-grid">
+            <div class="icon-cell" title="arrow-left"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M19 12H5M12 19l-7-7 7-7"/></svg></div>
+            <div class="icon-cell" title="arrow-right"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg></div>
+            <div class="icon-cell" title="check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20 6L9 17l-5-5"/></svg></div>
+            <div class="icon-cell" title="close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M18 6L6 18M6 6l12 12"/></svg></div>
+            <div class="icon-cell" title="search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg></div>
+            <div class="icon-cell" title="settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></div>
+            <div class="icon-cell" title="user"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>
+            <div class="icon-cell" title="heart"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg></div>
+            <div class="icon-cell" title="star"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></div>
+            <div class="icon-cell" title="trash"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></div>
+            <div class="icon-cell" title="edit"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></div>
+            <div class="icon-cell" title="plus"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 5v14M5 12h14"/></svg></div>
+          </div>
+        </div>
+
+        <div class="asset-block">
+          <h5>RASTER ASSETS · 多分辨率</h5>
+          <div class="resolution-strip">
+            <div class="res-card">
+              <div class="res-x">1×</div>
+              <div class="res-name">mdpi</div>
+              <div class="res-px">320×320</div>
+            </div>
+            <div class="res-card">
+              <div class="res-x">2×</div>
+              <div class="res-name">xhdpi</div>
+              <div class="res-px">640×640</div>
+            </div>
+            <div class="res-card">
+              <div class="res-x">3×</div>
+              <div class="res-name">xxhdpi</div>
+              <div class="res-px">960×960</div>
+            </div>
+          </div>
+          <div class="asset-name-rule" style="margin-top: 18px;">
+            <div><span class="ccom">// 命名规则 · kebab-case · 角色-语义-尺寸</span></div>
+            <div><span class="ckey">img-cover-product</span><span class="cnum">@2x</span>.png</div>
+            <div><span class="ckey">avatar-default</span><span class="cnum">@3x</span>.png</div>
+            <div><span class="ckey">illustration-empty-cart</span><span class="cnum">@1x</span>.png</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="asset-name-rule">
+        <div><span class="ccom">// 整体目录结构 · 推荐</span></div>
+        <div><span class="ckey">/assets</span></div>
+        <div>&nbsp;&nbsp;<span class="ckey">/icons</span> &nbsp; <span class="ccom">// SVG 单色图标，统一 24×24 / stroke 1.5</span></div>
+        <div>&nbsp;&nbsp;<span class="ckey">/illustrations</span> &nbsp; <span class="ccom">// 多色 SVG / PNG 插画</span></div>
+        <div>&nbsp;&nbsp;<span class="ckey">/images</span> &nbsp; <span class="ccom">// 位图，含 @1x @2x @3x</span></div>
+        <div>&nbsp;&nbsp;<span class="ckey">/fonts</span> &nbsp; <span class="ccom">// 自定义字体 (.woff2 / .otf)，附 license.txt</span></div>
+        <div>&nbsp;&nbsp;<span class="ckey">/lottie</span> &nbsp; <span class="ccom">// 动画文件 (.json)，附预览 GIF</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- §07 gifts 6-8 — doc, responsive, animation -->
+<section>
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>§07</strong> · GIFT 06–08 / 8</div>
+        <h2 class="section-title"><span class="em">文档</span> · 响应式 · 动画</h2>
+      </div>
+      <p class="section-sub">最后三件礼物：写一份"为什么这么设计"的文档；至少给三档断点；动画规格写到 ms 级别。</p>
+    </div>
+
+    <div class="triple-grid">
+      <!-- gift 6: doc -->
+      <div class="triple-card">
+        <div class="triple-num">Gift · 06</div>
+        <h4>设计文档</h4>
+        <p class="triple-sub">Figma 上画的是<strong>"是什么"</strong>，文档要写的是<strong>"为什么"</strong>和<strong>"什么场景下用"</strong>。一两段就够，关键是有。</p>
+        <div class="doc-mock">
+          <h6><span class="ico">i</span>使用场景</h6>
+          <p>用于结账流程的最后一步，明确告知用户"提交后将扣款"。</p>
+          <h6><span class="ico">!</span>设计意图</h6>
+          <p>使用强 CTA + 明显视觉权重，是因为转化率上是漏斗的最后一环。次按钮"返回购物车"不能太弱，要能让犹豫的用户找到回路。</p>
+          <h6><span class="ico">↗</span>跟其他模块的关系</h6>
+          <p>
+            <span class="doc-tag">⟵ 上游</span>
+            cart/summary 页面的"去结账" CTA 触发本页
+            <br>
+            <span class="doc-tag">⟶ 下游</span>
+            提交成功 → /order/success；失败 → 错误 toast，留在本页
+          </p>
+        </div>
+      </div>
+
+      <!-- gift 7: responsive -->
+      <div class="triple-card">
+        <div class="triple-num">Gift · 07</div>
+        <h4>响应式断点</h4>
+        <p class="triple-sub">至少三档：<strong>375 / 768 / 1440</strong>。每档画一遍，前端就知道你的内容怎么塌缩、怎么换行、什么时候用列布局。</p>
+        <div class="resp-track">
+          <div class="resp-bp">
+            <div class="bp-w">375</div>
+            <div class="bp-name">mobile · sm</div>
+            <div class="bp-grid">
+              <div class="bp-col"></div>
+            </div>
+          </div>
+          <div class="resp-bp">
+            <div class="bp-w">768</div>
+            <div class="bp-name">tablet · md</div>
+            <div class="bp-grid">
+              <div class="bp-col"></div>
+              <div class="bp-col"></div>
+            </div>
+          </div>
+          <div class="resp-bp">
+            <div class="bp-w">1440</div>
+            <div class="bp-name">desktop · lg</div>
+            <div class="bp-grid">
+              <div class="bp-col"></div>
+              <div class="bp-col"></div>
+              <div class="bp-col"></div>
+              <div class="bp-col"></div>
+            </div>
+          </div>
+        </div>
+        <p class="resp-note">
+          <strong>小诀窍：</strong>响应式不只是宽度变了。导航栏在 mobile 是抽屉、tablet 是 tab、desktop 是横向条 —— 这种"形态切换"必须画。 字号、行数、CTA 文案、列数也都可能在不同断点里变。
+        </p>
+      </div>
+
+      <!-- gift 8: animation -->
+      <div class="triple-card">
+        <div class="triple-num">Gift · 08</div>
+        <h4>动画规格</h4>
+        <p class="triple-sub">动画不是"帅就完事"。前端需要的三个数：<strong>duration</strong>（多久）、<strong>easing</strong>（怎么动）、<strong>触发条件</strong>（什么时候动）。</p>
+        <div class="anim-stage">
+          <div class="anim-canvas">
+            <div class="anim-target" id="animTarget"></div>
+          </div>
+          <div>
+            <div class="anim-spec-list">
+              <span class="k">duration</span>
+              <span class="v"><span class="code-style">600ms</span></span>
+              <span class="k">easing</span>
+              <span class="v"><span class="code-style">cubic-bezier(.34,1.56,.64,1)</span></span>
+              <span class="k">trigger</span>
+              <span class="v">用户点击 / 按下 Tab</span>
+              <span class="k">property</span>
+              <span class="v">transform: translate + scale</span>
+              <span class="k">delay</span>
+              <span class="v">0ms</span>
+            </div>
+            <button class="anim-replay" id="animReplay">▷ replay animation</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- §08 checklist + outro -->
+<section>
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>§08</strong> · CHECKLIST &amp; OUTRO</div>
+        <h2 class="section-title">8 项 Handoff <span class="em">自评</span></h2>
+      </div>
+      <p class="section-sub">把这一篇过完后，回到你最近一份设计稿，逐条勾。90 分以上 = handoff 大师。</p>
+    </div>
+
+    <div class="checklist-frame">
+      <div>
+        <h3>Self-assessment · 8 项打分</h3>
+        <p>每项 12.5 分。点击勾选，分数实时更新。这不是考试 —— 是给你一份自我反省的镜子。</p>
+      </div>
+      <div class="score-display" id="scoreDisplay">
+        <div class="score-num" id="scoreNum">0</div>
+        <div class="score-label">/ 100 分</div>
+      </div>
+    </div>
+
+    <div class="checklist-list" id="checklist">
+      <div class="check-item" data-check="1">
+        <div class="check-row">
+          <div class="check-box"></div>
+          <div class="check-content">
+            <div class="check-num">CHECK / 01</div>
+            <div class="check-title">完整图层命名</div>
+            <div class="check-meta">每一层都有可读名字，无 "Frame 12" / "Group 2 Copy"</div>
+          </div>
+        </div>
+      </div>
+      <div class="check-item" data-check="2">
+        <div class="check-row">
+          <div class="check-box"></div>
+          <div class="check-content">
+            <div class="check-num">CHECK / 02</div>
+            <div class="check-title">完整 Variables (Tokens)</div>
+            <div class="check-meta">颜色 / 字号 / 间距 / 圆角全部建库，含 Light + Dark</div>
+          </div>
+        </div>
+      </div>
+      <div class="check-item" data-check="3">
+        <div class="check-row">
+          <div class="check-box"></div>
+          <div class="check-content">
+            <div class="check-num">CHECK / 03</div>
+            <div class="check-title">完整 Components + Variants</div>
+            <div class="check-meta">所有组件画齐 5 态，配 Properties 一一映射 Props</div>
+          </div>
+        </div>
+      </div>
+      <div class="check-item" data-check="4">
+        <div class="check-row">
+          <div class="check-box"></div>
+          <div class="check-content">
+            <div class="check-num">CHECK / 04</div>
+            <div class="check-title">关键标注</div>
+            <div class="check-meta">跳转 / 校验 / 排序 / 异常态都有文字说明</div>
+          </div>
+        </div>
+      </div>
+      <div class="check-item" data-check="5">
+        <div class="check-row">
+          <div class="check-box"></div>
+          <div class="check-content">
+            <div class="check-num">CHECK / 05</div>
+            <div class="check-title">切图 + 资源</div>
+            <div class="check-meta">SVG 图标 / @1x@2x@3x 位图 / 字体文件，命名一致</div>
+          </div>
+        </div>
+      </div>
+      <div class="check-item" data-check="6">
+        <div class="check-row">
+          <div class="check-box"></div>
+          <div class="check-content">
+            <div class="check-num">CHECK / 06</div>
+            <div class="check-title">设计文档</div>
+            <div class="check-meta">使用场景 / 设计意图 / 跟其他模块的关系</div>
+          </div>
+        </div>
+      </div>
+      <div class="check-item" data-check="7">
+        <div class="check-row">
+          <div class="check-box"></div>
+          <div class="check-content">
+            <div class="check-num">CHECK / 07</div>
+            <div class="check-title">响应式断点</div>
+            <div class="check-meta">至少 375 / 768 / 1440 三档，含形态切换说明</div>
+          </div>
+        </div>
+      </div>
+      <div class="check-item" data-check="8">
+        <div class="check-row">
+          <div class="check-box"></div>
+          <div class="check-content">
+            <div class="check-num">CHECK / 08</div>
+            <div class="check-title">动画规格</div>
+            <div class="check-meta">duration / easing / 触发条件，每个都有数字</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="verdict" id="verdict">
+      <h4>当前评级 · <span class="em" id="verdictTitle">先勾几项试试</span></h4>
+      <p id="verdictText">勾选上方 checklist，看你这次设计稿的 handoff 完整度。每一项都有对应的章节回顾路径。</p>
+    </div>
+
+    <!-- Final outro: collection complete -->
+    <div class="outro-thanks">
+      <h3>感谢你看到这里 · <span class="em">完结彩蛋</span></h3>
+      <p>这一篇是「Design × Code Lab」<strong>13 / 13 收官篇</strong>。从盒子模型到 Handoff，我们把"设计稿到代码"这条路上每一段坑都走了一遍。</p>
+      <p>如果你只记得一句话，请记这句：<strong>设计师交付的不是图，是"前端能立刻动手的资料包"</strong>。</p>
+      <p>把这 8 件礼物变成你的肌肉记忆 —— 你的下一个项目会感谢现在的你。</p>
+    </div>
+
+    <!-- Roadmap recap -->
+    <div class="roadmap">
+      <h4>13 篇路线图回顾 · 你已经走完</h4>
+      <p class="road-sub">从 A 到 E，5 个模块 · 13 篇 · 一份完整的"AI 还原设计稿"知识树。</p>
+      <div class="roadmap-track">
+        <div class="road-step done">
+          <span class="road-num">01</span>
+          <span class="road-tag">A0 · 基础</span>
+          <span class="road-title">Figma 基础 · <strong>basics</strong></span>
+        </div>
+        <div class="road-step done">
+          <span class="road-num">02</span>
+          <span class="road-tag">A1 · 进阶</span>
+          <span class="road-title">盒子模型 × Auto Layout · <strong>box</strong></span>
+        </div>
+        <div class="road-step done">
+          <span class="road-num">03</span>
+          <span class="road-tag">A2 · 进阶</span>
+          <span class="road-title">组件 × Variants · <strong>components</strong></span>
+        </div>
+        <div class="road-step done">
+          <span class="road-num">04</span>
+          <span class="road-tag">B0 · 基础</span>
+          <span class="road-title">页面拼装 × Section · <strong>page</strong></span>
+        </div>
+        <div class="road-step done">
+          <span class="road-num">05</span>
+          <span class="road-tag">B1 · 进阶</span>
+          <span class="road-title">数据流 × Props · <strong>data-flow</strong></span>
+        </div>
+        <div class="road-step done">
+          <span class="road-num">06</span>
+          <span class="road-tag">B2 · 进阶</span>
+          <span class="road-title">状态机 × States · <strong>states</strong></span>
+        </div>
+        <div class="road-step done">
+          <span class="road-num">07</span>
+          <span class="road-tag">C0 · 基础</span>
+          <span class="road-title">颜色 · 字体 · Tokens · <strong>colors-type</strong></span>
+        </div>
+        <div class="road-step done">
+          <span class="road-num">08</span>
+          <span class="road-tag">C1 · 进阶</span>
+          <span class="road-title">Tokens 系统化 · <strong>tokens</strong></span>
+        </div>
+        <div class="road-step done">
+          <span class="road-num">09</span>
+          <span class="road-tag">D0 · 基础</span>
+          <span class="road-title">图层命名规范 · <strong>naming</strong></span>
+        </div>
+        <div class="road-step this">
+          <span class="road-num">10</span>
+          <span class="road-tag">E2 · 进阶</span>
+          <span class="road-title"><strong>Handoff &amp; 设计系统</strong>（你正在看）</span>
+        </div>
+        <div class="road-step">
+          <span class="road-num">·</span>
+          <span class="road-tag">未来</span>
+          <span class="road-title">3 篇扩展中：A11y · Motion · Code Connect</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Footer -->
+<footer>
+  <div class="wrap">
+    <div class="byline">
+      <div class="avatar">范</div>
+      <div class="byline-meta">
+        <div class="byline-label"><span class="dot"></span>作者 · WRITTEN BY</div>
+        <h3 class="byline-name">嗨，我是 <span class="em">范米花儿</span></h3>
+        <p class="byline-tag">一份关于 Handoff 与设计系统的实验讲解 ——<br>希望对正在打磨设计交付流程的你有帮助。</p>
+      </div>
+    </div>
+    <div class="footer-meta">
+      做于 <span class="mono">2026</span> · 用 <span class="heart">●</span> 写给 <span class="mono">DESIGNERS &amp; DEVELOPERS</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+// ========= Variables Modes interactive =========
+(function() {
+  const modes = {
+    light: [
+      { name: 'color/bg/canvas', val: '#F3EEE5', sw: '#f3eee5' },
+      { name: 'color/bg/elevated', val: '#FAF7F0', sw: '#faf7f0' },
+      { name: 'color/text/primary', val: '#16161D', sw: '#16161d' },
+      { name: 'color/text/secondary', val: '#4A4A55', sw: '#4a4a55' },
+      { name: 'color/border/default', val: '#D5CDBA', sw: '#d5cdba' },
+      { name: 'color/accent/primary', val: '#FF4D2E', sw: '#ff4d2e' },
+      { name: 'color/accent/soft', val: '#FFE4DC', sw: '#ffe4dc' },
+    ],
+    dark: [
+      { name: 'color/bg/canvas', val: '#16161D', sw: '#16161d' },
+      { name: 'color/bg/elevated', val: '#22222C', sw: '#22222c' },
+      { name: 'color/text/primary', val: '#F3EEE5', sw: '#f3eee5' },
+      { name: 'color/text/secondary', val: '#8A8A92', sw: '#8a8a92' },
+      { name: 'color/border/default', val: '#3A3A47', sw: '#3a3a47' },
+      { name: 'color/accent/primary', val: '#FF6B4D', sw: '#ff6b4d' },
+      { name: 'color/accent/soft', val: '#3A1A12', sw: '#3a1a12' },
+    ],
+    brand: [
+      { name: 'color/bg/canvas', val: '#0F1B2D', sw: '#0f1b2d' },
+      { name: 'color/bg/elevated', val: '#15263F', sw: '#15263f' },
+      { name: 'color/text/primary', val: '#FFFFFF', sw: '#ffffff' },
+      { name: 'color/text/secondary', val: '#9DB2D0', sw: '#9db2d0' },
+      { name: 'color/border/default', val: '#2A3D5C', sw: '#2a3d5c' },
+      { name: 'color/accent/primary', val: '#FFCF3D', sw: '#ffcf3d' },
+      { name: 'color/accent/soft', val: '#3A301A', sw: '#3a301a' },
+    ],
+  };
+
+  const tableEl = document.getElementById('tf-table');
+  const buttons = document.querySelectorAll('.tf-mode');
+
+  function render(mode) {
+    if (!tableEl) return;
+    const rows = modes[mode];
+    tableEl.innerHTML = rows.map(r =>
+      `<div class="tf-row"><span class="tf-name">${r.name}</span><span class="tf-val"><span class="tf-swatch" style="background:${r.sw}"></span>${r.val}</span></div>`
+    ).join('');
+  }
+
+  buttons.forEach(btn => {
+    btn.addEventListener('click', () => {
+      buttons.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      render(btn.dataset.mode);
+    });
+  });
+})();
+
+// ========= Animation replay =========
+(function() {
+  const target = document.getElementById('animTarget');
+  const replay = document.getElementById('animReplay');
+  if (!target || !replay) return;
+
+  function run() {
+    target.classList.remove('run');
+    void target.offsetWidth; // reflow
+    target.classList.add('run');
+  }
+  replay.addEventListener('click', run);
+  target.addEventListener('click', run);
+
+  // run once on first scroll into view
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        setTimeout(run, 200);
+        io.disconnect();
+      }
+    });
+  }, { threshold: 0.5 });
+  io.observe(target);
+})();
+
+// ========= Checklist self-assessment =========
+(function() {
+  const items = document.querySelectorAll('.check-item');
+  const scoreNum = document.getElementById('scoreNum');
+  const scoreDisplay = document.getElementById('scoreDisplay');
+  const verdict = document.getElementById('verdict');
+  const verdictTitle = document.getElementById('verdictTitle');
+  const verdictText = document.getElementById('verdictText');
+
+  const verdicts = [
+    { min: 0,  max: 12,  title: '先勾几项试试',     text: '勾选上方 checklist，看你这次设计稿的 handoff 完整度。每一项都有对应的章节回顾路径。', cls: '' },
+    { min: 13, max: 37,  title: '入门 · 还差很多',  text: '你只交付了"图"，还没交付"资料包"。回到本文 §02 / §03 / §04 重新过一遍，把命名、Tokens、Variants 补齐。', cls: '' },
+    { min: 38, max: 62,  title: '及格 · 能用',      text: '前端能勉强动工，但每天会有 1–2 次追问。下次试着把 §05 标注 和 §06 切图也带上 —— 追问会变成 0 次。', cls: 'passing' },
+    { min: 63, max: 87,  title: '良好 · 接近 senior', text: '你的设计稿能让前端 1.5 倍速完成。差最后一公里：§07 文档 + 响应式 + 动画规格 —— 这是从"good"到"great"的差距。', cls: 'passing' },
+    { min: 88, max: 100, title: 'Handoff 大师',     text: '90 分以上 —— 你交出去的不是设计稿，是一份可执行的产品规格。前端会主动来说："以后所有项目都按你这个标准来。"', cls: 'master' },
+  ];
+
+  function update() {
+    const checked = document.querySelectorAll('.check-item.checked').length;
+    const score = Math.round(checked * 12.5);
+    scoreNum.textContent = score;
+
+    // score color tier
+    scoreDisplay.classList.remove('passing', 'master');
+    if (score >= 88) scoreDisplay.classList.add('master');
+    else if (score >= 38) scoreDisplay.classList.add('passing');
+
+    // verdict
+    const v = verdicts.find(x => score >= x.min && score <= x.max);
+    if (v) {
+      verdictTitle.textContent = v.title;
+      verdictText.textContent = v.text;
+      verdict.classList.remove('passing', 'master');
+      if (v.cls) verdict.classList.add(v.cls);
+    }
+  }
+
+  items.forEach(item => {
+    item.addEventListener('click', () => {
+      item.classList.toggle('checked');
+      update();
+    });
+  });
+
+  update();
+})();
+</script>
+
+</body>
+</html>

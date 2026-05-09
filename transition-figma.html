@@ -1,0 +1,2111 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>动画 / Transition × Smart Animate — 好动画 = 物理感</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,300..900&family=Geist:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Noto+Sans+SC:wght@300;400;500;700;900&family=Noto+Serif+SC:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f3eee5;
+    --bg-2: #ebe4d4;
+    --ink: #16161d;
+    --ink-soft: #4a4a55;
+    --ink-mute: #8a8a92;
+    --line: #d5cdba;
+    --line-soft: #e3dcca;
+    --accent: #ff4d2e;
+    --accent-soft: #ffe4dc;
+    --blue: #0a4cff;
+    --blue-soft: #dde6ff;
+    --green: #1f6b3a;
+    --green-soft: #d4ecdb;
+    --yellow: #ffcf3d;
+    --paper: #faf7f0;
+    --shadow: 0 1px 0 rgba(0,0,0,0.04), 0 8px 24px rgba(22,22,29,0.06);
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'Geist', 'Noto Sans SC', system-ui, -apple-system, sans-serif;
+    font-size: 16px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    background-image:
+      radial-gradient(circle at 1px 1px, rgba(22,22,29,0.05) 1px, transparent 0);
+    background-size: 24px 24px;
+  }
+
+  /* Typography */
+  .display-cn { font-family: 'Noto Serif SC', 'Fraunces', serif; font-weight: 900; letter-spacing: -0.01em; }
+  .display-en { font-family: 'Fraunces', 'Noto Serif SC', serif; font-weight: 600; font-style: italic; letter-spacing: -0.02em; }
+  .mono { font-family: 'JetBrains Mono', monospace; }
+  .label { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-mute); }
+
+  /* Layout */
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 0 32px; }
+
+  /* Top bar */
+  .topbar {
+    border-bottom: 1px dashed var(--line);
+    padding: 16px 0;
+    background: var(--bg);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    backdrop-filter: blur(8px);
+    background: rgba(243, 238, 229, 0.85);
+  }
+  .topbar-inner { display: flex; justify-content: space-between; align-items: center; gap: 24px; flex-wrap: wrap; }
+  .brand { font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 600; }
+  .brand .dot { display: inline-block; width: 8px; height: 8px; background: var(--accent); border-radius: 50%; margin-right: 8px; vertical-align: middle; animation: pulse 2s ease-in-out infinite; }
+  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+  .nav-links { display: flex; gap: 20px; font-size: 13px; flex-wrap: wrap; }
+  .nav-links a { color: var(--ink-soft); text-decoration: none; transition: color 0.2s; }
+  .nav-links a:hover { color: var(--accent); }
+  .nav-links a.current { color: var(--accent); font-weight: 600; }
+
+  /* Hero */
+  .hero { padding: 100px 0 80px; position: relative; overflow: hidden; }
+  .hero-meta { display: flex; gap: 24px; margin-bottom: 32px; align-items: center; flex-wrap: wrap; }
+  .hero-meta .pill { padding: 6px 12px; border: 1px solid var(--ink); border-radius: 100px; font-size: 11px; font-family: 'JetBrains Mono', monospace; letter-spacing: 0.05em; }
+  .hero-meta .pill.fill { background: var(--ink); color: var(--bg); }
+  .hero-meta .pill.accent { background: var(--accent); color: white; border-color: var(--accent); }
+  .hero h1 {
+    font-family: 'Noto Serif SC', 'Fraunces', serif;
+    font-weight: 900;
+    font-size: clamp(48px, 7vw, 92px);
+    line-height: 0.95;
+    letter-spacing: -0.03em;
+    margin: 0 0 24px;
+  }
+  .hero h1 .em { font-family: 'Fraunces', serif; font-style: italic; font-weight: 500; color: var(--accent); }
+  .hero h1 .x { display: inline-block; transform: translateY(-0.05em); margin: 0 0.05em; color: var(--ink-mute); font-weight: 300; }
+  .hero p.lede {
+    font-size: 20px;
+    line-height: 1.5;
+    max-width: 640px;
+    color: var(--ink-soft);
+    margin: 0 0 40px;
+  }
+  .hero-grid {
+    display: grid;
+    grid-template-columns: 1.4fr 1fr;
+    gap: 48px;
+    align-items: end;
+  }
+  @media (max-width: 880px) { .hero-grid { grid-template-columns: 1fr; } }
+  .hero-side {
+    border-left: 1px dashed var(--line);
+    padding-left: 24px;
+    font-size: 13px;
+    color: var(--ink-soft);
+  }
+  .hero-side .row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px dashed var(--line); }
+  .hero-side .row:last-child { border-bottom: none; }
+  .hero-side .row .k { color: var(--ink-mute); font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.05em; text-transform: uppercase; }
+  .hero-side .row .v { font-weight: 500; }
+
+  /* Hero animated demo — moving ball */
+  .hero-demo {
+    margin-top: 56px;
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 32px;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero-track {
+    position: relative;
+    height: 64px;
+    background:
+      linear-gradient(to right, transparent 0, transparent calc(100% - 1px), var(--line-soft) calc(100% - 1px), var(--line-soft) 100%);
+    border-radius: 4px;
+  }
+  .hero-track::before {
+    content: '';
+    position: absolute;
+    left: 0; right: 0; top: 50%;
+    height: 1px; background: var(--line-soft);
+  }
+  .hero-ball {
+    position: absolute;
+    top: 50%; left: 0;
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--accent), #ff8866);
+    box-shadow: 0 4px 12px rgba(255, 77, 46, 0.35);
+    transform: translate(-50%, -50%);
+    animation: heroBall 3.4s cubic-bezier(0.34, 1.56, 0.64, 1) infinite;
+  }
+  @keyframes heroBall {
+    0%, 100% { left: 0; }
+    50% { left: 100%; }
+  }
+  .hero-demo-foot {
+    margin-top: 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--ink-mute);
+    letter-spacing: 0.05em;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .hero-demo-foot .lab strong { color: var(--accent); font-weight: 500; }
+
+  /* Section */
+  section { padding: 80px 0; border-top: 1px solid var(--line); position: relative; }
+  .section-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 56px; flex-wrap: wrap; gap: 16px; }
+  .section-num { font-family: 'JetBrains Mono', monospace; font-size: 13px; color: var(--ink-mute); letter-spacing: 0.1em; }
+  .section-num strong { color: var(--accent); }
+  .section-title {
+    font-family: 'Noto Serif SC', serif;
+    font-weight: 900;
+    font-size: clamp(32px, 4.5vw, 52px);
+    line-height: 1.05;
+    letter-spacing: -0.02em;
+    margin: 0;
+    max-width: 18ch;
+  }
+  .section-title .em { font-family: 'Fraunces', serif; font-style: italic; font-weight: 500; color: var(--accent); }
+  .section-sub { color: var(--ink-soft); font-size: 17px; max-width: 38ch; line-height: 1.55; margin: 0; }
+
+  /* ===== §01 Problem comparison: BAD vs GOOD ===== */
+  .problem-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 32px;
+    margin-top: 24px;
+  }
+  @media (max-width: 880px) { .problem-grid { grid-template-columns: 1fr; } }
+  .problem-card {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 28px;
+    position: relative;
+  }
+  .problem-card.bad { border-color: var(--accent); background: var(--accent-soft); }
+  .problem-card.good { border-color: var(--green); background: var(--green-soft); }
+  .problem-card .tag {
+    position: absolute; top: -12px; left: 24px;
+    background: var(--bg); padding: 2px 10px;
+    font-family: 'JetBrains Mono', monospace; font-size: 11px;
+    letter-spacing: 0.1em;
+  }
+  .problem-card.bad .tag { color: var(--accent); border: 1px solid var(--accent); }
+  .problem-card.good .tag { color: var(--green); border: 1px solid var(--green); }
+  .problem-card h3 { font-family: 'Noto Serif SC', serif; font-size: 22px; margin: 0 0 12px; font-weight: 700; }
+  .problem-card p { margin: 0 0 16px; color: var(--ink-soft); font-size: 14px; line-height: 1.55; }
+
+  .demo-stage {
+    background: white;
+    border: 1px dashed var(--line);
+    border-radius: 4px;
+    padding: 20px 16px;
+    margin-top: 14px;
+    position: relative;
+    height: 120px;
+    overflow: hidden;
+  }
+  .demo-track {
+    position: absolute;
+    left: 16px; right: 16px;
+    top: 50%; transform: translateY(-50%);
+    height: 1px;
+    background: var(--line-soft);
+  }
+  .demo-ball-bad, .demo-ball-good {
+    position: absolute;
+    top: 50%;
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    transform: translateY(-50%);
+    cursor: pointer;
+  }
+  .demo-ball-bad {
+    background: linear-gradient(135deg, #888, #aaa);
+    left: 16px;
+    transition: left 0.45s linear;
+  }
+  .demo-ball-bad.move { left: calc(100% - 44px); }
+  .demo-ball-good {
+    background: linear-gradient(135deg, var(--accent), #ff8866);
+    box-shadow: 0 3px 10px rgba(255, 77, 46, 0.3);
+    left: 16px;
+    transition: left 0.55s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  .demo-ball-good.move { left: calc(100% - 44px); }
+  .demo-trigger {
+    margin-top: 12px;
+    text-align: center;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--ink-mute);
+    letter-spacing: 0.05em;
+  }
+  .demo-trigger button {
+    background: var(--ink);
+    color: var(--bg);
+    border: none;
+    padding: 6px 14px;
+    border-radius: 100px;
+    font-family: inherit;
+    font-size: 11px;
+    cursor: pointer;
+    letter-spacing: 0.05em;
+    transition: all 0.15s ease;
+  }
+  .demo-trigger button:hover { background: var(--accent); transform: translateY(-1px); }
+
+  /* ===== §02 Four parameters ===== */
+  .params-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+    margin-top: 24px;
+  }
+  @media (max-width: 720px) { .params-grid { grid-template-columns: 1fr; } }
+  .param-card {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 24px;
+    position: relative;
+    overflow: hidden;
+  }
+  .param-card .pnum {
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    font-size: 36px;
+    line-height: 1;
+    color: var(--accent);
+    margin-bottom: 14px;
+  }
+  .param-card h4 {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 19px;
+    margin: 0 0 6px;
+    font-weight: 700;
+  }
+  .param-card .key {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--blue);
+    letter-spacing: 0.05em;
+    margin-bottom: 10px;
+  }
+  .param-card p {
+    font-size: 13.5px;
+    color: var(--ink-soft);
+    margin: 0 0 16px;
+    line-height: 1.6;
+  }
+  .param-stage {
+    background: var(--bg);
+    border: 1px dashed var(--line);
+    border-radius: 4px;
+    height: 80px;
+    position: relative;
+    overflow: hidden;
+  }
+  .param-track {
+    position: absolute;
+    left: 14px; right: 14px;
+    top: 50%; transform: translateY(-50%);
+    height: 1px; background: var(--line-soft);
+  }
+  .param-ball {
+    position: absolute;
+    top: 50%; left: 14px;
+    width: 24px; height: 24px;
+    border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 2px 8px rgba(255, 77, 46, 0.4);
+    transform: translateY(-50%);
+  }
+  .param-card.p1 .param-ball { animation: paramP1 2.4s ease-in-out infinite; }
+  @keyframes paramP1 { 0%, 100% { left: 14px; } 50% { left: calc(100% - 38px); } }
+
+  .param-card.p2 .param-stage {
+    display: flex;
+    align-items: center;
+    padding: 0 14px;
+    gap: 8px;
+  }
+  .param-card.p2 .ease-row {
+    flex: 1;
+    height: 24px;
+    position: relative;
+  }
+  .param-card.p2 .ease-row .e-ball {
+    position: absolute;
+    top: 0;
+    width: 18px; height: 18px;
+    border-radius: 50%;
+    background: var(--accent);
+  }
+  .param-card.p2 .ease-row .e-label {
+    position: absolute;
+    bottom: -16px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    color: var(--ink-mute);
+  }
+  .param-card.p2 .e-row1 .e-ball { animation: paramP2A 2s linear infinite; }
+  .param-card.p2 .e-row2 .e-ball { animation: paramP2A 2s ease-out infinite; background: var(--blue); }
+  .param-card.p2 .e-row3 .e-ball { animation: paramP2A 2s cubic-bezier(0.34, 1.56, 0.64, 1) infinite; background: var(--green); }
+  @keyframes paramP2A { 0%, 100% { left: 0; } 50% { left: calc(100% - 18px); } }
+
+  .param-card.p3 .param-ball { animation: paramP3 3.2s ease-in-out infinite; animation-delay: 0.6s; }
+  @keyframes paramP3 { 0%, 100% { left: 14px; } 50% { left: calc(100% - 38px); } }
+  .param-card.p3 .delay-mark {
+    position: absolute;
+    bottom: 8px; left: 14px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--ink-mute);
+    letter-spacing: 0.05em;
+  }
+
+  .param-card.p4 .param-stage {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 8px;
+    padding: 14px;
+  }
+  .param-card.p4 .pp {
+    background: var(--accent);
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.05em;
+  }
+  .param-card.p4 .pp.x { animation: ppX 2.4s ease-in-out infinite; }
+  .param-card.p4 .pp.o { animation: ppO 2.4s ease-in-out infinite; background: var(--blue); }
+  .param-card.p4 .pp.c { animation: ppC 2.4s ease-in-out infinite; }
+  @keyframes ppX { 0%, 100% { transform: translateX(0); } 50% { transform: translateX(8px); } }
+  @keyframes ppO { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+  @keyframes ppC { 0%, 100% { background: var(--green); } 50% { background: var(--yellow); color: var(--ink); } }
+
+  /* ===== §03 Easing — cubic-bezier playground ===== */
+  .ease-stage {
+    display: grid;
+    grid-template-columns: 1.1fr 1fr;
+    gap: 32px;
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 32px;
+  }
+  @media (max-width: 880px) { .ease-stage { grid-template-columns: 1fr; } }
+  .ease-bezier {
+    background: white;
+    border: 1px dashed var(--line);
+    border-radius: 6px;
+    padding: 24px;
+    position: relative;
+  }
+  .bezier-svg {
+    width: 100%;
+    height: auto;
+    display: block;
+    aspect-ratio: 1 / 1;
+    cursor: crosshair;
+  }
+  .bezier-svg .grid line { stroke: var(--line-soft); stroke-width: 1; }
+  .bezier-svg .axis { stroke: var(--ink-mute); stroke-width: 1.2; stroke-dasharray: 3 3; }
+  .bezier-svg .curve { fill: none; stroke: var(--accent); stroke-width: 3; stroke-linecap: round; }
+  .bezier-svg .ctrl-line { stroke: var(--blue); stroke-width: 1.4; stroke-dasharray: 4 3; }
+  .bezier-svg .handle {
+    fill: white;
+    stroke: var(--blue);
+    stroke-width: 2.5;
+    cursor: grab;
+    transition: r 0.15s ease, fill 0.15s ease;
+  }
+  .bezier-svg .handle:hover { fill: var(--blue); r: 11; }
+  .bezier-svg .handle.dragging { fill: var(--accent); stroke: var(--accent); cursor: grabbing; }
+  .bezier-svg .endpoint {
+    fill: var(--ink);
+    stroke: white;
+    stroke-width: 2;
+  }
+  .bezier-svg .axis-lab {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    fill: var(--ink-mute);
+    letter-spacing: 0.05em;
+  }
+  .bezier-readout {
+    margin-top: 16px;
+    padding: 12px 16px;
+    background: var(--ink);
+    color: #e8e8ec;
+    border-radius: 4px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    line-height: 1.7;
+    text-align: center;
+  }
+  .bezier-readout .ckey { color: #ff8a6e; }
+  .bezier-readout .cnum { color: #ffd166; }
+
+  .ease-presets {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 12px;
+  }
+  .ease-presets button {
+    background: white;
+    border: 1px solid var(--line);
+    padding: 6px 12px;
+    border-radius: 100px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--ink-soft);
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+  .ease-presets button:hover {
+    background: var(--accent);
+    color: white;
+    border-color: var(--accent);
+  }
+  .ease-presets button.active {
+    background: var(--ink);
+    color: var(--bg);
+    border-color: var(--ink);
+  }
+
+  .ease-balls {
+    background: white;
+    border: 1px dashed var(--line);
+    border-radius: 6px;
+    padding: 20px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  .ease-balls h5 {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 14px;
+    margin: 0;
+    font-weight: 600;
+  }
+  .ease-balls .desc {
+    font-size: 12.5px;
+    color: var(--ink-soft);
+    margin: -8px 0 4px;
+    line-height: 1.5;
+  }
+  .ball-track {
+    position: relative;
+    height: 32px;
+    background: linear-gradient(to right, var(--line-soft) 0, var(--line-soft) 100%) center/100% 1px no-repeat;
+    border-radius: 4px;
+  }
+  .ball-track .lab {
+    position: absolute;
+    left: 4px; top: -14px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--ink-mute);
+    letter-spacing: 0.05em;
+  }
+  .ball-track .b {
+    position: absolute;
+    top: 50%;
+    width: 24px; height: 24px;
+    border-radius: 50%;
+    transform: translateY(-50%);
+    left: 4px;
+    transition: left 1.2s linear;
+  }
+  .ball-track .b.linear { background: linear-gradient(135deg, #888, #aaa); }
+  .ball-track .b.ease-out { background: linear-gradient(135deg, var(--blue), #4a7eff); }
+  .ball-track .b.spring { background: linear-gradient(135deg, var(--accent), #ff8866); box-shadow: 0 2px 8px rgba(255,77,46,0.4); }
+  .ball-track.go .b { left: calc(100% - 28px); }
+
+  .ease-fire {
+    margin-top: 8px;
+    text-align: right;
+  }
+  .ease-fire button {
+    background: var(--accent);
+    color: white;
+    border: none;
+    padding: 8px 18px;
+    border-radius: 100px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.05em;
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+  .ease-fire button:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(255,77,46,0.3);
+  }
+
+  /* ===== §04 Smart Animate ↔ CSS transition ===== */
+  .sa-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    margin-top: 24px;
+  }
+  @media (max-width: 880px) { .sa-grid { grid-template-columns: 1fr; } }
+  .sa-card {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    overflow: hidden;
+  }
+  .sa-card-head {
+    padding: 14px 20px;
+    background: var(--ink);
+    color: var(--bg);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .sa-card-head .pill-mini {
+    background: var(--accent);
+    padding: 3px 10px;
+    border-radius: 100px;
+    font-size: 10px;
+  }
+  .sa-card-body { padding: 24px; }
+
+  /* Figma timeline mock */
+  .figma-tl {
+    background: #2c2c2c;
+    color: #e8e8e8;
+    border-radius: 4px;
+    padding: 16px;
+    font-family: 'Geist', sans-serif;
+    font-size: 12px;
+  }
+  .figma-tl .tl-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #404040;
+  }
+  .figma-tl .tl-title {
+    font-size: 11px;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: #999;
+    font-weight: 600;
+  }
+  .figma-tl .tl-pill {
+    background: #0d99ff;
+    color: white;
+    padding: 2px 8px;
+    border-radius: 3px;
+    font-size: 10px;
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .figma-tl .tl-row {
+    display: grid;
+    grid-template-columns: 80px 1fr;
+    gap: 12px;
+    align-items: center;
+    margin-bottom: 8px;
+  }
+  .figma-tl .tl-key { color: #999; font-size: 11px; }
+  .figma-tl .tl-val {
+    background: #1e1e1e;
+    padding: 5px 10px;
+    border-radius: 3px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: #ffd166;
+  }
+  .figma-tl .tl-val.curve { display: flex; align-items: center; gap: 8px; }
+  .figma-tl .tl-curve-mini {
+    width: 24px; height: 24px;
+    background: white;
+    border-radius: 3px;
+    flex-shrink: 0;
+  }
+  .figma-tl .tl-curve-mini svg { width: 100%; height: 100%; }
+
+  .figma-tl-frames {
+    margin-top: 12px;
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    gap: 12px;
+    align-items: center;
+  }
+  .figma-tl-frames .fr {
+    background: #1e1e1e;
+    border: 1.5px solid #444;
+    border-radius: 4px;
+    padding: 16px;
+    aspect-ratio: 1.4 / 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+  }
+  .figma-tl-frames .fr-card {
+    width: 64px; height: 36px;
+    background: var(--accent);
+    border-radius: 4px;
+  }
+  .figma-tl-frames .fr.b .fr-card { width: 88px; height: 56px; background: var(--blue); }
+  .figma-tl-frames .fr-name {
+    position: absolute;
+    top: -10px; left: 8px;
+    background: #2c2c2c;
+    padding: 2px 8px;
+    border-radius: 3px;
+    font-size: 10px;
+    color: #999;
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .figma-tl-frames .arrow {
+    color: #0d99ff;
+    font-size: 24px;
+    text-align: center;
+  }
+
+  /* CSS code panel */
+  .css-tl {
+    background: var(--ink);
+    color: #e8e8ec;
+    border-radius: 4px;
+    padding: 18px 20px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12.5px;
+    line-height: 1.85;
+    overflow-x: auto;
+  }
+  .css-tl .csel { color: #c9b6ff; }
+  .css-tl .ckey { color: #ff8a6e; }
+  .css-tl .cval { color: #ffd166; }
+  .css-tl .cstr { color: #a8e6a3; }
+  .css-tl .cnum { color: #8ec5ff; }
+  .css-tl .ccom { color: #6e6e7a; font-style: italic; }
+  .css-tl .indent { padding-left: 2ch; }
+
+  /* mapping table for §04 */
+  .sa-map {
+    margin-top: 32px;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    overflow: hidden;
+    background: var(--paper);
+  }
+  .sa-map-head {
+    display: grid;
+    grid-template-columns: 1fr 60px 1fr;
+    background: var(--ink);
+    color: var(--bg);
+  }
+  .sa-map-head > div {
+    padding: 14px 20px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+  .sa-map-head > div:nth-child(2) { text-align: center; }
+  .sa-map-row {
+    display: grid;
+    grid-template-columns: 1fr 60px 1fr;
+    border-top: 1px solid var(--line);
+  }
+  .sa-map-row > div { padding: 16px 20px; }
+  .sa-map-row > div:nth-child(1) { border-right: 1px dashed var(--line); }
+  .sa-map-row > div:nth-child(2) {
+    border-right: 1px dashed var(--line);
+    text-align: center;
+    color: var(--accent);
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    font-size: 18px;
+    background: var(--bg);
+  }
+  .sa-map-row .figma-name { font-weight: 600; font-size: 14px; }
+  .sa-map-row .css-name { font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 500; }
+  .sa-map-row .desc { color: var(--ink-soft); font-size: 13px; margin-top: 4px; }
+
+  /* ===== §05 Slider playground ===== */
+  .play-stage {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 32px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 32px;
+  }
+  @media (max-width: 880px) { .play-stage { grid-template-columns: 1fr; } }
+  .play-canvas {
+    background: var(--bg);
+    border: 1px dashed var(--line);
+    border-radius: 6px;
+    padding: 24px;
+    min-height: 280px;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+  }
+  .play-btn {
+    background: linear-gradient(135deg, var(--accent), #ff7355);
+    color: white;
+    border: none;
+    padding: 16px 32px;
+    border-radius: 6px;
+    font-family: 'Geist', 'Noto Sans SC', sans-serif;
+    font-size: 16px;
+    font-weight: 500;
+    cursor: pointer;
+    box-shadow: 0 4px 14px rgba(255, 77, 46, 0.3);
+    transition: transform 280ms cubic-bezier(0.34, 1.56, 0.64, 1) 0ms,
+                opacity 280ms cubic-bezier(0.34, 1.56, 0.64, 1) 0ms,
+                background-color 280ms cubic-bezier(0.34, 1.56, 0.64, 1) 0ms,
+                box-shadow 280ms cubic-bezier(0.34, 1.56, 0.64, 1) 0ms;
+  }
+  .play-btn.go-transform { transform: translateX(120px) scale(1.1); }
+  .play-btn.go-opacity { opacity: 0.25; }
+  .play-btn.go-color { background: linear-gradient(135deg, var(--blue), #4a7eff); }
+  .play-tip {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--ink-mute);
+    letter-spacing: 0.05em;
+  }
+  .play-tip strong { color: var(--accent); font-weight: 500; }
+
+  .play-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+  }
+  .play-ctrl {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .play-ctrl-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+  }
+  .play-ctrl-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    font-weight: 500;
+  }
+  .play-ctrl-val {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--ink-soft);
+    background: var(--bg-2);
+    padding: 1px 8px;
+    border-radius: 3px;
+  }
+  .play-ctrl input[type="range"] {
+    -webkit-appearance: none;
+    width: 100%;
+    height: 4px;
+    background: var(--line);
+    border-radius: 0;
+    outline: none;
+  }
+  .play-ctrl input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 18px; height: 18px;
+    background: var(--ink);
+    border: 2px solid var(--bg);
+    border-radius: 50%;
+    cursor: pointer;
+    box-shadow: 0 0 0 1px var(--ink);
+    transition: transform 0.1s;
+  }
+  .play-ctrl input[type="range"]::-webkit-slider-thumb:hover {
+    transform: scale(1.15);
+    background: var(--accent);
+  }
+  .play-ctrl input[type="range"]::-moz-range-thumb {
+    width: 18px; height: 18px;
+    background: var(--ink);
+    border: 2px solid var(--bg);
+    border-radius: 50%;
+    cursor: pointer;
+    box-shadow: 0 0 0 1px var(--ink);
+  }
+  .play-seg {
+    display: flex;
+    background: var(--bg-2);
+    padding: 3px;
+    border-radius: 4px;
+    gap: 2px;
+  }
+  .play-seg button {
+    flex: 1;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 6px 4px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--ink-soft);
+    border-radius: 3px;
+    transition: all 0.15s ease;
+  }
+  .play-seg button.active { background: var(--ink); color: var(--bg); }
+  .play-seg button:hover:not(.active) { color: var(--ink); }
+
+  .play-code {
+    grid-column: 1 / -1;
+    background: var(--ink);
+    color: #e8e8ec;
+    border-radius: 6px;
+    padding: 16px 20px 18px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    line-height: 1.75;
+    position: relative;
+    overflow-x: auto;
+  }
+  .play-code .filename {
+    position: absolute;
+    top: 10px; right: 14px;
+    font-size: 10px;
+    color: #6e6e7a;
+    letter-spacing: 0.05em;
+  }
+  .play-code::before {
+    content: '';
+    position: absolute;
+    top: 12px; left: 14px;
+    width: 8px; height: 8px; border-radius: 50%;
+    background: #ff5f56;
+    box-shadow: 14px 0 0 #ffbd2e, 28px 0 0 #27c93f;
+  }
+  .play-code-body { padding-top: 22px; }
+  .play-code .ckey { color: #ff8a6e; }
+  .play-code .cval { color: #ffd166; }
+  .play-code .cnum { color: #8ec5ff; }
+  .play-code .csel { color: #c9b6ff; }
+  .play-code .cstr { color: #a8e6a3; }
+  .play-code .ccom { color: #6e6e7a; font-style: italic; }
+
+  .play-fire {
+    grid-column: 1 / -1;
+    text-align: center;
+  }
+  .play-fire button {
+    background: var(--ink);
+    color: white;
+    border: none;
+    padding: 10px 24px;
+    border-radius: 100px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    cursor: pointer;
+    letter-spacing: 0.05em;
+    transition: all 0.15s ease;
+  }
+  .play-fire button:hover {
+    background: var(--accent);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(255,77,46,0.3);
+  }
+
+  /* ===== §06 Tips ===== */
+  .tips-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 24px;
+  }
+  @media (max-width: 720px) { .tips-grid { grid-template-columns: 1fr; } }
+  .tip {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 28px;
+    position: relative;
+  }
+  .tip-num { font-family: 'Fraunces', serif; font-style: italic; font-size: 48px; line-height: 1; color: var(--accent); margin-bottom: 12px; }
+  .tip h4 { font-family: 'Noto Serif SC', serif; font-size: 18px; margin: 0 0 10px; font-weight: 700; }
+  .tip p { margin: 0; font-size: 14px; color: var(--ink-soft); line-height: 1.6; }
+  .tip code {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    background: var(--bg-2);
+    padding: 1px 6px;
+    border-radius: 3px;
+    color: var(--ink);
+  }
+
+  /* Cheatsheet table — transition vs animation */
+  .cheat {
+    margin-top: 32px;
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    overflow: hidden;
+  }
+  .cheat-head {
+    background: var(--ink);
+    color: var(--bg);
+    padding: 16px 24px;
+    font-family: 'Noto Serif SC', serif;
+    font-size: 18px;
+    font-weight: 700;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .cheat-head .lab {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: rgba(255,255,255,0.55);
+    letter-spacing: 0.1em;
+    font-weight: 400;
+  }
+  .cheat-row {
+    display: grid;
+    grid-template-columns: 140px 1fr 1fr;
+    border-bottom: 1px dashed var(--line);
+  }
+  .cheat-row:last-child { border-bottom: none; }
+  .cheat-row > div {
+    padding: 16px 24px;
+    font-size: 13.5px;
+    line-height: 1.55;
+  }
+  .cheat-row .ckey {
+    background: var(--bg);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--ink-soft);
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    border-right: 1px dashed var(--line);
+    display: flex;
+    align-items: center;
+  }
+  .cheat-row .ct { border-right: 1px dashed var(--line); color: var(--ink-soft); }
+  .cheat-row .ca { color: var(--ink-soft); }
+  .cheat-row strong { color: var(--ink); font-weight: 600; }
+  .cheat-row.bold { background: var(--accent-soft); }
+  .cheat-row.bold .ckey { color: var(--accent); background: rgba(255,77,46,0.06); }
+  .cheat-row code {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    background: var(--bg-2);
+    padding: 1px 6px;
+    border-radius: 3px;
+    color: var(--ink);
+  }
+  @media (max-width: 720px) {
+    .cheat-row { grid-template-columns: 1fr; }
+    .cheat-row > div { border-right: none !important; border-bottom: 1px dashed var(--line); }
+    .cheat-row > div:last-child { border-bottom: none; }
+  }
+
+  /* outro */
+  .tip-outro {
+    margin-top: 24px;
+    padding: 24px 28px;
+    background: var(--accent-soft);
+    border-left: 3px solid var(--accent);
+    border-radius: 4px;
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 20px;
+    align-items: start;
+  }
+  .tip-outro .outro-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    color: var(--accent);
+    text-transform: uppercase;
+    padding-top: 2px;
+    white-space: nowrap;
+  }
+  .tip-outro p { margin: 0; font-size: 14px; line-height: 1.7; color: var(--ink); }
+  .tip-outro p + p { margin-top: 8px; color: var(--ink-soft); font-size: 13px; }
+  .tip-outro strong { color: var(--ink); font-weight: 600; }
+  .tip-outro .mono { font-family: 'JetBrains Mono', monospace; font-size: 12px; background: rgba(255,255,255,0.55); padding: 1px 6px; border-radius: 3px; color: var(--ink); }
+  @media (max-width: 720px) {
+    .tip-outro { grid-template-columns: 1fr; gap: 8px; }
+  }
+
+  /* End-of-module banner */
+  .end-banner {
+    margin-top: 32px;
+    padding: 32px;
+    background: var(--ink);
+    color: var(--bg);
+    border-radius: 6px;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 24px;
+    align-items: center;
+  }
+  @media (max-width: 720px) { .end-banner { grid-template-columns: 1fr; } }
+  .end-banner h3 {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 24px;
+    margin: 0 0 6px;
+    font-weight: 700;
+  }
+  .end-banner h3 .em { font-family: 'Fraunces', serif; font-style: italic; font-weight: 500; color: var(--accent); }
+  .end-banner p { margin: 0; color: rgba(255,255,255,0.65); font-size: 13.5px; line-height: 1.6; }
+  .end-banner .seq {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .end-banner .seq-step {
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.14);
+    padding: 8px 14px;
+    border-radius: 100px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: rgba(255,255,255,0.55);
+    letter-spacing: 0.05em;
+  }
+  .end-banner .seq-step.done { color: white; }
+  .end-banner .seq-step.curr { background: var(--accent); color: white; border-color: var(--accent); }
+
+  /* Footer */
+  footer {
+    border-top: 1px solid var(--line);
+    padding: 56px 0 64px;
+    background: var(--bg);
+  }
+  .byline {
+    display: flex;
+    gap: 28px;
+    align-items: center;
+    padding-bottom: 32px;
+    border-bottom: 1px dashed var(--line);
+    margin-bottom: 24px;
+    position: relative;
+  }
+  .byline::before {
+    content: '';
+    position: absolute;
+    top: -56px; left: 0;
+    width: 32px; height: 1px;
+    background: var(--accent);
+  }
+  .byline .avatar {
+    width: 96px; height: 96px;
+    border-radius: 50%;
+    object-fit: cover;
+    flex-shrink: 0;
+    border: 3px solid var(--paper);
+    box-shadow: 0 0 0 1px var(--line), 0 6px 20px rgba(22,22,29,0.10);
+    background: var(--paper);
+  }
+  .byline-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--ink-mute);
+    letter-spacing: 0.18em;
+    margin-bottom: 8px;
+  }
+  .byline-label .dot {
+    display: inline-block;
+    width: 6px; height: 6px;
+    background: var(--accent);
+    border-radius: 50%;
+    margin-right: 6px;
+    vertical-align: 1px;
+  }
+  .byline-name {
+    font-family: 'Noto Serif SC', 'Fraunces', serif;
+    font-size: clamp(28px, 4vw, 40px);
+    font-weight: 700;
+    line-height: 1.05;
+    letter-spacing: -0.01em;
+    margin: 0 0 8px;
+  }
+  .byline-name .em {
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    font-weight: 500;
+    color: var(--accent);
+  }
+  .byline-tag {
+    font-size: 14px;
+    color: var(--ink-soft);
+    line-height: 1.55;
+    margin: 0;
+    max-width: 52ch;
+  }
+  .footer-meta {
+    text-align: center;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--ink-mute);
+    letter-spacing: 0.05em;
+  }
+  .footer-meta .heart { color: var(--accent); }
+  .footer-meta .mono { color: var(--ink-soft); font-weight: 500; }
+  @media (max-width: 600px) {
+    .byline { flex-direction: column; text-align: center; align-items: center; gap: 16px; }
+    .byline-tag { margin-left: auto; margin-right: auto; }
+  }
+
+  /* Subtle entry animation */
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+  section { animation: fadeIn 0.6s ease-out backwards; }
+</style>
+</head>
+<body>
+
+<!-- Top bar -->
+<div class="topbar">
+  <div class="wrap topbar-inner">
+    <div class="brand"><span class="dot"></span>TRANSITION × SMART ANIMATE / D2 · 进阶</div>
+    <nav class="nav-links">
+      <a href="index.html">合集</a>
+      <a href="box-figma.html">01 盒子</a>
+      <a href="components-figma.html">02 组件</a>
+      <a href="page-figma.html">03 拼页面</a>
+      <a href="data-flow-figma.html">04 数据流</a>
+    </nav>
+  </div>
+</div>
+
+<!-- Hero -->
+<header class="hero">
+  <div class="wrap">
+    <div class="hero-meta">
+      <span class="pill fill">实验互动 · INTERACTIVE</span>
+      <span class="pill">2026 / 设计 × 代码</span>
+      <span class="pill accent">D2 · 进阶 · 动画</span>
+      <span class="label">阅读时长 ≈ 14 分钟</span>
+    </div>
+    <div class="hero-grid">
+      <div>
+        <h1>
+          <span class="display-cn">好动画</span>
+          <span class="x">=</span>
+          <span class="em">物理感</span>
+        </h1>
+        <p class="lede">
+          Smart Animate 在 Figma 里点几下就有，<br>
+          但 CSS transition 是怎么写的？easing 曲线为什么重要？<br>
+          这一篇带你拆解动画的 4 个参数。
+        </p>
+      </div>
+      <div class="hero-side">
+        <div class="row"><span class="k">本页讲什么</span><span class="v">动画 4 参数</span></div>
+        <div class="row"><span class="k">含互动</span><span class="v">cubic-bezier 拖拽 + 滑块</span></div>
+        <div class="row"><span class="k">面向</span><span class="v">设计师 / 前端进阶</span></div>
+        <div class="row"><span class="k">前置</span><span class="v">D0 状态 · D1 表单</span></div>
+      </div>
+    </div>
+
+    <!-- Hero animated demo -->
+    <div class="hero-demo">
+      <div class="hero-track">
+        <div class="hero-ball"></div>
+      </div>
+      <div class="hero-demo-foot">
+        <span class="lab">这颗球用的是 <strong>cubic-bezier(0.34, 1.56, 0.64, 1)</strong> · 一个轻微 overshoot 的 spring</span>
+        <span>3.4s · infinite</span>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- ============ §01 Problem ============ -->
+<section id="problem">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>01</strong> / 问题</div>
+        <h2 class="section-title">动画为什么<br>会显得 <span class="em">廉价</span>？</h2>
+      </div>
+      <p class="section-sub">
+        要么太机械（linear 一杆到底），要么太弹（一切都在抖）。
+        坏动画跟好动画的差距，往往就在那条 easing 曲线上。
+      </p>
+    </div>
+
+    <div class="problem-grid">
+      <div class="problem-card bad">
+        <span class="tag">BAD · 太硬</span>
+        <h3>linear · 机械感</h3>
+        <p>等速运动在自然界几乎不存在 —— 真实物体启动有惯性、停止有摩擦。<br>linear 一上来就让人觉得"这是程序在动"，不是"这东西在动"。</p>
+        <div class="demo-stage">
+          <div class="demo-track"></div>
+          <div class="demo-ball-bad" id="ballBad"></div>
+        </div>
+        <div class="demo-trigger">
+          <button onclick="fireBad()">点击触发 →</button>
+        </div>
+      </div>
+
+      <div class="problem-card good">
+        <span class="tag">GOOD · 物理感</span>
+        <h3>spring · 顺势</h3>
+        <p>同样的距离、几乎同样的时间，但加速度有变化 —— 启动稍快、末段微弹。<br>这一点点弧度让眼睛信"这是个有质量的东西"。</p>
+        <div class="demo-stage">
+          <div class="demo-track"></div>
+          <div class="demo-ball-good" id="ballGood"></div>
+        </div>
+        <div class="demo-trigger">
+          <button onclick="fireGood()">点击触发 →</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ §02 Four params ============ -->
+<section id="params">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>02</strong> / 拆解</div>
+        <h2 class="section-title">动画只有<br><span class="em">4 个</span>参数。</h2>
+      </div>
+      <p class="section-sub">
+        一句话：动哪个属性 · 动多久 · 怎么个节奏 · 等多久才开始。
+        所有 transition、所有 Smart Animate，都从这 4 个里捏出来。
+      </p>
+    </div>
+
+    <div class="params-grid">
+      <div class="param-card p1">
+        <div class="pnum">i</div>
+        <h4>Duration · 多久</h4>
+        <div class="key">duration: 280ms</div>
+        <p>
+          <strong>200ms</strong> 是最常见的过渡节拍 ——<br>
+          150-250 给 hover、点击反馈；<br>
+          400-600 给入场、模态浮现；<br>
+          再长就成动效演出了。
+        </p>
+        <div class="param-stage">
+          <div class="param-track"></div>
+          <div class="param-ball"></div>
+        </div>
+      </div>
+
+      <div class="param-card p2">
+        <div class="pnum">ii</div>
+        <h4>Easing · 节奏</h4>
+        <div class="key">cubic-bezier(...)</div>
+        <p>
+          这是动画的<strong>灵魂</strong>。同样 1 秒、同样距离，<br>
+          easing 决定了它"什么时候快、什么时候慢"。<br>
+          下面 3 颗球一起跑，自己看区别。
+        </p>
+        <div class="param-stage">
+          <div class="ease-row e-row1"><div class="e-ball"></div><span class="e-label">linear</span></div>
+          <div class="ease-row e-row2"><div class="e-ball"></div><span class="e-label">ease-out</span></div>
+          <div class="ease-row e-row3"><div class="e-ball"></div><span class="e-label">spring</span></div>
+        </div>
+      </div>
+
+      <div class="param-card p3">
+        <div class="pnum">iii</div>
+        <h4>Delay · 等多久</h4>
+        <div class="key">delay: 100ms</div>
+        <p>
+          告诉动画"先别急，等 0.1 秒再动"。<br>
+          多个元素错峰登场（stagger），<br>
+          就是靠每个元素 delay 不同来实现的。
+        </p>
+        <div class="param-stage">
+          <div class="param-track"></div>
+          <div class="param-ball"></div>
+          <div class="delay-mark">↑ 等 0.6s 再启动</div>
+        </div>
+      </div>
+
+      <div class="param-card p4">
+        <div class="pnum">iv</div>
+        <h4>Property · 动哪个</h4>
+        <div class="key">transform / opacity / color</div>
+        <p>
+          按钮 hover 你想动什么？位置？透明度？颜色？<br>
+          推荐<strong>只动 transform 和 opacity</strong> ——<br>
+          它们走 GPU，60fps 不掉帧。
+        </p>
+        <div class="param-stage">
+          <div class="pp x">移</div>
+          <div class="pp o">隐</div>
+          <div class="pp c">色</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ §03 Easing playground ============ -->
+<section id="easing">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>03</strong> / 灵魂</div>
+        <h2 class="section-title">Easing 就是<br>动画的 <span class="em">物理感</span>。</h2>
+      </div>
+      <p class="section-sub">
+        cubic-bezier 是一条曲线 —— 横轴是时间，竖轴是进度。
+        曲线弯成什么样，球就怎么动。拖一下两个蓝点试试。
+      </p>
+    </div>
+
+    <div class="ease-stage">
+      <div class="ease-bezier">
+        <svg class="bezier-svg" id="bezierSvg" viewBox="0 0 320 320" preserveAspectRatio="xMidYMid meet">
+          <!-- grid -->
+          <g class="grid">
+            <line x1="0" y1="80" x2="320" y2="80" />
+            <line x1="0" y1="160" x2="320" y2="160" />
+            <line x1="0" y1="240" x2="320" y2="240" />
+            <line x1="80" y1="0" x2="80" y2="320" />
+            <line x1="160" y1="0" x2="160" y2="320" />
+            <line x1="240" y1="0" x2="240" y2="320" />
+          </g>
+          <!-- frame -->
+          <rect x="0" y="0" width="320" height="320" fill="none" stroke="#d5cdba" stroke-width="1" />
+
+          <!-- axes labels -->
+          <text class="axis-lab" x="6" y="14">progress</text>
+          <text class="axis-lab" x="270" y="314">time →</text>
+
+          <!-- baseline 0,1 to 1,0 -->
+          <line class="axis" x1="0" y1="320" x2="320" y2="0" />
+
+          <!-- control lines -->
+          <line class="ctrl-line" id="ctrlLine1" x1="0" y1="320" x2="0" y2="0" />
+          <line class="ctrl-line" id="ctrlLine2" x1="320" y1="0" x2="320" y2="320" />
+
+          <!-- bezier curve -->
+          <path class="curve" id="bezierCurve" d="M 0 320 C 0 0, 320 0, 320 0" />
+
+          <!-- endpoints -->
+          <circle class="endpoint" cx="0" cy="320" r="6" />
+          <circle class="endpoint" cx="320" cy="0" r="6" />
+
+          <!-- handles -->
+          <circle class="handle" id="handleP1" cx="0" cy="0" r="9" data-handle="1" />
+          <circle class="handle" id="handleP2" cx="320" cy="320" r="9" data-handle="2" />
+
+          <!-- labels above handles -->
+          <text class="axis-lab" id="p1Lab" x="6" y="-4">P1</text>
+          <text class="axis-lab" id="p2Lab" x="320" y="338">P2</text>
+        </svg>
+        <div class="bezier-readout">
+          <span class="ckey">cubic-bezier</span>(<span class="cnum" id="bezierVals">0.00, 1.00, 1.00, 0.00</span>)
+        </div>
+        <div class="ease-presets" id="easePresets">
+          <button data-pre="linear" data-vals="0,0,1,1">linear</button>
+          <button data-pre="ease" data-vals="0.25,0.1,0.25,1">ease</button>
+          <button data-pre="ease-in" data-vals="0.42,0,1,1">ease-in</button>
+          <button data-pre="ease-out" data-vals="0,0,0.58,1" class="active">ease-out</button>
+          <button data-pre="spring" data-vals="0.34,1.56,0.64,1">spring</button>
+          <button data-pre="bounce" data-vals="0.68,-0.55,0.27,1.55">bounce</button>
+        </div>
+      </div>
+
+      <div class="ease-balls">
+        <h5>三种 easing 一起跑</h5>
+        <p class="desc">linear 跟 ease-out 几乎是同一个起点、同一个终点 —— 但中间过程完全不同。spring 还会"过头一点点"再回来。</p>
+
+        <div class="ball-track" id="track1"><span class="lab">linear</span><div class="b linear"></div></div>
+        <div class="ball-track" id="track2"><span class="lab">ease-out</span><div class="b ease-out"></div></div>
+        <div class="ball-track" id="track3"><span class="lab">spring</span><div class="b spring"></div></div>
+
+        <div class="ease-fire">
+          <button onclick="fireBalls()">▶ 同时发射 3 颗球</button>
+        </div>
+
+        <div style="font-size: 12.5px; color: var(--ink-soft); line-height: 1.55; margin-top: 8px; padding-top: 12px; border-top: 1px dashed var(--line);">
+          <strong style="color: var(--ink);">Figma 也有 easing。</strong> Smart Animate 的下拉菜单里，Linear / Ease in / Ease out / Ease in and out / Custom Bezier 一一对应 CSS 的关键字。Custom Bezier 就是这同一条曲线，靠拖控制点定义。
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ §04 Smart Animate ↔ CSS transition ============ -->
+<section id="mapping">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>04</strong> / 对应</div>
+        <h2 class="section-title">Smart Animate<br><span class="em">就是</span> CSS transition。</h2>
+      </div>
+      <p class="section-sub">
+        Figma 在两个 Frame 之间找<strong>同名图层</strong>（matched layers），
+        按你设的 duration 和 easing 在它们之间补一段过渡 ——
+        这跟 CSS transition 在 A 状态、B 状态之间补值，是同一件事。
+      </p>
+    </div>
+
+    <div class="sa-grid">
+      <div class="sa-card">
+        <div class="sa-card-head">
+          <span>Figma · Smart Animate</span>
+          <span class="pill-mini">设计</span>
+        </div>
+        <div class="sa-card-body">
+          <div class="figma-tl-frames">
+            <div class="fr">
+              <span class="fr-name">Frame A</span>
+              <div class="fr-card"></div>
+            </div>
+            <div class="arrow">→</div>
+            <div class="fr b">
+              <span class="fr-name">Frame B</span>
+              <div class="fr-card"></div>
+            </div>
+          </div>
+
+          <div class="figma-tl" style="margin-top: 16px;">
+            <div class="tl-head">
+              <span class="tl-title">Interaction</span>
+              <span class="tl-pill">Smart Animate</span>
+            </div>
+            <div class="tl-row"><span class="tl-key">Trigger</span><span class="tl-val">On click</span></div>
+            <div class="tl-row"><span class="tl-key">Action</span><span class="tl-val">Navigate to · Frame B</span></div>
+            <div class="tl-row"><span class="tl-key">Animation</span><span class="tl-val">Smart Animate</span></div>
+            <div class="tl-row">
+              <span class="tl-key">Easing</span>
+              <span class="tl-val curve">
+                <span class="tl-curve-mini">
+                  <svg viewBox="0 0 24 24"><path d="M 2 22 C 2 22, 8 4, 22 2" stroke="#ff4d2e" stroke-width="2" fill="none" stroke-linecap="round"/></svg>
+                </span>
+                Ease out
+              </span>
+            </div>
+            <div class="tl-row"><span class="tl-key">Duration</span><span class="tl-val">280ms</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="sa-card">
+        <div class="sa-card-head">
+          <span>CSS · transition</span>
+          <span class="pill-mini" style="background: var(--blue);">代码</span>
+        </div>
+        <div class="sa-card-body">
+          <div class="figma-tl-frames">
+            <div class="fr">
+              <span class="fr-name">:default</span>
+              <div class="fr-card"></div>
+            </div>
+            <div class="arrow">→</div>
+            <div class="fr b">
+              <span class="fr-name">:hover</span>
+              <div class="fr-card"></div>
+            </div>
+          </div>
+
+          <div class="css-tl" style="margin-top: 16px;">
+<span class="csel">.card</span> {
+<div class="indent"><span class="ckey">width</span>: <span class="cnum">64</span><span class="cval">px</span>;</div>
+<div class="indent"><span class="ckey">height</span>: <span class="cnum">36</span><span class="cval">px</span>;</div>
+<div class="indent"><span class="ckey">background</span>: <span class="cnum">#ff4d2e</span>;</div>
+<div class="indent"><span class="ckey">transition</span>: <span class="cval">all</span> <span class="cnum">280</span><span class="cval">ms</span> <span class="cval">ease-out</span>;</div>
+}
+<span class="ccom">/* hover state */</span>
+<span class="csel">.card:hover</span> {
+<div class="indent"><span class="ckey">width</span>: <span class="cnum">88</span><span class="cval">px</span>;</div>
+<div class="indent"><span class="ckey">height</span>: <span class="cnum">56</span><span class="cval">px</span>;</div>
+<div class="indent"><span class="ckey">background</span>: <span class="cnum">#0a4cff</span>;</div>
+}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- mapping table -->
+    <div class="sa-map">
+      <div class="sa-map-head">
+        <div>FIGMA / 设计视角</div>
+        <div></div>
+        <div>CSS / 代码视角</div>
+      </div>
+      <div class="sa-map-row">
+        <div>
+          <div class="figma-name">Smart Animate</div>
+          <div class="desc">两个 Frame 之间的同名图层差值过渡</div>
+        </div>
+        <div>≈</div>
+        <div>
+          <div class="css-name">transition: ...;</div>
+          <div class="desc">A 状态到 B 状态的属性补间</div>
+        </div>
+      </div>
+      <div class="sa-map-row">
+        <div>
+          <div class="figma-name">Duration · 280ms</div>
+          <div class="desc">动画持续时长滑块</div>
+        </div>
+        <div>≈</div>
+        <div>
+          <div class="css-name">duration: 280ms;</div>
+          <div class="desc">完全相同的毫秒数</div>
+        </div>
+      </div>
+      <div class="sa-map-row">
+        <div>
+          <div class="figma-name">Ease out / Custom Bezier</div>
+          <div class="desc">下拉菜单 / 拖控制点</div>
+        </div>
+        <div>≈</div>
+        <div>
+          <div class="css-name">ease-out / cubic-bezier(...)</div>
+          <div class="desc">关键字或自定义曲线</div>
+        </div>
+      </div>
+      <div class="sa-map-row">
+        <div>
+          <div class="figma-name">Matched layers</div>
+          <div class="desc">两 Frame 间同名同层级的图层</div>
+        </div>
+        <div>≈</div>
+        <div>
+          <div class="css-name">同一个 .selector</div>
+          <div class="desc">同一个 DOM 元素，状态切换</div>
+        </div>
+      </div>
+      <div class="sa-map-row">
+        <div>
+          <div class="figma-name">After delay 触发</div>
+          <div class="desc">"500ms 后自动跳转 Frame B"</div>
+        </div>
+        <div>≈</div>
+        <div>
+          <div class="css-name">transition-delay: 500ms;</div>
+          <div class="desc">或者 setTimeout 触发类切换</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ §05 Slider playground ============ -->
+<section id="play">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>05</strong> / 互动</div>
+        <h2 class="section-title">拖滑块，<br>调出你的 <span class="em">手感</span>。</h2>
+      </div>
+      <p class="section-sub">
+        4 个滑块，对应动画的 4 个参数。
+        点中间那颗按钮看效果，下面的代码会同步更新 ——
+        copy 就能用。
+      </p>
+    </div>
+
+    <div class="play-stage">
+      <div class="play-canvas">
+        <button class="play-btn" id="playBtn">点我看动画</button>
+        <div class="play-tip">点击按钮触发 · 也可点 <strong>▶ 触发动画</strong> 重放</div>
+      </div>
+
+      <div class="play-controls">
+        <div class="play-ctrl">
+          <div class="play-ctrl-head">
+            <span class="play-ctrl-label">Duration · 时长</span>
+            <span class="play-ctrl-val" id="valDur">280ms</span>
+          </div>
+          <input type="range" id="sliderDur" min="50" max="1500" step="10" value="280">
+        </div>
+
+        <div class="play-ctrl">
+          <div class="play-ctrl-head">
+            <span class="play-ctrl-label">Easing · 节奏</span>
+            <span class="play-ctrl-val" id="valEase">spring</span>
+          </div>
+          <div class="play-seg" id="segEase">
+            <button data-v="linear">linear</button>
+            <button data-v="ease-in">ease-in</button>
+            <button data-v="ease-out">ease-out</button>
+            <button data-v="spring" class="active">spring</button>
+          </div>
+        </div>
+
+        <div class="play-ctrl">
+          <div class="play-ctrl-head">
+            <span class="play-ctrl-label">Property · 动哪个</span>
+            <span class="play-ctrl-val" id="valProp">transform</span>
+          </div>
+          <div class="play-seg" id="segProp">
+            <button data-v="transform" class="active">transform</button>
+            <button data-v="opacity">opacity</button>
+            <button data-v="color">color</button>
+          </div>
+        </div>
+
+        <div class="play-ctrl">
+          <div class="play-ctrl-head">
+            <span class="play-ctrl-label">Delay · 等多久</span>
+            <span class="play-ctrl-val" id="valDelay">0ms</span>
+          </div>
+          <input type="range" id="sliderDelay" min="0" max="800" step="10" value="0">
+        </div>
+      </div>
+
+      <div class="play-fire">
+        <button onclick="firePlayBtn()">▶ 触发动画</button>
+      </div>
+
+      <div class="play-code">
+        <span class="filename">button.css</span>
+        <div class="play-code-body">
+<span class="csel">.btn</span> {
+  <span class="ckey">transition</span>: <span class="cval" id="codeProp">transform</span> <span class="cnum" id="codeDur">280</span><span class="cval">ms</span> <span class="cval" id="codeEase">cubic-bezier(0.34, 1.56, 0.64, 1)</span> <span class="cnum" id="codeDelay">0</span><span class="cval">ms</span>;
+}
+<span class="csel">.btn:active</span> {
+  <span class="ckey" id="codeBtnKey">transform</span>: <span class="cval" id="codeBtnVal">translateX(120px) scale(1.1)</span>;
+}
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ §06 Tips + cheatsheet ============ -->
+<section id="closing">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>06</strong> / 实践</div>
+        <h2 class="section-title">动画的<br><span class="em">手感</span>口诀。</h2>
+      </div>
+      <p class="section-sub">
+        4 条建议，把动画从"会动"做到"好看 · 性能稳"。
+        最后是一个速查表 —— 什么时候用 transition、什么时候用 animation。
+      </p>
+    </div>
+
+    <div class="tips-grid">
+      <div class="tip">
+        <div class="tip-num">i</div>
+        <h4>200ms 法则</h4>
+        <p>hover、点击、切换类的反馈动画，<code>150-250ms</code> 是甜区。<br>
+        太短人没察觉、太长会觉得卡。一个按钮 hover 用 600ms，整个界面就拖沓起来。</p>
+      </div>
+      <div class="tip">
+        <div class="tip-num">ii</div>
+        <h4>只动 transform / opacity</h4>
+        <p>能用 <code>transform: translate</code> 别用 <code>left</code>，能用 <code>opacity</code> 别用 <code>display</code>。<br>
+        这两个走 GPU 合成层，60fps 稳如狗。其他属性会触发 layout，掉帧给你看。</p>
+      </div>
+      <div class="tip">
+        <div class="tip-num">iii</div>
+        <h4>ease-out 进 / ease-in 出</h4>
+        <p><strong>东西"进入"</strong>用 <code>ease-out</code> —— 快入慢停，像物体落地。<br>
+        <strong>东西"离开"</strong>用 <code>ease-in</code> —— 慢启快出，像物体抛离。<br>
+        弹窗、模态、菜单都按这个来。</p>
+      </div>
+      <div class="tip">
+        <div class="tip-num">iv</div>
+        <h4>避免动画堆叠</h4>
+        <p>一个元素同时动 5 个属性，眼睛会累。<br>
+        优先<strong>选 1-2 个核心属性</strong>动 —— 通常是位移 + 透明度，其他静默切换。<br>
+        Figma Smart Animate 也建议两 Frame 间只改少数属性。</p>
+      </div>
+    </div>
+
+    <!-- Cheatsheet: transition vs animation -->
+    <div class="cheat">
+      <div class="cheat-head">
+        <span>速查 · transition vs animation</span>
+        <span class="lab">CHEATSHEET</span>
+      </div>
+      <div class="cheat-row">
+        <div class="ckey">维度</div>
+        <div class="ct"><strong>transition</strong> · 过渡</div>
+        <div class="ca"><strong>animation</strong> · 关键帧</div>
+      </div>
+      <div class="cheat-row">
+        <div class="ckey">触发</div>
+        <div class="ct">需要状态变化触发<br>（hover / 类切换 / JS 改值）</div>
+        <div class="ca">页面加载或绑定 class 时<br>自动开始播放</div>
+      </div>
+      <div class="cheat-row">
+        <div class="ckey">轨迹</div>
+        <div class="ct">只能 A → B 两点之间补值</div>
+        <div class="ca">可以 0% → 50% → 100% 多关键帧</div>
+      </div>
+      <div class="cheat-row">
+        <div class="ckey">循环</div>
+        <div class="ct">不会自动循环，需重新触发</div>
+        <div class="ca">可以 <code>infinite</code> 持续循环</div>
+      </div>
+      <div class="cheat-row">
+        <div class="ckey">语法</div>
+        <div class="ct"><code>transition: prop dur ease;</code></div>
+        <div class="ca"><code>@keyframes</code> + <code>animation: ...</code></div>
+      </div>
+      <div class="cheat-row bold">
+        <div class="ckey">怎么选</div>
+        <div class="ct">交互反馈：hover、聚焦、点击、状态切换 ——<strong>用 transition</strong>。</div>
+        <div class="ca">持续动效：loading 转圈、心跳呼吸、入场演出 ——<strong>用 animation</strong>。</div>
+      </div>
+      <div class="cheat-row">
+        <div class="ckey">Figma 对应</div>
+        <div class="ct">Smart Animate（两 Frame 之间）</div>
+        <div class="ca">Lottie / Rive 导出 / After Effects</div>
+      </div>
+    </div>
+
+    <div class="tip-outro">
+      <div class="outro-tag">划重点 · TL;DR</div>
+      <div>
+        <p>动画的灵魂是 <strong>easing</strong>，不是 duration。<span class="mono">cubic-bezier(0.34, 1.56, 0.64, 1)</span> 这种带轻微 overshoot 的 spring，比规整的 ease-out 更显"高级"。</p>
+        <p>大部分场景，你只需要记住 <strong>200ms · ease-out · transform</strong> 这 3 件套。再复杂的动画都是它们的组合。</p>
+      </div>
+    </div>
+
+    <!-- End of D module banner -->
+    <div class="end-banner">
+      <div>
+        <h3>D 模块 <span class="em">完结</span> · 动画收官</h3>
+        <p>D0 状态系统 → D1 表单态 → <strong>D2 动画过渡</strong>。<br>从静态的 5 种长相，到带时间的物理感运动 —— 你已经能做出"会呼吸"的界面了。</p>
+      </div>
+      <div class="seq">
+        <span class="seq-step done">D0 · 状态</span>
+        <span class="seq-step done">D1 · 表单</span>
+        <span class="seq-step curr">D2 · 动画 ✓</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ Footer ============ -->
+<footer>
+  <div class="wrap">
+    <div class="byline">
+      <img class="avatar" src="author.jpg" alt="范米花儿">
+      <div class="byline-meta">
+        <div class="byline-label"><span class="dot"></span>作者 · WRITTEN BY</div>
+        <h3 class="byline-name">嗨，我是 <span class="em">范米花儿</span></h3>
+        <p class="byline-tag">一份关于动画 4 参数和 Smart Animate 的进阶讲解 ——<br>希望对正在做交互动效的你有帮助。</p>
+      </div>
+    </div>
+    <div class="footer-meta">
+      做于 <span class="mono">2026</span> · 用 <span class="heart">●</span> 写给 <span class="mono">DESIGNERS &amp; DEVELOPERS</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+// ========= §01 Problem balls =========
+function fireBad() {
+  const b = document.getElementById('ballBad');
+  b.classList.remove('move');
+  void b.offsetWidth;
+  b.classList.add('move');
+  setTimeout(() => b.classList.remove('move'), 1200);
+}
+function fireGood() {
+  const b = document.getElementById('ballGood');
+  b.classList.remove('move');
+  void b.offsetWidth;
+  b.classList.add('move');
+  setTimeout(() => b.classList.remove('move'), 1200);
+}
+// auto fire on first scroll into view
+(function autoFire() {
+  const sec = document.getElementById('problem');
+  if (!sec) return;
+  const obs = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        setTimeout(fireBad, 200);
+        setTimeout(fireGood, 1500);
+        obs.disconnect();
+      }
+    });
+  }, { threshold: 0.4 });
+  obs.observe(sec);
+})();
+
+// ========= §03 Cubic Bezier playground =========
+(function bezier() {
+  const svg = document.getElementById('bezierSvg');
+  const handle1 = document.getElementById('handleP1');
+  const handle2 = document.getElementById('handleP2');
+  const ctrlLine1 = document.getElementById('ctrlLine1');
+  const ctrlLine2 = document.getElementById('ctrlLine2');
+  const curve = document.getElementById('bezierCurve');
+  const readout = document.getElementById('bezierVals');
+  const presets = document.getElementById('easePresets');
+  const p1Lab = document.getElementById('p1Lab');
+  const p2Lab = document.getElementById('p2Lab');
+
+  const SIZE = 320;
+  // Y is inverted: at SVG y=0 progress=1; y=320 progress=0
+  // current control values stored as [x1, y1, x2, y2] in 0..1 range (allowing overshoot)
+  let vals = [0.0, 0.58, 0.58, 1.0]; // start at ease-out friendly... actually let's use ease-out preset
+
+  // map ease-out: 0, 0, 0.58, 1
+  vals = [0, 0, 0.58, 1];
+
+  function valsToPx(v) {
+    // x: v*SIZE, y: (1-v)*SIZE  (because progress y axis inverted)
+    return [v[0]*SIZE, (1-v[1])*SIZE, v[2]*SIZE, (1-v[3])*SIZE];
+  }
+
+  function update() {
+    const [x1, y1, x2, y2] = valsToPx(vals);
+    // P1 anchored at (0, 320) "start"
+    handle1.setAttribute('cx', x1);
+    handle1.setAttribute('cy', y1);
+    handle2.setAttribute('cx', x2);
+    handle2.setAttribute('cy', y2);
+
+    ctrlLine1.setAttribute('x1', 0);
+    ctrlLine1.setAttribute('y1', SIZE);
+    ctrlLine1.setAttribute('x2', x1);
+    ctrlLine1.setAttribute('y2', y1);
+
+    ctrlLine2.setAttribute('x1', SIZE);
+    ctrlLine2.setAttribute('y1', 0);
+    ctrlLine2.setAttribute('x2', x2);
+    ctrlLine2.setAttribute('y2', y2);
+
+    curve.setAttribute('d', `M 0 ${SIZE} C ${x1} ${y1}, ${x2} ${y2}, ${SIZE} 0`);
+
+    p1Lab.setAttribute('x', x1 + 10);
+    p1Lab.setAttribute('y', y1 - 6);
+    p2Lab.setAttribute('x', x2 + 10);
+    p2Lab.setAttribute('y', y2 + 16);
+
+    readout.textContent = vals.map(v => v.toFixed(2)).join(', ');
+    // mark current preset if it matches
+    const want = vals.map(v => +v.toFixed(2)).join(',');
+    presets.querySelectorAll('button').forEach(b => {
+      const p = b.dataset.vals.split(',').map(parseFloat).map(v => +v.toFixed(2)).join(',');
+      b.classList.toggle('active', p === want);
+    });
+  }
+  update();
+
+  // drag logic
+  let dragging = null;
+  function getSvgPoint(evt) {
+    const rect = svg.getBoundingClientRect();
+    const xRaw = (evt.clientX - rect.left) / rect.width * SIZE;
+    const yRaw = (evt.clientY - rect.top) / rect.height * SIZE;
+    return { x: xRaw, y: yRaw };
+  }
+  function onPointerDown(handleId) {
+    return (evt) => {
+      evt.preventDefault();
+      dragging = handleId;
+      const target = handleId === 1 ? handle1 : handle2;
+      target.classList.add('dragging');
+      window.addEventListener('pointermove', onPointerMove);
+      window.addEventListener('pointerup', onPointerUp);
+    };
+  }
+  function onPointerMove(evt) {
+    if (!dragging) return;
+    const p = getSvgPoint(evt);
+    // clamp x to [0,1], allow y overshoot to [-0.6, 1.6]
+    const x = Math.max(0, Math.min(1, p.x / SIZE));
+    let prog = 1 - (p.y / SIZE);
+    prog = Math.max(-0.6, Math.min(1.6, prog));
+    if (dragging === 1) {
+      vals[0] = x; vals[1] = prog;
+    } else {
+      vals[2] = x; vals[3] = prog;
+    }
+    update();
+  }
+  function onPointerUp() {
+    if (dragging) {
+      const target = dragging === 1 ? handle1 : handle2;
+      target.classList.remove('dragging');
+    }
+    dragging = null;
+    window.removeEventListener('pointermove', onPointerMove);
+    window.removeEventListener('pointerup', onPointerUp);
+  }
+  handle1.addEventListener('pointerdown', onPointerDown(1));
+  handle2.addEventListener('pointerdown', onPointerDown(2));
+
+  // presets
+  presets.querySelectorAll('button').forEach(b => {
+    b.addEventListener('click', () => {
+      vals = b.dataset.vals.split(',').map(parseFloat);
+      update();
+    });
+  });
+
+  // expose vals for ball-fire to use the bezier
+  window.__getBezierVals = () => vals.slice();
+})();
+
+// ========= §03 Ease balls fire =========
+function fireBalls() {
+  ['track1','track2','track3'].forEach((id, i) => {
+    const t = document.getElementById(id);
+    t.classList.remove('go');
+    void t.offsetWidth;
+    setTimeout(() => t.classList.add('go'), 30);
+  });
+  // reset after animation
+  setTimeout(() => {
+    ['track1','track2','track3'].forEach(id => {
+      document.getElementById(id).classList.remove('go');
+    });
+  }, 1800);
+}
+// auto-fire when scrolled into view
+(function autoFireBalls() {
+  const sec = document.getElementById('easing');
+  if (!sec) return;
+  const obs = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        setTimeout(fireBalls, 400);
+        obs.disconnect();
+      }
+    });
+  }, { threshold: 0.3 });
+  obs.observe(sec);
+})();
+
+// ========= §05 Slider playground =========
+(function play() {
+  const btn = document.getElementById('playBtn');
+  const sliderDur = document.getElementById('sliderDur');
+  const sliderDelay = document.getElementById('sliderDelay');
+  const segEase = document.getElementById('segEase');
+  const segProp = document.getElementById('segProp');
+
+  const valDur = document.getElementById('valDur');
+  const valEase = document.getElementById('valEase');
+  const valProp = document.getElementById('valProp');
+  const valDelay = document.getElementById('valDelay');
+
+  const codeDur = document.getElementById('codeDur');
+  const codeEase = document.getElementById('codeEase');
+  const codeProp = document.getElementById('codeProp');
+  const codeDelay = document.getElementById('codeDelay');
+  const codeBtnKey = document.getElementById('codeBtnKey');
+  const codeBtnVal = document.getElementById('codeBtnVal');
+
+  const easeMap = {
+    'linear': 'linear',
+    'ease-in': 'cubic-bezier(0.42, 0, 1, 1)',
+    'ease-out': 'cubic-bezier(0, 0, 0.58, 1)',
+    'spring': 'cubic-bezier(0.34, 1.56, 0.64, 1)',
+  };
+
+  const propMap = {
+    'transform': { key: 'transform', val: 'translateX(120px) scale(1.1)', cls: 'go-transform' },
+    'opacity':   { key: 'opacity',   val: '0.25',                          cls: 'go-opacity'   },
+    'color':     { key: 'background', val: 'linear-gradient(135deg, #0a4cff, #4a7eff)', cls: 'go-color' },
+  };
+
+  const state = { dur: 280, ease: 'spring', prop: 'transform', delay: 0 };
+
+  function applyTransition() {
+    const e = easeMap[state.ease];
+    const p = propMap[state.prop];
+    btn.style.transition = `${p.key} ${state.dur}ms ${e} ${state.delay}ms, transform ${state.dur}ms ${e} ${state.delay}ms, opacity ${state.dur}ms ${e} ${state.delay}ms, background ${state.dur}ms ${e} ${state.delay}ms`;
+  }
+
+  function updateUI() {
+    valDur.textContent = state.dur + 'ms';
+    valEase.textContent = state.ease;
+    valProp.textContent = state.prop;
+    valDelay.textContent = state.delay + 'ms';
+
+    codeDur.textContent = state.dur;
+    codeEase.textContent = easeMap[state.ease];
+    codeProp.textContent = state.prop === 'color' ? 'background' : state.prop;
+    codeDelay.textContent = state.delay;
+
+    const p = propMap[state.prop];
+    codeBtnKey.textContent = p.key;
+    codeBtnVal.textContent = p.val;
+    applyTransition();
+  }
+
+  function fire() {
+    // remove all then re-add appropriate one
+    btn.classList.remove('go-transform','go-opacity','go-color');
+    void btn.offsetWidth;
+    const cls = propMap[state.prop].cls;
+    btn.classList.add(cls);
+    const totalMs = state.dur + state.delay;
+    clearTimeout(window.__playFireTimer);
+    window.__playFireTimer = setTimeout(() => {
+      btn.classList.remove(cls);
+    }, totalMs + 200);
+  }
+  window.firePlayBtn = fire;
+
+  sliderDur.addEventListener('input', e => { state.dur = +e.target.value; updateUI(); });
+  sliderDelay.addEventListener('input', e => { state.delay = +e.target.value; updateUI(); });
+  segEase.querySelectorAll('button').forEach(b => {
+    b.addEventListener('click', () => {
+      segEase.querySelectorAll('button').forEach(x => x.classList.remove('active'));
+      b.classList.add('active');
+      state.ease = b.dataset.v;
+      updateUI();
+    });
+  });
+  segProp.querySelectorAll('button').forEach(b => {
+    b.addEventListener('click', () => {
+      segProp.querySelectorAll('button').forEach(x => x.classList.remove('active'));
+      b.classList.add('active');
+      state.prop = b.dataset.v;
+      // clear other prop classes since we change targets
+      btn.classList.remove('go-transform','go-opacity','go-color');
+      updateUI();
+    });
+  });
+
+  btn.addEventListener('click', fire);
+
+  updateUI();
+})();
+</script>
+
+</body>
+</html>

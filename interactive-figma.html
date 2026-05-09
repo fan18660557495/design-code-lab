@@ -1,0 +1,1853 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Interactive Component — 5 种状态怎么写代码</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,300..900&family=Geist:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Noto+Sans+SC:wght@300;400;500;700;900&family=Noto+Serif+SC:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f3eee5;
+    --bg-2: #ebe4d4;
+    --ink: #16161d;
+    --ink-soft: #4a4a55;
+    --ink-mute: #8a8a92;
+    --line: #d5cdba;
+    --line-soft: #e3dcca;
+    --accent: #ff4d2e;
+    --accent-soft: #ffe4dc;
+    --blue: #0a4cff;
+    --blue-soft: #dde6ff;
+    --green: #1f6b3a;
+    --green-soft: #d4ecdb;
+    --yellow: #ffcf3d;
+    --paper: #faf7f0;
+    --shadow: 0 1px 0 rgba(0,0,0,0.04), 0 8px 24px rgba(22,22,29,0.06);
+
+    /* state colors carried over from D0 */
+    --state-default: #6b7280;
+    --state-hover:   #0a4cff;
+    --state-active:  #ff4d2e;
+    --state-focus:   #9333ea;
+    --state-disabled:#a8a29e;
+    --state-loading: #1f6b3a;
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'Geist', 'Noto Sans SC', system-ui, -apple-system, sans-serif;
+    font-size: 16px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    background-image:
+      radial-gradient(circle at 1px 1px, rgba(22,22,29,0.05) 1px, transparent 0);
+    background-size: 24px 24px;
+  }
+
+  /* Typography */
+  .display-cn { font-family: 'Noto Serif SC', 'Fraunces', serif; font-weight: 900; letter-spacing: -0.01em; }
+  .display-en { font-family: 'Fraunces', 'Noto Serif SC', serif; font-weight: 600; font-style: italic; letter-spacing: -0.02em; }
+  .mono { font-family: 'JetBrains Mono', monospace; }
+  .label { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-mute); }
+
+  /* Layout */
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 0 32px; }
+
+  /* Top bar */
+  .topbar {
+    border-bottom: 1px dashed var(--line);
+    padding: 16px 0;
+    background: var(--bg);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    backdrop-filter: blur(8px);
+    background: rgba(243, 238, 229, 0.85);
+  }
+  .topbar-inner { display: flex; justify-content: space-between; align-items: center; gap: 24px; flex-wrap: wrap; }
+  .brand { font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 600; }
+  .brand .dot { display: inline-block; width: 8px; height: 8px; background: var(--accent); border-radius: 50%; margin-right: 8px; vertical-align: middle; animation: pulse 2s ease-in-out infinite; }
+  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+  .nav-links { display: flex; gap: 20px; font-size: 13px; flex-wrap: wrap; }
+  .nav-links a { color: var(--ink-soft); text-decoration: none; transition: color 0.2s; }
+  .nav-links a:hover { color: var(--accent); }
+  .nav-links a.current { color: var(--accent); font-weight: 600; }
+
+  /* Hero */
+  .hero { padding: 100px 0 80px; position: relative; overflow: hidden; }
+  .hero-meta { display: flex; gap: 24px; margin-bottom: 32px; align-items: center; flex-wrap: wrap; }
+  .hero-meta .pill { padding: 6px 12px; border: 1px solid var(--ink); border-radius: 100px; font-size: 11px; font-family: 'JetBrains Mono', monospace; letter-spacing: 0.05em; }
+  .hero-meta .pill.fill { background: var(--ink); color: var(--bg); }
+  .hero h1 {
+    font-family: 'Noto Serif SC', 'Fraunces', serif;
+    font-weight: 900;
+    font-size: clamp(48px, 7vw, 92px);
+    line-height: 0.95;
+    letter-spacing: -0.03em;
+    margin: 0 0 24px;
+  }
+  .hero h1 .em { font-family: 'Fraunces', serif; font-style: italic; font-weight: 500; color: var(--accent); }
+  .hero h1 .num { font-family: 'Fraunces', serif; font-style: italic; font-weight: 600; color: var(--accent); }
+  .hero h1 .x { display: inline-block; transform: translateY(-0.05em); margin: 0 0.05em; color: var(--ink-mute); font-weight: 300; }
+  .hero p.lede {
+    font-size: 20px;
+    line-height: 1.5;
+    max-width: 640px;
+    color: var(--ink-soft);
+    margin: 0 0 40px;
+  }
+  .hero p.lede .em { font-family: 'Fraunces', serif; font-style: italic; color: var(--accent); font-weight: 500; }
+  .hero p.lede code {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.85em;
+    background: var(--paper);
+    padding: 1px 6px;
+    border-radius: 3px;
+    color: var(--ink);
+    border: 1px solid var(--line);
+  }
+  .hero-grid { display: grid; grid-template-columns: 1.4fr 1fr; gap: 48px; align-items: end; }
+  @media (max-width: 880px) { .hero-grid { grid-template-columns: 1fr; } }
+  .hero-side { border-left: 1px dashed var(--line); padding-left: 24px; font-size: 13px; color: var(--ink-soft); }
+  .hero-side .row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px dashed var(--line); }
+  .hero-side .row:last-child { border-bottom: none; }
+  .hero-side .row .k { color: var(--ink-mute); font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.05em; text-transform: uppercase; }
+  .hero-side .row .v { font-weight: 500; }
+
+  /* Hero code preview */
+  .hero-code-preview {
+    margin-top: 40px;
+    background: var(--ink);
+    color: #e8e8ec;
+    border-radius: 6px;
+    overflow: hidden;
+    box-shadow: 0 8px 24px rgba(22,22,29,0.18);
+    max-width: 540px;
+  }
+  .hero-code-preview .hcp-head {
+    background: #1f1f29;
+    padding: 10px 14px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    border-bottom: 1px solid #2a2a36;
+  }
+  .hero-code-preview .hcp-dots {
+    display: inline-block;
+    width: 8px; height: 8px; border-radius: 50%;
+    background: #ff5f56;
+    box-shadow: 14px 0 0 #ffbd2e, 28px 0 0 #27c93f;
+    margin-right: 28px;
+  }
+  .hero-code-preview .hcp-name {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px; color: #8a8a96; letter-spacing: 0.05em;
+  }
+  .hero-code-preview .hcp-body {
+    padding: 14px 18px 18px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    line-height: 1.85;
+  }
+  .hero-code-preview .hcp-body .csel { color: #c9b6ff; }
+  .hero-code-preview .hcp-body .ckey { color: #ff8a6e; }
+  .hero-code-preview .hcp-body .cval { color: #ffd166; }
+  .hero-code-preview .hcp-body .ccom { color: #6e6e7a; font-style: italic; }
+  .hero-code-preview .hcp-body .cstr { color: #a8e6a3; }
+  .hero-code-preview .hcp-body .indent { padding-left: 2ch; }
+
+  /* Section */
+  section { padding: 80px 0; border-top: 1px solid var(--line); position: relative; }
+  .section-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 56px; flex-wrap: wrap; gap: 16px; }
+  .section-num { font-family: 'JetBrains Mono', monospace; font-size: 13px; color: var(--ink-mute); letter-spacing: 0.1em; }
+  .section-num strong { color: var(--accent); }
+  .section-title {
+    font-family: 'Noto Serif SC', serif;
+    font-weight: 900;
+    font-size: clamp(32px, 4.5vw, 52px);
+    line-height: 1.05;
+    letter-spacing: -0.02em;
+    margin: 0;
+    max-width: 18ch;
+  }
+  .section-title .em { font-family: 'Fraunces', serif; font-style: italic; font-weight: 500; color: var(--accent); }
+  .section-sub { color: var(--ink-soft); font-size: 17px; max-width: 38ch; line-height: 1.55; margin: 0; }
+
+  /* Problem comparison */
+  .problem-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 32px;
+    margin-top: 24px;
+  }
+  @media (max-width: 880px) { .problem-grid { grid-template-columns: 1fr; } }
+  .problem-card {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 28px;
+    position: relative;
+  }
+  .problem-card.bad { border-color: var(--accent); background: var(--accent-soft); }
+  .problem-card.good { border-color: var(--green); background: var(--green-soft); }
+  .problem-card .tag {
+    position: absolute; top: -12px; left: 24px;
+    background: var(--bg); padding: 2px 10px;
+    font-family: 'JetBrains Mono', monospace; font-size: 11px;
+    letter-spacing: 0.1em;
+  }
+  .problem-card.bad .tag { color: var(--accent); border: 1px solid var(--accent); }
+  .problem-card.good .tag { color: var(--green); border: 1px solid var(--green); }
+  .problem-card h3 { font-family: 'Noto Serif SC', serif; font-size: 22px; margin: 0 0 12px; font-weight: 700; }
+  .problem-card p { margin: 0 0 16px; color: var(--ink-soft); font-size: 14px; line-height: 1.55; }
+  .problem-card .pc-quote {
+    margin-top: 14px;
+    padding: 12px 14px;
+    background: rgba(255,255,255,0.55);
+    border-left: 2px solid currentColor;
+    border-radius: 3px;
+    font-size: 13px;
+    color: var(--ink-soft);
+    line-height: 1.6;
+  }
+  .problem-card.bad .pc-quote { color: var(--accent); }
+  .problem-card.good .pc-quote { color: var(--green); }
+  .problem-card .pc-quote strong { color: var(--ink); font-weight: 600; }
+
+  /* Inline code blocks inside problem cards */
+  .pc-code {
+    background: var(--ink);
+    color: #e8e8ec;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    line-height: 1.85;
+    padding: 14px 16px;
+    border-radius: 4px;
+    margin-top: 10px;
+    overflow-x: auto;
+  }
+  .pc-code .csel { color: #c9b6ff; }
+  .pc-code .ckey { color: #ff8a6e; }
+  .pc-code .cval { color: #ffd166; }
+  .pc-code .ccom { color: #6e6e7a; font-style: italic; }
+  .pc-code .cstr { color: #a8e6a3; }
+  .pc-code .indent { padding-left: 2ch; }
+  .pc-code .indent2 { padding-left: 4ch; }
+
+  /* §02 Pseudo-class matrix */
+  .pc-stage {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 32px;
+    align-items: stretch;
+  }
+  @media (max-width: 880px) { .pc-stage { grid-template-columns: 1fr; } }
+
+  /* Figma-style variants matrix panel (left) */
+  .figma-matrix {
+    background: #2c2c2c;
+    color: #e8e8e8;
+    border-radius: 6px;
+    padding: 22px 22px 28px;
+    font-family: 'Geist', system-ui, sans-serif;
+    position: relative;
+  }
+  .figma-matrix .fm-label {
+    font-size: 10px;
+    color: #8e8e8e;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 18px;
+  }
+  .figma-matrix .fm-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 14px;
+  }
+  .figma-matrix .fm-cell {
+    background: #1e1e1e;
+    border: 1.5px dashed #444;
+    border-radius: 4px;
+    padding: 22px 14px 14px;
+    cursor: pointer;
+    transition: all 0.18s ease;
+    position: relative;
+  }
+  .figma-matrix .fm-cell:hover { border-color: #0d99ff; }
+  .figma-matrix .fm-cell.is-active {
+    border-color: #0d99ff;
+    background: #0d2d4a;
+    box-shadow: 0 0 0 1px #0d99ff inset;
+  }
+  .figma-matrix .fm-cell .fm-name {
+    position: absolute;
+    top: 7px; left: 10px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9.5px;
+    color: #8e8e8e;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  .figma-matrix .fm-cell.is-active .fm-name { color: #0d99ff; }
+  .figma-matrix .fm-cell .fm-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px 14px;
+    border-radius: 4px;
+    font-size: 13px;
+    font-weight: 500;
+    color: white;
+    font-family: 'Geist', sans-serif;
+    margin-top: 4px;
+  }
+  .fm-btn-default  { background: #6b7280; }
+  .fm-btn-hover    { background: #0a4cff; }
+  .fm-btn-active   { background: #ff4d2e; transform: translateY(1px); }
+  .fm-btn-disabled { background: #a8a29e; opacity: 0.55; }
+
+  /* CSS code panel (right) */
+  .css-panel {
+    background: var(--ink);
+    color: #e8e8ec;
+    border-radius: 6px;
+    overflow: hidden;
+    box-shadow: 0 4px 16px rgba(22,22,29,0.12);
+    display: flex;
+    flex-direction: column;
+  }
+  .css-panel .cp-head {
+    background: #1f1f29;
+    padding: 10px 14px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    border-bottom: 1px solid #2a2a36;
+  }
+  .css-panel .cp-dots {
+    display: inline-block;
+    width: 8px; height: 8px; border-radius: 50%;
+    background: #ff5f56;
+    box-shadow: 14px 0 0 #ffbd2e, 28px 0 0 #27c93f;
+    margin-right: 28px;
+  }
+  .css-panel .cp-name {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px; color: #8a8a96; letter-spacing: 0.05em;
+  }
+  .css-panel .cp-body {
+    padding: 18px 20px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    line-height: 1.95;
+    flex: 1;
+  }
+  .css-panel .cp-body .csel { color: #c9b6ff; }
+  .css-panel .cp-body .ckey { color: #ff8a6e; }
+  .css-panel .cp-body .cval { color: #ffd166; }
+  .css-panel .cp-body .ccom { color: #6e6e7a; font-style: italic; }
+  .css-panel .cp-body .cstr { color: #a8e6a3; }
+  .css-panel .cp-body .pseudo { color: #8ec5ff; }
+  .css-panel .cp-body .indent { padding-left: 2ch; }
+  .css-panel .cp-rule {
+    display: block;
+    padding: 4px 8px;
+    margin: 0 -8px 4px;
+    border-radius: 4px;
+    box-shadow: inset 2px 0 0 transparent;
+    transition: background-color 0.18s ease, box-shadow 0.18s ease;
+  }
+  .css-panel .cp-rule.is-active {
+    background-color: rgba(255, 138, 110, 0.16);
+    box-shadow: inset 2px 0 0 #ff8a6e;
+  }
+  @keyframes cssRuleFlash {
+    0%   { background-color: rgba(255, 138, 110, 0.45); }
+    100% { background-color: rgba(255, 138, 110, 0.16); }
+  }
+  .css-panel .cp-rule.is-flash { animation: cssRuleFlash 0.6s ease-out; }
+
+  /* Mapping table */
+  .mapping {
+    display: grid;
+    grid-template-columns: 1fr 60px 1fr;
+    gap: 0;
+    margin-top: 32px;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    overflow: hidden;
+    background: var(--paper);
+  }
+  .mapping-head { display: contents; }
+  .mapping-head > div {
+    background: var(--ink);
+    color: var(--bg);
+    padding: 14px 20px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+  .mapping-head > div:nth-child(2) { text-align: center; }
+  .mapping-row { display: contents; }
+  .mapping-row > div {
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--line);
+    background: var(--paper);
+  }
+  .mapping-row:last-child > div { border-bottom: none; }
+  .mapping-row > div:nth-child(1) { border-right: 1px dashed var(--line); }
+  .mapping-row > div:nth-child(2) {
+    border-right: 1px dashed var(--line);
+    text-align: center;
+    color: var(--accent);
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    font-size: 18px;
+    background: var(--bg);
+  }
+  .mapping-row .css-name { font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 500; }
+  .mapping-row .desc { color: var(--ink-soft); font-size: 13px; margin-top: 4px; line-height: 1.5; }
+  .mapping-row .desc .mono { background: var(--bg-2); padding: 1px 5px; border-radius: 3px; font-size: 12px; }
+  .mapping-row .figma-name { font-weight: 600; font-size: 14px; }
+
+  /* §03 Mouse vs Keyboard */
+  .mk-stage {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    margin-top: 24px;
+  }
+  @media (max-width: 880px) { .mk-stage { grid-template-columns: 1fr; } }
+  .mk-card {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 28px;
+    position: relative;
+  }
+  .mk-card .mk-head {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 14px;
+  }
+  .mk-card .mk-icon {
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px;
+  }
+  .mk-card.mouse .mk-icon { background: var(--blue-soft); color: var(--blue); }
+  .mk-card.kbd .mk-icon { background: #f3e8ff; color: var(--state-focus); }
+  .mk-card h4 { font-family: 'Noto Serif SC', serif; font-size: 20px; margin: 0; font-weight: 700; }
+  .mk-card .mk-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    color: var(--ink-mute);
+    text-transform: uppercase;
+    margin-top: 2px;
+  }
+  .mk-card p { font-size: 14px; color: var(--ink-soft); line-height: 1.6; margin: 0 0 18px; }
+
+  .mk-demo {
+    background: var(--bg);
+    border: 1px dashed var(--line);
+    border-radius: 4px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 14px;
+    min-height: 140px;
+    justify-content: center;
+  }
+  .mk-demo-btn {
+    background: var(--ink);
+    color: white;
+    padding: 12px 26px;
+    border: none;
+    border-radius: 4px;
+    font-family: 'Geist', 'Noto Sans SC', sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    outline: none;
+    transition: all 0.18s ease;
+  }
+  .mk-demo-btn:hover { background: #2a2a36; }
+  .mk-demo-btn:focus-visible {
+    outline: 3px solid var(--state-focus);
+    outline-offset: 3px;
+  }
+  .mk-hint {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--ink-mute);
+    letter-spacing: 0.05em;
+  }
+  .mk-hint kbd {
+    display: inline-block;
+    padding: 2px 7px;
+    background: white;
+    border: 1px solid var(--line);
+    border-bottom-width: 2px;
+    border-radius: 3px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--ink);
+    margin: 0 2px;
+  }
+
+  .mk-callout {
+    margin-top: 32px;
+    padding: 20px 24px;
+    background: var(--accent-soft);
+    border-left: 3px solid var(--accent);
+    border-radius: 4px;
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 16px;
+    align-items: start;
+  }
+  .mk-callout .co-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    color: var(--accent);
+    text-transform: uppercase;
+    padding-top: 2px;
+    white-space: nowrap;
+  }
+  .mk-callout p { margin: 0; font-size: 14px; line-height: 1.7; color: var(--ink); }
+  .mk-callout p + p { margin-top: 8px; color: var(--ink-soft); font-size: 13px; }
+  .mk-callout strong { font-weight: 600; }
+  .mk-callout .mono {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    background: rgba(255,255,255,0.55);
+    padding: 1px 6px;
+    border-radius: 3px;
+  }
+  @media (max-width: 720px) {
+    .mk-callout { grid-template-columns: 1fr; gap: 8px; }
+  }
+
+  /* §04 Loading state */
+  .ls-stage {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 32px;
+    align-items: stretch;
+  }
+  @media (max-width: 880px) { .ls-stage { grid-template-columns: 1fr; } }
+
+  .ls-figma {
+    background: #2c2c2c;
+    color: #e8e8e8;
+    border-radius: 6px;
+    padding: 22px;
+    font-family: 'Geist', system-ui, sans-serif;
+  }
+  .ls-figma .fm-label { font-size: 10px; color: #8e8e8e; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 14px; }
+  .ls-figma .fm-list { display: flex; flex-direction: column; gap: 10px; }
+  .ls-figma .fm-row {
+    background: #1e1e1e;
+    border: 1.5px dashed #444;
+    border-radius: 4px;
+    padding: 14px 18px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    transition: all 0.18s ease;
+  }
+  .ls-figma .fm-row.is-active {
+    border-color: #0d99ff;
+    background: #0d2d4a;
+  }
+  .ls-figma .fm-row .fm-state-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: #8e8e8e;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    min-width: 80px;
+  }
+  .ls-figma .fm-row.is-active .fm-state-tag { color: #0d99ff; }
+  .ls-figma .fm-btn {
+    padding: 9px 18px;
+    border-radius: 4px;
+    color: white;
+    font-size: 13px;
+    font-weight: 500;
+    flex: 1;
+    text-align: center;
+  }
+  .ls-figma .fm-btn.bg-default { background: #ff4d2e; }
+  .ls-figma .fm-btn.bg-loading { background: #1f6b3a; display: flex; align-items: center; justify-content: center; gap: 8px; }
+  .ls-figma .fm-btn.bg-loading .lspin {
+    width: 12px; height: 12px;
+    border: 2px solid rgba(255,255,255,0.3);
+    border-top-color: white;
+    border-radius: 50%;
+    animation: lsSpin 0.9s linear infinite;
+  }
+  @keyframes lsSpin { to { transform: rotate(360deg); } }
+
+  .ls-react {
+    background: var(--ink);
+    color: #e8e8ec;
+    border-radius: 6px;
+    overflow: hidden;
+    box-shadow: 0 4px 16px rgba(22,22,29,0.12);
+  }
+  .ls-react .cp-head {
+    background: #1f1f29;
+    padding: 10px 14px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    border-bottom: 1px solid #2a2a36;
+  }
+  .ls-react .cp-dots {
+    display: inline-block;
+    width: 8px; height: 8px; border-radius: 50%;
+    background: #ff5f56;
+    box-shadow: 14px 0 0 #ffbd2e, 28px 0 0 #27c93f;
+    margin-right: 28px;
+  }
+  .ls-react .cp-name { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #8a8a96; letter-spacing: 0.05em; }
+  .ls-react .cp-body {
+    padding: 18px 20px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12.5px;
+    line-height: 1.85;
+    overflow-x: auto;
+  }
+  .ls-react .cp-body .ckey { color: #ff8a6e; }
+  .ls-react .cp-body .cval { color: #ffd166; }
+  .ls-react .cp-body .cstr { color: #a8e6a3; }
+  .ls-react .cp-body .ccom { color: #6e6e7a; font-style: italic; }
+  .ls-react .cp-body .ckw  { color: #c9b6ff; }
+  .ls-react .cp-body .cfn  { color: #8ec5ff; }
+  .ls-react .cp-body .ctag { color: #8ec5ff; }
+  .ls-react .cp-body .cattr{ color: #ff8a6e; }
+  .ls-react .cp-body .indent { padding-left: 2ch; }
+  .ls-react .cp-body .indent2 { padding-left: 4ch; }
+  .ls-react .cp-line {
+    display: block;
+    padding: 2px 8px;
+    margin: 0 -8px;
+    border-radius: 3px;
+    transition: background-color 0.2s ease;
+  }
+  .ls-react .cp-line.is-active { background-color: rgba(168, 230, 163, 0.14); box-shadow: inset 2px 0 0 #a8e6a3; }
+
+  .ls-trigger {
+    margin-top: 24px;
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 28px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+  }
+  .ls-trigger .lst-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--ink-mute);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+  .ls-trigger .lst-btn {
+    background: var(--accent);
+    color: white;
+    border: none;
+    padding: 14px 40px;
+    border-radius: 4px;
+    font-family: 'Geist', 'Noto Sans SC', sans-serif;
+    font-size: 15px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.18s ease;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 200px;
+    justify-content: center;
+  }
+  .ls-trigger .lst-btn:hover { background: #e63d1e; }
+  .ls-trigger .lst-btn.is-loading {
+    background: var(--state-loading);
+    cursor: wait;
+  }
+  .ls-trigger .lst-btn .lspin {
+    width: 14px; height: 14px;
+    border: 2px solid rgba(255,255,255,0.35);
+    border-top-color: white;
+    border-radius: 50%;
+    animation: lsSpin 0.9s linear infinite;
+  }
+  .ls-trigger .lst-state {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--ink-soft);
+  }
+  .ls-trigger .lst-state .v { color: var(--accent); font-weight: 600; }
+
+  /* §05 Big playground */
+  .pg-stage {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 32px;
+    display: grid;
+    grid-template-columns: 1fr 1.1fr;
+    gap: 32px;
+    align-items: start;
+  }
+  @media (max-width: 1000px) { .pg-stage { grid-template-columns: 1fr; } }
+
+  .pg-left { display: flex; flex-direction: column; gap: 18px; }
+  .pg-canvas {
+    background: var(--bg);
+    border: 1px dashed var(--line);
+    border-radius: 6px;
+    padding: 60px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 200px;
+    position: relative;
+  }
+  .pg-canvas::before {
+    content: 'TEST · 把鼠标移过来 / Tab 选中 / 点一下';
+    position: absolute;
+    top: 10px; left: 14px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    color: var(--ink-mute);
+  }
+  .pg-btn {
+    background: var(--accent);
+    color: white;
+    border: none;
+    padding: 16px 44px;
+    border-radius: 4px;
+    font-family: 'Geist', 'Noto Sans SC', sans-serif;
+    font-size: 16px;
+    font-weight: 500;
+    cursor: pointer;
+    outline: none;
+    transition: background 0.16s ease, transform 0.06s ease, outline 0.12s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 200px;
+    justify-content: center;
+  }
+  .pg-btn:hover:not(:disabled) { background: #e63d1e; }
+  .pg-btn:active:not(:disabled) { transform: translateY(1px); background: #c4321a; }
+  .pg-btn:focus-visible { outline: 3px solid var(--state-focus); outline-offset: 3px; }
+  .pg-btn:disabled { background: var(--state-disabled); cursor: not-allowed; opacity: 0.7; }
+  .pg-btn.is-loading {
+    background: var(--state-loading) !important;
+    cursor: wait;
+  }
+  .pg-btn .pg-spin {
+    width: 14px; height: 14px;
+    border: 2px solid rgba(255,255,255,0.35);
+    border-top-color: white;
+    border-radius: 50%;
+    animation: lsSpin 0.9s linear infinite;
+  }
+
+  .pg-controls {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+  .pg-toggle {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: white;
+    border: 1px solid var(--line);
+    padding: 8px 14px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 13px;
+    font-family: 'JetBrains Mono', monospace;
+    user-select: none;
+  }
+  .pg-toggle input { accent-color: var(--accent); }
+  .pg-status-row {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-top: 4px;
+  }
+  .pg-pill {
+    padding: 5px 10px;
+    border: 1px solid var(--line);
+    border-radius: 100px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--ink-mute);
+    background: var(--bg);
+    transition: all 0.15s ease;
+  }
+  .pg-pill.is-on {
+    background: var(--accent);
+    color: white;
+    border-color: var(--accent);
+    font-weight: 500;
+  }
+
+  .pg-right {
+    background: var(--ink);
+    color: #e8e8ec;
+    border-radius: 6px;
+    overflow: hidden;
+    align-self: stretch;
+    box-shadow: 0 4px 16px rgba(22,22,29,0.18);
+  }
+  .pg-code-head {
+    background: #1f1f29;
+    padding: 10px 14px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    border-bottom: 1px solid #2a2a36;
+  }
+  .pg-code-dots {
+    display: inline-block;
+    width: 8px; height: 8px; border-radius: 50%;
+    background: #ff5f56;
+    box-shadow: 14px 0 0 #ffbd2e, 28px 0 0 #27c93f;
+    margin-right: 28px;
+  }
+  .pg-code-name { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #8a8a96; letter-spacing: 0.05em; }
+  .pg-code-pill {
+    margin-left: auto;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: #8a8a96;
+    background: rgba(255, 77, 46, 0.12);
+    border: 1px solid rgba(255, 77, 46, 0.25);
+    border-radius: 100px;
+    padding: 3px 9px;
+  }
+  .pg-code-pill strong { color: var(--accent); font-weight: 500; }
+  .pg-code-body {
+    padding: 18px 20px 20px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    line-height: 1.95;
+  }
+  .pg-code-body .csel { color: #c9b6ff; }
+  .pg-code-body .ckey { color: #ff8a6e; }
+  .pg-code-body .cval { color: #ffd166; }
+  .pg-code-body .ccom { color: #6e6e7a; font-style: italic; }
+  .pg-code-body .pseudo { color: #8ec5ff; }
+  .pg-code-body .indent { padding-left: 2ch; }
+  .pg-line {
+    display: block;
+    padding: 2px 8px;
+    margin: 0 -8px;
+    border-radius: 4px;
+    box-shadow: inset 2px 0 0 transparent;
+    transition: background-color 0.2s ease, box-shadow 0.2s ease;
+  }
+  .pg-line.is-on {
+    background-color: rgba(255, 138, 110, 0.16);
+    box-shadow: inset 2px 0 0 #ff8a6e;
+  }
+  .pg-line[data-state="loading"].is-on {
+    background-color: rgba(168, 230, 163, 0.14);
+    box-shadow: inset 2px 0 0 #a8e6a3;
+  }
+
+  .pg-divider {
+    height: 1px;
+    background: #2a2a36;
+    margin: 14px -20px;
+  }
+
+  /* §06 Cheatsheet + Next */
+  .cs-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    overflow: hidden;
+    background: var(--paper);
+    margin-top: 12px;
+  }
+  .cs-row {
+    display: grid;
+    grid-template-columns: 90px 1fr 1.3fr 1.2fr;
+    align-items: center;
+    border-bottom: 1px solid var(--line);
+    padding: 14px 20px;
+    gap: 16px;
+    font-size: 13px;
+  }
+  @media (max-width: 880px) {
+    .cs-row { grid-template-columns: 90px 1fr; gap: 8px 16px; }
+    .cs-row > .cs-impl, .cs-row > .cs-trigger { grid-column: 2 / -1; padding-top: 4px; color: var(--ink-soft); font-size: 12px; }
+  }
+  .cs-row:last-child { border-bottom: none; }
+  .cs-row.head {
+    background: var(--ink);
+    color: var(--bg);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 12px 20px;
+  }
+  @media (max-width: 880px) {
+    .cs-row.head { display: none; }
+  }
+  .cs-state {
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 500;
+    color: var(--ink);
+  }
+  .cs-impl, .cs-trigger { font-family: 'JetBrains Mono', monospace; }
+  .cs-impl .mono, .cs-trigger .mono {
+    background: var(--bg-2);
+    padding: 2px 7px;
+    border-radius: 3px;
+    font-size: 12px;
+  }
+  .cs-row .cs-figma { color: var(--ink-soft); font-size: 13px; }
+
+  .deliver-grid {
+    margin-top: 32px;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+  }
+  @media (max-width: 720px) { .deliver-grid { grid-template-columns: 1fr; } }
+  .deliver-card {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-left: 3px solid var(--accent);
+    border-radius: 4px;
+    padding: 22px 24px;
+  }
+  .deliver-card h4 {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 17px;
+    margin: 0 0 10px;
+    font-weight: 700;
+  }
+  .deliver-card p { font-size: 13.5px; color: var(--ink-soft); margin: 0; line-height: 1.65; }
+  .deliver-card p strong { color: var(--ink); }
+  .deliver-card .mono { font-family: 'JetBrains Mono', monospace; background: var(--bg-2); padding: 1px 6px; border-radius: 3px; font-size: 12px; }
+
+  .next-card {
+    margin-top: 40px;
+    background: var(--ink);
+    color: var(--bg);
+    border-radius: 6px;
+    padding: 32px 36px;
+    position: relative;
+    overflow: hidden;
+  }
+  .next-card .next-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--accent);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+  }
+  .next-card h4 {
+    font-family: 'Noto Serif SC', serif;
+    font-size: clamp(24px, 3vw, 32px);
+    line-height: 1.2;
+    margin: 0 0 16px;
+    font-weight: 700;
+  }
+  .next-card h4 .em { font-family: 'Fraunces', serif; font-style: italic; font-weight: 500; color: var(--accent); }
+  .next-card p {
+    color: rgba(255,255,255,0.72);
+    margin: 0 0 18px;
+    font-size: 14.5px;
+    line-height: 1.7;
+    max-width: 60ch;
+  }
+  .next-card .next-list {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px 18px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: rgba(255,255,255,0.7);
+  }
+  @media (max-width: 600px) { .next-card .next-list { grid-template-columns: 1fr; } }
+  .next-card .nl-item { display: flex; align-items: center; gap: 8px; }
+  .next-card .nl-item::before { content: '→'; color: var(--accent); }
+
+  /* Footer */
+  footer {
+    border-top: 1px solid var(--line);
+    padding: 56px 0 64px;
+    background: var(--bg);
+  }
+  .byline {
+    display: flex;
+    gap: 28px;
+    align-items: center;
+    padding-bottom: 32px;
+    border-bottom: 1px dashed var(--line);
+    margin-bottom: 24px;
+    position: relative;
+  }
+  .byline::before {
+    content: '';
+    position: absolute;
+    top: -56px; left: 0;
+    width: 32px; height: 1px;
+    background: var(--accent);
+  }
+  .byline .avatar {
+    width: 96px; height: 96px;
+    border-radius: 50%;
+    object-fit: cover;
+    flex-shrink: 0;
+    border: 3px solid var(--paper);
+    box-shadow: 0 0 0 1px var(--line), 0 6px 20px rgba(22,22,29,0.10);
+    background: var(--paper);
+  }
+  .byline-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--ink-mute);
+    letter-spacing: 0.18em;
+    margin-bottom: 8px;
+  }
+  .byline-label .dot {
+    display: inline-block;
+    width: 6px; height: 6px;
+    background: var(--accent);
+    border-radius: 50%;
+    margin-right: 6px;
+    vertical-align: 1px;
+  }
+  .byline-name {
+    font-family: 'Noto Serif SC', 'Fraunces', serif;
+    font-size: clamp(28px, 4vw, 40px);
+    font-weight: 700;
+    line-height: 1.05;
+    letter-spacing: -0.01em;
+    margin: 0 0 8px;
+  }
+  .byline-name .em {
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    font-weight: 500;
+    color: var(--accent);
+  }
+  .byline-tag {
+    font-size: 14px;
+    color: var(--ink-soft);
+    line-height: 1.55;
+    margin: 0;
+    max-width: 52ch;
+  }
+  .footer-meta {
+    text-align: center;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--ink-mute);
+    letter-spacing: 0.05em;
+  }
+  .footer-meta .heart { color: var(--accent); }
+  .footer-meta .mono { color: var(--ink-soft); font-weight: 500; }
+  @media (max-width: 600px) {
+    .byline { flex-direction: column; text-align: center; align-items: center; gap: 16px; }
+    .byline-tag { margin-left: auto; margin-right: auto; }
+  }
+
+  /* Subtle entry animation */
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+  section { animation: fadeIn 0.6s ease-out backwards; }
+</style>
+</head>
+<body>
+
+<!-- Top bar -->
+<div class="topbar">
+  <div class="wrap topbar-inner">
+    <div class="brand"><span class="dot"></span>INTERACTIVE × CODE / 实验讲解</div>
+    <nav class="nav-links">
+      <a href="index.html">合集</a>
+      <a href="box-figma.html">01 盒子</a>
+      <a href="components-figma.html">02 组件</a>
+      <a href="page-figma.html">03 拼页面</a>
+      <a href="data-flow-figma.html">04 数据流</a>
+    </nav>
+  </div>
+</div>
+
+<!-- Hero -->
+<header class="hero">
+  <div class="wrap">
+    <div class="hero-meta">
+      <span class="pill fill">实验互动 · INTERACTIVE</span>
+      <span class="pill">2026</span>
+      <span class="pill">D1 · 基础 · 交互组件</span>
+      <span class="label">阅读时长 ≈ 12 分钟</span>
+    </div>
+    <div class="hero-grid">
+      <div>
+        <h1>
+          <span class="num">5</span> <span class="display-cn">种状态</span><br>
+          <span class="display-cn">怎么</span> <span class="em">写代码</span>
+        </h1>
+        <p class="lede">
+          上一篇讲了 5 种状态在视觉上长什么样，这一篇讲它们在代码里怎么写 ——
+          <code>:hover</code> / <code>:focus</code> / <code>:active</code> / <code>:disabled</code> 4 种 CSS 伪类，
+          loading 用 <span class="em">React state</span>。
+        </p>
+        <div class="hero-code-preview">
+          <div class="hcp-head">
+            <span class="hcp-dots"></span>
+            <span class="hcp-name">Button.tsx · 一眼概览</span>
+          </div>
+          <div class="hcp-body">
+<div><span class="csel">.btn</span> { <span class="ccom">/* 默认 */</span> }</div>
+<div><span class="csel">.btn<span class="ckey">:hover</span></span> { <span class="ccom">/* 鼠标悬上去 */</span> }</div>
+<div><span class="csel">.btn<span class="ckey">:focus-visible</span></span> { <span class="ccom">/* 键盘 Tab 选中 */</span> }</div>
+<div><span class="csel">.btn<span class="ckey">:active</span></span> { <span class="ccom">/* 按下的瞬间 */</span> }</div>
+<div><span class="csel">.btn<span class="ckey">[disabled]</span></span> { <span class="ccom">/* 不能点 */</span> }</div>
+<div>&nbsp;</div>
+<div><span class="ccom">// loading 不是伪类</span></div>
+<div><span class="ckey">const</span> [loading, setLoading] = <span class="cval">useState</span>(<span class="cval">false</span>);</div>
+          </div>
+        </div>
+      </div>
+      <div class="hero-side">
+        <div class="row"><span class="k">本页讲什么</span><span class="v">5 态怎么写代码</span></div>
+        <div class="row"><span class="k">含互动</span><span class="v">真键鼠 5 态触发</span></div>
+        <div class="row"><span class="k">面向</span><span class="v">设计师 / 前端入门</span></div>
+        <div class="row"><span class="k">前置知识</span><span class="v">D0 视觉态入门</span></div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- §01 Problem -->
+<section id="problem">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>01</strong> / 问题</div>
+        <h2 class="section-title">设计稿画了 <span class="em">5 态</span>，<br>前端怎么写？</h2>
+      </div>
+      <p class="section-sub">
+        Variants 交付完整、颜色注释也对了，前端坐下来开始写：每种状态都做一个独立的 class？
+        鼠标悬停了去切类名？—— 这是常见的两种错误打开方式。
+      </p>
+    </div>
+
+    <div class="problem-grid">
+      <div class="problem-card bad">
+        <span class="tag">BAD · 硬写每种状态</span>
+        <h3>每个状态搞一个 class，<br>鼠标进出手动切</h3>
+        <p>设计稿给了 5 个 Variants，前端就建 5 个 class。鼠标移上去切 <code class="mono" style="font-size:12px;background:var(--bg-2);padding:1px 5px">btn-hover</code>，移开切回 <code class="mono" style="font-size:12px;background:var(--bg-2);padding:1px 5px">btn-default</code> ——
+          代码冗长还容易漏。</p>
+        <div class="pc-code">
+<div><span class="csel">.btn-default</span> { <span class="ckey">background</span>: <span class="cval">#FF4D2E</span>; }</div>
+<div><span class="csel">.btn-hover</span>   { <span class="ckey">background</span>: <span class="cval">#E63D1E</span>; }</div>
+<div><span class="csel">.btn-active</span>  { <span class="ckey">background</span>: <span class="cval">#C4321A</span>; }</div>
+<div><span class="csel">.btn-focus</span>   { <span class="ckey">outline</span>: <span class="cval">3px</span> <span class="cstr">solid</span>; }</div>
+<div>&nbsp;</div>
+<div><span class="ccom">// JS 里手动监听鼠标进出</span></div>
+<div><span class="csel">btn</span>.<span class="ckey">onmouseenter</span> = () =&gt; <span class="ccom">/* 切类 */</span>;</div>
+<div><span class="csel">btn</span>.<span class="ckey">onmouseleave</span> = () =&gt; <span class="ccom">/* 切回 */</span>;</div>
+        </div>
+        <div class="pc-quote">
+          <strong>问题：</strong>多写了 60% 代码，键盘 Tab 时还想不起来给 focus 也加监听 —— 无障碍直接没了。
+        </div>
+      </div>
+
+      <div class="problem-card good">
+        <span class="tag">GOOD · CSS 伪类自动接管</span>
+        <h3>一个 class，<br>用伪类描述每种状态</h3>
+        <p>只有一个 <code class="mono" style="font-size:12px;background:var(--bg-2);padding:1px 5px">.btn</code>，鼠标悬停 / 键盘聚焦 / 按下 / 禁用，
+          浏览器自动套相应的伪类。<strong>设计师交 5 个 Variants → 前端就写 5 个伪类</strong>。</p>
+        <div class="pc-code">
+<div><span class="csel">.btn</span>          { <span class="ckey">background</span>: <span class="cval">#FF4D2E</span>; }</div>
+<div><span class="csel">.btn<span class="pseudo">:hover</span></span>   { <span class="ckey">background</span>: <span class="cval">#E63D1E</span>; }</div>
+<div><span class="csel">.btn<span class="pseudo">:active</span></span>  { <span class="ckey">background</span>: <span class="cval">#C4321A</span>; }</div>
+<div><span class="csel">.btn<span class="pseudo">:focus-visible</span></span> { <span class="ckey">outline</span>: <span class="cval">3px</span> <span class="cstr">solid</span>; }</div>
+<div><span class="csel">.btn<span class="pseudo">[disabled]</span></span>  { <span class="ckey">opacity</span>: <span class="cval">.6</span>; }</div>
+<div>&nbsp;</div>
+<div><span class="ccom">// JS 一行不用写</span></div>
+        </div>
+        <div class="pc-quote">
+          <strong>赢在哪：</strong>键盘党自动有 focus、按下自动反馈、禁用自动不能点。<br>
+          5 个 Variants ↔ 5 段 CSS，<strong>1:1 直译</strong>。
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- §02 Pseudo-class matrix -->
+<section id="pseudo">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>02</strong> / 对照</div>
+        <h2 class="section-title">4 种 <span class="em">CSS 伪类</span>，<br>对应你画的<br>4 个 Variants。</h2>
+      </div>
+      <p class="section-sub">
+        左边是 Figma 里画的 Variants 矩阵，右边是 CSS 里对应的伪类。
+        点左边任意一个 → 右边自动高亮对应那一段 CSS。
+      </p>
+    </div>
+
+    <div class="pc-stage">
+      <!-- Figma matrix -->
+      <div class="figma-matrix" id="fmMatrix">
+        <div class="fm-label">Component · Button / 4 个 Variants</div>
+        <div class="fm-grid">
+          <div class="fm-cell" data-pc="hover" tabindex="0">
+            <span class="fm-name">Default</span>
+            <div class="fm-btn fm-btn-default">立即购买</div>
+          </div>
+          <div class="fm-cell" data-pc="hover" tabindex="0">
+            <span class="fm-name">Hover</span>
+            <div class="fm-btn fm-btn-hover">立即购买</div>
+          </div>
+          <div class="fm-cell" data-pc="active" tabindex="0">
+            <span class="fm-name">Active</span>
+            <div class="fm-btn fm-btn-active">立即购买</div>
+          </div>
+          <div class="fm-cell" data-pc="disabled" tabindex="0">
+            <span class="fm-name">Disabled</span>
+            <div class="fm-btn fm-btn-disabled">立即购买</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- CSS panel -->
+      <div class="css-panel" id="cssPanel">
+        <div class="cp-head">
+          <span class="cp-dots"></span>
+          <span class="cp-name">Button.css</span>
+        </div>
+        <div class="cp-body">
+<span class="cp-rule" data-pc="default"><span class="csel">.btn</span> {
+  <span class="ckey">background</span>: <span class="cval">#FF4D2E</span>;
+  <span class="ckey">color</span>: <span class="cval">white</span>;
+}</span>
+
+<span class="cp-rule" data-pc="hover"><span class="csel">.btn<span class="pseudo">:hover</span></span> {
+  <span class="ckey">background</span>: <span class="cval">#E63D1E</span>;
+}</span>
+
+<span class="cp-rule" data-pc="active"><span class="csel">.btn<span class="pseudo">:active</span></span> {
+  <span class="ckey">background</span>: <span class="cval">#C4321A</span>;
+  <span class="ckey">transform</span>: <span class="cval">translateY(1px)</span>;
+}</span>
+
+<span class="cp-rule" data-pc="disabled"><span class="csel">.btn<span class="pseudo">[disabled]</span></span> {
+  <span class="ckey">opacity</span>: <span class="cval">0.6</span>;
+  <span class="ckey">cursor</span>: <span class="cval">not-allowed</span>;
+}</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="mapping">
+      <div class="mapping-head">
+        <div>CSS 伪类</div>
+        <div></div>
+        <div>Figma Variant · 触发条件</div>
+      </div>
+      <div class="mapping-row">
+        <div>
+          <div class="css-name">:hover</div>
+          <div class="desc">鼠标悬停时浏览器自动套用</div>
+        </div>
+        <div>↔</div>
+        <div>
+          <div class="figma-name">Hover</div>
+          <div class="desc">设计稿里 <span class="mono">State = Hover</span> 那一态</div>
+        </div>
+      </div>
+      <div class="mapping-row">
+        <div>
+          <div class="css-name">:focus / :focus-visible</div>
+          <div class="desc">元素被键盘 Tab 选中时</div>
+        </div>
+        <div>↔</div>
+        <div>
+          <div class="figma-name">Focus</div>
+          <div class="desc">键盘党的"我现在选到这了"</div>
+        </div>
+      </div>
+      <div class="mapping-row">
+        <div>
+          <div class="css-name">:active</div>
+          <div class="desc">鼠标按下、还没松开的瞬间</div>
+        </div>
+        <div>↔</div>
+        <div>
+          <div class="figma-name">Pressed / Active</div>
+          <div class="desc">"按下去缩一下"的反馈</div>
+        </div>
+      </div>
+      <div class="mapping-row">
+        <div>
+          <div class="css-name">:disabled / [disabled]</div>
+          <div class="desc">表单元素的 disabled 属性为 true</div>
+        </div>
+        <div>↔</div>
+        <div>
+          <div class="figma-name">Disabled</div>
+          <div class="desc">变灰、点不动的样子</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- §03 Mouse vs Keyboard -->
+<section id="mouse-kbd">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>03</strong> / 关键认知</div>
+        <h2 class="section-title">鼠标 ≠ 键盘 —— <br>focus <span class="em">不是</span> hover。</h2>
+      </div>
+      <p class="section-sub">
+        新手最常踩的坑：以为 <code class="mono" style="font-size:13px;background:var(--paper);padding:1px 5px;border:1px solid var(--line);border-radius:3px">:focus</code> 和 <code class="mono" style="font-size:13px;background:var(--paper);padding:1px 5px;border:1px solid var(--line);border-radius:3px">:hover</code> 是一回事。
+        实际上它们服务的是<strong>两类不同用户</strong>，触发方式完全不一样。
+      </p>
+    </div>
+
+    <div class="mk-stage">
+      <div class="mk-card mouse">
+        <div class="mk-head">
+          <div class="mk-icon">🖱</div>
+          <div>
+            <h4>Hover · 给鼠标用户</h4>
+            <div class="mk-tag">:hover</div>
+          </div>
+        </div>
+        <p>把鼠标光标移到元素上 —— 浏览器自动套用 <code class="mono" style="font-size:12px;background:var(--bg-2);padding:1px 5px;border-radius:3px">:hover</code>。
+          移开就消失。<strong>触屏设备没有 hover</strong>（手指点过去 = 点击，没有"悬停"这个动作）。</p>
+        <div class="mk-demo">
+          <button class="mk-demo-btn" tabindex="-1">悬上来试试</button>
+          <div class="mk-hint">把鼠标移到按钮上 → 看变深</div>
+        </div>
+      </div>
+
+      <div class="mk-card kbd">
+        <div class="mk-head">
+          <div class="mk-icon">⌨</div>
+          <div>
+            <h4>Focus · 给键盘用户</h4>
+            <div class="mk-tag">:focus-visible</div>
+          </div>
+        </div>
+        <p>用键盘 <kbd>Tab</kbd> 一个个跳到元素 —— 浏览器自动套用 <code class="mono" style="font-size:12px;background:var(--bg-2);padding:1px 5px;border-radius:3px">:focus</code>。
+          这是给<strong>看不见鼠标光标的用户</strong>用的（视障 / 不便用鼠标 / 喜欢键盘）。</p>
+        <div class="mk-demo">
+          <button class="mk-demo-btn" id="kbdDemoBtn">点这里 / 按 Tab 试试</button>
+          <div class="mk-hint">点一下输入框旁边 → 按 <kbd>Tab</kbd> 跳到按钮 → 看紫色描边</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="mk-callout">
+      <div class="co-tag">划重点 · 设计师视角</div>
+      <div>
+        <p><strong><code class="mono" style="font-size:13px;background:rgba(255,255,255,0.55);padding:1px 6px;border-radius:3px">:focus-visible</code> 比 <code class="mono" style="font-size:13px;background:rgba(255,255,255,0.55);padding:1px 6px;border-radius:3px">:focus</code> 更聪明：</strong>它<strong>只在键盘 Tab 时</strong>显示描边，鼠标点击不会显示。
+          这样既照顾键盘党，又不会让鼠标用户看到讨厌的"点完按钮还有个框"。</p>
+        <p>
+          做交付时：5 态 Variants 里给 <span class="mono">Focus</span> 配一个清晰可见的描边 / 边框 —— 这是<strong>无障碍最低标准</strong>。
+          浏览器虽然有默认 focus 样式，但常被 reset 掉，所以你要明确告诉前端"这一态需要保留 / 自定义样式"。
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- §04 Loading state -->
+<section id="loading">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>04</strong> / 状态升级</div>
+        <h2 class="section-title">loading <span class="em">不是</span>伪类，<br>是 React state。</h2>
+      </div>
+      <p class="section-sub">
+        hover / active / focus 是<strong>瞬态</strong> —— 鼠标动一下就消失了。
+        但 loading / 选中 / 折叠这种"<strong>持续状态</strong>"，靠 CSS 伪类管不了，要用 React state。
+      </p>
+    </div>
+
+    <div class="ls-stage">
+      <!-- Figma side -->
+      <div class="ls-figma">
+        <div class="fm-label">Component · Button / Variant: state</div>
+        <div class="fm-list">
+          <div class="fm-row" id="lsRowDefault">
+            <span class="fm-state-tag">state=default</span>
+            <div class="fm-btn bg-default">立即购买</div>
+          </div>
+          <div class="fm-row" id="lsRowLoading">
+            <span class="fm-state-tag">state=loading</span>
+            <div class="fm-btn bg-loading"><span class="lspin"></span>提交中…</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- React side -->
+      <div class="ls-react">
+        <div class="cp-head">
+          <span class="cp-dots"></span>
+          <span class="cp-name">SubmitButton.tsx</span>
+        </div>
+        <div class="cp-body">
+<span class="cp-line" data-ls="state"><span class="ckw">const</span> [<span class="cval">loading</span>, <span class="cval">setLoading</span>] = <span class="cfn">useState</span>(<span class="cval">false</span>);</span>
+<span>&nbsp;</span>
+<span class="cp-line" data-ls="handler"><span class="ckw">async function</span> <span class="cfn">onSubmit</span>() {</span>
+<span class="cp-line indent" data-ls="handler">  <span class="cfn">setLoading</span>(<span class="cval">true</span>);     <span class="ccom">// 进入 loading</span></span>
+<span class="cp-line indent" data-ls="handler">  <span class="ckw">await</span> <span class="cfn">api.submit</span>();</span>
+<span class="cp-line indent" data-ls="handler">  <span class="cfn">setLoading</span>(<span class="cval">false</span>);    <span class="ccom">// 自动退出</span></span>
+<span class="cp-line" data-ls="handler">}</span>
+<span>&nbsp;</span>
+<span class="cp-line" data-ls="render"><span class="ckw">return</span> (</span>
+<span class="cp-line indent" data-ls="render">  <span class="ctag">&lt;Button</span></span>
+<span class="cp-line indent2" data-ls="render">    <span class="cattr">disabled</span>=<span class="cstr">{loading}</span></span>
+<span class="cp-line indent2" data-ls="render">    <span class="cattr">onClick</span>=<span class="cstr">{onSubmit}</span><span class="ctag">&gt;</span></span>
+<span class="cp-line indent2" data-ls="render">    {loading ? <span class="cstr">'提交中…'</span> : <span class="cstr">'立即购买'</span>}</span>
+<span class="cp-line indent" data-ls="render">  <span class="ctag">&lt;/Button&gt;</span></span>
+<span class="cp-line" data-ls="render">);</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="ls-trigger">
+      <div class="lst-label">点一下试试 · 2 秒后自动退出 loading</div>
+      <button class="lst-btn" id="lsBtn">
+        <span class="lst-text">立即购买</span>
+      </button>
+      <div class="lst-state">React state · loading = <span class="v" id="lsStateVal">false</span></div>
+    </div>
+
+    <div class="mk-callout" style="margin-top: 32px;">
+      <div class="co-tag">关键区分</div>
+      <div>
+        <p><strong>瞬态用 CSS 伪类，持续态用 React state。</strong>
+          区分标准：<strong>"是否需要在 JS 里手动开 / 关"</strong>。</p>
+        <p>
+          鼠标移开 hover 自动消失 → 伪类。
+          但 loading 一旦进入，不调用 <code class="mono" style="font-size:12px;background:rgba(255,255,255,0.55);padding:1px 6px;border-radius:3px">setLoading(false)</code> 永远出不来 → state。
+          同理：选中 / 折叠 / 编辑中 / 选项卡激活 —— 全是 state。
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- §05 Big playground -->
+<section id="playground">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>05</strong> / 互动 · 5 态全开</div>
+        <h2 class="section-title">真按钮，<br>5 种状态<span class="em">真触发</span>。</h2>
+      </div>
+      <p class="section-sub">
+        左边是一个真实按钮，右边是它的 CSS + React state。
+        <strong>悬停 / Tab / 按下 / 禁用 / 点击</strong> —— 任何动作触发哪一态，对应那段代码就高亮。
+      </p>
+    </div>
+
+    <div class="pg-stage">
+      <div class="pg-left">
+        <div class="pg-canvas">
+          <button class="pg-btn" id="pgBtn">
+            <span id="pgLabel">立即购买</span>
+          </button>
+        </div>
+
+        <div class="pg-controls">
+          <label class="pg-toggle">
+            <input type="checkbox" id="pgDisabled">
+            <span>禁用按钮 (disabled)</span>
+          </label>
+        </div>
+
+        <div class="pg-status-row">
+          <span class="pg-pill" id="pillDefault">default</span>
+          <span class="pg-pill" id="pillHover">:hover</span>
+          <span class="pg-pill" id="pillFocus">:focus-visible</span>
+          <span class="pg-pill" id="pillActive">:active</span>
+          <span class="pg-pill" id="pillDisabled">[disabled]</span>
+          <span class="pg-pill" id="pillLoading">loading (state)</span>
+        </div>
+      </div>
+
+      <div class="pg-right">
+        <div class="pg-code-head">
+          <span class="pg-code-dots"></span>
+          <span class="pg-code-name">Button.css + Button.tsx</span>
+          <span class="pg-code-pill">触发哪一行 <strong>就高亮</strong></span>
+        </div>
+        <div class="pg-code-body">
+<span class="pg-line" data-state="default"><span class="csel">.btn</span> { <span class="ckey">background</span>: <span class="cval">#FF4D2E</span>; }</span>
+<span class="pg-line" data-state="hover"><span class="csel">.btn<span class="pseudo">:hover</span></span> { <span class="ckey">background</span>: <span class="cval">#E63D1E</span>; }</span>
+<span class="pg-line" data-state="focus"><span class="csel">.btn<span class="pseudo">:focus-visible</span></span> { <span class="ckey">outline</span>: <span class="cval">3px solid #9333EA</span>; }</span>
+<span class="pg-line" data-state="active"><span class="csel">.btn<span class="pseudo">:active</span></span> { <span class="ckey">transform</span>: <span class="cval">translateY(1px)</span>; }</span>
+<span class="pg-line" data-state="disabled"><span class="csel">.btn<span class="pseudo">[disabled]</span></span> { <span class="ckey">opacity</span>: <span class="cval">0.6</span>; }</span>
+<div class="pg-divider"></div>
+<span class="pg-line" data-state="loading"><span class="ckey">const</span> [<span class="cval">loading</span>, <span class="cval">setLoading</span>] = <span class="cval">useState</span>(<span class="cval">false</span>);</span>
+<span class="pg-line" data-state="loading"><span class="ccom">// 点击 → setLoading(true) → 2s 后 false</span></span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- §06 Cheatsheet + Next -->
+<section id="cheatsheet">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>06</strong> / 速查 + 下篇</div>
+        <h2 class="section-title">5 种状态 ×<br><span class="em">实现方式</span> 速查。</h2>
+      </div>
+      <p class="section-sub">
+        把这张表存下来。下次写交互组件，按表对照着写就不会漏。
+      </p>
+    </div>
+
+    <div class="cs-grid">
+      <div class="cs-row head">
+        <div>状态</div>
+        <div>实现方式</div>
+        <div>触发条件</div>
+        <div>Figma Variant</div>
+      </div>
+      <div class="cs-row">
+        <div class="cs-state">Default</div>
+        <div class="cs-impl"><span class="mono">.btn</span> 基础 class</div>
+        <div class="cs-trigger">什么都不做时</div>
+        <div class="cs-figma">默认态</div>
+      </div>
+      <div class="cs-row">
+        <div class="cs-state">Hover</div>
+        <div class="cs-impl"><span class="mono">.btn:hover</span></div>
+        <div class="cs-trigger">鼠标悬停（触屏无）</div>
+        <div class="cs-figma">Hover</div>
+      </div>
+      <div class="cs-row">
+        <div class="cs-state">Focus</div>
+        <div class="cs-impl"><span class="mono">:focus-visible</span></div>
+        <div class="cs-trigger">键盘 Tab 选中</div>
+        <div class="cs-figma">Focus（键盘党专属）</div>
+      </div>
+      <div class="cs-row">
+        <div class="cs-state">Active</div>
+        <div class="cs-impl"><span class="mono">.btn:active</span></div>
+        <div class="cs-trigger">鼠标按下，还没松开</div>
+        <div class="cs-figma">Pressed / Active</div>
+      </div>
+      <div class="cs-row">
+        <div class="cs-state">Disabled</div>
+        <div class="cs-impl"><span class="mono">[disabled]</span> 属性</div>
+        <div class="cs-trigger">prop disabled = true</div>
+        <div class="cs-figma">Disabled</div>
+      </div>
+      <div class="cs-row">
+        <div class="cs-state">Loading</div>
+        <div class="cs-impl"><span class="mono">useState</span></div>
+        <div class="cs-trigger">JS 主动 set true / false</div>
+        <div class="cs-figma">state = loading</div>
+      </div>
+    </div>
+
+    <div class="deliver-grid">
+      <div class="deliver-card">
+        <h4>设计师该交什么</h4>
+        <p>
+          5 态 <strong>Variants</strong>（含 Focus！）+ 颜色注释。
+          特别注明：<span class="mono">Focus 描边是否需要自定义样式</span>（默认浏览器有，但常被 reset）。
+          <span class="mono">Loading</span> 加一个独立 Variant，画 spinner + 文案。
+        </p>
+      </div>
+      <div class="deliver-card">
+        <h4>前端该写什么</h4>
+        <p>
+          一个 class，4 个 CSS 伪类（hover / focus-visible / active / [disabled]）。
+          <strong>不要</strong>给 hover / focus 加 JS 监听 —— 浏览器原生处理。
+          <strong>要</strong>用 React state 管 loading 这种持续态。
+        </p>
+      </div>
+    </div>
+
+    <div class="next-card">
+      <div class="next-tag">下一篇 · D2 · 进阶</div>
+      <h4>动画 / <span class="em">Transition</span><br>—— 状态之间怎么"变过去"</h4>
+      <p>
+        这一篇我们写完了"状态 = 什么"。下一篇翻到"状态怎么<strong>过渡</strong>"——
+        从 default 到 hover，颜色不是瞬切的，是 200ms 慢慢变深的。
+        这个"慢慢变"的过程，CSS 里叫 <span class="mono" style="background:rgba(255,255,255,0.1);padding:1px 6px;border-radius:3px">transition</span>，Figma 里叫 Smart Animate。
+      </p>
+      <div class="next-list">
+        <div class="nl-item">transition 三要素：属性 / 时长 / 缓动</div>
+        <div class="nl-item">缓动函数 ↔ Figma Easing</div>
+        <div class="nl-item">什么动画该写，什么不该写</div>
+        <div class="nl-item">Smart Animate 怎么标注交付</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div class="byline">
+      <img class="avatar" src="author.jpg" alt="范米花儿">
+      <div class="byline-meta">
+        <div class="byline-label"><span class="dot"></span>作者 · WRITTEN BY</div>
+        <h3 class="byline-name">嗨，我是 <span class="em">范米花儿</span></h3>
+        <p class="byline-tag">一份关于"5 种状态怎么写代码"的基础讲解 ——<br>给入门前端 / 想读代码的设计师，把伪类和 state 一次说清楚。</p>
+      </div>
+    </div>
+    <div class="footer-meta">
+      做于 <span class="mono">2026</span> · 用 <span class="heart">●</span> 写给 <span class="mono">DESIGNERS &amp; DEVELOPERS</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+// ========== §02 Figma matrix ↔ CSS panel sync ==========
+(function () {
+  const matrix = document.getElementById('fmMatrix');
+  const panel = document.getElementById('cssPanel');
+  if (!matrix || !panel) return;
+
+  // Each cell maps to one or more rules. Default cell maps to .btn rule.
+  const cellMap = [
+    { selector: '.fm-cell:nth-child(1)', rules: ['default'] },
+    { selector: '.fm-cell:nth-child(2)', rules: ['hover'] },
+    { selector: '.fm-cell:nth-child(3)', rules: ['active'] },
+    { selector: '.fm-cell:nth-child(4)', rules: ['disabled'] },
+  ];
+
+  function setActive(rules, on) {
+    rules.forEach(r => {
+      const rule = panel.querySelector(`.cp-rule[data-pc="${r}"]`);
+      if (rule) rule.classList.toggle('is-active', on);
+    });
+  }
+  function flash(rules) {
+    rules.forEach(r => {
+      const rule = panel.querySelector(`.cp-rule[data-pc="${r}"]`);
+      if (!rule) return;
+      rule.classList.remove('is-flash');
+      void rule.offsetWidth;
+      rule.classList.add('is-flash');
+      setTimeout(() => rule.classList.remove('is-flash'), 700);
+    });
+  }
+
+  cellMap.forEach(({ selector, rules }) => {
+    const cell = matrix.querySelector(selector);
+    if (!cell) return;
+    cell.addEventListener('mouseenter', () => setActive(rules, true));
+    cell.addEventListener('mouseleave', () => setActive(rules, false));
+    cell.addEventListener('focus', () => setActive(rules, true));
+    cell.addEventListener('blur', () => setActive(rules, false));
+    cell.addEventListener('click', () => {
+      // Toggle active class on cell + flash code rule
+      cellMap.forEach(({ selector: s }) => {
+        const c = matrix.querySelector(s);
+        if (c) c.classList.remove('is-active');
+      });
+      cell.classList.add('is-active');
+      flash(rules);
+    });
+  });
+})();
+
+// ========== §04 Loading state demo ==========
+(function () {
+  const btn = document.getElementById('lsBtn');
+  const txt = btn && btn.querySelector('.lst-text');
+  const stateVal = document.getElementById('lsStateVal');
+  const rowDefault = document.getElementById('lsRowDefault');
+  const rowLoading = document.getElementById('lsRowLoading');
+  const reactPanel = document.querySelectorAll('.cp-line[data-ls="handler"]');
+  if (!btn) return;
+
+  let loading = false;
+  function setLoading(v) {
+    loading = v;
+    btn.classList.toggle('is-loading', v);
+    if (v) {
+      btn.innerHTML = '<span class="lspin"></span><span class="lst-text">提交中…</span>';
+    } else {
+      btn.innerHTML = '<span class="lst-text">立即购买</span>';
+    }
+    stateVal.textContent = v ? 'true' : 'false';
+    if (rowDefault) rowDefault.classList.toggle('is-active', !v);
+    if (rowLoading) rowLoading.classList.toggle('is-active', v);
+    reactPanel.forEach(el => el.classList.toggle('is-active', v));
+  }
+
+  // Initial state
+  if (rowDefault) rowDefault.classList.add('is-active');
+
+  btn.addEventListener('click', () => {
+    if (loading) return;
+    setLoading(true);
+    setTimeout(() => setLoading(false), 2000);
+  });
+})();
+
+// ========== §05 Big playground · 5-state live tracker ==========
+(function () {
+  const btn = document.getElementById('pgBtn');
+  const label = document.getElementById('pgLabel');
+  const dis = document.getElementById('pgDisabled');
+  if (!btn) return;
+
+  const pills = {
+    default: document.getElementById('pillDefault'),
+    hover: document.getElementById('pillHover'),
+    focus: document.getElementById('pillFocus'),
+    active: document.getElementById('pillActive'),
+    disabled: document.getElementById('pillDisabled'),
+    loading: document.getElementById('pillLoading'),
+  };
+
+  function lineBy(state) {
+    return document.querySelectorAll(`.pg-line[data-state="${state}"]`);
+  }
+
+  let isHover = false;
+  let isFocus = false;
+  let isActive = false;
+  let isLoading = false;
+
+  function render() {
+    const isDisabled = btn.disabled;
+
+    // Pills
+    Object.values(pills).forEach(p => p && p.classList.remove('is-on'));
+    // Code lines
+    document.querySelectorAll('.pg-line').forEach(l => l.classList.remove('is-on'));
+
+    if (isDisabled) {
+      pills.disabled && pills.disabled.classList.add('is-on');
+      lineBy('disabled').forEach(l => l.classList.add('is-on'));
+      return;
+    }
+
+    if (isLoading) {
+      pills.loading && pills.loading.classList.add('is-on');
+      lineBy('loading').forEach(l => l.classList.add('is-on'));
+      return;
+    }
+
+    // Default is on whenever no other state is on
+    let anyOn = false;
+    if (isHover)  { pills.hover.classList.add('is-on');  lineBy('hover').forEach(l => l.classList.add('is-on'));  anyOn = true; }
+    if (isFocus)  { pills.focus.classList.add('is-on');  lineBy('focus').forEach(l => l.classList.add('is-on'));  anyOn = true; }
+    if (isActive) { pills.active.classList.add('is-on'); lineBy('active').forEach(l => l.classList.add('is-on')); anyOn = true; }
+    if (!anyOn) {
+      pills.default && pills.default.classList.add('is-on');
+      lineBy('default').forEach(l => l.classList.add('is-on'));
+    }
+  }
+
+  // Mouse hover
+  btn.addEventListener('mouseenter', () => { isHover = true; render(); });
+  btn.addEventListener('mouseleave', () => { isHover = false; isActive = false; render(); });
+
+  // Mouse press
+  btn.addEventListener('mousedown', () => { isActive = true; render(); });
+  btn.addEventListener('mouseup', () => { isActive = false; render(); });
+
+  // Keyboard focus (focus-visible)
+  btn.addEventListener('focus', (e) => {
+    // Only treat as focus-visible if matches the CSS selector
+    if (btn.matches(':focus-visible')) {
+      isFocus = true;
+      render();
+    }
+  });
+  btn.addEventListener('blur', () => { isFocus = false; render(); });
+
+  // Keyboard press
+  btn.addEventListener('keydown', (e) => {
+    if (e.key === ' ' || e.key === 'Enter') {
+      isActive = true;
+      render();
+    }
+  });
+  btn.addEventListener('keyup', (e) => {
+    if (e.key === ' ' || e.key === 'Enter') {
+      isActive = false;
+      render();
+    }
+  });
+
+  // Disabled toggle
+  dis.addEventListener('change', () => {
+    btn.disabled = dis.checked;
+    if (btn.disabled) {
+      isHover = false; isFocus = false; isActive = false; isLoading = false;
+    }
+    render();
+  });
+
+  // Click → loading
+  btn.addEventListener('click', () => {
+    if (btn.disabled || isLoading) return;
+    isLoading = true;
+    btn.classList.add('is-loading');
+    label.innerHTML = '<span class="pg-spin"></span>提交中…';
+    label.style.display = 'inline-flex';
+    label.style.alignItems = 'center';
+    label.style.gap = '10px';
+    render();
+    setTimeout(() => {
+      isLoading = false;
+      btn.classList.remove('is-loading');
+      label.innerHTML = '立即购买';
+      label.style.display = '';
+      render();
+    }, 2000);
+  });
+
+  render();
+})();
+</script>
+
+</body>
+</html>
