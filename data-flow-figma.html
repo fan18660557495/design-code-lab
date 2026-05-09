@@ -1,0 +1,1165 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>组件树 × 数据流 — 谁告诉谁什么</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,300..900&family=Geist:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Noto+Sans+SC:wght@300;400;500;700;900&family=Noto+Serif+SC:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f3eee5;
+    --bg-2: #ebe4d4;
+    --ink: #16161d;
+    --ink-soft: #4a4a55;
+    --ink-mute: #8a8a92;
+    --line: #d5cdba;
+    --line-soft: #e3dcca;
+    --accent: #ff4d2e;
+    --accent-soft: #ffe4dc;
+    --blue: #0a4cff;
+    --blue-soft: #dde6ff;
+    --green: #1f6b3a;
+    --green-soft: #d4ecdb;
+    --yellow: #ffcf3d;
+    --paper: #faf7f0;
+    --shadow: 0 1px 0 rgba(0,0,0,0.04), 0 8px 24px rgba(22,22,29,0.06);
+
+    /* Tree-specific colors */
+    --tree-bg-1: #faf7f0;
+    --tree-bg-2: #f3ecdc;
+    --tree-bg-3: #ebe2cd;
+    --tree-bg-4: #e2d6bb;
+    --tree-bg-5: #d8c9a6;
+    --node-stroke: #c4b896;
+    --prop-color: #ff8a4a;
+    --state-color: #1f6b3a;
+    --context-color: #9333ea;
+    --context-soft: rgba(147, 51, 234, 0.12);
+    --drilling-color: #d4a017;
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'Geist', 'Noto Sans SC', system-ui, -apple-system, sans-serif;
+    font-size: 16px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    background-image: radial-gradient(circle at 1px 1px, rgba(22,22,29,0.05) 1px, transparent 0);
+    background-size: 24px 24px;
+  }
+
+  .display-cn { font-family: 'Noto Serif SC', 'Fraunces', serif; font-weight: 900; letter-spacing: -0.01em; }
+  .display-en { font-family: 'Fraunces', 'Noto Serif SC', serif; font-weight: 600; font-style: italic; letter-spacing: -0.02em; }
+  .mono { font-family: 'JetBrains Mono', monospace; }
+  .label { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-mute); }
+
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 0 32px; }
+
+  /* topbar */
+  .topbar {
+    border-bottom: 1px dashed var(--line);
+    padding: 16px 0;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    backdrop-filter: blur(8px);
+    background: rgba(243, 238, 229, 0.85);
+  }
+  .topbar-inner { display: flex; justify-content: space-between; align-items: center; gap: 24px; flex-wrap: wrap; }
+  .brand { font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 600; }
+  .brand .dot { display: inline-block; width: 8px; height: 8px; background: var(--accent); border-radius: 50%; margin-right: 8px; vertical-align: middle; animation: pulse 2s ease-in-out infinite; }
+  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+  .nav-links { display: flex; gap: 18px; font-size: 13px; flex-wrap: wrap; }
+  .nav-links a { color: var(--ink-soft); text-decoration: none; transition: color 0.2s; }
+  .nav-links a:hover { color: var(--accent); }
+  .nav-links a.current { color: var(--accent); font-weight: 600; }
+
+  /* hero */
+  .hero { padding: 100px 0 80px; position: relative; overflow: hidden; }
+  .hero-meta { display: flex; gap: 24px; margin-bottom: 32px; align-items: center; flex-wrap: wrap; }
+  .hero-meta .pill { padding: 6px 12px; border: 1px solid var(--ink); border-radius: 100px; font-size: 11px; font-family: 'JetBrains Mono', monospace; letter-spacing: 0.05em; }
+  .hero-meta .pill.fill { background: var(--ink); color: var(--bg); }
+  .hero h1 {
+    font-family: 'Noto Serif SC', 'Fraunces', serif;
+    font-weight: 900;
+    font-size: clamp(48px, 7vw, 92px);
+    line-height: 0.95;
+    letter-spacing: -0.03em;
+    margin: 0 0 24px;
+  }
+  .hero h1 .em { font-family: 'Fraunces', serif; font-style: italic; font-weight: 500; color: var(--accent); }
+  .hero h1 .x { display: inline-block; transform: translateY(-0.05em); margin: 0 0.05em; color: var(--ink-mute); font-weight: 300; }
+  .hero p.lede { font-size: 20px; line-height: 1.5; max-width: 640px; color: var(--ink-soft); margin: 0 0 40px; }
+  .hero p.lede .em { font-family: 'Fraunces', serif; font-style: italic; color: var(--accent); }
+  .hero-grid { display: grid; grid-template-columns: 1.4fr 1fr; gap: 48px; align-items: end; }
+  @media (max-width: 880px) { .hero-grid { grid-template-columns: 1fr; } }
+  .hero-side { border-left: 1px dashed var(--line); padding-left: 24px; font-size: 13px; color: var(--ink-soft); }
+  .hero-side .row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px dashed var(--line); }
+  .hero-side .row:last-child { border-bottom: none; }
+  .hero-side .row .k { color: var(--ink-mute); font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.05em; text-transform: uppercase; }
+  .hero-side .row .v { font-weight: 500; }
+
+  /* section */
+  section { padding: 80px 0; border-top: 1px solid var(--line); position: relative; }
+  .section-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 48px; flex-wrap: wrap; gap: 16px; }
+  .section-num { font-family: 'JetBrains Mono', monospace; font-size: 13px; color: var(--ink-mute); letter-spacing: 0.1em; }
+  .section-num strong { color: var(--accent); }
+  .section-title {
+    font-family: 'Noto Serif SC', serif;
+    font-weight: 900;
+    font-size: clamp(32px, 4.5vw, 52px);
+    line-height: 1.05;
+    letter-spacing: -0.02em;
+    margin: 0;
+    max-width: 18ch;
+  }
+  .section-title .em { font-family: 'Fraunces', serif; font-style: italic; font-weight: 500; color: var(--accent); }
+  .section-sub { color: var(--ink-soft); font-size: 17px; max-width: 38ch; line-height: 1.55; margin: 0; }
+
+  /* problem cards */
+  .problem-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; margin-top: 24px; }
+  @media (max-width: 880px) { .problem-grid { grid-template-columns: 1fr; } }
+  .problem-card {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 28px;
+    position: relative;
+  }
+  .problem-card.bad { border-color: var(--accent); background: var(--accent-soft); }
+  .problem-card.good { border-color: var(--green); background: var(--green-soft); }
+  .problem-card .tag {
+    position: absolute; top: -12px; left: 24px;
+    background: var(--bg); padding: 2px 10px;
+    font-family: 'JetBrains Mono', monospace; font-size: 11px;
+    letter-spacing: 0.1em;
+  }
+  .problem-card.bad .tag { color: var(--accent); border: 1px solid var(--accent); }
+  .problem-card.good .tag { color: var(--green); border: 1px solid var(--green); }
+  .problem-card h3 { font-family: 'Noto Serif SC', serif; font-size: 22px; margin: 0 0 12px; font-weight: 700; }
+  .problem-card p { margin: 0 0 12px; color: var(--ink-soft); font-size: 14px; line-height: 1.55; }
+  .problem-card p:last-child { margin-bottom: 0; }
+
+  /* quote box */
+  .quote-box {
+    margin: 32px 0 0;
+    padding: 24px 28px;
+    background: var(--paper);
+    border-left: 3px solid var(--ink);
+    border-radius: 0 6px 6px 0;
+    font-family: 'Noto Serif SC', serif;
+    font-size: 18px;
+    line-height: 1.55;
+    color: var(--ink);
+    font-weight: 500;
+  }
+  .quote-box .quote-mark {
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    color: var(--accent);
+    font-size: 28px;
+    line-height: 1;
+    margin-right: 8px;
+  }
+  .quote-box .quote-attr {
+    display: block;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--ink-mute);
+    margin-top: 12px;
+    letter-spacing: 0.05em;
+    font-weight: 400;
+  }
+
+  /* === 组件树主视觉 === */
+  .tree-stage {
+    margin-top: 24px;
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 32px;
+    display: grid;
+    grid-template-columns: 1.3fr 1fr;
+    gap: 32px;
+  }
+  @media (max-width: 980px) { .tree-stage { grid-template-columns: 1fr; } }
+
+  .tree-vis {
+    background: var(--bg);
+    border: 1px dashed var(--line);
+    border-radius: 6px;
+    padding: 28px;
+    overflow-x: auto;
+  }
+  .tree-vis-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--ink-mute);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 16px;
+  }
+
+  .tree-node {
+    background: var(--tree-bg-1);
+    border: 1px solid var(--node-stroke);
+    border-radius: 6px;
+    padding: 10px 14px 14px;
+    margin-bottom: 8px;
+    position: relative;
+    transition: all 0.2s;
+    cursor: pointer;
+  }
+  .tree-node:last-child { margin-bottom: 0; }
+  .tree-node:hover {
+    border-color: var(--ink);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  }
+  .tree-node.selected {
+    border-color: var(--accent);
+    background: var(--accent-soft);
+    border-width: 1.5px;
+  }
+  .tree-node.selected > .tree-tag { color: var(--accent); font-weight: 700; }
+
+  .tree-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    color: var(--ink);
+    font-weight: 600;
+    margin-bottom: 8px;
+  }
+  .tree-tag::before {
+    content: '◆';
+    color: var(--ink-mute);
+    font-size: 10px;
+  }
+  .tree-tag .tree-meta {
+    font-weight: 400;
+    color: var(--ink-mute);
+    font-size: 11px;
+    margin-left: 4px;
+  }
+
+  .tree-children {
+    margin-left: 20px;
+    border-left: 1px dashed var(--node-stroke);
+    padding-left: 16px;
+    margin-top: 8px;
+  }
+
+  /* Different depth backgrounds for visual hierarchy */
+  .tree-node .tree-node { background: var(--tree-bg-2); }
+  .tree-node .tree-node .tree-node { background: var(--tree-bg-3); }
+  .tree-node .tree-node .tree-node .tree-node { background: var(--tree-bg-4); }
+  .tree-node .tree-node .tree-node .tree-node .tree-node { background: var(--tree-bg-5); }
+
+  /* Node info side */
+  .tree-info {
+    background: white;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    align-self: flex-start;
+    position: sticky;
+    top: 100px;
+  }
+  .tree-info-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--accent);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+  .tree-info-name {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 22px;
+    font-weight: 700;
+    margin: 0;
+    color: var(--ink);
+  }
+  .tree-info-desc {
+    color: var(--ink-soft);
+    font-size: 14px;
+    line-height: 1.6;
+    margin: 0;
+  }
+  .tree-info-section {
+    padding-top: 14px;
+    border-top: 1px dashed var(--line);
+  }
+  .tree-info-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--ink-mute);
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+  .tree-info-list {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--ink);
+    line-height: 1.7;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+  .tree-info-list li::before {
+    content: '·';
+    color: var(--accent);
+    margin-right: 6px;
+  }
+  .tree-info-empty {
+    color: var(--ink-mute);
+    font-size: 13px;
+    font-style: italic;
+  }
+
+  /* mapping table (Figma vs React) */
+  .mapping {
+    display: grid;
+    grid-template-columns: 1fr 60px 1fr;
+    gap: 0;
+    margin-top: 24px;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    overflow: hidden;
+    background: var(--paper);
+  }
+  .mapping-head { display: contents; }
+  .mapping-head > div {
+    background: var(--ink);
+    color: var(--bg);
+    padding: 14px 20px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+  .mapping-head > div:nth-child(2) { text-align: center; }
+  .mapping-row { display: contents; }
+  .mapping-row > div {
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--line);
+    background: var(--paper);
+  }
+  .mapping-row:last-child > div { border-bottom: none; }
+  .mapping-row > div:nth-child(1) { border-right: 1px dashed var(--line); }
+  .mapping-row > div:nth-child(2) {
+    border-right: 1px dashed var(--line);
+    text-align: center;
+    color: var(--accent);
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    font-size: 18px;
+    background: var(--bg);
+  }
+  .mapping-row .css-name { font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 500; color: var(--blue); }
+  .mapping-row .css-name + .desc { color: var(--ink-soft); font-size: 13px; margin-top: 4px; }
+  .mapping-row .figma-name { font-weight: 600; font-size: 14px; }
+  .mapping-row .figma-name + .desc { color: var(--ink-soft); font-size: 13px; margin-top: 4px; }
+
+  /* === §03 Props — horizontal flow === */
+  .props-stage { margin-top: 24px; background: var(--paper); border: 1px solid var(--line); border-radius: 8px; padding: 32px; }
+  .props-source { background: white; border: 1.5px solid var(--ink); border-radius: 6px; padding: 14px 18px; margin-bottom: 28px; display: flex; align-items: center; gap: 14px; flex-wrap: wrap; font-family: 'JetBrains Mono', monospace; }
+  .props-source-label { font-size: 10px; color: var(--ink-mute); letter-spacing: 0.08em; text-transform: uppercase; }
+  .props-source-value { font-size: 13px; color: var(--ink); flex: 1; }
+  .props-flow { display: flex; align-items: stretch; gap: 0; overflow-x: auto; padding: 8px 0; }
+  .props-node {
+    background: white; border: 1.5px solid var(--node-stroke); border-radius: 6px;
+    padding: 12px 14px; min-width: 140px; flex-shrink: 0;
+    display: flex; flex-direction: column; gap: 6px;
+    transition: border-color 0.3s, box-shadow 0.3s, transform 0.3s;
+  }
+  .props-node.flash {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 4px var(--accent-soft);
+    transform: translateY(-2px);
+  }
+  .props-node-tag { font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 600; color: var(--ink); }
+  .props-node-prop { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ink-soft); background: var(--bg); padding: 4px 8px; border-radius: 3px; word-break: break-all; }
+  .props-node.leaf { border-color: var(--green); background: var(--green-soft); }
+  .props-leaf-render { font-family: 'Noto Sans SC', sans-serif; font-size: 12px; color: var(--green); font-weight: 700; margin-top: 4px; padding: 4px 8px; background: white; border-radius: 3px; }
+  .props-arrow { flex: 1; min-width: 70px; position: relative; display: flex; align-items: center; justify-content: center; padding: 0 6px; }
+  .props-arrow::before { content: ''; position: absolute; top: 50%; left: 0; right: 0; height: 2px; background: var(--node-stroke); z-index: 0; }
+  .props-arrow::after { content: '▶'; position: absolute; top: 50%; right: 4px; transform: translateY(-50%); color: var(--node-stroke); font-size: 10px; }
+  .props-arrow-label { position: relative; z-index: 2; background: var(--paper); padding: 2px 8px; font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--accent); font-weight: 600; border: 1px solid var(--accent); border-radius: 100px; white-space: nowrap; }
+  .props-controls { margin-top: 24px; display: flex; justify-content: center; gap: 12px; }
+  .props-btn { padding: 10px 22px; background: var(--accent); border: none; border-radius: 6px; color: white; font-family: 'Geist','Noto Sans SC',sans-serif; font-size: 14px; font-weight: 500; cursor: pointer; transition: filter 0.15s; }
+  .props-btn:hover { filter: brightness(0.92); }
+
+  /* === §04 State — independent components === */
+  .state-stage { margin-top: 24px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+  @media (max-width: 880px) { .state-stage { grid-template-columns: 1fr; } }
+  .state-component {
+    background: var(--paper); border: 1px solid var(--line); border-radius: 8px;
+    padding: 24px; display: flex; flex-direction: column; gap: 14px; align-items: center;
+  }
+  .state-component-label { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ink-mute); letter-spacing: 0.05em; }
+  .state-btn {
+    padding: 10px 18px; font-size: 14px; background: var(--accent); border: 1.5px solid var(--accent);
+    border-radius: 6px; color: white; font-family: 'Geist','Noto Sans SC',sans-serif; font-weight: 500; cursor: pointer;
+    display: inline-flex; align-items: center; gap: 6px; min-width: 130px; justify-content: center;
+  }
+  .state-btn[data-loading="true"] { background: var(--ink-mute); border-color: var(--ink-mute); cursor: progress; }
+  .state-btn .state-spinner { display: none; width: 12px; height: 12px; border: 2px solid white; border-top-color: transparent; border-radius: 50%; animation: state-spin 0.6s linear infinite; }
+  .state-btn[data-loading="true"] .state-spinner { display: inline-block; }
+  @keyframes state-spin { to { transform: rotate(360deg); } }
+  .state-internal { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ink-soft); background: var(--bg-2); padding: 8px 12px; border-radius: 4px; width: 100%; text-align: center; }
+  .state-val { color: var(--green); font-weight: 700; }
+  .state-val.true { color: var(--accent); }
+  .state-note { margin-top: 28px; text-align: center; font-size: 14px; color: var(--ink-soft); line-height: 1.7; }
+  .state-note .em-italic { font-family: 'Fraunces', serif; font-style: italic; color: var(--accent); font-weight: 500; }
+
+  /* === §05 Drilling === */
+  .drilling-stage { margin-top: 24px; background: var(--paper); border: 1px solid var(--line); border-radius: 8px; padding: 32px; display: flex; flex-direction: column; align-items: center; }
+  .drill-node { background: white; border: 1px solid var(--line); border-radius: 6px; padding: 14px 18px; width: 100%; max-width: 520px; display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+  .drill-node.drill-source { background: var(--ink); color: white; border-color: var(--ink); }
+  .drill-node.drill-source .drill-tag, .drill-node.drill-source .drill-prop { color: white; }
+  .drill-node.drill-source .drill-prop-name { color: var(--prop-color); }
+  .drill-node.drill-relay { border-left: 3px solid var(--drilling-color); background: rgba(212, 160, 23, 0.08); }
+  .drill-node.drill-leaf { border-left: 3px solid var(--green); background: var(--green-soft); }
+  .drill-tag { font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 600; min-width: 90px; }
+  .drill-prop { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--ink); flex: 1; }
+  .drill-prop-name { color: var(--accent); font-weight: 600; }
+  .drill-warn { color: var(--drilling-color) !important; }
+  .drill-use { color: var(--green) !important; font-weight: 600; }
+  .drill-line { width: 2px; height: 24px; background: var(--node-stroke); }
+  .drilling-pain { margin-top: 28px; padding: 16px 20px; background: rgba(212, 160, 23, 0.1); border-left: 3px solid var(--drilling-color); border-radius: 4px; font-size: 14px; line-height: 1.65; color: var(--ink-soft); }
+  .drilling-pain strong { color: var(--drilling-color); font-weight: 700; }
+  .drilling-pain .em-italic { font-family: 'Fraunces', serif; font-style: italic; color: var(--accent); }
+
+  /* === §06 Context === */
+  .ctx-stage { margin-top: 24px; background: var(--paper); border: 1px solid var(--line); border-radius: 8px; padding: 32px; display: flex; flex-direction: column; align-items: center; }
+  .ctx-tree { display: flex; flex-direction: column; gap: 0; align-items: center; width: 100%; max-width: 540px; }
+  .ctx-node { background: white; border: 1px solid var(--line); border-radius: 6px; padding: 14px 18px; width: 100%; display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+  .ctx-node.ctx-provider { background: var(--context-color); color: white; border-color: var(--context-color); box-shadow: 0 0 0 6px var(--context-soft); }
+  .ctx-node.ctx-provider .ctx-tag { color: white; }
+  .ctx-tag { font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 600; min-width: 90px; color: var(--ink); }
+  .ctx-provider-tag { font-family: 'JetBrains Mono', monospace; font-size: 12px; flex: 1; }
+  .ctx-empty { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ink-mute); font-style: italic; flex: 1; }
+  .ctx-use { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--context-color); font-weight: 600; flex: 1; }
+  .ctx-node.ctx-leaf { border-left: 3px solid var(--context-color); background: var(--context-soft); }
+  .ctx-line { width: 2px; height: 24px; background: var(--context-color); opacity: 0.5; }
+  .ctx-line.dashed { background: none; border-left: 2px dashed var(--context-color); }
+  .ctx-explain { margin-top: 28px; padding: 16px 20px; background: var(--context-soft); border-left: 3px solid var(--context-color); border-radius: 4px; font-size: 14px; line-height: 1.65; color: var(--ink-soft); max-width: 540px; }
+  .ctx-explain strong { color: var(--context-color); font-weight: 700; }
+
+  /* === §07 Override === */
+  .ov-stage { margin-top: 24px; background: var(--paper); border: 1px solid var(--line); border-radius: 8px; padding: 32px; }
+  .ov-control { display: flex; gap: 10px; margin-bottom: 28px; justify-content: center; flex-wrap: wrap; }
+  .ov-toggle { padding: 8px 14px; background: white; border: 1.5px solid var(--line); border-radius: 100px; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ink-soft); cursor: pointer; transition: all 0.15s; }
+  .ov-toggle:hover { border-color: var(--ink); color: var(--ink); }
+  .ov-toggle.active { background: var(--ink); color: white; border-color: var(--ink); }
+  .ov-toggle .ov-toggle-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; vertical-align: middle; background: var(--ink); }
+  .ov-toggle.active .ov-toggle-dot { background: white; }
+  .ov-tree { display: flex; flex-direction: column; align-items: center; gap: 0; }
+  .ov-layer { border-radius: 8px; padding: 18px 20px; position: relative; width: 100%; max-width: 480px; }
+  .ov-layer + .ov-layer { margin-top: -1px; }
+  .ov-layer-global { background: rgba(22, 22, 29, 0.05); border: 1.5px dashed var(--ink); }
+  .ov-layer-section { background: rgba(255, 77, 46, 0.08); border: 1.5px dashed var(--accent); margin-top: 14px !important; }
+  .ov-layer-component { background: rgba(31, 107, 58, 0.1); border: 1.5px dashed var(--green); margin-top: 14px !important; }
+  .ov-layer.dim { opacity: 0.35; filter: saturate(0.5); }
+  .ov-layer-tag { font-family: 'JetBrains Mono', monospace; font-size: 11px; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .ov-color { display: inline-block; font-family: 'JetBrains Mono', monospace; font-size: 11px; background: var(--ink); color: white; padding: 2px 8px; border-radius: 3px; }
+  .ov-layer-section .ov-color { background: var(--accent); }
+  .ov-layer-component .ov-color { background: var(--green); }
+  .ov-leaf { background: white; border: 1px solid var(--line); border-radius: 6px; padding: 16px; text-align: center; display: flex; flex-direction: column; gap: 8px; align-items: center; }
+  .ov-leaf-tag { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ink-mute); letter-spacing: 0.05em; }
+  .ov-leaf-color { width: 48px; height: 48px; border-radius: 8px; background: var(--ink); transition: background 0.3s; }
+  .ov-leaf-name { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--ink); }
+  .ov-explain { margin-top: 24px; text-align: center; font-size: 13px; color: var(--ink-soft); line-height: 1.6; }
+  .ov-explain .em-italic { font-family: 'Fraunces', serif; font-style: italic; color: var(--accent); font-weight: 500; }
+
+  /* === §08 Cheatsheet + Next-up === */
+  .practice-cheatsheet { background: var(--paper); border: 1px solid var(--line); border-radius: 8px; padding: 32px; margin-top: 24px; }
+  .practice-cheatsheet h3 { font-family: 'Noto Serif SC', serif; font-size: 22px; margin: 0 0 18px; font-weight: 700; }
+  .practice-cheatsheet h3 .em { font-family: 'Fraunces', serif; font-style: italic; color: var(--accent); font-weight: 500; }
+  .cheat-list { list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px 28px; }
+  @media (max-width: 720px) { .cheat-list { grid-template-columns: 1fr; } }
+  .cheat-list li { font-size: 14px; color: var(--ink-soft); line-height: 1.6; padding-left: 22px; position: relative; }
+  .cheat-list li::before { content: '·'; color: var(--accent); position: absolute; left: 0; font-weight: 700; font-size: 22px; line-height: 1; top: 0; }
+  .cheat-list li strong { color: var(--ink); font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 600; }
+  .next-up-3 { margin-top: 28px; padding: 24px 28px; background: var(--paper); border: 1px dashed var(--accent); border-radius: 6px; }
+  .next-up-3 .nu-meta { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--accent); letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 6px; }
+  .next-up-3 h3 { font-family: 'Noto Serif SC', serif; font-size: 22px; font-weight: 700; margin: 0 0 8px; letter-spacing: -0.01em; }
+  .next-up-3 h3 .em { font-family: 'Fraunces', serif; font-style: italic; color: var(--accent); font-weight: 500; }
+  .next-up-3 p { color: var(--ink-soft); font-size: 14px; margin: 0; line-height: 1.55; }
+
+  /* footer */
+  footer {
+    border-top: 1px solid var(--line);
+    padding: 60px 0 80px;
+    background: var(--bg-2);
+    margin-top: 60px;
+  }
+  .byline { display: flex; gap: 20px; align-items: center; margin-bottom: 40px; }
+  .avatar { width: 64px; height: 64px; border-radius: 50%; border: 1px solid var(--line); object-fit: cover; }
+  .byline-meta { flex: 1; }
+  .byline-label { font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.1em; color: var(--ink-mute); margin-bottom: 4px; }
+  .byline-label .dot { display: inline-block; width: 6px; height: 6px; background: var(--accent); border-radius: 50%; margin-right: 6px; vertical-align: middle; }
+  .byline-name { font-family: 'Noto Serif SC', serif; font-weight: 900; font-size: 20px; margin: 0 0 4px; }
+  .byline-name .em { font-family: 'Fraunces', serif; font-style: italic; color: var(--accent); font-weight: 500; }
+  .byline-tag { font-size: 13px; color: var(--ink-soft); margin: 0; line-height: 1.5; }
+  .footer-meta { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ink-mute); letter-spacing: 0.05em; padding-top: 24px; border-top: 1px dashed var(--line); }
+  .footer-meta .heart { color: var(--accent); margin: 0 4px; animation: heartbeat 2s ease-in-out infinite; display: inline-block; }
+  @keyframes heartbeat { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.2); } }
+</style>
+</head>
+<body>
+
+<!-- Topbar -->
+<div class="topbar">
+  <div class="wrap topbar-inner">
+    <div class="brand"><span class="dot"></span>DESIGN × CODE LAB</div>
+    <nav class="nav-links">
+      <a href="index.html">合集</a>
+      <a href="box-figma.html">01 盒子</a>
+      <a href="components-figma.html">02 组件</a>
+      <a href="data-flow-figma.html" class="current">03 数据流</a>
+    </nav>
+  </div>
+</div>
+
+<!-- Hero -->
+<header class="hero">
+  <div class="wrap">
+    <div class="hero-meta">
+      <span class="pill fill">实验互动 · INTERACTIVE</span>
+      <span class="pill">2026 / 设计 × 代码</span>
+      <span class="label">基础篇 · 阅读 ≈ 12 分钟</span>
+    </div>
+    <div class="hero-grid">
+      <div>
+        <h1>
+          <span class="display-cn">组件树</span><br>
+          <span class="x">×</span>
+          <span class="em">数据流</span><br>
+          <span class="display-cn">谁告诉谁什么。</span>
+        </h1>
+        <p class="lede">
+          做完一个 Button，下一关是组件们之间<span class="em">怎么对话</span>。<br>
+          父怎么传给子，状态归谁管，主题怎么覆盖 ——<br>
+          这些是设计稿能不能稳定落地的关键。
+        </p>
+      </div>
+      <div class="hero-side">
+        <div class="row"><span class="k">本页讲什么</span><span class="v">Props · State · Context</span></div>
+        <div class="row"><span class="k">含互动</span><span class="v">一棵活的组件树</span></div>
+        <div class="row"><span class="k">面向</span><span class="v">设计师 / 前端</span></div>
+        <div class="row"><span class="k">前置知识</span><span class="v">看过 02 组件</span></div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- §01 问题 -->
+<section id="problem">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>01</strong> / 问题</div>
+        <h2 class="section-title">这个 prop <br>是从 <span class="em">哪</span> 来的？</h2>
+      </div>
+      <p class="section-sub">
+        看一段 React 代码，最难的不是语法，是数据流向 ——
+        这个值哪来的？被传到哪去？谁该改它？
+      </p>
+    </div>
+
+    <div class="problem-grid">
+      <div class="problem-card bad">
+        <span class="tag">不懂数据流的设计师</span>
+        <h3>"我改了 Figma，前端说还要改 5 个文件"</h3>
+        <p>你只改了一个商品名的字段，但代码里同样一段数据被一路传过 5 层组件。每层都得改 prop 名字，否则中间断掉。</p>
+        <p>这就是 <strong>数据沿组件树流动</strong> 的代价 —— 不懂这事，你跟前端讨论改动就靠猜。</p>
+      </div>
+      <div class="problem-card good">
+        <span class="tag">懂数据流的设计师</span>
+        <h3>"我看一眼就知道这个 prop 从哪来"</h3>
+        <p>看到组件树，能指出这个值的来源、被谁拿走、谁该负责。讨论改动时一句话说清"这个值往上提到 ProductPage 就好"。</p>
+        <p>这一篇要建立的就是这套<strong>词汇表</strong> —— 父子、props、state、context、覆盖。</p>
+      </div>
+    </div>
+
+    <div class="quote-box">
+      <span class="quote-mark">"</span>看一段 React 代码，最难的不是语法，是<span style="color:var(--accent);font-family:'Fraunces',serif;font-style:italic;font-weight:500;">数据流向</span>。
+      <span class="quote-attr">—— 给设计师的提醒</span>
+    </div>
+  </div>
+</section>
+
+<!-- §02 组件树 -->
+<section id="tree">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>02</strong> / 组件树</div>
+        <h2 class="section-title">一个页面 <br>= 组件 <span class="em">套</span> 组件 <span class="em">套</span> 组件。</h2>
+      </div>
+      <p class="section-sub">
+        跟 Figma 里 Frame 嵌套 Frame 是一回事 —— 只是名字换成了"组件"。
+        点下面任意节点看它的角色和 props。
+      </p>
+    </div>
+
+    <div class="tree-stage">
+      <div class="tree-vis">
+        <div class="tree-vis-tag">商品页 · 组件树</div>
+
+        <div class="tree-node" data-node="App" data-desc="整个商品页的根组件 — 路由、全局状态、主题都从这里开始。" data-props="无（最顶层）" data-state="theme · user · cart">
+          <div class="tree-tag">App <span class="tree-meta">— 根组件</span></div>
+          <div class="tree-children">
+            <div class="tree-node" data-node="Header" data-desc="顶部导航栏 — 含 logo、菜单、用户头像。" data-props="user (来自 App)" data-state="无（纯展示）">
+              <div class="tree-tag">Header</div>
+              <div class="tree-children">
+                <div class="tree-node" data-node="Logo" data-desc="品牌 logo — 通常是个图片或 SVG。" data-props="无" data-state="无">
+                  <div class="tree-tag">Logo</div>
+                </div>
+                <div class="tree-node" data-node="Nav" data-desc="导航菜单 — 链接列表。" data-props="items" data-state="activeItem">
+                  <div class="tree-tag">Nav</div>
+                </div>
+                <div class="tree-node" data-node="Avatar" data-desc="用户头像 — 显示当前登录用户。" data-props="user" data-state="无">
+                  <div class="tree-tag">Avatar</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="tree-node" data-node="ProductList" data-desc="商品列表容器 — 渲染多个 ProductCard。" data-props="products (来自 App)" data-state="filterValue">
+              <div class="tree-tag">ProductList <span class="tree-meta">— 列表容器</span></div>
+              <div class="tree-children">
+                <div class="tree-node" data-node="ProductCard" data-desc="单个商品卡片 — 包含图、名、价、按钮。" data-props="product" data-state="无">
+                  <div class="tree-tag">ProductCard</div>
+                  <div class="tree-children">
+                    <div class="tree-node" data-node="Image" data-desc="商品主图。" data-props="src · alt" data-state="无">
+                      <div class="tree-tag">Image</div>
+                    </div>
+                    <div class="tree-node" data-node="Title" data-desc="商品名称。" data-props="text" data-state="无">
+                      <div class="tree-tag">Title</div>
+                    </div>
+                    <div class="tree-node" data-node="PriceTag" data-desc="价格标签 — 显示价格和折扣。" data-props="price · discount" data-state="无">
+                      <div class="tree-tag">PriceTag</div>
+                    </div>
+                    <div class="tree-node" data-node="AddButton" data-desc="加入购物车按钮。" data-props="productId · disabled" data-state="loading">
+                      <div class="tree-tag">AddButton</div>
+                    </div>
+                  </div>
+                </div>
+                <div class="tree-node" data-node="ProductCard2" data-desc="另一个商品卡片 — 跟上面是同一个组件，只是 props 不同。" data-props="product" data-state="无">
+                  <div class="tree-tag">ProductCard <span class="tree-meta">(another instance)</span></div>
+                </div>
+              </div>
+            </div>
+
+            <div class="tree-node" data-node="Footer" data-desc="底部 — 版权信息、链接。" data-props="无" data-state="无">
+              <div class="tree-tag">Footer</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <aside class="tree-info" id="tree-info">
+        <div class="tree-info-tag">↑ 点节点查看详情</div>
+        <h3 class="tree-info-name" id="ti-name">App</h3>
+        <p class="tree-info-desc" id="ti-desc">整个商品页的根组件 — 路由、全局状态、主题都从这里开始。</p>
+        <div class="tree-info-section">
+          <div class="tree-info-label">接收的 props</div>
+          <ul class="tree-info-list" id="ti-props"><li>无（最顶层）</li></ul>
+        </div>
+        <div class="tree-info-section">
+          <div class="tree-info-label">自己的 state</div>
+          <ul class="tree-info-list" id="ti-state"><li>theme · user · cart</li></ul>
+        </div>
+      </aside>
+    </div>
+
+    <!-- Figma ↔ Code mapping -->
+    <div class="mapping">
+      <div class="mapping-head">
+        <div>Figma 里的概念</div>
+        <div>≈</div>
+        <div>React 里的概念</div>
+      </div>
+      <div class="mapping-row">
+        <div>
+          <div class="figma-name">Frame 嵌套 Frame</div>
+          <div class="desc">图层面板里的缩进树</div>
+        </div>
+        <div>≈</div>
+        <div>
+          <div class="css-name">组件树（Component Tree）</div>
+          <div class="desc">代码里组件嵌套的层级</div>
+        </div>
+      </div>
+      <div class="mapping-row">
+        <div>
+          <div class="figma-name">Component (主组件)</div>
+          <div class="desc">紫色◆ 的"模板"</div>
+        </div>
+        <div>≈</div>
+        <div>
+          <div class="css-name">function ProductCard</div>
+          <div class="desc">代码里的组件函数</div>
+        </div>
+      </div>
+      <div class="mapping-row">
+        <div>
+          <div class="figma-name">Instance (实例)</div>
+          <div class="desc">从主组件拖出来用的副本</div>
+        </div>
+        <div>≈</div>
+        <div>
+          <div class="css-name">&lt;ProductCard /&gt;</div>
+          <div class="desc">页面里被调用的标签</div>
+        </div>
+      </div>
+      <div class="mapping-row">
+        <div>
+          <div class="figma-name">Component Property</div>
+          <div class="desc">实例上能切换的值</div>
+        </div>
+        <div>≈</div>
+        <div>
+          <div class="css-name">props</div>
+          <div class="desc">下一节专门讲</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- §03 Props (placeholder) -->
+<section id="props">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>03</strong> / Props</div>
+        <h2 class="section-title">数据从父<br>到子的 <span class="em">递棒</span>。</h2>
+      </div>
+      <p class="section-sub">
+        Props = 父组件递给子组件的"参数包"。单向流动，不能反过来。
+      </p>
+    </div>
+    <div class="props-stage">
+      <div class="props-source">
+        <span class="props-source-label">数据源</span>
+        <span class="props-source-value">products: [{ name: "红色 T 恤", price: 99 }, ...]</span>
+      </div>
+
+      <div class="props-flow" id="props-flow">
+        <div class="props-node" data-pf="0">
+          <div class="props-node-tag">App</div>
+          <div class="props-node-prop">products</div>
+        </div>
+        <div class="props-arrow"><span class="props-arrow-label">products</span></div>
+        <div class="props-node" data-pf="1">
+          <div class="props-node-tag">ProductList</div>
+          <div class="props-node-prop">.map(p =&gt; ...)</div>
+        </div>
+        <div class="props-arrow"><span class="props-arrow-label">product</span></div>
+        <div class="props-node" data-pf="2">
+          <div class="props-node-tag">ProductCard</div>
+          <div class="props-node-prop">name · price</div>
+        </div>
+        <div class="props-arrow"><span class="props-arrow-label">name</span></div>
+        <div class="props-node leaf" data-pf="3">
+          <div class="props-node-tag">Title</div>
+          <div class="props-node-prop">{name}</div>
+          <div class="props-leaf-render">"红色 T 恤"</div>
+        </div>
+      </div>
+
+      <div class="props-controls">
+        <button class="props-btn" id="props-replay">▶ 重放数据流</button>
+      </div>
+    </div>
+
+    <div class="quote-box" style="margin-top:32px">
+      <span class="quote-mark">"</span>
+      Props 是 <span style="font-family:'Fraunces',serif;font-style:italic;color:var(--accent);font-weight:500;">单向</span> 的 ——
+      数据从父流到子，不能反过来。<br>
+      想让子告诉父发生了什么？传一个 callback prop 下去（这是另一节内容）。
+    </div>
+  </div>
+</section>
+
+<!-- §04 State -->
+<section id="state">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>04</strong> / State</div>
+        <h2 class="section-title">组件自己的 <br><span class="em">小账本</span>。</h2>
+      </div>
+      <p class="section-sub">
+        State = 组件自管的内存（toggle 开关、loading、当前选中 tab 等）。
+        不传给父，也不传给子 —— 自己用。
+      </p>
+    </div>
+    <div class="state-stage">
+      <div class="state-component">
+        <div class="state-component-label">ProductCard 1 · AddButton</div>
+        <button class="state-btn" data-state-btn="1">
+          <span class="state-spinner"></span>
+          <span class="state-btn-label">加入购物车</span>
+        </button>
+        <div class="state-internal">state: { loading: <span class="state-val" data-state-val="1">false</span> }</div>
+      </div>
+      <div class="state-component">
+        <div class="state-component-label">ProductCard 2 · AddButton</div>
+        <button class="state-btn" data-state-btn="2">
+          <span class="state-spinner"></span>
+          <span class="state-btn-label">加入购物车</span>
+        </button>
+        <div class="state-internal">state: { loading: <span class="state-val" data-state-val="2">false</span> }</div>
+      </div>
+      <div class="state-component">
+        <div class="state-component-label">ProductCard 3 · AddButton</div>
+        <button class="state-btn" data-state-btn="3">
+          <span class="state-spinner"></span>
+          <span class="state-btn-label">加入购物车</span>
+        </button>
+        <div class="state-internal">state: { loading: <span class="state-val" data-state-val="3">false</span> }</div>
+      </div>
+    </div>
+
+    <p class="state-note">
+      点任意一个按钮 → 只有<strong>那个组件</strong>的 state 翻页。<br>
+      各管各的 —— 这就是组件 <span class="em-italic">自管</span> state 的含义，跟其他组件无关。
+    </p>
+  </div>
+</section>
+
+<!-- §05 Drilling -->
+<section id="drilling">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>05</strong> / Drilling</div>
+        <h2 class="section-title">中转 N 层<br>的 <span class="em">疲劳</span>。</h2>
+      </div>
+      <p class="section-sub">
+        某个值从顶层一路传到第 8 层叶子，中间 7 层组件都不用它，只是"中转"。
+        这种状态叫 Props Drilling —— 是引出 Context 的痛点。
+      </p>
+    </div>
+    <div class="drilling-stage">
+      <div class="drill-node drill-source">
+        <span class="drill-tag">App</span>
+        <span class="drill-prop"><span class="drill-prop-name">user</span> = { name: "范米花儿" }</span>
+      </div>
+      <div class="drill-line"></div>
+      <div class="drill-node drill-relay">
+        <span class="drill-tag">Header</span>
+        <span class="drill-prop drill-warn">📦 user (中转，自己不用)</span>
+      </div>
+      <div class="drill-line"></div>
+      <div class="drill-node drill-relay">
+        <span class="drill-tag">Nav</span>
+        <span class="drill-prop drill-warn">📦 user (中转，自己不用)</span>
+      </div>
+      <div class="drill-line"></div>
+      <div class="drill-node drill-relay">
+        <span class="drill-tag">NavRight</span>
+        <span class="drill-prop drill-warn">📦 user (中转，自己不用)</span>
+      </div>
+      <div class="drill-line"></div>
+      <div class="drill-node drill-leaf">
+        <span class="drill-tag">Avatar</span>
+        <span class="drill-prop drill-use">✓ user (终于用上了)</span>
+      </div>
+    </div>
+
+    <div class="drilling-pain">
+      <strong>痛点：</strong>user 走了 4 层才到 Avatar。中间 3 层组件都得"承接 + 转发"，但自己根本不用。
+      哪天 user 字段改名（比如 user → currentUser），<span class="em-italic">4 个文件</span>都要改。
+      <br><br>
+      <strong>解药：</strong>Context（下一节）。
+    </div>
+  </div>
+</section>
+
+<!-- §06 Context -->
+<section id="context">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>06</strong> / Context</div>
+        <h2 class="section-title">跨层级<br>的 <span class="em">广播</span>。</h2>
+      </div>
+      <p class="section-sub">
+        Context = 在某个节点放一个 Provider，子树里所有节点都能直接读它，
+        不用一层层传 props。就近读取 —— 更近的 Provider 优先。
+      </p>
+    </div>
+    <div class="ctx-stage">
+      <div class="ctx-tree">
+        <div class="ctx-node ctx-provider">
+          <span class="ctx-tag">App</span>
+          <span class="ctx-provider-tag">📡 UserContext.Provider value={user}</span>
+        </div>
+        <div class="ctx-line dashed"></div>
+        <div class="ctx-node">
+          <span class="ctx-tag">Header</span>
+          <span class="ctx-empty">无 props 传递 ✨</span>
+        </div>
+        <div class="ctx-line dashed"></div>
+        <div class="ctx-node">
+          <span class="ctx-tag">Nav</span>
+          <span class="ctx-empty">无 props 传递 ✨</span>
+        </div>
+        <div class="ctx-line dashed"></div>
+        <div class="ctx-node">
+          <span class="ctx-tag">NavRight</span>
+          <span class="ctx-empty">无 props 传递 ✨</span>
+        </div>
+        <div class="ctx-line dashed"></div>
+        <div class="ctx-node ctx-leaf">
+          <span class="ctx-tag">Avatar</span>
+          <span class="ctx-use">📡 useContext(UserContext) → user</span>
+        </div>
+      </div>
+
+      <div class="ctx-explain">
+        <strong>Provider 一放</strong> → 整棵子树都能"广播订阅"。<br>
+        Avatar 直接 <code class="mono" style="background:rgba(0,0,0,0.05);padding:1px 5px;border-radius:2px;">useContext</code> 拿到 user，跳过中间 3 层。
+        <br><br>
+        Figma 的 <strong>Variables / Modes</strong> 就是这套思路 —— 在某个 frame 设一次，子层都能读。
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- §07 Token 覆盖 -->
+<section id="override">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>07</strong> / 覆盖</div>
+        <h2 class="section-title">全局 <span class="em">→</span> context <span class="em">→</span><br>组件特例。</h2>
+      </div>
+      <p class="section-sub">
+        Token / Theme 不是"一个值"，是分层的。全局给默认，context 给区域，
+        组件可以再加特例。就近读取，局部覆盖优先。
+      </p>
+    </div>
+    <div class="ov-stage">
+      <div class="ov-control">
+        <button class="ov-toggle active" data-ov="global"><span class="ov-toggle-dot"></span>全局 theme · 黑</button>
+        <button class="ov-toggle active" data-ov="section"><span class="ov-toggle-dot" style="background:var(--accent)"></span>区域 context · 红</button>
+        <button class="ov-toggle active" data-ov="component"><span class="ov-toggle-dot" style="background:var(--green)"></span>组件特例 · 绿</button>
+      </div>
+
+      <div class="ov-tree">
+        <div class="ov-layer ov-layer-global" data-ov-layer="global">
+          <div class="ov-layer-tag">全局 theme: <span class="ov-color">#16161d</span> (黑)</div>
+          <div class="ov-layer ov-layer-section" data-ov-layer="section">
+            <div class="ov-layer-tag">营销区域 context: <span class="ov-color">#ff4d2e</span> (红)</div>
+            <div class="ov-layer ov-layer-component" data-ov-layer="component">
+              <div class="ov-layer-tag">组件特例: <span class="ov-color">#1f6b3a</span> (绿)</div>
+              <div class="ov-leaf">
+                <div class="ov-leaf-tag">最终按钮颜色 →</div>
+                <div class="ov-leaf-color" id="ov-leaf-color"></div>
+                <div class="ov-leaf-name" id="ov-leaf-name">绿 (组件特例)</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <p class="ov-explain">
+        点上面的 toggle 关闭某层 — 看叶子最终读到哪个值。<br>
+        规则：<span class="em-italic">就近读取</span> —— 局部 &gt; context &gt; 全局。
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- §08 实践 + 速查 -->
+<section id="practice">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>08</strong> / 速查</div>
+        <h2 class="section-title">几条<br><span class="em">准则</span>带走。</h2>
+      </div>
+      <p class="section-sub">
+        基础篇结束。下一篇（进阶）用真实场景练习这些概念。
+      </p>
+    </div>
+    <div class="practice-cheatsheet">
+      <h3><span class="em">速查表</span> · 6 条带走</h3>
+      <ul class="cheat-list">
+        <li><strong>Props</strong> — 父→子单向，不能反过来</li>
+        <li><strong>State</strong> — 组件自管的小账本，不外传</li>
+        <li><strong>Drilling</strong> — 中转 ≥ 3 层就考虑 Context</li>
+        <li><strong>Context</strong> — 跨层共享 / 区域覆盖，子树就近订阅</li>
+        <li><strong>覆盖优先级</strong> — 局部 &gt; Context &gt; 全局，最近的赢</li>
+        <li><strong>状态归属</strong> — 兄弟共享时上提到共同父级</li>
+      </ul>
+    </div>
+
+    <div class="next-up-3">
+      <div class="nu-meta">下一篇 · 系列 C 之四</div>
+      <h3>组件树 × 数据流 · <span class="em">进阶案例</span></h3>
+      <p>5 个真实场景练习：商品卡数据流 / 状态归属 / 主题嵌套 / 局部覆盖 / Button → Button System。把基础篇的概念用真案例跑一遍。</p>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div class="byline">
+      <img class="avatar" src="author.jpg" alt="范米花儿">
+      <div class="byline-meta">
+        <div class="byline-label"><span class="dot"></span>作者 · WRITTEN BY</div>
+        <h3 class="byline-name">嗨，我是 <span class="em">范米花儿</span></h3>
+        <p class="byline-tag">一份关于组件树和数据流的实验讲解 ——<br>先建词汇表，下一篇用案例练手。</p>
+      </div>
+    </div>
+    <div class="footer-meta">
+      做于 <span class="mono">2026</span> · 用 <span class="heart">●</span> 写给 <span class="mono">DESIGNERS &amp; DEVELOPERS</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+  // ==========================================================
+  //  §02 组件树 — 点击节点显示信息
+  // ==========================================================
+  const treeInfo = document.getElementById('tree-info');
+  const tiName = document.getElementById('ti-name');
+  const tiDesc = document.getElementById('ti-desc');
+  const tiProps = document.getElementById('ti-props');
+  const tiState = document.getElementById('ti-state');
+
+  function renderList(target, str) {
+    target.innerHTML = '';
+    if (!str || str === '无' || str.startsWith('无')) {
+      const li = document.createElement('li');
+      li.className = 'tree-info-empty';
+      li.textContent = str || '无';
+      target.appendChild(li);
+      return;
+    }
+    str.split('·').forEach(item => {
+      const li = document.createElement('li');
+      li.textContent = item.trim();
+      target.appendChild(li);
+    });
+  }
+
+  function selectNode(node) {
+    document.querySelectorAll('.tree-node.selected').forEach(n => n.classList.remove('selected'));
+    node.classList.add('selected');
+    tiName.textContent = node.dataset.node;
+    tiDesc.textContent = node.dataset.desc;
+    renderList(tiProps, node.dataset.props);
+    renderList(tiState, node.dataset.state);
+  }
+
+  document.querySelectorAll('.tree-node').forEach(node => {
+    node.addEventListener('click', e => {
+      e.stopPropagation();
+      selectNode(node);
+    });
+  });
+
+  // Default: select App
+  const defaultNode = document.querySelector('.tree-node[data-node="App"]');
+  if (defaultNode) selectNode(defaultNode);
+
+  // ==========================================================
+  //  §03 Props — 重放数据流
+  // ==========================================================
+  const propsReplay = document.getElementById('props-replay');
+  if (propsReplay) {
+    propsReplay.addEventListener('click', () => {
+      const nodes = document.querySelectorAll('.props-node');
+      nodes.forEach(n => n.classList.remove('flash'));
+      nodes.forEach((node, i) => {
+        setTimeout(() => {
+          node.classList.add('flash');
+          setTimeout(() => node.classList.remove('flash'), 700);
+        }, i * 350);
+      });
+    });
+  }
+
+  // ==========================================================
+  //  §04 State — 每个组件独立 loading
+  // ==========================================================
+  document.querySelectorAll('[data-state-btn]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      if (btn.dataset.loading === 'true') return;
+      const id = btn.dataset.stateBtn;
+      btn.dataset.loading = 'true';
+      btn.querySelector('.state-btn-label').textContent = '处理中…';
+      const valEl = document.querySelector(`[data-state-val="${id}"]`);
+      if (valEl) { valEl.textContent = 'true'; valEl.classList.add('true'); }
+      setTimeout(() => {
+        btn.dataset.loading = 'false';
+        btn.querySelector('.state-btn-label').textContent = '加入购物车';
+        if (valEl) { valEl.textContent = 'false'; valEl.classList.remove('true'); }
+      }, 1200);
+    });
+  });
+
+  // ==========================================================
+  //  §07 Override — toggle 层级，叶子读最近一层
+  // ==========================================================
+  const ovLayers = { global: '#16161d', section: '#ff4d2e', component: '#1f6b3a' };
+  const ovLayerName = { global: '黑 (全局 theme)', section: '红 (区域 context)', component: '绿 (组件特例)' };
+  const ovActive = { global: true, section: true, component: true };
+
+  function ovUpdate() {
+    // dim disabled layers
+    document.querySelectorAll('.ov-layer').forEach(layer => {
+      const name = layer.dataset.ovLayer;
+      if (name && !ovActive[name]) layer.classList.add('dim');
+      else layer.classList.remove('dim');
+    });
+    // 最近优先：component → section → global
+    let final = null;
+    if (ovActive.component) final = 'component';
+    else if (ovActive.section) final = 'section';
+    else if (ovActive.global) final = 'global';
+    const colorEl = document.getElementById('ov-leaf-color');
+    const nameEl = document.getElementById('ov-leaf-name');
+    if (colorEl && nameEl) {
+      if (final) {
+        colorEl.style.background = ovLayers[final];
+        nameEl.textContent = ovLayerName[final];
+      } else {
+        colorEl.style.background = 'transparent';
+        colorEl.style.border = '1px dashed var(--ink-mute)';
+        nameEl.textContent = '— 全部关闭，没颜色读 —';
+      }
+    }
+  }
+
+  document.querySelectorAll('.ov-toggle').forEach(t => {
+    t.addEventListener('click', () => {
+      const name = t.dataset.ov;
+      ovActive[name] = !ovActive[name];
+      t.classList.toggle('active', ovActive[name]);
+      ovUpdate();
+    });
+  });
+  ovUpdate();
+</script>
+
+</body>
+</html>
