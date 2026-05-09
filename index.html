@@ -41,6 +41,7 @@
     background-size: 24px 24px;
   }
 
+  /* Typography */
   .display-cn { font-family: 'Noto Serif SC', 'Fraunces', serif; font-weight: 900; letter-spacing: -0.01em; }
   .display-en { font-family: 'Fraunces', 'Noto Serif SC', serif; font-weight: 600; font-style: italic; letter-spacing: -0.02em; }
   .mono { font-family: 'JetBrains Mono', monospace; }
@@ -48,6 +49,7 @@
 
   .wrap { max-width: 1180px; margin: 0 auto; padding: 0 32px; }
 
+  /* Top bar */
   .topbar {
     border-bottom: 1px dashed var(--line);
     padding: 16px 0;
@@ -61,13 +63,15 @@
   .brand { font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 600; }
   .brand .dot { display: inline-block; width: 8px; height: 8px; background: var(--accent); border-radius: 50%; margin-right: 8px; vertical-align: middle; animation: pulse 2s ease-in-out infinite; }
   @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
-  .nav-links { display: flex; gap: 20px; font-size: 13px; }
+  .nav-links { display: flex; gap: 20px; font-size: 13px; flex-wrap: wrap; }
   .nav-links a { color: var(--ink-soft); text-decoration: none; transition: color 0.2s; }
   .nav-links a:hover { color: var(--accent); }
   .nav-links a.current { color: var(--accent); font-weight: 600; }
+  .nav-links a.dim { color: var(--ink-mute); }
 
+  /* Hero */
   .hero { padding: 120px 0 100px; position: relative; overflow: hidden; }
-  .hero-meta { display: flex; gap: 24px; margin-bottom: 32px; align-items: center; flex-wrap: wrap; }
+  .hero-meta { display: flex; gap: 12px; margin-bottom: 36px; align-items: center; flex-wrap: wrap; }
   .hero-meta .pill { padding: 6px 12px; border: 1px solid var(--ink); border-radius: 100px; font-size: 11px; font-family: 'JetBrains Mono', monospace; letter-spacing: 0.05em; }
   .hero-meta .pill.fill { background: var(--ink); color: var(--bg); }
   .hero h1 {
@@ -95,6 +99,7 @@
   .hero-side .row .k { color: var(--ink-mute); font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.05em; text-transform: uppercase; }
   .hero-side .row .v { font-weight: 500; }
 
+  /* Section */
   section { padding: 80px 0; border-top: 1px solid var(--line); position: relative; }
   .section-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 56px; flex-wrap: wrap; gap: 16px; }
   .section-num { font-family: 'JetBrains Mono', monospace; font-size: 13px; color: var(--ink-mute); letter-spacing: 0.1em; }
@@ -111,148 +116,7 @@
   .section-title .em { font-family: 'Fraunces', serif; font-style: italic; font-weight: 500; color: var(--accent); }
   .section-sub { color: var(--ink-soft); font-size: 17px; max-width: 38ch; line-height: 1.55; margin: 0; }
 
-  .lineup-grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 28px;
-  }
-  @media (max-width: 880px) { .lineup-grid { grid-template-columns: 1fr; } }
-
-  .lineup-card {
-    background: var(--paper);
-    border: 1px solid var(--line);
-    border-radius: 8px;
-    padding: 36px 32px 28px;
-    text-decoration: none;
-    color: inherit;
-    display: block;
-    position: relative;
-    transition: all 0.25s ease;
-    overflow: hidden;
-  }
-  .lineup-card::before {
-    content: '';
-    position: absolute;
-    top: 0; left: 0; right: 0;
-    height: 3px;
-    background: var(--accent);
-    transform: scaleX(0);
-    transform-origin: left;
-    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  }
-  .lineup-card:hover::before { transform: scaleX(1); }
-  .lineup-card:hover {
-    transform: translateY(-2px);
-    box-shadow: var(--shadow);
-    border-color: var(--ink);
-  }
-  .lineup-card .num {
-    font-family: 'Fraunces', serif;
-    font-style: italic;
-    font-weight: 300;
-    font-size: 64px;
-    line-height: 1;
-    color: var(--accent);
-    letter-spacing: -0.02em;
-  }
-  .lineup-card .en {
-    font-family: 'Fraunces', serif;
-    font-style: italic;
-    font-weight: 400;
-    font-size: 14px;
-    color: var(--ink-mute);
-    margin: 14px 0 4px;
-  }
-  .lineup-card h3 {
-    font-family: 'Noto Serif SC', serif;
-    font-weight: 900;
-    font-size: 30px;
-    line-height: 1.15;
-    letter-spacing: -0.02em;
-    margin: 4px 0 14px;
-  }
-  .lineup-card h3 .x { color: var(--ink-mute); font-weight: 300; margin: 0 0.06em; font-family: 'Fraunces', serif; font-style: italic; }
-  .lineup-card .desc {
-    color: var(--ink-soft);
-    font-size: 14px;
-    line-height: 1.6;
-    margin: 0 0 24px;
-  }
-  .lineup-card .meta {
-    display: flex;
-    gap: 16px;
-    flex-wrap: wrap;
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 11px;
-    color: var(--ink-mute);
-    letter-spacing: 0.04em;
-    padding-top: 16px;
-    border-top: 1px dashed var(--line);
-  }
-  .lineup-card .meta .game-tag {
-    color: var(--accent);
-    font-weight: 600;
-  }
-  .lineup-card .status {
-    position: absolute;
-    top: 24px; right: 24px;
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 10px;
-    letter-spacing: 0.1em;
-    padding: 3px 9px;
-    border-radius: 100px;
-    background: var(--green-soft);
-    color: var(--green);
-    border: 1px solid var(--green);
-  }
-
-  .future-list {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 24px;
-  }
-  @media (max-width: 880px) { .future-list { grid-template-columns: 1fr; } }
-
-  .future-card {
-    border: 1px dashed var(--line);
-    border-radius: 8px;
-    padding: 28px;
-    background: rgba(255,255,255,0.3);
-  }
-  .future-card .label { margin-bottom: 12px; }
-  .future-card h4 {
-    font-family: 'Noto Serif SC', serif;
-    font-weight: 900;
-    font-size: 22px;
-    margin: 0 0 14px;
-    letter-spacing: -0.01em;
-  }
-  .future-card h4 .em { font-family: 'Fraunces', serif; font-style: italic; font-weight: 500; color: var(--accent); }
-  .future-card .topics {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-    font-size: 14px;
-    color: var(--ink-soft);
-    line-height: 1.85;
-  }
-  .future-card .topics li { padding-left: 18px; position: relative; }
-  .future-card .topics li::before {
-    content: '·';
-    color: var(--accent);
-    position: absolute;
-    left: 0;
-    font-weight: 900;
-    font-size: 18px;
-    line-height: 1.4;
-  }
-  .future-card .topics .game {
-    color: var(--ink-mute);
-    font-family: 'Fraunces', serif;
-    font-style: italic;
-    font-size: 13px;
-  }
-
+  /* Manifesto */
   .manifesto {
     background: var(--paper);
     border: 1px solid var(--line);
@@ -288,6 +152,419 @@
   .manifesto strong { color: var(--ink); font-weight: 600; }
   .manifesto .em { font-family: 'Fraunces', serif; font-style: italic; color: var(--accent); }
 
+  /* ===== Roadmap matrix ===== */
+  .matrix-legend {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--ink-mute);
+    letter-spacing: 0.05em;
+    margin-bottom: 28px;
+    align-items: center;
+  }
+  .matrix-legend .dot {
+    display: inline-block;
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    margin-right: 6px;
+    vertical-align: middle;
+  }
+  .matrix-legend .dot.live { background: var(--green); }
+  .matrix-legend .dot.soon { background: var(--accent); }
+  .matrix-legend .dot.todo { background: var(--ink-mute); opacity: 0.5; }
+
+  .matrix {
+    display: grid;
+    grid-template-columns: 140px repeat(3, 1fr);
+    gap: 0;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: var(--paper);
+    overflow: hidden;
+  }
+  @media (max-width: 880px) {
+    .matrix { grid-template-columns: 1fr; }
+    .matrix .col-head { display: none; }
+    .matrix .row-head { background: var(--bg-2); padding: 18px 20px !important; border-right: none !important; }
+  }
+  .matrix > * {
+    padding: 16px 18px;
+    border-bottom: 1px solid var(--line-soft);
+    border-right: 1px solid var(--line-soft);
+    min-height: 96px;
+    position: relative;
+  }
+  .matrix > *:nth-child(4n) { border-right: none; }
+  .matrix .col-head, .matrix .row-head {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink-mute);
+    background: var(--bg-2);
+    min-height: auto;
+    padding: 14px 18px;
+    display: flex;
+    align-items: center;
+  }
+  .matrix .col-head .tier-num {
+    color: var(--accent);
+    font-weight: 600;
+    margin-right: 8px;
+  }
+  .matrix .col-head .tier-cn {
+    color: var(--ink);
+    font-family: 'Noto Serif SC', serif;
+    font-weight: 700;
+    font-size: 13px;
+    margin-right: 8px;
+    letter-spacing: 0;
+    text-transform: none;
+  }
+  .matrix .row-head {
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: center;
+    gap: 4px;
+  }
+  .matrix .row-head .mod-letter {
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    font-size: 28px;
+    line-height: 1;
+    color: var(--accent);
+    font-weight: 400;
+  }
+  .matrix .row-head .mod-name {
+    font-family: 'Noto Serif SC', serif;
+    font-weight: 700;
+    font-size: 13px;
+    color: var(--ink);
+    text-transform: none;
+    letter-spacing: 0;
+  }
+  .matrix .corner {
+    background: var(--bg-2);
+    color: var(--ink-mute);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    align-items: flex-end;
+    justify-content: flex-end;
+    display: flex;
+    min-height: auto;
+    padding: 10px 14px;
+  }
+
+  .cell {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    text-decoration: none;
+    color: inherit;
+    transition: background 0.2s;
+  }
+  .cell .cell-code {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    color: var(--ink-mute);
+  }
+  .cell .cell-title {
+    font-family: 'Noto Serif SC', serif;
+    font-weight: 700;
+    font-size: 14px;
+    line-height: 1.35;
+    color: var(--ink);
+    letter-spacing: -0.01em;
+  }
+  .cell .cell-title .x { color: var(--ink-mute); font-weight: 300; font-family: 'Fraunces', serif; font-style: italic; margin: 0 0.05em; }
+  .cell .cell-status {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.06em;
+    margin-top: auto;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .cell .cell-status .dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    display: inline-block;
+  }
+
+  .cell.live { background: rgba(31, 107, 58, 0.04); }
+  .cell.live:hover { background: var(--green-soft); }
+  .cell.live .cell-status { color: var(--green); font-weight: 600; }
+  .cell.live .cell-status .dot { background: var(--green); }
+  .cell.live::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 3px; height: 100%;
+    background: var(--green);
+  }
+
+  .cell.soon { background: rgba(255, 77, 46, 0.03); }
+  .cell.soon .cell-status { color: var(--accent); font-weight: 600; }
+  .cell.soon .cell-status .dot { background: var(--accent); animation: pulse 2s ease-in-out infinite; }
+  .cell.soon::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 3px; height: 100%;
+    background: var(--accent);
+    opacity: 0.6;
+  }
+
+  .cell.todo { opacity: 0.55; }
+  .cell.todo .cell-title { color: var(--ink-soft); font-weight: 500; }
+  .cell.todo .cell-status { color: var(--ink-mute); }
+  .cell.todo .cell-status .dot { background: var(--ink-mute); opacity: 0.5; }
+
+  .cell.intro {
+    background: transparent;
+  }
+  .cell.intro .cell-title { font-size: 13px; font-weight: 500; color: var(--ink-soft); }
+
+  /* ===== Lineup cards ===== */
+  .lineup-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
+  }
+  @media (max-width: 1080px) { .lineup-grid { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 720px) { .lineup-grid { grid-template-columns: 1fr; } }
+
+  .lineup-card {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 32px 28px 24px;
+    text-decoration: none;
+    color: inherit;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    transition: all 0.25s ease;
+    overflow: hidden;
+    min-height: 360px;
+  }
+  .lineup-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    background: var(--accent);
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .lineup-card:hover::before { transform: scaleX(1); }
+  .lineup-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow);
+    border-color: var(--ink);
+  }
+  .lineup-card .num {
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    font-weight: 300;
+    font-size: 56px;
+    line-height: 1;
+    color: var(--accent);
+    letter-spacing: -0.02em;
+  }
+  .lineup-card .en {
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    font-weight: 400;
+    font-size: 13px;
+    color: var(--ink-mute);
+    margin: 14px 0 4px;
+  }
+  .lineup-card h3 {
+    font-family: 'Noto Serif SC', serif;
+    font-weight: 900;
+    font-size: 24px;
+    line-height: 1.18;
+    letter-spacing: -0.02em;
+    margin: 4px 0 14px;
+  }
+  .lineup-card h3 .x { color: var(--ink-mute); font-weight: 300; margin: 0 0.06em; font-family: 'Fraunces', serif; font-style: italic; }
+  .lineup-card .desc {
+    color: var(--ink-soft);
+    font-size: 13.5px;
+    line-height: 1.55;
+    margin: 0 0 20px;
+    flex: 1;
+  }
+  .lineup-card .desc strong { color: var(--ink); font-weight: 600; }
+  .lineup-card .meta {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10.5px;
+    color: var(--ink-mute);
+    letter-spacing: 0.04em;
+    padding-top: 14px;
+    border-top: 1px dashed var(--line);
+  }
+  .lineup-card .meta .game-tag {
+    color: var(--accent);
+    font-weight: 600;
+  }
+  .lineup-card .badges {
+    position: absolute;
+    top: 20px; right: 20px;
+    display: flex;
+    gap: 6px;
+    flex-direction: column;
+    align-items: flex-end;
+  }
+  .lineup-card .badge {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9.5px;
+    letter-spacing: 0.08em;
+    padding: 3px 8px;
+    border-radius: 100px;
+    border: 1px solid;
+  }
+  .lineup-card .badge.live {
+    background: var(--green-soft);
+    color: var(--green);
+    border-color: var(--green);
+  }
+  .lineup-card .badge.tier {
+    background: var(--accent-soft);
+    color: var(--accent);
+    border-color: var(--accent);
+  }
+  .lineup-card .module-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    color: var(--ink-mute);
+    margin-bottom: 8px;
+    text-transform: uppercase;
+  }
+  .lineup-card .module-tag .key {
+    color: var(--accent);
+    font-weight: 600;
+  }
+
+  /* ===== Coming-soon cards ===== */
+  .coming-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
+  }
+  @media (max-width: 1080px) { .coming-grid { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 720px) { .coming-grid { grid-template-columns: 1fr; } }
+
+  .coming-card {
+    border: 1.5px dashed var(--line);
+    border-radius: 8px;
+    padding: 28px 24px 22px;
+    background: rgba(255,255,255,0.25);
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    min-height: 220px;
+    transition: all 0.25s ease;
+  }
+  .coming-card:hover {
+    border-color: var(--accent);
+    background: rgba(255,228,220,0.25);
+  }
+  .coming-card.next {
+    border-style: solid;
+    border-color: var(--accent);
+    background: rgba(255,228,220,0.35);
+  }
+  .coming-card .module-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    color: var(--ink-mute);
+    margin-bottom: 10px;
+    text-transform: uppercase;
+  }
+  .coming-card .module-tag .key {
+    color: var(--accent);
+    font-weight: 600;
+  }
+  .coming-card h4 {
+    font-family: 'Noto Serif SC', serif;
+    font-weight: 900;
+    font-size: 22px;
+    line-height: 1.2;
+    margin: 0 0 12px;
+    letter-spacing: -0.02em;
+  }
+  .coming-card h4 .x { color: var(--ink-mute); font-weight: 300; margin: 0 0.06em; font-family: 'Fraunces', serif; font-style: italic; }
+  .coming-card h4 .em { font-family: 'Fraunces', serif; font-style: italic; font-weight: 500; color: var(--accent); }
+  .coming-card .blurb {
+    color: var(--ink-soft);
+    font-size: 13.5px;
+    line-height: 1.55;
+    margin: 0 0 18px;
+    flex: 1;
+  }
+  .coming-card .status-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10.5px;
+    color: var(--ink-mute);
+    letter-spacing: 0.05em;
+    padding-top: 14px;
+    border-top: 1px dashed var(--line);
+  }
+  .coming-card .status-row .stat {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .coming-card .status-row .stat .dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    display: inline-block;
+    background: var(--ink-mute);
+    opacity: 0.5;
+  }
+  .coming-card.next .status-row .stat .dot {
+    background: var(--accent);
+    opacity: 1;
+    animation: pulse 2s ease-in-out infinite;
+  }
+  .coming-card.next .status-row .stat {
+    color: var(--accent);
+    font-weight: 600;
+  }
+  .coming-card .corner-note {
+    position: absolute;
+    top: 16px; right: 16px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9.5px;
+    letter-spacing: 0.08em;
+    color: var(--ink-mute);
+    padding: 3px 8px;
+    border-radius: 100px;
+    border: 1px solid var(--line);
+    background: var(--bg);
+  }
+  .coming-card.next .corner-note {
+    color: var(--accent);
+    border-color: var(--accent);
+    background: var(--bg);
+  }
+
+  /* Footer */
   footer {
     border-top: 1px solid var(--line);
     padding: 60px 0 80px;
@@ -305,6 +582,10 @@
   .footer-meta { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ink-mute); letter-spacing: 0.05em; padding-top: 24px; border-top: 1px dashed var(--line); }
   .footer-meta .heart { color: var(--accent); margin: 0 4px; animation: heartbeat 2s ease-in-out infinite; display: inline-block; }
   @keyframes heartbeat { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.2); } }
+  @media (max-width: 600px) {
+    .byline { flex-direction: column; text-align: center; align-items: center; gap: 16px; }
+    .byline-tag { margin-left: auto; margin-right: auto; }
+  }
 </style>
 </head>
 <body>
@@ -316,7 +597,8 @@
       <a href="index.html" class="current">合集</a>
       <a href="box-figma.html">01 盒子</a>
       <a href="components-figma.html">02 组件</a>
-      <a href="data-flow-figma.html">03 数据流</a>
+      <a href="page-figma.html" class="dim">03 拼页面</a>
+      <a href="data-flow-figma.html">04 数据流</a>
     </div>
   </div>
 </div>
@@ -325,7 +607,8 @@
   <div class="wrap">
     <div class="hero-meta">
       <span class="pill fill">合集 · COLLECTION</span>
-      <span class="pill">2026 / 实验室</span>
+      <span class="pill">2026 · 实验室</span>
+      <span class="pill">5 模块 × 3 层</span>
       <span class="label">设计师 × 前端</span>
     </div>
     <div class="hero-grid">
@@ -338,15 +621,15 @@
         </h1>
         <p class="lede">
           给设计师的代码侧基础。<br>
-          一篇讲一件事，配一个能玩的<span class="em">小游戏</span>。<br>
+          按 <span class="em">5 模块 × 3 层难度</span> 组织，每篇讲一件事，配一个能玩的小游戏。<br>
           不深，但管用 —— 让你跟前端说同一种语言。
         </p>
       </div>
       <div class="hero-side">
-        <div class="row"><span class="k">已发布</span><span class="v">2 篇</span></div>
-        <div class="row"><span class="k">含互动</span><span class="v">实时联动控件</span></div>
-        <div class="row"><span class="k">作者</span><span class="v">范米花儿</span></div>
-        <div class="row"><span class="k">下次更新</span><span class="v">视觉系统</span></div>
+        <div class="row"><span class="k">已发布</span><span class="v">3 篇</span></div>
+        <div class="row"><span class="k">主理人</span><span class="v">范米花儿</span></div>
+        <div class="row"><span class="k">模块数</span><span class="v">5 × 3 矩阵</span></div>
+        <div class="row"><span class="k">下次更新</span><span class="v">B0 · 拼页面</span></div>
       </div>
     </div>
   </div>
@@ -372,7 +655,7 @@
         而设计稿有没有结构，本质上取决于设计师懂不懂代码侧的"骨架"。
       </p>
       <p>
-        这个合集就想讲清楚这些"骨架" —— Auto Layout、组件、Token、状态……
+        这个合集就想讲清楚这些"骨架" —— Auto Layout、组件、数据流、Token、状态……
         每篇都把 Figma 的概念和代码的概念<strong>一一对应</strong>，
         然后配一个独有的小游戏让你亲手玩一遍。
       </p>
@@ -384,26 +667,162 @@
   </div>
 </section>
 
-<section id="lineup">
+<section id="roadmap">
   <div class="wrap">
     <div class="section-head">
       <div>
-        <div class="section-num"><strong>已发布</strong> / 2 篇</div>
+        <div class="section-num"><strong>01</strong> / 完整路线图</div>
+        <h2 class="section-title">5 模块 <span class="em">×</span><br>3 层难度。</h2>
+      </div>
+      <p class="section-sub">
+        横轴是难度（从直觉到对照到实战），纵轴是 5 个模块（单元素 / 多组件协作 / 视觉系统 / 状态交互 / 工程化）。整张表就是这个合集的全部规划。
+      </p>
+    </div>
+
+    <div class="matrix-legend">
+      <span><span class="dot live"></span>已发布</span>
+      <span><span class="dot soon"></span>即将到来</span>
+      <span><span class="dot todo"></span>待规划</span>
+    </div>
+
+    <div class="matrix">
+      <!-- Header row -->
+      <div class="corner">模块 \ 难度</div>
+      <div class="col-head"><span class="tier-num">L1</span><span class="tier-cn">入门</span><span>设计师视角</span></div>
+      <div class="col-head"><span class="tier-num">L2</span><span class="tier-cn">基础</span><span>Figma↔代码 对照</span></div>
+      <div class="col-head"><span class="tier-num">L3</span><span class="tier-cn">进阶</span><span>真实案例</span></div>
+
+      <!-- Row A: 单元素与组件 -->
+      <div class="row-head">
+        <div class="mod-letter">A</div>
+        <div class="mod-name">单元素与组件</div>
+      </div>
+      <div class="cell intro">
+        <div class="cell-code">A0</div>
+        <div class="cell-title">设计稿是怎么变代码的</div>
+        <div class="cell-status"><span class="dot"></span>HTML / CSS / JS 三件套</div>
+      </div>
+      <a class="cell live" href="box-figma.html">
+        <div class="cell-code">A1</div>
+        <div class="cell-title">盒子 <span class="x">×</span> Auto Layout（含响应）</div>
+        <div class="cell-status"><span class="dot"></span>已发布</div>
+      </a>
+      <a class="cell live" href="components-figma.html">
+        <div class="cell-code">A2 · A3 进阶规划中</div>
+        <div class="cell-title">组件 <span class="x">×</span> Variants &amp; Props</div>
+        <div class="cell-status"><span class="dot"></span>已发布 · A3 待做</div>
+      </a>
+
+      <!-- Row B: 多组件协作 -->
+      <div class="row-head">
+        <div class="mod-letter">B</div>
+        <div class="mod-name">多组件协作</div>
+      </div>
+      <div class="cell soon">
+        <div class="cell-code">B0</div>
+        <div class="cell-title">拼页面 <span class="x">·</span> 组件嵌套</div>
+        <div class="cell-status"><span class="dot"></span>即将到来</div>
+      </div>
+      <a class="cell live" href="data-flow-figma.html">
+        <div class="cell-code">B1</div>
+        <div class="cell-title">数据流 <span class="x">·</span> 概念</div>
+        <div class="cell-status"><span class="dot"></span>已发布</div>
+      </a>
+      <div class="cell todo">
+        <div class="cell-code">B2</div>
+        <div class="cell-title">数据流 <span class="x">·</span> 实战 5 案例</div>
+        <div class="cell-status"><span class="dot"></span>待规划</div>
+      </div>
+
+      <!-- Row C: 视觉系统 -->
+      <div class="row-head">
+        <div class="mod-letter">C</div>
+        <div class="mod-name">视觉系统</div>
+      </div>
+      <div class="cell todo">
+        <div class="cell-code">C0</div>
+        <div class="cell-title">Variables / Tokens 是什么</div>
+        <div class="cell-status"><span class="dot"></span>待规划</div>
+      </div>
+      <div class="cell todo">
+        <div class="cell-code">C1</div>
+        <div class="cell-title">Colors × Modes / Type / Spacing</div>
+        <div class="cell-status"><span class="dot"></span>待规划</div>
+      </div>
+      <div class="cell todo">
+        <div class="cell-code">C2</div>
+        <div class="cell-title">Theme 切换 <span class="x">·</span> 实战</div>
+        <div class="cell-status"><span class="dot"></span>待规划</div>
+      </div>
+
+      <!-- Row D: 状态与交互 -->
+      <div class="row-head">
+        <div class="mod-letter">D</div>
+        <div class="mod-name">状态与交互</div>
+      </div>
+      <div class="cell todo">
+        <div class="cell-code">D0</div>
+        <div class="cell-title">视觉态入门 <span class="x">·</span> 看得见的状态</div>
+        <div class="cell-status"><span class="dot"></span>待规划</div>
+      </div>
+      <div class="cell todo">
+        <div class="cell-code">D1</div>
+        <div class="cell-title">Interactive Component（hover/focus）</div>
+        <div class="cell-status"><span class="dot"></span>待规划</div>
+      </div>
+      <div class="cell todo">
+        <div class="cell-code">D2</div>
+        <div class="cell-title">动画 / Transition</div>
+        <div class="cell-status"><span class="dot"></span>待规划</div>
+      </div>
+
+      <!-- Row E: 工程化 -->
+      <div class="row-head" style="border-bottom: none;">
+        <div class="mod-letter">E</div>
+        <div class="mod-name">工程化</div>
+      </div>
+      <div class="cell todo" style="border-bottom: none;">
+        <div class="cell-code">E0</div>
+        <div class="cell-title">命名 / 图层规范</div>
+        <div class="cell-status"><span class="dot"></span>待规划</div>
+      </div>
+      <div class="cell intro" style="border-bottom: none; opacity: 0.5;">
+        <div class="cell-code">—</div>
+        <div class="cell-title" style="font-style: italic; color: var(--ink-mute);">无（直接进进阶）</div>
+        <div class="cell-status" style="color: var(--ink-mute);"><span class="dot" style="background:var(--ink-mute);opacity:0.3;"></span>跳过</div>
+      </div>
+      <div class="cell todo" style="border-bottom: none; border-right: none;">
+        <div class="cell-code">E2</div>
+        <div class="cell-title">Handoff &amp; 设计系统</div>
+        <div class="cell-status"><span class="dot"></span>待规划</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="published">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>02</strong> / 已发布 3 篇</div>
         <h2 class="section-title">先把 <span class="em">骨架</span><br>立起来。</h2>
       </div>
       <p class="section-sub">
-        Auto Layout 决定"东西怎么摆、窗口变了怎么变"，组件决定"一个东西有几种长相"。
-        这两件事懂了，你的设计稿 AI 才能真的还原。
+        从单个盒子到组件，再到组件之间怎么对话 —— 这三件事懂了，AI 才能真的还原你的稿子。
       </p>
     </div>
 
     <div class="lineup-grid">
       <a class="lineup-card" href="box-figma.html">
-        <span class="status">已发布</span>
+        <div class="badges">
+          <span class="badge live">已发布</span>
+          <span class="badge tier">基础</span>
+        </div>
         <div class="num">01</div>
+        <div class="module-tag"><span class="key">A1</span> · 模块 A · 单元素</div>
         <div class="en">Box × Auto Layout · Responsive</div>
         <h3>盒子 <span class="x">×</span> 自动布局</h3>
-        <p class="desc">每个元素都是一个盒子。content / padding / border / margin 四件套，对应 Figma Auto Layout 几乎一一对应。<strong>含响应式</strong> —— Hug / Fill / Fixed 就是窗口变了谁让步。</p>
+        <p class="desc">每个元素都是一个盒子。<strong>content / padding / border / margin</strong> 四件套，对应 Figma Auto Layout 几乎一一对应。含响应式 —— Hug / Fill / Fixed 就是窗口变了谁让步。</p>
         <div class="meta">
           <span class="game-tag">游戏 · 拖滑块 + 闯关 6 关</span>
           <span>≈ 12 分钟</span>
@@ -411,11 +830,15 @@
       </a>
 
       <a class="lineup-card" href="components-figma.html">
-        <span class="status">已发布</span>
+        <div class="badges">
+          <span class="badge live">已发布</span>
+          <span class="badge tier">基础</span>
+        </div>
         <div class="num">02</div>
+        <div class="module-tag"><span class="key">A2</span> · 模块 A · 单元素</div>
         <div class="en">Components · One Button, Many Faces</div>
         <h3>组件 <span class="x">×</span> Variants &amp; Props</h3>
-        <p class="desc">为什么我做了 18 个 Variants，前端说"这只要 4 个 prop"？因为 Variant 不是组件，是组件的某个轴。整页只玩一个按钮 —— 三联动面板贯穿全篇。</p>
+        <p class="desc">为什么我做了 <strong>18 个 Variants</strong>，前端说"这只要 4 个 prop"？因为 Variant 不是组件，是组件的某个轴。整页只玩一个按钮 —— 三联动面板贯穿全篇。</p>
         <div class="meta">
           <span class="game-tag">游戏 · Figma↔代码 实时联动</span>
           <span>≈ 12 分钟</span>
@@ -423,64 +846,68 @@
       </a>
 
       <a class="lineup-card" href="data-flow-figma.html">
-        <span class="status">已发布 · 基础</span>
-        <div class="num">03</div>
+        <div class="badges">
+          <span class="badge live">已发布</span>
+          <span class="badge tier">基础</span>
+        </div>
+        <div class="num">04</div>
+        <div class="module-tag"><span class="key">B1</span> · 模块 B · 多组件</div>
         <div class="en">Component Tree · Who Tells Whom What</div>
-        <h3>组件树 <span class="x">×</span> 数据流</h3>
-        <p class="desc"><strong>基础篇 — 建立词汇表。</strong>做完一个组件，下一关是组件们之间怎么对话。父怎么传给子、状态归谁管、主题怎么覆盖 —— 8 节讲清 6 个核心概念。</p>
+        <h3>数据流 <span class="x">·</span> 概念</h3>
+        <p class="desc"><strong>建立词汇表。</strong>做完一个组件，下一关是组件们之间怎么对话。父怎么传给子、状态归谁管、主题怎么覆盖 —— 8 节讲清 Props / State / Context / Slot 等核心概念。</p>
         <div class="meta">
           <span class="game-tag">游戏 · 一棵活的组件树</span>
           <span>≈ 12 分钟</span>
-        </div>
-      </a>
-
-      <a class="lineup-card" href="#" style="opacity:0.55; pointer-events:none;" onclick="return false;">
-        <span class="status coming" style="background:var(--bg-2);color:var(--ink-mute);border-color:var(--line);">即将到来 · 进阶</span>
-        <div class="num">04</div>
-        <div class="en">Component Tree · Real-World Cases</div>
-        <h3>组件树 <span class="x">×</span> 数据流 · 进阶</h3>
-        <p class="desc"><strong>进阶篇 — 案例练习。</strong>用 5 个真实场景跑通基础篇的概念：商品卡数据流 / 状态归属 / 主题嵌套 / 局部覆盖 / Button → Button System。</p>
-        <div class="meta">
-          <span class="game-tag">游戏 · 5 个真实案例</span>
-          <span>制作中</span>
         </div>
       </a>
     </div>
   </div>
 </section>
 
-<section id="future">
+<section id="coming">
   <div class="wrap">
     <div class="section-head">
       <div>
-        <div class="section-num"><strong>下一期</strong> / 即将到来</div>
+        <div class="section-num"><strong>03</strong> / 即将到来</div>
         <h2 class="section-title">下一篇<br>正在 <span class="em">路上</span>。</h2>
       </div>
       <p class="section-sub">
-        摆好了、复用了，下一步就是让设计稿"会动" —— 状态、Token、插槽。
+        组件单点讲完了，下一步是把它们拼成一整页 —— 然后再回头补视觉、状态、Token。
       </p>
     </div>
 
-    <div class="future-list">
-      <div class="future-card">
-        <div class="label">下一篇 · 系列 C 之二</div>
-        <h4>状态 <span class="em">×</span> Interactive Component</h4>
-        <ul class="topics">
-          <li>hover / focus / active / disabled <span class="game">— 5 态在 Figma 和代码里有什么不同</span></li>
-          <li>键盘 vs 鼠标 <span class="game">— 为什么 focus 不是 hover</span></li>
-          <li>真实输入触发 <span class="game">— 用身体动作学概念</span></li>
-        </ul>
+    <div class="coming-grid">
+      <div class="coming-card next">
+        <span class="corner-note">下一篇</span>
+        <div class="module-tag"><span class="key">B0</span> · 模块 B · 入门</div>
+        <h4>拼页面 <span class="x">·</span> 组件 <span class="em">嵌套</span></h4>
+        <p class="blurb">把 01 的盒子和 02 的组件拼成一整页。讲嵌套层级、Frame 与 Section、Group vs Auto Layout、什么时候应该提取成组件。</p>
+        <div class="status-row">
+          <span class="stat"><span class="dot"></span>制作中</span>
+          <span>≈ 12 分钟</span>
+        </div>
       </div>
 
-      <div class="future-card">
-        <div class="label">系列 B · 视觉系统</div>
-        <h4>设计 <span class="em">Token</span> / 颜色 / 字号 / 间距</h4>
-        <ul class="topics">
-          <li>Token × Variables <span class="game">— 切主题找硬编码</span></li>
-          <li>颜色 × HSL <span class="game">— 锁色相调到对比度合规</span></li>
-          <li>字号 × Type Scale <span class="game">— 一参数变气质</span></li>
-          <li>间距 × 4/8 系统 <span class="game">— 节拍磁吸</span></li>
-        </ul>
+      <div class="coming-card">
+        <span class="corner-note">待规划</span>
+        <div class="module-tag"><span class="key">B2</span> · 模块 B · 进阶</div>
+        <h4>数据流 <span class="x">·</span> <span class="em">实战</span> 5 案例</h4>
+        <p class="blurb">用 5 个真实场景跑通 B1 的概念：商品卡数据流 / 状态归属 / 主题嵌套 / 局部覆盖 / Button → Button System。</p>
+        <div class="status-row">
+          <span class="stat"><span class="dot"></span>待做</span>
+          <span>≈ 15 分钟</span>
+        </div>
+      </div>
+
+      <div class="coming-card">
+        <span class="corner-note">待规划</span>
+        <div class="module-tag"><span class="key">C0</span> · 模块 C · 入门</div>
+        <h4>Variables <span class="x">·</span> <span class="em">Tokens</span> 入门</h4>
+        <p class="blurb">从硬编码颜色到一套可切换的 Variables。Token 不是"颜色集"，是设计语言里有名字的常量。</p>
+        <div class="status-row">
+          <span class="stat"><span class="dot"></span>待做</span>
+          <span>≈ 10 分钟</span>
+        </div>
       </div>
     </div>
   </div>
