@@ -1,0 +1,1747 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>起好图层名 × Figma 命名规范 — 设计师送给前端的礼物</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,300..900&family=Geist:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Noto+Sans+SC:wght@300;400;500;700;900&family=Noto+Serif+SC:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f3eee5;
+    --bg-2: #ebe4d4;
+    --ink: #16161d;
+    --ink-soft: #4a4a55;
+    --ink-mute: #8a8a92;
+    --line: #d5cdba;
+    --line-soft: #e3dcca;
+    --accent: #ff4d2e;
+    --accent-soft: #ffe4dc;
+    --blue: #0a4cff;
+    --blue-soft: #dde6ff;
+    --green: #1f6b3a;
+    --green-soft: #d4ecdb;
+    --yellow: #ffcf3d;
+    --paper: #faf7f0;
+    --shadow: 0 1px 0 rgba(0,0,0,0.04), 0 8px 24px rgba(22,22,29,0.06);
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'Geist', 'Noto Sans SC', system-ui, -apple-system, sans-serif;
+    font-size: 16px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    background-image:
+      radial-gradient(circle at 1px 1px, rgba(22,22,29,0.05) 1px, transparent 0);
+    background-size: 24px 24px;
+  }
+
+  /* Typography */
+  .display-cn { font-family: 'Noto Serif SC', 'Fraunces', serif; font-weight: 900; letter-spacing: -0.01em; }
+  .display-en { font-family: 'Fraunces', 'Noto Serif SC', serif; font-weight: 600; font-style: italic; letter-spacing: -0.02em; }
+  .mono { font-family: 'JetBrains Mono', monospace; }
+  .label { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-mute); }
+
+  /* Layout */
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 0 32px; }
+
+  /* Top bar */
+  .topbar {
+    border-bottom: 1px dashed var(--line);
+    padding: 16px 0;
+    background: var(--bg);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    backdrop-filter: blur(8px);
+    background: rgba(243, 238, 229, 0.85);
+  }
+  .topbar-inner { display: flex; justify-content: space-between; align-items: center; gap: 24px; }
+  .brand { font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 600; }
+  .brand .dot { display: inline-block; width: 8px; height: 8px; background: var(--accent); border-radius: 50%; margin-right: 8px; vertical-align: middle; animation: pulse 2s ease-in-out infinite; }
+  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+  .nav-links { display: flex; gap: 20px; font-size: 13px; flex-wrap: wrap; }
+  .nav-links a { color: var(--ink-soft); text-decoration: none; transition: color 0.2s; }
+  .nav-links a:hover { color: var(--accent); }
+  .nav-links a.current { color: var(--accent); font-weight: 600; }
+
+  /* Hero */
+  .hero { padding: 100px 0 80px; position: relative; overflow: hidden; }
+  .hero-meta { display: flex; gap: 24px; margin-bottom: 32px; align-items: center; flex-wrap: wrap; }
+  .hero-meta .pill { padding: 6px 12px; border: 1px solid var(--ink); border-radius: 100px; font-size: 11px; font-family: 'JetBrains Mono', monospace; letter-spacing: 0.05em; }
+  .hero-meta .pill.fill { background: var(--ink); color: var(--bg); }
+  .hero h1 {
+    font-family: 'Noto Serif SC', 'Fraunces', serif;
+    font-weight: 900;
+    font-size: clamp(40px, 6vw, 84px);
+    line-height: 0.98;
+    letter-spacing: -0.03em;
+    margin: 0 0 24px;
+  }
+  .hero h1 .em { font-family: 'Fraunces', serif; font-style: italic; font-weight: 500; color: var(--accent); }
+  .hero h1 .x { display: inline-block; transform: translateY(-0.05em); margin: 0 0.05em; color: var(--ink-mute); font-weight: 300; }
+  .hero p.lede {
+    font-size: 19px;
+    line-height: 1.55;
+    max-width: 640px;
+    color: var(--ink-soft);
+    margin: 0 0 40px;
+  }
+  .hero-grid {
+    display: grid;
+    grid-template-columns: 1.4fr 1fr;
+    gap: 48px;
+    align-items: end;
+  }
+  @media (max-width: 880px) { .hero-grid { grid-template-columns: 1fr; } }
+  .hero-side {
+    border-left: 1px dashed var(--line);
+    padding-left: 24px;
+    font-size: 13px;
+    color: var(--ink-soft);
+  }
+  .hero-side .row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px dashed var(--line); gap: 16px; }
+  .hero-side .row:last-child { border-bottom: none; }
+  .hero-side .row .k { color: var(--ink-mute); font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.05em; text-transform: uppercase; }
+  .hero-side .row .v { font-weight: 500; text-align: right; }
+
+  /* Section */
+  section { padding: 80px 0; border-top: 1px solid var(--line); position: relative; }
+  .section-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 56px; flex-wrap: wrap; gap: 16px; }
+  .section-num { font-family: 'JetBrains Mono', monospace; font-size: 13px; color: var(--ink-mute); letter-spacing: 0.1em; }
+  .section-num strong { color: var(--accent); }
+  .section-title {
+    font-family: 'Noto Serif SC', serif;
+    font-weight: 900;
+    font-size: clamp(32px, 4.5vw, 52px);
+    line-height: 1.05;
+    letter-spacing: -0.02em;
+    margin: 0;
+    max-width: 18ch;
+  }
+  .section-title .em { font-family: 'Fraunces', serif; font-style: italic; font-weight: 500; color: var(--accent); }
+  .section-sub { color: var(--ink-soft); font-size: 17px; max-width: 38ch; line-height: 1.55; margin: 0; }
+
+  /* Problem comparison (BAD/GOOD) */
+  .problem-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 32px;
+    margin-top: 24px;
+  }
+  @media (max-width: 880px) { .problem-grid { grid-template-columns: 1fr; } }
+  .problem-card {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 28px;
+    position: relative;
+  }
+  .problem-card.bad { border-color: var(--accent); background: var(--accent-soft); }
+  .problem-card.good { border-color: var(--green); background: var(--green-soft); }
+  .problem-card .tag {
+    position: absolute; top: -12px; left: 24px;
+    background: var(--bg); padding: 2px 10px;
+    font-family: 'JetBrains Mono', monospace; font-size: 11px;
+    letter-spacing: 0.1em;
+  }
+  .problem-card.bad .tag { color: var(--accent); border: 1px solid var(--accent); }
+  .problem-card.good .tag { color: var(--green); border: 1px solid var(--green); }
+  .problem-card h3 { font-family: 'Noto Serif SC', serif; font-size: 22px; margin: 0 0 12px; font-weight: 700; }
+  .problem-card p { margin: 0 0 16px; color: var(--ink-soft); font-size: 14px; line-height: 1.55; }
+  .layer-tree { font-family: 'JetBrains Mono', monospace; font-size: 12.5px; line-height: 1.85; margin-top: 12px; padding: 14px 16px; background: rgba(255,255,255,0.5); border-radius: 4px; border: 1px dashed rgba(0,0,0,0.1); }
+  .layer-tree .l { color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .layer-tree .t { display: inline-block; width: 14px; color: var(--ink-mute); }
+  .layer-tree .name-bad { color: var(--accent); font-weight: 500; }
+  .layer-tree .name-good { color: var(--green); font-weight: 600; }
+  .layer-tree .meta { color: var(--ink-mute); font-size: 11px; }
+
+  /* Confusion dialog (showing dev frustration) */
+  .confusion {
+    margin-top: 28px;
+    padding: 20px 24px;
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+  }
+  .confusion-row { display: flex; gap: 14px; align-items: flex-start; padding: 10px 0; border-bottom: 1px dashed var(--line); }
+  .confusion-row:last-child { border-bottom: none; }
+  .confusion-row .who {
+    flex: 0 0 64px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.05em;
+    color: var(--ink-mute);
+    padding-top: 2px;
+  }
+  .confusion-row .who.dev { color: var(--blue); }
+  .confusion-row .who.des { color: var(--accent); }
+  .confusion-row .what { font-size: 14px; color: var(--ink); line-height: 1.55; }
+  .confusion-row .what .mono-inline { background: var(--bg-2); padding: 1px 6px; border-radius: 3px; font-family: 'JetBrains Mono', monospace; font-size: 12px; }
+
+  /* Mapping table */
+  .mapping {
+    display: grid;
+    grid-template-columns: 1fr 60px 1fr;
+    gap: 0;
+    margin-top: 24px;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    overflow: hidden;
+    background: var(--paper);
+  }
+  @media (max-width: 720px) { .mapping { grid-template-columns: 1fr; } .mapping > div:nth-child(3n+2) { display: none; } }
+  .mapping-head { display: contents; }
+  .mapping-head > div {
+    background: var(--ink);
+    color: var(--bg);
+    padding: 14px 20px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+  .mapping-head > div:nth-child(2) { text-align: center; }
+  .mapping-row { display: contents; }
+  .mapping-row > div {
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--line);
+    background: var(--paper);
+  }
+  .mapping-row:last-child > div { border-bottom: none; }
+  .mapping-row > div:nth-child(1) { border-right: 1px dashed var(--line); }
+  .mapping-row > div:nth-child(2) {
+    border-right: 1px dashed var(--line);
+    text-align: center;
+    color: var(--accent);
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    font-size: 18px;
+    background: var(--bg);
+  }
+  .mapping-row .figma-name { font-weight: 600; font-size: 14px; font-family: 'JetBrains Mono', monospace; color: var(--accent); }
+  .mapping-row .figma-name + .desc { color: var(--ink-soft); font-size: 13px; margin-top: 4px; }
+  .mapping-row .code-name { font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 500; color: var(--blue); }
+  .mapping-row .code-name + .desc { color: var(--ink-soft); font-size: 13px; margin-top: 4px; }
+
+  /* Side-by-side: Figma layer tree vs Code structure */
+  .side-by-side {
+    display: grid;
+    grid-template-columns: 1fr 60px 1fr;
+    gap: 0;
+    margin-top: 32px;
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    overflow: hidden;
+  }
+  @media (max-width: 880px) { .side-by-side { grid-template-columns: 1fr; } .side-by-side .arrow { display: none; } }
+  .side-pane { padding: 0; }
+  .side-pane.figma-side { background: #2c2c2c; color: #e8e8e8; padding: 20px 18px; font-family: 'Geist', sans-serif; font-size: 13px; }
+  .side-pane.figma-side .pane-head { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: #888; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 14px; padding-bottom: 10px; border-bottom: 1px solid #404040; }
+  .side-pane.figma-side .layer-list { font-size: 13px; line-height: 1.95; font-family: 'Geist', 'Noto Sans SC', sans-serif; }
+  .side-pane.figma-side .layer-list .row { display: flex; align-items: center; gap: 6px; }
+  .side-pane.figma-side .layer-list .indent { display: inline-block; width: 16px; flex-shrink: 0; }
+  .side-pane.figma-side .layer-list .ic { color: #999; font-size: 11px; flex-shrink: 0; width: 14px; text-align: center; }
+  .side-pane.figma-side .layer-list .nm { color: #e8e8e8; }
+  .side-pane.figma-side .layer-list .nm.frame { color: #d8a8ff; font-weight: 500; }
+  .side-pane.figma-side .layer-list .nm.text { color: #a8e6a3; }
+  .side-pane.figma-side .layer-list .nm.btn { color: #ffd166; }
+  .arrow {
+    background: var(--bg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--accent);
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    font-size: 28px;
+    border-left: 1px dashed var(--line);
+    border-right: 1px dashed var(--line);
+  }
+  .side-pane.code-side { background: var(--ink); color: #d8d8e0; padding: 20px 22px; font-family: 'JetBrains Mono', monospace; font-size: 13px; line-height: 1.85; }
+  .side-pane.code-side .pane-head { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: #8a8a96; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 14px; padding-bottom: 10px; border-bottom: 1px solid #2a2a36; }
+  .side-pane.code-side .csel { color: #c9b6ff; }
+  .side-pane.code-side .ckey { color: #ff8a6e; }
+  .side-pane.code-side .cstr { color: #a8e6a3; }
+  .side-pane.code-side .ccom { color: #6e6e7a; font-style: italic; }
+  .side-pane.code-side .ctag { color: #8ec5ff; }
+
+  .takeaway {
+    margin-top: 24px;
+    padding: 20px 24px;
+    background: var(--accent-soft);
+    border-left: 3px solid var(--accent);
+    border-radius: 4px;
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 18px;
+    align-items: start;
+  }
+  .takeaway .lab {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--accent);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    padding-top: 2px;
+    white-space: nowrap;
+  }
+  .takeaway p { margin: 0; font-size: 14.5px; line-height: 1.65; color: var(--ink); }
+  .takeaway p strong { color: var(--ink); font-weight: 700; }
+  @media (max-width: 720px) { .takeaway { grid-template-columns: 1fr; gap: 8px; } }
+
+  /* Rules section (4 rules) */
+  .rules-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    margin-top: 24px;
+  }
+  @media (max-width: 880px) { .rules-grid { grid-template-columns: 1fr; } }
+  .rule-card {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 28px;
+    position: relative;
+  }
+  .rule-card .rule-num {
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    font-size: 36px;
+    line-height: 1;
+    color: var(--accent);
+    margin-bottom: 8px;
+  }
+  .rule-card h3 {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 22px;
+    margin: 0 0 12px;
+    font-weight: 700;
+  }
+  .rule-card p.rule-desc {
+    margin: 0 0 18px;
+    font-size: 14px;
+    color: var(--ink-soft);
+    line-height: 1.6;
+  }
+  .rule-compare {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-top: 12px;
+  }
+  .rule-compare .rc-item {
+    padding: 10px 12px;
+    border-radius: 4px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    line-height: 1.5;
+  }
+  .rule-compare .rc-item.bad {
+    background: var(--accent-soft);
+    border: 1px solid rgba(255,77,46,0.3);
+    color: var(--accent);
+    text-decoration: line-through;
+    text-decoration-color: rgba(255,77,46,0.5);
+  }
+  .rule-compare .rc-item.good {
+    background: var(--green-soft);
+    border: 1px solid rgba(31,107,58,0.3);
+    color: var(--green);
+    font-weight: 500;
+  }
+  .rule-compare .rc-tag {
+    display: block;
+    font-size: 9.5px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    opacity: 0.7;
+    margin-bottom: 4px;
+    text-decoration: none;
+  }
+  .rule-compare .rc-item.bad .rc-tag,
+  .rule-compare .rc-item.good .rc-tag { text-decoration: none; }
+
+  .rule-nesting {
+    margin-top: 12px;
+    padding: 14px 18px;
+    background: var(--bg);
+    border: 1px dashed var(--line);
+    border-radius: 4px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12.5px;
+    line-height: 1.9;
+  }
+  .rule-nesting .row { display: block; }
+  .rule-nesting .indent-1 { padding-left: 14px; }
+  .rule-nesting .indent-2 { padding-left: 28px; }
+  .rule-nesting .name { color: var(--ink); font-weight: 500; }
+  .rule-nesting .name.parent { color: var(--accent); }
+  .rule-nesting .ic { color: var(--ink-mute); display: inline-block; width: 14px; }
+
+  /* Game / Naming Challenge */
+  .game-intro {
+    background: var(--ink);
+    color: var(--bg);
+    border-radius: 6px;
+    padding: 32px;
+    margin-bottom: 32px;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 24px;
+    align-items: center;
+  }
+  @media (max-width: 720px) { .game-intro { grid-template-columns: 1fr; } }
+  .game-intro h3 { font-family: 'Noto Serif SC', serif; font-size: 24px; margin: 0 0 8px; font-weight: 700; }
+  .game-intro p { margin: 0; color: rgba(255,255,255,0.7); font-size: 14px; line-height: 1.6; }
+  .game-stats { display: flex; gap: 24px; }
+  .game-stat .v { font-family: 'Fraunces', serif; font-size: 36px; font-style: italic; line-height: 1; color: var(--accent); }
+  .game-stat .l { font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.1em; opacity: 0.6; text-transform: uppercase; margin-top: 4px; }
+
+  .challenge {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 26px 28px;
+    margin-bottom: 22px;
+    transition: all 0.3s ease;
+  }
+  .challenge.solved { border-color: var(--green); background: var(--green-soft); }
+  .ch-head { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 18px; gap: 16px; flex-wrap: wrap; }
+  .ch-head .meta { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ink-mute); letter-spacing: 0.1em; margin-bottom: 6px; }
+  .ch-head h3 { font-family: 'Noto Serif SC', serif; font-size: 20px; margin: 0 0 4px; font-weight: 700; }
+  .ch-head .ch-context { font-size: 13px; color: var(--ink-soft); margin: 0; }
+  .ch-head .status {
+    padding: 4px 12px; border: 1px solid var(--line);
+    border-radius: 100px; font-family: 'JetBrains Mono', monospace;
+    font-size: 11px; color: var(--ink-mute); letter-spacing: 0.05em;
+    white-space: nowrap; flex-shrink: 0;
+  }
+  .challenge.solved .status { background: var(--green); color: white; border-color: var(--green); }
+
+  .ch-body {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    align-items: stretch;
+  }
+  @media (max-width: 880px) { .ch-body { grid-template-columns: 1fr; } }
+
+  .ch-figma {
+    background: #2c2c2c;
+    border-radius: 4px;
+    padding: 16px 14px;
+    color: #e8e8e8;
+    font-family: 'Geist', sans-serif;
+    font-size: 13px;
+    position: relative;
+  }
+  .ch-figma::before {
+    content: 'FIGMA · LAYERS';
+    position: absolute;
+    top: -10px; left: 12px;
+    background: var(--paper);
+    padding: 2px 8px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--ink-mute);
+    letter-spacing: 0.1em;
+  }
+  .challenge.solved .ch-figma::before { background: var(--green-soft); }
+  .ch-figma .layer { display: flex; align-items: center; gap: 8px; padding: 5px 6px; border-radius: 3px; transition: background 0.15s; }
+  .ch-figma .layer:hover { background: rgba(255,255,255,0.05); }
+  .ch-figma .layer .indent { display: inline-block; width: 16px; flex-shrink: 0; }
+  .ch-figma .layer .indent-2 { width: 32px; }
+  .ch-figma .layer .ic { color: #999; font-size: 10px; flex-shrink: 0; width: 14px; text-align: center; }
+  .ch-figma .layer .original {
+    color: #888;
+    font-size: 12px;
+    font-family: 'JetBrains Mono', monospace;
+    text-decoration: line-through;
+    text-decoration-color: rgba(255,255,255,0.2);
+  }
+  .ch-figma .layer .arrow-rename { color: var(--accent); margin: 0 6px; font-size: 11px; }
+  .ch-figma .layer input.rename {
+    background: #1e1e1e;
+    border: 1px solid #404040;
+    color: #fff;
+    padding: 4px 8px;
+    border-radius: 3px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    width: 100%;
+    max-width: 180px;
+    outline: none;
+    transition: all 0.15s;
+  }
+  .ch-figma .layer input.rename:focus {
+    border-color: #0d99ff;
+    background: #252525;
+  }
+  .ch-figma .layer input.rename.win {
+    border-color: #4ad681;
+    background: rgba(74,214,129,0.12);
+    color: #a8e6a3;
+  }
+  .ch-figma .layer input.rename.invalid {
+    border-color: #ff7355;
+    background: rgba(255,77,46,0.12);
+  }
+  .ch-figma .layer.fixed-good .nm {
+    color: #a8e6a3;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+  }
+
+  .ch-checklist {
+    background: var(--bg);
+    border: 1px dashed var(--line);
+    border-radius: 4px;
+    padding: 16px 20px;
+    position: relative;
+  }
+  .ch-checklist::before {
+    content: '通关条件';
+    position: absolute;
+    top: -10px; left: 12px;
+    background: var(--paper);
+    padding: 2px 8px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--ink-mute);
+    letter-spacing: 0.1em;
+  }
+  .challenge.solved .ch-checklist::before { background: var(--green-soft); }
+  .ch-checklist h4 { font-family: 'Noto Serif SC', serif; font-size: 14px; margin: 0 0 12px; font-weight: 700; }
+  .ch-checklist .check-item {
+    display: flex;
+    gap: 8px;
+    align-items: flex-start;
+    padding: 8px 0;
+    border-bottom: 1px dashed var(--line);
+    font-size: 13px;
+    color: var(--ink-soft);
+    line-height: 1.5;
+  }
+  .ch-checklist .check-item:last-child { border-bottom: none; }
+  .ch-checklist .check-item .box {
+    flex: 0 0 18px;
+    width: 18px; height: 18px;
+    border: 1.5px solid var(--line);
+    border-radius: 3px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: transparent;
+    font-size: 12px;
+    transition: all 0.2s;
+    margin-top: 1px;
+  }
+  .ch-checklist .check-item.done .box {
+    background: var(--green);
+    border-color: var(--green);
+    color: white;
+  }
+  .ch-checklist .check-item.done {
+    color: var(--green);
+    text-decoration: line-through;
+    text-decoration-color: rgba(31,107,58,0.4);
+  }
+  .ch-checklist .hint {
+    margin-top: 14px;
+    padding: 10px 12px;
+    background: rgba(255,255,255,0.5);
+    border-radius: 3px;
+    font-size: 12px;
+    color: var(--ink-soft);
+    line-height: 1.55;
+    border-left: 2px solid var(--accent);
+  }
+  .ch-checklist .hint .lab { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--accent); letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 4px; display: block; }
+  .ch-checklist .hint code { background: var(--bg-2); padding: 1px 5px; border-radius: 2px; font-family: 'JetBrains Mono', monospace; font-size: 11.5px; color: var(--ink); }
+
+  .ch-feedback {
+    margin-top: 14px;
+    padding: 12px 16px;
+    background: var(--ink);
+    color: var(--bg);
+    border-radius: 4px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    line-height: 1.65;
+    opacity: 0;
+    max-height: 0;
+    overflow: hidden;
+    transition: all 0.3s ease;
+  }
+  .challenge.solved .ch-feedback { opacity: 1; max-height: 200px; padding: 14px 16px; }
+  .ch-feedback .ckey { color: #ff8a6e; }
+  .ch-feedback .ccom { color: #8ed390; }
+
+  /* Cheatsheet */
+  .cheatsheet {
+    margin-top: 32px;
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    overflow: hidden;
+  }
+  .cheatsheet-head {
+    background: var(--ink);
+    color: var(--bg);
+    padding: 16px 24px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+  .cheat-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0;
+  }
+  @media (max-width: 720px) { .cheat-grid { grid-template-columns: 1fr; } }
+  .cheat-item {
+    padding: 18px 24px;
+    border-bottom: 1px dashed var(--line);
+    border-right: 1px dashed var(--line);
+  }
+  .cheat-item:nth-child(2n) { border-right: none; }
+  .cheat-item:last-child,
+  .cheat-item:nth-last-child(2):nth-child(odd) { border-bottom: none; }
+  .cheat-item .cat {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--accent);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+  .cheat-item .name {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14px;
+    color: var(--ink);
+    font-weight: 500;
+    margin-bottom: 4px;
+    line-height: 1.5;
+  }
+  .cheat-item .name .or { color: var(--ink-mute); margin: 0 4px; font-weight: 400; }
+  .cheat-item .desc {
+    font-size: 12.5px;
+    color: var(--ink-soft);
+    line-height: 1.5;
+  }
+
+  /* Gift checklist */
+  .gift-list {
+    margin-top: 32px;
+    padding: 28px 32px;
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-left: 3px solid var(--accent);
+    border-radius: 6px;
+  }
+  .gift-list .gift-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--accent);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+  .gift-list h4 {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 22px;
+    margin: 0 0 10px;
+    font-weight: 700;
+  }
+  .gift-list p.gift-lede {
+    color: var(--ink-soft);
+    font-size: 14px;
+    line-height: 1.6;
+    margin: 0 0 22px;
+    max-width: 60ch;
+  }
+  .gift-items {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+  }
+  @media (max-width: 720px) { .gift-items { grid-template-columns: 1fr; } }
+  .gift-item {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+    padding: 12px 14px;
+    background: var(--bg);
+    border-radius: 4px;
+    border: 1px dashed var(--line);
+  }
+  .gift-item .num {
+    flex: 0 0 24px;
+    width: 24px; height: 24px;
+    background: var(--accent);
+    color: white;
+    border-radius: 50%;
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+  }
+  .gift-item .body { flex: 1; }
+  .gift-item .body .t { font-weight: 600; font-size: 14px; margin-bottom: 2px; }
+  .gift-item .body .d { font-size: 12.5px; color: var(--ink-soft); line-height: 1.55; }
+  .gift-item .body .d code { background: var(--bg-2); padding: 1px 5px; border-radius: 2px; font-family: 'JetBrains Mono', monospace; font-size: 11.5px; color: var(--ink); }
+
+  /* Next preview */
+  .next-preview {
+    margin-top: 32px;
+    padding: 28px 32px;
+    background: var(--accent-soft);
+    border-radius: 6px;
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    gap: 24px;
+    align-items: center;
+  }
+  @media (max-width: 720px) { .next-preview { grid-template-columns: 1fr; gap: 16px; } }
+  .next-preview .next-num {
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    font-size: 56px;
+    line-height: 1;
+    color: var(--accent);
+    flex-shrink: 0;
+  }
+  .next-preview .next-meta { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--accent); letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 4px; }
+  .next-preview h4 { font-family: 'Noto Serif SC', serif; font-size: 22px; margin: 0 0 6px; font-weight: 700; }
+  .next-preview p { margin: 0; font-size: 14px; color: var(--ink-soft); line-height: 1.55; }
+  .next-preview .next-arrow {
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    font-size: 36px;
+    color: var(--accent);
+    flex-shrink: 0;
+  }
+
+  /* Footer */
+  footer {
+    border-top: 1px solid var(--line);
+    padding: 56px 0 64px;
+    background: var(--bg);
+  }
+  .byline {
+    display: flex;
+    gap: 28px;
+    align-items: center;
+    padding-bottom: 32px;
+    border-bottom: 1px dashed var(--line);
+    margin-bottom: 24px;
+    position: relative;
+  }
+  .byline::before {
+    content: '';
+    position: absolute;
+    top: -56px; left: 0;
+    width: 32px; height: 1px;
+    background: var(--accent);
+  }
+  .byline .avatar {
+    width: 96px; height: 96px;
+    border-radius: 50%;
+    object-fit: cover;
+    flex-shrink: 0;
+    border: 3px solid var(--paper);
+    box-shadow: 0 0 0 1px var(--line), 0 6px 20px rgba(22,22,29,0.10);
+    background: var(--paper);
+  }
+  .byline-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--ink-mute);
+    letter-spacing: 0.18em;
+    margin-bottom: 8px;
+  }
+  .byline-label .dot {
+    display: inline-block;
+    width: 6px; height: 6px;
+    background: var(--accent);
+    border-radius: 50%;
+    margin-right: 6px;
+    vertical-align: 1px;
+  }
+  .byline-name {
+    font-family: 'Noto Serif SC', 'Fraunces', serif;
+    font-size: clamp(28px, 4vw, 40px);
+    font-weight: 700;
+    line-height: 1.05;
+    letter-spacing: -0.01em;
+    margin: 0 0 8px;
+  }
+  .byline-name .em {
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    font-weight: 500;
+    color: var(--accent);
+  }
+  .byline-tag {
+    font-size: 14px;
+    color: var(--ink-soft);
+    line-height: 1.55;
+    margin: 0;
+    max-width: 52ch;
+  }
+  .footer-meta {
+    text-align: center;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--ink-mute);
+    letter-spacing: 0.05em;
+  }
+  .footer-meta .heart { color: var(--accent); }
+  .footer-meta .mono { color: var(--ink-soft); font-weight: 500; }
+  @media (max-width: 600px) {
+    .byline { flex-direction: column; text-align: center; align-items: center; gap: 16px; }
+    .byline-tag { margin-left: auto; margin-right: auto; }
+  }
+
+  /* Subtle entry animation */
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+  section { animation: fadeIn 0.6s ease-out backwards; }
+</style>
+</head>
+<body>
+
+<!-- Top bar -->
+<div class="topbar">
+  <div class="wrap topbar-inner">
+    <div class="brand"><span class="dot"></span>NAMING × FIGMA / 入门讲解</div>
+    <nav class="nav-links">
+      <a href="index.html">合集</a>
+      <a href="box-figma.html">01 盒子</a>
+      <a href="components-figma.html">02 组件</a>
+      <a href="page-figma.html">03 拼页面</a>
+      <a href="data-flow-figma.html">04 数据流</a>
+    </nav>
+  </div>
+</div>
+
+<!-- Hero -->
+<header class="hero">
+  <div class="wrap">
+    <div class="hero-meta">
+      <span class="pill fill">实验互动 · INTERACTIVE</span>
+      <span class="pill">2026 / 设计 × 代码</span>
+      <span class="pill">E0 · 入门 · 命名</span>
+      <span class="label">阅读时长 ≈ 10 分钟</span>
+    </div>
+    <div class="hero-grid">
+      <div>
+        <h1>
+          <span class="display-cn">起好图层名</span><br>
+          是设计师送给前端的<br>
+          <span class="em">礼物</span>
+        </h1>
+        <p class="lede">
+          <span class="mono" style="background:var(--accent-soft);padding:2px 8px;border-radius:3px;font-size:14px">Frame 247 / Group 3 / Rectangle 12</span> 还是
+          <span class="mono" style="background:var(--green-soft);padding:2px 8px;border-radius:3px;font-size:14px">ProductCard / Header / PriceTag</span>？<br>
+          前者前端只能猜，后者前端直接抄。<br>
+          这一篇讲清命名规范怎么省 <strong style="color:var(--accent)">50% 沟通成本</strong>。
+        </p>
+      </div>
+      <div class="hero-side">
+        <div class="row"><span class="k">本页讲什么</span><span class="v">命名规范基础</span></div>
+        <div class="row"><span class="k">含互动</span><span class="v">6 题命名挑战</span></div>
+        <div class="row"><span class="k">面向</span><span class="v">设计师 · 入门</span></div>
+        <div class="row"><span class="k">前置知识</span><span class="v">无</span></div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- Section 1: Problem -->
+<section id="problem">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>01</strong> / 问题</div>
+        <h2 class="section-title">为什么前端拿到稿子<br>第一句话总是<br><span class="em">"这是个啥"？</span></h2>
+      </div>
+      <p class="section-sub">
+        因为图层名字全是 Figma 自动生成的 <span class="mono">Frame 247</span>。
+        前端只能猜、问、自己起名 —— 三件都是浪费。
+      </p>
+    </div>
+
+    <div class="problem-grid">
+      <div class="problem-card bad">
+        <span class="tag">BAD · 默认命名</span>
+        <h3>Frame 247 是啥？</h3>
+        <p>Figma 默认给每个新图层一个编号名字。你没改，前端就要逐个问、逐个猜。</p>
+        <div class="layer-tree">
+          <div class="l"><span class="name-bad">📄 Frame 247</span></div>
+          <div class="l"><span class="t">└</span><span class="name-bad">Group 3</span></div>
+          <div class="l"><span class="t">&nbsp;&nbsp;&nbsp;&nbsp;└</span><span class="name-bad">Rectangle 12</span></div>
+          <div class="l"><span class="t">&nbsp;&nbsp;&nbsp;&nbsp;└</span><span class="name-bad">Text</span></div>
+          <div class="l"><span class="t">&nbsp;&nbsp;&nbsp;&nbsp;└</span><span class="name-bad">Text Copy 2</span></div>
+          <div class="l"><span class="t">└</span><span class="name-bad">Group 4</span></div>
+          <div class="l"><span class="t">&nbsp;&nbsp;&nbsp;&nbsp;└</span><span class="name-bad">Rectangle 18</span></div>
+        </div>
+      </div>
+
+      <div class="problem-card good">
+        <span class="tag">GOOD · 有意义命名</span>
+        <h3>ProductCard 一眼看懂</h3>
+        <p>你给它一个业务名字，前端不用问、不用猜。组件名、文件名、CSS 类名全部能直接抄。</p>
+        <div class="layer-tree">
+          <div class="l"><span class="name-good">📄 ProductCard</span></div>
+          <div class="l"><span class="t">└</span><span class="name-good">CardHeader</span></div>
+          <div class="l"><span class="t">&nbsp;&nbsp;&nbsp;&nbsp;└</span><span class="name-good">CoverImage</span></div>
+          <div class="l"><span class="t">&nbsp;&nbsp;&nbsp;&nbsp;└</span><span class="name-good">ProductTitle</span></div>
+          <div class="l"><span class="t">&nbsp;&nbsp;&nbsp;&nbsp;└</span><span class="name-good">ProductDesc</span></div>
+          <div class="l"><span class="t">└</span><span class="name-good">CardFooter</span></div>
+          <div class="l"><span class="t">&nbsp;&nbsp;&nbsp;&nbsp;└</span><span class="name-good">PriceTag</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="confusion">
+      <div class="confusion-row">
+        <div class="who dev">前端 →</div>
+        <div class="what">这个 <span class="mono-inline">Rectangle 12</span> 是干啥的？背景？卡片？按钮？我看不出来。</div>
+      </div>
+      <div class="confusion-row">
+        <div class="who des">设计 →</div>
+        <div class="what">啊那个是商品卡片的背景，旁边那个 <span class="mono-inline">Group 3</span> 是头部，里面是图片和标题。</div>
+      </div>
+      <div class="confusion-row">
+        <div class="who dev">前端 →</div>
+        <div class="what">那 <span class="mono-inline">Text Copy 2</span> 又是啥？描述？副标题？还是价格？</div>
+      </div>
+      <div class="confusion-row">
+        <div class="who des">设计 →</div>
+        <div class="what">那个是…我看看…哦那个是商品描述。</div>
+      </div>
+      <div class="confusion-row">
+        <div class="who dev">前端 →</div>
+        <div class="what">…<strong>这样我们能少聊半天</strong>，你下次能不能给图层起个名字？</div>
+      </div>
+    </div>
+
+    <div class="takeaway">
+      <span class="lab">划重点 · TL;DR</span>
+      <p>设计师起好图层名 = <strong>给前端一份免费的需求文档</strong>。一个起好名字的设计稿能让前端工作量少一半 —— 不是夸张，是真的。</p>
+    </div>
+  </div>
+</section>
+
+<!-- Section 2: Naming = Code Structure -->
+<section id="mapping">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>02</strong> / 对应</div>
+        <h2 class="section-title">Figma 图层名<br>就是前端的<br><span class="em">代码结构</span>。</h2>
+      </div>
+      <p class="section-sub">
+        前端写代码会给每个组件起一个名字。你在 Figma 写 <span class="mono">ProductCard</span>，
+        前端就写 <span class="mono">ProductCard.tsx</span>。一字不差。
+      </p>
+    </div>
+
+    <div class="mapping">
+      <div class="mapping-head">
+        <div>FIGMA / 设计视角</div>
+        <div></div>
+        <div>CODE / 代码视角</div>
+      </div>
+
+      <div class="mapping-row">
+        <div>
+          <div class="figma-name">ProductCard</div>
+          <div class="desc">Figma 里的图层名 / Frame 名</div>
+        </div>
+        <div>=</div>
+        <div>
+          <div class="code-name">ProductCard.tsx</div>
+          <div class="desc">前端的组件文件名</div>
+        </div>
+      </div>
+
+      <div class="mapping-row">
+        <div>
+          <div class="figma-name">Component / Button</div>
+          <div class="desc">Figma 创建的可复用组件</div>
+        </div>
+        <div>=</div>
+        <div>
+          <div class="code-name">&lt;Button /&gt;</div>
+          <div class="desc">前端的可复用 React 组件</div>
+        </div>
+      </div>
+
+      <div class="mapping-row">
+        <div>
+          <div class="figma-name">Variant: type=primary</div>
+          <div class="desc">组件的属性变体（主按钮 / 次按钮）</div>
+        </div>
+        <div>≈</div>
+        <div>
+          <div class="code-name">&lt;Button type="primary" /&gt;</div>
+          <div class="desc">组件的 props（参数）</div>
+        </div>
+      </div>
+
+      <div class="mapping-row">
+        <div>
+          <div class="figma-name">Color Style: brand/red-500</div>
+          <div class="desc">Figma 的颜色样式 token</div>
+        </div>
+        <div>=</div>
+        <div>
+          <div class="code-name">--color-brand-red-500</div>
+          <div class="desc">前端的 CSS 变量 token</div>
+        </div>
+      </div>
+
+      <div class="mapping-row">
+        <div>
+          <div class="figma-name">CardHeader</div>
+          <div class="desc">嵌套在 ProductCard 里的子图层</div>
+        </div>
+        <div>=</div>
+        <div>
+          <div class="code-name">&lt;CardHeader /&gt;</div>
+          <div class="desc">嵌套在父组件里的子组件</div>
+        </div>
+      </div>
+    </div>
+
+    <h3 style="font-family:'Noto Serif SC',serif; font-size:24px; margin:48px 0 16px; font-weight:700;">看一眼真实对应：</h3>
+    <p style="color:var(--ink-soft); font-size:15px; max-width:60ch; margin:0 0 24px; line-height:1.6;">
+      左边是 Figma 里的图层树，右边是前端实际写的 React 代码。一行对一行，<strong>名字几乎完全一样</strong>。
+    </p>
+
+    <div class="side-by-side">
+      <div class="side-pane figma-side">
+        <div class="pane-head">▼ Layers · Figma</div>
+        <div class="layer-list">
+          <div class="row"><span class="ic">▼</span><span class="nm frame">ProductCard</span></div>
+          <div class="row"><span class="indent"></span><span class="ic">▼</span><span class="nm frame">CardHeader</span></div>
+          <div class="row"><span class="indent"></span><span class="indent"></span><span class="ic">▦</span><span class="nm">CoverImage</span></div>
+          <div class="row"><span class="indent"></span><span class="ic">▼</span><span class="nm frame">CardBody</span></div>
+          <div class="row"><span class="indent"></span><span class="indent"></span><span class="ic">T</span><span class="nm text">ProductTitle</span></div>
+          <div class="row"><span class="indent"></span><span class="indent"></span><span class="ic">T</span><span class="nm text">ProductDesc</span></div>
+          <div class="row"><span class="indent"></span><span class="ic">▼</span><span class="nm frame">CardFooter</span></div>
+          <div class="row"><span class="indent"></span><span class="indent"></span><span class="ic">T</span><span class="nm text">PriceTag</span></div>
+          <div class="row"><span class="indent"></span><span class="indent"></span><span class="ic">▣</span><span class="nm btn">BuyButton</span></div>
+        </div>
+      </div>
+      <div class="arrow">→</div>
+      <div class="side-pane code-side">
+        <div class="pane-head">// ProductCard.tsx</div>
+        <div>&lt;<span class="ctag">ProductCard</span>&gt;</div>
+        <div>&nbsp;&nbsp;&lt;<span class="ctag">CardHeader</span>&gt;</div>
+        <div>&nbsp;&nbsp;&nbsp;&nbsp;&lt;<span class="ctag">CoverImage</span> /&gt;</div>
+        <div>&nbsp;&nbsp;&lt;/<span class="ctag">CardHeader</span>&gt;</div>
+        <div>&nbsp;&nbsp;&lt;<span class="ctag">CardBody</span>&gt;</div>
+        <div>&nbsp;&nbsp;&nbsp;&nbsp;&lt;<span class="ctag">ProductTitle</span> /&gt;</div>
+        <div>&nbsp;&nbsp;&nbsp;&nbsp;&lt;<span class="ctag">ProductDesc</span> /&gt;</div>
+        <div>&nbsp;&nbsp;&lt;/<span class="ctag">CardBody</span>&gt;</div>
+        <div>&nbsp;&nbsp;&lt;<span class="ctag">CardFooter</span>&gt;</div>
+        <div>&nbsp;&nbsp;&nbsp;&nbsp;&lt;<span class="ctag">PriceTag</span> /&gt;</div>
+        <div>&nbsp;&nbsp;&nbsp;&nbsp;&lt;<span class="ctag">BuyButton</span> /&gt;</div>
+        <div>&nbsp;&nbsp;&lt;/<span class="ctag">CardFooter</span>&gt;</div>
+        <div>&lt;/<span class="ctag">ProductCard</span>&gt;</div>
+      </div>
+    </div>
+
+    <div class="takeaway">
+      <span class="lab">关键认知</span>
+      <p>当你在 Figma 给图层起名 <span class="mono">ProductCard</span>，<strong>你就在帮前端写代码</strong>。这个名字会变成 <span class="mono">.tsx</span> 文件名、组件名、CSS 类名 —— 所有地方都用它。名字起好了，代码自然就好了。</p>
+    </div>
+  </div>
+</section>
+
+<!-- Section 3: Four Rules -->
+<section id="rules">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>03</strong> / 规则</div>
+        <h2 class="section-title">命名 4 条规则<br><span class="em">死记就够用</span>。</h2>
+      </div>
+      <p class="section-sub">
+        不需要懂代码、不需要懂英文语法。
+        记住这 4 条，95% 的命名场景都能搞定。
+      </p>
+    </div>
+
+    <div class="rules-grid">
+      <!-- Rule 1: Use real words -->
+      <div class="rule-card">
+        <div class="rule-num">i</div>
+        <h3>用人话，别用编号</h3>
+        <p class="rule-desc">Figma 默认的 <span class="mono">Frame 247</span> / <span class="mono">Group 3</span> 是没意义的占位符。你看到的"按钮"就叫 Button，"卡片"就叫 Card。</p>
+        <div class="rule-compare">
+          <div class="rc-item bad">
+            <span class="rc-tag">BAD · 默认</span>
+            Frame 247<br>
+            Group 3<br>
+            Rectangle 12
+          </div>
+          <div class="rc-item good">
+            <span class="rc-tag">GOOD · 人话</span>
+            ProductCard<br>
+            CardHeader<br>
+            CoverImage
+          </div>
+        </div>
+      </div>
+
+      <!-- Rule 2: Business semantic -->
+      <div class="rule-card">
+        <div class="rule-num">ii</div>
+        <h3>用业务语义，别用样式</h3>
+        <p class="rule-desc">写 <span class="mono">primary-button</span>（主按钮），别写 <span class="mono">blue-button</span>（蓝按钮）—— 颜色会改、业务不会变。</p>
+        <div class="rule-compare">
+          <div class="rc-item bad">
+            <span class="rc-tag">BAD · 样式</span>
+            blue-button<br>
+            big-text<br>
+            red-tag
+          </div>
+          <div class="rc-item good">
+            <span class="rc-tag">GOOD · 语义</span>
+            primary-button<br>
+            page-title<br>
+            sale-tag
+          </div>
+        </div>
+      </div>
+
+      <!-- Rule 3: Camel/kebab case -->
+      <div class="rule-card">
+        <div class="rule-num">iii</div>
+        <h3>大驼峰 · 或短横分隔</h3>
+        <p class="rule-desc">组件用 <strong>大驼峰</strong>（首字母大写、连写），样式用 <strong>短横分隔</strong>。<strong>不要</strong>带空格、中文、emoji。</p>
+        <div class="rule-compare">
+          <div class="rc-item bad">
+            <span class="rc-tag">BAD · 空格 / 中文</span>
+            product card<br>
+            商品卡片<br>
+            🔥 hot tag
+          </div>
+          <div class="rc-item good">
+            <span class="rc-tag">GOOD · 规范</span>
+            ProductCard<br>
+            product-card<br>
+            HotTag
+          </div>
+        </div>
+      </div>
+
+      <!-- Rule 4: Nesting hierarchy -->
+      <div class="rule-card">
+        <div class="rule-num">iv</div>
+        <h3>嵌套层级要清晰</h3>
+        <p class="rule-desc">父子关系用名字体现：父叫 <span class="mono">Card</span>，子就叫 <span class="mono">CardHeader / CardBody / CardFooter</span>。前端一眼能看出从属。</p>
+        <div class="rule-nesting">
+          <div class="row"><span class="ic">▼</span><span class="name parent">Card</span></div>
+          <div class="row indent-1"><span class="ic">▼</span><span class="name">CardHeader</span></div>
+          <div class="row indent-2"><span class="ic">T</span><span class="name">CardTitle</span></div>
+          <div class="row indent-1"><span class="ic">▼</span><span class="name">CardBody</span></div>
+          <div class="row indent-1"><span class="ic">▼</span><span class="name">CardFooter</span></div>
+          <div class="row indent-2"><span class="ic">▣</span><span class="name">CardAction</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="takeaway">
+      <span class="lab">小贴士</span>
+      <p>不知道叫什么的时候问自己一句：<strong>"这块东西在产品里负责干啥？"</strong> 答案就是名字。比如这块负责"显示价格" → <span class="mono">PriceTag</span>。负责"点击购买" → <span class="mono">BuyButton</span>。简单、粗暴、有效。</p>
+    </div>
+  </div>
+</section>
+
+<!-- Section 4: Naming Challenge -->
+<section id="challenge">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>04</strong> / 挑战</div>
+        <h2 class="section-title">来给图层<br><span class="em">重新起名</span>。</h2>
+      </div>
+      <p class="section-sub">
+        6 个真实场景的图层树，全部默认命名。请你按规则给每一个图层重命名 —— 全部通过即可通关。
+      </p>
+    </div>
+
+    <div class="game-intro">
+      <div>
+        <h3>命名挑战 · 6 关</h3>
+        <p>每个输入框输入新名字，回车或点其他地方确认。系统自动判定：是否人话 · 是否业务语义 · 是否格式规范。</p>
+      </div>
+      <div class="game-stats">
+        <div class="game-stat">
+          <div class="v"><span id="solvedCount">0</span>/6</div>
+          <div class="l">已通关</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Challenge 1 -->
+    <div class="challenge" data-challenge="1">
+      <div class="ch-head">
+        <div>
+          <div class="meta">关卡 01 · 一个按钮</div>
+          <h3>把"主按钮"起个名</h3>
+          <p class="ch-context">这是个"购买"主按钮，红色背景白字。</p>
+        </div>
+        <div class="status">未通关</div>
+      </div>
+      <div class="ch-body">
+        <div class="ch-figma">
+          <div class="layer">
+            <span class="ic">▣</span>
+            <span class="original">Rectangle 12</span>
+            <span class="arrow-rename">→</span>
+            <input type="text" class="rename" data-target="btn1" placeholder="重命名…">
+          </div>
+        </div>
+        <div class="ch-checklist">
+          <h4>这一关的判定</h4>
+          <div class="check-item" data-check="btn1-words"><span class="box">✓</span><span>不是 Frame / Rectangle / Group / Layer 这些默认词</span></div>
+          <div class="check-item" data-check="btn1-button"><span class="box">✓</span><span>名字里带 Button / Btn 之一</span></div>
+          <div class="check-item" data-check="btn1-format"><span class="box">✓</span><span>格式规范：纯英文、无空格 / 中文 / emoji</span></div>
+          <div class="hint">
+            <span class="lab">提示</span>
+            <span>主按钮一般叫 <code>PrimaryButton</code> 或 <code>BuyButton</code>。不要叫 <code>red-button</code>（颜色不是语义）。</span>
+          </div>
+        </div>
+      </div>
+      <div class="ch-feedback">
+        <span class="ckey">✓ 通关。</span> 这个名字会变成 <span class="ckey">&lt;BuyButton /&gt;</span> 组件，前端直接用。
+      </div>
+    </div>
+
+    <!-- Challenge 2 -->
+    <div class="challenge" data-challenge="2">
+      <div class="ch-head">
+        <div>
+          <div class="meta">关卡 02 · 一张卡片</div>
+          <h3>给"商品卡片"起个名</h3>
+          <p class="ch-context">这是商品列表里的一张卡片，里面有图、标题、价格、按钮。</p>
+        </div>
+        <div class="status">未通关</div>
+      </div>
+      <div class="ch-body">
+        <div class="ch-figma">
+          <div class="layer">
+            <span class="ic">▼</span>
+            <span class="original">Frame 247</span>
+            <span class="arrow-rename">→</span>
+            <input type="text" class="rename" data-target="card2" placeholder="重命名…">
+          </div>
+        </div>
+        <div class="ch-checklist">
+          <h4>这一关的判定</h4>
+          <div class="check-item" data-check="card2-words"><span class="box">✓</span><span>不是 Frame / Rectangle / Group 这些默认词</span></div>
+          <div class="check-item" data-check="card2-card"><span class="box">✓</span><span>名字里带 Card</span></div>
+          <div class="check-item" data-check="card2-business"><span class="box">✓</span><span>带业务语义：Product / Item / Goods 之一</span></div>
+          <div class="hint">
+            <span class="lab">提示</span>
+            <span>商品卡片叫 <code>ProductCard</code> 比叫 <code>Card</code> 更具体。卡片有很多种，明确说"什么卡"。</span>
+          </div>
+        </div>
+      </div>
+      <div class="ch-feedback">
+        <span class="ckey">✓ 通关。</span> <span class="ccom">// 这个名字会变成组件文件 ProductCard.tsx</span>
+      </div>
+    </div>
+
+    <!-- Challenge 3 -->
+    <div class="challenge" data-challenge="3">
+      <div class="ch-head">
+        <div>
+          <div class="meta">关卡 03 · 一个标签</div>
+          <h3>给"促销标签"起个名</h3>
+          <p class="ch-context">商品上贴的红色 "SALE" 角标，提示促销中。</p>
+        </div>
+        <div class="status">未通关</div>
+      </div>
+      <div class="ch-body">
+        <div class="ch-figma">
+          <div class="layer">
+            <span class="ic">▣</span>
+            <span class="original">Rectangle 18</span>
+            <span class="arrow-rename">→</span>
+            <input type="text" class="rename" data-target="tag3" placeholder="重命名…">
+          </div>
+        </div>
+        <div class="ch-checklist">
+          <h4>这一关的判定</h4>
+          <div class="check-item" data-check="tag3-words"><span class="box">✓</span><span>不是默认词</span></div>
+          <div class="check-item" data-check="tag3-semantic"><span class="box">✓</span><span>用业务语义不用样式：含 Sale / Promo / Discount / Hot 等</span></div>
+          <div class="check-item" data-check="tag3-noColor"><span class="box">✓</span><span>名字里不带颜色（red / blue / orange）</span></div>
+          <div class="hint">
+            <span class="lab">提示</span>
+            <span>叫 <code>SaleTag</code> 不叫 <code>RedTag</code>。明天促销结束改成蓝色 → 红的名字立刻不准了。</span>
+          </div>
+        </div>
+      </div>
+      <div class="ch-feedback">
+        <span class="ckey">✓ 通关。</span> 业务语义比颜色稳定一万倍。
+      </div>
+    </div>
+
+    <!-- Challenge 4 -->
+    <div class="challenge" data-challenge="4">
+      <div class="ch-head">
+        <div>
+          <div class="meta">关卡 04 · 嵌套层级</div>
+          <h3>给"卡片头部"起个名</h3>
+          <p class="ch-context">这是 ProductCard 内部"上半部分"，里面装着商品图和标题。</p>
+        </div>
+        <div class="status">未通关</div>
+      </div>
+      <div class="ch-body">
+        <div class="ch-figma">
+          <div class="layer fixed-good">
+            <span class="ic">▼</span>
+            <span class="nm">ProductCard</span>
+          </div>
+          <div class="layer">
+            <span class="indent"></span>
+            <span class="ic">▼</span>
+            <span class="original">Group 3</span>
+            <span class="arrow-rename">→</span>
+            <input type="text" class="rename" data-target="header4" placeholder="重命名…">
+          </div>
+          <div class="layer fixed-good">
+            <span class="indent"></span>
+            <span class="indent"></span>
+            <span class="ic">▦</span>
+            <span class="nm">CoverImage</span>
+          </div>
+        </div>
+        <div class="ch-checklist">
+          <h4>这一关的判定</h4>
+          <div class="check-item" data-check="header4-header"><span class="box">✓</span><span>名字里带 Header / Top</span></div>
+          <div class="check-item" data-check="header4-prefix"><span class="box">✓</span><span>体现父子关系：以 Card 或 Product 开头</span></div>
+          <div class="check-item" data-check="header4-format"><span class="box">✓</span><span>格式规范、纯英文</span></div>
+          <div class="hint">
+            <span class="lab">提示</span>
+            <span>父图层叫 <code>ProductCard</code>，子图层就叫 <code>CardHeader</code>。前端一眼能看出从属关系。</span>
+          </div>
+        </div>
+      </div>
+      <div class="ch-feedback">
+        <span class="ckey">✓ 通关。</span> 父子前缀是设计稿可读性的灵魂。
+      </div>
+    </div>
+
+    <!-- Challenge 5 -->
+    <div class="challenge" data-challenge="5">
+      <div class="ch-head">
+        <div>
+          <div class="meta">关卡 05 · 选择题</div>
+          <h3>哪个最该叫"页面顶部"？</h3>
+          <p class="ch-context">网站顶部的 Logo + 导航 + 用户头像那一条。</p>
+        </div>
+        <div class="status">未通关</div>
+      </div>
+      <div class="ch-body">
+        <div class="ch-figma">
+          <div class="layer">
+            <span class="ic">▼</span>
+            <span class="original">Frame 1</span>
+            <span class="arrow-rename">→</span>
+            <select class="rename" data-target="header5" style="background:#1e1e1e;color:#fff;border:1px solid #404040;padding:4px 8px;border-radius:3px;font-family:'JetBrains Mono',monospace;font-size:12px;">
+              <option value="">— 选一个 —</option>
+              <option value="Frame 1">Frame 1</option>
+              <option value="顶部导航">顶部导航</option>
+              <option value="top-blue-bar">top-blue-bar</option>
+              <option value="Header">Header</option>
+              <option value="HeaderNav">HeaderNav</option>
+              <option value="header_2024_v3">header_2024_v3</option>
+            </select>
+          </div>
+        </div>
+        <div class="ch-checklist">
+          <h4>这一关的判定</h4>
+          <div class="check-item" data-check="header5-correct"><span class="box">✓</span><span>选了 Header 或 HeaderNav</span></div>
+          <div class="hint">
+            <span class="lab">提示</span>
+            <span><code>Frame 1</code> 没意义、<code>中文</code>不规范、<code>top-blue-bar</code> 用了颜色、<code>header_2024_v3</code> 带了无用的版本号。</span>
+          </div>
+        </div>
+      </div>
+      <div class="ch-feedback">
+        <span class="ckey">✓ 通关。</span> 简洁 + 语义 + 规范，三件全占才是好名字。
+      </div>
+    </div>
+
+    <!-- Challenge 6 -->
+    <div class="challenge" data-challenge="6">
+      <div class="ch-head">
+        <div>
+          <div class="meta">关卡 06 · 综合实战</div>
+          <h3>给"价格 + 购买"起两个名</h3>
+          <p class="ch-context">卡片底部一行：左边是价格 ¥199，右边是"立即购买"按钮。</p>
+        </div>
+        <div class="status">未通关</div>
+      </div>
+      <div class="ch-body">
+        <div class="ch-figma">
+          <div class="layer fixed-good">
+            <span class="ic">▼</span>
+            <span class="nm">CardFooter</span>
+          </div>
+          <div class="layer">
+            <span class="indent"></span>
+            <span class="ic">T</span>
+            <span class="original">Text</span>
+            <span class="arrow-rename">→</span>
+            <input type="text" class="rename" data-target="price6" placeholder="价格元素…">
+          </div>
+          <div class="layer">
+            <span class="indent"></span>
+            <span class="ic">▣</span>
+            <span class="original">Rectangle 24</span>
+            <span class="arrow-rename">→</span>
+            <input type="text" class="rename" data-target="buy6" placeholder="按钮元素…">
+          </div>
+        </div>
+        <div class="ch-checklist">
+          <h4>这一关的判定</h4>
+          <div class="check-item" data-check="price6-price"><span class="box">✓</span><span>价格元素含 Price</span></div>
+          <div class="check-item" data-check="buy6-button"><span class="box">✓</span><span>按钮元素含 Button / Btn</span></div>
+          <div class="check-item" data-check="both6-format"><span class="box">✓</span><span>两个名字格式都规范</span></div>
+          <div class="hint">
+            <span class="lab">提示</span>
+            <span>可以叫 <code>PriceTag</code> + <code>BuyButton</code>，或者 <code>ProductPrice</code> + <code>BuyBtn</code>。组合搭配都行，重要的是清楚。</span>
+          </div>
+        </div>
+      </div>
+      <div class="ch-feedback">
+        <span class="ckey">✓ 全部通关。</span> 你已经掌握 95% 场景的命名了。<span class="ccom">// 设计师→前端的礼物已送达</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Section 5: Practice + Next -->
+<section id="practice">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>05</strong> / 实践</div>
+        <h2 class="section-title">速查清单 +<br><span class="em">下一步</span>。</h2>
+      </div>
+      <p class="section-sub">
+        实战中查一下就够。最后再讲讲，除了图层名，你还能给前端送什么"礼物"。
+      </p>
+    </div>
+
+    <div class="cheatsheet">
+      <div class="cheatsheet-head">▼ 常见组件 · 命名速查</div>
+      <div class="cheat-grid">
+        <div class="cheat-item">
+          <div class="cat">按钮 · Button</div>
+          <div class="name">PrimaryButton<span class="or">/</span>SecondaryButton<span class="or">/</span>IconButton</div>
+          <div class="desc">主按钮 / 次按钮 / 图标按钮。命名带"作用"，不带"颜色"。</div>
+        </div>
+        <div class="cheat-item">
+          <div class="cat">卡片 · Card</div>
+          <div class="name">ProductCard<span class="or">/</span>UserCard<span class="or">/</span>InfoCard</div>
+          <div class="desc">说清"什么卡"。一个项目可能有 5 种 Card，别叫 Card 1、Card 2。</div>
+        </div>
+        <div class="cheat-item">
+          <div class="cat">列表 · List</div>
+          <div class="name">ProductList<span class="or">/</span>UserList<span class="or">/</span>NavList</div>
+          <div class="desc">列表项里的元素叫 <span class="mono">ListItem</span>。</div>
+        </div>
+        <div class="cheat-item">
+          <div class="cat">导航 · Nav</div>
+          <div class="name">Header<span class="or">/</span>Sidebar<span class="or">/</span>BottomNav</div>
+          <div class="desc">顶部 / 侧边 / 底部。每种叫法不同，约定俗成。</div>
+        </div>
+        <div class="cheat-item">
+          <div class="cat">输入 · Input</div>
+          <div class="name">TextInput<span class="or">/</span>SearchBar<span class="or">/</span>Dropdown</div>
+          <div class="desc">说清是文本输入、搜索框还是下拉选择。</div>
+        </div>
+        <div class="cheat-item">
+          <div class="cat">表单 · Form</div>
+          <div class="name">LoginForm<span class="or">/</span>SignupForm<span class="or">/</span>FormField</div>
+          <div class="desc">表单整体 + 字段。表单按用途命名。</div>
+        </div>
+        <div class="cheat-item">
+          <div class="cat">弹窗 · Modal</div>
+          <div class="name">ConfirmModal<span class="or">/</span>AlertDialog<span class="or">/</span>Toast</div>
+          <div class="desc">阻断式弹窗 / 提示对话框 / 轻提示。三类区分。</div>
+        </div>
+        <div class="cheat-item">
+          <div class="cat">标签 · Tag</div>
+          <div class="name">SaleTag<span class="or">/</span>StatusBadge<span class="or">/</span>CountChip</div>
+          <div class="desc">促销 / 状态 / 计数。带"用途"，不要带"红的""圆的"。</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="gift-list">
+      <div class="gift-tag">送给前端的 4 件礼物</div>
+      <h4>不只是图层名 —— 还有这些</h4>
+      <p class="gift-lede">
+        把这 4 个地方的命名都做规范，前端的工作量能再砍一半。设计稿不只是图，是<strong>结构化的资产</strong>。
+      </p>
+      <div class="gift-items">
+        <div class="gift-item">
+          <div class="num">i</div>
+          <div class="body">
+            <div class="t">图层 / Frame 名</div>
+            <div class="d">这一篇的主角。<code>ProductCard</code> 不是 <code>Frame 247</code>。</div>
+          </div>
+        </div>
+        <div class="gift-item">
+          <div class="num">ii</div>
+          <div class="body">
+            <div class="t">Component 命名</div>
+            <div class="d">Figma 的可复用组件。叫 <code>Button</code>，不要叫 <code>组件 / 按钮 1</code>。</div>
+          </div>
+        </div>
+        <div class="gift-item">
+          <div class="num">iii</div>
+          <div class="body">
+            <div class="t">Variant 属性命名</div>
+            <div class="d">变体属性叫 <code>type=primary</code>，不要叫 <code>样式 1 / 样式 2</code>。</div>
+          </div>
+        </div>
+        <div class="gift-item">
+          <div class="num">iv</div>
+          <div class="body">
+            <div class="t">Color / Text Style 命名</div>
+            <div class="d">颜色样式叫 <code>brand/red-500</code>，不要叫 <code>红色</code> 或 <code>颜色 12</code>。</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <a href="#" class="next-preview" style="text-decoration:none; color:inherit;">
+      <div class="next-num">E1</div>
+      <div>
+        <div class="next-meta">下一篇 · 即将更新</div>
+        <h4>进阶 · Handoff 完全指南</h4>
+        <p>设计稿交付清单：图层结构 · 命名 · 标注 · 切图 · 字号字色 token —— 一份让前端不再追问的稿子。</p>
+      </div>
+      <div class="next-arrow">→</div>
+    </a>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div class="byline">
+      <img class="avatar" src="author.jpg" alt="范米花儿">
+      <div class="byline-meta">
+        <div class="byline-label"><span class="dot"></span>作者 · WRITTEN BY</div>
+        <h3 class="byline-name">嗨，我是 <span class="em">范米花儿</span></h3>
+        <p class="byline-tag">一份关于 Figma 命名规范的入门讲解 ——<br>希望让设计师和前端的协作少一点猜谜、多一点默契。</p>
+      </div>
+    </div>
+    <div class="footer-meta">
+      做于 <span class="mono">2026</span> · 用 <span class="heart">●</span> 写给 <span class="mono">DESIGNERS &amp; DEVELOPERS</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+// ========= Naming Challenge Logic =========
+
+// Words considered "default" / placeholder names (case-insensitive)
+const DEFAULT_WORDS = [
+  'frame', 'group', 'rectangle', 'ellipse', 'polygon', 'star',
+  'line', 'vector', 'layer', 'text copy', 'subtract', 'union',
+  'instance', 'component'
+];
+
+// Color words to flag as bad in Rule 2 (visual not semantic)
+const COLOR_WORDS = [
+  'red', 'blue', 'green', 'yellow', 'orange', 'purple', 'pink',
+  'black', 'white', 'gray', 'grey', 'brown', 'cyan', 'gold'
+];
+
+const CONTAINS = (str, words) =>
+  words.some(w => str.toLowerCase().includes(w.toLowerCase()));
+
+const HAS_DEFAULT_WORD = (str) => {
+  const s = str.toLowerCase().trim();
+  // exact match or starts-with for common defaults
+  return DEFAULT_WORDS.some(w => {
+    const re = new RegExp('(^|[^a-z])' + w + '($|[^a-z])', 'i');
+    return re.test(s);
+  }) || /^(frame|group|rectangle)\s*\d/i.test(s);
+};
+
+const IS_FORMAT_OK = (str) => {
+  if (!str || !str.trim()) return false;
+  // No spaces, no Chinese, no emoji-likely codepoints, only a-zA-Z0-9-_
+  if (/\s/.test(str)) return false;
+  if (/[一-鿿㐀-䶿]/.test(str)) return false; // CJK
+  // Block emoji-ish ranges
+  if (/[☀-➿\uD800-\uDFFF︀-️]/.test(str)) return false;
+  // Allow letters, digits, dash, underscore
+  if (!/^[A-Za-z][A-Za-z0-9_-]*$/.test(str)) return false;
+  return true;
+};
+
+const HAS_KEYWORD = (str, keywords) => {
+  const s = str.toLowerCase();
+  return keywords.some(k => s.includes(k.toLowerCase()));
+};
+
+// State for solved challenges
+const challengeSolved = {
+  1: false, 2: false, 3: false, 4: false, 5: false, 6: false
+};
+
+function updateSolvedCount() {
+  const count = Object.values(challengeSolved).filter(Boolean).length;
+  document.getElementById('solvedCount').textContent = count;
+}
+
+function setChallengeSolved(n, solved) {
+  if (challengeSolved[n] === solved) return;
+  challengeSolved[n] = solved;
+  const card = document.querySelector(`.challenge[data-challenge="${n}"]`);
+  if (!card) return;
+  card.classList.toggle('solved', solved);
+  card.querySelector('.status').textContent = solved ? '已通关 ✓' : '未通关';
+  updateSolvedCount();
+}
+
+function setCheck(checkName, ok) {
+  const item = document.querySelector(`.check-item[data-check="${checkName}"]`);
+  if (item) item.classList.toggle('done', !!ok);
+}
+
+function setInputState(input, allChecksOk) {
+  if (!input) return;
+  input.classList.toggle('win', !!allChecksOk);
+}
+
+// ===== Challenge 1: button =====
+function evalCh1() {
+  const input = document.querySelector('[data-target="btn1"]');
+  const v = (input.value || '').trim();
+  const okWords = v.length > 0 && !HAS_DEFAULT_WORD(v);
+  const okButton = HAS_KEYWORD(v, ['button', 'btn']);
+  const okFormat = IS_FORMAT_OK(v);
+  setCheck('btn1-words', okWords);
+  setCheck('btn1-button', okButton);
+  setCheck('btn1-format', okFormat);
+  const all = okWords && okButton && okFormat;
+  setInputState(input, all);
+  setChallengeSolved(1, all);
+}
+
+// ===== Challenge 2: ProductCard =====
+function evalCh2() {
+  const input = document.querySelector('[data-target="card2"]');
+  const v = (input.value || '').trim();
+  const okWords = v.length > 0 && !HAS_DEFAULT_WORD(v);
+  const okCard = HAS_KEYWORD(v, ['card']);
+  const okBusiness = HAS_KEYWORD(v, ['product', 'item', 'goods', 'sku']);
+  setCheck('card2-words', okWords);
+  setCheck('card2-card', okCard);
+  setCheck('card2-business', okBusiness);
+  const all = okWords && okCard && okBusiness && IS_FORMAT_OK(v);
+  setInputState(input, all);
+  setChallengeSolved(2, all);
+}
+
+// ===== Challenge 3: SaleTag =====
+function evalCh3() {
+  const input = document.querySelector('[data-target="tag3"]');
+  const v = (input.value || '').trim();
+  const okWords = v.length > 0 && !HAS_DEFAULT_WORD(v);
+  const okSemantic = HAS_KEYWORD(v, ['sale', 'promo', 'discount', 'hot', 'tag', 'badge', 'label']);
+  const noColor = !CONTAINS(v, COLOR_WORDS);
+  setCheck('tag3-words', okWords);
+  setCheck('tag3-semantic', okSemantic);
+  setCheck('tag3-noColor', noColor);
+  const all = okWords && okSemantic && noColor && IS_FORMAT_OK(v);
+  setInputState(input, all);
+  setChallengeSolved(3, all);
+}
+
+// ===== Challenge 4: CardHeader =====
+function evalCh4() {
+  const input = document.querySelector('[data-target="header4"]');
+  const v = (input.value || '').trim();
+  const okHeader = HAS_KEYWORD(v, ['header', 'top']);
+  const okPrefix = HAS_KEYWORD(v, ['card', 'product']);
+  const okFormat = IS_FORMAT_OK(v) && !HAS_DEFAULT_WORD(v);
+  setCheck('header4-header', okHeader);
+  setCheck('header4-prefix', okPrefix);
+  setCheck('header4-format', okFormat);
+  const all = okHeader && okPrefix && okFormat;
+  setInputState(input, all);
+  setChallengeSolved(4, all);
+}
+
+// ===== Challenge 5: Header (multiple choice) =====
+function evalCh5() {
+  const select = document.querySelector('[data-target="header5"]');
+  const v = select.value;
+  const correct = (v === 'Header' || v === 'HeaderNav');
+  setCheck('header5-correct', correct);
+  setInputState(select, correct);
+  setChallengeSolved(5, correct);
+}
+
+// ===== Challenge 6: PriceTag + BuyButton =====
+function evalCh6() {
+  const priceInput = document.querySelector('[data-target="price6"]');
+  const buyInput = document.querySelector('[data-target="buy6"]');
+  const pv = (priceInput.value || '').trim();
+  const bv = (buyInput.value || '').trim();
+  const okPrice = HAS_KEYWORD(pv, ['price']) && !HAS_DEFAULT_WORD(pv);
+  const okBuy = HAS_KEYWORD(bv, ['button', 'btn']) && !HAS_DEFAULT_WORD(bv);
+  const okFormat = IS_FORMAT_OK(pv) && IS_FORMAT_OK(bv);
+  setCheck('price6-price', okPrice);
+  setCheck('buy6-button', okBuy);
+  setCheck('both6-format', okFormat);
+  const all = okPrice && okBuy && okFormat;
+  setInputState(priceInput, all);
+  setInputState(buyInput, all);
+  setChallengeSolved(6, all);
+}
+
+// Wire up listeners
+document.querySelector('[data-target="btn1"]').addEventListener('input', evalCh1);
+document.querySelector('[data-target="card2"]').addEventListener('input', evalCh2);
+document.querySelector('[data-target="tag3"]').addEventListener('input', evalCh3);
+document.querySelector('[data-target="header4"]').addEventListener('input', evalCh4);
+document.querySelector('[data-target="header5"]').addEventListener('change', evalCh5);
+document.querySelector('[data-target="price6"]').addEventListener('input', evalCh6);
+document.querySelector('[data-target="buy6"]').addEventListener('input', evalCh6);
+
+// Initial run
+evalCh1(); evalCh2(); evalCh3(); evalCh4(); evalCh5(); evalCh6();
+updateSolvedCount();
+</script>
+
+</body>
+</html>

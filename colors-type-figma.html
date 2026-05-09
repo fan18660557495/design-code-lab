@@ -1,0 +1,1954 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>颜色 / 字号 / 间距 — Tokens 一一对应到 CSS Variables</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,300..900&family=Geist:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Noto+Sans+SC:wght@300;400;500;700;900&family=Noto+Serif+SC:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f3eee5;
+    --bg-2: #ebe4d4;
+    --ink: #16161d;
+    --ink-soft: #4a4a55;
+    --ink-mute: #8a8a92;
+    --line: #d5cdba;
+    --line-soft: #e3dcca;
+    --accent: #ff4d2e;
+    --accent-soft: #ffe4dc;
+    --blue: #0a4cff;
+    --blue-soft: #dde6ff;
+    --green: #1f6b3a;
+    --green-soft: #d4ecdb;
+    --yellow: #ffcf3d;
+    --paper: #faf7f0;
+    --shadow: 0 1px 0 rgba(0,0,0,0.04), 0 8px 24px rgba(22,22,29,0.06);
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'Geist', 'Noto Sans SC', system-ui, -apple-system, sans-serif;
+    font-size: 16px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    background-image:
+      radial-gradient(circle at 1px 1px, rgba(22,22,29,0.05) 1px, transparent 0);
+    background-size: 24px 24px;
+  }
+
+  /* Typography */
+  .display-cn { font-family: 'Noto Serif SC', 'Fraunces', serif; font-weight: 900; letter-spacing: -0.01em; }
+  .display-en { font-family: 'Fraunces', 'Noto Serif SC', serif; font-weight: 600; font-style: italic; letter-spacing: -0.02em; }
+  .mono { font-family: 'JetBrains Mono', monospace; }
+  .label { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-mute); }
+
+  /* Layout */
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 0 32px; }
+
+  /* Top bar */
+  .topbar {
+    border-bottom: 1px dashed var(--line);
+    padding: 16px 0;
+    background: var(--bg);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    backdrop-filter: blur(8px);
+    background: rgba(243, 238, 229, 0.85);
+  }
+  .topbar-inner { display: flex; justify-content: space-between; align-items: center; gap: 24px; }
+  .brand { font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 600; }
+  .brand .dot { display: inline-block; width: 8px; height: 8px; background: var(--accent); border-radius: 50%; margin-right: 8px; vertical-align: middle; animation: pulse 2s ease-in-out infinite; }
+  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+  .nav-links { display: flex; gap: 20px; font-size: 13px; }
+  .nav-links a { color: var(--ink-soft); text-decoration: none; transition: color 0.2s; }
+  .nav-links a:hover { color: var(--accent); }
+  .nav-links a.current { color: var(--accent); font-weight: 600; }
+
+  /* Hero */
+  .hero { padding: 100px 0 80px; position: relative; overflow: hidden; }
+  .hero-meta { display: flex; gap: 24px; margin-bottom: 32px; align-items: center; flex-wrap: wrap; }
+  .hero-meta .pill { padding: 6px 12px; border: 1px solid var(--ink); border-radius: 100px; font-size: 11px; font-family: 'JetBrains Mono', monospace; letter-spacing: 0.05em; }
+  .hero-meta .pill.fill { background: var(--ink); color: var(--bg); }
+  .hero h1 {
+    font-family: 'Noto Serif SC', 'Fraunces', serif;
+    font-weight: 900;
+    font-size: clamp(48px, 7vw, 92px);
+    line-height: 0.95;
+    letter-spacing: -0.03em;
+    margin: 0 0 24px;
+  }
+  .hero h1 .em { font-family: 'Fraunces', serif; font-style: italic; font-weight: 500; color: var(--accent); }
+  .hero h1 .x { display: inline-block; transform: translateY(-0.05em); margin: 0 0.05em; color: var(--ink-mute); font-weight: 300; }
+  .hero h1 .slash { display: inline-block; margin: 0 0.08em; color: var(--ink-mute); font-weight: 300; font-family: 'Fraunces', serif; font-style: italic; }
+  .hero p.lede {
+    font-size: 20px;
+    line-height: 1.5;
+    max-width: 640px;
+    color: var(--ink-soft);
+    margin: 0 0 40px;
+  }
+  .hero-grid {
+    display: grid;
+    grid-template-columns: 1.4fr 1fr;
+    gap: 48px;
+    align-items: end;
+  }
+  .hero-side {
+    border-left: 1px dashed var(--line);
+    padding-left: 24px;
+    font-size: 13px;
+    color: var(--ink-soft);
+  }
+  .hero-side .row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px dashed var(--line); }
+  .hero-side .row:last-child { border-bottom: none; }
+  .hero-side .row .k { color: var(--ink-mute); font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.05em; text-transform: uppercase; }
+  .hero-side .row .v { font-weight: 500; }
+
+  /* Section */
+  section { padding: 80px 0; border-top: 1px solid var(--line); position: relative; }
+  .section-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 56px; flex-wrap: wrap; gap: 16px; }
+  .section-num { font-family: 'JetBrains Mono', monospace; font-size: 13px; color: var(--ink-mute); letter-spacing: 0.1em; }
+  .section-num strong { color: var(--accent); }
+  .section-title {
+    font-family: 'Noto Serif SC', serif;
+    font-weight: 900;
+    font-size: clamp(32px, 4.5vw, 52px);
+    line-height: 1.05;
+    letter-spacing: -0.02em;
+    margin: 0;
+    max-width: 18ch;
+  }
+  .section-title .em { font-family: 'Fraunces', serif; font-style: italic; font-weight: 500; color: var(--accent); }
+  .section-sub { color: var(--ink-soft); font-size: 17px; max-width: 38ch; line-height: 1.55; margin: 0; }
+
+  /* Problem comparison */
+  .problem-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 32px;
+    margin-top: 24px;
+  }
+  @media (max-width: 720px) { .problem-grid { grid-template-columns: 1fr; } }
+  .problem-card {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 28px;
+    position: relative;
+  }
+  .problem-card.bad { border-color: var(--accent); background: var(--accent-soft); }
+  .problem-card.good { border-color: var(--green); background: var(--green-soft); }
+  .problem-card .tag {
+    position: absolute; top: -12px; left: 24px;
+    background: var(--bg); padding: 2px 10px;
+    font-family: 'JetBrains Mono', monospace; font-size: 11px;
+    letter-spacing: 0.1em;
+  }
+  .problem-card.bad .tag { color: var(--accent); border: 1px solid var(--accent); }
+  .problem-card.good .tag { color: var(--green); border: 1px solid var(--green); }
+  .problem-card h3 { font-family: 'Noto Serif SC', serif; font-size: 22px; margin: 0 0 12px; font-weight: 700; }
+  .problem-card p { margin: 0; color: var(--ink-soft); font-size: 14px; line-height: 1.55; }
+
+  /* BAD/GOOD chip clouds for §01 */
+  .chip-cloud {
+    margin-top: 14px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .chip-cloud .chip {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    padding: 4px 10px;
+    border-radius: 3px;
+    border: 1px solid var(--ink);
+    background: white;
+    color: var(--ink);
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .chip-cloud .chip .sw {
+    width: 10px; height: 10px;
+    border-radius: 2px;
+    border: 1px solid rgba(22,22,29,0.15);
+    flex: 0 0 auto;
+  }
+  .chip-cloud.bad .chip { border-color: rgba(255,77,46,0.55); }
+  .chip-cloud.good .chip { border-color: rgba(31,107,58,0.45); background: white; }
+
+  /* Code panel — shared */
+  .code-panel {
+    background: var(--ink);
+    color: #e8e8ec;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    line-height: 1.7;
+    padding: 36px 24px 20px;
+    border-radius: 6px;
+    margin-top: 0;
+    position: relative;
+    overflow-x: auto;
+    white-space: pre;
+  }
+  .code-panel .ckey { color: #ff8a6e; }
+  .code-panel .cval { color: #ffd166; }
+  .code-panel .cstr { color: #a8e6a3; }
+  .code-panel .ccom { color: #6e6e7a; font-style: italic; }
+  .code-panel .cnum { color: #8ec5ff; }
+  .code-panel .csel { color: #c9b6ff; }
+  .code-panel::before {
+    content: '';
+    position: absolute;
+    top: 12px; left: 14px;
+    width: 8px; height: 8px; border-radius: 50%;
+    background: #ff5f56;
+    box-shadow: 14px 0 0 #ffbd2e, 28px 0 0 #27c93f;
+  }
+  .code-panel .filename {
+    position: absolute; top: 10px; right: 14px;
+    font-size: 10px; color: #6e6e7a; letter-spacing: 0.05em;
+  }
+  .code-row {
+    display: inline-block;
+    border-radius: 3px;
+    padding: 0 6px;
+    margin: 0 -6px;
+    box-shadow: inset 2px 0 0 transparent;
+    transition: background-color 0.18s ease, box-shadow 0.18s ease;
+    cursor: default;
+  }
+  .code-row.is-active {
+    background-color: rgba(255, 138, 110, 0.14);
+    box-shadow: inset 2px 0 0 #ff8a6e;
+  }
+  @keyframes codeRowFlash {
+    0%   { background-color: rgba(255, 138, 110, 0.45); }
+    100% { background-color: rgba(255, 138, 110, 0.14); }
+  }
+  .code-row.is-flash {
+    animation: codeRowFlash 0.55s ease-out;
+  }
+
+  /* Mapping table */
+  .mapping {
+    display: grid;
+    grid-template-columns: 1fr 60px 1fr;
+    gap: 0;
+    margin-top: 16px;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    overflow: hidden;
+    background: var(--paper);
+  }
+  .mapping-head { display: contents; }
+  .mapping-head > div {
+    background: var(--ink);
+    color: var(--bg);
+    padding: 14px 20px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+  .mapping-head > div:nth-child(2) { text-align: center; }
+  .mapping-row { display: contents; }
+  .mapping-row > div {
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--line);
+    background: var(--paper);
+  }
+  .mapping-row:last-child > div { border-bottom: none; }
+  .mapping-row > div:nth-child(1) { border-right: 1px dashed var(--line); }
+  .mapping-row > div:nth-child(2) {
+    border-right: 1px dashed var(--line);
+    text-align: center;
+    color: var(--accent);
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    font-size: 18px;
+    background: var(--bg);
+  }
+  .mapping-row .css-name { font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 500; }
+  .mapping-row .css-name + .desc { color: var(--ink-soft); font-size: 13px; margin-top: 4px; }
+  .mapping-row .figma-name { font-weight: 600; font-size: 14px; display: flex; align-items: center; gap: 8px; }
+  .mapping-row .figma-name + .desc { color: var(--ink-soft); font-size: 13px; margin-top: 4px; }
+  .mapping-row .figma-name .sw {
+    width: 14px; height: 14px;
+    border-radius: 3px;
+    border: 1px solid rgba(22,22,29,0.18);
+    flex: 0 0 auto;
+  }
+
+  /* ===== §02 Color Tokens — interactive split ===== */
+  .colors-stage {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    align-items: start;
+  }
+  @media (max-width: 880px) { .colors-stage { grid-template-columns: 1fr; } }
+
+  /* Figma-style variables panel */
+  .fig-vars {
+    background: #2c2c2c;
+    color: #e8e8e8;
+    border-radius: 6px;
+    padding: 0;
+    font-family: 'Geist', system-ui, sans-serif;
+    overflow: hidden;
+  }
+  .fig-vars-head {
+    background: #1f1f1f;
+    padding: 12px 16px;
+    border-bottom: 1px solid #404040;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .fig-vars-head .icn {
+    width: 16px; height: 16px;
+    background: linear-gradient(135deg, #ff5f56, #ffbd2e, #0d99ff);
+    border-radius: 3px;
+  }
+  .fig-vars-head .ttl {
+    font-size: 12px;
+    letter-spacing: 0.04em;
+    color: #e8e8e8;
+    font-weight: 600;
+  }
+  .fig-vars-head .ttl small { color: #888; font-weight: 400; margin-left: 6px; }
+  .fig-vars-body {
+    padding: 6px 0;
+    max-height: 540px;
+    overflow-y: auto;
+  }
+  .fig-vars-group {
+    padding: 6px 0;
+  }
+  .fig-vars-group .gh {
+    font-size: 10px;
+    color: #888;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    font-weight: 600;
+    padding: 4px 16px 4px 26px;
+  }
+  .fig-vars-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 6px 16px 6px 26px;
+    cursor: pointer;
+    font-size: 12px;
+    color: #d8d8d8;
+    transition: background-color 0.15s;
+    border-left: 2px solid transparent;
+  }
+  .fig-vars-row:hover {
+    background: #353535;
+  }
+  .fig-vars-row.is-active {
+    background: rgba(13, 153, 255, 0.18);
+    border-left-color: #0d99ff;
+    color: white;
+  }
+  .fig-vars-row .sw {
+    width: 14px; height: 14px;
+    border-radius: 3px;
+    border: 1px solid rgba(255,255,255,0.18);
+    flex: 0 0 auto;
+  }
+  .fig-vars-row .nm {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11.5px;
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .fig-vars-row .vl {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10.5px;
+    color: #888;
+    flex: 0 0 auto;
+  }
+  .fig-vars-row.is-active .vl { color: #b8d8ff; }
+
+  /* Right-side code (active row highlights) */
+  .colors-code {
+    background: var(--ink);
+    color: #e8e8ec;
+    border-radius: 6px;
+    overflow: hidden;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    line-height: 1.85;
+    box-shadow: 0 4px 16px rgba(22,22,29,0.12);
+  }
+  .colors-code-head {
+    background: #1f1f29;
+    padding: 10px 14px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    border-bottom: 1px solid #2a2a36;
+  }
+  .colors-code-head .dots {
+    display: inline-block;
+    width: 8px; height: 8px; border-radius: 50%;
+    background: #ff5f56;
+    box-shadow: 14px 0 0 #ffbd2e, 28px 0 0 #27c93f;
+    margin-right: 28px;
+  }
+  .colors-code-head .fn {
+    font-size: 11px;
+    color: #8a8a96;
+    letter-spacing: 0.05em;
+  }
+  .colors-code-body {
+    padding: 14px 18px 18px;
+    overflow-x: auto;
+  }
+  .colors-code-body .ln {
+    white-space: nowrap;
+    border-radius: 3px;
+    padding: 0 6px;
+    margin: 0 -6px;
+    transition: background-color 0.2s, box-shadow 0.2s;
+    box-shadow: inset 2px 0 0 transparent;
+  }
+  .colors-code-body .ln.indent { padding-left: 2ch; }
+  .colors-code-body .ln.is-active {
+    background-color: rgba(255, 138, 110, 0.14);
+    box-shadow: inset 2px 0 0 #ff8a6e;
+  }
+  .colors-code-body .ckey { color: #ff8a6e; }
+  .colors-code-body .cval { color: #ffd166; }
+  .colors-code-body .cstr { color: #a8e6a3; }
+  .colors-code-body .ccom { color: #6e6e7a; font-style: italic; }
+  .colors-code-body .csel { color: #c9b6ff; }
+
+  .colors-hint {
+    margin-top: 16px;
+    padding: 14px 18px;
+    background: var(--paper);
+    border: 1px dashed var(--line);
+    border-left: 3px solid var(--blue);
+    border-radius: 4px;
+    font-size: 13px;
+    color: var(--ink-soft);
+    line-height: 1.6;
+  }
+  .colors-hint strong { color: var(--ink); }
+  .colors-hint .mono { font-family: 'JetBrains Mono', monospace; font-size: 12px; background: var(--bg-2); padding: 1px 6px; border-radius: 3px; color: var(--ink); }
+
+  /* Color palette swatch grid */
+  .palette-grid {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 10px;
+    margin-top: 24px;
+  }
+  @media (max-width: 720px) { .palette-grid { grid-template-columns: repeat(3, 1fr); } }
+  .palette-swatch {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    overflow: hidden;
+  }
+  .palette-swatch .color {
+    height: 56px;
+    border-bottom: 1px solid rgba(22,22,29,0.08);
+  }
+  .palette-swatch .meta {
+    padding: 8px 10px 10px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10.5px;
+    line-height: 1.4;
+  }
+  .palette-swatch .meta .nm { color: var(--ink); font-weight: 500; }
+  .palette-swatch .meta .hx { color: var(--ink-mute); margin-top: 2px; }
+
+  /* ===== §03 Type Scale — interactive ratio slider ===== */
+  .type-stage {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    align-items: start;
+  }
+  @media (max-width: 880px) { .type-stage { grid-template-columns: 1fr; } }
+
+  .type-preview {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    overflow: hidden;
+  }
+  .type-preview-head {
+    background: var(--bg-2);
+    padding: 10px 16px;
+    border-bottom: 1px solid var(--line);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .type-preview-head .lab {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--ink-mute);
+  }
+  .type-preview-body { padding: 8px 0; }
+  .type-row {
+    display: grid;
+    grid-template-columns: 84px 1fr 80px;
+    gap: 12px;
+    align-items: baseline;
+    padding: 14px 18px;
+    border-bottom: 1px dashed var(--line-soft);
+    transition: background-color 0.2s;
+  }
+  .type-row:last-child { border-bottom: none; }
+  .type-row:hover { background: var(--bg-2); }
+  .type-row.is-active { background: var(--accent-soft); }
+  .type-row .nm {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10.5px;
+    color: var(--ink-mute);
+    letter-spacing: 0.04em;
+  }
+  .type-row .nm strong { color: var(--ink); font-weight: 600; }
+  .type-row .sample {
+    font-family: 'Noto Serif SC', 'Fraunces', serif;
+    color: var(--ink);
+    line-height: 1.15;
+    letter-spacing: -0.01em;
+    font-weight: 700;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    transition: font-size 0.25s ease;
+  }
+  .type-row .px {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--accent);
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .type-controls {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 22px 24px;
+  }
+  .type-controls h4 {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 16px;
+    margin: 0 0 12px;
+    font-weight: 700;
+  }
+  .type-controls .desc {
+    font-size: 13px;
+    color: var(--ink-soft);
+    margin: 0 0 18px;
+    line-height: 1.55;
+  }
+  .ratio-seg {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 4px;
+    background: var(--bg-2);
+    padding: 3px;
+    border-radius: 5px;
+    margin-bottom: 18px;
+  }
+  .ratio-seg button {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 8px 4px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--ink-soft);
+    border-radius: 3px;
+    transition: all 0.15s;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    line-height: 1.2;
+  }
+  .ratio-seg button.active { background: var(--ink); color: var(--bg); }
+  .ratio-seg button .r-num { font-size: 13px; font-weight: 600; }
+  .ratio-seg button .r-nm { font-size: 9px; opacity: 0.75; letter-spacing: 0.05em; text-transform: uppercase; }
+
+  .ratio-formula {
+    background: var(--ink);
+    color: #e8e8ec;
+    padding: 14px 18px;
+    border-radius: 4px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    line-height: 1.7;
+  }
+  .ratio-formula .ckey { color: #ff8a6e; }
+  .ratio-formula .cval { color: #ffd166; }
+  .ratio-formula .ccom { color: #6e6e7a; font-style: italic; }
+  .ratio-formula .csel { color: #c9b6ff; }
+  .ratio-formula .hl { background: rgba(255,138,110,0.18); padding: 0 4px; border-radius: 2px; }
+
+  /* ===== §04 Spacing Scale — sliders & ruler ===== */
+  .space-stage {
+    display: grid;
+    grid-template-columns: 1.2fr 1fr;
+    gap: 24px;
+    align-items: start;
+  }
+  @media (max-width: 880px) { .space-stage { grid-template-columns: 1fr; } }
+
+  .space-canvas {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 24px 24px 20px;
+    overflow: hidden;
+  }
+  .space-canvas-head {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--ink-mute);
+    margin-bottom: 14px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .space-canvas-head .ttl strong { color: var(--ink); }
+
+  /* Card preview that moves with --space-* changes */
+  .space-card {
+    background: white;
+    border: 1.5px dashed var(--blue);
+    border-radius: 6px;
+    transition: padding 0.25s ease, gap 0.25s ease;
+    display: flex;
+    flex-direction: column;
+  }
+  .space-card-head {
+    display: flex;
+    align-items: center;
+    transition: gap 0.25s ease;
+  }
+  .space-card-head .av {
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    background: var(--accent);
+    flex: 0 0 auto;
+  }
+  .space-card-head .info { display: flex; flex-direction: column; gap: 4px; }
+  .space-card-head .ttl {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 14px;
+    font-weight: 700;
+  }
+  .space-card-head .sub {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--ink-mute);
+  }
+  .space-card-body {
+    color: var(--ink-soft);
+    font-size: 13px;
+    line-height: 1.6;
+  }
+  .space-card-actions {
+    display: flex;
+    transition: gap 0.25s ease;
+  }
+  .space-card-actions .btn {
+    padding: 8px 14px;
+    background: var(--ink);
+    color: white;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 500;
+    font-family: 'Geist', sans-serif;
+  }
+  .space-card-actions .btn.alt {
+    background: white;
+    color: var(--ink);
+    border: 1px solid var(--line);
+  }
+
+  .ruler-strip {
+    margin-top: 18px;
+    background: var(--bg-2);
+    border-radius: 4px;
+    padding: 14px 16px;
+  }
+  .ruler-strip .lab {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--ink-mute);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+  .ruler-bars {
+    display: flex;
+    align-items: flex-end;
+    gap: 6px;
+    min-height: 56px;
+  }
+  .ruler-bar {
+    background: var(--accent);
+    transition: width 0.25s ease, height 0.25s ease;
+    position: relative;
+  }
+  .ruler-bar .nm {
+    position: absolute;
+    bottom: -22px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    color: var(--ink-mute);
+    white-space: nowrap;
+  }
+  .ruler-bar .px {
+    position: absolute;
+    top: -16px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    color: var(--ink);
+    font-weight: 500;
+    white-space: nowrap;
+  }
+  .ruler-bars-wrap {
+    padding: 22px 4px 28px;
+  }
+
+  .space-controls {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 22px 24px;
+  }
+  .space-controls h4 {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 16px;
+    margin: 0 0 6px;
+    font-weight: 700;
+  }
+  .space-controls .desc {
+    font-size: 13px;
+    color: var(--ink-soft);
+    margin: 0 0 16px;
+    line-height: 1.55;
+  }
+  .space-controls .ctrl {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-bottom: 16px;
+  }
+  .space-controls .ctrl-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+  }
+  .space-controls .ctrl-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--ink);
+  }
+  .space-controls .ctrl-value {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--accent);
+    font-variant-numeric: tabular-nums;
+    font-weight: 500;
+  }
+  .space-readout {
+    background: var(--ink);
+    color: #e8e8ec;
+    padding: 14px 18px;
+    border-radius: 4px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    line-height: 1.75;
+    margin-top: 8px;
+  }
+  .space-readout .ckey { color: #ff8a6e; }
+  .space-readout .cval { color: #ffd166; }
+  .space-readout .ccom { color: #6e6e7a; font-style: italic; }
+  .space-readout .csel { color: #c9b6ff; }
+
+  input[type="range"] {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100%;
+    height: 4px;
+    background: var(--line);
+    border-radius: 0;
+    outline: none;
+  }
+  input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 18px; height: 18px;
+    background: var(--ink);
+    border: 2px solid var(--bg);
+    border-radius: 50%;
+    cursor: pointer;
+    box-shadow: 0 0 0 1px var(--ink);
+    transition: transform 0.1s;
+  }
+  input[type="range"]::-webkit-slider-thumb:hover { transform: scale(1.15); background: var(--accent); }
+  input[type="range"]::-moz-range-thumb {
+    width: 18px; height: 18px;
+    background: var(--ink);
+    border: 2px solid var(--bg);
+    border-radius: 50%;
+    cursor: pointer;
+    box-shadow: 0 0 0 1px var(--ink);
+  }
+
+  /* ===== §05 Other tokens cheat ===== */
+  .other-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 18px;
+    margin-top: 8px;
+  }
+  @media (max-width: 880px) { .other-grid { grid-template-columns: 1fr; } }
+  .other-card {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 22px 24px;
+  }
+  .other-card .head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 12px;
+  }
+  .other-card h4 {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 18px;
+    margin: 0;
+    font-weight: 700;
+  }
+  .other-card .pfx {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--accent);
+    background: var(--accent-soft);
+    padding: 2px 8px;
+    border-radius: 3px;
+  }
+  .other-card .preview {
+    background: var(--bg);
+    border: 1px dashed var(--line);
+    border-radius: 4px;
+    padding: 16px;
+    min-height: 80px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+  .other-card .row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 6px 0;
+    border-bottom: 1px dashed var(--line-soft);
+    font-size: 12px;
+  }
+  .other-card .row:last-child { border-bottom: none; }
+  .other-card .row .k {
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--ink-soft);
+  }
+  .other-card .row .v {
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--ink);
+    font-weight: 500;
+  }
+
+  /* radius preview tiles */
+  .r-tile {
+    width: 48px; height: 48px;
+    background: linear-gradient(135deg, var(--accent), #ff7355);
+  }
+  .r-tile.s { border-radius: 2px; }
+  .r-tile.m { border-radius: 6px; }
+  .r-tile.l { border-radius: 12px; }
+  .r-tile.xl { border-radius: 999px; width: 60px; }
+
+  /* shadow preview tiles */
+  .sh-tile {
+    width: 56px; height: 56px;
+    background: white;
+    border-radius: 6px;
+  }
+  .sh-tile.sm { box-shadow: 0 1px 2px rgba(22,22,29,0.10); }
+  .sh-tile.md { box-shadow: 0 4px 12px rgba(22,22,29,0.10); }
+  .sh-tile.lg { box-shadow: 0 12px 32px rgba(22,22,29,0.18); }
+
+  /* border preview tiles */
+  .bd-tile {
+    width: 48px; height: 48px;
+    background: var(--paper);
+    border-color: var(--ink);
+    border-style: solid;
+  }
+  .bd-tile.sm { border-width: 1px; }
+  .bd-tile.md { border-width: 2px; }
+  .bd-tile.lg { border-width: 4px; }
+
+  /* ===== §06 Tips & outro ===== */
+  .tips-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
+  }
+  @media (max-width: 880px) { .tips-grid { grid-template-columns: 1fr; } }
+  .tip {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 28px;
+    position: relative;
+  }
+  .tip-num { font-family: 'Fraunces', serif; font-style: italic; font-size: 48px; line-height: 1; color: var(--accent); margin-bottom: 12px; }
+  .tip h4 { font-family: 'Noto Serif SC', serif; font-size: 18px; margin: 0 0 10px; font-weight: 700; }
+  .tip p { margin: 0; font-size: 14px; color: var(--ink-soft); line-height: 1.6; }
+  .tip code.mono { font-size: 12px; background: var(--bg-2); padding: 1px 5px; border-radius: 3px; color: var(--ink); }
+
+  /* Cheat sheet */
+  .cheat {
+    margin-top: 28px;
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    overflow: hidden;
+  }
+  .cheat-head {
+    background: var(--ink);
+    color: var(--bg);
+    padding: 14px 22px;
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+  }
+  .cheat-head .ttl {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 16px;
+    font-weight: 700;
+  }
+  .cheat-head .lab {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    color: rgba(255,255,255,0.6);
+  }
+  .cheat-table {
+    display: grid;
+    grid-template-columns: 1fr 1.6fr 1.4fr;
+  }
+  .cheat-row {
+    display: contents;
+  }
+  .cheat-row > div {
+    padding: 14px 22px;
+    border-bottom: 1px dashed var(--line-soft);
+    font-size: 13px;
+  }
+  .cheat-row:last-child > div { border-bottom: none; }
+  .cheat-row.head > div {
+    background: var(--bg-2);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10.5px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--ink-mute);
+    font-weight: 600;
+  }
+  .cheat-row .k {
+    font-family: 'Noto Serif SC', serif;
+    font-weight: 700;
+    font-size: 14px;
+  }
+  .cheat-row .pfx {
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--accent);
+  }
+  .cheat-row .ex {
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--ink-soft);
+    font-size: 12px;
+  }
+
+  .tip-outro {
+    margin-top: 32px;
+    padding: 24px 28px;
+    background: var(--accent-soft);
+    border-left: 3px solid var(--accent);
+    border-radius: 4px;
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 20px;
+    align-items: start;
+  }
+  .tip-outro .outro-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    color: var(--accent);
+    text-transform: uppercase;
+    padding-top: 2px;
+    white-space: nowrap;
+  }
+  .tip-outro p {
+    margin: 0;
+    font-size: 14px;
+    line-height: 1.7;
+    color: var(--ink);
+  }
+  .tip-outro p + p { margin-top: 8px; color: var(--ink-soft); font-size: 13px; }
+  .tip-outro strong { color: var(--ink); font-weight: 600; }
+  .tip-outro .mono { font-family: 'JetBrains Mono', monospace; font-size: 12px; background: rgba(255,255,255,0.55); padding: 1px 6px; border-radius: 3px; color: var(--ink); }
+  @media (max-width: 720px) {
+    .tip-outro { grid-template-columns: 1fr; gap: 8px; }
+  }
+
+  /* Next preview banner */
+  .next-up {
+    margin-top: 24px;
+    background: var(--ink);
+    color: var(--bg);
+    border-radius: 6px;
+    padding: 28px 32px;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 24px;
+    align-items: center;
+  }
+  @media (max-width: 720px) { .next-up { grid-template-columns: 1fr; } }
+  .next-up .label {
+    color: var(--accent);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    margin-bottom: 8px;
+  }
+  .next-up h3 {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 26px;
+    margin: 0 0 6px;
+    font-weight: 700;
+  }
+  .next-up h3 .em { font-family: 'Fraunces', serif; font-style: italic; font-weight: 500; color: var(--accent); }
+  .next-up p { margin: 0; color: rgba(255,255,255,0.65); font-size: 14px; line-height: 1.55; }
+  .next-up .arrow {
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    font-size: 80px;
+    color: var(--accent);
+    line-height: 1;
+  }
+
+  /* Footer */
+  footer {
+    border-top: 1px solid var(--line);
+    padding: 56px 0 64px;
+    background: var(--bg);
+  }
+  .byline {
+    display: flex;
+    gap: 28px;
+    align-items: center;
+    padding-bottom: 32px;
+    border-bottom: 1px dashed var(--line);
+    margin-bottom: 24px;
+    position: relative;
+  }
+  .byline::before {
+    content: '';
+    position: absolute;
+    top: -56px; left: 0;
+    width: 32px; height: 1px;
+    background: var(--accent);
+  }
+  .byline .avatar {
+    width: 96px; height: 96px;
+    border-radius: 50%;
+    object-fit: cover;
+    flex-shrink: 0;
+    border: 3px solid var(--paper);
+    box-shadow: 0 0 0 1px var(--line), 0 6px 20px rgba(22,22,29,0.10);
+    background: var(--paper);
+  }
+  .byline-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--ink-mute);
+    letter-spacing: 0.18em;
+    margin-bottom: 8px;
+  }
+  .byline-label .dot {
+    display: inline-block;
+    width: 6px; height: 6px;
+    background: var(--accent);
+    border-radius: 50%;
+    margin-right: 6px;
+    vertical-align: 1px;
+  }
+  .byline-name {
+    font-family: 'Noto Serif SC', 'Fraunces', serif;
+    font-size: clamp(28px, 4vw, 40px);
+    font-weight: 700;
+    line-height: 1.05;
+    letter-spacing: -0.01em;
+    margin: 0 0 8px;
+  }
+  .byline-name .em {
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    font-weight: 500;
+    color: var(--accent);
+  }
+  .byline-tag {
+    font-size: 14px;
+    color: var(--ink-soft);
+    line-height: 1.55;
+    margin: 0;
+    max-width: 52ch;
+  }
+  .footer-meta {
+    text-align: center;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--ink-mute);
+    letter-spacing: 0.05em;
+  }
+  .footer-meta .heart { color: var(--accent); }
+  .footer-meta .mono { color: var(--ink-soft); font-weight: 500; }
+  @media (max-width: 600px) {
+    .byline { flex-direction: column; text-align: center; align-items: center; gap: 16px; }
+    .byline-tag { margin-left: auto; margin-right: auto; }
+  }
+
+  /* Subtle entry animation */
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+  section { animation: fadeIn 0.6s ease-out backwards; }
+</style>
+</head>
+<body>
+
+<!-- Top bar -->
+<div class="topbar">
+  <div class="wrap topbar-inner">
+    <div class="brand"><span class="dot"></span>COLORS / TYPE / SPACING · TOKENS</div>
+    <nav class="nav-links">
+      <a href="index.html">合集</a>
+      <a href="box-figma.html">01 盒子</a>
+      <a href="components-figma.html">02 组件</a>
+      <a href="page-figma.html">03 拼页面</a>
+      <a href="data-flow-figma.html">04 数据流</a>
+    </nav>
+  </div>
+</div>
+
+<!-- Hero -->
+<header class="hero">
+  <div class="wrap">
+    <div class="hero-meta">
+      <span class="pill fill">实验互动 · INTERACTIVE</span>
+      <span class="pill">2026 / 设计 × 代码</span>
+      <span class="pill">C1 · 基础 · 视觉系统</span>
+      <span class="label">阅读时长 ≈ 14 分钟</span>
+    </div>
+    <div class="hero-grid">
+      <div>
+        <h1>
+          <span class="display-cn">颜色</span>
+          <span class="slash">/</span>
+          <span class="display-cn">字号</span>
+          <span class="slash">/</span>
+          <span class="display-cn">间距</span><br>
+          <span class="em">三件事</span>，<br>
+          <span class="display-cn">一份 Token 表</span>
+        </h1>
+        <p class="lede">
+          Figma Variables 里的色板、字号阶梯、间距系统 ——<br>
+          这一篇讲清楚它们到代码里长什么样、命名怎么起、怎么用。
+        </p>
+      </div>
+      <div class="hero-side">
+        <div class="row"><span class="k">本页讲什么</span><span class="v">视觉系统 ↔ Tokens</span></div>
+        <div class="row"><span class="k">含互动</span><span class="v">3 个：高亮 / 比例 / 滑块</span></div>
+        <div class="row"><span class="k">面向</span><span class="v">设计师 / 前端</span></div>
+        <div class="row"><span class="k">前置知识</span><span class="v">C0 入门</span></div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- Section 1: Problem -->
+<section id="problem">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>01</strong> / 问题</div>
+        <h2 class="section-title">一个页面用了<br><span class="em">7 个相似的红</span>、<br>5 个相似的字号。</h2>
+      </div>
+      <p class="section-sub">
+        没系统的代价：前端凭感觉挑色，跟设计稿差半度；改稿一次，全站对齐失败。
+        Tokens 就是让"挑色"和"猜字号"这件事消失。
+      </p>
+    </div>
+
+    <div class="problem-grid">
+      <div class="problem-card bad">
+        <span class="tag">BAD · 散装值</span>
+        <h3>每次都现挑一个</h3>
+        <p>设计稿写 #FF4D2E，前端写 #ff5530，AI 看图猜了个 #f64a2c —— 同一个"品牌红"被实现了 7 次。改色等于改 7 个地方。</p>
+        <div class="chip-cloud bad">
+          <span class="chip"><span class="sw" style="background:#ff4d2e"></span>#FF4D2E</span>
+          <span class="chip"><span class="sw" style="background:#ff5530"></span>#FF5530</span>
+          <span class="chip"><span class="sw" style="background:#f64a2c"></span>#F64A2C</span>
+          <span class="chip"><span class="sw" style="background:#ff5040"></span>#FF5040</span>
+          <span class="chip"><span class="sw" style="background:#fc4928"></span>#FC4928</span>
+          <span class="chip"><span class="sw" style="background:#ff5235"></span>#FF5235</span>
+          <span class="chip"><span class="sw" style="background:#fa4530"></span>#FA4530</span>
+        </div>
+      </div>
+
+      <div class="problem-card good">
+        <span class="tag">GOOD · Tokens</span>
+        <h3>一个名字，一个值</h3>
+        <p>设计师定一个 <code class="mono" style="font-size:12px;background:white;padding:1px 5px;border-radius:3px">color/brand/primary</code>，前端写 <code class="mono" style="font-size:12px;background:white;padding:1px 5px;border-radius:3px">var(--color-brand-primary)</code>。改一次值，全站同步。这就是 Tokens 的全部意义。</p>
+        <div class="chip-cloud good">
+          <span class="chip"><span class="sw" style="background:#ff4d2e"></span>--color-brand-primary</span>
+          <span class="chip"><span class="sw" style="background:#ff4d2e"></span>--color-brand-primary</span>
+          <span class="chip"><span class="sw" style="background:#ff4d2e"></span>--color-brand-primary</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Section 2: Color Tokens -->
+<section id="colors">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>02</strong> / 颜色</div>
+        <h2 class="section-title">Figma Variables<br><span class="em">就是 CSS Variables</span>。</h2>
+      </div>
+      <p class="section-sub">
+        左边是 Figma Variables 面板（点点看），右边是它对应的 CSS 代码。
+        命名层次先按用途分（brand / text / bg / border），再按强弱分（primary / secondary / muted）。
+      </p>
+    </div>
+
+    <div class="colors-stage">
+      <!-- Figma-style Variables panel -->
+      <div class="fig-vars" id="figVars">
+        <div class="fig-vars-head">
+          <div class="icn"></div>
+          <div class="ttl">Local variables <small>· 11 items</small></div>
+        </div>
+        <div class="fig-vars-body">
+          <div class="fig-vars-group">
+            <div class="gh">color / brand</div>
+            <div class="fig-vars-row" data-var="--color-brand-primary"><span class="sw" style="background:#ff4d2e"></span><span class="nm">primary</span><span class="vl">#FF4D2E</span></div>
+            <div class="fig-vars-row" data-var="--color-brand-soft"><span class="sw" style="background:#ffe4dc"></span><span class="nm">soft</span><span class="vl">#FFE4DC</span></div>
+          </div>
+
+          <div class="fig-vars-group">
+            <div class="gh">color / text</div>
+            <div class="fig-vars-row" data-var="--color-text-primary"><span class="sw" style="background:#16161d"></span><span class="nm">primary</span><span class="vl">#16161D</span></div>
+            <div class="fig-vars-row" data-var="--color-text-secondary"><span class="sw" style="background:#4a4a55"></span><span class="nm">secondary</span><span class="vl">#4A4A55</span></div>
+            <div class="fig-vars-row" data-var="--color-text-muted"><span class="sw" style="background:#8a8a92"></span><span class="nm">muted</span><span class="vl">#8A8A92</span></div>
+          </div>
+
+          <div class="fig-vars-group">
+            <div class="gh">color / bg</div>
+            <div class="fig-vars-row" data-var="--color-bg-canvas"><span class="sw" style="background:#f3eee5"></span><span class="nm">canvas</span><span class="vl">#F3EEE5</span></div>
+            <div class="fig-vars-row" data-var="--color-bg-paper"><span class="sw" style="background:#faf7f0"></span><span class="nm">paper</span><span class="vl">#FAF7F0</span></div>
+            <div class="fig-vars-row" data-var="--color-bg-sunken"><span class="sw" style="background:#ebe4d4"></span><span class="nm">sunken</span><span class="vl">#EBE4D4</span></div>
+          </div>
+
+          <div class="fig-vars-group">
+            <div class="gh">color / border</div>
+            <div class="fig-vars-row" data-var="--color-border-default"><span class="sw" style="background:#d5cdba"></span><span class="nm">default</span><span class="vl">#D5CDBA</span></div>
+            <div class="fig-vars-row" data-var="--color-border-soft"><span class="sw" style="background:#e3dcca"></span><span class="nm">soft</span><span class="vl">#E3DCCA</span></div>
+            <div class="fig-vars-row" data-var="--color-border-strong"><span class="sw" style="background:#16161d"></span><span class="nm">strong</span><span class="vl">#16161D</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- CSS code with highlighted active row -->
+      <div class="colors-code" id="colorsCode">
+        <div class="colors-code-head">
+          <span class="dots"></span>
+          <span class="fn">tokens.css</span>
+        </div>
+        <div class="colors-code-body">
+<div class="ln"><span class="csel">:root</span> {</div>
+<div class="ln indent"><span class="ccom">/* color / brand */</span></div>
+<div class="ln indent" data-var="--color-brand-primary"><span class="ckey">--color-brand-primary</span>: <span class="cstr">#ff4d2e</span>;</div>
+<div class="ln indent" data-var="--color-brand-soft"><span class="ckey">--color-brand-soft</span>: <span class="cstr">#ffe4dc</span>;</div>
+<div class="ln indent">&nbsp;</div>
+<div class="ln indent"><span class="ccom">/* color / text */</span></div>
+<div class="ln indent" data-var="--color-text-primary"><span class="ckey">--color-text-primary</span>: <span class="cstr">#16161d</span>;</div>
+<div class="ln indent" data-var="--color-text-secondary"><span class="ckey">--color-text-secondary</span>: <span class="cstr">#4a4a55</span>;</div>
+<div class="ln indent" data-var="--color-text-muted"><span class="ckey">--color-text-muted</span>: <span class="cstr">#8a8a92</span>;</div>
+<div class="ln indent">&nbsp;</div>
+<div class="ln indent"><span class="ccom">/* color / bg */</span></div>
+<div class="ln indent" data-var="--color-bg-canvas"><span class="ckey">--color-bg-canvas</span>: <span class="cstr">#f3eee5</span>;</div>
+<div class="ln indent" data-var="--color-bg-paper"><span class="ckey">--color-bg-paper</span>: <span class="cstr">#faf7f0</span>;</div>
+<div class="ln indent" data-var="--color-bg-sunken"><span class="ckey">--color-bg-sunken</span>: <span class="cstr">#ebe4d4</span>;</div>
+<div class="ln indent">&nbsp;</div>
+<div class="ln indent"><span class="ccom">/* color / border */</span></div>
+<div class="ln indent" data-var="--color-border-default"><span class="ckey">--color-border-default</span>: <span class="cstr">#d5cdba</span>;</div>
+<div class="ln indent" data-var="--color-border-soft"><span class="ckey">--color-border-soft</span>: <span class="cstr">#e3dcca</span>;</div>
+<div class="ln indent" data-var="--color-border-strong"><span class="ckey">--color-border-strong</span>: <span class="cstr">#16161d</span>;</div>
+<div class="ln">}</div>
+<div class="ln">&nbsp;</div>
+<div class="ln"><span class="ccom">/* 用法：var(--color-brand-primary) */</span></div>
+<div class="ln"><span class="csel">.btn-primary</span> {</div>
+<div class="ln indent"><span class="ckey">background</span>: <span class="cval">var(--color-brand-primary)</span>;</div>
+<div class="ln indent"><span class="ckey">color</span>: <span class="cval">var(--color-bg-paper)</span>;</div>
+<div class="ln">}</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="colors-hint">
+      <strong>点左边任意一个变量</strong>，右边代码同名的那行会高亮 ——
+      <span class="mono">color/brand/primary</span> 在 Figma 里是分组路径，到代码里就是
+      <span class="mono">--color-brand-primary</span>，一一对应。
+    </div>
+
+    <!-- Mapping table -->
+    <div class="mapping" style="margin-top: 32px">
+      <div class="mapping-head">
+        <div>FIGMA / 设计视角</div>
+        <div></div>
+        <div>CSS / 代码视角</div>
+      </div>
+      <div class="mapping-row">
+        <div>
+          <div class="figma-name"><span class="sw" style="background:#ff4d2e"></span>color/brand/primary</div>
+          <div class="desc">Variables 面板里的分组路径</div>
+        </div>
+        <div>=</div>
+        <div>
+          <div class="css-name">--color-brand-primary: #ff4d2e</div>
+          <div class="desc">把 / 替换成 - 就是变量名</div>
+        </div>
+      </div>
+      <div class="mapping-row">
+        <div>
+          <div class="figma-name">引用变量到 Fill</div>
+          <div class="desc">点 fill 旁的菱形图标，选 token</div>
+        </div>
+        <div>≈</div>
+        <div>
+          <div class="css-name">background: var(--color-brand-primary);</div>
+          <div class="desc">var(...) 表示"读这个变量的值"</div>
+        </div>
+      </div>
+      <div class="mapping-row">
+        <div>
+          <div class="figma-name">改 Variable 的值</div>
+          <div class="desc">所有引用过它的图层一起变</div>
+        </div>
+        <div>=</div>
+        <div>
+          <div class="css-name">改 :root 里那一行</div>
+          <div class="desc">所有 var(...) 的地方一起更新</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Color palette grid -->
+    <div class="palette-grid">
+      <div class="palette-swatch"><div class="color" style="background:#ff4d2e"></div><div class="meta"><div class="nm">brand-primary</div><div class="hx">#FF4D2E</div></div></div>
+      <div class="palette-swatch"><div class="color" style="background:#ffe4dc"></div><div class="meta"><div class="nm">brand-soft</div><div class="hx">#FFE4DC</div></div></div>
+      <div class="palette-swatch"><div class="color" style="background:#16161d"></div><div class="meta"><div class="nm">text-primary</div><div class="hx">#16161D</div></div></div>
+      <div class="palette-swatch"><div class="color" style="background:#4a4a55"></div><div class="meta"><div class="nm">text-secondary</div><div class="hx">#4A4A55</div></div></div>
+      <div class="palette-swatch"><div class="color" style="background:#8a8a92"></div><div class="meta"><div class="nm">text-muted</div><div class="hx">#8A8A92</div></div></div>
+      <div class="palette-swatch"><div class="color" style="background:#f3eee5"></div><div class="meta"><div class="nm">bg-canvas</div><div class="hx">#F3EEE5</div></div></div>
+      <div class="palette-swatch"><div class="color" style="background:#faf7f0"></div><div class="meta"><div class="nm">bg-paper</div><div class="hx">#FAF7F0</div></div></div>
+      <div class="palette-swatch"><div class="color" style="background:#ebe4d4"></div><div class="meta"><div class="nm">bg-sunken</div><div class="hx">#EBE4D4</div></div></div>
+      <div class="palette-swatch"><div class="color" style="background:#d5cdba"></div><div class="meta"><div class="nm">border-default</div><div class="hx">#D5CDBA</div></div></div>
+      <div class="palette-swatch"><div class="color" style="background:#e3dcca"></div><div class="meta"><div class="nm">border-soft</div><div class="hx">#E3DCCA</div></div></div>
+      <div class="palette-swatch"><div class="color" style="background:#1f6b3a"></div><div class="meta"><div class="nm">success</div><div class="hx">#1F6B3A</div></div></div>
+      <div class="palette-swatch"><div class="color" style="background:#ffcf3d"></div><div class="meta"><div class="nm">warning</div><div class="hx">#FFCF3D</div></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- Section 3: Type Scale -->
+<section id="type">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>03</strong> / 字号</div>
+        <h2 class="section-title">字号<span class="em">不是随便挑</span>的，<br>是一道阶梯。</h2>
+      </div>
+      <p class="section-sub">
+        Figma 里叫 Text Styles，代码里叫 <code class="mono" style="font-size:14px;background:var(--bg-2);padding:1px 6px;border-radius:3px">--font-size-*</code>。
+        阶梯的关键是<strong style="color:var(--ink)">比例</strong>—— 选一个比例系数（1.2、1.25、1.333…），整套字号自动算出来。
+      </p>
+    </div>
+
+    <div class="type-stage">
+      <div class="type-preview">
+        <div class="type-preview-head">
+          <span class="lab">type / scale · 预览</span>
+          <span class="lab">PX</span>
+        </div>
+        <div class="type-preview-body" id="typeRows">
+          <div class="type-row" data-step="4">
+            <div class="nm"><strong>display</strong><br>step +4</div>
+            <div class="sample" data-base="16">设计 × 代码</div>
+            <div class="px"><span class="px-val">39</span>px</div>
+          </div>
+          <div class="type-row" data-step="3">
+            <div class="nm"><strong>h1</strong><br>step +3</div>
+            <div class="sample" data-base="16">把概念讲清楚</div>
+            <div class="px"><span class="px-val">31</span>px</div>
+          </div>
+          <div class="type-row" data-step="2">
+            <div class="nm"><strong>h2</strong><br>step +2</div>
+            <div class="sample" data-base="16">章节标题</div>
+            <div class="px"><span class="px-val">25</span>px</div>
+          </div>
+          <div class="type-row" data-step="1">
+            <div class="nm"><strong>h3</strong><br>step +1</div>
+            <div class="sample" data-base="16">小节标题</div>
+            <div class="px"><span class="px-val">20</span>px</div>
+          </div>
+          <div class="type-row" data-step="0">
+            <div class="nm"><strong>body</strong><br>step 0</div>
+            <div class="sample" data-base="16">正文，基准 16</div>
+            <div class="px"><span class="px-val">16</span>px</div>
+          </div>
+          <div class="type-row" data-step="-1">
+            <div class="nm"><strong>small</strong><br>step −1</div>
+            <div class="sample" data-base="16">辅助说明</div>
+            <div class="px"><span class="px-val">13</span>px</div>
+          </div>
+          <div class="type-row" data-step="-2">
+            <div class="nm"><strong>caption</strong><br>step −2</div>
+            <div class="sample" data-base="16">脚注 / 元信息</div>
+            <div class="px"><span class="px-val">10</span>px</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="type-controls">
+        <h4>选一个比例</h4>
+        <p class="desc">每一档的字号 = 上一档 × 比例。比例越大，字号差距越夸张；越小，整体越统一。试试切换：</p>
+
+        <div class="ratio-seg" id="ratioSeg">
+          <button data-r="1.125"><span class="r-num">1.125</span><span class="r-nm">conservative</span></button>
+          <button class="active" data-r="1.25"><span class="r-num">1.25</span><span class="r-nm">major 3rd</span></button>
+          <button data-r="1.333"><span class="r-num">1.333</span><span class="r-nm">perfect 4th</span></button>
+          <button data-r="1.618"><span class="r-num">1.618</span><span class="r-nm">golden</span></button>
+        </div>
+
+        <div class="ratio-formula">
+<span class="ccom">/* type scale 自动算公式 */</span>
+<span class="csel">:root</span> {
+  <span class="ckey">--font-base</span>: <span class="cval">16px</span>;
+  <span class="ckey">--type-ratio</span>: <span class="cval"><span class="hl" id="rdRatio">1.25</span></span>;
+
+  <span class="ccom">/* 每一档 = base × ratio<sup>step</sup> */</span>
+  <span class="ckey">--font-size-display</span>: <span class="cval"><span id="rdDisplay">39.06</span>px</span>;
+  <span class="ckey">--font-size-h1</span>:      <span class="cval"><span id="rdH1">31.25</span>px</span>;
+  <span class="ckey">--font-size-h2</span>:      <span class="cval"><span id="rdH2">25.00</span>px</span>;
+  <span class="ckey">--font-size-h3</span>:      <span class="cval"><span id="rdH3">20.00</span>px</span>;
+  <span class="ckey">--font-size-body</span>:    <span class="cval"><span id="rdBody">16.00</span>px</span>;
+  <span class="ckey">--font-size-small</span>:   <span class="cval"><span id="rdSmall">12.80</span>px</span>;
+  <span class="ckey">--font-size-caption</span>: <span class="cval"><span id="rdCaption">10.24</span>px</span>;
+}
+        </div>
+
+        <div class="colors-hint" style="margin-top:18px">
+          <strong>为什么是比例？</strong>因为视觉上有"舒服的层级感" —— 类似音乐里的和弦。
+          1.25（大三度）、1.333（纯四度）、1.618（黄金比）都是经典选项。
+          <strong>选定一个比例，就别再瞎调中间值。</strong>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Section 4: Spacing Scale -->
+<section id="spacing">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>04</strong> / 间距</div>
+        <h2 class="section-title">间距也是 <span class="em">Tokens</span>，<br>不是 8 就是 16。</h2>
+      </div>
+      <p class="section-sub">
+        4 / 8 系统：所有间距都从 4px 起步，逐档翻倍或加 4。<br>
+        改一档，整页 padding / gap 同步变 —— 试一下右边的滑块。
+      </p>
+    </div>
+
+    <div class="space-stage">
+      <div>
+        <div class="space-canvas">
+          <div class="space-canvas-head">
+            <div class="ttl"><strong>Card · 用 token 拼出来的</strong></div>
+            <div>预览</div>
+          </div>
+          <div class="space-card" id="spaceCard" style="padding: 16px; gap: 12px;">
+            <div class="space-card-head" style="gap: 12px">
+              <div class="av"></div>
+              <div class="info">
+                <div class="ttl">范米花儿</div>
+                <div class="sub">@designer · 2026</div>
+              </div>
+            </div>
+            <div class="space-card-body">
+              一份关于盒子模型和 Auto Layout 的实验讲解，希望对正在用 AI 还原设计稿的你有帮助。
+            </div>
+            <div class="space-card-actions" style="gap: 8px">
+              <div class="btn">关注</div>
+              <div class="btn alt">私信</div>
+            </div>
+          </div>
+
+          <div class="ruler-strip">
+            <div class="lab">Spacing scale · 4 / 8 system</div>
+            <div class="ruler-bars-wrap">
+              <div class="ruler-bars" id="rulerBars">
+                <div class="ruler-bar" style="width: 4px; height: 4px"><div class="px">4</div><div class="nm">--space-1</div></div>
+                <div class="ruler-bar" style="width: 8px; height: 8px"><div class="px">8</div><div class="nm">--space-2</div></div>
+                <div class="ruler-bar" style="width: 12px; height: 12px"><div class="px">12</div><div class="nm">--space-3</div></div>
+                <div class="ruler-bar" style="width: 16px; height: 16px"><div class="px">16</div><div class="nm">--space-4</div></div>
+                <div class="ruler-bar" style="width: 24px; height: 24px"><div class="px">24</div><div class="nm">--space-6</div></div>
+                <div class="ruler-bar" style="width: 32px; height: 32px"><div class="px">32</div><div class="nm">--space-8</div></div>
+                <div class="ruler-bar" style="width: 48px; height: 48px"><div class="px">48</div><div class="nm">--space-12</div></div>
+                <div class="ruler-bar" style="width: 64px; height: 64px"><div class="px">64</div><div class="nm">--space-16</div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="space-controls">
+        <h4>调整 Token 值</h4>
+        <p class="desc">这两个滑块改的是 <code class="mono" style="font-size:11px;background:var(--bg-2);padding:1px 5px;border-radius:3px">--space-4</code> 和 <code class="mono" style="font-size:11px;background:var(--bg-2);padding:1px 5px;border-radius:3px">--space-3</code> 的值。注意整个卡片的呼吸感同步变化。</p>
+
+        <div class="ctrl">
+          <div class="ctrl-head">
+            <span class="ctrl-label">--space-4 · 卡片 padding</span>
+            <span class="ctrl-value" id="space4Val">16px</span>
+          </div>
+          <input type="range" id="space4Slider" min="4" max="40" step="4" value="16">
+        </div>
+
+        <div class="ctrl">
+          <div class="ctrl-head">
+            <span class="ctrl-label">--space-3 · 头像与名字间距</span>
+            <span class="ctrl-value" id="space3Val">12px</span>
+          </div>
+          <input type="range" id="space3Slider" min="4" max="32" step="4" value="12">
+        </div>
+
+        <div class="ctrl">
+          <div class="ctrl-head">
+            <span class="ctrl-label">--space-2 · 按钮之间</span>
+            <span class="ctrl-value" id="space2Val">8px</span>
+          </div>
+          <input type="range" id="space2Slider" min="4" max="24" step="4" value="8">
+        </div>
+
+        <div class="space-readout">
+<span class="ccom">/* 同步生成 */</span>
+<span class="csel">.card</span> {
+  <span class="ckey">padding</span>: <span class="cval">var(--space-4)</span>; <span class="ccom">/* <span id="rdSpace4">16</span>px */</span>
+  <span class="ckey">gap</span>:     <span class="cval">var(--space-3)</span>; <span class="ccom">/* <span id="rdSpace3">12</span>px */</span>
+}
+<span class="csel">.card-actions</span> {
+  <span class="ckey">gap</span>: <span class="cval">var(--space-2)</span>; <span class="ccom">/* <span id="rdSpace2">8</span>px */</span>
+}
+        </div>
+      </div>
+    </div>
+
+    <div class="colors-hint" style="margin-top: 24px">
+      <strong>为什么固定 4 / 8 系统？</strong>因为屏幕的物理像素就是 4 / 8 的倍数最锐利，
+      而且数字少了选择困难症 —— <span class="mono">--space-3</span> 和 <span class="mono">--space-4</span> 二选一，比"13px 还是 14px"轻松一万倍。
+    </div>
+  </div>
+</section>
+
+<!-- Section 5: Other tokens -->
+<section id="other">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>05</strong> / 其他</div>
+        <h2 class="section-title">圆角 · 阴影 · 边框 ——<br><span class="em">同样是 Tokens</span>。</h2>
+      </div>
+      <p class="section-sub">
+        除了三大件（颜色 / 字号 / 间距），剩下几类常用 token 也是一回事：定一组阶梯，按名字用。
+        速查一下，看着眼熟就够了。
+      </p>
+    </div>
+
+    <div class="other-grid">
+      <div class="other-card">
+        <div class="head">
+          <h4>圆角 / radius</h4>
+          <span class="pfx">--radius-*</span>
+        </div>
+        <div class="preview">
+          <div class="r-tile s"></div>
+          <div class="r-tile m"></div>
+          <div class="r-tile l"></div>
+          <div class="r-tile xl"></div>
+        </div>
+        <div class="row"><span class="k">--radius-sm</span><span class="v">2px</span></div>
+        <div class="row"><span class="k">--radius-md</span><span class="v">6px</span></div>
+        <div class="row"><span class="k">--radius-lg</span><span class="v">12px</span></div>
+        <div class="row"><span class="k">--radius-pill</span><span class="v">999px</span></div>
+      </div>
+
+      <div class="other-card">
+        <div class="head">
+          <h4>阴影 / shadow</h4>
+          <span class="pfx">--shadow-*</span>
+        </div>
+        <div class="preview" style="background: var(--bg-2)">
+          <div class="sh-tile sm"></div>
+          <div class="sh-tile md"></div>
+          <div class="sh-tile lg"></div>
+        </div>
+        <div class="row"><span class="k">--shadow-sm</span><span class="v">0 1 2 / .10</span></div>
+        <div class="row"><span class="k">--shadow-md</span><span class="v">0 4 12 / .10</span></div>
+        <div class="row"><span class="k">--shadow-lg</span><span class="v">0 12 32 / .18</span></div>
+      </div>
+
+      <div class="other-card">
+        <div class="head">
+          <h4>边框 / border</h4>
+          <span class="pfx">--border-*</span>
+        </div>
+        <div class="preview">
+          <div class="bd-tile sm"></div>
+          <div class="bd-tile md"></div>
+          <div class="bd-tile lg"></div>
+        </div>
+        <div class="row"><span class="k">--border-sm</span><span class="v">1px</span></div>
+        <div class="row"><span class="k">--border-md</span><span class="v">2px</span></div>
+        <div class="row"><span class="k">--border-lg</span><span class="v">4px</span></div>
+      </div>
+    </div>
+
+    <div class="code-panel" style="margin-top: 28px">
+<span class="filename">tokens.css · 完整结构示意</span>
+<span class="csel">:root</span> {
+  <span class="ccom">/* 1 · 颜色 */</span>
+  <span class="ckey">--color-brand-primary</span>:   <span class="cstr">#ff4d2e</span>;
+  <span class="ckey">--color-text-primary</span>:    <span class="cstr">#16161d</span>;
+  <span class="ckey">--color-bg-paper</span>:        <span class="cstr">#faf7f0</span>;
+
+  <span class="ccom">/* 2 · 字号 */</span>
+  <span class="ckey">--font-size-display</span>:     <span class="cval">39px</span>;
+  <span class="ckey">--font-size-body</span>:        <span class="cval">16px</span>;
+  <span class="ckey">--line-height-tight</span>:     <span class="cval">1.2</span>;
+  <span class="ckey">--line-height-relaxed</span>:   <span class="cval">1.6</span>;
+
+  <span class="ccom">/* 3 · 间距 */</span>
+  <span class="ckey">--space-1</span>:  <span class="cval">4px</span>;
+  <span class="ckey">--space-2</span>:  <span class="cval">8px</span>;
+  <span class="ckey">--space-4</span>:  <span class="cval">16px</span>;
+  <span class="ckey">--space-8</span>:  <span class="cval">32px</span>;
+
+  <span class="ccom">/* 4 · 圆角 */</span>
+  <span class="ckey">--radius-md</span>:             <span class="cval">6px</span>;
+  <span class="ckey">--radius-pill</span>:           <span class="cval">999px</span>;
+
+  <span class="ccom">/* 5 · 阴影 */</span>
+  <span class="ckey">--shadow-md</span>:             <span class="cval">0 4px 12px rgba(22,22,29,0.10)</span>;
+}
+    </div>
+  </div>
+</section>
+
+<!-- Section 6: Practice + next -->
+<section id="practice">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>06</strong> / 实践</div>
+        <h2 class="section-title">回到工作流：<br>从今天起，<span class="em">用名字</span>，<br>不要用值。</h2>
+      </div>
+      <p class="section-sub">
+        Tokens 不是新鲜玩意，但它是后面所有视觉系统的地基。三条规矩记住，剩下的就是熟练度问题。
+      </p>
+    </div>
+
+    <div class="tips-grid">
+      <div class="tip">
+        <div class="tip-num">i</div>
+        <h4>用 Semantic，别用 Literal</h4>
+        <p>命名是 <code class="mono">--color-brand-primary</code>，不是 <code class="mono">--color-orange</code>。前者你换主题色不用改名字，后者就是个笑话。</p>
+      </div>
+      <div class="tip">
+        <div class="tip-num">ii</div>
+        <h4>分组比扁平更清晰</h4>
+        <p>用 <code class="mono">color/text/primary</code> 这种斜杠分组，到代码里变 <code class="mono">--color-text-primary</code>。<strong style="color:var(--ink)">用途 → 强弱</strong>，两层就够。</p>
+      </div>
+      <div class="tip">
+        <div class="tip-num">iii</div>
+        <h4>能用 token 就别用值</h4>
+        <p>Figma 里点菱形图标接 token，前端写 <code class="mono">var(--*)</code> 而不是 <code class="mono">#ff4d2e</code>。一个团队能不能换主题，全看这一条。</p>
+      </div>
+    </div>
+
+    <!-- Cheat sheet -->
+    <div class="cheat">
+      <div class="cheat-head">
+        <span class="ttl">5 大类 Tokens · 速查</span>
+        <span class="lab">CHEAT SHEET</span>
+      </div>
+      <div class="cheat-table">
+        <div class="cheat-row head">
+          <div>类别</div>
+          <div>命名前缀</div>
+          <div>典型用法</div>
+        </div>
+        <div class="cheat-row">
+          <div class="k">颜色 / Color</div>
+          <div class="pfx">--color-{用途}-{强弱}</div>
+          <div class="ex">background: var(--color-brand-primary)</div>
+        </div>
+        <div class="cheat-row">
+          <div class="k">字号 / Type</div>
+          <div class="pfx">--font-size-{阶梯}</div>
+          <div class="ex">font-size: var(--font-size-h2)</div>
+        </div>
+        <div class="cheat-row">
+          <div class="k">间距 / Spacing</div>
+          <div class="pfx">--space-{数字}</div>
+          <div class="ex">padding: var(--space-4)</div>
+        </div>
+        <div class="cheat-row">
+          <div class="k">圆角 / Radius</div>
+          <div class="pfx">--radius-{档位}</div>
+          <div class="ex">border-radius: var(--radius-md)</div>
+        </div>
+        <div class="cheat-row">
+          <div class="k">阴影 / Shadow</div>
+          <div class="pfx">--shadow-{档位}</div>
+          <div class="ex">box-shadow: var(--shadow-lg)</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="tip-outro">
+      <div class="outro-tag">划重点 · TL;DR</div>
+      <div>
+        <p>Figma Variables 和 CSS Variables <strong>是同一件事的两种界面</strong>——前者用面板点，后者用 <span class="mono">var(--*)</span> 写。命名规则定下来，整个团队就能对得上。</p>
+        <p>设计师常踩的坑：色板做了 30 个但代码里只用了 5 个。<strong>多余的会让前端混乱、AI 抓错色。</strong> 留住你<span class="mono">真用上</span>的那一组就够了。</p>
+      </div>
+    </div>
+
+    <!-- Next preview -->
+    <div class="next-up">
+      <div>
+        <div class="label">下一篇 · NEXT UP</div>
+        <h3>C2 · 进阶 · <span class="em">Theme 切换实战</span></h3>
+        <p>Light / Dark / Brand 三套主题，怎么用同一份 Tokens 在 Figma 和代码里切换？同一个 <span style="color:var(--accent)">--color-bg-canvas</span>，不同模式下读到不同值。</p>
+      </div>
+      <div class="arrow">→</div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div class="byline">
+      <img class="avatar" src="author.jpg" alt="范米花儿">
+      <div class="byline-meta">
+        <div class="byline-label"><span class="dot"></span>作者 · WRITTEN BY</div>
+        <h3 class="byline-name">嗨，我是 <span class="em">范米花儿</span></h3>
+        <p class="byline-tag">一份关于颜色、字号和间距的 Tokens 实验讲解 ——<br>希望对正在搭设计系统的你有帮助。</p>
+      </div>
+    </div>
+    <div class="footer-meta">
+      做于 <span class="mono">2026</span> · 用 <span class="heart">●</span> 写给 <span class="mono">DESIGNERS &amp; DEVELOPERS</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+// ================ §02 Colors: Figma Variables row ↔ CSS row sync ================
+(function() {
+  const figRows = document.querySelectorAll('#figVars .fig-vars-row');
+  const codeRows = document.querySelectorAll('#colorsCode .ln[data-var]');
+
+  function setActive(varName) {
+    figRows.forEach(r => r.classList.toggle('is-active', r.dataset.var === varName));
+    codeRows.forEach(r => r.classList.toggle('is-active', r.dataset.var === varName));
+  }
+  function clearActive() {
+    figRows.forEach(r => r.classList.remove('is-active'));
+    codeRows.forEach(r => r.classList.remove('is-active'));
+  }
+
+  figRows.forEach(r => {
+    r.addEventListener('mouseenter', () => setActive(r.dataset.var));
+    r.addEventListener('click', () => {
+      // Pin highlight on click; clear other pins, then set this one
+      const wasPinned = r.classList.contains('is-pinned');
+      figRows.forEach(x => x.classList.remove('is-pinned'));
+      codeRows.forEach(x => x.classList.remove('is-pinned'));
+      if (!wasPinned) {
+        r.classList.add('is-pinned');
+        const cr = document.querySelector(`#colorsCode .ln[data-var="${r.dataset.var}"]`);
+        if (cr) cr.classList.add('is-pinned');
+        setActive(r.dataset.var);
+      } else {
+        clearActive();
+      }
+    });
+  });
+  codeRows.forEach(r => {
+    r.addEventListener('mouseenter', () => setActive(r.dataset.var));
+  });
+
+  document.getElementById('figVars').addEventListener('mouseleave', () => {
+    // restore pinned highlight if any
+    const pinned = document.querySelector('#figVars .fig-vars-row.is-pinned');
+    if (pinned) setActive(pinned.dataset.var); else clearActive();
+  });
+  document.getElementById('colorsCode').addEventListener('mouseleave', () => {
+    const pinned = document.querySelector('#figVars .fig-vars-row.is-pinned');
+    if (pinned) setActive(pinned.dataset.var); else clearActive();
+  });
+})();
+
+// ================ §03 Type Scale: ratio control ================
+(function() {
+  const seg = document.getElementById('ratioSeg');
+  const btns = seg.querySelectorAll('button');
+  const rows = document.querySelectorAll('#typeRows .type-row');
+  const rdRatio = document.getElementById('rdRatio');
+  const rdMap = {
+    4: document.getElementById('rdDisplay'),
+    3: document.getElementById('rdH1'),
+    2: document.getElementById('rdH2'),
+    1: document.getElementById('rdH3'),
+    0: document.getElementById('rdBody'),
+    '-1': document.getElementById('rdSmall'),
+    '-2': document.getElementById('rdCaption'),
+  };
+
+  function applyRatio(r) {
+    const base = 16;
+    rdRatio.textContent = r;
+    rows.forEach(row => {
+      const step = parseInt(row.dataset.step, 10);
+      const px = base * Math.pow(r, step);
+      const sample = row.querySelector('.sample');
+      const pxLabel = row.querySelector('.px-val');
+      sample.style.fontSize = px + 'px';
+      pxLabel.textContent = px.toFixed(0);
+      const target = rdMap[step];
+      if (target) target.textContent = px.toFixed(2);
+      // Briefly flash the row
+      row.classList.add('is-active');
+      clearTimeout(row._t);
+      row._t = setTimeout(() => row.classList.remove('is-active'), 350);
+    });
+  }
+
+  btns.forEach(b => {
+    b.addEventListener('click', () => {
+      btns.forEach(x => x.classList.remove('active'));
+      b.classList.add('active');
+      applyRatio(parseFloat(b.dataset.r));
+    });
+  });
+
+  // Initial application with the default 1.25
+  applyRatio(1.25);
+})();
+
+// ================ §04 Spacing: sliders ================
+(function() {
+  const card = document.getElementById('spaceCard');
+  const cardHead = card.querySelector('.space-card-head');
+  const cardActions = card.querySelector('.space-card-actions');
+
+  const s4 = document.getElementById('space4Slider');
+  const s3 = document.getElementById('space3Slider');
+  const s2 = document.getElementById('space2Slider');
+
+  const s4Val = document.getElementById('space4Val');
+  const s3Val = document.getElementById('space3Val');
+  const s2Val = document.getElementById('space2Val');
+
+  const rd4 = document.getElementById('rdSpace4');
+  const rd3 = document.getElementById('rdSpace3');
+  const rd2 = document.getElementById('rdSpace2');
+
+  function update() {
+    const v4 = +s4.value;
+    const v3 = +s3.value;
+    const v2 = +s2.value;
+
+    card.style.padding = v4 + 'px';
+    card.style.gap = v3 + 'px';
+    cardHead.style.gap = v3 + 'px';
+    cardActions.style.gap = v2 + 'px';
+
+    s4Val.textContent = v4 + 'px';
+    s3Val.textContent = v3 + 'px';
+    s2Val.textContent = v2 + 'px';
+
+    rd4.textContent = v4;
+    rd3.textContent = v3;
+    rd2.textContent = v2;
+  }
+
+  s4.addEventListener('input', update);
+  s3.addEventListener('input', update);
+  s2.addEventListener('input', update);
+  update();
+})();
+</script>
+
+</body>
+</html>

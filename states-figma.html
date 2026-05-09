@@ -1,0 +1,1714 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>视觉态入门 — 一个按钮 5 种长相</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,300..900&family=Geist:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Noto+Sans+SC:wght@300;400;500;700;900&family=Noto+Serif+SC:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f3eee5;
+    --bg-2: #ebe4d4;
+    --ink: #16161d;
+    --ink-soft: #4a4a55;
+    --ink-mute: #8a8a92;
+    --line: #d5cdba;
+    --line-soft: #e3dcca;
+    --accent: #ff4d2e;
+    --accent-soft: #ffe4dc;
+    --blue: #0a4cff;
+    --blue-soft: #dde6ff;
+    --green: #1f6b3a;
+    --green-soft: #d4ecdb;
+    --yellow: #ffcf3d;
+    --paper: #faf7f0;
+    --shadow: 0 1px 0 rgba(0,0,0,0.04), 0 8px 24px rgba(22,22,29,0.06);
+
+    /* State-specific colors */
+    --state-default: #6b7280;
+    --state-hover:   #0a4cff;
+    --state-active:  #ff4d2e;
+    --state-focus:   #9333ea;
+    --state-disabled:#a8a29e;
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'Geist', 'Noto Sans SC', system-ui, -apple-system, sans-serif;
+    font-size: 16px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    background-image:
+      radial-gradient(circle at 1px 1px, rgba(22,22,29,0.05) 1px, transparent 0);
+    background-size: 24px 24px;
+  }
+
+  /* Typography */
+  .display-cn { font-family: 'Noto Serif SC', 'Fraunces', serif; font-weight: 900; letter-spacing: -0.01em; }
+  .display-en { font-family: 'Fraunces', 'Noto Serif SC', serif; font-weight: 600; font-style: italic; letter-spacing: -0.02em; }
+  .mono { font-family: 'JetBrains Mono', monospace; }
+  .label { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-mute); }
+
+  /* Layout */
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 0 32px; }
+
+  /* Top bar */
+  .topbar {
+    border-bottom: 1px dashed var(--line);
+    padding: 16px 0;
+    background: var(--bg);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    backdrop-filter: blur(8px);
+    background: rgba(243, 238, 229, 0.85);
+  }
+  .topbar-inner { display: flex; justify-content: space-between; align-items: center; gap: 24px; flex-wrap: wrap; }
+  .brand { font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 600; }
+  .brand .dot { display: inline-block; width: 8px; height: 8px; background: var(--accent); border-radius: 50%; margin-right: 8px; vertical-align: middle; animation: pulse 2s ease-in-out infinite; }
+  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+  .nav-links { display: flex; gap: 20px; font-size: 13px; flex-wrap: wrap; }
+  .nav-links a { color: var(--ink-soft); text-decoration: none; transition: color 0.2s; }
+  .nav-links a:hover { color: var(--accent); }
+  .nav-links a.current { color: var(--accent); font-weight: 600; }
+
+  /* Hero */
+  .hero { padding: 100px 0 80px; position: relative; overflow: hidden; }
+  .hero-meta { display: flex; gap: 24px; margin-bottom: 32px; align-items: center; flex-wrap: wrap; }
+  .hero-meta .pill { padding: 6px 12px; border: 1px solid var(--ink); border-radius: 100px; font-size: 11px; font-family: 'JetBrains Mono', monospace; letter-spacing: 0.05em; }
+  .hero-meta .pill.fill { background: var(--ink); color: var(--bg); }
+  .hero h1 {
+    font-family: 'Noto Serif SC', 'Fraunces', serif;
+    font-weight: 900;
+    font-size: clamp(48px, 7vw, 92px);
+    line-height: 0.95;
+    letter-spacing: -0.03em;
+    margin: 0 0 24px;
+  }
+  .hero h1 .em { font-family: 'Fraunces', serif; font-style: italic; font-weight: 500; color: var(--accent); }
+  .hero h1 .num { font-family: 'Fraunces', serif; font-style: italic; font-weight: 600; color: var(--accent); }
+  .hero h1 .x { display: inline-block; transform: translateY(-0.05em); margin: 0 0.05em; color: var(--ink-mute); font-weight: 300; }
+  .hero p.lede {
+    font-size: 20px;
+    line-height: 1.5;
+    max-width: 640px;
+    color: var(--ink-soft);
+    margin: 0 0 40px;
+  }
+  .hero p.lede .em { font-family: 'Fraunces', serif; font-style: italic; color: var(--accent); font-weight: 500; }
+  .hero-grid { display: grid; grid-template-columns: 1.4fr 1fr; gap: 48px; align-items: end; }
+  @media (max-width: 880px) { .hero-grid { grid-template-columns: 1fr; } }
+  .hero-side { border-left: 1px dashed var(--line); padding-left: 24px; font-size: 13px; color: var(--ink-soft); }
+  .hero-side .row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px dashed var(--line); }
+  .hero-side .row:last-child { border-bottom: none; }
+  .hero-side .row .k { color: var(--ink-mute); font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.05em; text-transform: uppercase; }
+  .hero-side .row .v { font-weight: 500; }
+
+  /* Hero floating preview cards (5 buttons drifting) */
+  .hero-floats {
+    margin-top: 48px;
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+  .hero-float-btn {
+    padding: 9px 18px;
+    border-radius: 6px;
+    font-family: 'Geist', 'Noto Sans SC', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    border: none;
+    color: white;
+    background: var(--accent);
+    transition: transform 0.4s ease;
+    cursor: default;
+    user-select: none;
+    position: relative;
+  }
+  .hero-float-btn .tag {
+    position: absolute;
+    top: -18px; left: 0;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9.5px;
+    color: var(--ink-mute);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+  .hero-float-btn.s-default { background: #ff4d2e; }
+  .hero-float-btn.s-hover   { background: #e63d20; transform: translateY(-2px); box-shadow: 0 6px 14px rgba(255,77,46,0.25); }
+  .hero-float-btn.s-active  { background: #c2331b; transform: translateY(1px); }
+  .hero-float-btn.s-focus   { background: #ff4d2e; box-shadow: 0 0 0 3px #ffd9d0; }
+  .hero-float-btn.s-disabled{ background: #d8d2c4; color: #a8a29e; }
+
+  /* Section */
+  section { padding: 80px 0; border-top: 1px solid var(--line); position: relative; }
+  .section-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 56px; flex-wrap: wrap; gap: 16px; }
+  .section-num { font-family: 'JetBrains Mono', monospace; font-size: 13px; color: var(--ink-mute); letter-spacing: 0.1em; }
+  .section-num strong { color: var(--accent); }
+  .section-title {
+    font-family: 'Noto Serif SC', serif;
+    font-weight: 900;
+    font-size: clamp(32px, 4.5vw, 52px);
+    line-height: 1.05;
+    letter-spacing: -0.02em;
+    margin: 0;
+    max-width: 18ch;
+  }
+  .section-title .em { font-family: 'Fraunces', serif; font-style: italic; font-weight: 500; color: var(--accent); }
+  .section-sub { color: var(--ink-soft); font-size: 17px; max-width: 38ch; line-height: 1.55; margin: 0; }
+
+  /* §01 Problem comparison cards */
+  .problem-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; margin-top: 24px; }
+  @media (max-width: 880px) { .problem-grid { grid-template-columns: 1fr; } }
+  .problem-card {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 28px;
+    position: relative;
+  }
+  .problem-card.bad { border-color: var(--accent); background: var(--accent-soft); }
+  .problem-card.good { border-color: var(--green); background: var(--green-soft); }
+  .problem-card .tag {
+    position: absolute; top: -12px; left: 24px;
+    background: var(--bg); padding: 2px 10px;
+    font-family: 'JetBrains Mono', monospace; font-size: 11px;
+    letter-spacing: 0.1em;
+  }
+  .problem-card.bad .tag { color: var(--accent); border: 1px solid var(--accent); }
+  .problem-card.good .tag { color: var(--green); border: 1px solid var(--green); }
+  .problem-card h3 { font-family: 'Noto Serif SC', serif; font-size: 22px; margin: 0 0 12px; font-weight: 700; }
+  .problem-card p { margin: 0 0 18px; color: var(--ink-soft); font-size: 14px; line-height: 1.6; }
+  .problem-card p:last-child { margin-bottom: 0; }
+  .problem-card .frame-mock {
+    background: white;
+    border: 1.5px dashed var(--blue);
+    padding: 18px;
+    border-radius: 4px;
+    margin-bottom: 12px;
+    position: relative;
+  }
+  .problem-card .frame-mock::before {
+    content: 'Figma · 设计稿';
+    position: absolute;
+    top: -10px; left: 12px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    color: var(--blue);
+    background: var(--paper);
+    padding: 0 6px;
+    letter-spacing: 0.05em;
+  }
+  .problem-card.bad .frame-mock { background: var(--accent-soft); }
+  .problem-card.good .frame-mock { background: var(--green-soft); }
+  .problem-card .frame-mock .row-buttons {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    align-items: flex-end;
+  }
+  .problem-card .frame-mock .row-buttons.single { justify-content: flex-start; }
+  .pc-btn {
+    padding: 8px 16px;
+    border-radius: 4px;
+    font-family: 'Geist', 'Noto Sans SC', sans-serif;
+    font-size: 12px;
+    font-weight: 500;
+    border: none;
+    color: white;
+    cursor: default;
+    user-select: none;
+    position: relative;
+  }
+  .pc-btn .pc-cap {
+    position: absolute;
+    bottom: -16px; left: 0;
+    width: 100%;
+    text-align: center;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    color: var(--ink-mute);
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+  .pc-btn.def { background: #ff4d2e; }
+  .pc-btn.hov { background: #e63d20; }
+  .pc-btn.act { background: #c2331b; }
+  .pc-btn.foc { background: #ff4d2e; box-shadow: 0 0 0 2px #ffd9d0; }
+  .pc-btn.dis { background: #d8d2c4; color: #a8a29e; }
+  .problem-card .question-mark {
+    width: 80px; height: 28px;
+    background: repeating-linear-gradient(45deg, rgba(255,77,46,0.25) 0 4px, transparent 4px 8px);
+    border: 1.5px dashed var(--accent);
+    border-radius: 4px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--accent);
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    font-weight: 500;
+    font-size: 14px;
+  }
+  .problem-card .frame-row-pad { padding-bottom: 22px; }
+  .pc-quote {
+    margin-top: 16px;
+    padding: 14px 16px;
+    background: var(--bg);
+    border-radius: 4px;
+    border-left: 2px solid var(--ink);
+    font-size: 13px;
+    color: var(--ink-soft);
+    line-height: 1.6;
+  }
+  .pc-quote strong { color: var(--ink); }
+  .problem-card.bad .pc-quote { border-left-color: var(--accent); }
+  .problem-card.good .pc-quote { border-left-color: var(--green); }
+
+  /* §02 Five states display */
+  .states-stage {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 48px 32px 32px;
+    overflow: hidden;
+  }
+  .states-row {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 16px;
+    margin-bottom: 32px;
+  }
+  @media (max-width: 880px) { .states-row { grid-template-columns: repeat(2, 1fr); gap: 24px; } }
+  @media (max-width: 480px) { .states-row { grid-template-columns: 1fr; } }
+  .state-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    padding: 20px 12px 16px;
+    background: var(--bg);
+    border: 1px dashed var(--line);
+    border-radius: 6px;
+    position: relative;
+  }
+  .state-card .state-num {
+    position: absolute;
+    top: 8px; right: 12px;
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    font-size: 18px;
+    color: var(--ink-mute);
+    line-height: 1;
+  }
+  .state-card .state-name-cn {
+    font-family: 'Noto Serif SC', serif;
+    font-weight: 700;
+    font-size: 14px;
+    margin-top: 6px;
+  }
+  .state-card .state-name-en {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10.5px;
+    color: var(--ink-mute);
+    letter-spacing: 0.05em;
+  }
+  .state-card .state-when {
+    font-size: 11.5px;
+    color: var(--ink-soft);
+    text-align: center;
+    line-height: 1.45;
+    padding: 0 4px;
+    margin-top: 2px;
+  }
+  .state-card .state-color {
+    margin-top: 6px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--ink-mute);
+  }
+  .state-card .state-color .sw { width: 12px; height: 12px; border-radius: 2px; border: 1px solid rgba(0,0,0,0.06); }
+  .state-card .state-btn {
+    padding: 10px 20px;
+    border-radius: 5px;
+    font-family: 'Geist', 'Noto Sans SC', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    border: none;
+    color: white;
+    user-select: none;
+    cursor: default;
+    pointer-events: none;
+  }
+  .state-card .state-btn.def { background: #ff4d2e; }
+  .state-card .state-btn.hov { background: #e63d20; transform: translateY(-1px); box-shadow: 0 4px 10px rgba(255,77,46,0.30); }
+  .state-card .state-btn.act { background: #c2331b; transform: translateY(1px); }
+  .state-card .state-btn.foc { background: #ff4d2e; box-shadow: 0 0 0 3px #ffd9d0; }
+  .state-card .state-btn.dis { background: #d8d2c4; color: #a8a29e; }
+
+  /* Color comparison table */
+  .color-bar {
+    display: grid;
+    grid-template-columns: 90px 1fr 1fr 100px;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    overflow: hidden;
+    margin-top: 8px;
+    background: var(--paper);
+  }
+  .color-bar .ch { background: var(--ink); color: var(--bg); padding: 12px 16px; font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; }
+  .color-bar .ch:not(:last-child) { border-right: 1px dashed rgba(255,255,255,0.2); }
+  .color-bar .cell { padding: 12px 16px; border-bottom: 1px solid var(--line); font-size: 13px; }
+  .color-bar .cell:nth-child(4n+1) { font-family: 'Noto Serif SC', serif; font-weight: 600; color: var(--ink); }
+  .color-bar .cell:nth-child(4n+2) { color: var(--ink-soft); }
+  .color-bar .cell:nth-child(4n+3) { font-family: 'JetBrains Mono', monospace; color: var(--ink-soft); font-size: 12px; }
+  .color-bar .cell.swatch { display: flex; align-items: center; gap: 8px; }
+  .color-bar .cell.swatch .sw { width: 22px; height: 22px; border-radius: 3px; border: 1px solid rgba(0,0,0,0.08); flex-shrink: 0; }
+  .color-bar .cell { border-right: 1px dashed var(--line); }
+  .color-bar .cell:nth-child(4n) { border-right: none; }
+  .color-bar .row-last .cell { border-bottom: none; }
+  @media (max-width: 720px) { .color-bar { grid-template-columns: 1fr; } .color-bar .ch:not(:first-child) { display: none; } .color-bar .cell { border-right: none; } }
+
+  /* §03 Figma Variants matrix */
+  .figma-variants-stage {
+    display: grid;
+    grid-template-columns: 1fr 320px;
+    gap: 32px;
+    align-items: start;
+  }
+  @media (max-width: 880px) { .figma-variants-stage { grid-template-columns: 1fr; } }
+
+  /* Figma-style panel */
+  .figma-panel {
+    background: #2c2c2c;
+    color: #e8e8e8;
+    padding: 18px 16px 14px;
+    border-radius: 6px;
+    font-family: 'Geist', system-ui, sans-serif;
+    font-size: 12px;
+  }
+  .figma-panel .fp-title { font-size: 11px; color: #999; margin-bottom: 14px; letter-spacing: 0.05em; text-transform: uppercase; font-weight: 600; display: flex; align-items: center; gap: 8px; }
+  .figma-panel .fp-title::before { content: '◇'; color: #b58fff; font-size: 14px; }
+  .figma-panel .fp-prop {
+    background: #1e1e1e;
+    border-radius: 4px;
+    padding: 10px 12px;
+    margin-bottom: 8px;
+  }
+  .figma-panel .fp-prop-name {
+    color: #b8b8b8;
+    font-size: 11px;
+    margin-bottom: 6px;
+    font-family: 'JetBrains Mono', monospace;
+    letter-spacing: 0.03em;
+  }
+  .figma-panel .fp-prop-val {
+    color: #e8e8e8;
+    font-weight: 500;
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .figma-panel .fp-prop-val .arrow { color: #999; font-size: 10px; margin-left: auto; }
+  .figma-panel .fp-section { padding: 12px 0 0; border-top: 1px solid #404040; margin-top: 12px; }
+  .figma-panel .fp-section-title { font-size: 10px; color: #999; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 8px; }
+  .figma-panel .fp-list { display: flex; flex-direction: column; gap: 4px; }
+  .figma-panel .fp-list-item {
+    background: rgba(255,255,255,0.04);
+    padding: 6px 10px;
+    border-radius: 3px;
+    font-size: 11.5px;
+    font-family: 'JetBrains Mono', monospace;
+    color: #cfcfcf;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  .figma-panel .fp-list-item:hover { background: rgba(13, 153, 255, 0.18); color: white; }
+  .figma-panel .fp-list-item.active { background: #0d99ff; color: white; }
+
+  /* Variants matrix mock — 5 button cells with state name labels */
+  .variants-matrix {
+    background: var(--paper);
+    border: 1.5px dashed #b58fff;
+    border-radius: 6px;
+    padding: 32px 24px 24px;
+    position: relative;
+  }
+  .variants-matrix::before {
+    content: 'Component · State Variants';
+    position: absolute;
+    top: -10px; left: 16px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: #9333ea;
+    background: var(--paper);
+    padding: 0 8px;
+    letter-spacing: 0.05em;
+  }
+  .variants-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 14px;
+  }
+  @media (max-width: 880px) {
+    .variants-grid { grid-template-columns: repeat(3, 1fr); }
+  }
+  @media (max-width: 480px) { .variants-grid { grid-template-columns: repeat(2, 1fr); } }
+  .variant-cell {
+    background: white;
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    padding: 24px 12px 14px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    position: relative;
+    transition: all 0.2s ease;
+  }
+  .variant-cell:hover { border-color: #9333ea; box-shadow: 0 0 0 2px rgba(147,51,234,0.12); }
+  .variant-cell .v-tag {
+    position: absolute;
+    top: 6px; left: 8px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    color: #9333ea;
+    letter-spacing: 0.04em;
+  }
+  .variant-cell .v-state-name {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10.5px;
+    color: var(--ink-soft);
+    letter-spacing: 0.05em;
+  }
+  .variant-cell .v-btn {
+    padding: 8px 16px;
+    border-radius: 4px;
+    font-family: 'Geist', 'Noto Sans SC', sans-serif;
+    font-size: 12px;
+    font-weight: 500;
+    border: none;
+    color: white;
+    user-select: none;
+    pointer-events: none;
+  }
+  .variant-cell .v-btn.def { background: #ff4d2e; }
+  .variant-cell .v-btn.hov { background: #e63d20; transform: translateY(-1px); box-shadow: 0 3px 8px rgba(255,77,46,0.25); }
+  .variant-cell .v-btn.act { background: #c2331b; transform: translateY(1px); }
+  .variant-cell .v-btn.foc { background: #ff4d2e; box-shadow: 0 0 0 2.5px #ffd9d0; }
+  .variant-cell .v-btn.dis { background: #d8d2c4; color: #a8a29e; }
+
+  .variants-callout {
+    margin-top: 24px;
+    padding: 16px 20px;
+    background: var(--blue-soft);
+    border-radius: 4px;
+    border-left: 3px solid var(--blue);
+    font-size: 13.5px;
+    line-height: 1.65;
+    color: var(--ink-soft);
+  }
+  .variants-callout strong { color: var(--ink); font-weight: 600; }
+  .variants-callout .mono { font-family: 'JetBrains Mono', monospace; font-size: 12px; background: rgba(255,255,255,0.6); padding: 1px 6px; border-radius: 3px; color: var(--ink); }
+
+  /* Naming sync table */
+  .name-sync {
+    margin-top: 24px;
+    display: grid;
+    grid-template-columns: 1fr 60px 1fr;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    overflow: hidden;
+    background: var(--paper);
+  }
+  @media (max-width: 600px) { .name-sync { grid-template-columns: 1fr; } }
+  .name-sync .nh {
+    background: var(--ink); color: var(--bg);
+    padding: 12px 16px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px; letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+  .name-sync .nh:nth-child(2) { text-align: center; }
+  .name-sync .ni {
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--line);
+    font-size: 13px;
+    background: var(--paper);
+  }
+  .name-sync .ni.left { font-weight: 600; color: var(--ink); border-right: 1px dashed var(--line); }
+  .name-sync .ni.right { font-family: 'JetBrains Mono', monospace; color: var(--ink-soft); }
+  .name-sync .ni.mid {
+    text-align: center;
+    color: var(--accent);
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    font-size: 18px;
+    background: var(--bg);
+    border-right: 1px dashed var(--line);
+  }
+  .name-sync .row-last .ni { border-bottom: none; }
+  @media (max-width: 600px) {
+    .name-sync .ni { border-right: none !important; }
+    .name-sync .ni.mid { display: none; }
+  }
+
+  /* §04 Real button playground */
+  .playground {
+    background: var(--ink);
+    color: var(--bg);
+    border-radius: 8px;
+    padding: 36px 32px;
+    position: relative;
+    overflow: hidden;
+  }
+  .playground::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(to right, rgba(255,255,255,0.04) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(255,255,255,0.04) 1px, transparent 1px);
+    background-size: 24px 24px;
+    pointer-events: none;
+  }
+  .pg-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 40px;
+    position: relative;
+    align-items: stretch;
+  }
+  @media (max-width: 880px) { .pg-grid { grid-template-columns: 1fr; } }
+
+  .pg-stage {
+    background: var(--bg);
+    color: var(--ink);
+    border-radius: 6px;
+    padding: 40px 24px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 24px;
+    min-height: 320px;
+    position: relative;
+  }
+  .pg-stage .stage-tag {
+    position: absolute;
+    top: 12px; left: 16px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--ink-mute);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+  .pg-stage .stage-help {
+    position: absolute;
+    top: 12px; right: 16px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--accent);
+    letter-spacing: 0.05em;
+  }
+  .pg-button {
+    padding: 16px 32px;
+    border-radius: 6px;
+    font-family: 'Geist', 'Noto Sans SC', sans-serif;
+    font-size: 16px;
+    font-weight: 500;
+    border: none;
+    background: var(--accent);
+    color: white;
+    cursor: pointer;
+    transition: background 0.12s ease, transform 0.08s ease, box-shadow 0.15s ease;
+    outline: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .pg-button:hover:not(:disabled) {
+    background: #e63d20;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(255,77,46,0.32);
+  }
+  .pg-button:active:not(:disabled) {
+    background: #c2331b;
+    transform: translateY(1px);
+    box-shadow: 0 2px 6px rgba(255,77,46,0.20);
+  }
+  .pg-button:focus-visible {
+    box-shadow: 0 0 0 4px #ffd9d0;
+  }
+  .pg-button:disabled {
+    background: #d8d2c4;
+    color: #a8a29e;
+    cursor: not-allowed;
+  }
+  .pg-toggle-row {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--ink-soft);
+  }
+  .pg-toggle {
+    width: 40px; height: 22px;
+    background: var(--line);
+    border-radius: 100px;
+    border: none;
+    position: relative;
+    cursor: pointer;
+    transition: background 0.18s ease;
+    padding: 0;
+  }
+  .pg-toggle::after {
+    content: '';
+    position: absolute;
+    top: 3px; left: 3px;
+    width: 16px; height: 16px;
+    background: white;
+    border-radius: 50%;
+    transition: transform 0.18s ease;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+  }
+  .pg-toggle.on { background: var(--accent); }
+  .pg-toggle.on::after { transform: translateX(18px); }
+  .pg-hint {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--ink-mute);
+    text-align: center;
+    letter-spacing: 0.03em;
+    line-height: 1.5;
+  }
+
+  /* Slot panel — 5 state slots */
+  .pg-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    color: var(--bg);
+  }
+  .pg-panel-head {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: rgba(255,255,255,0.6);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .pg-panel-head .live-dot {
+    display: inline-block;
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--accent);
+    margin-right: 6px;
+    animation: pulse 1.5s ease-in-out infinite;
+  }
+  .pg-slot {
+    display: grid;
+    grid-template-columns: 28px 1fr 76px;
+    align-items: center;
+    gap: 14px;
+    padding: 12px 16px;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.10);
+    border-radius: 6px;
+    transition: all 0.18s ease;
+    position: relative;
+  }
+  .pg-slot.lit {
+    background: rgba(255,255,255,0.13);
+    border-color: var(--accent);
+    box-shadow: 0 0 0 2px rgba(255,77,46,0.25), 0 6px 18px rgba(255,77,46,0.18);
+  }
+  .pg-slot .lamp {
+    width: 14px; height: 14px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.14);
+    border: 1.5px solid rgba(255,255,255,0.20);
+    transition: all 0.18s ease;
+    position: relative;
+  }
+  .pg-slot.lit .lamp {
+    background: var(--accent);
+    border-color: var(--accent);
+    box-shadow: 0 0 8px rgba(255,77,46,0.6), 0 0 16px rgba(255,77,46,0.35);
+  }
+  .pg-slot.lit .lamp::after {
+    content: '';
+    position: absolute;
+    inset: 3px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.6);
+  }
+  .pg-slot .info { display: flex; flex-direction: column; gap: 2px; }
+  .pg-slot .info .name-cn {
+    font-family: 'Noto Serif SC', serif;
+    font-weight: 600;
+    font-size: 14px;
+    color: white;
+  }
+  .pg-slot .info .name-en {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10.5px;
+    color: rgba(255,255,255,0.55);
+    letter-spacing: 0.05em;
+  }
+  .pg-slot .trigger {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: rgba(255,255,255,0.55);
+    letter-spacing: 0.04em;
+    text-align: right;
+    line-height: 1.35;
+  }
+  .pg-slot.lit .trigger { color: white; }
+
+  .pg-counter {
+    margin-top: 12px;
+    padding: 12px 16px;
+    border: 1px dashed rgba(255,255,255,0.18);
+    border-radius: 6px;
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: rgba(255,255,255,0.55);
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+  .pg-counter .count {
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    font-size: 26px;
+    color: var(--accent);
+    letter-spacing: -0.02em;
+  }
+  .pg-counter.full .count { color: #5cce7a; }
+
+  /* §05 Delivery checklist */
+  .deliv-grid {
+    display: grid;
+    grid-template-columns: 1.2fr 1fr;
+    gap: 32px;
+  }
+  @media (max-width: 880px) { .deliv-grid { grid-template-columns: 1fr; } }
+  .checklist {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 28px;
+  }
+  .checklist h4 {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 18px;
+    margin: 0 0 18px;
+    font-weight: 700;
+  }
+  .checklist h4 .badge {
+    display: inline-block;
+    margin-left: 8px;
+    padding: 2px 8px;
+    background: var(--accent-soft);
+    color: var(--accent);
+    border-radius: 100px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    font-weight: 600;
+    vertical-align: 3px;
+  }
+  .check-item {
+    display: grid;
+    grid-template-columns: 28px 1fr;
+    gap: 14px;
+    padding: 12px 0;
+    border-bottom: 1px dashed var(--line);
+    align-items: start;
+  }
+  .check-item:last-child { border-bottom: none; }
+  .check-item .check {
+    width: 22px; height: 22px;
+    border-radius: 4px;
+    background: var(--green);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 12px;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+  .check-item.opt .check { background: var(--bg-2); color: var(--ink-mute); }
+  .check-item.skip .check { background: var(--line); color: var(--ink-mute); }
+  .check-item .ci-body { font-size: 14px; color: var(--ink); line-height: 1.55; }
+  .check-item .ci-body strong { font-weight: 600; }
+  .check-item .ci-body .meta {
+    display: block;
+    margin-top: 4px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11.5px;
+    color: var(--ink-mute);
+    letter-spacing: 0.02em;
+  }
+
+  /* Next chapter teaser card */
+  .next-card {
+    background: var(--ink);
+    color: var(--bg);
+    border-radius: 6px;
+    padding: 28px;
+    position: relative;
+    overflow: hidden;
+  }
+  .next-card::before {
+    content: 'D1';
+    position: absolute;
+    bottom: -36px; right: -16px;
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    font-size: 220px;
+    color: rgba(255,77,46,0.10);
+    line-height: 1;
+    pointer-events: none;
+  }
+  .next-card .next-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.15em;
+    color: var(--accent);
+    text-transform: uppercase;
+    margin-bottom: 14px;
+  }
+  .next-card h4 {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 26px;
+    line-height: 1.15;
+    margin: 0 0 12px;
+    font-weight: 700;
+    position: relative;
+    z-index: 1;
+  }
+  .next-card h4 .em { font-family: 'Fraunces', serif; font-style: italic; color: var(--accent); font-weight: 500; }
+  .next-card p {
+    margin: 0 0 18px;
+    color: rgba(255,255,255,0.7);
+    font-size: 14px;
+    line-height: 1.6;
+    position: relative;
+    z-index: 1;
+  }
+  .next-card .next-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    position: relative;
+    z-index: 1;
+  }
+  .next-card .next-list .nl-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: rgba(255,255,255,0.85);
+  }
+  .next-card .next-list .nl-item::before {
+    content: '→';
+    color: var(--accent);
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    font-size: 16px;
+  }
+
+  /* Footer */
+  footer {
+    border-top: 1px solid var(--line);
+    padding: 56px 0 64px;
+    background: var(--bg);
+  }
+  .byline {
+    display: flex;
+    gap: 28px;
+    align-items: center;
+    padding-bottom: 32px;
+    border-bottom: 1px dashed var(--line);
+    margin-bottom: 24px;
+    position: relative;
+  }
+  .byline::before {
+    content: '';
+    position: absolute;
+    top: -56px; left: 0;
+    width: 32px; height: 1px;
+    background: var(--accent);
+  }
+  .byline .avatar {
+    width: 96px; height: 96px;
+    border-radius: 50%;
+    object-fit: cover;
+    flex-shrink: 0;
+    border: 3px solid var(--paper);
+    box-shadow: 0 0 0 1px var(--line), 0 6px 20px rgba(22,22,29,0.10);
+    background: var(--paper);
+  }
+  .byline-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--ink-mute);
+    letter-spacing: 0.18em;
+    margin-bottom: 8px;
+  }
+  .byline-label .dot {
+    display: inline-block;
+    width: 6px; height: 6px;
+    background: var(--accent);
+    border-radius: 50%;
+    margin-right: 6px;
+    vertical-align: 1px;
+  }
+  .byline-name {
+    font-family: 'Noto Serif SC', 'Fraunces', serif;
+    font-size: clamp(28px, 4vw, 40px);
+    font-weight: 700;
+    line-height: 1.05;
+    letter-spacing: -0.01em;
+    margin: 0 0 8px;
+  }
+  .byline-name .em {
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    font-weight: 500;
+    color: var(--accent);
+  }
+  .byline-tag {
+    font-size: 14px;
+    color: var(--ink-soft);
+    line-height: 1.55;
+    margin: 0;
+    max-width: 52ch;
+  }
+  .footer-meta {
+    text-align: center;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--ink-mute);
+    letter-spacing: 0.05em;
+  }
+  .footer-meta .heart { color: var(--accent); }
+  .footer-meta .mono { color: var(--ink-soft); font-weight: 500; }
+  @media (max-width: 600px) {
+    .byline { flex-direction: column; text-align: center; align-items: center; gap: 16px; }
+    .byline-tag { margin-left: auto; margin-right: auto; }
+  }
+
+  /* Subtle entry */
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+  section { animation: fadeIn 0.6s ease-out backwards; }
+</style>
+</head>
+<body>
+
+<!-- Top bar -->
+<div class="topbar">
+  <div class="wrap topbar-inner">
+    <div class="brand"><span class="dot"></span>STATES × FIGMA / 实验讲解</div>
+    <nav class="nav-links">
+      <a href="index.html">合集</a>
+      <a href="box-figma.html">01 盒子</a>
+      <a href="components-figma.html">02 组件</a>
+      <a href="page-figma.html">03 拼页面</a>
+      <a href="data-flow-figma.html">04 数据流</a>
+    </nav>
+  </div>
+</div>
+
+<!-- Hero -->
+<header class="hero">
+  <div class="wrap">
+    <div class="hero-meta">
+      <span class="pill fill">实验互动 · INTERACTIVE</span>
+      <span class="pill">2026</span>
+      <span class="pill">D0 · 入门 · 视觉态</span>
+      <span class="label">阅读时长 ≈ 10 分钟</span>
+    </div>
+    <div class="hero-grid">
+      <div>
+        <h1>
+          <span class="display-cn">一个按钮</span><br>
+          <span class="num">5</span> <span class="display-cn">种长相</span>
+        </h1>
+        <p class="lede">
+          设计稿里你画了一个按钮，但鼠标悬停时它<span class="em">变深一点</span>、按下去缩一下、不能点时变灰 ——<br>
+          这些都是「<span class="em">状态</span>」。这一篇，讲清这 5 种状态是什么、它们在 Figma 里叫什么、跟代码怎么对应。
+        </p>
+        <div class="hero-floats">
+          <button class="hero-float-btn s-default"><span class="tag">默认</span>立即购买</button>
+          <button class="hero-float-btn s-hover"><span class="tag">悬停</span>立即购买</button>
+          <button class="hero-float-btn s-active"><span class="tag">按下</span>立即购买</button>
+          <button class="hero-float-btn s-focus"><span class="tag">聚焦</span>立即购买</button>
+          <button class="hero-float-btn s-disabled"><span class="tag">禁用</span>立即购买</button>
+        </div>
+      </div>
+      <div class="hero-side">
+        <div class="row"><span class="k">本页讲什么</span><span class="v">视觉态入门</span></div>
+        <div class="row"><span class="k">含互动</span><span class="v">5 状态触发器</span></div>
+        <div class="row"><span class="k">面向</span><span class="v">设计师 / 入门</span></div>
+        <div class="row"><span class="k">前置知识</span><span class="v">无</span></div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- §01 Problem -->
+<section id="problem">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>01</strong> / 问题</div>
+        <h2 class="section-title">设计稿只有"<span class="em">默认</span>"，<br>剩下的全靠<br>开发猜。</h2>
+      </div>
+      <p class="section-sub">
+        你把按钮画得漂漂亮亮交了出去，鼠标悬上去深一度浅一度，按下去缩一点、不能点时灰一点 —— 这些都没说。
+        前端只能凭感觉补，结果出来的成品总觉得"差点意思"。
+      </p>
+    </div>
+
+    <div class="problem-grid">
+      <div class="problem-card bad">
+        <span class="tag">BAD · 单态设计稿</span>
+        <h3>只画了一个"看上去对"的样子</h3>
+        <p>设计稿里只有一个按钮，颜色 #FF4D2E，padding 也对。但鼠标悬上去之后呢？按下去呢？灰掉的样子呢？没人画。</p>
+
+        <div class="frame-mock frame-row-pad">
+          <div class="row-buttons single">
+            <button class="pc-btn def">立即购买<span class="pc-cap">交付的唯一一态</span></button>
+          </div>
+        </div>
+
+        <div class="pc-quote">
+          前端：<strong>"悬停的颜色用什么？"</strong><br>
+          设计师：<strong>"那个，深一点就行……"</strong>
+        </div>
+      </div>
+
+      <div class="problem-card good">
+        <span class="tag">GOOD · 多态设计稿</span>
+        <h3>5 种状态都画清楚</h3>
+        <p>同一个按钮，给出 5 种长相 + 颜色注释。前端不用问、AI 也不用猜。设计意图 = 实现结果。</p>
+
+        <div class="frame-mock frame-row-pad">
+          <div class="row-buttons">
+            <button class="pc-btn def">购买<span class="pc-cap">默认</span></button>
+            <button class="pc-btn hov">购买<span class="pc-cap">悬停</span></button>
+            <button class="pc-btn act">购买<span class="pc-cap">按下</span></button>
+            <button class="pc-btn foc">购买<span class="pc-cap">聚焦</span></button>
+            <button class="pc-btn dis">购买<span class="pc-cap">禁用</span></button>
+          </div>
+        </div>
+
+        <div class="pc-quote">
+          前端：<strong>"颜色全标了，照着抄就行。"</strong><br>
+          AI：<strong>"我也认得这是 5 个变体。"</strong>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- §02 Five basic states -->
+<section id="five">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>02</strong> / 基础</div>
+        <h2 class="section-title">每个交互元素，<br>都有这 <span class="em">5 种</span> 长相。</h2>
+      </div>
+      <p class="section-sub">
+        默认、悬停、按下、聚焦、禁用 —— 名字可能不熟，但你天天在用。
+        把它们想成同一个角色的 5 套表情。
+      </p>
+    </div>
+
+    <div class="states-stage">
+      <div class="states-row">
+        <div class="state-card">
+          <span class="state-num">01</span>
+          <button class="state-btn def">购买</button>
+          <div class="state-name-cn">默认</div>
+          <div class="state-name-en">default</div>
+          <div class="state-when">啥也没发生<br>它就长这样</div>
+          <div class="state-color"><span class="sw" style="background:#ff4d2e"></span>#FF4D2E</div>
+        </div>
+        <div class="state-card">
+          <span class="state-num">02</span>
+          <button class="state-btn hov">购买</button>
+          <div class="state-name-cn">悬停</div>
+          <div class="state-name-en">hover</div>
+          <div class="state-when">鼠标移上来<br>"我注意到你了"</div>
+          <div class="state-color"><span class="sw" style="background:#e63d20"></span>#E63D20</div>
+        </div>
+        <div class="state-card">
+          <span class="state-num">03</span>
+          <button class="state-btn act">购买</button>
+          <div class="state-name-cn">按下</div>
+          <div class="state-name-en">active / pressed</div>
+          <div class="state-when">点击的瞬间<br>"我感受到你按了"</div>
+          <div class="state-color"><span class="sw" style="background:#c2331b"></span>#C2331B</div>
+        </div>
+        <div class="state-card">
+          <span class="state-num">04</span>
+          <button class="state-btn foc">购买</button>
+          <div class="state-name-cn">聚焦</div>
+          <div class="state-name-en">focus</div>
+          <div class="state-when">键盘 Tab 选中<br>"现在轮到你"</div>
+          <div class="state-color"><span class="sw" style="background:#ffd9d0"></span>外圈光晕</div>
+        </div>
+        <div class="state-card">
+          <span class="state-num">05</span>
+          <button class="state-btn dis">购买</button>
+          <div class="state-name-cn">禁用</div>
+          <div class="state-name-en">disabled</div>
+          <div class="state-when">不能点的时候<br>"等一下再来"</div>
+          <div class="state-color"><span class="sw" style="background:#d8d2c4"></span>#D8D2C4</div>
+        </div>
+      </div>
+
+      <div class="color-bar">
+        <div class="ch">状态</div>
+        <div class="ch">什么时候出现</div>
+        <div class="ch">怎么变</div>
+        <div class="ch swatch-h">视觉</div>
+
+        <div class="cell">默认</div>
+        <div class="cell">页面刚加载、用户没碰它</div>
+        <div class="cell">原色：#FF4D2E</div>
+        <div class="cell swatch"><span class="sw" style="background:#ff4d2e"></span>—</div>
+
+        <div class="cell">悬停</div>
+        <div class="cell">鼠标光标移到按钮上，但还没按</div>
+        <div class="cell">变深 ≈ 10%，可加阴影上浮</div>
+        <div class="cell swatch"><span class="sw" style="background:#e63d20"></span>↑</div>
+
+        <div class="cell">按下</div>
+        <div class="cell">鼠标按下去那一下、还没松开</div>
+        <div class="cell">再深一档 + 下沉 1-2px</div>
+        <div class="cell swatch"><span class="sw" style="background:#c2331b"></span>↓</div>
+
+        <div class="cell">聚焦</div>
+        <div class="cell">用户用 Tab 键选中（无障碍 / 键盘党）</div>
+        <div class="cell">外圈描边或光晕</div>
+        <div class="cell swatch"><span class="sw" style="background:#ffd9d0;border:2px solid #ff4d2e"></span>○</div>
+
+        <div class="cell">禁用</div>
+        <div class="cell">业务上"现在不让点"（表单没填完等）</div>
+        <div class="cell">变灰 + 鼠标变禁止号</div>
+        <div class="cell swatch"><span class="sw" style="background:#d8d2c4"></span>—</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- §03 Figma Variants -->
+<section id="variants">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>03</strong> / 在 Figma 里</div>
+        <h2 class="section-title">你<span class="em">已经会做</span>了，<br>只是名字不一样。</h2>
+      </div>
+      <p class="section-sub">
+        Figma 的 <strong>Variants</strong>（变体）和 <strong>Interactive Component</strong>（互动组件），
+        就是用来交付"5 种状态"的标准工具。
+      </p>
+    </div>
+
+    <div class="figma-variants-stage">
+      <div>
+        <div class="variants-matrix">
+          <div class="variants-grid">
+            <div class="variant-cell">
+              <div class="v-tag">State=Default</div>
+              <button class="v-btn def">购买</button>
+              <div class="v-state-name">default</div>
+            </div>
+            <div class="variant-cell">
+              <div class="v-tag">State=Hover</div>
+              <button class="v-btn hov">购买</button>
+              <div class="v-state-name">hover</div>
+            </div>
+            <div class="variant-cell">
+              <div class="v-tag">State=Active</div>
+              <button class="v-btn act">购买</button>
+              <div class="v-state-name">active</div>
+            </div>
+            <div class="variant-cell">
+              <div class="v-tag">State=Focus</div>
+              <button class="v-btn foc">购买</button>
+              <div class="v-state-name">focus</div>
+            </div>
+            <div class="variant-cell">
+              <div class="v-tag">State=Disabled</div>
+              <button class="v-btn dis">购买</button>
+              <div class="v-state-name">disabled</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="variants-callout">
+          <strong>怎么做：</strong>
+          选中按钮 Component，点 <span class="mono">Add variant</span>，
+          再加一个属性 <span class="mono">State</span>，把可选值填成
+          <span class="mono">Default / Hover / Active / Focus / Disabled</span>。
+          每个值复制一份按钮、改一下颜色 —— 搞定。
+        </div>
+      </div>
+
+      <div class="figma-panel">
+        <div class="fp-title">Component Properties</div>
+
+        <div class="fp-prop">
+          <div class="fp-prop-name">State</div>
+          <div class="fp-prop-val">Variant <span class="arrow">▾</span></div>
+        </div>
+
+        <div class="fp-section">
+          <div class="fp-section-title">Variants · 5 个值</div>
+          <div class="fp-list">
+            <div class="fp-list-item active">Default</div>
+            <div class="fp-list-item">Hover</div>
+            <div class="fp-list-item">Active</div>
+            <div class="fp-list-item">Focus</div>
+            <div class="fp-list-item">Disabled</div>
+          </div>
+        </div>
+
+        <div class="fp-section">
+          <div class="fp-section-title">Interactions（可选）</div>
+          <div class="fp-list">
+            <div class="fp-list-item">While hovering → Hover</div>
+            <div class="fp-list-item">On press → Active</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="name-sync">
+      <div class="nh">Figma 里的叫法</div>
+      <div class="nh">同义</div>
+      <div class="nh">代码 / CSS 里的叫法</div>
+
+      <div class="ni left">State = Default<div style="font-size:12px;color:var(--ink-soft);font-weight:400;margin-top:4px;font-family:'Geist',sans-serif;">原始那一态</div></div>
+      <div class="ni mid">≡</div>
+      <div class="ni right">默认样式</div>
+
+      <div class="ni left">State = Hover<div style="font-size:12px;color:var(--ink-soft);font-weight:400;margin-top:4px;font-family:'Geist',sans-serif;">"While hovering" 触发</div></div>
+      <div class="ni mid">≡</div>
+      <div class="ni right">hover 状态</div>
+
+      <div class="ni left">State = Active / Pressed<div style="font-size:12px;color:var(--ink-soft);font-weight:400;margin-top:4px;font-family:'Geist',sans-serif;">"On press" 触发</div></div>
+      <div class="ni mid">≡</div>
+      <div class="ni right">active / pressed 状态</div>
+
+      <div class="ni left">State = Focused<div style="font-size:12px;color:var(--ink-soft);font-weight:400;margin-top:4px;font-family:'Geist',sans-serif;">键盘选中</div></div>
+      <div class="ni mid">≡</div>
+      <div class="ni right">focus 状态</div>
+
+      <div class="ni left row-last">State = Disabled<div style="font-size:12px;color:var(--ink-soft);font-weight:400;margin-top:4px;font-family:'Geist',sans-serif;">不可点的样子</div></div>
+      <div class="ni mid row-last">≡</div>
+      <div class="ni right row-last">disabled 状态</div>
+    </div>
+  </div>
+</section>
+
+<!-- §04 Real button playground -->
+<section id="play">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>04</strong> / 互动</div>
+        <h2 class="section-title">真按钮，<br>真<span class="em">触发</span>。</h2>
+      </div>
+      <p class="section-sub">
+        左边一个真实按钮。用你的鼠标 / 键盘去戳它，看右边 5 个状态槽哪个会亮。
+        你刚才一直都在做这件事 —— 只是从来没人指出来。
+      </p>
+    </div>
+
+    <div class="playground">
+      <div class="pg-grid">
+        <div class="pg-stage">
+          <div class="stage-tag">真实按钮 · TRY ME</div>
+          <div class="stage-help" id="stageHelp">用鼠标 / Tab 键试试</div>
+          <button class="pg-button" id="pgBtn">立即购买</button>
+          <div class="pg-toggle-row">
+            <span>禁用模式</span>
+            <button class="pg-toggle" id="pgToggle" aria-label="切换禁用模式" type="button"></button>
+            <span id="pgToggleLabel">关</span>
+          </div>
+          <div class="pg-hint">
+            把鼠标移上来 → 悬停亮<br>
+            按住不放 → 按下亮<br>
+            点页面任意处后按 <span class="mono" style="font-family:'JetBrains Mono',monospace;background:rgba(0,0,0,0.06);padding:1px 6px;border-radius:3px;">Tab</span> → 聚焦亮
+          </div>
+        </div>
+
+        <div class="pg-panel">
+          <div class="pg-panel-head">
+            <span><span class="live-dot"></span>状态实时槽</span>
+            <span id="curStateLabel">CURRENT · Default</span>
+          </div>
+
+          <div class="pg-slot" id="slotDefault">
+            <div class="lamp"></div>
+            <div class="info">
+              <span class="name-cn">默认</span>
+              <span class="name-en">default</span>
+            </div>
+            <div class="trigger">啥也<br>没发生</div>
+          </div>
+
+          <div class="pg-slot" id="slotHover">
+            <div class="lamp"></div>
+            <div class="info">
+              <span class="name-cn">悬停</span>
+              <span class="name-en">hover</span>
+            </div>
+            <div class="trigger">鼠标 ↑<br>移上来</div>
+          </div>
+
+          <div class="pg-slot" id="slotActive">
+            <div class="lamp"></div>
+            <div class="info">
+              <span class="name-cn">按下</span>
+              <span class="name-en">active</span>
+            </div>
+            <div class="trigger">鼠标 ↓<br>按住</div>
+          </div>
+
+          <div class="pg-slot" id="slotFocus">
+            <div class="lamp"></div>
+            <div class="info">
+              <span class="name-cn">聚焦</span>
+              <span class="name-en">focus</span>
+            </div>
+            <div class="trigger">键盘<br>Tab</div>
+          </div>
+
+          <div class="pg-slot" id="slotDisabled">
+            <div class="lamp"></div>
+            <div class="info">
+              <span class="name-cn">禁用</span>
+              <span class="name-en">disabled</span>
+            </div>
+            <div class="trigger">切上面<br>Toggle</div>
+          </div>
+
+          <div class="pg-counter" id="pgCounter">
+            <span>已点亮</span>
+            <span><span class="count" id="pgCount">0</span> / 5</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- §05 Delivery checklist + next chapter -->
+<section id="deliver">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>05</strong> / 交付清单</div>
+        <h2 class="section-title">设计稿到底要<br>给到 <span class="em">什么程度</span>？</h2>
+      </div>
+      <p class="section-sub">
+        不是每一态都要画。下面是一份"够用即可"的最低交付标准，照着补就不会被前端追着问了。
+      </p>
+    </div>
+
+    <div class="deliv-grid">
+      <div class="checklist">
+        <h4>每个交互组件 <span class="badge">必交</span></h4>
+        <div class="check-item">
+          <div class="check">✓</div>
+          <div class="ci-body">
+            <strong>默认 (Default)</strong> —— 这一态总是要的，否则就没东西可做了。
+            <span class="meta">100% 必须</span>
+          </div>
+        </div>
+        <div class="check-item">
+          <div class="check">✓</div>
+          <div class="ci-body">
+            <strong>悬停 (Hover)</strong> —— 颜色 / 阴影变化，让用户知道"这是可点的"。
+            <span class="meta">桌面端必须 · 移动端可省</span>
+          </div>
+        </div>
+        <div class="check-item">
+          <div class="check">✓</div>
+          <div class="ci-body">
+            <strong>禁用 (Disabled)</strong> —— 表单没填完、加载中等场景，避免误点。
+            <span class="meta">只要"它会被禁用"就必须</span>
+          </div>
+        </div>
+        <div class="check-item opt">
+          <div class="check">○</div>
+          <div class="ci-body">
+            <strong>按下 (Active)</strong> —— 通常按钮加 transform / 颜色变深，前端能默认处理。
+            <span class="meta">交付可选 · 强调反馈时建议给</span>
+          </div>
+        </div>
+        <div class="check-item skip">
+          <div class="check">—</div>
+          <div class="ci-body">
+            <strong>聚焦 (Focus)</strong> —— 浏览器和组件库都自带描边样式，前端默认处理。
+            <span class="meta">默认前端处理 · 标注"是否需要特殊样式"即可</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="next-card">
+        <div class="next-tag">下一篇 · D1 · 基础</div>
+        <h4>Interactive <span class="em">Component</span><br>怎么写代码？</h4>
+        <p>
+          这一篇我们用 Figma 视角看完了"5 种长相"。
+          下一篇翻到代码侧 —— hover / active / focus 在 CSS 里怎么写、:disabled 是什么意思、为什么 focus-visible 比 focus 好用。
+        </p>
+        <div class="next-list">
+          <div class="nl-item">:hover &nbsp;.btn 怎么变深</div>
+          <div class="nl-item">:active &nbsp;按下的反馈</div>
+          <div class="nl-item">:focus-visible &nbsp;只对键盘党亮</div>
+          <div class="nl-item">:disabled &nbsp;变灰 + 不可点</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div class="byline">
+      <img class="avatar" src="author.jpg" alt="范米花儿">
+      <div class="byline-meta">
+        <div class="byline-label"><span class="dot"></span>作者 · WRITTEN BY</div>
+        <h3 class="byline-name">嗨，我是 <span class="em">范米花儿</span></h3>
+        <p class="byline-tag">一份关于"视觉态"的入门讲解 ——<br>给设计师讲清楚"状态"是什么、Figma 里怎么对应。</p>
+      </div>
+    </div>
+    <div class="footer-meta">
+      做于 <span class="mono">2026</span> · 用 <span class="heart">●</span> 写给 <span class="mono">DESIGNERS &amp; DEVELOPERS</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+// ========== §04 Playground: real button → 5 state slots ==========
+(function () {
+  const btn = document.getElementById('pgBtn');
+  const toggle = document.getElementById('pgToggle');
+  const toggleLabel = document.getElementById('pgToggleLabel');
+  const stageHelp = document.getElementById('stageHelp');
+  const curLabel = document.getElementById('curStateLabel');
+  const counterEl = document.getElementById('pgCount');
+  const counterBox = document.getElementById('pgCounter');
+
+  const slotDefault  = document.getElementById('slotDefault');
+  const slotHover    = document.getElementById('slotHover');
+  const slotActive   = document.getElementById('slotActive');
+  const slotFocus    = document.getElementById('slotFocus');
+  const slotDisabled = document.getElementById('slotDisabled');
+
+  // Track which slots have been lit at least once → counter
+  const lit = new Set();
+
+  // Reactive state flags
+  let isHover = false;
+  let isActive = false;
+  let isFocus = false;
+  let isDisabled = false;
+
+  function bumpCount(name) {
+    if (!lit.has(name)) {
+      lit.add(name);
+      counterEl.textContent = lit.size;
+      if (lit.size === 5) {
+        counterBox.classList.add('full');
+      }
+    }
+  }
+
+  function render() {
+    // Disabled wins everything
+    if (isDisabled) {
+      slotDefault.classList.remove('lit');
+      slotHover.classList.remove('lit');
+      slotActive.classList.remove('lit');
+      slotFocus.classList.remove('lit');
+      slotDisabled.classList.add('lit');
+      curLabel.textContent = 'CURRENT · Disabled';
+      bumpCount('disabled');
+      return;
+    } else {
+      slotDisabled.classList.remove('lit');
+    }
+
+    // Active beats hover (按下中肯定也悬停)
+    if (isActive) {
+      slotActive.classList.add('lit');
+      bumpCount('active');
+    } else {
+      slotActive.classList.remove('lit');
+    }
+
+    if (isHover && !isActive) {
+      slotHover.classList.add('lit');
+      bumpCount('hover');
+    } else if (!isHover) {
+      slotHover.classList.remove('lit');
+    } else {
+      // hovered + active → keep hover quiet, active wins
+      slotHover.classList.remove('lit');
+    }
+
+    if (isFocus) {
+      slotFocus.classList.add('lit');
+      bumpCount('focus');
+    } else {
+      slotFocus.classList.remove('lit');
+    }
+
+    // Default = nothing else happening
+    if (!isHover && !isActive && !isFocus) {
+      slotDefault.classList.add('lit');
+      bumpCount('default');
+      curLabel.textContent = 'CURRENT · Default';
+    } else {
+      slotDefault.classList.remove('lit');
+      // Decide which label to show — priority: active > hover > focus
+      if (isActive) curLabel.textContent = 'CURRENT · Active';
+      else if (isHover) curLabel.textContent = 'CURRENT · Hover';
+      else if (isFocus) curLabel.textContent = 'CURRENT · Focus';
+    }
+  }
+
+  // Mouse hover
+  btn.addEventListener('mouseenter', () => {
+    if (isDisabled) return;
+    isHover = true;
+    render();
+  });
+  btn.addEventListener('mouseleave', () => {
+    isHover = false;
+    isActive = false;
+    render();
+  });
+
+  // Mouse press
+  btn.addEventListener('mousedown', (e) => {
+    if (isDisabled) return;
+    isActive = true;
+    render();
+  });
+  btn.addEventListener('mouseup', () => {
+    if (isDisabled) return;
+    isActive = false;
+    render();
+  });
+  // Cancel active if pointer leaves while held
+  document.addEventListener('mouseup', () => {
+    if (isActive) {
+      isActive = false;
+      render();
+    }
+  });
+
+  // Touch press (mobile)
+  btn.addEventListener('touchstart', () => {
+    if (isDisabled) return;
+    isHover = true;
+    isActive = true;
+    render();
+  }, { passive: true });
+  btn.addEventListener('touchend', () => {
+    isActive = false;
+    isHover = false;
+    setTimeout(() => render(), 100);
+  }, { passive: true });
+
+  // Keyboard focus — only when reached via Tab (focus-visible is closer to "real")
+  // We'll set isFocus on focus event but only after Tab keydown to mimic focus-visible
+  let lastKeyWasTab = false;
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Tab') lastKeyWasTab = true;
+  });
+  document.addEventListener('mousedown', () => {
+    lastKeyWasTab = false;
+  });
+  btn.addEventListener('focus', () => {
+    if (isDisabled) return;
+    if (lastKeyWasTab) {
+      isFocus = true;
+      stageHelp.textContent = '聚焦了！按 Enter 试试';
+      render();
+    }
+  });
+  btn.addEventListener('blur', () => {
+    isFocus = false;
+    render();
+  });
+  // Also light focus slot if click focuses (some browsers)
+  btn.addEventListener('click', (e) => {
+    // brief active flash for keyboard "Enter" press
+    if (e.detail === 0 && !isDisabled) {
+      // Triggered by keyboard (Enter / Space). Pulse active.
+      isActive = true;
+      render();
+      setTimeout(() => {
+        isActive = false;
+        render();
+      }, 180);
+    }
+  });
+
+  // Disabled toggle
+  toggle.addEventListener('click', () => {
+    isDisabled = !isDisabled;
+    toggle.classList.toggle('on', isDisabled);
+    toggleLabel.textContent = isDisabled ? '开' : '关';
+    btn.disabled = isDisabled;
+    if (isDisabled) {
+      // clear other states
+      isHover = false;
+      isActive = false;
+      isFocus = false;
+      stageHelp.textContent = '现在按钮不能点 → 禁用槽亮';
+    } else {
+      stageHelp.textContent = '用鼠标 / Tab 键试试';
+    }
+    render();
+  });
+
+  // Initial render
+  render();
+})();
+</script>
+
+</body>
+</html>

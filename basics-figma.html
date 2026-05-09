@@ -1,0 +1,1498 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>设计稿是怎么变成代码的？— HTML / CSS / JS 三件套</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,300..900&family=Geist:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Noto+Sans+SC:wght@300;400;500;700;900&family=Noto+Serif+SC:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f3eee5;
+    --bg-2: #ebe4d4;
+    --ink: #16161d;
+    --ink-soft: #4a4a55;
+    --ink-mute: #8a8a92;
+    --line: #d5cdba;
+    --line-soft: #e3dcca;
+    --accent: #ff4d2e;
+    --accent-soft: #ffe4dc;
+    --blue: #0a4cff;
+    --blue-soft: #dde6ff;
+    --green: #1f6b3a;
+    --green-soft: #d4ecdb;
+    --yellow: #ffcf3d;
+    --paper: #faf7f0;
+    --shadow: 0 1px 0 rgba(0,0,0,0.04), 0 8px 24px rgba(22,22,29,0.06);
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'Geist', 'Noto Sans SC', system-ui, -apple-system, sans-serif;
+    font-size: 16px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    background-image:
+      radial-gradient(circle at 1px 1px, rgba(22,22,29,0.05) 1px, transparent 0);
+    background-size: 24px 24px;
+  }
+
+  /* Typography */
+  .display-cn { font-family: 'Noto Serif SC', 'Fraunces', serif; font-weight: 900; letter-spacing: -0.01em; }
+  .display-en { font-family: 'Fraunces', 'Noto Serif SC', serif; font-weight: 600; font-style: italic; letter-spacing: -0.02em; }
+  .mono { font-family: 'JetBrains Mono', monospace; }
+  .label { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-mute); }
+
+  /* Layout */
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 0 32px; }
+
+  /* Top bar */
+  .topbar {
+    border-bottom: 1px dashed var(--line);
+    padding: 16px 0;
+    background: var(--bg);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    backdrop-filter: blur(8px);
+    background: rgba(243, 238, 229, 0.85);
+  }
+  .topbar-inner { display: flex; justify-content: space-between; align-items: center; gap: 24px; }
+  .brand { font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 600; }
+  .brand .dot { display: inline-block; width: 8px; height: 8px; background: var(--accent); border-radius: 50%; margin-right: 8px; vertical-align: middle; animation: pulse 2s ease-in-out infinite; }
+  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+  .nav-links { display: flex; gap: 20px; font-size: 13px; }
+  .nav-links a { color: var(--ink-soft); text-decoration: none; transition: color 0.2s; }
+  .nav-links a:hover { color: var(--accent); }
+  .nav-links a.current { color: var(--accent); font-weight: 600; }
+
+  /* Hero */
+  .hero { padding: 100px 0 80px; position: relative; overflow: hidden; }
+  .hero-meta { display: flex; gap: 24px; margin-bottom: 32px; align-items: center; flex-wrap: wrap; }
+  .hero-meta .pill { padding: 6px 12px; border: 1px solid var(--ink); border-radius: 100px; font-size: 11px; font-family: 'JetBrains Mono', monospace; letter-spacing: 0.05em; }
+  .hero-meta .pill.fill { background: var(--ink); color: var(--bg); }
+  .hero h1 {
+    font-family: 'Noto Serif SC', 'Fraunces', serif;
+    font-weight: 900;
+    font-size: clamp(48px, 7vw, 92px);
+    line-height: 0.95;
+    letter-spacing: -0.03em;
+    margin: 0 0 24px;
+  }
+  .hero h1 .em { font-family: 'Fraunces', serif; font-style: italic; font-weight: 500; color: var(--accent); }
+  .hero h1 .x { display: inline-block; transform: translateY(-0.05em); margin: 0 0.05em; color: var(--ink-mute); font-weight: 300; }
+  .hero p.lede {
+    font-size: 20px;
+    line-height: 1.5;
+    max-width: 640px;
+    color: var(--ink-soft);
+    margin: 0 0 40px;
+  }
+  .hero-grid {
+    display: grid;
+    grid-template-columns: 1.4fr 1fr;
+    gap: 48px;
+    align-items: end;
+  }
+  .hero-side {
+    border-left: 1px dashed var(--line);
+    padding-left: 24px;
+    font-size: 13px;
+    color: var(--ink-soft);
+  }
+  .hero-side .row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px dashed var(--line); }
+  .hero-side .row:last-child { border-bottom: none; }
+  .hero-side .row .k { color: var(--ink-mute); font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.05em; text-transform: uppercase; }
+  .hero-side .row .v { font-weight: 500; }
+
+  /* Section */
+  section { padding: 80px 0; border-top: 1px solid var(--line); position: relative; }
+  .section-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 56px; flex-wrap: wrap; gap: 16px; }
+  .section-num { font-family: 'JetBrains Mono', monospace; font-size: 13px; color: var(--ink-mute); letter-spacing: 0.1em; }
+  .section-num strong { color: var(--accent); }
+  .section-title {
+    font-family: 'Noto Serif SC', serif;
+    font-weight: 900;
+    font-size: clamp(32px, 4.5vw, 52px);
+    line-height: 1.05;
+    letter-spacing: -0.02em;
+    margin: 0;
+    max-width: 18ch;
+  }
+  .section-title .em { font-family: 'Fraunces', serif; font-style: italic; font-weight: 500; color: var(--accent); }
+  .section-sub { color: var(--ink-soft); font-size: 17px; max-width: 38ch; line-height: 1.55; margin: 0; }
+
+  /* Problem comparison */
+  .problem-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 32px;
+    margin-top: 24px;
+  }
+  @media (max-width: 720px) { .problem-grid { grid-template-columns: 1fr; } }
+  .problem-card {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 28px;
+    position: relative;
+  }
+  .problem-card.bad { border-color: var(--accent); background: var(--accent-soft); }
+  .problem-card.good { border-color: var(--green); background: var(--green-soft); }
+  .problem-card .tag {
+    position: absolute; top: -12px; left: 24px;
+    background: var(--bg); padding: 2px 10px;
+    font-family: 'JetBrains Mono', monospace; font-size: 11px;
+    letter-spacing: 0.1em;
+  }
+  .problem-card.bad .tag { color: var(--accent); border: 1px solid var(--accent); }
+  .problem-card.good .tag { color: var(--green); border: 1px solid var(--green); }
+  .problem-card h3 { font-family: 'Noto Serif SC', serif; font-size: 22px; margin: 0 0 12px; font-weight: 700; }
+  .problem-card p { margin: 0; color: var(--ink-soft); font-size: 14px; line-height: 1.55; }
+  .problem-card .blackbox-vis {
+    margin-top: 20px;
+    padding: 20px;
+    background: rgba(255,255,255,0.55);
+    border-radius: 4px;
+    border: 1px dashed var(--line);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    line-height: 1.7;
+    color: var(--ink-soft);
+  }
+  .problem-card .blackbox-vis .arrow { color: var(--accent); margin: 0 6px; }
+  .problem-card .blackbox-vis .q { color: var(--ink-mute); }
+  .problem-card .blackbox-vis strong { color: var(--ink); font-weight: 600; }
+
+  /* Pipeline arrow box */
+  .pipeline {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr auto 1fr;
+    gap: 12px;
+    margin-top: 32px;
+    align-items: stretch;
+  }
+  @media (max-width: 720px) { .pipeline { grid-template-columns: 1fr; } .pipeline .arr { transform: rotate(90deg); margin: 4px auto; } }
+  .pipe-step {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 18px 16px;
+    text-align: center;
+  }
+  .pipe-step.designer { border-color: var(--blue); background: var(--blue-soft); }
+  .pipe-step.code { border-color: var(--accent); background: var(--accent-soft); }
+  .pipe-step.browser { border-color: var(--green); background: var(--green-soft); }
+  .pipe-step .pipe-icon { font-family: 'Fraunces', serif; font-style: italic; font-size: 32px; line-height: 1; margin-bottom: 8px; }
+  .pipe-step.designer .pipe-icon { color: var(--blue); }
+  .pipe-step.code .pipe-icon { color: var(--accent); }
+  .pipe-step.browser .pipe-icon { color: var(--green); }
+  .pipe-step .pipe-title { font-family: 'Noto Serif SC', serif; font-weight: 700; font-size: 15px; margin-bottom: 4px; }
+  .pipe-step .pipe-desc { font-size: 12px; color: var(--ink-soft); line-height: 1.5; }
+  .pipeline .arr { display: flex; align-items: center; justify-content: center; font-family: 'Fraunces', serif; font-size: 28px; color: var(--ink-mute); }
+
+  /* HTML/CSS/JS layered theme cards */
+  .layer-card {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    overflow: hidden;
+    margin-top: 16px;
+  }
+  @media (max-width: 880px) { .layer-card { grid-template-columns: 1fr; } }
+
+  /* Figma-like layer panel mock */
+  .figma-mock {
+    background: #2c2c2c;
+    color: #e8e8e8;
+    padding: 20px;
+    font-family: 'Geist', system-ui, sans-serif;
+    font-size: 13px;
+    border-right: 1px solid var(--line);
+  }
+  .figma-mock .fm-title {
+    font-size: 11px;
+    color: #999;
+    margin-bottom: 14px;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .figma-mock .fm-title::before {
+    content: '';
+    width: 14px; height: 14px;
+    background: linear-gradient(135deg, #ff4d2e 0%, #a259ff 50%, #0d99ff 100%);
+    border-radius: 3px;
+  }
+  .figma-mock .fm-layer {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 10px;
+    border-radius: 3px;
+    font-size: 12.5px;
+    cursor: pointer;
+    transition: background 0.15s;
+    user-select: none;
+  }
+  .figma-mock .fm-layer:hover { background: #3a3a3a; }
+  .figma-mock .fm-layer.is-active { background: #0d99ff; color: white; }
+  .figma-mock .fm-layer .fm-ic {
+    width: 14px; height: 14px;
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: #999;
+  }
+  .figma-mock .fm-layer.is-active .fm-ic { color: white; }
+  .figma-mock .fm-indent-1 { padding-left: 26px; }
+  .figma-mock .fm-indent-2 { padding-left: 42px; }
+
+  /* Code mock right side */
+  .code-mock {
+    background: var(--ink);
+    color: #d8d8e0;
+    padding: 24px 24px 20px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    line-height: 1.85;
+    position: relative;
+    overflow-x: auto;
+  }
+  .code-mock .code-head {
+    position: absolute;
+    top: 12px; left: 14px;
+    width: 8px; height: 8px; border-radius: 50%;
+    background: #ff5f56;
+    box-shadow: 14px 0 0 #ffbd2e, 28px 0 0 #27c93f;
+  }
+  .code-mock .code-fname {
+    position: absolute; top: 10px; right: 16px;
+    font-size: 10px; color: #6e6e7a; letter-spacing: 0.08em;
+  }
+  .code-mock pre { margin: 0; padding-top: 18px; }
+  .code-mock .ctag { color: #ff8a6e; }
+  .code-mock .cattr { color: #ffd166; }
+  .code-mock .cstr { color: #a8e6a3; }
+  .code-mock .ccom { color: #6e6e7a; font-style: italic; }
+  .code-mock .ckey { color: #ff8a6e; }
+  .code-mock .cnum { color: #8ec5ff; }
+  .code-mock .csel { color: #c9b6ff; }
+  .code-mock .cfun { color: #8ec5ff; }
+  .code-mock .cline {
+    display: block;
+    padding: 0 6px;
+    margin: 0 -6px;
+    border-radius: 3px;
+    box-shadow: inset 2px 0 0 transparent;
+    transition: background-color 0.18s ease, box-shadow 0.18s ease;
+  }
+  .code-mock .cline.is-active {
+    background-color: rgba(255, 138, 110, 0.16);
+    box-shadow: inset 2px 0 0 #ff8a6e;
+  }
+  @keyframes lineFlash {
+    0%   { background-color: rgba(255, 138, 110, 0.45); }
+    100% { background-color: rgba(255, 138, 110, 0.16); }
+  }
+  .code-mock .cline.is-flash { animation: lineFlash 0.55s ease-out; }
+
+  /* Caption row under each pair */
+  .pair-caption {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0;
+    border-top: 1px solid var(--line);
+    background: var(--paper);
+  }
+  .pair-caption > div {
+    padding: 14px 24px;
+    font-size: 12px;
+    color: var(--ink-soft);
+    line-height: 1.5;
+  }
+  .pair-caption > div:first-child { border-right: 1px dashed var(--line); }
+  .pair-caption .cap-k { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--ink-mute); letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 4px; }
+  .pair-caption strong { color: var(--ink); font-weight: 600; }
+  @media (max-width: 880px) {
+    .pair-caption { grid-template-columns: 1fr; }
+    .pair-caption > div:first-child { border-right: none; border-bottom: 1px dashed var(--line); }
+  }
+
+  /* Helper hint above section interactives */
+  .hint-strip {
+    margin-top: 8px;
+    padding: 14px 18px;
+    background: var(--accent-soft);
+    border-left: 3px solid var(--accent);
+    border-radius: 4px;
+    font-size: 13px;
+    color: var(--ink);
+    line-height: 1.55;
+  }
+  .hint-strip .hint-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--accent);
+    letter-spacing: 0.12em;
+    margin-right: 10px;
+    text-transform: uppercase;
+  }
+
+  /* CSS section: Figma properties panel mock */
+  .props-mock {
+    background: #2c2c2c;
+    color: #e8e8e8;
+    padding: 16px;
+    font-family: 'Geist', system-ui, sans-serif;
+    font-size: 12px;
+    border-right: 1px solid var(--line);
+  }
+  .props-mock .pm-section {
+    padding: 12px 0;
+    border-bottom: 1px solid #3a3a3a;
+  }
+  .props-mock .pm-section:last-child { border-bottom: none; }
+  .props-mock .pm-section:first-child { padding-top: 0; }
+  .props-mock .pm-section-title {
+    font-size: 10px;
+    color: #999;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+    font-weight: 600;
+  }
+  .props-mock .pm-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 8px;
+    cursor: pointer;
+    border-radius: 3px;
+    padding: 3px 4px;
+    transition: background 0.15s;
+  }
+  .props-mock .pm-row:hover { background: #3a3a3a; }
+  .props-mock .pm-row.is-active { background: rgba(255, 138, 110, 0.18); }
+  .props-mock .pm-row:last-child { margin-bottom: 0; }
+  .props-mock .pm-input {
+    background: #1e1e1e;
+    border: 1px solid transparent;
+    color: #e8e8e8;
+    padding: 4px 8px;
+    border-radius: 3px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    flex: 1;
+  }
+  .props-mock .pm-prefix {
+    color: #888;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    width: 16px;
+    text-align: center;
+  }
+  .props-mock .pm-color-chip {
+    width: 18px; height: 18px;
+    border-radius: 3px;
+    flex-shrink: 0;
+  }
+  .props-mock .pm-color-input {
+    background: #1e1e1e;
+    color: #e8e8e8;
+    padding: 4px 8px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    border-radius: 3px;
+    flex: 1;
+  }
+
+  /* JS section: Prototype mock with arrow */
+  .proto-mock {
+    background: #1a1a1a;
+    background-image:
+      linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+    background-size: 16px 16px;
+    padding: 30px 24px;
+    position: relative;
+    min-height: 280px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 24px;
+    border-right: 1px solid var(--line);
+  }
+  .proto-frame {
+    background: white;
+    border: 1.5px solid #0d99ff;
+    border-radius: 4px;
+    padding: 14px 18px;
+    width: 130px;
+    text-align: center;
+    color: var(--ink);
+    font-size: 13px;
+    font-weight: 500;
+    position: relative;
+  }
+  .proto-frame .pf-tag {
+    position: absolute;
+    top: -22px; left: -1px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: #0d99ff;
+    letter-spacing: 0.05em;
+  }
+  .proto-frame.dark { background: var(--ink); color: white; }
+  .proto-frame .pf-btn {
+    margin-top: 10px;
+    background: var(--accent);
+    color: white;
+    border: none;
+    padding: 7px 14px;
+    border-radius: 3px;
+    font-size: 12px;
+    font-family: inherit;
+    cursor: pointer;
+  }
+  .proto-frame .pf-btn:hover { filter: brightness(1.08); }
+  .proto-arrow {
+    position: relative;
+    flex: 0 0 auto;
+    height: 2px;
+    width: 80px;
+    background: #0d99ff;
+  }
+  .proto-arrow::after {
+    content: '';
+    position: absolute;
+    right: -1px; top: 50%;
+    transform: translateY(-50%);
+    border-left: 8px solid #0d99ff;
+    border-top: 5px solid transparent;
+    border-bottom: 5px solid transparent;
+  }
+  .proto-arrow .pa-label {
+    position: absolute;
+    top: -24px; left: 50%;
+    transform: translateX(-50%);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: #0d99ff;
+    background: rgba(13, 153, 255, 0.12);
+    padding: 2px 8px;
+    border-radius: 100px;
+    border: 1px solid rgba(13, 153, 255, 0.4);
+    white-space: nowrap;
+  }
+  @media (max-width: 880px) { .proto-mock { flex-direction: column; gap: 40px; } .proto-arrow { transform: rotate(90deg); } }
+
+  /* §05 — Toggle preview */
+  .toggle-stage {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    overflow: hidden;
+    margin-top: 16px;
+  }
+  .toggle-controls {
+    display: flex;
+    background: var(--ink);
+    padding: 10px 14px;
+    gap: 6px;
+    align-items: center;
+  }
+  .toggle-controls .tc-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: rgba(255,255,255,0.65);
+    letter-spacing: 0.08em;
+    margin-right: 8px;
+  }
+  .toggle-controls button {
+    background: rgba(255,255,255,0.1);
+    border: 1px solid rgba(255,255,255,0.2);
+    color: rgba(255,255,255,0.9);
+    padding: 6px 14px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    border-radius: 3px;
+    cursor: pointer;
+    transition: all 0.15s;
+    letter-spacing: 0.03em;
+  }
+  .toggle-controls button:hover { background: rgba(255,255,255,0.2); }
+  .toggle-controls button.active { background: var(--accent); border-color: var(--accent); color: white; }
+
+  .toggle-grid {
+    display: grid;
+    grid-template-columns: 1.1fr 1fr;
+    gap: 0;
+  }
+  @media (max-width: 880px) { .toggle-grid { grid-template-columns: 1fr; } }
+
+  .toggle-render {
+    padding: 40px 32px;
+    min-height: 320px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background:
+      linear-gradient(to right, var(--line-soft) 1px, transparent 1px) 0 0/16px 16px,
+      linear-gradient(to bottom, var(--line-soft) 1px, transparent 1px) 0 0/16px 16px,
+      var(--bg);
+    border-right: 1px solid var(--line);
+  }
+  @media (max-width: 880px) { .toggle-render { border-right: none; border-bottom: 1px solid var(--line); } }
+
+  /* Demo card to show three layers */
+  .demo-card {
+    background: white;
+    border-radius: 8px;
+    padding: 24px;
+    width: 280px;
+    box-shadow: 0 4px 14px rgba(22,22,29,0.08);
+    text-align: left;
+    transition: all 0.3s ease;
+  }
+  .demo-card .dc-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--accent);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+  .demo-card h4 {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 18px;
+    margin: 0 0 8px;
+    font-weight: 700;
+    color: var(--ink);
+  }
+  .demo-card p {
+    font-size: 13px;
+    color: var(--ink-soft);
+    margin: 0 0 16px;
+    line-height: 1.5;
+  }
+  .demo-card button {
+    background: var(--ink);
+    color: white;
+    border: none;
+    padding: 10px 18px;
+    border-radius: 4px;
+    font-family: inherit;
+    font-size: 13px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: all 0.18s;
+  }
+  .demo-card button:hover { background: var(--accent); }
+  .demo-card button:active { transform: scale(0.97); }
+
+  /* Stage-1 only HTML — no CSS at all (browser default) */
+  .stage-1 .demo-card {
+    background: transparent;
+    border: none;
+    box-shadow: none;
+    padding: 0;
+    width: auto;
+    border-radius: 0;
+    font-family: 'Times New Roman', serif;
+  }
+  .stage-1 .demo-card .dc-tag,
+  .stage-1 .demo-card h4,
+  .stage-1 .demo-card p {
+    font-family: 'Times New Roman', serif;
+    color: black;
+    font-weight: normal;
+    font-size: 16px;
+    margin-bottom: 8px;
+    line-height: 1.4;
+    letter-spacing: 0;
+    text-transform: none;
+  }
+  .stage-1 .demo-card .dc-tag::before { content: '· '; }
+  .stage-1 .demo-card h4 { font-size: 24px; font-weight: bold; margin-top: 12px; }
+  .stage-1 .demo-card button {
+    background: buttonface;
+    color: black;
+    border: 2px outset buttongray;
+    padding: 2px 8px;
+    border-radius: 0;
+    font-family: 'Times New Roman', serif;
+    font-size: 13px;
+  }
+  .stage-1 .demo-card button:hover { background: buttonface; filter: none; }
+
+  /* Stage-3 enhances with JS animation hint */
+  .stage-3 .demo-card.toggled {
+    background: var(--ink);
+    color: white;
+    transform: translateY(-4px);
+  }
+  .stage-3 .demo-card.toggled h4 { color: white; }
+  .stage-3 .demo-card.toggled p { color: rgba(255,255,255,0.75); }
+  .stage-3 .demo-card.toggled .dc-tag { color: var(--yellow); }
+  .stage-3 .demo-card.toggled button { background: var(--accent); }
+
+  /* Code stack on right side of toggle */
+  .toggle-code {
+    background: var(--ink);
+    color: #d8d8e0;
+    padding: 24px 24px 20px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    line-height: 1.75;
+    overflow-x: auto;
+    position: relative;
+    min-height: 320px;
+  }
+  .toggle-code .tc-head {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: #6e6e7a;
+    letter-spacing: 0.1em;
+    margin-bottom: 12px;
+    padding-bottom: 8px;
+    border-bottom: 1px dashed #2a2a36;
+  }
+  .toggle-code .tc-head strong { color: var(--accent); font-weight: 500; }
+  .toggle-code pre { margin: 0; }
+  .toggle-code .ctag { color: #ff8a6e; }
+  .toggle-code .cattr { color: #ffd166; }
+  .toggle-code .cstr { color: #a8e6a3; }
+  .toggle-code .ckey { color: #ff8a6e; }
+  .toggle-code .cnum { color: #8ec5ff; }
+  .toggle-code .csel { color: #c9b6ff; }
+  .toggle-code .cfun { color: #8ec5ff; }
+  .toggle-code .ccom { color: #6e6e7a; font-style: italic; }
+  .toggle-code .cdim { opacity: 0.32; }
+
+  /* Cheat sheet */
+  .cheat-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    margin-top: 32px;
+  }
+  @media (max-width: 880px) { .cheat-grid { grid-template-columns: 1fr; } }
+  .cheat-card {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 24px;
+    position: relative;
+  }
+  .cheat-card.html { border-top: 4px solid #ff8a6e; }
+  .cheat-card.css { border-top: 4px solid #c9b6ff; }
+  .cheat-card.js { border-top: 4px solid var(--yellow); }
+  .cheat-card .cc-num {
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    font-size: 11px;
+    color: var(--ink-mute);
+    letter-spacing: 0.1em;
+    margin-bottom: 4px;
+    text-transform: uppercase;
+  }
+  .cheat-card h4 {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 22px;
+    margin: 0 0 6px;
+    font-weight: 800;
+    letter-spacing: -0.01em;
+  }
+  .cheat-card .cc-sub {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--ink-soft);
+    margin-bottom: 16px;
+    letter-spacing: 0.05em;
+  }
+  .cheat-card dl { margin: 0; padding: 0; font-size: 13px; }
+  .cheat-card dl dt {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--ink-mute);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-top: 14px;
+  }
+  .cheat-card dl dt:first-child { margin-top: 0; }
+  .cheat-card dl dd {
+    margin: 4px 0 0;
+    color: var(--ink-soft);
+    font-size: 13px;
+    line-height: 1.55;
+  }
+  .cheat-card dl dd strong { color: var(--ink); font-weight: 600; }
+
+  /* Outro card linking to A1 */
+  .outro {
+    margin-top: 32px;
+    padding: 28px 32px;
+    background: var(--ink);
+    color: var(--bg);
+    border-radius: 6px;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 24px;
+    align-items: center;
+  }
+  @media (max-width: 720px) { .outro { grid-template-columns: 1fr; } }
+  .outro .outro-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--accent);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+  .outro h4 {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 22px;
+    margin: 0 0 8px;
+    font-weight: 700;
+    color: white;
+  }
+  .outro p { margin: 0; color: rgba(255,255,255,0.72); font-size: 14px; line-height: 1.6; }
+  .outro .outro-cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 22px;
+    background: var(--accent);
+    color: white;
+    text-decoration: none;
+    border-radius: 4px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    transition: all 0.18s;
+    white-space: nowrap;
+  }
+  .outro .outro-cta:hover { background: white; color: var(--ink); transform: translateX(2px); }
+  .outro .outro-cta .arr { font-family: 'Fraunces', serif; font-style: italic; font-size: 18px; }
+
+  /* Footer */
+  footer {
+    border-top: 1px solid var(--line);
+    padding: 56px 0 64px;
+    background: var(--bg);
+  }
+  .byline {
+    display: flex;
+    gap: 28px;
+    align-items: center;
+    padding-bottom: 32px;
+    border-bottom: 1px dashed var(--line);
+    margin-bottom: 24px;
+    position: relative;
+  }
+  .byline::before {
+    content: '';
+    position: absolute;
+    top: -56px; left: 0;
+    width: 32px; height: 1px;
+    background: var(--accent);
+  }
+  .byline .avatar {
+    width: 96px; height: 96px;
+    border-radius: 50%;
+    object-fit: cover;
+    flex-shrink: 0;
+    border: 3px solid var(--paper);
+    box-shadow: 0 0 0 1px var(--line), 0 6px 20px rgba(22,22,29,0.10);
+    background: var(--paper);
+  }
+  .byline-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--ink-mute);
+    letter-spacing: 0.18em;
+    margin-bottom: 8px;
+  }
+  .byline-label .dot {
+    display: inline-block;
+    width: 6px; height: 6px;
+    background: var(--accent);
+    border-radius: 50%;
+    margin-right: 6px;
+    vertical-align: 1px;
+  }
+  .byline-name {
+    font-family: 'Noto Serif SC', 'Fraunces', serif;
+    font-size: clamp(28px, 4vw, 40px);
+    font-weight: 700;
+    line-height: 1.05;
+    letter-spacing: -0.01em;
+    margin: 0 0 8px;
+  }
+  .byline-name .em {
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    font-weight: 500;
+    color: var(--accent);
+  }
+  .byline-tag {
+    font-size: 14px;
+    color: var(--ink-soft);
+    line-height: 1.55;
+    margin: 0;
+    max-width: 52ch;
+  }
+  .footer-meta {
+    text-align: center;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--ink-mute);
+    letter-spacing: 0.05em;
+  }
+  .footer-meta .heart { color: var(--accent); }
+  .footer-meta .mono { color: var(--ink-soft); font-weight: 500; }
+  @media (max-width: 600px) {
+    .byline { flex-direction: column; text-align: center; align-items: center; gap: 16px; }
+    .byline-tag { margin-left: auto; margin-right: auto; }
+  }
+
+  /* Subtle entry animation */
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+  section { animation: fadeIn 0.6s ease-out backwards; }
+</style>
+</head>
+<body>
+
+<!-- Top bar -->
+<div class="topbar">
+  <div class="wrap topbar-inner">
+    <div class="brand"><span class="dot"></span>BASICS · 三件套 / 实验讲解</div>
+    <nav class="nav-links">
+      <a href="index.html">合集</a>
+      <a href="box-figma.html">01 盒子</a>
+      <a href="components-figma.html">02 组件</a>
+      <a href="page-figma.html">03 拼页面</a>
+      <a href="data-flow-figma.html">04 数据流</a>
+    </nav>
+  </div>
+</div>
+
+<!-- Hero -->
+<header class="hero">
+  <div class="wrap">
+    <div class="hero-meta">
+      <span class="pill fill">实验互动 · INTERACTIVE</span>
+      <span class="pill">2026 · 设计 × 代码</span>
+      <span class="pill">A0 · 入门 · 三件套</span>
+      <span class="label">阅读时长 ≈ 10 分钟</span>
+    </div>
+    <div class="hero-grid">
+      <div>
+        <h1>
+          <span class="display-cn">设计稿</span><br>
+          <span class="display-cn">是怎么变成</span><br>
+          <span class="em">代码</span><span class="display-cn">的？</span>
+        </h1>
+        <p class="lede">
+          你画完 Figma，前端拿走做出来。<br>
+          中间到底发生了什么？<br>
+          这一篇用最小的字讲清 HTML / CSS / JS 三件套，<br>用 Figma 类比 —— 你已经熟悉这些概念了，只是名字不一样。
+        </p>
+      </div>
+      <div class="hero-side">
+        <div class="row"><span class="k">本页讲什么</span><span class="v">三件套 = 什么</span></div>
+        <div class="row"><span class="k">含互动</span><span class="v">2 个对照练习</span></div>
+        <div class="row"><span class="k">面向</span><span class="v">设计师 · 完全 0 代码</span></div>
+        <div class="row"><span class="k">前置知识</span><span class="v">无 · 会用 Figma 即可</span></div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- Section 1: Problem -->
+<section id="problem">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>01</strong> / 问题</div>
+        <h2 class="section-title">设计稿到代码<br>中间的<span class="em">"黑盒"</span></h2>
+      </div>
+      <p class="section-sub">
+        你交完稿，前端默默工作几天，网页上线了。
+        中间到底发生了什么？知道一点结构，比完全不知道，沟通效率会差一个数量级。
+      </p>
+    </div>
+
+    <div class="problem-grid">
+      <div class="problem-card bad">
+        <span class="tag">BAD · 完全黑盒</span>
+        <h3>"反正我交了稿，剩下让前端弄"</h3>
+        <p>能做出来当然好，但只要稿子和成品对不上、需要改一下间距、想加个 hover 状态 —— 你完全不知道哪句话能说清楚需求。</p>
+        <div class="blackbox-vis">
+          <strong>你</strong>：稿子 <span class="arrow">→</span> <span class="q">？？？</span> <span class="arrow">→</span> <strong>网页</strong><br>
+          <span class="q">// 中间是一团迷雾</span><br>
+          <span class="q">// 出问题时无法精确定位</span>
+        </div>
+      </div>
+
+      <div class="problem-card good">
+        <span class="tag">GOOD · 知道大概结构</span>
+        <h3>"代码 = 三件套，每件管一件事"</h3>
+        <p>不需要会写。但你知道：HTML 管"有什么"，CSS 管"长什么样"，JS 管"动起来"。沟通改稿、提需求、看 AI 生成的代码 —— 都顺多了。</p>
+        <div class="blackbox-vis">
+          <strong>你</strong> <span class="arrow">→</span> 稿子 <span class="arrow">→</span> <strong>HTML + CSS + JS</strong> <span class="arrow">→</span> 网页<br>
+          <span class="q">// 三件套各司其职</span><br>
+          <span class="q">// 每件都能对应到 Figma 概念</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="pipeline">
+      <div class="pipe-step designer">
+        <div class="pipe-icon">F</div>
+        <div class="pipe-title">Figma</div>
+        <div class="pipe-desc">图层 / 属性 / 原型</div>
+      </div>
+      <div class="arr">→</div>
+      <div class="pipe-step code">
+        <div class="pipe-icon">{ }</div>
+        <div class="pipe-title">三件套</div>
+        <div class="pipe-desc">HTML + CSS + JS</div>
+      </div>
+      <div class="arr">→</div>
+      <div class="pipe-step browser">
+        <div class="pipe-icon">www</div>
+        <div class="pipe-title">浏览器</div>
+        <div class="pipe-desc">用户看到的页面</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Section 2: HTML -->
+<section id="html">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>02</strong> / 骨架</div>
+        <h2 class="section-title"><span class="em">HTML</span> 是骨架<br>= Figma 图层树</h2>
+      </div>
+      <p class="section-sub">
+        Figma 左侧那棵图层树 —— Frame 套 Frame 套 Text/Image —— 翻译成代码就是 HTML。
+        每一层"图层"对应一个"标签"。结构是一一对应的。
+      </p>
+    </div>
+
+    <div class="hint-strip">
+      <span class="hint-tag">互动</span>点左侧 Figma 图层 → 右侧 HTML 对应行会高亮。反过来点代码也一样。
+    </div>
+
+    <div class="layer-card" id="htmlPair">
+      <div class="figma-mock">
+        <div class="fm-title">图层 · LAYERS</div>
+        <div class="fm-layer" data-key="card">
+          <span class="fm-ic">▾</span>
+          <span class="fm-ic">⬚</span>
+          <span>Card</span>
+        </div>
+        <div class="fm-layer fm-indent-1" data-key="header">
+          <span class="fm-ic">▾</span>
+          <span class="fm-ic">⬚</span>
+          <span>Header</span>
+        </div>
+        <div class="fm-layer fm-indent-2" data-key="title">
+          <span class="fm-ic">·</span>
+          <span class="fm-ic">T</span>
+          <span>Title</span>
+        </div>
+        <div class="fm-layer fm-indent-2" data-key="desc">
+          <span class="fm-ic">·</span>
+          <span class="fm-ic">T</span>
+          <span>Description</span>
+        </div>
+        <div class="fm-layer fm-indent-1" data-key="btn">
+          <span class="fm-ic">·</span>
+          <span class="fm-ic">▭</span>
+          <span>Button</span>
+        </div>
+      </div>
+
+      <div class="code-mock">
+        <span class="code-head"></span>
+        <span class="code-fname">card.html</span>
+<pre><span class="cline" data-key="card"><span class="ctag">&lt;div</span> <span class="cattr">class</span>=<span class="cstr">"card"</span><span class="ctag">&gt;</span></span>
+<span class="cline" data-key="header">  <span class="ctag">&lt;div</span> <span class="cattr">class</span>=<span class="cstr">"header"</span><span class="ctag">&gt;</span></span>
+<span class="cline" data-key="title">    <span class="ctag">&lt;h3&gt;</span>标题<span class="ctag">&lt;/h3&gt;</span></span>
+<span class="cline" data-key="desc">    <span class="ctag">&lt;p&gt;</span>一段描述...<span class="ctag">&lt;/p&gt;</span></span>
+<span class="cline" data-key="header">  <span class="ctag">&lt;/div&gt;</span></span>
+<span class="cline" data-key="btn">  <span class="ctag">&lt;button&gt;</span>了解更多<span class="ctag">&lt;/button&gt;</span></span>
+<span class="cline" data-key="card"><span class="ctag">&lt;/div&gt;</span></span></pre>
+      </div>
+
+      <div class="pair-caption">
+        <div>
+          <div class="cap-k">Figma 视角</div>
+          一棵<strong>图层树</strong>。Frame 套 Frame，每个图层有名字、有层级、有缩进。
+        </div>
+        <div>
+          <div class="cap-k">代码视角</div>
+          一棵<strong>标签树</strong>。<code>&lt;div&gt;</code> 套 <code>&lt;div&gt;</code>，每个标签有名字、有层级、有缩进 —— 一模一样的事。
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Section 3: CSS -->
+<section id="css">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>03</strong> / 装修</div>
+        <h2 class="section-title"><span class="em">CSS</span> 是装修<br>= Figma 属性面板</h2>
+      </div>
+      <p class="section-sub">
+        Figma 右侧那一排属性面板 —— 颜色、字号、间距、圆角 —— 翻译成代码就是 CSS。
+        HTML 决定"<strong>有什么</strong>"，CSS 决定"<strong>长什么样</strong>"。
+      </p>
+    </div>
+
+    <div class="hint-strip">
+      <span class="hint-tag">互动</span>点左侧 Figma 属性行 → 右侧 CSS 代码对应位置会高亮。
+    </div>
+
+    <div class="layer-card" id="cssPair">
+      <div class="props-mock">
+        <div class="pm-section">
+          <div class="pm-section-title">Layout · 布局</div>
+          <div class="pm-row" data-key="padding">
+            <span class="pm-prefix">P</span>
+            <input class="pm-input" value="20" readonly>
+            <span style="color:#666;font-size:11px;">内边距</span>
+          </div>
+          <div class="pm-row" data-key="radius">
+            <span class="pm-prefix">⌒</span>
+            <input class="pm-input" value="8" readonly>
+            <span style="color:#666;font-size:11px;">圆角</span>
+          </div>
+        </div>
+
+        <div class="pm-section">
+          <div class="pm-section-title">Fill · 填充</div>
+          <div class="pm-row" data-key="bg">
+            <span class="pm-color-chip" style="background:#ff4d2e"></span>
+            <span class="pm-color-input">FF4D2E</span>
+            <span style="color:#666;font-size:11px;">100%</span>
+          </div>
+        </div>
+
+        <div class="pm-section">
+          <div class="pm-section-title">Text · 文字</div>
+          <div class="pm-row" data-key="font-size">
+            <span class="pm-prefix">Aa</span>
+            <input class="pm-input" value="14" readonly>
+            <span style="color:#666;font-size:11px;">字号</span>
+          </div>
+          <div class="pm-row" data-key="color">
+            <span class="pm-color-chip" style="background:#ffffff;border:1px solid #555"></span>
+            <span class="pm-color-input">FFFFFF</span>
+            <span style="color:#666;font-size:11px;">字色</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="code-mock">
+        <span class="code-head"></span>
+        <span class="code-fname">style.css</span>
+<pre><span class="csel">.button</span> {
+<span class="cline" data-key="bg">  <span class="ckey">background</span>: <span class="cstr">#ff4d2e</span>;</span>
+<span class="cline" data-key="color">  <span class="ckey">color</span>: <span class="cstr">#ffffff</span>;</span>
+<span class="cline" data-key="padding">  <span class="ckey">padding</span>: <span class="cnum">20</span><span class="cstr">px</span>;</span>
+<span class="cline" data-key="radius">  <span class="ckey">border-radius</span>: <span class="cnum">8</span><span class="cstr">px</span>;</span>
+<span class="cline" data-key="font-size">  <span class="ckey">font-size</span>: <span class="cnum">14</span><span class="cstr">px</span>;</span>
+}</pre>
+      </div>
+
+      <div class="pair-caption">
+        <div>
+          <div class="cap-k">Figma 视角</div>
+          选中一个图层，<strong>右侧属性面板</strong>就是它"长什么样"的全部信息。
+        </div>
+        <div>
+          <div class="cap-k">代码视角</div>
+          一组 <code>属性: 值</code>。属性名几乎跟 Figma 一样：<code>padding</code> = 内边距、<code>border-radius</code> = 圆角。
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Section 4: JS -->
+<section id="js">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>04</strong> / 行为</div>
+        <h2 class="section-title"><span class="em">JS</span> 是行为<br>= Figma Prototype</h2>
+      </div>
+      <p class="section-sub">
+        Figma Prototype 里那根连接两个 Frame 的箭头 —— 点击 / hover / 切换状态 —— 翻译成代码就是 JS。
+        前两件管"静态长什么样"，<strong>JS 管"用户操作时怎么响应"</strong>。
+      </p>
+    </div>
+
+    <div class="layer-card" id="jsPair">
+      <div class="proto-mock">
+        <div class="proto-frame">
+          <div class="pf-tag">Frame · Default</div>
+          深色模式
+          <button class="pf-btn">切换</button>
+        </div>
+        <div class="proto-arrow">
+          <span class="pa-label">On Click → Smart Animate</span>
+        </div>
+        <div class="proto-frame dark">
+          <div class="pf-tag" style="color:#ffd166">Frame · Dark</div>
+          深色模式
+          <button class="pf-btn">切换</button>
+        </div>
+      </div>
+
+      <div class="code-mock">
+        <span class="code-head"></span>
+        <span class="code-fname">script.js</span>
+<pre><span class="ccom">// 选中那个按钮</span>
+<span class="ckey">const</span> btn = document.<span class="cfun">querySelector</span>(<span class="cstr">'button'</span>);
+
+<span class="ccom">// 监听"点击"这个动作</span>
+btn.<span class="cfun">addEventListener</span>(<span class="cstr">'click'</span>, () =&gt; {
+  <span class="ccom">// 切到深色样式</span>
+  card.classList.<span class="cfun">toggle</span>(<span class="cstr">'dark'</span>);
+});</pre>
+      </div>
+
+      <div class="pair-caption">
+        <div>
+          <div class="cap-k">Figma 视角</div>
+          <strong>Prototype 连线</strong>：两个 Frame，中间一根箭头，注明"On Click"、动画类型。
+        </div>
+        <div>
+          <div class="cap-k">代码视角</div>
+          <strong>事件监听</strong>：盯住某个元素，等"click"发生，然后改一下样式 —— 完全同一件事。
+        </div>
+      </div>
+    </div>
+
+    <div class="hint-strip" style="margin-top:24px;">
+      <span class="hint-tag">注意</span>页面上看到的所有"动起来"的部分 —— 弹窗、tab 切换、表单校验、菜单展开 —— 背后都是 JS 在响应。Figma 里看不到的"用户操作之后"，都靠它。
+    </div>
+  </div>
+</section>
+
+<!-- Section 5: Together -->
+<section id="together">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>05</strong> / 合体</div>
+        <h2 class="section-title">三件套<br><span class="em">合在一起</span></h2>
+      </div>
+      <p class="section-sub">
+        给一个完整的卡片，逐层叠加：先看只有 HTML（裸结构）、再加 CSS（样式上身）、再加 JS（点击有反应）。
+        切一下试试。
+      </p>
+    </div>
+
+    <div class="toggle-stage" id="toggleStage">
+      <div class="toggle-controls">
+        <span class="tc-label">显示层级 ›</span>
+        <button class="active" data-stage="1">只看 HTML</button>
+        <button data-stage="2">+ CSS</button>
+        <button data-stage="3">+ JS</button>
+      </div>
+
+      <div class="toggle-grid">
+        <div class="toggle-render stage-1" id="toggleRender">
+          <div class="demo-card" id="demoCard">
+            <div class="dc-tag">A0 · 三件套</div>
+            <h4>Hello, world.</h4>
+            <p>这是一张用来演示 HTML / CSS / JS 三层叠加的卡片。点击下方按钮试试。</p>
+            <button id="demoBtn">点我切换</button>
+          </div>
+        </div>
+
+        <div class="toggle-code">
+          <div class="tc-head" id="codeHead">
+            当前显示 · <strong>只有 HTML</strong> · 浏览器默认样式 · 静态
+          </div>
+<pre id="codeBlock"><span class="ctag">&lt;div&gt;</span>
+  <span class="ctag">&lt;span&gt;</span>A0 · 三件套<span class="ctag">&lt;/span&gt;</span>
+  <span class="ctag">&lt;h4&gt;</span>Hello, world.<span class="ctag">&lt;/h4&gt;</span>
+  <span class="ctag">&lt;p&gt;</span>这是一张用来演示 HTML / CSS / JS 三层叠加的卡片。<span class="ctag">&lt;/p&gt;</span>
+  <span class="ctag">&lt;button&gt;</span>点我切换<span class="ctag">&lt;/button&gt;</span>
+<span class="ctag">&lt;/div&gt;</span>
+
+<span class="ccom">// 只有 HTML：</span>
+<span class="ccom">// → 元素都在，但都是浏览器默认样式</span>
+<span class="ccom">// → 黑字白底、Times New Roman、按钮是灰色凸起</span>
+<span class="ccom">// → 你看到这种页面，等于"只画了图层、没设属性"</span></pre>
+        </div>
+      </div>
+    </div>
+
+    <div class="cheat-grid">
+      <div class="cheat-card html">
+        <div class="cc-num">PART 01 · 骨架</div>
+        <h4>HTML</h4>
+        <div class="cc-sub">HyperText Markup Language</div>
+        <dl>
+          <dt>负责</dt>
+          <dd>页面上<strong>有什么</strong>。标题、段落、按钮、图片这些"东西"。</dd>
+          <dt>类比 Figma</dt>
+          <dd><strong>图层树</strong>。Frame 套 Frame 的那个面板。</dd>
+          <dt>设计师交什么</dt>
+          <dd>清晰的<strong>图层结构和命名</strong>。Auto Layout 比绝对定位好十倍。</dd>
+        </dl>
+      </div>
+
+      <div class="cheat-card css">
+        <div class="cc-num">PART 02 · 装修</div>
+        <h4>CSS</h4>
+        <div class="cc-sub">Cascading Style Sheets</div>
+        <dl>
+          <dt>负责</dt>
+          <dd>页面<strong>长什么样</strong>。颜色、字号、间距、圆角、阴影。</dd>
+          <dt>类比 Figma</dt>
+          <dd><strong>右侧属性面板</strong>。Fill / Stroke / Effects / Text。</dd>
+          <dt>设计师交什么</dt>
+          <dd>统一的<strong>设计变量</strong>（颜色、字号、间距）和清晰的设计稿。</dd>
+        </dl>
+      </div>
+
+      <div class="cheat-card js">
+        <div class="cc-num">PART 03 · 行为</div>
+        <h4>JS</h4>
+        <div class="cc-sub">JavaScript</div>
+        <dl>
+          <dt>负责</dt>
+          <dd>用户操作时<strong>怎么响应</strong>。点击、hover、切换、加载新数据。</dd>
+          <dt>类比 Figma</dt>
+          <dd><strong>Prototype 连线</strong>和 Smart Animate。</dd>
+          <dt>设计师交什么</dt>
+          <dd>每个交互的<strong>所有状态</strong>：默认、hover、点击中、禁用、加载、错误...</dd>
+        </dl>
+      </div>
+    </div>
+
+    <div class="outro">
+      <div>
+        <div class="outro-tag">下一篇 · NEXT</div>
+        <h4>A1 · 盒子 × Auto Layout</h4>
+        <p>三件套讲完了。下一站直接落到最常用的一件 —— CSS 盒子模型 + Figma Auto Layout，一次讲清单元素的布局。</p>
+      </div>
+      <a class="outro-cta" href="box-figma.html">
+        继续阅读 <span class="arr">→</span>
+      </a>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div class="byline">
+      <img class="avatar" src="author.jpg" alt="范米花儿">
+      <div class="byline-meta">
+        <div class="byline-label"><span class="dot"></span>作者 · WRITTEN BY</div>
+        <h3 class="byline-name">嗨，我是 <span class="em">范米花儿</span></h3>
+        <p class="byline-tag">一份给设计师的代码入门 ——<br>不需要会写，知道大概怎么回事，跟前端 / AI 沟通就顺多了。</p>
+      </div>
+    </div>
+    <div class="footer-meta">
+      做于 <span class="mono">2026</span> · 用 <span class="heart">●</span> 写给 <span class="mono">DESIGNERS &amp; DEVELOPERS</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+// ========= §02 HTML pair: layer ↔ code two-way highlight =========
+(function () {
+  const pair = document.getElementById('htmlPair');
+  if (!pair) return;
+  const layers = pair.querySelectorAll('.fm-layer[data-key]');
+  const lines  = pair.querySelectorAll('.cline[data-key]');
+
+  function setActive(key) {
+    layers.forEach(l => l.classList.toggle('is-active', l.dataset.key === key));
+    lines.forEach(l => {
+      const match = l.dataset.key === key;
+      l.classList.toggle('is-active', match);
+      if (match) {
+        l.classList.remove('is-flash');
+        // force reflow to restart animation
+        void l.offsetWidth;
+        l.classList.add('is-flash');
+      }
+    });
+  }
+
+  layers.forEach(layer => {
+    layer.addEventListener('mouseenter', () => setActive(layer.dataset.key));
+    layer.addEventListener('click',     () => setActive(layer.dataset.key));
+  });
+  lines.forEach(line => {
+    line.addEventListener('mouseenter', () => setActive(line.dataset.key));
+    line.addEventListener('click',     () => setActive(line.dataset.key));
+  });
+
+  pair.addEventListener('mouseleave', () => {
+    layers.forEach(l => l.classList.remove('is-active'));
+    lines.forEach(l => l.classList.remove('is-active'));
+  });
+
+  // Default: highlight the card root briefly to invite interaction
+  setTimeout(() => setActive('header'), 600);
+})();
+
+// ========= §03 CSS pair: property row ↔ code line =========
+(function () {
+  const pair = document.getElementById('cssPair');
+  if (!pair) return;
+  const rows  = pair.querySelectorAll('.pm-row[data-key]');
+  const lines = pair.querySelectorAll('.cline[data-key]');
+
+  function setActive(key) {
+    rows.forEach(r => r.classList.toggle('is-active', r.dataset.key === key));
+    lines.forEach(l => {
+      const match = l.dataset.key === key;
+      l.classList.toggle('is-active', match);
+      if (match) {
+        l.classList.remove('is-flash');
+        void l.offsetWidth;
+        l.classList.add('is-flash');
+      }
+    });
+  }
+
+  rows.forEach(row => {
+    row.addEventListener('mouseenter', () => setActive(row.dataset.key));
+    row.addEventListener('click',     () => setActive(row.dataset.key));
+  });
+  lines.forEach(line => {
+    line.addEventListener('mouseenter', () => setActive(line.dataset.key));
+    line.addEventListener('click',     () => setActive(line.dataset.key));
+  });
+
+  pair.addEventListener('mouseleave', () => {
+    rows.forEach(r => r.classList.remove('is-active'));
+    lines.forEach(l => l.classList.remove('is-active'));
+  });
+
+  setTimeout(() => setActive('bg'), 800);
+})();
+
+// ========= §05 Stage toggle: HTML / +CSS / +JS =========
+(function () {
+  const stage  = document.getElementById('toggleStage');
+  if (!stage) return;
+  const buttons = stage.querySelectorAll('.toggle-controls button');
+  const render  = document.getElementById('toggleRender');
+  const codeHead = document.getElementById('codeHead');
+  const codeBlock = document.getElementById('codeBlock');
+  const card    = document.getElementById('demoCard');
+  const btn     = document.getElementById('demoBtn');
+
+  const headTexts = {
+    1: '当前显示 · <strong>只有 HTML</strong> · 浏览器默认样式 · 静态',
+    2: '当前显示 · <strong>HTML + CSS</strong> · 长成你想要的样子 · 但点按钮还没反应',
+    3: '当前显示 · <strong>HTML + CSS + JS</strong> · 完整版 · 点按钮试试'
+  };
+
+  const codeBlocks = {
+    1:
+'<span class="ctag">&lt;div&gt;</span>\n' +
+'  <span class="ctag">&lt;span&gt;</span>A0 · 三件套<span class="ctag">&lt;/span&gt;</span>\n' +
+'  <span class="ctag">&lt;h4&gt;</span>Hello, world.<span class="ctag">&lt;/h4&gt;</span>\n' +
+'  <span class="ctag">&lt;p&gt;</span>这是一张用来演示 HTML / CSS / JS 三层叠加的卡片。<span class="ctag">&lt;/p&gt;</span>\n' +
+'  <span class="ctag">&lt;button&gt;</span>点我切换<span class="ctag">&lt;/button&gt;</span>\n' +
+'<span class="ctag">&lt;/div&gt;</span>\n\n' +
+'<span class="ccom">// 只有 HTML：</span>\n' +
+'<span class="ccom">// → 元素都在，但都是浏览器默认样式</span>\n' +
+'<span class="ccom">// → 黑字白底、Times New Roman、按钮是灰色凸起</span>\n' +
+'<span class="ccom">// → 你看到这种页面，等于"只画了图层、没设属性"</span>',
+
+    2:
+'<span class="cdim"><span class="ctag">&lt;div&gt;</span> ... <span class="ctag">&lt;/div&gt;</span></span>\n\n' +
+'<span class="ccom">/* 加上样式 */</span>\n' +
+'<span class="csel">.card</span> {\n' +
+'  <span class="ckey">background</span>: <span class="cstr">#ffffff</span>;\n' +
+'  <span class="ckey">padding</span>: <span class="cnum">24</span><span class="cstr">px</span>;\n' +
+'  <span class="ckey">border-radius</span>: <span class="cnum">8</span><span class="cstr">px</span>;\n' +
+'  <span class="ckey">box-shadow</span>: <span class="cnum">0</span> <span class="cnum">4</span><span class="cstr">px</span> ...;\n' +
+'}\n' +
+'<span class="csel">.card button</span> {\n' +
+'  <span class="ckey">background</span>: <span class="cstr">#16161d</span>;\n' +
+'  <span class="ckey">color</span>: <span class="cstr">white</span>;\n' +
+'  <span class="ckey">border-radius</span>: <span class="cnum">4</span><span class="cstr">px</span>;\n' +
+'}\n\n' +
+'<span class="ccom">// HTML + CSS：</span>\n' +
+'<span class="ccom">// → 卡片"长好看了"，按钮也变成深色</span>\n' +
+'<span class="ccom">// → 但点按钮还是没反应 —— 那是 JS 的活</span>',
+
+    3:
+'<span class="cdim"><span class="ctag">&lt;div&gt;</span> ... <span class="ctag">&lt;/div&gt;</span> + <span class="csel">.card</span> { ... }</span>\n\n' +
+'<span class="ccom">// 加上行为</span>\n' +
+'<span class="ckey">const</span> btn  = document.<span class="cfun">querySelector</span>(<span class="cstr">\'#demoBtn\'</span>);\n' +
+'<span class="ckey">const</span> card = document.<span class="cfun">querySelector</span>(<span class="cstr">\'.demo-card\'</span>);\n\n' +
+'btn.<span class="cfun">addEventListener</span>(<span class="cstr">\'click\'</span>, () =&gt; {\n' +
+'  card.classList.<span class="cfun">toggle</span>(<span class="cstr">\'toggled\'</span>);\n' +
+'});\n\n' +
+'<span class="ccom">// HTML + CSS + JS：</span>\n' +
+'<span class="ccom">// → 三件套到齐</span>\n' +
+'<span class="ccom">// → 点按钮 → 卡片切到深色 ⇄ 切回浅色</span>\n' +
+'<span class="ccom">// → 这就是一个完整的小组件</span>'
+  };
+
+  function setStage(n) {
+    buttons.forEach(b => b.classList.toggle('active', b.dataset.stage === String(n)));
+    render.className = 'toggle-render stage-' + n;
+    codeHead.innerHTML = headTexts[n];
+    codeBlock.innerHTML = codeBlocks[n];
+    if (n !== 3) card.classList.remove('toggled');
+  }
+
+  buttons.forEach(b => b.addEventListener('click', () => setStage(b.dataset.stage)));
+
+  btn.addEventListener('click', e => {
+    // Only respond when stage 3 is active (JS layer applied)
+    const active = stage.querySelector('.toggle-controls button.active').dataset.stage;
+    if (active === '3') {
+      card.classList.toggle('toggled');
+    } else {
+      // Tiny visual hint — shake the JS button to invite the user
+      const jsBtn = stage.querySelector('button[data-stage="3"]');
+      jsBtn.animate(
+        [{ transform: 'translateX(0)' }, { transform: 'translateX(-4px)' }, { transform: 'translateX(4px)' }, { transform: 'translateX(0)' }],
+        { duration: 320, easing: 'ease-out' }
+      );
+    }
+    e.preventDefault();
+  });
+})();
+</script>
+
+</body>
+</html>

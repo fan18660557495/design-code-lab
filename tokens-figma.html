@@ -1,0 +1,1816 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>色板是给前端的礼物 — Variables × Tokens 入门</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,300..900&family=Geist:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Noto+Sans+SC:wght@300;400;500;700;900&family=Noto+Serif+SC:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f3eee5;
+    --bg-2: #ebe4d4;
+    --ink: #16161d;
+    --ink-soft: #4a4a55;
+    --ink-mute: #8a8a92;
+    --line: #d5cdba;
+    --line-soft: #e3dcca;
+    --accent: #ff4d2e;
+    --accent-soft: #ffe4dc;
+    --blue: #0a4cff;
+    --blue-soft: #dde6ff;
+    --green: #1f6b3a;
+    --green-soft: #d4ecdb;
+    --yellow: #ffcf3d;
+    --paper: #faf7f0;
+    --shadow: 0 1px 0 rgba(0,0,0,0.04), 0 8px 24px rgba(22,22,29,0.06);
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'Geist', 'Noto Sans SC', system-ui, -apple-system, sans-serif;
+    font-size: 16px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    background-image:
+      radial-gradient(circle at 1px 1px, rgba(22,22,29,0.05) 1px, transparent 0);
+    background-size: 24px 24px;
+  }
+
+  .display-cn { font-family: 'Noto Serif SC', 'Fraunces', serif; font-weight: 900; letter-spacing: -0.01em; }
+  .display-en { font-family: 'Fraunces', 'Noto Serif SC', serif; font-weight: 600; font-style: italic; letter-spacing: -0.02em; }
+  .mono { font-family: 'JetBrains Mono', monospace; }
+  .label { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-mute); }
+
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 0 32px; }
+
+  /* Top bar */
+  .topbar {
+    border-bottom: 1px dashed var(--line);
+    padding: 16px 0;
+    background: var(--bg);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    backdrop-filter: blur(8px);
+    background: rgba(243, 238, 229, 0.85);
+  }
+  .topbar-inner { display: flex; justify-content: space-between; align-items: center; gap: 24px; }
+  .brand { font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 600; }
+  .brand .dot { display: inline-block; width: 8px; height: 8px; background: var(--accent); border-radius: 50%; margin-right: 8px; vertical-align: middle; animation: pulse 2s ease-in-out infinite; }
+  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+  .nav-links { display: flex; gap: 20px; font-size: 13px; }
+  .nav-links a { color: var(--ink-soft); text-decoration: none; transition: color 0.2s; }
+  .nav-links a:hover { color: var(--accent); }
+  .nav-links a.current { color: var(--accent); font-weight: 600; }
+
+  /* Hero */
+  .hero { padding: 100px 0 80px; position: relative; overflow: hidden; }
+  .hero-meta { display: flex; gap: 24px; margin-bottom: 32px; align-items: center; flex-wrap: wrap; }
+  .hero-meta .pill { padding: 6px 12px; border: 1px solid var(--ink); border-radius: 100px; font-size: 11px; font-family: 'JetBrains Mono', monospace; letter-spacing: 0.05em; }
+  .hero-meta .pill.fill { background: var(--ink); color: var(--bg); }
+  .hero h1 {
+    font-family: 'Noto Serif SC', 'Fraunces', serif;
+    font-weight: 900;
+    font-size: clamp(44px, 6.5vw, 84px);
+    line-height: 0.98;
+    letter-spacing: -0.03em;
+    margin: 0 0 24px;
+  }
+  .hero h1 .em { font-family: 'Fraunces', serif; font-style: italic; font-weight: 500; color: var(--accent); }
+  .hero h1 .x { display: inline-block; transform: translateY(-0.05em); margin: 0 0.05em; color: var(--ink-mute); font-weight: 300; }
+  .hero p.lede {
+    font-size: 19px;
+    line-height: 1.55;
+    max-width: 640px;
+    color: var(--ink-soft);
+    margin: 0 0 40px;
+  }
+  .hero-grid {
+    display: grid;
+    grid-template-columns: 1.4fr 1fr;
+    gap: 48px;
+    align-items: end;
+  }
+  .hero-side {
+    border-left: 1px dashed var(--line);
+    padding-left: 24px;
+    font-size: 13px;
+    color: var(--ink-soft);
+  }
+  .hero-side .row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px dashed var(--line); }
+  .hero-side .row:last-child { border-bottom: none; }
+  .hero-side .row .k { color: var(--ink-mute); font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.05em; text-transform: uppercase; }
+  .hero-side .row .v { font-weight: 500; }
+
+  /* Hero color strip — quiet visual signature for tokens article */
+  .hero-strip {
+    margin-top: 56px;
+    display: grid;
+    grid-template-columns: repeat(8, 1fr);
+    gap: 0;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    overflow: hidden;
+    background: var(--paper);
+  }
+  .hero-strip .swatch {
+    aspect-ratio: 1.6 / 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    padding: 10px 12px;
+    color: white;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.04em;
+    border-right: 1px solid rgba(255,255,255,0.1);
+    position: relative;
+  }
+  .hero-strip .swatch:last-child { border-right: none; }
+  .hero-strip .swatch .n { font-size: 9px; opacity: 0.7; margin-bottom: 2px; }
+  .hero-strip .swatch .v { font-weight: 500; }
+  .hero-strip .swatch.dark { color: var(--ink); }
+  @media (max-width: 720px) {
+    .hero-strip { grid-template-columns: repeat(4, 1fr); }
+    .hero-strip .swatch:nth-child(4) { border-right: none; }
+  }
+
+  /* Section */
+  section { padding: 80px 0; border-top: 1px solid var(--line); position: relative; }
+  .section-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 56px; flex-wrap: wrap; gap: 16px; }
+  .section-num { font-family: 'JetBrains Mono', monospace; font-size: 13px; color: var(--ink-mute); letter-spacing: 0.1em; }
+  .section-num strong { color: var(--accent); }
+  .section-title {
+    font-family: 'Noto Serif SC', serif;
+    font-weight: 900;
+    font-size: clamp(30px, 4.2vw, 48px);
+    line-height: 1.05;
+    letter-spacing: -0.02em;
+    margin: 0;
+    max-width: 18ch;
+  }
+  .section-title .em { font-family: 'Fraunces', serif; font-style: italic; font-weight: 500; color: var(--accent); }
+  .section-sub { color: var(--ink-soft); font-size: 17px; max-width: 38ch; line-height: 1.55; margin: 0; }
+
+  /* §01 — Problem (BAD/GOOD comparison) */
+  .problem-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 32px;
+    margin-top: 24px;
+  }
+  @media (max-width: 880px) { .problem-grid { grid-template-columns: 1fr; } }
+  .problem-card {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 28px;
+    position: relative;
+  }
+  .problem-card.bad { border-color: var(--accent); background: var(--accent-soft); }
+  .problem-card.good { border-color: var(--green); background: var(--green-soft); }
+  .problem-card .tag {
+    position: absolute; top: -12px; left: 24px;
+    background: var(--bg); padding: 2px 10px;
+    font-family: 'JetBrains Mono', monospace; font-size: 11px;
+    letter-spacing: 0.1em;
+  }
+  .problem-card.bad .tag { color: var(--accent); border: 1px solid var(--accent); }
+  .problem-card.good .tag { color: var(--green); border: 1px solid var(--green); }
+  .problem-card h3 { font-family: 'Noto Serif SC', serif; font-size: 22px; margin: 0 0 12px; font-weight: 700; }
+  .problem-card p { margin: 0 0 18px; color: var(--ink-soft); font-size: 14px; line-height: 1.6; }
+
+  /* swatch list inside problem card */
+  .swatch-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 12px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+  }
+  .swatch-list .sw-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 6px 10px;
+    background: rgba(255,255,255,0.55);
+    border-radius: 3px;
+  }
+  .swatch-list .chip {
+    width: 16px; height: 16px;
+    border-radius: 3px;
+    flex-shrink: 0;
+    border: 1px solid rgba(0,0,0,0.08);
+  }
+  .swatch-list .label-mono { color: var(--ink); }
+  .swatch-list .desc { color: var(--ink-soft); margin-left: auto; font-size: 11px; }
+  .swatch-list .arrow { color: var(--ink-mute); font-family: 'Fraunces', serif; font-style: italic; font-size: 14px; }
+
+  .designer-note {
+    margin-top: 14px;
+    padding: 10px 14px;
+    background: rgba(255,255,255,0.5);
+    border-left: 2px solid var(--accent);
+    border-radius: 0 3px 3px 0;
+    font-size: 13px;
+    color: var(--ink-soft);
+    line-height: 1.55;
+  }
+  .problem-card.good .designer-note { border-left-color: var(--green); }
+  .designer-note strong { color: var(--ink); }
+
+  /* §02 — Variables side-by-side */
+  .var-stage {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    align-items: stretch;
+  }
+  @media (max-width: 880px) { .var-stage { grid-template-columns: 1fr; } }
+
+  /* Figma-style variables panel */
+  .figma-vars {
+    background: #2c2c2c;
+    color: #e8e8e8;
+    border-radius: 6px;
+    overflow: hidden;
+    font-family: 'Geist', system-ui, sans-serif;
+    box-shadow: var(--shadow);
+  }
+  .figma-vars-head {
+    background: #1e1e1e;
+    padding: 12px 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    border-bottom: 1px solid #3a3a3a;
+  }
+  .figma-vars-head .fv-title {
+    font-size: 12px; font-weight: 600; color: #e8e8e8;
+  }
+  .figma-vars-head .fv-tag {
+    margin-left: auto;
+    font-size: 10px; color: #888;
+    font-family: 'JetBrains Mono', monospace;
+    letter-spacing: 0.05em;
+  }
+  .figma-vars-head .fv-icon {
+    width: 14px; height: 14px;
+    background: #0d99ff;
+    border-radius: 3px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 10px; color: white; font-weight: 700;
+  }
+  .figma-vars-body { padding: 8px 0; min-height: 280px; }
+  .figma-vars-row {
+    display: grid;
+    grid-template-columns: 24px 1fr 80px;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    font-size: 12px;
+    border-bottom: 1px solid #353540;
+    transition: background 0.15s;
+  }
+  .figma-vars-row:last-child { border-bottom: none; }
+  .figma-vars-row:hover { background: #353540; }
+  .figma-vars-row .fv-chip {
+    width: 14px; height: 14px;
+    border-radius: 3px;
+    border: 1px solid rgba(255,255,255,0.1);
+  }
+  .figma-vars-row .fv-chip.text-chip {
+    background: transparent;
+    color: #e8e8e8;
+    font-family: 'Noto Serif SC', serif;
+    font-weight: 700;
+    text-align: center;
+    line-height: 14px;
+    border: none;
+  }
+  .figma-vars-row .fv-chip.gap-chip {
+    background: linear-gradient(90deg, transparent 0, transparent 50%, #888 50%, #888 100%);
+    background-size: 4px 100%;
+    border: 1px dashed #666;
+  }
+  .figma-vars-row .fv-name {
+    color: #e8e8e8;
+    font-size: 12px;
+  }
+  .figma-vars-row .fv-name .fv-slash { color: #888; }
+  .figma-vars-row .fv-value {
+    color: #aaa;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    text-align: right;
+  }
+  .figma-vars-row.is-active { background: rgba(13, 153, 255, 0.12); }
+  .figma-vars-row.is-active .fv-name { color: #0d99ff; }
+
+  /* CSS code panel */
+  .css-panel {
+    background: var(--ink);
+    color: #e8e8ec;
+    border-radius: 6px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    line-height: 1.85;
+    overflow: hidden;
+    box-shadow: var(--shadow);
+    display: flex; flex-direction: column;
+  }
+  .css-panel-head {
+    background: #1f1f29;
+    padding: 10px 14px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    border-bottom: 1px solid #2a2a36;
+  }
+  .css-panel-head .dots {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: #ff5f56;
+    box-shadow: 14px 0 0 #ffbd2e, 28px 0 0 #27c93f;
+    margin-right: 28px;
+  }
+  .css-panel-head .filename {
+    color: #8a8a96; font-size: 11px; letter-spacing: 0.05em;
+  }
+  .css-panel-head .pill-label {
+    margin-left: auto;
+    font-size: 10px; color: #8a8a96;
+    background: rgba(255, 77, 46, 0.12);
+    border: 1px solid rgba(255, 77, 46, 0.25);
+    border-radius: 100px;
+    padding: 3px 10px;
+    letter-spacing: 0.05em;
+  }
+  .css-panel-head .pill-label strong { color: var(--accent); font-weight: 500; }
+  .css-panel-body {
+    padding: 16px 20px;
+    flex: 1;
+    overflow-x: auto;
+  }
+  .css-panel .line {
+    display: flex;
+    align-items: center;
+    transition: background 0.15s;
+    border-radius: 3px;
+    padding: 0 6px;
+    margin: 0 -6px;
+  }
+  .css-panel .line.is-active { background: rgba(255, 138, 110, 0.14); box-shadow: inset 2px 0 0 #ff8a6e; }
+  .css-panel .csel { color: #c9b6ff; }
+  .css-panel .ckey { color: #ff8a6e; }
+  .css-panel .cstr { color: #a8e6a3; }
+  .css-panel .cnum { color: #8ec5ff; }
+  .css-panel .ccom { color: #6e6e7a; font-style: italic; }
+  .css-panel .cvar { color: #ffd166; }
+
+  /* §02 explanation strip */
+  .v-explain {
+    margin-top: 32px;
+    padding: 24px 28px;
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-left: 3px solid var(--blue);
+    border-radius: 6px;
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 24px;
+    align-items: center;
+  }
+  @media (max-width: 720px) { .v-explain { grid-template-columns: 1fr; } }
+  .v-explain .num {
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    font-size: 64px;
+    line-height: 1;
+    color: var(--blue);
+  }
+  .v-explain h4 {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 18px;
+    margin: 0 0 6px;
+    font-weight: 700;
+  }
+  .v-explain p { margin: 0; color: var(--ink-soft); font-size: 14px; line-height: 1.65; }
+  .v-explain p .mono { background: var(--bg-2); padding: 1px 6px; border-radius: 3px; font-size: 12px; color: var(--ink); }
+
+  /* §03 — Three token types tabs */
+  .tt-stage {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    overflow: hidden;
+  }
+  .tt-tabs {
+    display: flex;
+    background: var(--bg-2);
+    padding: 4px;
+    margin: 16px;
+    border-radius: 4px;
+    gap: 2px;
+  }
+  .tt-tabs button {
+    flex: 1;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 10px 12px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--ink-soft);
+    border-radius: 3px;
+    letter-spacing: 0.05em;
+    transition: all 0.15s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+  .tt-tabs button:hover:not(.active) { color: var(--ink); }
+  .tt-tabs button.active { background: var(--ink); color: var(--bg); }
+  .tt-tabs button .t-ico { font-size: 14px; opacity: 0.7; }
+  .tt-tabs button.active .t-ico { opacity: 1; }
+
+  .tt-content { padding: 8px 16px 24px; }
+  .tt-pane { display: none; }
+  .tt-pane.active { display: block; animation: fadeInPane 0.25s ease-out; }
+  @keyframes fadeInPane { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+
+  .tt-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    align-items: stretch;
+  }
+  @media (max-width: 880px) { .tt-grid { grid-template-columns: 1fr; } }
+
+  /* tt sample (preview) */
+  .tt-sample {
+    background: var(--bg);
+    border: 1px dashed var(--line);
+    border-radius: 4px;
+    padding: 24px 20px;
+    min-height: 240px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+  }
+  .tt-sample::before {
+    content: 'PREVIEW';
+    position: absolute;
+    top: 8px; left: 12px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 0.15em;
+    color: var(--ink-mute);
+  }
+
+  .tt-color-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+    width: 100%;
+    max-width: 320px;
+  }
+  .tt-color-grid .ts-chip {
+    aspect-ratio: 2.4 / 1;
+    border-radius: 4px;
+    padding: 8px 10px;
+    color: white;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    border: 1px solid rgba(0,0,0,0.06);
+  }
+  .tt-color-grid .ts-chip .n { font-size: 9px; opacity: 0.85; letter-spacing: 0.04em; }
+  .tt-color-grid .ts-chip .v { font-weight: 500; align-self: flex-end; }
+  .tt-color-grid .ts-chip.dark { color: var(--ink); }
+
+  .tt-type-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    width: 100%;
+    max-width: 380px;
+  }
+  .tt-type-stack .ts-row {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 16px;
+    align-items: baseline;
+    padding-bottom: 10px;
+    border-bottom: 1px dashed var(--line-soft);
+  }
+  .tt-type-stack .ts-row:last-child { border-bottom: none; }
+  .tt-type-stack .ts-row .text { font-family: 'Noto Serif SC', serif; color: var(--ink); line-height: 1; }
+  .tt-type-stack .ts-row .meta {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--ink-mute);
+    text-align: right;
+    line-height: 1.4;
+  }
+  .tt-type-stack .ts-row .meta .name { color: var(--ink-soft); display: block; }
+
+  .tt-space-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: 100%;
+    max-width: 360px;
+  }
+  .tt-space-stack .ts-row {
+    display: grid;
+    grid-template-columns: 60px 1fr 80px;
+    gap: 12px;
+    align-items: center;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+  }
+  .tt-space-stack .ts-row .name { color: var(--ink); font-weight: 500; }
+  .tt-space-stack .ts-row .bar {
+    height: 20px;
+    background: var(--accent);
+    border-radius: 2px;
+  }
+  .tt-space-stack .ts-row .v { color: var(--ink-mute); text-align: right; }
+
+  /* tt mapping panel — Figma name <-> CSS variable */
+  .tt-mapping {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+  .tt-mapping-head {
+    display: grid;
+    grid-template-columns: 1fr 24px 1fr;
+    background: var(--ink);
+    color: var(--bg);
+    padding: 10px 14px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+  .tt-mapping-head > div:nth-child(2) { text-align: center; }
+  .tt-mapping-row {
+    display: grid;
+    grid-template-columns: 1fr 24px 1fr;
+    align-items: center;
+    padding: 10px 14px;
+    border-bottom: 1px dashed var(--line-soft);
+    font-size: 12px;
+    background: var(--paper);
+    transition: background 0.15s;
+  }
+  .tt-mapping-row:hover { background: rgba(255,77,46,0.05); }
+  .tt-mapping-row:last-child { border-bottom: none; }
+  .tt-mapping-row > div:nth-child(2) {
+    text-align: center;
+    color: var(--ink-mute);
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    font-size: 14px;
+  }
+  .tt-mapping-row .figma-name {
+    font-family: 'Geist', sans-serif;
+    color: var(--ink);
+    font-size: 12px;
+  }
+  .tt-mapping-row .figma-name .slash { color: var(--ink-mute); }
+  .tt-mapping-row .css-name {
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--ink);
+    font-size: 11.5px;
+  }
+  .tt-mapping-row .css-name .dim { color: var(--ink-mute); }
+
+  /* §03 hint */
+  .tt-hint {
+    margin-top: 16px;
+    padding: 14px 18px;
+    background: var(--bg-2);
+    border-radius: 4px;
+    font-size: 13px;
+    color: var(--ink-soft);
+    line-height: 1.6;
+  }
+  .tt-hint strong { color: var(--ink); }
+  .tt-hint .mono { font-family: 'JetBrains Mono', monospace; background: var(--paper); padding: 1px 6px; border-radius: 3px; font-size: 12px; color: var(--ink); }
+
+  /* §04 — Live recolor demo */
+  .live-stage {
+    display: grid;
+    grid-template-columns: 1fr 280px;
+    gap: 32px;
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 28px;
+  }
+  @media (max-width: 880px) { .live-stage { grid-template-columns: 1fr; } }
+
+  /* live preview — fake mini page that reads tokens */
+  .live-page {
+    background: var(--bg);
+    border: 1px dashed var(--line);
+    border-radius: 4px;
+    padding: 28px 24px;
+    min-height: 320px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+
+    /* default tokens — will be overwritten by JS */
+    --t-brand: #ff4d2e;
+    --t-brand-soft: #ffe4dc;
+    --t-text: #16161d;
+  }
+  .live-page .lp-bar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid var(--line-soft);
+  }
+  .live-page .lp-logo {
+    width: 26px; height: 26px;
+    background: var(--t-brand);
+    border-radius: 5px;
+    display: flex; align-items: center; justify-content: center;
+    color: white; font-family: 'Fraunces', serif;
+    font-style: italic; font-weight: 700; font-size: 14px;
+    transition: background 0.3s;
+  }
+  .live-page .lp-brand-name {
+    font-family: 'Noto Serif SC', serif;
+    font-weight: 700;
+    font-size: 14px;
+    color: var(--t-text);
+  }
+  .live-page .lp-link {
+    margin-left: auto;
+    color: var(--t-brand);
+    font-size: 12px;
+    font-weight: 500;
+    transition: color 0.3s;
+  }
+  .live-page .lp-h {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 22px;
+    line-height: 1.25;
+    margin: 8px 0 0;
+    color: var(--t-text);
+    font-weight: 700;
+  }
+  .live-page .lp-h .em {
+    color: var(--t-brand);
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    font-weight: 500;
+    transition: color 0.3s;
+  }
+  .live-page .lp-p {
+    color: var(--ink-soft);
+    font-size: 13px;
+    margin: 0;
+    line-height: 1.6;
+  }
+  .live-page .lp-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 4px;
+  }
+  .live-page .lp-btn-primary {
+    background: var(--t-brand);
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-family: 'Geist', sans-serif;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.3s;
+  }
+  .live-page .lp-btn-ghost {
+    background: var(--t-brand-soft);
+    color: var(--t-brand);
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-family: 'Geist', sans-serif;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.3s, color 0.3s;
+  }
+  .live-page .lp-tag {
+    display: inline-block;
+    padding: 3px 10px;
+    background: var(--t-brand-soft);
+    color: var(--t-brand);
+    border-radius: 100px;
+    font-size: 10px;
+    font-family: 'JetBrains Mono', monospace;
+    letter-spacing: 0.05em;
+    transition: background 0.3s, color 0.3s;
+    align-self: flex-start;
+  }
+
+  /* live controls — picker chips */
+  .live-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+  }
+  .live-controls .lc-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--ink-soft);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+  .live-controls .lc-current {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    background: var(--bg);
+    border: 1px solid var(--line);
+    border-radius: 4px;
+  }
+  .live-controls .lc-current .lc-chip {
+    width: 22px; height: 22px;
+    border-radius: 4px;
+    border: 1px solid rgba(0,0,0,0.08);
+    transition: background 0.3s;
+  }
+  .live-controls .lc-current .lc-name {
+    flex: 1;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--ink);
+  }
+  .live-controls .lc-current .lc-name .dim { color: var(--ink-mute); }
+  .live-controls .lc-current .lc-val {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--ink-mute);
+  }
+
+  .lc-presets {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 6px;
+  }
+  .lc-presets button {
+    aspect-ratio: 1 / 1;
+    border: 2px solid transparent;
+    border-radius: 4px;
+    cursor: pointer;
+    background: var(--lc-color, #ccc);
+    transition: transform 0.15s, border-color 0.15s;
+    position: relative;
+  }
+  .lc-presets button:hover { transform: scale(1.06); }
+  .lc-presets button.active {
+    border-color: var(--ink);
+    box-shadow: 0 0 0 2px var(--bg);
+  }
+  .lc-presets button.active::after {
+    content: '✓';
+    position: absolute;
+    inset: 0;
+    color: white;
+    font-size: 14px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+  }
+
+  .live-readout {
+    margin-top: 8px;
+    padding: 14px 16px;
+    background: var(--ink);
+    color: #e8e8ec;
+    border-radius: 4px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11.5px;
+    line-height: 1.7;
+  }
+  .live-readout .ckey { color: #ff8a6e; }
+  .live-readout .cstr { color: #ffd166; }
+  .live-readout .ccom { color: #6e6e7a; }
+
+  .live-counter {
+    margin-top: 14px;
+    padding: 10px 14px;
+    background: var(--accent-soft);
+    border: 1px solid rgba(255,77,46,0.3);
+    border-radius: 4px;
+    font-size: 12.5px;
+    color: var(--ink);
+    line-height: 1.55;
+  }
+  .live-counter strong { color: var(--accent); font-family: 'Fraunces', serif; font-style: italic; font-size: 16px; }
+
+  /* §05 — Tips + outro */
+  .tips-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 20px;
+  }
+  @media (max-width: 880px) { .tips-grid { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 520px) { .tips-grid { grid-template-columns: 1fr; } }
+  .tip-card {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 22px 20px;
+    position: relative;
+  }
+  .tip-card .tip-num {
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    font-size: 36px;
+    line-height: 1;
+    color: var(--accent);
+    margin-bottom: 12px;
+  }
+  .tip-card h4 {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 16px;
+    margin: 0 0 8px;
+    font-weight: 700;
+    line-height: 1.3;
+  }
+  .tip-card p {
+    margin: 0;
+    font-size: 13px;
+    color: var(--ink-soft);
+    line-height: 1.55;
+  }
+  .tip-card .mono {
+    font-family: 'JetBrains Mono', monospace;
+    background: var(--bg-2);
+    padding: 1px 5px;
+    border-radius: 2px;
+    font-size: 11.5px;
+    color: var(--ink);
+  }
+
+  /* Naming convention BAD/GOOD mini */
+  .naming-grid {
+    margin-top: 32px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+  }
+  @media (max-width: 720px) { .naming-grid { grid-template-columns: 1fr; } }
+  .naming-card {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 22px 24px;
+    position: relative;
+  }
+  .naming-card.bad { border-color: rgba(255,77,46,0.4); background: var(--accent-soft); }
+  .naming-card.good { border-color: rgba(31,107,58,0.4); background: var(--green-soft); }
+  .naming-card .nm-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    margin-bottom: 8px;
+  }
+  .naming-card.bad .nm-tag { color: var(--accent); }
+  .naming-card.good .nm-tag { color: var(--green); }
+  .naming-card h5 {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 16px;
+    margin: 0 0 12px;
+    font-weight: 700;
+  }
+  .naming-card .nm-rows {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+  }
+  .naming-card .nm-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 6px 10px;
+    background: rgba(255,255,255,0.5);
+    border-radius: 3px;
+  }
+  .naming-card .nm-row .nm-chip {
+    width: 12px; height: 12px;
+    border-radius: 2px;
+    flex-shrink: 0;
+    border: 1px solid rgba(0,0,0,0.08);
+  }
+  .naming-card .nm-row .nm-name { color: var(--ink); }
+  .naming-card .nm-row .nm-note { margin-left: auto; color: var(--ink-mute); font-size: 10.5px; }
+
+  .naming-takeaway {
+    margin-top: 20px;
+    font-size: 13.5px;
+    color: var(--ink-soft);
+    line-height: 1.65;
+  }
+  .naming-takeaway strong { color: var(--ink); }
+
+  /* outro — next */
+  .next-card {
+    margin-top: 40px;
+    padding: 28px 32px;
+    background: var(--ink);
+    color: var(--bg);
+    border-radius: 6px;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 24px;
+    align-items: center;
+  }
+  @media (max-width: 720px) { .next-card { grid-template-columns: 1fr; } }
+  .next-card .next-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    color: var(--accent);
+    margin-bottom: 6px;
+  }
+  .next-card h3 {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 22px;
+    margin: 0 0 6px;
+    font-weight: 700;
+    line-height: 1.3;
+  }
+  .next-card h3 .em { font-family: 'Fraunces', serif; font-style: italic; font-weight: 500; color: var(--accent); }
+  .next-card p {
+    margin: 0;
+    color: rgba(255,255,255,0.65);
+    font-size: 13px;
+    line-height: 1.6;
+  }
+  .next-card .next-arrow {
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    font-size: 56px;
+    line-height: 1;
+    color: var(--accent);
+    opacity: 0.6;
+  }
+
+  /* Footer */
+  footer {
+    border-top: 1px solid var(--line);
+    padding: 56px 0 64px;
+    background: var(--bg);
+  }
+  .byline {
+    display: flex;
+    gap: 28px;
+    align-items: center;
+    padding-bottom: 32px;
+    border-bottom: 1px dashed var(--line);
+    margin-bottom: 24px;
+    position: relative;
+  }
+  .byline::before {
+    content: '';
+    position: absolute;
+    top: -56px; left: 0;
+    width: 32px; height: 1px;
+    background: var(--accent);
+  }
+  .byline .avatar {
+    width: 96px; height: 96px;
+    border-radius: 50%;
+    object-fit: cover;
+    flex-shrink: 0;
+    border: 3px solid var(--paper);
+    box-shadow: 0 0 0 1px var(--line), 0 6px 20px rgba(22,22,29,0.10);
+    background: var(--paper);
+  }
+  .byline-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--ink-mute);
+    letter-spacing: 0.18em;
+    margin-bottom: 8px;
+  }
+  .byline-label .dot {
+    display: inline-block;
+    width: 6px; height: 6px;
+    background: var(--accent);
+    border-radius: 50%;
+    margin-right: 6px;
+    vertical-align: 1px;
+  }
+  .byline-name {
+    font-family: 'Noto Serif SC', 'Fraunces', serif;
+    font-size: clamp(28px, 4vw, 40px);
+    font-weight: 700;
+    line-height: 1.05;
+    letter-spacing: -0.01em;
+    margin: 0 0 8px;
+  }
+  .byline-name .em {
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    font-weight: 500;
+    color: var(--accent);
+  }
+  .byline-tag {
+    font-size: 14px;
+    color: var(--ink-soft);
+    line-height: 1.55;
+    margin: 0;
+    max-width: 52ch;
+  }
+  .footer-meta {
+    text-align: center;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--ink-mute);
+    letter-spacing: 0.05em;
+  }
+  .footer-meta .heart { color: var(--accent); }
+  .footer-meta .mono { color: var(--ink-soft); font-weight: 500; }
+  @media (max-width: 600px) {
+    .byline { flex-direction: column; text-align: center; align-items: center; gap: 16px; }
+    .byline-tag { margin-left: auto; margin-right: auto; }
+  }
+
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+  section { animation: fadeIn 0.6s ease-out backwards; }
+</style>
+</head>
+<body>
+
+<!-- Top bar -->
+<div class="topbar">
+  <div class="wrap topbar-inner">
+    <div class="brand"><span class="dot"></span>TOKENS × VARIABLES / 实验讲解</div>
+    <nav class="nav-links">
+      <a href="index.html">合集</a>
+      <a href="box-figma.html">01 盒子</a>
+      <a href="components-figma.html">02 组件</a>
+      <a href="page-figma.html">03 拼页面</a>
+      <a href="data-flow-figma.html">04 数据流</a>
+    </nav>
+  </div>
+</div>
+
+<!-- Hero -->
+<header class="hero">
+  <div class="wrap">
+    <div class="hero-meta">
+      <span class="pill fill">实验互动 · INTERACTIVE</span>
+      <span class="pill">2026 / 设计 × 代码</span>
+      <span class="pill">C0 · 入门 · Tokens</span>
+      <span class="label">阅读时长 ≈ 9 分钟</span>
+    </div>
+    <div class="hero-grid">
+      <div>
+        <h1>
+          <span class="display-cn">色板，</span><br>
+          是给前端的<span class="em">礼物</span><br>
+          <span class="display-cn">不只是好看。</span>
+        </h1>
+        <p class="lede">
+          你设计稿里那些色板、字号阶梯、间距系统 ——<br>
+          它们到了代码里有个名字叫 <span class="mono">Tokens</span>。<br>
+          改一处，全站跟着变。
+        </p>
+      </div>
+      <div class="hero-side">
+        <div class="row"><span class="k">本页讲什么</span><span class="v">Variables / Tokens 入门</span></div>
+        <div class="row"><span class="k">含互动</span><span class="v">3 个：切换 / 改色 / 联动</span></div>
+        <div class="row"><span class="k">面向</span><span class="v">设计师 (零基础)</span></div>
+        <div class="row"><span class="k">前置知识</span><span class="v">用过 Figma 色板</span></div>
+      </div>
+    </div>
+
+    <!-- Quiet visual signature: a tokens "shelf" -->
+    <div class="hero-strip">
+      <div class="swatch" style="background:#ff4d2e"><div class="n">brand / primary</div><div class="v">#ff4d2e</div></div>
+      <div class="swatch dark" style="background:#ffe4dc"><div class="n" style="color:#ff4d2e; opacity:0.9">brand / soft</div><div class="v" style="color:#ff4d2e">#ffe4dc</div></div>
+      <div class="swatch" style="background:#16161d"><div class="n">text / ink</div><div class="v">#16161d</div></div>
+      <div class="swatch" style="background:#4a4a55"><div class="n">text / soft</div><div class="v">#4a4a55</div></div>
+      <div class="swatch" style="background:#0a4cff"><div class="n">accent / blue</div><div class="v">#0a4cff</div></div>
+      <div class="swatch" style="background:#1f6b3a"><div class="n">accent / green</div><div class="v">#1f6b3a</div></div>
+      <div class="swatch" style="background:#faf7f0; color:#16161d"><div class="n">bg / paper</div><div class="v">#faf7f0</div></div>
+      <div class="swatch" style="background:#d5cdba; color:#16161d"><div class="n">line / divider</div><div class="v">#d5cdba</div></div>
+    </div>
+  </div>
+</header>
+
+<!-- §01 Problem: scattered colors -->
+<section id="problem">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>01</strong> / 问题</div>
+        <h2 class="section-title">散装颜色，<br>谁都不知道<br>哪个是<span class="em">"那个橙"</span>。</h2>
+      </div>
+      <p class="section-sub">
+        设计师 A 复制粘贴了 #ff4d2e，设计师 B 用了 #ff5733。
+        前端打开你的 Figma，从五个相似的橙里挑一个。
+        改品牌色那天，没人知道要改哪几处。
+      </p>
+    </div>
+
+    <div class="problem-grid">
+      <div class="problem-card bad">
+        <span class="tag">BAD · 散装色码</span>
+        <h3>每个图层都是一个"裸值"</h3>
+        <p>颜色直接刷在每个元素上。文件里有五个相似的橙色，你也分不出哪个是品牌色、哪个是临时记的。</p>
+
+        <div class="swatch-list">
+          <div class="sw-row">
+            <div class="chip" style="background:#ff4d2e"></div>
+            <span class="label-mono">#ff4d2e</span>
+            <span class="desc">主按钮</span>
+          </div>
+          <div class="sw-row">
+            <div class="chip" style="background:#ff5733"></div>
+            <span class="label-mono">#ff5733</span>
+            <span class="desc">徽章</span>
+          </div>
+          <div class="sw-row">
+            <div class="chip" style="background:#ff4f30"></div>
+            <span class="label-mono">#ff4f30</span>
+            <span class="desc">链接 hover</span>
+          </div>
+          <div class="sw-row">
+            <div class="chip" style="background:#fe4c2d"></div>
+            <span class="label-mono">#fe4c2d</span>
+            <span class="desc">图标</span>
+          </div>
+        </div>
+
+        <div class="designer-note">
+          <strong>真实场景：</strong>老板说"把品牌色调蓝"。前端问你：要改哪些颜色？你打开稿子，开始一个一个找。
+        </div>
+      </div>
+
+      <div class="problem-card good">
+        <span class="tag">GOOD · 命名色板</span>
+        <h3>一个名字，一处定义</h3>
+        <p>每个颜色都有名字，比如 <code class="mono">brand/primary</code>。所有用到品牌色的地方，都引用这个名字 —— 而不是色码。</p>
+
+        <div class="swatch-list">
+          <div class="sw-row">
+            <div class="chip" style="background:#ff4d2e"></div>
+            <span class="label-mono">brand / primary</span>
+            <span class="arrow">→</span>
+            <span class="desc">#ff4d2e</span>
+          </div>
+          <div class="sw-row">
+            <div class="chip" style="background:#ff4d2e"></div>
+            <span class="label-mono">brand / primary</span>
+            <span class="arrow">→</span>
+            <span class="desc">#ff4d2e</span>
+          </div>
+          <div class="sw-row">
+            <div class="chip" style="background:#ff4d2e"></div>
+            <span class="label-mono">brand / primary</span>
+            <span class="arrow">→</span>
+            <span class="desc">#ff4d2e</span>
+          </div>
+          <div class="sw-row">
+            <div class="chip" style="background:#ff4d2e"></div>
+            <span class="label-mono">brand / primary</span>
+            <span class="arrow">→</span>
+            <span class="desc">#ff4d2e</span>
+          </div>
+        </div>
+
+        <div class="designer-note">
+          <strong>真实场景：</strong>老板说"把品牌色调蓝"。你只改 <code class="mono">brand/primary</code> 一个值，所有按钮、徽章、链接、图标全部跟着变。
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- §02 What are Variables: give a value a name -->
+<section id="variables">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>02</strong> / 命名</div>
+        <h2 class="section-title">不是说 #ff4d2e，<br>而是说 <span class="em">brand/primary</span>。</h2>
+      </div>
+      <p class="section-sub">
+        Figma Variables 干的事，本质就一句话：给一个值起一个名字。<br>
+        从此以后，设计稿和代码都用名字交流，不再用色码。
+      </p>
+    </div>
+
+    <div class="var-stage">
+      <!-- Figma side -->
+      <div class="figma-vars" id="figmaVars">
+        <div class="figma-vars-head">
+          <div class="fv-icon">F</div>
+          <div class="fv-title">Variables · Local</div>
+          <div class="fv-tag">brand · 8 var</div>
+        </div>
+        <div class="figma-vars-body">
+          <div class="figma-vars-row" data-token="brand-primary">
+            <div class="fv-chip" style="background:#ff4d2e"></div>
+            <div class="fv-name"><span class="fv-slash">brand /</span> primary</div>
+            <div class="fv-value">#FF4D2E</div>
+          </div>
+          <div class="figma-vars-row" data-token="brand-soft">
+            <div class="fv-chip" style="background:#ffe4dc"></div>
+            <div class="fv-name"><span class="fv-slash">brand /</span> soft</div>
+            <div class="fv-value">#FFE4DC</div>
+          </div>
+          <div class="figma-vars-row" data-token="text-ink">
+            <div class="fv-chip" style="background:#16161d"></div>
+            <div class="fv-name"><span class="fv-slash">text /</span> ink</div>
+            <div class="fv-value">#16161D</div>
+          </div>
+          <div class="figma-vars-row" data-token="text-soft">
+            <div class="fv-chip" style="background:#4a4a55"></div>
+            <div class="fv-name"><span class="fv-slash">text /</span> soft</div>
+            <div class="fv-value">#4A4A55</div>
+          </div>
+          <div class="figma-vars-row" data-token="bg-paper">
+            <div class="fv-chip" style="background:#faf7f0"></div>
+            <div class="fv-name"><span class="fv-slash">bg /</span> paper</div>
+            <div class="fv-value">#FAF7F0</div>
+          </div>
+          <div class="figma-vars-row" data-token="line">
+            <div class="fv-chip" style="background:#d5cdba"></div>
+            <div class="fv-name"><span class="fv-slash">line /</span> divider</div>
+            <div class="fv-value">#D5CDBA</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- CSS side -->
+      <div class="css-panel" id="cssPanel">
+        <div class="css-panel-head">
+          <span class="dots"></span>
+          <span class="filename">tokens.css</span>
+          <span class="pill-label"><strong>同一份字典</strong></span>
+        </div>
+        <div class="css-panel-body">
+<div class="line"><span class="csel">:root</span> {</div>
+<div class="line" data-token="brand-primary">&nbsp;&nbsp;<span class="ckey">--brand-primary</span>: <span class="cstr">#ff4d2e</span>;</div>
+<div class="line" data-token="brand-soft">&nbsp;&nbsp;<span class="ckey">--brand-soft</span>: <span class="cstr">#ffe4dc</span>;</div>
+<div class="line" data-token="text-ink">&nbsp;&nbsp;<span class="ckey">--text-ink</span>: <span class="cstr">#16161d</span>;</div>
+<div class="line" data-token="text-soft">&nbsp;&nbsp;<span class="ckey">--text-soft</span>: <span class="cstr">#4a4a55</span>;</div>
+<div class="line" data-token="bg-paper">&nbsp;&nbsp;<span class="ckey">--bg-paper</span>: <span class="cstr">#faf7f0</span>;</div>
+<div class="line" data-token="line">&nbsp;&nbsp;<span class="ckey">--line</span>: <span class="cstr">#d5cdba</span>;</div>
+<div class="line">}</div>
+<div class="line">&nbsp;</div>
+<div class="line"><span class="ccom">/* 用的时候，引用名字： */</span></div>
+<div class="line"><span class="csel">.btn-primary</span> {</div>
+<div class="line">&nbsp;&nbsp;<span class="ckey">background</span>: <span class="cvar">var(--brand-primary)</span>;</div>
+<div class="line">}</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="v-explain">
+      <div class="num">→</div>
+      <div>
+        <h4>左边的 Figma 面板，右边的 CSS 文件，其实是一份字典</h4>
+        <p>
+          鼠标移到任意一行 ——<span class="mono">brand/primary</span> 在 Figma 里叫这个名，到了 CSS 里叫 <span class="mono">--brand-primary</span>。
+          名字略有不同（连字符 vs 斜杠），但<strong>它们指向同一个值</strong>。
+          这就是设计稿和代码"对得上"的起点：约定一套共同的名字。
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- §03 Three token types -->
+<section id="types">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>03</strong> / 三件事</div>
+        <h2 class="section-title">Tokens 不只是颜色，<br><span class="em">字号、间距</span>都是。</h2>
+      </div>
+      <p class="section-sub">
+        90% 的设计系统，token 就这三类：颜色、字号、间距。
+        点上面的标签切换，看 Figma 的命名和 CSS 变量是怎么对上的。
+      </p>
+    </div>
+
+    <div class="tt-stage">
+      <div class="tt-tabs" id="ttTabs">
+        <button class="active" data-pane="color"><span class="t-ico">●</span>Colors · 颜色</button>
+        <button data-pane="type"><span class="t-ico">A</span>Type · 字号</button>
+        <button data-pane="space"><span class="t-ico">⇔</span>Spacing · 间距</button>
+      </div>
+
+      <div class="tt-content">
+        <!-- Colors pane -->
+        <div class="tt-pane active" data-pane="color">
+          <div class="tt-grid">
+            <div class="tt-sample">
+              <div class="tt-color-grid">
+                <div class="ts-chip" style="background:#ff4d2e"><div class="n">brand / primary</div><div class="v">#ff4d2e</div></div>
+                <div class="ts-chip" style="background:#ffe4dc; color:#ff4d2e"><div class="n">brand / soft</div><div class="v">#ffe4dc</div></div>
+                <div class="ts-chip" style="background:#16161d"><div class="n">text / ink</div><div class="v">#16161d</div></div>
+                <div class="ts-chip" style="background:#4a4a55"><div class="n">text / soft</div><div class="v">#4a4a55</div></div>
+                <div class="ts-chip" style="background:#faf7f0; color:#16161d"><div class="n">bg / paper</div><div class="v">#faf7f0</div></div>
+                <div class="ts-chip" style="background:#d5cdba; color:#16161d"><div class="n">line / divider</div><div class="v">#d5cdba</div></div>
+              </div>
+            </div>
+
+            <div>
+              <div class="tt-mapping">
+                <div class="tt-mapping-head">
+                  <div>FIGMA · 命名</div>
+                  <div></div>
+                  <div>CSS · 变量名</div>
+                </div>
+                <div class="tt-mapping-row">
+                  <div class="figma-name">brand <span class="slash">/</span> primary</div>
+                  <div>≈</div>
+                  <div class="css-name"><span class="dim">--</span>brand-primary</div>
+                </div>
+                <div class="tt-mapping-row">
+                  <div class="figma-name">brand <span class="slash">/</span> soft</div>
+                  <div>≈</div>
+                  <div class="css-name"><span class="dim">--</span>brand-soft</div>
+                </div>
+                <div class="tt-mapping-row">
+                  <div class="figma-name">text <span class="slash">/</span> ink</div>
+                  <div>≈</div>
+                  <div class="css-name"><span class="dim">--</span>text-ink</div>
+                </div>
+                <div class="tt-mapping-row">
+                  <div class="figma-name">bg <span class="slash">/</span> paper</div>
+                  <div>≈</div>
+                  <div class="css-name"><span class="dim">--</span>bg-paper</div>
+                </div>
+                <div class="tt-mapping-row">
+                  <div class="figma-name">line <span class="slash">/</span> divider</div>
+                  <div>≈</div>
+                  <div class="css-name"><span class="dim">--</span>line</div>
+                </div>
+              </div>
+              <div class="tt-hint">
+                <strong>注意</strong>：Figma 用 <span class="mono">/</span> 表示分组（brand 是一组，里面有 primary 和 soft）。
+                CSS 一般用 <span class="mono">-</span> 连接，写成 <span class="mono">--brand-primary</span>。
+                同一回事，写法不同。
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Type pane -->
+        <div class="tt-pane" data-pane="type">
+          <div class="tt-grid">
+            <div class="tt-sample">
+              <div class="tt-type-stack">
+                <div class="ts-row">
+                  <div class="text" style="font-size:38px; font-weight:900; letter-spacing:-0.02em">范米花儿</div>
+                  <div class="meta"><span class="name">display / xl</span>38 / 900</div>
+                </div>
+                <div class="ts-row">
+                  <div class="text" style="font-size:24px; font-weight:700">这是一个大标题</div>
+                  <div class="meta"><span class="name">heading / lg</span>24 / 700</div>
+                </div>
+                <div class="ts-row">
+                  <div class="text" style="font-size:18px; font-weight:600">这是一个小标题</div>
+                  <div class="meta"><span class="name">heading / sm</span>18 / 600</div>
+                </div>
+                <div class="ts-row">
+                  <div class="text" style="font-size:14px; font-weight:400; line-height:1.6">这是一段正文，描述详细的内容。</div>
+                  <div class="meta"><span class="name">body / md</span>14 / 400</div>
+                </div>
+                <div class="ts-row">
+                  <div class="text" style="font-size:11px; font-weight:500; color:var(--ink-mute); font-family:'JetBrains Mono', monospace">CAPTION · 12 PX</div>
+                  <div class="meta"><span class="name">caption</span>11 / 500</div>
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <div class="tt-mapping">
+                <div class="tt-mapping-head">
+                  <div>FIGMA · 命名</div>
+                  <div></div>
+                  <div>CSS · 变量名</div>
+                </div>
+                <div class="tt-mapping-row">
+                  <div class="figma-name">display <span class="slash">/</span> xl</div>
+                  <div>≈</div>
+                  <div class="css-name"><span class="dim">--</span>font-display-xl</div>
+                </div>
+                <div class="tt-mapping-row">
+                  <div class="figma-name">heading <span class="slash">/</span> lg</div>
+                  <div>≈</div>
+                  <div class="css-name"><span class="dim">--</span>font-heading-lg</div>
+                </div>
+                <div class="tt-mapping-row">
+                  <div class="figma-name">heading <span class="slash">/</span> sm</div>
+                  <div>≈</div>
+                  <div class="css-name"><span class="dim">--</span>font-heading-sm</div>
+                </div>
+                <div class="tt-mapping-row">
+                  <div class="figma-name">body <span class="slash">/</span> md</div>
+                  <div>≈</div>
+                  <div class="css-name"><span class="dim">--</span>font-body-md</div>
+                </div>
+                <div class="tt-mapping-row">
+                  <div class="figma-name">caption</div>
+                  <div>≈</div>
+                  <div class="css-name"><span class="dim">--</span>font-caption</div>
+                </div>
+              </div>
+              <div class="tt-hint">
+                <strong>关键</strong>：字号 token 不是只存"38px"那个数字 —— 它通常是一个组合：<strong>字号 + 字重 + 行高</strong> 一起被命名。
+                Figma 里叫 Text Style，CSS 里有时候用 token，有时候直接写 class（这一篇先建概念，后面 C1 细讲）。
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Space pane -->
+        <div class="tt-pane" data-pane="space">
+          <div class="tt-grid">
+            <div class="tt-sample">
+              <div class="tt-space-stack">
+                <div class="ts-row">
+                  <div class="name">space / xs</div>
+                  <div class="bar" style="width:4px"></div>
+                  <div class="v">4 px</div>
+                </div>
+                <div class="ts-row">
+                  <div class="name">space / sm</div>
+                  <div class="bar" style="width:8px"></div>
+                  <div class="v">8 px</div>
+                </div>
+                <div class="ts-row">
+                  <div class="name">space / md</div>
+                  <div class="bar" style="width:16px"></div>
+                  <div class="v">16 px</div>
+                </div>
+                <div class="ts-row">
+                  <div class="name">space / lg</div>
+                  <div class="bar" style="width:24px"></div>
+                  <div class="v">24 px</div>
+                </div>
+                <div class="ts-row">
+                  <div class="name">space / xl</div>
+                  <div class="bar" style="width:48px"></div>
+                  <div class="v">48 px</div>
+                </div>
+                <div class="ts-row">
+                  <div class="name">space / 2xl</div>
+                  <div class="bar" style="width:80px"></div>
+                  <div class="v">80 px</div>
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <div class="tt-mapping">
+                <div class="tt-mapping-head">
+                  <div>FIGMA · 命名</div>
+                  <div></div>
+                  <div>CSS · 变量名</div>
+                </div>
+                <div class="tt-mapping-row">
+                  <div class="figma-name">space <span class="slash">/</span> xs</div>
+                  <div>≈</div>
+                  <div class="css-name"><span class="dim">--</span>space-xs</div>
+                </div>
+                <div class="tt-mapping-row">
+                  <div class="figma-name">space <span class="slash">/</span> sm</div>
+                  <div>≈</div>
+                  <div class="css-name"><span class="dim">--</span>space-sm</div>
+                </div>
+                <div class="tt-mapping-row">
+                  <div class="figma-name">space <span class="slash">/</span> md</div>
+                  <div>≈</div>
+                  <div class="css-name"><span class="dim">--</span>space-md</div>
+                </div>
+                <div class="tt-mapping-row">
+                  <div class="figma-name">space <span class="slash">/</span> lg</div>
+                  <div>≈</div>
+                  <div class="css-name"><span class="dim">--</span>space-lg</div>
+                </div>
+                <div class="tt-mapping-row">
+                  <div class="figma-name">space <span class="slash">/</span> xl</div>
+                  <div>≈</div>
+                  <div class="css-name"><span class="dim">--</span>space-xl</div>
+                </div>
+              </div>
+              <div class="tt-hint">
+                <strong>用在哪</strong>：Figma 里 Auto Layout 的 padding、gap，以及组件之间的间距，都该用 space token，而不是手敲数字。
+                这样所有间距是 4 / 8 / 16 / 24 这种"阶梯"，不会出现 13、17、22 这种零碎值。
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- §04 Live recolor demo -->
+<section id="live">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>04</strong> / 力量</div>
+        <h2 class="section-title">改一个 token，<br><span class="em">整页跟着变</span>。</h2>
+      </div>
+      <p class="section-sub">
+        右边换一个品牌色 ——
+        左边的 Logo、按钮、徽章、链接、标题强调字、图标，
+        所有引用 <span class="mono">brand/primary</span> 的地方一起变。
+      </p>
+    </div>
+
+    <div class="live-stage">
+      <!-- Live mini page -->
+      <div class="live-page" id="livePage">
+        <div class="lp-bar">
+          <div class="lp-logo">F</div>
+          <div class="lp-brand-name">范米花儿</div>
+          <div class="lp-link">订阅 →</div>
+        </div>
+        <span class="lp-tag">C0 · TOKENS</span>
+        <h3 class="lp-h">色板是给前端的<span class="em">礼物</span>。</h3>
+        <p class="lp-p">这里所有的"主色"——Logo 底色、按钮、徽章、链接 ——都引用了同一个 token。改 token，全部跟着变。</p>
+        <div class="lp-actions">
+          <button class="lp-btn-primary">立即开始</button>
+          <button class="lp-btn-ghost">了解更多</button>
+        </div>
+      </div>
+
+      <!-- Controls -->
+      <div class="live-controls">
+        <div>
+          <div class="lc-label">当前 brand / primary</div>
+          <div class="lc-current" style="margin-top:8px">
+            <div class="lc-chip" id="lcChip" style="background:#ff4d2e"></div>
+            <div class="lc-name"><span class="dim">--</span>brand-primary</div>
+            <div class="lc-val" id="lcVal">#ff4d2e</div>
+          </div>
+        </div>
+
+        <div>
+          <div class="lc-label">点一个色板换它</div>
+          <div class="lc-presets" id="lcPresets" style="margin-top:8px">
+            <button class="active" data-color="#ff4d2e" data-soft="#ffe4dc" style="--lc-color:#ff4d2e"></button>
+            <button data-color="#0a4cff" data-soft="#dde6ff" style="--lc-color:#0a4cff"></button>
+            <button data-color="#1f6b3a" data-soft="#d4ecdb" style="--lc-color:#1f6b3a"></button>
+            <button data-color="#9333ea" data-soft="#ede0ff" style="--lc-color:#9333ea"></button>
+            <button data-color="#e11d48" data-soft="#ffe1e7" style="--lc-color:#e11d48"></button>
+            <button data-color="#0891b2" data-soft="#cef0f7" style="--lc-color:#0891b2"></button>
+            <button data-color="#ca8a04" data-soft="#fef3c7" style="--lc-color:#ca8a04"></button>
+            <button data-color="#16161d" data-soft="#e3e3e8" style="--lc-color:#16161d"></button>
+          </div>
+        </div>
+
+        <div class="live-readout" id="liveReadout">
+<span class="ccom">/* 同步生效中 */</span>
+<span class="ckey">--brand-primary</span>: <span class="cstr">#ff4d2e</span>;
+<span class="ckey">--brand-soft</span>: <span class="cstr">#ffe4dc</span>;
+        </div>
+
+        <div class="live-counter">
+          一次点击，<strong id="liveCount">6</strong> 处元素同步换色 —— 你没改任何具体颜色，只改了一个 token。
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- §05 Tips + outro -->
+<section id="practice">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>05</strong> / 实践</div>
+        <h2 class="section-title">什么时候<br>该建一个 <span class="em">token</span>？</h2>
+      </div>
+      <p class="section-sub">
+        简单的判断：这个值出现在两个以上的地方 —— 就该建 token。
+        下面是设计师每天会遇到的四类清单。
+      </p>
+    </div>
+
+    <div class="tips-grid">
+      <div class="tip-card">
+        <div class="tip-num">01</div>
+        <h4>颜色 · Color</h4>
+        <p>品牌色、文字色、背景色、边框色、状态色（成功 / 警告 / 错误）—— 全部建 token。<span class="mono">brand-primary</span>、<span class="mono">text-ink</span>、<span class="mono">bg-paper</span>。</p>
+      </div>
+
+      <div class="tip-card">
+        <div class="tip-num">02</div>
+        <h4>字号 · Type</h4>
+        <p>不是每个 px 数字都要建，而是建一套"阶梯"：display / heading / body / caption。改字号阶梯，全站排印一起调。</p>
+      </div>
+
+      <div class="tip-card">
+        <div class="tip-num">03</div>
+        <h4>间距 · Spacing</h4>
+        <p>4 / 8 / 16 / 24 / 48 这种 4 倍数阶梯。Auto Layout 的 padding 和 gap 用它们，不要手敲 13、17 这种零碎值。</p>
+      </div>
+
+      <div class="tip-card">
+        <div class="tip-num">04</div>
+        <h4>圆角 · Radius</h4>
+        <p>容易被忽略，但同样关键。<span class="mono">radius-sm</span> = 4，<span class="mono">radius-md</span> = 8，<span class="mono">radius-pill</span> = 999。圆角风格统一感全靠它。</p>
+      </div>
+    </div>
+
+    <!-- Naming convention -->
+    <div class="naming-grid">
+      <div class="naming-card bad">
+        <div class="nm-tag">BAD · 用值命名</div>
+        <h5>取名取的是颜色本身</h5>
+        <div class="nm-rows">
+          <div class="nm-row">
+            <div class="nm-chip" style="background:#ff4d2e"></div>
+            <span class="nm-name">orange-500</span>
+            <span class="nm-note">改成蓝色就尴尬了</span>
+          </div>
+          <div class="nm-row">
+            <div class="nm-chip" style="background:#ff4d2e"></div>
+            <span class="nm-name">red-bright</span>
+            <span class="nm-note">名字限死了颜色</span>
+          </div>
+          <div class="nm-row">
+            <div class="nm-chip" style="background:#ff4d2e"></div>
+            <span class="nm-name">color-1</span>
+            <span class="nm-note">完全看不出用在哪</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="naming-card good">
+        <div class="nm-tag">GOOD · 用语义命名</div>
+        <h5>取名取的是用途</h5>
+        <div class="nm-rows">
+          <div class="nm-row">
+            <div class="nm-chip" style="background:#ff4d2e"></div>
+            <span class="nm-name">brand / primary</span>
+            <span class="nm-note">改成蓝色也合理</span>
+          </div>
+          <div class="nm-row">
+            <div class="nm-chip" style="background:#ff4d2e"></div>
+            <span class="nm-name">action / cta</span>
+            <span class="nm-note">说清楚干什么的</span>
+          </div>
+          <div class="nm-row">
+            <div class="nm-chip" style="background:#ff4d2e"></div>
+            <span class="nm-name">status / danger</span>
+            <span class="nm-note">语义跨颜色稳定</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <p class="naming-takeaway">
+      <strong>记住一句话</strong>：token 的名字应该说明 <strong>"这是什么用途"</strong>，而不是 <strong>"这是什么颜色"</strong>。
+      因为颜色会变，用途不变。<span class="mono">brand-primary</span> 这个名字，明天换成蓝色也还合理；<span class="mono">orange-500</span> 换成蓝色就成笑话了。
+    </p>
+
+    <!-- Next -->
+    <div class="next-card">
+      <div>
+        <div class="next-tag">下一篇 · C1 · 基础</div>
+        <h3>Colors / Type / Spacing —— <br>三件事的<span class="em">细节展开</span></h3>
+        <p>这一篇你建好了"token 是什么"的概念。下一篇我们一项一项过：色板怎么搭、字号阶梯怎么定、间距系统为什么是 4 的倍数。</p>
+      </div>
+      <div class="next-arrow">→</div>
+    </div>
+  </div>
+</section>
+
+<!-- Footer -->
+<footer>
+  <div class="wrap">
+    <div class="byline">
+      <img class="avatar" src="author.jpg" alt="范米花儿">
+      <div class="byline-meta">
+        <div class="byline-label"><span class="dot"></span>作者 · WRITTEN BY</div>
+        <h3 class="byline-name">嗨，我是 <span class="em">范米花儿</span></h3>
+        <p class="byline-tag">C0 · 入门 · Variables / Tokens 入门 ——<br>给设计师的代码侧基础，从"色板"这个你最熟的事开始。</p>
+      </div>
+    </div>
+    <div class="footer-meta">
+      做于 <span class="mono">2026</span> · 用 <span class="heart">●</span> 写给 <span class="mono">DESIGNERS &amp; DEVELOPERS</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+// ========= §02 Variables — hover sync =========
+(function () {
+  const figmaRows = document.querySelectorAll('#figmaVars .figma-vars-row');
+  const cssLines  = document.querySelectorAll('#cssPanel .line[data-token]');
+
+  function activate(token) {
+    figmaRows.forEach(r => r.classList.toggle('is-active', r.dataset.token === token));
+    cssLines.forEach(l  => l.classList.toggle('is-active',  l.dataset.token === token));
+  }
+  function clear() {
+    figmaRows.forEach(r => r.classList.remove('is-active'));
+    cssLines.forEach(l  => l.classList.remove('is-active'));
+  }
+
+  figmaRows.forEach(r => {
+    r.addEventListener('mouseenter', () => activate(r.dataset.token));
+    r.addEventListener('mouseleave', clear);
+  });
+  cssLines.forEach(l => {
+    l.addEventListener('mouseenter', () => activate(l.dataset.token));
+    l.addEventListener('mouseleave', clear);
+  });
+})();
+
+// ========= §03 Token type tabs =========
+(function () {
+  const tabs  = document.querySelectorAll('#ttTabs button');
+  const panes = document.querySelectorAll('.tt-pane');
+  tabs.forEach(btn => {
+    btn.addEventListener('click', () => {
+      tabs.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      const target = btn.dataset.pane;
+      panes.forEach(p => p.classList.toggle('active', p.dataset.pane === target));
+    });
+  });
+})();
+
+// ========= §04 Live recolor =========
+(function () {
+  const page    = document.getElementById('livePage');
+  const presets = document.querySelectorAll('#lcPresets button');
+  const chip    = document.getElementById('lcChip');
+  const valEl   = document.getElementById('lcVal');
+  const readout = document.getElementById('liveReadout');
+  const counter = document.getElementById('liveCount');
+
+  let count = 6;
+  let currentColor = '#ff4d2e';
+
+  presets.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const c    = btn.dataset.color;
+      const soft = btn.dataset.soft;
+
+      presets.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+
+      page.style.setProperty('--t-brand', c);
+      page.style.setProperty('--t-brand-soft', soft);
+
+      chip.style.background = c;
+      valEl.textContent     = c;
+
+      readout.innerHTML =
+        '<span class="ccom">/* 同步生效中 */</span>\n' +
+        '<span class="ckey">--brand-primary</span>: <span class="cstr">' + c + '</span>;\n' +
+        '<span class="ckey">--brand-soft</span>: <span class="cstr">' + soft + '</span>;';
+
+      if (c !== currentColor) {
+        count += 6;
+        counter.textContent = count;
+        currentColor = c;
+      }
+    });
+  });
+})();
+</script>
+
+</body>
+</html>
