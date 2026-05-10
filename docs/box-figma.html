@@ -1,0 +1,2676 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>盒子模型 × Figma Auto Layout — 一次讲清楚</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,300..900&family=Geist:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Noto+Sans+SC:wght@300;400;500;700;900&family=Noto+Serif+SC:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f3eee5;
+    --bg-2: #ebe4d4;
+    --ink: #16161d;
+    --ink-soft: #4a4a55;
+    --ink-mute: #8a8a92;
+    --line: #d5cdba;
+    --line-soft: #e3dcca;
+    --accent: #ff4d2e;
+    --accent-soft: #ffe4dc;
+    --blue: #0a4cff;
+    --blue-soft: #dde6ff;
+    --green: #1f6b3a;
+    --green-soft: #d4ecdb;
+    --yellow: #ffcf3d;
+    --paper: #faf7f0;
+    --shadow: 0 1px 0 rgba(0,0,0,0.04), 0 8px 24px rgba(22,22,29,0.06);
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'Geist', 'Noto Sans SC', system-ui, -apple-system, sans-serif;
+    font-size: 16px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    background-image:
+      radial-gradient(circle at 1px 1px, rgba(22,22,29,0.05) 1px, transparent 0);
+    background-size: 24px 24px;
+  }
+
+  /* Typography */
+  .display-cn { font-family: 'Noto Serif SC', 'Fraunces', serif; font-weight: 900; letter-spacing: -0.01em; }
+  .display-en { font-family: 'Fraunces', 'Noto Serif SC', serif; font-weight: 600; font-style: italic; letter-spacing: -0.02em; }
+  .mono { font-family: 'JetBrains Mono', monospace; }
+  .label { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-mute); }
+
+  /* Layout */
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 0 32px; }
+
+  /* Top bar */
+  .topbar {
+    border-bottom: 1px dashed var(--line);
+    padding: 16px 0;
+    background: var(--bg);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    backdrop-filter: blur(8px);
+    background: rgba(243, 238, 229, 0.85);
+  }
+  .topbar-inner { display: flex; justify-content: space-between; align-items: center; gap: 24px; }
+  .brand { font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 600; }
+  .brand .dot { display: inline-block; width: 8px; height: 8px; background: var(--accent); border-radius: 50%; margin-right: 8px; vertical-align: middle; animation: pulse 2s ease-in-out infinite; }
+  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+  .nav-links { display: flex; gap: 20px; font-size: 13px; }
+  .nav-links a { color: var(--ink-soft); text-decoration: none; transition: color 0.2s; }
+  .nav-links a:hover { color: var(--accent); }
+  .nav-links a.current { color: var(--accent); font-weight: 600; }
+
+  /* Hero */
+  .hero { padding: 100px 0 80px; position: relative; overflow: hidden; }
+  .hero-meta { display: flex; gap: 24px; margin-bottom: 32px; align-items: center; flex-wrap: wrap; }
+  .hero-meta .pill { padding: 6px 12px; border: 1px solid var(--ink); border-radius: 100px; font-size: 11px; font-family: 'JetBrains Mono', monospace; letter-spacing: 0.05em; }
+  .hero-meta .pill.fill { background: var(--ink); color: var(--bg); }
+  .hero h1 {
+    font-family: 'Noto Serif SC', 'Fraunces', serif;
+    font-weight: 900;
+    font-size: clamp(48px, 7vw, 92px);
+    line-height: 0.95;
+    letter-spacing: -0.03em;
+    margin: 0 0 24px;
+  }
+  .hero h1 .em { font-family: 'Noto Serif SC', serif; font-weight: 500; color: var(--accent); }
+  .hero h1 .x { display: inline-block; transform: translateY(-0.05em); margin: 0 0.05em; color: var(--ink-mute); font-weight: 300; }
+  .hero p.lede {
+    font-size: 20px;
+    line-height: 1.5;
+    max-width: 640px;
+    color: var(--ink-soft);
+    margin: 0 0 40px;
+  }
+  .hero-grid {
+    display: grid;
+    grid-template-columns: 1.4fr 1fr;
+    gap: 48px;
+    align-items: end;
+  }
+  .hero-side {
+    border-left: 1px dashed var(--line);
+    padding-left: 24px;
+    font-size: 13px;
+    color: var(--ink-soft);
+  }
+  .hero-side .row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px dashed var(--line); }
+  .hero-side .row:last-child { border-bottom: none; }
+  .hero-side .row .k { color: var(--ink-mute); font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.05em; text-transform: uppercase; }
+  .hero-side .row .v { font-weight: 500; }
+
+  /* Decorative corner marks */
+  .corner-marks::before, .corner-marks::after {
+    content: '';
+    position: absolute;
+    width: 16px; height: 16px;
+    border: 1px solid var(--accent);
+  }
+  .corner-marks::before { top: 0; left: 0; border-right: none; border-bottom: none; }
+  .corner-marks::after { bottom: 0; right: 0; border-left: none; border-top: none; }
+
+  /* Section */
+  section { padding: 80px 0; border-top: 1px solid var(--line); position: relative; }
+  .section-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 56px; flex-wrap: wrap; gap: 16px; }
+  .section-num { font-family: 'JetBrains Mono', monospace; font-size: 13px; color: var(--ink-mute); letter-spacing: 0.1em; }
+  .section-num strong { color: var(--accent); }
+  .section-title {
+    font-family: 'Noto Serif SC', serif;
+    font-weight: 900;
+    font-size: clamp(32px, 4.5vw, 52px);
+    line-height: 1.05;
+    letter-spacing: -0.02em;
+    margin: 0;
+    max-width: 18ch;
+  }
+  .section-title .em { font-family: 'Noto Serif SC', serif; font-weight: 500; color: var(--accent); }
+  .section-sub { color: var(--ink-soft); font-size: 17px; max-width: 38ch; line-height: 1.55; margin: 0; }
+
+  /* Problem comparison */
+  .problem-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 32px;
+    margin-top: 24px;
+  }
+  .problem-card {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 28px;
+    position: relative;
+  }
+  .problem-card.bad { border-color: var(--accent); background: var(--accent-soft); }
+  .problem-card.good { border-color: var(--green); background: var(--green-soft); }
+  .problem-card .tag { 
+    position: absolute; top: -12px; left: 24px;
+    background: var(--bg); padding: 2px 10px;
+    font-family: 'JetBrains Mono', monospace; font-size: 11px;
+    letter-spacing: 0.1em;
+  }
+  .problem-card.bad .tag { color: var(--accent); border: 1px solid var(--accent); }
+  .problem-card.good .tag { color: var(--green); border: 1px solid var(--green); }
+  .problem-card h3 { font-family: 'Noto Serif SC', serif; font-size: 22px; margin: 0 0 12px; font-weight: 700; }
+  .problem-card p { margin: 0; color: var(--ink-soft); font-size: 14px; line-height: 1.55; }
+  .layer-tree { font-family: 'JetBrains Mono', monospace; font-size: 12px; line-height: 1.7; margin-top: 16px; }
+  .layer-tree .l { color: var(--ink-soft); }
+  .layer-tree .t { display: inline-block; width: 14px; color: var(--ink-mute); }
+
+  /* Box model interactive */
+  .bm-stage {
+    display: grid;
+    grid-template-columns: 1.3fr 1fr;
+    gap: 48px;
+    align-items: start;
+  }
+  @media (max-width: 880px) { .bm-stage { grid-template-columns: 1fr; } }
+
+  .bm-canvas {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 48px 32px;
+    min-height: 480px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .bm-canvas::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(to right, var(--line-soft) 1px, transparent 1px),
+      linear-gradient(to bottom, var(--line-soft) 1px, transparent 1px);
+    background-size: 16px 16px;
+    opacity: 0.5;
+  }
+
+  .box-model {
+    position: relative;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .layer-margin { background: rgba(255, 207, 61, 0.4); border: 1px dashed #c79f1e; }
+  .layer-border-area { background: rgba(31, 107, 58, 0.18); }
+  .layer-padding { background: rgba(10, 76, 255, 0.18); }
+  .layer-content { background: var(--accent); color: white; display: flex; align-items: center; justify-content: center; font-weight: 600; min-width: 80px; min-height: 60px; font-family: 'JetBrains Mono', monospace; font-size: 13px; }
+
+  .layer-tag {
+    position: absolute;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.05em;
+    background: var(--ink);
+    color: var(--bg);
+    padding: 2px 6px;
+    border-radius: 2px;
+    z-index: 10;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+  .box-model:hover .layer-tag { opacity: 1; }
+  .layer-tag.tag-margin { top: 4px; left: 4px; background: #c79f1e; }
+  .layer-tag.tag-border { top: 4px; left: 4px; background: var(--green); }
+  .layer-tag.tag-padding { top: 4px; left: 4px; background: var(--blue); }
+
+  .bm-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+  }
+  .ctrl {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .ctrl-head { display: flex; justify-content: space-between; align-items: baseline; }
+  .ctrl-label { font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 500; }
+  .ctrl-label .swatch { display: inline-block; width: 10px; height: 10px; margin-right: 6px; vertical-align: middle; border-radius: 2px; }
+  .ctrl-value { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--ink-soft); font-variant-numeric: tabular-nums; }
+  
+  input[type="range"] {
+    -webkit-appearance: none;
+    width: 100%;
+    height: 4px;
+    background: var(--line);
+    border-radius: 0;
+    outline: none;
+  }
+  input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 18px; height: 18px;
+    background: var(--ink);
+    border: 2px solid var(--bg);
+    border-radius: 50%;
+    cursor: pointer;
+    box-shadow: 0 0 0 1px var(--ink);
+    transition: transform 0.1s;
+  }
+  input[type="range"]::-webkit-slider-thumb:hover { transform: scale(1.15); background: var(--accent); }
+  input[type="range"]::-moz-range-thumb {
+    width: 18px; height: 18px;
+    background: var(--ink);
+    border: 2px solid var(--bg);
+    border-radius: 50%;
+    cursor: pointer;
+    box-shadow: 0 0 0 1px var(--ink);
+  }
+
+  /* Code panel */
+  .code-panel {
+    background: var(--ink);
+    color: #e8e8ec;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    line-height: 1.7;
+    padding: 20px 24px;
+    border-radius: 6px;
+    margin-top: 24px;
+    position: relative;
+    overflow-x: auto;
+  }
+  .code-panel .ckey { color: #ff8a6e; }
+  .code-panel .cval { color: #ffd166; }
+  .code-panel .cstr { color: #a8e6a3; }
+  .code-panel .ccom { color: #6e6e7a; font-style: italic; }
+  .code-panel .cnum { color: #8ec5ff; }
+  .code-panel::before {
+    content: '';
+    position: absolute;
+    top: 12px; left: 14px;
+    width: 8px; height: 8px; border-radius: 50%;
+    background: #ff5f56;
+    box-shadow: 14px 0 0 #ffbd2e, 28px 0 0 #27c93f;
+  }
+  .code-panel { padding-top: 36px; }
+  .code-panel .filename {
+    position: absolute; top: 10px; right: 14px;
+    font-size: 10px; color: #6e6e7a; letter-spacing: 0.05em;
+  }
+
+  /* Box-model live highlight: ctrl ↔ code row ↔ canvas layer */
+  .code-row {
+    display: inline-block;
+    border-radius: 3px;
+    padding: 0 6px;
+    margin: 0 -6px;
+    box-shadow: inset 2px 0 0 transparent;
+    transition: background-color 0.18s ease, box-shadow 0.18s ease;
+    cursor: default;
+  }
+  .code-row.is-active {
+    background-color: rgba(255, 138, 110, 0.14);
+    box-shadow: inset 2px 0 0 #ff8a6e;
+  }
+  @keyframes codeRowFlash {
+    0%   { background-color: rgba(255, 138, 110, 0.45); }
+    100% { background-color: rgba(255, 138, 110, 0.14); }
+  }
+  .code-row.is-flash {
+    animation: codeRowFlash 0.55s ease-out;
+  }
+  .ctrl { border-radius: 4px; padding: 4px 6px; margin: -4px -6px; transition: background-color 0.18s ease; }
+  .ctrl.is-active { background-color: var(--accent-soft); }
+  .layer-margin.is-active   { outline: 2px solid #c79f1e; outline-offset: -1px; filter: brightness(1.05); }
+  .layer-border-area.is-active { outline: 2px solid var(--green); outline-offset: -1px; filter: brightness(1.05); }
+  .layer-padding.is-active  { outline: 2px solid var(--blue); outline-offset: -1px; filter: brightness(1.05); }
+
+  /* Mapping table */
+  .mapping {
+    display: grid;
+    grid-template-columns: 1fr 60px 1fr;
+    gap: 0;
+    margin-top: 16px;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    overflow: hidden;
+    background: var(--paper);
+  }
+  .mapping-head {
+    display: contents;
+  }
+  .mapping-head > div {
+    background: var(--ink);
+    color: var(--bg);
+    padding: 14px 20px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+  .mapping-head > div:nth-child(2) { text-align: center; }
+  .mapping-row { display: contents; }
+  .mapping-row > div {
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--line);
+    background: var(--paper);
+  }
+  .mapping-row:last-child > div { border-bottom: none; }
+  .mapping-row > div:nth-child(1) { border-right: 1px dashed var(--line); }
+  .mapping-row > div:nth-child(2) { 
+    border-right: 1px dashed var(--line);
+    text-align: center;
+    color: var(--accent);
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    font-size: 18px;
+    background: var(--bg);
+  }
+  .mapping-row .css-name { font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 500; }
+  .mapping-row .css-name + .desc { color: var(--ink-soft); font-size: 13px; margin-top: 4px; }
+  .mapping-row .figma-name { font-weight: 600; font-size: 14px; }
+  .mapping-row .figma-name + .desc { color: var(--ink-soft); font-size: 13px; margin-top: 4px; }
+
+  /* Auto Layout demo */
+  .al-demo {
+    display: grid;
+    grid-template-columns: 280px 1fr;
+    gap: 32px;
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    overflow: hidden;
+  }
+  @media (max-width: 880px) { .al-demo { grid-template-columns: 1fr; } }
+
+  /* Figma-style panel */
+  .figma-panel {
+    background: #2c2c2c;
+    color: #e8e8e8;
+    padding: 20px 16px;
+    font-family: 'Geist', system-ui, sans-serif;
+    font-size: 12px;
+  }
+  .figma-panel .fp-title { font-size: 11px; color: #999; margin-bottom: 12px; letter-spacing: 0.05em; text-transform: uppercase; font-weight: 600; }
+  .figma-panel .fp-section { padding: 12px 0; border-bottom: 1px solid #404040; }
+  .figma-panel .fp-section:last-child { border-bottom: none; }
+  .figma-panel .fp-row { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+  .figma-panel .fp-row:last-child { margin-bottom: 0; }
+  .figma-panel .fp-icon-btn-group { display: flex; background: #1e1e1e; border-radius: 4px; padding: 2px; gap: 2px; }
+  .figma-panel .fp-icon-btn {
+    background: transparent; border: none; color: #999;
+    width: 32px; height: 26px; cursor: pointer;
+    border-radius: 3px; display: flex; align-items: center; justify-content: center;
+    font-size: 12px;
+  }
+  .figma-panel .fp-icon-btn.active { background: #0d99ff; color: white; }
+  .figma-panel .fp-icon-btn:hover:not(.active) { background: #404040; color: white; }
+  .figma-panel .fp-input {
+    background: #1e1e1e; border: 1px solid transparent; color: #e8e8e8;
+    padding: 5px 8px; border-radius: 3px;
+    font-family: inherit; font-size: 11px;
+    width: 56px;
+  }
+  .figma-panel .fp-input:focus { border-color: #0d99ff; outline: none; }
+  .figma-panel .fp-input-group { display: flex; align-items: center; gap: 4px; background: #1e1e1e; border-radius: 4px; padding: 0 8px; }
+  .figma-panel .fp-input-group .fp-input { background: transparent; border: none; padding: 5px 0; width: 36px; }
+  .figma-panel .fp-input-group .fp-prefix { color: #888; font-size: 10px; font-family: 'JetBrains Mono', monospace; }
+  .figma-panel .fp-row-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+  .figma-panel .fp-select {
+    background: #1e1e1e; border: 1px solid transparent; color: #e8e8e8;
+    padding: 5px 24px 5px 8px; border-radius: 3px;
+    font-family: inherit; font-size: 11px; width: 100%;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg width='10' height='6' viewBox='0 0 10 6' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%23999' fill='none' stroke-width='1.2'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 8px center;
+    cursor: pointer;
+  }
+  .figma-panel .fp-align {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px;
+    background: #1e1e1e; padding: 2px; border-radius: 3px; width: 78px;
+  }
+  .figma-panel .fp-align button {
+    aspect-ratio: 1; background: transparent; border: none; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    border-radius: 2px; padding: 0;
+  }
+  .figma-panel .fp-align button:hover { background: #404040; }
+  .figma-panel .fp-align button.active { background: #0d99ff; }
+  .figma-panel .fp-align .dot {
+    width: 5px; height: 5px; background: #888; border-radius: 50%;
+  }
+  .figma-panel .fp-align button.active .dot { background: white; }
+
+  /* Canvas (preview area) */
+  .al-canvas {
+    background: var(--paper);
+    background-image:
+      linear-gradient(to right, var(--line-soft) 1px, transparent 1px),
+      linear-gradient(to bottom, var(--line-soft) 1px, transparent 1px);
+    background-size: 16px 16px;
+    padding: 40px;
+    min-height: 320px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+  }
+  .al-frame {
+    background: white;
+    border: 1.5px dashed var(--blue);
+    display: flex;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    min-width: 100px;
+    min-height: 60px;
+  }
+  .al-frame::before {
+    content: 'Frame · Auto Layout';
+    position: absolute;
+    top: -22px; left: 0;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--blue);
+    letter-spacing: 0.05em;
+  }
+  .al-item {
+    background: linear-gradient(135deg, var(--accent) 0%, #ff7355 100%);
+    color: white;
+    padding: 12px 16px;
+    border-radius: 4px;
+    font-family: 'Geist', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.25s ease;
+  }
+  .al-item:nth-child(2) { background: linear-gradient(135deg, var(--blue) 0%, #4a7eff 100%); }
+  .al-item:nth-child(3) { background: linear-gradient(135deg, var(--green) 0%, #4a9c61 100%); }
+
+  .al-readout {
+    margin-top: 0;
+    padding: 16px 20px;
+    background: var(--ink);
+    color: #e8e8ec;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    line-height: 1.6;
+    grid-column: 1 / -1;
+  }
+  .al-readout .ckey { color: #ff8a6e; }
+  .al-readout .cval { color: #ffd166; }
+  .al-readout .ccom { color: #6e6e7a; }
+
+  /* Hug Fill Fixed */
+  .hff-stage {
+    display: grid;
+    grid-template-columns: 1fr 280px;
+    gap: 32px;
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 32px;
+  }
+  @media (max-width: 880px) { .hff-stage { grid-template-columns: 1fr; } }
+  .hff-canvas {
+    background: var(--bg);
+    border: 1px dashed var(--line);
+    padding: 32px;
+    min-height: 280px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .hff-frame {
+    background: white;
+    border: 1.5px dashed var(--blue);
+    padding: 16px;
+    display: flex;
+    gap: 12px;
+    width: 100%;
+    max-width: 100%;
+    transition: all 0.3s ease;
+  }
+  .hff-frame > div {
+    background: linear-gradient(135deg, var(--accent), #ff7355);
+    color: white; padding: 16px;
+    border-radius: 4px;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Geist', sans-serif; font-weight: 500;
+    transition: all 0.3s ease;
+    text-align: center;
+  }
+  .hff-frame > div:nth-child(2) {
+    background: linear-gradient(135deg, var(--blue), #4a7eff);
+  }
+  .hff-controls { display: flex; flex-direction: column; gap: 20px; }
+  .hff-controls h4 { font-family: 'Noto Serif SC', serif; font-size: 14px; margin: 0; }
+  .hff-row { display: flex; flex-direction: column; gap: 8px; }
+  .hff-row .lab { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ink-soft); }
+  .hff-btns { display: flex; gap: 4px; background: var(--bg-2); padding: 3px; border-radius: 4px; }
+  .hff-btns button {
+    flex: 1; background: transparent; border: none; cursor: pointer;
+    padding: 6px 8px; font-family: 'JetBrains Mono', monospace; font-size: 11px;
+    color: var(--ink-soft); border-radius: 3px;
+    transition: all 0.15s;
+  }
+  .hff-btns button.active { background: var(--ink); color: var(--bg); }
+  .hff-btns button:hover:not(.active) { color: var(--ink); }
+  .hff-width { display: flex; align-items: center; gap: 12px; }
+  .hff-width input { flex: 1; }
+  .hff-width span { font-family: 'JetBrains Mono', monospace; font-size: 11px; min-width: 60px; }
+
+  /* Responsive vignette — 真实场景：导航栏在三种宽度下 */
+  .resp-vignette {
+    margin-top: 32px;
+    padding: 28px 32px;
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-left: 3px solid var(--accent);
+    border-radius: 6px;
+  }
+  .resp-vignette .resp-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--accent);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+  .resp-vignette h4 {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 22px;
+    margin: 0 0 10px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+  }
+  .resp-vignette .resp-desc {
+    color: var(--ink-soft);
+    font-size: 14px;
+    line-height: 1.6;
+    margin: 0 0 24px;
+    max-width: 60ch;
+  }
+  .resp-vignette .resp-desc strong { color: var(--ink); }
+  .resp-shots {
+    display: grid;
+    grid-template-columns: 2fr 1.4fr 1fr;
+    gap: 16px;
+    margin-bottom: 20px;
+  }
+  @media (max-width: 720px) { .resp-shots { grid-template-columns: 1fr; } }
+  .resp-shot { display: flex; flex-direction: column; gap: 8px; }
+  .resp-bar {
+    background: white;
+    border: 1.5px dashed var(--blue);
+    padding: 10px 12px;
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    height: 48px;
+    box-sizing: border-box;
+  }
+  .resp-bar .el-logo {
+    background: var(--ink);
+    color: white;
+    padding: 5px 10px;
+    border-radius: 3px;
+    font-size: 11px;
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 600;
+    flex: 0 0 auto;
+    letter-spacing: 0.05em;
+  }
+  .resp-bar .el-spacer {
+    flex: 1;
+    height: 8px;
+    background: repeating-linear-gradient(45deg, var(--accent-soft) 0, var(--accent-soft) 4px, transparent 4px, transparent 8px);
+    border-radius: 2px;
+    min-width: 4px;
+  }
+  .resp-bar .el-avatar {
+    width: 24px;
+    height: 24px;
+    background: var(--accent);
+    border-radius: 50%;
+    flex: 0 0 auto;
+  }
+  .resp-shot .resp-label {
+    text-align: center;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--ink-mute);
+    letter-spacing: 0.05em;
+  }
+  .resp-shot .resp-label strong { color: var(--ink); }
+  .resp-vignette .resp-code {
+    background: var(--ink);
+    color: #e8e8ec;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    line-height: 1.75;
+    padding: 14px 18px;
+    border-radius: 4px;
+    overflow-x: auto;
+    white-space: pre;
+  }
+  .resp-vignette .resp-code .ckey { color: #ff8a6e; }
+  .resp-vignette .resp-code .cval { color: #ffd166; }
+  .resp-vignette .resp-code .ccom { color: #6e6e7a; font-style: italic; }
+
+  /* Game */
+  .game-intro {
+    background: var(--ink);
+    color: var(--bg);
+    border-radius: 6px;
+    padding: 32px;
+    margin-bottom: 32px;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 24px;
+    align-items: center;
+  }
+  @media (max-width: 720px) { .game-intro { grid-template-columns: 1fr; } }
+  .game-intro h3 { font-family: 'Noto Serif SC', serif; font-size: 24px; margin: 0 0 8px; font-weight: 700; }
+  .game-intro p { margin: 0; color: rgba(255,255,255,0.7); font-size: 14px; }
+  .game-stats { display: flex; gap: 24px; }
+  .game-stat .v { font-family: 'Fraunces', serif; font-size: 36px; font-style: italic; line-height: 1; color: var(--accent); }
+  .game-stat .l { font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.1em; opacity: 0.6; text-transform: uppercase; margin-top: 4px; }
+
+  .level {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 28px;
+    margin-bottom: 24px;
+    transition: all 0.3s ease;
+  }
+  .level.solved { border-color: var(--green); background: var(--green-soft); }
+  .level-head { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; gap: 16px; flex-wrap: wrap; }
+  .level-head .meta { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ink-mute); letter-spacing: 0.1em; margin-bottom: 6px; }
+  .level-head h3 { font-family: 'Noto Serif SC', serif; font-size: 22px; margin: 0; font-weight: 700; }
+  .level-head .status {
+    padding: 4px 12px; border: 1px solid var(--line);
+    border-radius: 100px; font-family: 'JetBrains Mono', monospace;
+    font-size: 11px; color: var(--ink-mute); letter-spacing: 0.05em;
+  }
+  .level.solved .status { background: var(--green); color: white; border-color: var(--green); }
+  
+  .level-body { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; align-items: start; }
+  @media (max-width: 720px) { .level-body { grid-template-columns: 1fr; } }
+  
+  .level-target, .level-yours {
+    background: var(--bg);
+    border: 1px dashed var(--line);
+    border-radius: 4px;
+    padding: 20px;
+    min-height: 200px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+  }
+  .level-target::before, .level-yours::before {
+    content: 'TARGET';
+    position: absolute;
+    top: 8px; left: 12px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 0.15em;
+    color: var(--ink-mute);
+  }
+  .level-yours::before { content: 'YOURS'; }
+  .level-target { /* keep target-spec inside */ }
+  
+  .level-controls { margin-top: 20px; display: flex; flex-wrap: wrap; gap: 16px; align-items: center; }
+  .level-controls .ctrl-mini { display: flex; flex-direction: column; gap: 4px; }
+  .level-controls .ctrl-mini .lab { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--ink-soft); letter-spacing: 0.05em; text-transform: uppercase; }
+  .level-controls select, .level-controls input[type="number"] {
+    background: white;
+    border: 1px solid var(--line);
+    padding: 6px 10px;
+    border-radius: 3px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+  }
+  .level-controls input[type="number"] { width: 70px; }
+  .level-controls .seg { display: flex; background: var(--bg-2); padding: 2px; border-radius: 4px; }
+  .level-controls .seg button {
+    background: transparent; border: none; cursor: pointer;
+    padding: 6px 12px; font-family: 'JetBrains Mono', monospace; font-size: 11px;
+    border-radius: 3px;
+  }
+  .level-controls .seg button.active { background: var(--ink); color: var(--bg); }
+  
+  .level-feedback {
+    margin-top: 16px; padding: 12px 16px;
+    background: var(--ink); color: var(--bg);
+    border-radius: 4px; font-family: 'JetBrains Mono', monospace;
+    font-size: 12px; line-height: 1.7;
+    opacity: 0; max-height: 0; overflow: hidden;
+    transition: all 0.3s ease;
+  }
+  .level.solved .level-feedback { opacity: 1; max-height: 300px; padding: 16px; }
+  .level-feedback .ckey { color: #ff8a6e; }
+  .level-feedback .cval { color: #ffd166; }
+  .level-feedback .ccom { color: #8ed390; }
+
+  /* Game items - simple rectangles */
+  .g-frame {
+    background: white;
+    display: flex;
+    transition: all 0.25s ease;
+    border: 1.5px dashed transparent;
+  }
+  .g-frame.outline { border-color: var(--blue); }
+  .g-item {
+    background: var(--accent);
+    color: white;
+    border-radius: 3px;
+    transition: all 0.25s ease;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Geist', sans-serif; font-size: 12px; font-weight: 500;
+    flex-shrink: 0;
+  }
+  .g-item:nth-child(2) { background: var(--blue); }
+  .g-item:nth-child(3) { background: var(--green); }
+
+  /* Closing tips */
+  .tips-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
+  }
+  @media (max-width: 880px) { .tips-grid { grid-template-columns: 1fr; } }
+  .tip {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 28px;
+    position: relative;
+  }
+  .tip-num { font-family: 'Fraunces', serif; font-style: italic; font-size: 48px; line-height: 1; color: var(--accent); margin-bottom: 12px; }
+  .tip h4 { font-family: 'Noto Serif SC', serif; font-size: 18px; margin: 0 0 10px; font-weight: 700; }
+  .tip p { margin: 0; font-size: 14px; color: var(--ink-soft); line-height: 1.6; }
+
+  .tip-outro {
+    margin-top: 24px;
+    padding: 24px 28px;
+    background: var(--accent-soft);
+    border-left: 3px solid var(--accent);
+    border-radius: 4px;
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 20px;
+    align-items: start;
+  }
+  .tip-outro .outro-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    color: var(--accent);
+    text-transform: uppercase;
+    padding-top: 2px;
+    white-space: nowrap;
+  }
+  .tip-outro p {
+    margin: 0;
+    font-size: 14px;
+    line-height: 1.7;
+    color: var(--ink);
+  }
+  .tip-outro p + p { margin-top: 8px; color: var(--ink-soft); font-size: 13px; }
+  .tip-outro strong { color: var(--ink); font-weight: 600; }
+  .tip-outro .mono { font-family: 'JetBrains Mono', monospace; font-size: 12px; background: rgba(255,255,255,0.55); padding: 1px 6px; border-radius: 3px; color: var(--ink); }
+  @media (max-width: 720px) {
+    .tip-outro { grid-template-columns: 1fr; gap: 8px; }
+  }
+
+  /* ============= Unified next-post block (used across the series) ============= */
+  .next-post {
+    margin-top: 48px;
+    padding: 32px 36px;
+    background: var(--ink);
+    color: var(--bg);
+    border-radius: 8px;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 32px;
+    align-items: center;
+    text-decoration: none;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    position: relative;
+    overflow: hidden;
+  }
+  .next-post::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at 100% 0%, rgba(255,77,46,0.12), transparent 55%);
+    pointer-events: none;
+  }
+  .next-post:hover { transform: translateY(-2px); box-shadow: 0 14px 36px rgba(22,22,29,0.22); }
+  @media (max-width: 720px) { .next-post { grid-template-columns: 1fr; padding: 24px; gap: 20px; } }
+  .next-post .np-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--accent);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+    display: inline-block;
+  }
+  .next-post h4 {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 26px;
+    margin: 0 0 10px;
+    font-weight: 700;
+    color: white;
+    line-height: 1.25;
+    letter-spacing: -0.01em;
+  }
+  .next-post h4 .em {
+    font-family: 'Noto Serif SC', serif;
+    font-weight: 500;
+    color: var(--accent);
+  }
+  .next-post p {
+    margin: 0;
+    color: rgba(255,255,255,0.72);
+    font-size: 14px;
+    line-height: 1.65;
+    max-width: 560px;
+  }
+  .next-post p strong { color: white; font-weight: 600; }
+  .next-post .np-cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 24px;
+    background: var(--accent);
+    color: white;
+    border-radius: 4px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    white-space: nowrap;
+    transition: background 0.18s, color 0.18s, transform 0.18s;
+    position: relative;
+    z-index: 1;
+  }
+  .next-post:hover .np-cta { background: white; color: var(--ink); transform: translateX(2px); }
+  .next-post .np-cta .arr { font-family: 'Fraunces', serif; font-style: italic; font-size: 18px; font-weight: 500; }
+
+  /* Footer */
+  footer {
+    border-top: 1px solid var(--line);
+    padding: 56px 0 64px;
+    background: var(--bg);
+  }
+  .byline {
+    display: flex;
+    gap: 28px;
+    align-items: center;
+    padding-bottom: 32px;
+    border-bottom: 1px dashed var(--line);
+    margin-bottom: 24px;
+    position: relative;
+  }
+  .byline::before {
+    content: '';
+    position: absolute;
+    top: -56px; left: 0;
+    width: 32px; height: 1px;
+    background: var(--accent);
+  }
+  .byline .avatar {
+    width: 96px; height: 96px;
+    border-radius: 50%;
+    object-fit: cover;
+    flex-shrink: 0;
+    border: 3px solid var(--paper);
+    box-shadow: 0 0 0 1px var(--line), 0 6px 20px rgba(22,22,29,0.10);
+    background: var(--paper);
+  }
+  .byline-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--ink-mute);
+    letter-spacing: 0.18em;
+    margin-bottom: 8px;
+  }
+  .byline-label .dot {
+    display: inline-block;
+    width: 6px; height: 6px;
+    background: var(--accent);
+    border-radius: 50%;
+    margin-right: 6px;
+    vertical-align: 1px;
+  }
+  .byline-name {
+    font-family: 'Noto Serif SC', 'Fraunces', serif;
+    font-size: clamp(28px, 4vw, 40px);
+    font-weight: 700;
+    line-height: 1.05;
+    letter-spacing: -0.01em;
+    margin: 0 0 8px;
+  }
+  .byline-name .em {
+    font-family: 'Noto Serif SC', serif;
+    font-weight: 500;
+    color: var(--accent);
+  }
+  .byline-tag {
+    font-size: 14px;
+    color: var(--ink-soft);
+    line-height: 1.55;
+    margin: 0;
+    max-width: 52ch;
+  }
+  .footer-meta {
+    text-align: center;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--ink-mute);
+    letter-spacing: 0.05em;
+  }
+  .footer-meta .heart { color: var(--accent); }
+  .footer-meta .mono { color: var(--ink-soft); font-weight: 500; }
+  @media (max-width: 600px) {
+    .byline { flex-direction: column; text-align: center; align-items: center; gap: 16px; }
+    .byline-tag { margin-left: auto; margin-right: auto; }
+  }
+
+  /* Subtle entry animation */
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+  section { animation: fadeIn 0.6s ease-out backwards; }
+
+  /* Highlight hover for box-model layers */
+  .layer-margin, .layer-border-area, .layer-padding, .layer-content {
+    transition: filter 0.2s, outline 0.2s;
+  }
+  .legend {
+    display: flex; gap: 16px; flex-wrap: wrap;
+    margin-top: 16px; padding-top: 16px; border-top: 1px dashed var(--line);
+  }
+  .legend-item { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--ink-soft); }
+  .legend-item .sw { width: 12px; height: 12px; border-radius: 2px; }
+
+  /* ============ Code Levels ============ */
+  .code-level {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 28px;
+    margin-bottom: 24px;
+    transition: all 0.3s ease;
+  }
+  .code-level.solved {
+    border-color: var(--green);
+    background: var(--green-soft);
+  }
+  .code-level.solved .status {
+    background: var(--green);
+    color: white;
+    border-color: var(--green);
+  }
+
+  .cl-tableau {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 16px;
+  }
+  @media (max-width: 720px) { .cl-tableau { grid-template-columns: 1fr; } }
+
+  .cl-target, .cl-preview {
+    background: var(--bg);
+    border: 1px dashed var(--line);
+    border-radius: 4px;
+    min-height: 160px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 28px 24px 24px;
+    position: relative;
+  }
+  .cl-target::before, .cl-preview::before {
+    content: 'TARGET';
+    position: absolute;
+    top: 8px; left: 12px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 0.15em;
+    color: var(--ink-mute);
+  }
+  .cl-preview::before { content: 'YOURS'; }
+
+  /* Target spec annotation — shows the values to aim for */
+  .target-spec {
+    position: absolute;
+    top: 6px;
+    right: 10px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10.5px;
+    color: var(--accent);
+    background: var(--paper);
+    padding: 3px 9px;
+    border-radius: 3px;
+    border: 1px solid var(--accent);
+    white-space: nowrap;
+    font-weight: 500;
+    z-index: 5;
+    box-shadow: 0 1px 0 rgba(255,77,46,0.15);
+    line-height: 1.3;
+  }
+  .target-spec strong { color: var(--ink); font-weight: 600; }
+  @media (max-width: 520px) { .target-spec { font-size: 9.5px; padding: 2px 6px; } }
+
+  /* Code block (rendered, with inline editable values) */
+  .cl-code {
+    background: var(--ink);
+    border-radius: 6px;
+    overflow: hidden;
+    box-shadow: 0 4px 16px rgba(22,22,29,0.12);
+  }
+  .cl-code-head {
+    background: #1f1f29;
+    padding: 10px 14px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    border-bottom: 1px solid #2a2a36;
+  }
+  .cl-dots {
+    display: inline-block;
+    width: 8px; height: 8px; border-radius: 50%;
+    background: #ff5f56;
+    box-shadow: 14px 0 0 #ffbd2e, 28px 0 0 #27c93f;
+    margin-right: 28px;
+  }
+  .cl-filename {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: #8a8a96;
+    letter-spacing: 0.05em;
+  }
+  .cl-pill {
+    margin-left: auto;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: #8a8a96;
+    letter-spacing: 0.05em;
+    background: rgba(255, 77, 46, 0.12);
+    border: 1px solid rgba(255, 77, 46, 0.25);
+    border-radius: 100px;
+    padding: 3px 10px;
+  }
+  .cl-pill strong { color: var(--accent); font-weight: 500; }
+
+  .cl-code-body {
+    padding: 16px 20px 20px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    line-height: 1.85;
+    color: #d8d8e0;
+    overflow-x: auto;
+  }
+  .cl-line { white-space: nowrap; }
+  .cl-line.indent { padding-left: 2ch; }
+
+  /* Syntax tokens */
+  .cl-code-body .csel { color: #c9b6ff; }       /* selectors purple */
+  .cl-code-body .ckey { color: #ff8a6e; }       /* property keys */
+  .cl-code-body .cstr { color: #a8e6a3; }       /* string values */
+  .cl-code-body .cnum { color: #8ec5ff; }       /* number values */
+  .cl-code-body .ccom { color: #6e6e7a; font-style: italic; }
+
+  /* Editable inline inputs */
+  .ce-num, .ce-sel {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    line-height: 1.4;
+    background: rgba(255, 77, 46, 0.16);
+    color: #ffd166;
+    border: 1px solid rgba(255, 77, 46, 0.5);
+    border-radius: 3px;
+    padding: 1px 6px;
+    outline: none;
+    transition: all 0.15s;
+    cursor: pointer;
+    font-weight: 500;
+  }
+  .ce-num {
+    width: 56px;
+    text-align: center;
+    -moz-appearance: textfield;
+  }
+  .ce-num::-webkit-outer-spin-button,
+  .ce-num::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+  .ce-sel {
+    appearance: none;
+    -webkit-appearance: none;
+    padding-right: 22px;
+    background-image: url("data:image/svg+xml,%3Csvg width='10' height='6' viewBox='0 0 10 6' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%23ffd166' fill='none' stroke-width='1.4'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 7px center;
+  }
+  .ce-sel-wide { min-width: 100px; }
+
+  .ce-num:hover, .ce-sel:hover {
+    background-color: rgba(255, 77, 46, 0.28);
+    border-color: var(--accent);
+  }
+  .ce-num:focus, .ce-sel:focus {
+    background-color: rgba(255, 77, 46, 0.35);
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(255, 77, 46, 0.18);
+  }
+  .ce-num.win, .ce-sel.win {
+    background-color: rgba(39, 201, 63, 0.25);
+    border-color: rgba(39, 201, 63, 0.7);
+    color: #a8e6a3;
+  }
+  .ce-sel.win {
+    background-image: url("data:image/svg+xml,%3Csvg width='10' height='6' viewBox='0 0 10 6' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%23a8e6a3' fill='none' stroke-width='1.4'/%3E%3C/svg%3E");
+  }
+
+  /* Target/preview element styles per level */
+  .cl1-btn-target, .btn-1 {
+    background: #ff4d2e;
+    color: white;
+    border-radius: 4px;
+    font-weight: 500;
+    font-size: 14px;
+    border: none;
+    cursor: pointer;
+    font-family: 'Geist', 'Noto Sans SC', sans-serif;
+  }
+  .cl1-btn-target { padding: 24px 40px; }
+
+  .cl2-row-target {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    padding: 12px;
+    background: white;
+    border: 1.5px dashed var(--blue);
+  }
+  /* .row-2 base styles — static parts shown in the editor code block.
+     Only flex-direction and gap are user-editable (via inline controls). */
+  .row-2 {
+    display: flex;
+    padding: 12px;
+    background: white;
+    border: 1.5px dashed var(--blue);
+  }
+  .cl2-row-target span, .row-2 span {
+    background: #ff4d2e;
+    color: white;
+    padding: 8px 16px;
+    border-radius: 3px;
+    text-align: center;
+    width: 120px;
+    font-size: 13px;
+    font-weight: 500;
+    font-family: 'Geist', 'Noto Sans SC', sans-serif;
+    box-sizing: border-box;
+  }
+
+  .cl3-nav-target, .nav-3 {
+    display: flex;
+    gap: 12px;
+    padding: 12px;
+    background: white;
+    border: 1.5px dashed var(--blue);
+    width: 320px;
+    box-sizing: border-box;
+  }
+  .cl3-nav-target span, .nav-3 span {
+    height: 36px;
+    padding: 0 14px;
+    border-radius: 3px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: 500;
+    font-size: 13px;
+    box-sizing: border-box;
+    font-family: 'Geist', 'Noto Sans SC', sans-serif;
+  }
+  .cl3-nav-target .cl3-logo, .nav-3 .logo-3 { background: #ff4d2e; }
+  .cl3-nav-target .cl3-search, .nav-3 .search-3 { background: var(--blue); }
+  /* Target preset: logo hug, search fill */
+  .cl3-nav-target .cl3-logo { flex: 0 0 auto; }
+  .cl3-nav-target .cl3-search { flex: 1 1 0; min-width: 0; }
+  a.brand { text-decoration: none; color: inherit; transition: color 0.2s; cursor: pointer; }
+  a.brand:hover { color: var(--accent); }
+  .byline-contact { margin-top: 14px; padding-top: 14px; border-top: 1px dashed var(--line); display: flex; align-items: center; gap: 10px; flex-wrap: wrap; font-size: 12px; }
+  .byline-contact .contact-label { font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-mute); padding: 2px 8px; border: 1px solid var(--line); border-radius: 3px; }
+  .byline-contact .contact-id { font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 600; color: var(--ink); background: var(--accent-soft); padding: 3px 10px; border-radius: 4px; letter-spacing: 0.02em; }
+  .byline-contact .contact-hint { font-size: 12px; color: var(--ink-soft); font-style: italic; }
+  /* === Roadmap Modal === */
+  .rm-modal { position: fixed; inset: 0; z-index: 1000; display: flex; align-items: center; justify-content: center; padding: 30px 16px; }
+  .rm-modal[hidden] { display: none; }
+  .rm-backdrop { position: absolute; inset: 0; background: rgba(22,22,29,0.55); backdrop-filter: blur(4px); animation: rm-fade 0.2s; }
+  @keyframes rm-fade { from { opacity: 0; } to { opacity: 1; } }
+  .rm-dialog { position: relative; background: var(--bg); border-radius: 12px; max-width: 720px; width: 100%; max-height: calc(100vh - 60px); overflow-y: auto; padding: 32px 36px 24px; box-shadow: 0 30px 80px rgba(0,0,0,0.3); animation: rm-pop 0.25s cubic-bezier(0.4,0,0.2,1); }
+  @keyframes rm-pop { from { transform: scale(0.96) translateY(8px); opacity: 0; } to { transform: scale(1) translateY(0); opacity: 1; } }
+  .rm-close { position: absolute; top: 14px; right: 16px; background: transparent; border: none; cursor: pointer; font-size: 20px; color: var(--ink-mute); width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: all 0.15s; line-height: 1; }
+  .rm-close:hover { background: var(--bg-2); color: var(--ink); }
+  .rm-header { margin-bottom: 22px; padding-bottom: 18px; border-bottom: 1px dashed var(--line); }
+  .rm-tag { font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.1em; color: var(--accent); text-transform: uppercase; margin-bottom: 8px; }
+  .rm-title { font-family: 'Noto Serif SC', serif; font-size: 28px; margin: 0 0 6px; font-weight: 900; letter-spacing: -0.02em; line-height: 1.1; }
+  .rm-title .rm-em { font-family: 'Noto Serif SC', serif; color: var(--accent); font-weight: 500; }
+  .rm-sub { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--ink-mute); margin: 0; }
+  .rm-body { display: flex; flex-direction: column; gap: 18px; }
+  .rm-mod-key { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ink); font-weight: 700; margin-bottom: 8px; letter-spacing: 0.04em; text-transform: uppercase; }
+  .rm-mod-list { display: flex; flex-direction: column; gap: 6px; }
+  .rm-cell { display: grid; grid-template-columns: 36px 1fr auto; gap: 12px; align-items: center; padding: 9px 13px; border-radius: 5px; background: var(--paper); border: 1px solid var(--line); text-decoration: none; color: inherit; transition: all 0.15s; }
+  .rm-cell:hover { border-color: var(--accent); background: var(--accent-soft); transform: translateX(3px); }
+  .rm-cell-code { font-family: 'Fraunces', serif; font-style: italic; font-weight: 500; color: var(--accent); font-size: 15px; }
+  .rm-cell-name { font-size: 13px; color: var(--ink); }
+  .rm-cell-tier { font-family: 'JetBrains Mono', monospace; font-size: 9px; letter-spacing: 0.08em; color: var(--ink-mute); text-transform: uppercase; border: 1px solid var(--line); padding: 2px 7px; border-radius: 3px; }
+  .rm-footer { margin-top: 22px; padding-top: 16px; border-top: 1px dashed var(--line); display: flex; justify-content: space-between; align-items: center; font-size: 12px; color: var(--ink-soft); flex-wrap: wrap; gap: 8px; }
+  .rm-wechat { font-family: 'JetBrains Mono', monospace; background: var(--accent-soft); color: var(--ink); padding: 3px 10px; border-radius: 3px; font-weight: 600; letter-spacing: 0.02em; }
+  .nav-links a[data-rm-open] { cursor: pointer; }
+
+  /* === Locked cells (unpublished articles) === */
+  .rm-cell.rm-cell-locked {
+    opacity: 0.42;
+    pointer-events: none;
+    cursor: not-allowed;
+    position: relative;
+  }
+  .rm-cell.rm-cell-locked::after {
+    content: '🔒';
+    position: absolute;
+    right: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 13px;
+    opacity: 0.7;
+  }
+  .rm-cell.rm-cell-locked .rm-cell-tier {
+    border-style: dashed;
+    color: var(--ink-mute);
+  }
+
+  /* === Coming Soon next-post === */
+  .next-post-soon {
+    display: block;
+    margin-top: 60px;
+    padding: 32px 36px;
+    background: var(--bg);
+    border: 1.5px dashed var(--line);
+    border-radius: 12px;
+    text-align: center;
+    color: var(--ink);
+  }
+  .next-post-soon .ns-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.18em;
+    color: var(--accent);
+    margin-bottom: 14px;
+  }
+  .next-post-soon h4 {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 28px;
+    font-weight: 900;
+    margin: 0 0 10px;
+    color: var(--ink);
+    letter-spacing: -0.01em;
+  }
+  .next-post-soon p {
+    font-size: 13.5px;
+    color: var(--ink-soft);
+    line-height: 1.65;
+    margin: 0;
+    max-width: 520px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+  .next-post-soon .ns-em {
+    color: var(--accent);
+    font-weight: 700;
+  }
+</style>
+</head>
+<body>
+
+<!-- Top bar -->
+<div class="topbar">
+  <div class="wrap topbar-inner">
+    <a href="index.html" class="brand"><span class="dot"></span>BOX × AUTO LAYOUT / 实验讲解</a>
+    <nav class="nav-links">
+      <a href="index.html#roadmap" data-rm-open>路线图</a>
+      <a href="index.html#manifesto">关于</a>
+    </nav>
+  </div>
+</div>
+
+<!-- Hero -->
+<header class="hero">
+  <div class="wrap">
+    <div class="hero-meta">
+      <span class="pill fill">实验互动 · INTERACTIVE</span>
+      <span class="pill">2026 / 设计 × 代码</span>
+      <span class="pill">A1 · 基础 · 单元素</span>
+      <span class="label">阅读时长 ≈ 12 分钟</span>
+    </div>
+    <div class="hero-grid">
+      <div>
+        <h1>
+          <span class="display-cn">盒子模型</span><br>
+          <span class="x">×</span>
+          <span class="em">Figma Auto Layout</span><br>
+          <span class="display-cn">同一件事</span>
+        </h1>
+        <p class="lede">
+          为什么 AI 还原你的设计稿总是差点意思？<br>
+          一半的原因是：图层乱、不用 Auto Layout。<br>
+          这一页，我们一次讲清楚 CSS 的"盒子"和 Figma 的"自动布局"到底是什么关系。
+        </p>
+      </div>
+      <div class="hero-side">
+        <div class="row"><span class="k">本页讲什么</span><span class="v">盒子模型基础</span></div>
+        <div class="row"><span class="k">含互动</span><span class="v">3 视觉 + 3 代码</span></div>
+        <div class="row"><span class="k">面向</span><span class="v">设计师 / 前端</span></div>
+        <div class="row"><span class="k">前置知识</span><span class="v">无</span></div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- Section 1: Problem -->
+<section id="problem">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>01</strong> / 问题</div>
+        <h2 class="section-title">为什么 <span class="em">AI 还原</span><br>你的稿子总是<br>"看着对、拆开错"？</h2>
+      </div>
+      <p class="section-sub">
+        不是 AI 不行。是它从 Figma 读到的图层信息，本身就没有"结构"。
+        没有结构 = 没法生成可维护的代码。
+      </p>
+    </div>
+
+    <div class="problem-grid">
+      <div class="problem-card bad">
+        <span class="tag">BAD · 散装图层</span>
+        <h3>绝对定位 + 手动对齐</h3>
+        <p>每个元素靠肉眼摆位，间距用尺子量。AI 只能猜 "left: 24px, top: 132px"，加一行字立刻全乱。</p>
+        <div class="layer-tree">
+          <div class="l">📄 Card</div>
+          <div class="l"><span class="t">└</span>🟦 Rectangle (背景)</div>
+          <div class="l"><span class="t">└</span>🖼 Image (左 16, 上 16)</div>
+          <div class="l"><span class="t">└</span>📝 Text (左 92, 上 18)</div>
+          <div class="l"><span class="t">└</span>📝 Text 2 (左 92, 上 42)</div>
+          <div class="l"><span class="t">└</span>🔘 Button (左 92, 上 88)</div>
+        </div>
+      </div>
+
+      <div class="problem-card good">
+        <span class="tag">GOOD · Auto Layout</span>
+        <h3>容器 + 间距 + 对齐</h3>
+        <p>元素之间用 padding 和 gap 表达关系。AI 一眼就能映射成 flex / grid 代码。改文字也不会乱。</p>
+        <div class="layer-tree">
+          <div class="l">📄 Card · ↓ V-Auto · gap 12 · pad 16</div>
+          <div class="l"><span class="t">└</span>📦 Header · → H-Auto · gap 12</div>
+          <div class="l"><span class="t">&nbsp;&nbsp;&nbsp;&nbsp;└</span>🖼 Image</div>
+          <div class="l"><span class="t">&nbsp;&nbsp;&nbsp;&nbsp;└</span>📦 Text Block · ↓ V-Auto</div>
+          <div class="l"><span class="t">└</span>🔘 Button · Fill width</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Section 2: Box Model fundamentals -->
+<section id="box">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>02</strong> / 基础</div>
+        <h2 class="section-title">每个元素，<br>都是一个 <span class="em">盒子</span>。</h2>
+      </div>
+      <p class="section-sub">
+        浏览器里所有东西，从一个按钮到整个网页，都被包成一层套一层的"盒子"。
+        盒子有四层：内容、内边距、边框、外边距。拖一下试试。
+      </p>
+    </div>
+
+    <div class="bm-stage">
+      <div class="bm-canvas">
+        <div class="box-model" id="boxModel">
+          <span class="layer-tag tag-margin">margin</span>
+          <div class="layer-margin" id="layerMargin" data-prop="margin">
+            <div class="layer-border-area" id="layerBorder" data-prop="border">
+              <div class="layer-padding" id="layerPadding" data-prop="padding">
+                <div class="layer-content">CONTENT</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="bm-controls">
+        <div class="ctrl" data-prop="margin">
+          <div class="ctrl-head">
+            <span class="ctrl-label"><span class="swatch" style="background:rgba(255,207,61,0.6);border:1px dashed #c79f1e"></span>Margin · 外边距</span>
+            <span class="ctrl-value" id="marginVal">16px</span>
+          </div>
+          <input type="range" id="marginSlider" min="0" max="60" value="16">
+        </div>
+
+        <div class="ctrl" data-prop="border">
+          <div class="ctrl-head">
+            <span class="ctrl-label"><span class="swatch" style="background:rgba(31,107,58,0.4)"></span>Border · 边框</span>
+            <span class="ctrl-value" id="borderVal">2px</span>
+          </div>
+          <input type="range" id="borderSlider" min="0" max="20" value="2">
+        </div>
+
+        <div class="ctrl" data-prop="padding">
+          <div class="ctrl-head">
+            <span class="ctrl-label"><span class="swatch" style="background:rgba(10,76,255,0.3)"></span>Padding · 内边距</span>
+            <span class="ctrl-value" id="paddingVal">20px</span>
+          </div>
+          <input type="range" id="paddingSlider" min="0" max="60" value="20">
+        </div>
+
+        <div class="code-panel" id="boxCodePanel">
+          <span class="filename">style.css</span>
+<span class="ckey">.box</span> {
+  <span class="code-row" data-prop="margin"><span class="ckey">margin</span>: <span class="cnum"><span id="codeMargin">16</span></span><span class="cval">px</span>;</span>
+  <span class="code-row" data-prop="border"><span class="ckey">border</span>: <span class="cnum"><span id="codeBorder">2</span></span><span class="cval">px</span> <span class="cstr">solid</span> <span class="cval">#1f6b3a</span>;</span>
+  <span class="code-row" data-prop="padding"><span class="ckey">padding</span>: <span class="cnum"><span id="codePadding">20</span></span><span class="cval">px</span>;</span>
+}
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Section 3: Mapping -->
+<section id="mapping">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>03</strong> / 对应</div>
+        <h2 class="section-title">Figma 没有"重新发明"，<br>它<span class="em">几乎一一对应</span>。</h2>
+      </div>
+      <p class="section-sub">
+        Figma Auto Layout 的设计灵感，本质上来自 CSS Flexbox。
+        理解了对应关系，你看到 Figma 面板就能"翻译"成代码。
+      </p>
+    </div>
+
+    <div class="mapping">
+      <div class="mapping-head">
+        <div>CSS / 代码视角</div>
+        <div></div>
+        <div>FIGMA / 设计视角</div>
+      </div>
+
+      <div class="mapping-row">
+        <div>
+          <div class="css-name">display: flex;</div>
+          <div class="desc">把容器设为弹性布局</div>
+        </div>
+        <div>≈</div>
+        <div>
+          <div class="figma-name">Auto Layout 开关</div>
+          <div class="desc">Shift + A · 把 Frame 转为 Auto Layout</div>
+        </div>
+      </div>
+
+      <div class="mapping-row">
+        <div>
+          <div class="css-name">flex-direction: row / column;</div>
+          <div class="desc">主轴方向：横向或纵向排列</div>
+        </div>
+        <div>≈</div>
+        <div>
+          <div class="figma-name">→ / ↓ 方向按钮</div>
+          <div class="desc">面板顶部那两个箭头切换</div>
+        </div>
+      </div>
+
+      <div class="mapping-row">
+        <div>
+          <div class="css-name">gap: 12px;</div>
+          <div class="desc">子元素之间的间距</div>
+        </div>
+        <div>≈</div>
+        <div>
+          <div class="figma-name">Item Spacing</div>
+          <div class="desc">两元素之间的图标 + 数字</div>
+        </div>
+      </div>
+
+      <div class="mapping-row">
+        <div>
+          <div class="css-name">padding: 16px 24px;</div>
+          <div class="desc">内边距：容器到子元素的距离</div>
+        </div>
+        <div>=</div>
+        <div>
+          <div class="figma-name">Horizontal / Vertical Padding</div>
+          <div class="desc">完全一样的概念，命名一致</div>
+        </div>
+      </div>
+
+      <div class="mapping-row">
+        <div>
+          <div class="css-name">justify-content / align-items</div>
+          <div class="desc">主轴 + 交叉轴的对齐</div>
+        </div>
+        <div>≈</div>
+        <div>
+          <div class="figma-name">3×3 对齐九宫格</div>
+          <div class="desc">面板里那个九个点的小方块</div>
+        </div>
+      </div>
+
+      <div class="mapping-row">
+        <div>
+          <div class="css-name">width: fit-content / 100% / 200px</div>
+          <div class="desc">宽度策略：贴合内容 / 撑满 / 固定</div>
+        </div>
+        <div>≈</div>
+        <div>
+          <div class="figma-name">Hug / Fill / Fixed</div>
+          <div class="desc">下拉框三选一</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Section 4: Auto Layout interactive -->
+<section id="autolayout">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>04</strong> / 演示</div>
+        <h2 class="section-title">动一动 Figma 面板，<br><span class="em">看 CSS 怎么变</span>。</h2>
+      </div>
+      <p class="section-sub">
+        左边是仿造的 Figma Auto Layout 面板。改它，右边的画布和最下面的代码会同步更新。
+      </p>
+    </div>
+
+    <div class="al-demo">
+      <!-- Figma-style panel -->
+      <div class="figma-panel">
+        <div class="fp-title">Auto Layout</div>
+
+        <div class="fp-section">
+          <div class="fp-row">
+            <div class="fp-icon-btn-group" id="alDir" data-prop="dir">
+              <button class="fp-icon-btn active" data-dir="row">→</button>
+              <button class="fp-icon-btn" data-dir="column">↓</button>
+            </div>
+            <div class="fp-input-group" data-prop="gap" style="margin-left:auto">
+              <span class="fp-prefix">↔</span>
+              <input class="fp-input" type="number" id="alGap" value="12" min="0" max="60">
+            </div>
+          </div>
+        </div>
+
+        <div class="fp-section" data-prop="pad">
+          <div class="fp-title" style="margin-bottom:8px">Padding</div>
+          <div class="fp-row-grid">
+            <div class="fp-input-group">
+              <span class="fp-prefix">⇕</span>
+              <input class="fp-input" type="number" id="alPadV" value="20" min="0" max="60">
+            </div>
+            <div class="fp-input-group">
+              <span class="fp-prefix">⇔</span>
+              <input class="fp-input" type="number" id="alPadH" value="20" min="0" max="60">
+            </div>
+          </div>
+        </div>
+
+        <div class="fp-section" data-prop="jc,ai">
+          <div class="fp-title" style="margin-bottom:8px">Alignment</div>
+          <div class="fp-align" id="alAlign">
+            <button data-pos="start-start"><span class="dot"></span></button>
+            <button data-pos="center-start"><span class="dot"></span></button>
+            <button data-pos="end-start"><span class="dot"></span></button>
+            <button data-pos="start-center"><span class="dot"></span></button>
+            <button class="active" data-pos="center-center"><span class="dot"></span></button>
+            <button data-pos="end-center"><span class="dot"></span></button>
+            <button data-pos="start-end"><span class="dot"></span></button>
+            <button data-pos="center-end"><span class="dot"></span></button>
+            <button data-pos="end-end"><span class="dot"></span></button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Canvas preview -->
+      <div class="al-canvas">
+        <div class="al-frame" id="alFrame">
+          <div class="al-item">A</div>
+          <div class="al-item">B</div>
+          <div class="al-item">C</div>
+        </div>
+      </div>
+
+      <!-- Code readout -->
+      <div class="al-readout" id="alReadout">
+<span class="ccom">/* 同步生成的 CSS */</span>
+<span class="ckey">.frame</span> {
+  <span class="ckey">display</span>: <span class="cval">flex</span>;
+  <span class="code-row" data-prop="dir"><span class="ckey">flex-direction</span>: <span class="cval"><span id="rdDir">row</span></span>;</span>
+  <span class="code-row" data-prop="gap"><span class="ckey">gap</span>: <span class="cval"><span id="rdGap">12</span>px</span>;</span>
+  <span class="code-row" data-prop="pad"><span class="ckey">padding</span>: <span class="cval"><span id="rdPad">20px 20px</span></span>;</span>
+  <span class="code-row" data-prop="jc"><span class="ckey">justify-content</span>: <span class="cval"><span id="rdJC">center</span></span>;</span>
+  <span class="code-row" data-prop="ai"><span class="ckey">align-items</span>: <span class="cval"><span id="rdAI">center</span></span>;</span>
+}
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Section 5: Hug / Fill / Fixed -->
+<section id="sizing">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>05</strong> / 尺寸</div>
+        <h2 class="section-title"><span class="em">Hug · Fill · Fixed</span><br>窗口变了，<br>谁来让步。</h2>
+      </div>
+      <p class="section-sub">
+        这三个词就是响应式的核心。拖下面的容器宽度看一眼 ——
+        Hug 死死保持、Fill 主动让步、Fixed 撞了车也不让。
+      </p>
+    </div>
+
+    <div class="hff-stage">
+      <div>
+        <div class="hff-canvas">
+          <div class="hff-frame" id="hffFrame">
+            <div id="hffA">短文本</div>
+            <div id="hffB">这里是更长一点的描述文字</div>
+          </div>
+        </div>
+        <div style="margin-top: 16px; display: flex; gap: 24px; flex-wrap: wrap; font-size: 12px; color: var(--ink-soft);">
+          <span><strong style="color:var(--ink)">Hug</strong> = 紧贴内容（像气球贴皮肤）</span>
+          <span><strong style="color:var(--ink)">Fill</strong> = 撑满父容器剩余空间</span>
+          <span><strong style="color:var(--ink)">Fixed</strong> = 给一个固定数字，不变</span>
+        </div>
+      </div>
+
+      <div class="hff-controls">
+        <h4>容器宽度</h4>
+        <div class="hff-row">
+          <div class="hff-width">
+            <input type="range" id="hffContainerW" min="200" max="600" value="400">
+            <span id="hffContainerWVal">400px</span>
+          </div>
+        </div>
+
+        <h4 style="margin-top:8px">A 元素</h4>
+        <div class="hff-btns" data-target="A" data-prop="A">
+          <button class="active" data-mode="hug">Hug</button>
+          <button data-mode="fill">Fill</button>
+          <button data-mode="fixed">Fixed</button>
+        </div>
+
+        <h4 style="margin-top:8px">B 元素</h4>
+        <div class="hff-btns" data-target="B" data-prop="B">
+          <button data-mode="hug">Hug</button>
+          <button class="active" data-mode="fill">Fill</button>
+          <button data-mode="fixed">Fixed</button>
+        </div>
+
+        <div class="code-panel" style="margin-top: 8px; font-size: 11px;">
+<span class="ccom">/* 翻译 */</span>
+<span class="code-row" data-prop="A"><span class="ckey">.A</span> { <span class="ckey">width</span>: <span class="cval"><span id="hffACSS">fit-content</span></span>; }</span>
+<span class="code-row" data-prop="B"><span class="ckey">.B</span> { <span class="ckey">flex</span>: <span class="cval"><span id="hffBCSS">1</span></span>; }</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 响应式 vignette：真实场景导航栏 3 状态对比 -->
+    <div class="resp-vignette">
+      <div class="resp-tag">真实场景 · NAV BAR</div>
+      <h4>3 种宽度，<span style="color:var(--accent);font-family:'Fraunces',serif;font-style:italic;font-weight:500;">1 套规则</span>。</h4>
+      <p class="resp-desc">
+        同样的导航栏，桌面 / 平板 / 手机 三种宽度。规则只有一句：
+        Logo 和 Avatar 是 <strong>Hug</strong>，中间空白是 <strong>Fill</strong>。
+        窗口缩小时，Fill 自动让步，其他保持不动 —— 这就是响应式。
+      </p>
+      <div class="resp-shots">
+        <div class="resp-shot">
+          <div class="resp-bar">
+            <div class="el-logo">LOGO</div>
+            <div class="el-spacer"></div>
+            <div class="el-avatar"></div>
+          </div>
+          <div class="resp-label"><strong>1440px</strong> · 桌面</div>
+        </div>
+        <div class="resp-shot">
+          <div class="resp-bar">
+            <div class="el-logo">LOGO</div>
+            <div class="el-spacer"></div>
+            <div class="el-avatar"></div>
+          </div>
+          <div class="resp-label"><strong>768px</strong> · 平板</div>
+        </div>
+        <div class="resp-shot">
+          <div class="resp-bar">
+            <div class="el-logo">LOGO</div>
+            <div class="el-spacer"></div>
+            <div class="el-avatar"></div>
+          </div>
+          <div class="resp-label"><strong>375px</strong> · 手机</div>
+        </div>
+      </div>
+      <div class="resp-code"><span class="ccom">/* 同一套 CSS，三种宽度都能用 — 不用写 @media query */</span>
+<span class="ckey">.nav</span> { <span class="ckey">display</span>: <span class="cval">flex</span>; <span class="ckey">gap</span>: <span class="cval">12px</span>; <span class="ckey">align-items</span>: <span class="cval">center</span>; }
+<span class="ckey">.logo</span>, <span class="ckey">.avatar</span> { <span class="ckey">width</span>: <span class="cval">fit-content</span>; }<span class="ccom">  /* Hug — 紧贴内容 */</span>
+<span class="ckey">.spacer</span> { <span class="ckey">flex</span>: <span class="cval">1</span>; }<span class="ccom">                          /* Fill — 减压阀 */</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- Section 6: Game -->
+<section id="game">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>06</strong> / 关卡</div>
+        <h2 class="section-title">该<span class="em">动手</span>了。<br>3 关，过完你就出师。</h2>
+      </div>
+      <p class="section-sub">
+        左边是目标的样子，右边是你能调整的样子。改变设置，让它们看起来一致。
+      </p>
+    </div>
+
+    <div class="game-intro">
+      <div>
+        <h3>规则很简单</h3>
+        <p>看左边的 TARGET → 调右边的控件，让 YOURS 看起来一样 → 自动判定 → 看到 CSS 翻译。</p>
+      </div>
+      <div class="game-stats">
+        <div class="game-stat">
+          <div class="v" id="gameSolved">0</div>
+          <div class="l">已通关</div>
+        </div>
+        <div class="game-stat">
+          <div class="v">3</div>
+          <div class="l">总数</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Level 1: Padding -->
+    <div class="level" data-level="1">
+      <div class="level-head">
+        <div>
+          <div class="meta">LEVEL 01 · 难度 ★☆☆</div>
+          <h3>Padding 起手式</h3>
+        </div>
+        <span class="status">未通关</span>
+      </div>
+      <div class="level-body">
+        <div class="level-target">
+          <div class="target-spec">⇕ <strong>24</strong> · ⇔ <strong>40</strong></div>
+          <div class="g-frame outline" style="padding: 24px 40px;">
+            <div class="g-item" style="width: 80px; height: 32px;">按钮</div>
+          </div>
+        </div>
+        <div class="level-yours">
+          <div class="g-frame outline" id="L1Frame" style="padding: 8px 8px;">
+            <div class="g-item" style="width: 80px; height: 32px;">按钮</div>
+          </div>
+        </div>
+      </div>
+      <div class="level-controls">
+        <div class="ctrl-mini">
+          <span class="lab">Vertical Padding</span>
+          <input type="number" id="L1V" value="8" min="0" max="60">
+        </div>
+        <div class="ctrl-mini">
+          <span class="lab">Horizontal Padding</span>
+          <input type="number" id="L1H" value="8" min="0" max="60">
+        </div>
+      </div>
+      <div class="level-feedback" id="L1Fb">
+<span class="ccom">// 你的设置</span>
+<span class="ckey">padding</span>: <span class="cval"><span class="L1cv">24px 40px</span></span>; <span class="ccom">// 上下 24, 左右 40</span>
+<span class="ccom">// 在 Figma 里就是 V-Padding = 24, H-Padding = 40</span>
+      </div>
+    </div>
+
+    <!-- Level 2: Direction + Gap -->
+    <div class="level" data-level="2">
+      <div class="level-head">
+        <div>
+          <div class="meta">LEVEL 02 · 难度 ★★☆</div>
+          <h3>方向 + 间距</h3>
+        </div>
+        <span class="status">未通关</span>
+      </div>
+      <div class="level-body">
+        <div class="level-target">
+          <div class="target-spec">↓ <strong>column</strong> · gap <strong>16</strong></div>
+          <div class="g-frame outline" style="flex-direction: column; gap: 16px; padding: 16px;">
+            <div class="g-item" style="width: 120px; height: 32px;">A</div>
+            <div class="g-item" style="width: 120px; height: 32px;">B</div>
+            <div class="g-item" style="width: 120px; height: 32px;">C</div>
+          </div>
+        </div>
+        <div class="level-yours">
+          <div class="g-frame outline" id="L2Frame" style="flex-direction: row; gap: 4px; padding: 16px;">
+            <div class="g-item" style="width: 120px; height: 32px;">A</div>
+            <div class="g-item" style="width: 120px; height: 32px;">B</div>
+            <div class="g-item" style="width: 120px; height: 32px;">C</div>
+          </div>
+        </div>
+      </div>
+      <div class="level-controls">
+        <div class="ctrl-mini">
+          <span class="lab">Direction</span>
+          <div class="seg" id="L2Dir">
+            <button class="active" data-v="row">→ Horizontal</button>
+            <button data-v="column">↓ Vertical</button>
+          </div>
+        </div>
+        <div class="ctrl-mini">
+          <span class="lab">Gap</span>
+          <input type="number" id="L2Gap" value="4" min="0" max="60">
+        </div>
+      </div>
+      <div class="level-feedback" id="L2Fb">
+<span class="ccom">// 关键两行</span>
+<span class="ckey">flex-direction</span>: <span class="cval">column</span>;
+<span class="ckey">gap</span>: <span class="cval">16px</span>;
+<span class="ccom">// 在 Figma：方向按钮选 ↓，Item Spacing = 16</span>
+      </div>
+    </div>
+
+    <!-- Level 3: Hug / Fill -->
+    <div class="level" data-level="3">
+      <div class="level-head">
+        <div>
+          <div class="meta">LEVEL 03 · 难度 ★★★</div>
+          <h3>Hug / Fill 实战</h3>
+        </div>
+        <span class="status">未通关</span>
+      </div>
+      <div class="level-body">
+        <div class="level-target">
+          <div class="target-spec">LOGO · <strong>Hug</strong> &nbsp;|&nbsp; 搜索框 · <strong>Fill</strong></div>
+          <!-- Target: a "header bar" with a tight logo on left and a stretching search bar on right -->
+          <div class="g-frame outline" style="width: 320px; flex-direction: row; gap: 12px; padding: 12px;">
+            <div class="g-item" style="height: 36px; padding: 0 14px; flex: 0 0 auto;">LOGO</div>
+            <div class="g-item" style="height: 36px; flex: 1 1 0; min-width: 0;">搜索框</div>
+          </div>
+        </div>
+        <div class="level-yours">
+          <div class="g-frame outline" id="L3Frame" style="width: 320px; flex-direction: row; gap: 12px; padding: 12px;">
+            <div class="g-item" id="L3A" style="height: 36px; padding: 0 14px; flex: 1 1 0; min-width: 0;">LOGO</div>
+            <div class="g-item" id="L3B" style="height: 36px; padding: 0 14px; flex: 0 0 auto;">搜索框</div>
+          </div>
+        </div>
+      </div>
+      <div class="level-controls">
+        <div class="ctrl-mini">
+          <span class="lab">LOGO 宽度</span>
+          <div class="seg" data-target="L3A" id="L3Aseg">
+            <button data-v="hug">Hug</button>
+            <button class="active" data-v="fill">Fill</button>
+          </div>
+        </div>
+        <div class="ctrl-mini">
+          <span class="lab">搜索框 宽度</span>
+          <div class="seg" data-target="L3B" id="L3Bseg">
+            <button class="active" data-v="hug">Hug</button>
+            <button data-v="fill">Fill</button>
+          </div>
+        </div>
+      </div>
+      <div class="level-feedback" id="L3Fb">
+<span class="ccom">// 真实场景：导航栏 logo + 搜索框</span>
+<span class="ckey">.logo</span>   { <span class="ckey">width</span>: <span class="cval">fit-content</span>; } <span class="ccom">// Hug</span>
+<span class="ckey">.search</span> { <span class="ckey">flex</span>: <span class="cval">1</span>; }            <span class="ccom">// Fill</span>
+<span class="ccom">// 这是 web 上最常见的布局 pattern 之一</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Section 7: Code-Bonus -->
+<section id="code-game">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>07</strong> / Bonus</div>
+        <h2 class="section-title">同样的事，<br>这次<span class="em">用代码</span><br>再做一遍。</h2>
+      </div>
+      <p class="section-sub">
+        视觉关用 Figma 思维。代码关直接写 CSS。
+        感受一下：你刚才在面板里点的，到底变成了什么。
+      </p>
+    </div>
+
+    <div class="game-intro" style="background: #1f1612;">
+      <div>
+        <h3>不用从头写代码</h3>
+        <p>代码已经写好了，你只需要点 <strong style="color: var(--accent)">橙色高亮</strong> 的值，改成对的数字 / 选项。这才是真实工作里大家做的事——<strong style="color: white">"知道去哪里改"</strong>。</p>
+      </div>
+      <div class="game-stats">
+        <div class="game-stat">
+          <div class="v" id="codeSolved">0</div>
+          <div class="l">已通关</div>
+        </div>
+        <div class="game-stat">
+          <div class="v">3</div>
+          <div class="l">总数</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Code Level 1 -->
+    <div class="code-level" data-cl="1">
+      <div class="level-head">
+        <div>
+          <div class="meta">CODE 01 · ★☆☆</div>
+          <h3>给按钮加 padding</h3>
+        </div>
+        <span class="status">未通关</span>
+      </div>
+      <div class="cl-tableau">
+        <div class="cl-target">
+          <div class="target-spec">padding: <strong>24px 40px</strong></div>
+          <button class="cl1-btn-target">点击按钮</button>
+        </div>
+        <div class="cl-preview"><button class="btn-1">点击按钮</button></div>
+      </div>
+      <div class="cl-code">
+        <div class="cl-code-head">
+          <span class="cl-dots"></span>
+          <span class="cl-filename">style.css</span>
+          <span class="cl-pill">点 <strong>橙色的值</strong> 改</span>
+        </div>
+        <div class="cl-code-body">
+<div class="cl-line"><span class="csel">.btn-1</span> {</div>
+<div class="cl-line indent"><span class="ckey">background</span>: <span class="cstr">#ff4d2e</span>;</div>
+<div class="cl-line indent"><span class="ckey">color</span>: <span class="cstr">white</span>;</div>
+<div class="cl-line indent"><span class="ckey">border-radius</span>: <span class="cnum">4px</span>;</div>
+<div class="cl-line indent"><span class="ckey">font-weight</span>: <span class="cnum">500</span>;</div>
+<div class="cl-line indent"><span class="ckey">border</span>: <span class="cstr">none</span>;</div>
+<div class="cl-line indent"><span class="ckey">cursor</span>: <span class="cstr">pointer</span>;</div>
+<div class="cl-line indent"><span class="ckey">padding</span>: <input class="ce-num" type="number" data-cl1="v" value="8" min="0" max="80">px <input class="ce-num" type="number" data-cl1="h" value="8" min="0" max="80">px;<span class="ccom">  /* ⇕ 上下 &nbsp;&nbsp;⇔ 左右 */</span></div>
+<div class="cl-line">}</div>
+        </div>
+      </div>
+      <div class="level-feedback">
+<span class="ccom">// ✓ 完美</span>
+你刚改的 <span class="cval">padding: 24px 40px</span> 在 Figma 里就是 V-Padding=24, H-Padding=40。
+代码和设计稿，<span class="cval">同一件事的两种表达</span>。
+      </div>
+    </div>
+
+    <!-- Code Level 2 -->
+    <div class="code-level" data-cl="2">
+      <div class="level-head">
+        <div>
+          <div class="meta">CODE 02 · ★★☆</div>
+          <h3>flex 排成一列</h3>
+        </div>
+        <span class="status">未通关</span>
+      </div>
+      <div class="cl-tableau">
+        <div class="cl-target">
+          <div class="target-spec">flex-direction: <strong>column</strong> · gap: <strong>16px</strong></div>
+          <div class="cl2-row-target"><span>A</span><span>B</span><span>C</span></div>
+        </div>
+        <div class="cl-preview">
+          <div class="row-2"><span>A</span><span>B</span><span>C</span></div>
+        </div>
+      </div>
+      <div class="cl-code">
+        <div class="cl-code-head">
+          <span class="cl-dots"></span>
+          <span class="cl-filename">style.css</span>
+          <span class="cl-pill">点 <strong>橙色的值</strong> 改</span>
+        </div>
+        <div class="cl-code-body">
+<div class="cl-line"><span class="csel">.row-2</span> {</div>
+<div class="cl-line indent"><span class="ckey">display</span>: <span class="cstr">flex</span>;</div>
+<div class="cl-line indent"><span class="ckey">flex-direction</span>: <select class="ce-sel" data-cl2="dir"><option value="row">row</option><option value="column">column</option></select>;<span class="ccom">  /* 主轴方向 */</span></div>
+<div class="cl-line indent"><span class="ckey">gap</span>: <input class="ce-num" type="number" data-cl2="gap" value="4" min="0" max="60">px;<span class="ccom">  /* 子元素间距 */</span></div>
+<div class="cl-line indent"><span class="ckey">padding</span>: <span class="cnum">12px</span>;</div>
+<div class="cl-line indent"><span class="ckey">background</span>: <span class="cstr">white</span>;</div>
+<div class="cl-line indent"><span class="ckey">border</span>: <span class="cnum">1.5px</span> <span class="cstr">dashed</span> <span class="cstr">#0a4cff</span>;</div>
+<div class="cl-line">}</div>
+        </div>
+      </div>
+      <div class="level-feedback">
+<span class="ccom">// ✓ 通关</span>
+<span class="cval">flex-direction: column</span> + <span class="cval">gap: 16px</span> 
+在 Figma 就是方向选 ↓ 加 Item Spacing = 16。
+两个东西，<span class="cval">两种描述方式</span>。
+      </div>
+    </div>
+
+    <!-- Code Level 3 -->
+    <div class="code-level" data-cl="3">
+      <div class="level-head">
+        <div>
+          <div class="meta">CODE 03 · ★★★</div>
+          <h3>导航栏：logo + 搜索框</h3>
+        </div>
+        <span class="status">未通关</span>
+      </div>
+      <div class="cl-tableau">
+        <div class="cl-target">
+          <div class="target-spec">.logo-3 · <strong>0 0 auto</strong> &nbsp;|&nbsp; .search-3 · <strong>1</strong></div>
+          <div class="cl3-nav-target">
+            <span class="cl3-logo">LOGO</span>
+            <span class="cl3-search">搜索框</span>
+          </div>
+        </div>
+        <div class="cl-preview">
+          <div class="nav-3">
+            <span class="logo-3">LOGO</span>
+            <span class="search-3">搜索框</span>
+          </div>
+        </div>
+      </div>
+      <div class="cl-code">
+        <div class="cl-code-head">
+          <span class="cl-dots"></span>
+          <span class="cl-filename">style.css</span>
+          <span class="cl-pill">点 <strong>橙色的值</strong> 改</span>
+        </div>
+        <div class="cl-code-body">
+<div class="cl-line"><span class="ccom">/* 容器和颜色已写好，你只要决定：谁 hug，谁 fill */</span></div>
+<div class="cl-line">&nbsp;</div>
+<div class="cl-line"><span class="csel">.logo-3</span> {</div>
+<div class="cl-line indent"><span class="ckey">flex</span>: <select class="ce-sel ce-sel-wide" data-cl3="logo"><option value="1">1</option><option value="0 0 auto">0 0 auto</option></select>;<span class="ccom">  /* 想 hug 还是 fill ？ */</span></div>
+<div class="cl-line">}</div>
+<div class="cl-line">&nbsp;</div>
+<div class="cl-line"><span class="csel">.search-3</span> {</div>
+<div class="cl-line indent"><span class="ckey">flex</span>: <select class="ce-sel ce-sel-wide" data-cl3="search"><option value="0 0 auto">0 0 auto</option><option value="1">1</option></select>;<span class="ccom">  /* 想 hug 还是 fill ？ */</span></div>
+<div class="cl-line">}</div>
+        </div>
+      </div>
+      <div class="level-feedback">
+<span class="ccom">// ✓ 这是 web 上最常见的布局之一</span>
+<span class="cval">flex: 1</span> 让搜索框占完所有剩余横向空间。
+<span class="cval">flex: 0 0 auto</span> 让 logo 紧贴内容。
+这就是为什么 Figma 也提供 Hug / Fill —— 它在帮你<span class="cval">显式表达布局意图</span>。
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Section 8: Closing tips -->
+<section id="closing">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>08</strong> / 实践</div>
+        <h2 class="section-title">回到开头：<br>怎么让 AI <span class="em">真的能用</span><br>你的设计稿？</h2>
+      </div>
+      <p class="section-sub">
+        你已经知道 Auto Layout 是什么了。下面 3 条建议，是把这件事变成肌肉记忆的关键。
+      </p>
+    </div>
+
+    <div class="tips-grid">
+      <div class="tip">
+        <div class="tip-num">i</div>
+        <h4>所有"组"都用 Auto Layout</h4>
+        <p>看到一组横排的标签、一个卡片、一个表单 row —— 框选 Shift+A。一个 Frame 套一个 Frame，让结构能被读出来，而不是 100 个绝对定位的图层堆在那。</p>
+      </div>
+      <div class="tip">
+        <div class="tip-num">ii</div>
+        <h4>给图层起人话名字</h4>
+        <p><code class="mono" style="font-size:12px;background:var(--bg-2);padding:1px 5px">Card / Header / SearchBar</code> 比 <code class="mono" style="font-size:12px;background:var(--bg-2);padding:1px 5px">Frame 247</code> 强一万倍。AI 会把图层名当组件名，名字乱代码就乱。</p>
+      </div>
+      <div class="tip">
+        <div class="tip-num">iii</div>
+        <h4>明确 Hug / Fill / Fixed</h4>
+        <p>每个元素都问一句：它的宽度该怎么变？响应式问题 80% 出在这里没想清楚。AI 不会替你做这个决策，它只能照搬你定的策略。</p>
+      </div>
+    </div>
+
+    <div class="tip-outro">
+      <div class="outro-tag">划重点 · TL;DR</div>
+      <div>
+        <p>做不到 100% Auto Layout、图层名也来不及全改？<strong>没关系。</strong>把"主结构"做对就够了——卡片、列表、导航这种会被反复用到的块。剩下的乱一点也行。</p>
+        <p>真嫌麻烦，可以直接把稿子丢给 AI，告诉它：<span class="mono">"帮我把这份稿子的图层重新组织成 Auto Layout、起好名字。"</span> <strong>只要这一句话就够了。</strong></p>
+      </div>
+    </div>
+
+    <div class="next-post-soon">
+      <div class="ns-tag">更多 · COMING SOON</div>
+      <h4>下一篇 <span class="ns-em">还在路上</span></h4>
+      <p>
+        Design × Code Lab 总共 <strong>28 篇</strong>，会陆续公开。<br>
+        关注 <strong>范米花儿</strong>，每篇上线第一时间收到新链接。
+      </p>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div class="byline">
+      <img class="avatar" src="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAUDBAQEAwUEBAQFBQUGBwwIBwcHBw8LCwkMEQ8SEhEPERETFhwXExQaFRERGCEYGh0dHx8fExciJCIeJBweHx7/2wBDAQUFBQcGBw4ICA4eFBEUHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh7/wAARCAEAAQADASIAAhEBAxEB/8QAHQAAAQMFAQAAAAAAAAAAAAAAAAYHCAECAwQFCf/EAFAQAAECBAMEBgUJBQYEAwkAAAECAwAEBREGEiEHMUFREyJhcYGRFDJCUqEIFSNTYpKxwdEkM1Ryk0OCorLh8CVjc9IWNPEXJjVERWR0o8L/xAAbAQEAAgMBAQAAAAAAAAAAAAAAAQMCBAUGB//EADoRAAIBAgEHCQYGAgMAAAAAAAABAgMRBAUSFCExoeETFRYiQVFhYmMXMnGi4vAGUlOBkbFCZCNU8f/aAAwDAQACEQMRAD8AmVBBBABBBBABBBBABBBBABBBBABBBBABBBBABBBBABBBBABBBBABBBBABBBBABBBBABBBBABBBBABBBBABBBBABBBBABBBBABBBBABBBBABBBGCdm5WSl1TM5MsyzKfWcdWEpHiYAzwQlJ7HVKaQVSUvO1AfWNNZGv6jhSk+F4SVX2wU+VJS5VMM05Q3h+odOv7qLfjEXJsOxBDBT+3aiNnXG1PUDxk6U4sDxJVGtL7dsNvOdH/7R2GFf/cU4NDzU2BDOFiQ0ENBQtoyqoR804zoNTvuSlLThPghwH4QoWcY11k2mqZT5r/pPLZV5KCh8YXFmL6CErK45pSgPnCXnab9p5rO399sqSPG0KORnJSel0zMlNMzLKtzjSwtJ8RpEkGeCCCACCCCACCCCACCCCACCCCACCCCACCCCACCCCACCCCACCCCACMM5My8nKuTU2+2ww0nMtxxQSlI5kmNLFFepWGqJMVmtTjcpJS6brcWbXO4JHMk6ARDfbPt9qeI5pctQFrlJJpdkOj1gdw6MHcr/mHUeyE7zDdgPvtK220egZpWWmAw8R1AprpJl0c0M3GQfbdKR9kxHjFe2rENTn1rpyG5dwH/AM1MkTUwkdhUOjb7kI8YaR2aeUpx11anJp9V1KUoqNzqSSdTzJO+KKUG5dTaVWKtN9yeZiDI7FbxPWq7Ml2pVOdnQDbPMzClgnjZPqgeEcszCzfKAhsG1k6X8o0nnujRZO4kJAix6ZUlokJGg3QBvpdUsZibJGie2MDU0orcUb5b5U66ab/jGBLo3E9mnCLGFgt9hF9d+usCCqkSrzzhXLNFSV6KCQCNBxGsKDDmMsY0AH5lxZU2EIVYMPuekMnsyOXt4WhPNgZlkHeowNnK45robH4f6QA9+E/lFVOVLbWLqIlxrcZ2mXuO1TSj/lV4Q8+DsY4VxMhVUw1V0oeFi4/JOFp1HY6i1x/fSRELpdfXWgjgFee/8Ixy65unVBupUebfkZ5g3afl3ChafEfhuPKFibno1SMWz8mhKaw2J+W4Tcq39IBzW2L5h2o+7Cxp09J1GTbnJCZamZdwXQ42rMk/75cIhHso29KQ41S8ZFqVdUQlNQSnLLun/mpH7pX/ADE9XmBEjaJPrS8qpUSYTLzCrKfaVq0+CNM4GhuNzide8aQvbaLX2DsQRycOV2WrLCwlCpebZsJiWcPWbJ3G+5STwUND2EEDrRkYhBBBABBBBABBBBABBBBAGH0mX+va++IPSZf69r74jz9BPM+cBvzPnHn+fH+TfwPpHs/X/Y+X6j0C9Klv4hr74g9Klv4hr74jz815mDXiT5w588m/gPZ/6/y/UegfpMv9e198QelS38Q198R5+AnmfOKgm+8+cOfPJv4D2f8Ar/L9R6Beky/17X3xHLxXimg4XoM1W61UmJaTlk5lqKwSTwSkDVSjuAEQPcWG0KWteVKRckncIQOI6uqemEtIKg1ckJPIfmdPwjcweUJ4mVlCyXbfgcPLn4bo5IpKUq+dJ7Fm2/fbqQvtu+12rbTa0gKSqRosotRkZIK1F9OlcI9ZwjTkkEgcSWzDgXM5dyW0jzP+n4xjl0OPOOqSNAUpzHQDx8Yz+jNM51qcU4pahoBZPLvPwjpHlCxxw+kgAk2QbAbySeXhAsTHSJ+gdsAd4trp2xsFQSCUpQm5A6qQNLiOpSaNO1Fv070CoiksuATs+xIuPNyyL9ZRyixsNbXg3Yk5iKTU3ZBVSTLLMky+lpx8NrLaHFA5UFdrZiLm3ZGq7KPOKDaHAtaiAEhGiiToBreJO7bZPD078nSiTez9xp/DtNn0LdLN76oUgrcB1z51DNm1GYcLQwGFJCaq2KqTTJBsrm5mdZbaA33Kxr4b/CK4VM+LZMo2djkVOlVWnTS5afk3ZOZAuWJhpbSwDu0UAfG0aqUPhIBl3bgAHd+usS1+VnOYZqcvI4XRJzFTxu84lVMRKN5nGkKVqHT7iheyd+mYWAJiOOM8KV7CNYcpOIJBUpNJSFp6wUhxJ9pChoocLjuiKVTPSewSjmuwlmVg5jc3zm44jWLkKBddufd0842i2y8lKnGm1EgalOvnGs3KgguNuqSFDcoZuzfFpiAc/ahbS7Z/ERc45Z1IvvuI1lhaH87ibICSnONU3uPLxii1Xda10JP4GAMy0JWXGyBf1knlff8AH8YcDY7tUqOCJxmmVV51+g5rJIBWuSudSge037zfimxhvFLIeQeYUk/AxWyXCts6KsFJPwgCf1HqTdUlpWsUedaRMJQHGJho9IhSFa/32l8vwULw4uG8QS1XklLcySs2yrJMy61i7a7X0PtJI1SriORuBAf5P20x/CFYaw9VX7UaadysOLVpJuqO4ng0s7/dVZXOJGbTcLs4voAmJJAFUlUlUsToVe8yrv4cjY7iYrnKUItxV2bGHp0qtWMass2L2u17ftqJAelS/wBe198Qeky/17X3xHn2M1yCFJIJBChYgjeCOBguocT5xxue2v8ADfwPfr8AJq6xHy/UegnpMv8AXtffEHpMv9e198R59Ek8T5xUX5nziOfPJv4D2ff7Hy/UegnpMv8AXtffEHpMv9e198R59m/M+cVueZ84c+eTfwHs+/2Pl+o9AzNS38Q198Qeky/17X3xHn7c8z5wXPMnxhz4/wAm/gPZ9/sfL9QDN7p8orZXuq8odcAA7hAbW3R5bSfA9vp/l3jT2UPZV5QEK91XlDsRW/ZDSfAaf5d40tlD2VeUHW91XlDs6co1atPM02mTNQft0cu0pxXbYbvE6RMcQ5NJLWRLKKinKUdS8RicbVTo2FSbSsq7gKtzO4eA177Ql2pYlYmH9GykBCB6ytfgO2NiefXUJ+aqlQu4t2ZJSkn113Gp+yPjujDMLUt5BNyVEn4R73CYdYekoL9/ifFcr5SnlLFyrz2PYu5di++0zTDt+jQAEpzdVCdANDGKYN+iGty4nSKPhanGQndc/hFXUWdYB+svp3GNk5hc7e6eF1D8Yk58lzazUajUZXZ3VpWSTLplFCmOSzIatkTdTbiRorMm5zWuSDe94jE+mxRbX6RP4w8/yQ8NP1Xaia7lIlKLLqcUrgXXAUIT5FZ8IqrpODuZwvnKwr1TtN2Vbe6rg+aYaVgjFjLa35NwXal1PXTmA4JCwpJ+yR7ohYbMtisrgPGdYxGwr51LaSihy7hyrZzjrdIrdmF8gUPZud5tHM23Suy6jY0dxRtEn363U1y6G6fQZf1UMoBsVpBubkqJUspTroDaO1t2xVOy/wAntmr0xTtJfqyJNsIbc67LbqcykBQ+yMtxbS8ajlKVku3aWJJXb7C7ZUjDDO0arSVOmm8SYsKVTGIq6R9GypSglMsxySD1bDclGpJ0DMfKW2nSmM6sii0mUZ+baS+4G5tSLuvueqopPst6aDjYE8BGT5H9bRStqbtIcsGatJKaQNw6Rs9IkeICxCC2v4WdwZtDrFCUVLYQ8XpVavbYc66D5Gx7UmLoU0qrv2IxcuoI+XJLCLj2R+EWyiiWADwJHxMZZYfs6D9kRilR9GdPbV/mMbRUVYWQ48nUWUPiBGMyzTz5ynolp6ybeqb3Go4eEXNG02+k8kH4GLj1ZxP2m1DyI/WANSYQpEw2hYsdeNwdN4PGLM5TNIF96FfiI3XbFSUKTmSu+h5jWNJ5otPpcN1NAEZuKb23/rAFJlIdCwpINvWHMEf+sPvsM2jTVWmG8NV+cnGjKSzbUs81MrQHQBbOsgglwWG8m6QbajViAbTLg+wk/jHb2e1pygYtp9RbClJz+jvIHtAmw8f1gyY7R4tolKmabimbdUp59ibc6dt5STqVb0k2sVAg67zv4mE8bkeqryiR9PcZxXhNyWW8elASkOHelYGZtzv3X7QoQhUldil1vo3UKKHEH2VA2UPAgx5HLFF4epyiV1L+z6t+F8vuthlhpx61NJfFbF/GxjUEK35VeUVAVb1VeUOyINLxxtJ8D1Gn+XeNNZXunygsv3VeUOyReKw0nwI0/wAu8abre6ryioCj7KvKHYiqYaT4E6f5d4BKvcV5GLbL91XlD/ADkILDkPKO30e9TdxPB9JvS38Bgwlfuq8jFClY9lXlD/WHIeUUyjkPKHR71N3EdJ/S38Bgghfuq8jCM2yPhrBypVToa9JeQF30JbScyrc9wHjEscvAAXiEfylMVzGIsf1ptLhVJ01xUnLpB0ARoo+KsxjYwuQlSqxqOd7O+ziaWUPxI6mHlTVO2crbe/8AYbt/6R1uycqAoWSDuAB0irmVLqEgG4Sb/CAkgoAI1UdfAximX2JZaStXWKbJA4x6Q8SXrUC+hNtbHS3dFHTZ9oC28/5THImKi+9ONtSjS3H1KyoaaSVLVflbjCmpOzrGlVKXHpdilouCFTTpK/upufO0V1KsKavN2LqOHq1nanFs0uqtxptxwNJLgC3FbkD3j2DfE3aVIYb2H7H5qfYfFQDbPpKnwLenzCkjowLbkm6QkcE89YhBXMP4lo8yplxLUylFldI05YKBuBYK14HyhwUYx2mTeyR7ZxUcITtSk3Cy5TZpSLOSmVYUkXFwpG8AG1gd9tIpqTp1ErSVviZrD1oSacHf4HDl2cRbQMZrFnKlXq1MlSyBbMsjX+VCUjuCUxJ/5UNFdl9hLMvLIU43S5iT6TICQltCS3m7gSPOIryWBtpku56dLsJkH5dYU0oVBKHLjikpOnmIUFQltt9WpKqfVsSzT0k6MjrMxVlLSpPJQANx5xhUrUnJNTWotjgsTZ/8b1+Bw8EVR2i40olYl1lDkpUGHb9mcBXmkkRJP5aGD5edwtJ4xZW23NUt5Mq6DoXmHV9UDmpKtR2KVyiLc7RMSYUqspMVanNzsq1MIdJlphJDqUqCimxsoXAtuhQbcdsuJ9pc8hDtMmadSpZaly1PbuUg2tnWr212uL2AG4DUk23U5RnF6jXlTnTvGcXcSTN0sIB4JF9YslD+zg9qj/iMcNFWLSCVqUk29VaSI2ZCo3YTcgpy+zzjYKTfQf217+VH5wP6TDB/mHw/0jBLTTbjzqwd5CR4D/WMrysz7BA3FX4QBdMqyFtV9zg+On5wKWUlCvtWPcdIsndWLndnT/mEWTpIYWRwsfiIAxPslpwvMp6hFlNjgB7vnujVC8zL5QrQLJSRw0BvHUWrKQR7w/SNKclyCtyXT11AlaB7XMjt/GBJK3YViFTzUg4+s9HU5dN77g5cpV5Oj/8AbChxzI+i4i9JbSein0ZyANzqAArzTlPgYQHyfpj582DzraV/tGHKuHkKG9LLyElXkcyv7kPYZ+8lI10JsWlImHEjgk9V1PgCv7ojnYjAqth+Qk/g+7u3ajsYTKLw2MWJitu1d99u/WNyAr3VeUVyqPsq8of0gX4Hti4Ach5RxOj3qbuJ6vpP6W/gMDlWPZV5RQpXf1VeRh/rDkPKAAch5Q6Pepu4jpP6W/gMFlX7qvIxclKxvSryh/LDkPKCw5CHR71N3EdJ/S38CwON/WI+8Ir0jf1iPvCI46mLrm1rx7HRfE5nNPm3cSRnSN/WI+8Ir0jf1iPvCI4623xXWGi+I5p827iSPbcb6RH0iPWHtDnHnhjdDoxPiFtdy4Z1+9uJzH4xIFJOYd8MBiMobr1SmdMqnnFJ8FqH6RjOjyfacnK2D0eMXe9zhVOaDLaOjSCoWUkc9P8AWOMnNU3ujCwhu4DjqxfJ3DiYtcRMzMyWG1ggpKlK4oQP92EOZss2W1XErqS3llJNCQrpXBe9yRoOO46xrV68aUbtnMw+HlVlZIz7Op7DVAm0iTo77i1dVU04sF5Q4200vyHdEhMIDDtSal1ttKUtdworVnAVvTbQAhQCu4pIOsalC2QYcp0uhLyFzbid61AI18IWFNoVNpyOjlZUNi4O8nXTX4R52vUp1HdXbPT0FVpxtey7kJfaBgNiu056XlUpROyilLaB0DzC9SnTksGx4EdsaOy+Xpk7hsU+ZlFCt0NZl56WzEOOM70rCb69WxFt5SRxEOW6FLyLaUEPNklCju13pPYf0PCEtinCDVUqbOIKQluUrLKcjrLxUlqZbvfIpSOsk8UuJ3HgRcRVGSazZGcs9POicrE2MMB0GWIPRTpTqhLCM5cuL6KPDtOkM1i/aNVKytxqkSTNKlFDqoZb+kUOJK94Hda/C8OrUdmVEq08Jlz5wp8wq5dlphIXdV7khY0VfW5G/S4jq0/BmF8PgzC5Jp5wHMVTBCrkC9zm0AAG86ACLIyo0+y7MJcvUWuVkR1pGCsW4hVmk6ZMvIV7a05UfeVoPOFrRdgc9OMFydrktKuI0U10a1lJ5G1rd4JhxH8czdZJRg/D9WxC2klAmJQIlZIEcBMO+v3oTaG6xptsr+DcQKpFawtImcQgFbcvXHHXGQRcBRAy3tY2jcWlT92NvvxNKTwsPelf78DpTmwiVl5IutVV5UyB1mVtJCF9ra7kFX2VWv3w0WLNnz1ImbzMmQ24opamZclCVK90j2VfZPxh/Nle2vD+LJwU95TtMnHDlSxO2yuqPsodHVJ+yoAnheHOrmHKJXJRTNQkkKStORRSMpI5Ebj4jThaKNJrUJWqFzw9CtC8NhAOYpk9IgmXUJhpJtlV1Vg33d8WStQUmayvBSCgWDa9DrvMSjxnshQNaeu7gBS28rXpEe4vmRu49/AMZjHCcxSZ30GsStgU5mXgd6b20V2HQ9veI6dDHxnqZy8Tk6UOtE4C5tp1CEZgCpxO/sNz+EZJ0fsy7cQPxEcqdpszTHS8oqmJcC2cDrIHaPzi+XnQvK0g50XBUeQ32joKSkro5kouLszpTNw0rmCP8wi11ZS42R7xHwP6RV8hbIIOilJHxEbmHqBXMV1pNJoEn076TncWo2Q0ndmUdwGv6RJA9HyOa3S5au4owvUVdE3W5NK0ngVIuhSQBxIdv/dMPhhcPs4YVLVeWmGkJUpDi1NEpyrAvqL71FXnEc6ZsqxZgapyeKjUqXUPQ3Ercl21raXrYdUqFlEb7aXtaJezVBRI4bqrofS6XGLpyerYEKGvGIdtpbe8UgwfUET2GJB9b6FuJa6F1WcarbJQrzKb+MdYOt/WI+8IYnF0slPo08lOVwvBp1Q9tKkm1+diBYxyASeMWQw6mr3PQYDCLFUs/OtbVsJHdI39Yj7winSt/WI+8IjoSecUF+cZaJ4m5zT5t3EkaXGx/aI+8IM6PfR94RHPXnFyVHnDRPEc0+bdxMYUOY84qVJ5jzhoQTzPnASeZ846PJnczB3QpJ9oecVzDgoecM+b8zFbkbifOHJk5g8CFAqHWGhHGI7Y2Q4yt+XcCkPNvqQog8bm/nCpueZ84TuMKY+9T3Kg2h7omXEhbqUnKCq/VJ3XNiQDyVbdGviaVo3OD+IMO5UFUX+L/ss2Q4cViWtmn5/pJp0N5gNQhKgVHyComRTJGSo7iJWVZDTPQoZZQhO8oJ0A7j8DES/k21FcjtOwy2lBc6aamJdQ4kqQq3n+cP8AbVpqq4hxnQ9ntAmHpNiqtqcqU60CHESqQCpCFeyVaAnfqBpx8pjac6tdQvqZz8DUhSoOdtaFDVdpuCqVOqkJmuyjs2k2XLygcmnEnkrokqAPjHTw1ivD+Jm3VUOqS04pn980hRDrX8yFAKT4iOxL4DpeG9ntQpuFqW0xOIkHhKIZOQ9NkOXrDUqvbrG5vEH5mYq05tSl6ngaipw/Uc6ES8nIvuuuh4aLKy4SSSb5gdLXuN5hoFNxfWsyI5QqZ3u3ROFC7K7DGykCOWC6mVQ5MZErS2C6U+qFW61uy97R0JdYLaSb6gGOSu467WozKCiggGEvWcHqxbVpam1BX/B2vp51q/8A5sg9RpXNF+socbJG68KoajSMjbi2lBSDZQ4xbSkoTUu4pqpyg4rtO5SqZIyLCGmJdpKW0hKRlGgG4AbgOwRDL5WLGLZPFNTw7PTLTVBnamqrSV5VtIeK02v0oSFEp1TlKrCw03RLN2rzqAQggnmQDHLrBXWJcS1SYZm2QrMG3mULSFcwCN8dJZRjHWrnMWTpy22sRy+TFhNlUnXKniKlNzNNnZNuUk2nmgA84HAvpU8slrBY4qsDviRdIl0MMIaRmyJFgFKvaLWJJtASEoCQBYAcuUbrSQnQRz8RXlXlnPYdKhQjQjZGQtpUkpUlKkneCLgwj9pmAJLGFAXJAol5pslcq8Rfo1248SlW4juO8CFqmxGkVJimN4u6LGrqz2EEKvTp2j1OapFSl1szEq4W3W1es0r80kbuBG6EtVaauTWZmVQCg6raTuI5p/SJG/KwwsWZ6RxdJoy9Kn0eaKd4UPVURxBGh7QOcMbIoeqUw1JyjC3Zp5YQ2whBUpxfAJA1J7B5R3cPWbSnE4mJoq7hITkrNreU2loFV12bbGqlKOg0iZmxvBLODsIMyy2x85TID086BcqcI9W/JI0Hbc8YZ7AGx2pUXatR1Yhl2pd1uXVUnpC+ZTGVQS3ntoCpeuXW2UxI6ffXLSLrjIV04AQ0D7TiiEo/xER0nK6OVm2ZxlNCt4hyOdaVklEhNtFWNifFYKR9ltfvQplz7slJTOab6CVLSi/nPUCALqJ5WGsYsIUoNUcvgX6dZyKO8to6iD4hJV3rMaGMUIUuXp7h+hCTOTYte7TZGVJ/mXbTjkI4xJIi61UK1U5RwNYaKKeVJcZWqb/a+qoKC1M5ctjb1M+YA89I50o+3MSyHm1DKobidQdxB7QbiFY/K9IM8ygKdOqgTcI+yO7ieJ8IZnaLICQxfMZAUonG0zPeokpWfNIJ7SY2sM+tmndyFiHGtyL2S/v/AMF9mHMecVChzHnDQi/P4xdy1PnG9yZ63MHdBHMecVSR7w84aAk8z5wAknefOJ5PxGYWZu2KZhzEejHzbT/4GV/op/SD5up/8DK/0U/pGvpfgeb6Sr9LfwPOcKHMQFQ5iPRn5up/8DK/0U/pFPm2n/wMr/RT+kNL8B0mX6W/gecylC28Q/mz2j0M/JiriKtIImk1hb7rtx1hkUG2lJPBSSkqB598Sd+bad/ASv8ART+kNNjCXbfwfiNlAShKZuaTlSLAATHLuimviOUjaxo5QyxptJU1G2u+3gRTwTs2r2CNt+FZOdSH5CYqyH5GcbPVdAQStJG9KgmxI8riJV1JtyRm26jJyzS5lOhJGqk8ifGEVWpVcxtI2bzYSS007OOHsPoZKYcSbUggBZFzuG8nuG8x5fKTfKrN2lmTEuTedsNJeKaqpsIZkWGV7rqcK7dwAjk02gynz1M152SlU1KZFnplLCEOODkSBu/HjeFTI0KoTJCkyfQpO5T5yfDVXwjty+F0ggzc64r7DKQgeZufwiuOHxNZdbZ/BbPFYWg+rt/kQVfuUMyiNC+4lJPZfX4AxtIcTeyDmN9yBm/CHGlaDSGXUuimsuOJ3OOpzqHiq8dVsFCQlCEoHJJt+EXRyZ+aRTLLFlaMf5GzlpedWepIzqh/+Ov8xG2KbU1Hq0yd8WiPxhwglROpHxgyEbynyi5ZNprtZryyrVfYhAJo1VO+mTPjlH4qi1VFq/ClzH3m/wDuhwSk++PuwFJ9/wCETzdS8THnSt3L7/cbw0Wsk6UuY+83/wB0HzNWR/8ASZk9ym/+6HDyHgv4RYtQQoJUuxV6vV3w5upeI50reH3+43xp1Wbvmo8//dQlX4KjDOdNJMKfnJKel2Ues45LLCUi9rk2sB2w4zqsqFKzDQXtljl1OWZrtFnKbMpdQ0+gIV0S7LtcHQ8N0Q8m07amyVlSrfWkNfjfDTuMqNMYfkmkuzpspBUOoydRdw7gkgkWOp3AGNCiYY2Z/JvwkcRVp9M7XXUqQh9SQqYfXbVqWQdUJ5k8PWVwhdVLFdPozfzLhOSZmphCj0i0n9nZVxKlXu4vmAe9Q3RC/wCUhL4mXjueqeIJ9+oLQoJS4s9VtpWreVI0SjenQWzA33i7DOnRfJp3kZYhVsQuVkrR/seXZNXp7G01XMfVJhEu5UpoS8s0i6g0wyNE3O85lqJPEwt6iT9EUn9y29NeLbZyf41o8oSuxiR+b9mVBl05UqXKB5dxvU4Ss/5hDhYYkZeo1WqMzaekaTTUy6k3tcPOKza8DZsR1EjlMVMpTUSkmzKIHVYaS0O5IA/KEJiQJM9OPCykvzol0f8ATlUgq8C8s+UKpqVxuwz6EzUqFMNgZW6hMMu+kAcCtpPUWsDjmSCdSBuhNYokmaY/K0phxx1EnKJSXHDdbi3FrWtaj7yiAT3xmyEcF82SYaLbEgCtU169iZZ1BHctB/Mw7U0bJMKvYVIS85iGszUxLtvBiWZaTnQFWKlrUd/8ojKlLNmmbWExGjVo1bXsREChzi7N2jzj0W+baf8AwMr/AEU/pB820/8AgZX+in9I3dLXcd7pKv0t/A86CocSIAsDiI9F/m2n/wADK/0U/pB820/+Blf6Kf0hpfgOky/T38DbgggjSPKBBBBAFDuhrK/RnpivVeRFSXLyDs4l+ZlwyCpxK0oUQlZPVCiFBWh3G1rmHUhE45R6HXJWdt9HOMmXUbaBxBK0eaS55RjLYZR2iPwzSZWo1+my08860aemYVL9HYFbqCppaSTew6NaVWGp110hypCRlJK4lZdtpRGqvbPed584apye+b8TqdKilCX2Z9NuKf3L4+6QT/NDuqGUkm19190USir3trLM52tfUWrvoAbX38IvQQn1bqPYIoEg23Hw/WLyNNRfvMDEvDlhqAO8iKlwn/0Ji1APA27hF+TTVV4kFCVakX+7FqivXVQ7gO3tjJlHMxUoB33gDDuvqfh2wFQ5n4RkKExQpRAFgPJR8xB1tBc/4ez/AFi8JRwEUVYDdAGFxN0kHNu90frCW2jBLOC55ttbiC8thrRRSes8hJFweRPnCpWkchCQ2kWVRJNkEfS1KWBGmoSVOcP5YqrO1OT8GW4dZ1WK8UJ2Ul2mGw0y2lCBoEpFgBCC274alKrgypVNz6N+RkXlpcABOXITlIOhBtuPfoQDDiNp0EJXbPcbKcTFO/5udHwjzVG6qRt3nq67vTlfuNbDiGpaiyEsoAFqWaQAexAEK7AzwS/W3b75iXaHclnN+K4S9OcPozeXKU5U8ddwjewpO5HK22DqmooJHYZdu34GPWo8eOKmaTb1ob/Fz+fEE6q9+uhPk0j9Y7HzgQN8JHEczmq8yb71JV5to/SMhY0J54BJh0Pk+ShTh6p1JQP7VPFCDzS0hKf82eGeqk4iXlXZlwFSGklZA3m3Adp3eMSN2cUZeH8EUmlPAh9qXCpi/wBaslbn+JSolESFDBBBGRgEEEEAEEEEAEEEEAEcnFtI+e6DMSKVhp8gLYcI/dupN0nuvoewmOtBAEb66+t5hxDrS2pyVUtt1k+sm4yuN99tRzISeMPDgeqCs4SplSzhan5ZBWocVAZVfEGNTaNgBvEToqdLfbkqskBK1LB6KYSNwXbUEcFjUDQgi1rtmNJepeDZWWfS2lwrddKW1ZkAqcUeqdLjju4xTNWLL3FIDF2YxZYjhFwF4wBkQRa5MZUEHSNfQRlQeN4kF5IHCC8UIKhoYAg8YiwAm8WlN+MXZYu3b4Awm41vFilWjMpN4tyDiIkGAqUdLQk9pLL5pUjOtsrcl5SbD0ypOvRt9EtOcjeQCoXtew13A2WiQOUYHG0KSpDqczagUrBubg6Ea9kYVIKpBxfaZ0punNTXYNw1YpEcjHlONXwZWKWn1pqSdZT3qQQPjaNyjtql5P0RS+kVKLXKlV736NRQD5ARqYmNSmpM0qiNh2qziVIlUk2Sk29dR4IToSfzsI8woSU81bbnrc6Eqec9lhvcGVdE/hemTilJSXJVsqCk3yqCQlQPaFAiL2apMyOIaklpwZZppiYTpoSjM2r8UecJzFEhJ7FZmnUOqV9VSZnUF0qUn9oad/tHMg/sVquRxBuNdba8xiehVHo5uRr9PL7BJQVugApIspCgdQCPIgHhHrUzyAtnK5PqH74juSBGjMzy1PB54qUlaQhajrlUL5Sewg2vzSOcYMOSuIMSn/3dwtVKm0EZlzDfRtsJPuhxxSUrP8pPhCtoOzLHlSmm0TlMYoEuT9I/MzbbzqU8crbRIJ71Ac77oysG0U2X4bdxVi+VdcRej0p1MzNqI0edHWZZHPrWcV2JSPaiRscvC1Bp2G6KzSaW0pDDVypS1ZlurOqlrV7SidSfysI6sZJWK27hBBBEkBBBBABBBBABBBBABBBBAFricyFJCim4IuN4hK0uYqUisUSZZllPSjCOjWkkJfaHVCxvynSxSdx3EgwrITWIiql1tuuPpCpBTCZZ9YPWY65IWRxQSoA21FgdRe2E1dGUSqqm+24UvSoT3KN/iI3ZeZbdbStsgpULgxleZbeRZaUqTGo1KIl1q6NRCVG+U8DFKuZs2tb74yovbfeNZKrHUxsN6jQmJIRerNa4WRGlMvOpuETC79gH6RtqSDobnxiwtN8EDyiCTkOO1Ak5J50dzaT+UVQmrq/+fft/0UfpHZSABoIrviLE3OSmXrBP/wARdA7UNj/+Yyokqhe7lWe7QlKf+2OlYDeYwTU0zLt53nUNo4FRtfu5xNiCxEqEj6SZmnD9p0geQtFHWpcKupKdOKlFXwPcIxoffmNWWS22fbdFr9yd/naLnpNDqQXit7LrZXq/d3QIEBW/o8YzElTpdUwqooTNSyUJshSvUe624JSQlSjwz8SY5m07HFE2L4RXPzOSq4mqCcsuwOr0itbE8W2Em/aojiSbKraRiinYYorcwtSV1RSlfNksnVTrtrEWH9nr1zoAO20Qr+U/VZ92VpsxPTapqfnZtx599wC68qAAANyUjNYJGgHjfTUadPEJL3pbjorla2GcnqhDeN5ivEFaxXiabr1enVztRnF53HFaDsQkbkpA0CRoIUWzbFdRwlW2anSn1NOA2zpAKrcU6ggj7JBB5X3Nm1VFaJdRYc0/pCgp8whWVS7FC7ZrHnuUP96GL69OSVyqhVg3Yntsx280muSLbdfbSw6lIzTcqkraHatGqmu/VPbDwUqp06qyqZmmz0vOMqFwtlwKHwjzHp83MyswFy8wqXmUm7biVZc/iNxhZYb2j1anzA6Z5+XfB1cYV0a79oGivC0Vwxc46payyeDhLXF2PRKCIp7PNq2PqvNJk6NOIrDhHVZcm2kOK7AHRcnsF4eWg1nahNZUzuEUSh4uTFQZSnyQlRjap4iM9iZqVMLKG1r+Rx4I0aW1Uko6SpTDK3SLdGwkhCfE6qPbp3RvRejXYQQQRJAQQQQAQQQQAQQQQARzMVSSalhmqU9Q0mZN1rTf1kEadsdONWrTCJSlzc04bIZYW4o9gST+UQwhGbNqtP1TB9KmZzL84rkGH30k2TMJWgEOpPAnUHhmBvvBhStvoeSSEqSUmy0qFlJPaPz3GEXi+sUjZ5sdpteqkz6I5R5BhuXATdT7hbSOgCfaz2sRwtm0y3jsbPsXUHHuFJLE1AmQ7LvpsRcZ2F+00scwfA6ERQ00WXudwjXnGRsqTrFtkg6i0XZQfa+MAZM0XpF+MYQLab/GLXPSFCzTjbfMnUwBtWABMacxU5Nm6Q50qxvS0Mx89w84wOyXTK/aX1ujkTceW6MrUtLt2yNi43E62iLA1i/VJw/QNIk2vfV1lnu4DyMZpWntNO9MvM8/9a4cyvC+6NxKwkXUY0Z6qtMrLLKele4pB9XvPD8eyFiTbedaYQXHVhIG+8InaFtBk8NywaQ2JmpPpJlZIKspQ3dI4fYbB47zuFzuTWP9oqZCYcplHLVQq6SUuuHWXkj229Zf2Br7xG4tpISU5Uakt11x6cnppeZ1503Ws8yeAHADQDQCNDF46NHqx1yOtgMmSr9epqj/AGbMuKjXK09U6o+qcnnwA67lsEoG5tCfYQOCfE3OsMh8rdfR1KjygbQlKC8d2o0b07olXRqS3T5ZLaQCu3WVbeYjN8r6UQ7WG1pUgOsvJCUE2KkrQLkc7FIjnYCTlilKW3gdXHqOiThBWSS/tEe2WlPOpbRvPHlChkwWQkIuUoRax4i+saEmyGU5QbrPrK5RvsuWWi24XHw/0j0tTXFnkqbtJHckFomZZTalEqbI1424H/fbGRSs+ZqYsQgjre7y8DwPCOZTHAzPIJPUJyHtSd3xMdIKPSLbFulaJTruI5HsjlyjZnXhK6OxQHJWWnG01GdfkErUA1PISVhlfAOJGtu0a8ReJVbK9rdewxMSGH9pBD8hNoBp1bbV0jTqOCukGi08/aTxHKIUs50RC0IDjJ6qm1i409kg8uHLduh/NiVbpUtShR6w0mq4EqTyGp2XfJUuizSzZt1J3hpZ0zjVJ0Otr5UpOMtTsRVipR1q/wB9hM1pxt1pDrS0rbWkKSpJuFA7iDxEXw22BGKlgGttYOqM07PUGcKvmOecN1NKAuZVw87XKTxsR2Q5MdOEs5HJnHNerYEEEEZmAQQQQAQQQQAQQRY64202px1aUISLqUo2AHaTAF8cPGmd+kopbVy5Un0SptwbJu6fBsL+EaFW2kYCpSyiexdRm1jegTSVqHgm5i7C2OME4sn8mH8S0qpzbST9Cy+C4kcTlPW4b7RG0ELvlw7SF4jxw5huRfJpdDWqXQlJ6rkxudX22/djllX70NdsH2v4h2VYk9MkSZylTKgJ+nrXZDyfeHurHBXnpGjtco05IbQK9R5lZM1JVGYaUVn959IohV+ZBB8YRDzLrDpaebU2sb0qFjCyYueqezXH2F9omHUVvC9RRNM2AfYUQH5ZXFDiN6T27jvBhTX5bo8mMM16t4Zq7NXw/VZumTzJuh+WdKFdxtvHYbgxJ7Zh8r+oy6WZDaFSETqRoalIgNud62/VPhaK3Ta2GSZMjWLkg84QGD9rmAcVy6HaPiOScUofunVdG4nvB3ecLBmoNPoC2HG3wdxbcCh8IrMjo9UbzGrOT8vLHIpV3CNG0jMs+H6wn8TYjp9Hly9WatL01k7gtzKpfYB6yu4Q1WI9rhIXLYUplgd87PoKR3paBzK71lPcYrqVoU11nY2MPhatd2pxv9946eJMRS1Mp6p+rz7VLkgbXUvrrPugjUk+6gEwzeLNodSrhVIUJD1IphuFOerNPjw/dJPZdZ5p3QjZuZqFWqJn6rPTE/OHQPPqvkHJCRZKB2JA8Y3EuSFOaD1QnZWSbP8AaTDoQkeJ3+EcnEY+U+rT4no8LkenQXKV3d7uJvUanlZalpZkXOiEJFgP984ciiUtikyZKiku5czrp0AHfwAhnqntlwnhiVUzQZV6szqk9aZdBYZ7hcZ1DuSL84ZrH+1LFOLszNQqCkyhNxKMDo2R/cB63esq8IroZNrVXeWr4mGLytRhqhr+A/W0zbpRKA25JYbDVYqGqemv+zNnvGrh7E6faiLWLcRVXE1afq9ZnFzc26dVqsAkDclIGgA5CNB1a3CVOKJJ7Y13TpeO5h8JToLqrX3nncRjKld9Z6u4G1daMhVlKVcAoX/D841W1deL+kLjwaHqp1X+QjZaNZOzudRIORJGhsde46R0n3Ms+HRudQgnvKY4ba1IFkHT3Tu/0jadnEOFNwW1JQkAHcbDnGnOi7m7TrxO0XAy8F5czb3VcH2rb/EfgYUuz7EasKYnZfmGRN0uaBYnJZfqPsrFloP8w3HgoJO+Er++knG+JRdPenUfmIUcnRjWNnL1clEqcdpk0GZ1IPqhwEtL7ASlSe+3ONTWtZu3Wwnzs/aYrWAmaVMzi55mXSj0KdJ67rNguWevwWE5QT7yFQt2Ok6FHTFJcyjOU7ieNoYr5H9Xfcwu/QJ5xS3ZRlmZk1q/tZR66kkfyrzjsvaH4jqUXnQTOVXjmzaCCCCLSkIIIIAIpGtVqjI0mmTNTqc01KSUq0p1991WVDaEi5UTyAiE+2/5R+IcUTr0hhCdm6Dh1JKEOsHo5ydG7Ope9pB4JTZVtSeAAlzj3H2FMFU96YrtZkpd9LZWzJl9PpEwq1whCL3JO7dbXWIS7RtpeIMb1d+arE4osBZ9Hkm1kMMJ90J9o2tdRBJPIWENdTpgzU0/PuC6kqyhaiVLUo+spSjdR5XPbGOqTym2RkT9Io2bvrckb+7jviGSbmIahUqgDI0x5Mu0CUvug2190W+PfaNKgU1+jVFipSlTnGp1hYW08w4W1Nq5pI1B7YrLTDbLQbbubbyd6idSfEwOTajpa0Yg0MZvTszVHalNzcxNTL6ulcffdU44tR0JUpRJJ04xrSdSYfZEvUZVEy0ndm0Uj+VW8fhG1UUmYlVZjcp63huP5HwhOpCmn7G4Uk2jJEHUm6PLPoW7SprNYZvR3tF2+ydyvhHBUTuItHdp5/4l0O5LgFh/Mn9YMWvCcYpU+VS5dXKJadDZJIUjS6rgWURwF4lMM3Nkc45I7SKJNIZU82iaT6QlJtdk6OXPIJJPhEt8WYPqVKUqYkJh9+SvoQo5kDt/WIobIajT6dihXzipLbUzLrYS6rcgqtqeQNrX7Y9BqWm9MlQVBd2Ea783VGvbeOBlWUlVVu49LkZqFFu97vYR76FXT51oPSnQqVqo+J1jh1/FlEpLXVd9OetctsqACRe1yo6anda+4w/O0CgUdOGqnP8AoaUPMyy3E9GvowTbyG+IUYred+fZtpa3FhlDLac7PRKACSdU8N8YYDDLEXlPsNnKWVJYeKjRVm9wpavtKq7pUiQS1It82xdf31fkBCNnqrOTj6n3X3X3TvcUoqV946xrKSlTaVZQVEm5OvGLc2UWjt06NOn7iseYrYqtXd6kmyxRcUSVGxPLf5xaE2BtF5MUi0oLFHTWNeYNwAD3xsIC3nOiaAzaZlHRKASBmUdyU67zpDq0jYTiX/w5imZrdOmEVKQeZlKcGJtn0ZTygl1x118no0soZUOsVDrLSN9xEgZoq6NBUPWOgjPLpDTQzesrUxR9rophTawkqbJScqgoaHcCND3jfC3kdmGKZ7BFOxSxIzLhqdQTJyEmGCHJsKbcWHGiTZQu04nLvuBa94ARZWonSL0JUBr5QqaPgHE1SwzPYiYkmWabJS78wt2YmEtlaWVBLoQk6qUkqTcaesOYi3AmCMSY1n5WWoNOdfamJ9uQM1lJZYdWCodIUglIypUSbWABiAcWQm3JdScqrpBv0ajoe48Pwh9PkbiRrOOK/g2plKJSuUNxlSHFAHOhaCgp5qF7i3KGTqOH6zIYhmaBM06Y+c5YrDkshGdYCElSiAN4CQVX5axgpMrUqhNIlqZIzk7MAgoblmVuLBvYEBIJBvbWK3Si3ctjWmlYnx8nmhTFJotLemEludoc9PUCbFrFTCnOkRf+Vy1uxZh9Y81cA7btpuzybmJGXqCpqXEyVzVOq7JdBdFgcyjZxKhlAPW4bokjs4+V/g6rluUxnTJrDk0bAzLd5mVJ5kgZ0eKSO2MqUMxWIqzz5XJMwRz8P1uj4gpbVUodUk6nIui6JiVeS4g+IO/sjoRYVhBBDS/Kk2kHZ7s5dFPfDdeqxVKU629rT6R7+4k3H2imAGC+WVtg+fKw9gehzV6LTHbT60Hqzk0k+p2ttnhuK/5REbam8pLagm6lgBCe07vxjnVGZ6eeaYSVZErG83J148zx7zHQlk9NU0ZvVZBcN+Z0H5xiDqNNCXlEy6dzYAJ5nW58+2OW+7086sjVDIyjtUd/6RtzMx0CFLVeybk2Pf8A74RzpNJSwkK9Y9ZXedYEmcKPCL83OKW03RhfcCQQN8LEFj7ikOBaTcDQjmOIjnzTaVKUW1Zii3HUp4ePCM4czEpJ0MaLSz6bdJt1rRINhl7o52Vf7AD4GN2uEqoLbKnFH0WedQhKnwcqVjN1W7XA01VflHOn0BLaFp0GY6co6kwtb1JqSAVFKm2Jm2ZATcHISb9YnsT4wAn2yQQQbEboX+A9quPsKMJlKNXn0yaTpLPgOtDuSoG3haEA0QNFJuPjG20oJHUdA7Fp/MRE4RmrSVyYTlB3i7D0T/ygsdVSnO0qdboqmZpHQur9FKDlVoTfNYd9tN8N1iRbZxBOdEplSVJaILT5eT6pHrnVXeY4CXiCCcmhvcKhRYoK1V5bjgmMy5VtR6dTZVvPuaW+MYU6UKStBWM6lWdT33c5WY9Ha+5REHxiihZSjwzRjW6kaJIJjMrMpISm5NhGu68VnK2D3xQpU4rrXI7dB5RkS2ALHXs4RIJIbDdodCXg/D2AZWiJqFWel3ZerqnghiR9DbfdmVLdeF1rCWwEhJGVIUvfexdbZnJYRpmDy8nEtOq1FfLlaSiZeQlhmWQVOOANOlxabrJK7pByvIF7o1iInEVMp2zw0Kiysw1VqotXz5PO267CVXalmbG4bNgtZNipQSNwjhU3EtbplEq1Cp9RelqXVejE/LotlmOjVmTc2voeRF+N7QuBVIoFFqOJKVX5ySl6ZhuuVB+Vl5ORrDYcZW1lBUp2YTlQ0VKBzKFgCbDS0SJxa9QJCmYqwwulrWZXDMq+XmJ8OT0/MNNFSUNKWkKUhtp8KUtKUaaJHWiGrji15QtSlBIskE3AF72HIXJPjHdwJiE4dxhTa26hT7LC+jmW73LsutJbdb8W1KAHdAEl3JCVpPycq5s4oC53E9XzXfp7TCFTjTjqw6emYZdKkZC2gk5nLE5VC4IGXZe9VKdg+SoOIDiCrspobE2/Q5KVcTNuNOOlkoU02UrACc7fSAjMFZliyReMuLZWSpGNqozQqoiclJacX6FPSzhHSNk3StKhYg2OvI3Ec1U9PLmfSVz00p/Lk6UvqK8vLNe9uyFwSS2VyWEtlycQ1TErUvJYplqeZpNNmZpuYblQ4pIQkNJAcC0JmAlQz5lWVYaG29s0lMPUmt1yvoq9FfxLUZp+XRN0SqzS21JcYXMXaRnQStQQB0ZcKsytVINhEVlZRqq173v2xiWoK6uUW7YAe+eo8wam5SpWTwK9iR1Uw/6GzJszS8qGkrst111YLynFlFsyvUcVc2F0Tiis1Oi4lnaTMymFZ1MjMFpZYpEoWnbWuApCNRwuDz1hDJaSR1kptytpFy18BYJHARAFDg/GuJ8G1pVWwnWZmjTC1lSkSqyGlC98qkG6VpG6ygYmBsC+VVSsRuM0DaKJWi1VZCGaijqykweS7/uld5ynmN0QZK7myd8ASfaN+yJB/9k=" alt="范米花儿">
+      <div class="byline-meta">
+        <div class="byline-label"><span class="dot"></span>作者 · WRITTEN BY</div>
+        <h3 class="byline-name">嗨，我是 <span class="em">范米花儿</span></h3>
+        <p class="byline-tag">一份关于盒子模型和 Auto Layout 的实验讲解 ——<br>希望对正在用 AI 还原设计稿的你有帮助。</p>
+        <div class="byline-contact">
+          <span class="contact-label">微信</span>
+          <span class="contact-id">vanvan_0422</span>
+          <span class="contact-hint">想看什么主题，加我聊</span>
+        </div>
+      </div>
+    </div>
+    <div class="footer-meta">
+      做于 <span class="mono">2026</span> · 用 <span class="heart">●</span> 写给 <span class="mono">DESIGNERS &amp; DEVELOPERS</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+// ========= Box Model interactive =========
+const marginSlider = document.getElementById('marginSlider');
+const borderSlider = document.getElementById('borderSlider');
+const paddingSlider = document.getElementById('paddingSlider');
+const layerMargin = document.getElementById('layerMargin');
+const layerBorder = document.getElementById('layerBorder');
+const layerPadding = document.getElementById('layerPadding');
+
+function updateBoxModel() {
+  const m = marginSlider.value;
+  const b = borderSlider.value;
+  const p = paddingSlider.value;
+  layerMargin.style.padding = m + 'px';
+  layerBorder.style.padding = b + 'px';
+  layerPadding.style.padding = p + 'px';
+  document.getElementById('marginVal').textContent = m + 'px';
+  document.getElementById('borderVal').textContent = b + 'px';
+  document.getElementById('paddingVal').textContent = p + 'px';
+  document.getElementById('codeMargin').textContent = m;
+  document.getElementById('codeBorder').textContent = b;
+  document.getElementById('codePadding').textContent = p;
+}
+
+// ----- Box-model: sync highlight between ctrl ↔ code row ↔ canvas layer -----
+const bmGroups = ['margin', 'border', 'padding'].reduce((acc, prop) => {
+  acc[prop] = {
+    ctrl: document.querySelector(`.ctrl[data-prop="${prop}"]`),
+    row:  document.querySelector(`.code-row[data-prop="${prop}"]`),
+    layer: document.querySelector(`#boxModel [data-prop="${prop}"]`),
+  };
+  return acc;
+}, {});
+
+function bmSetActive(prop, on) {
+  const g = bmGroups[prop]; if (!g) return;
+  ['ctrl', 'row', 'layer'].forEach(k => g[k] && g[k].classList.toggle('is-active', on));
+}
+
+const bmFlashTimers = {};
+function bmFlashRow(prop) {
+  const row = bmGroups[prop] && bmGroups[prop].row;
+  if (!row) return;
+  row.classList.remove('is-flash');
+  void row.offsetWidth; // restart animation
+  row.classList.add('is-flash');
+  clearTimeout(bmFlashTimers[prop]);
+  bmFlashTimers[prop] = setTimeout(() => row.classList.remove('is-flash'), 600);
+}
+
+const sliderProp = { marginSlider: 'margin', borderSlider: 'border', paddingSlider: 'padding' };
+[marginSlider, borderSlider, paddingSlider].forEach(s => {
+  const prop = sliderProp[s.id];
+  s.addEventListener('input', () => { updateBoxModel(); bmFlashRow(prop); });
+});
+
+Object.entries(bmGroups).forEach(([prop, g]) => {
+  ['ctrl', 'row', 'layer'].forEach(k => {
+    if (!g[k]) return;
+    g[k].addEventListener('mouseenter', () => bmSetActive(prop, true));
+    g[k].addEventListener('mouseleave', () => bmSetActive(prop, false));
+  });
+});
+
+updateBoxModel();
+
+// ========= Auto Layout demo =========
+const alFrame = document.getElementById('alFrame');
+const alState = {
+  dir: 'row',
+  gap: 12,
+  padV: 20,
+  padH: 20,
+  align: 'center-center'
+};
+
+function updateAL() {
+  alFrame.style.flexDirection = alState.dir;
+  alFrame.style.gap = alState.gap + 'px';
+  alFrame.style.padding = alState.padV + 'px ' + alState.padH + 'px';
+  
+  const [main, cross] = alState.align.split('-');
+  const map = { start: 'flex-start', center: 'center', end: 'flex-end' };
+  alFrame.style.justifyContent = map[main];
+  alFrame.style.alignItems = map[cross];
+
+  document.getElementById('rdDir').textContent = alState.dir;
+  document.getElementById('rdGap').textContent = alState.gap;
+  document.getElementById('rdPad').textContent = alState.padV + 'px ' + alState.padH + 'px';
+  document.getElementById('rdJC').textContent = map[main];
+  document.getElementById('rdAI').textContent = map[cross];
+}
+
+// Generic helpers for code-row flash + hover sync (props can be comma-separated)
+const _flashTimers = {};
+function flashCodeRow(scope, prop) {
+  const row = scope.querySelector(`.code-row[data-prop="${prop}"]`);
+  if (!row) return;
+  row.classList.remove('is-flash');
+  void row.offsetWidth;
+  row.classList.add('is-flash');
+  const key = scope.id + ':' + prop;
+  clearTimeout(_flashTimers[key]);
+  _flashTimers[key] = setTimeout(() => row.classList.remove('is-flash'), 600);
+}
+function flashCodeRows(scope, props) {
+  String(props).split(',').map(s => s.trim()).filter(Boolean).forEach(p => flashCodeRow(scope, p));
+}
+function _propSet(el) { return new Set(String(el.dataset.prop).split(',').map(s => s.trim()).filter(Boolean)); }
+function bindHoverSync(scope) {
+  const all = Array.from(scope.querySelectorAll('[data-prop]'));
+  all.forEach(el => {
+    const mine = _propSet(el);
+    const peers = all.filter(other => other !== el && [..._propSet(other)].some(p => mine.has(p)));
+    el.addEventListener('mouseenter', () => peers.forEach(p => p.classList.add('is-active')));
+    el.addEventListener('mouseleave', () => peers.forEach(p => p.classList.remove('is-active')));
+  });
+}
+
+document.querySelectorAll('#alDir .fp-icon-btn').forEach(b => {
+  b.addEventListener('click', () => {
+    document.querySelectorAll('#alDir .fp-icon-btn').forEach(x => x.classList.remove('active'));
+    b.classList.add('active');
+    alState.dir = b.dataset.dir;
+    updateAL();
+    flashCodeRow(document.getElementById('autolayout'), 'dir');
+  });
+});
+const _alScope = document.getElementById('autolayout');
+document.getElementById('alGap').addEventListener('input', e => { alState.gap = +e.target.value || 0; updateAL(); flashCodeRow(_alScope, 'gap'); });
+document.getElementById('alPadV').addEventListener('input', e => { alState.padV = +e.target.value || 0; updateAL(); flashCodeRow(_alScope, 'pad'); });
+document.getElementById('alPadH').addEventListener('input', e => { alState.padH = +e.target.value || 0; updateAL(); flashCodeRow(_alScope, 'pad'); });
+document.querySelectorAll('#alAlign button').forEach(b => {
+  b.addEventListener('click', () => {
+    document.querySelectorAll('#alAlign button').forEach(x => x.classList.remove('active'));
+    b.classList.add('active');
+    alState.align = b.dataset.pos;
+    updateAL();
+    flashCodeRows(_alScope, 'jc,ai');
+  });
+});
+bindHoverSync(_alScope);
+updateAL();
+
+// ========= Hug / Fill / Fixed =========
+const hffFrame = document.getElementById('hffFrame');
+const hffA = document.getElementById('hffA');
+const hffB = document.getElementById('hffB');
+const hffState = { containerW: 400, A: 'hug', B: 'fill' };
+
+function applyHFF(el, mode) {
+  el.style.flex = '';
+  el.style.width = '';
+  if (mode === 'hug') { el.style.width = 'fit-content'; el.style.flex = '0 0 auto'; }
+  else if (mode === 'fill') { el.style.flex = '1 1 0'; el.style.minWidth = '0'; }
+  else if (mode === 'fixed') { el.style.width = '120px'; el.style.flex = '0 0 auto'; }
+}
+function updateHFF() {
+  hffFrame.style.width = hffState.containerW + 'px';
+  applyHFF(hffA, hffState.A);
+  applyHFF(hffB, hffState.B);
+  document.getElementById('hffContainerWVal').textContent = hffState.containerW + 'px';
+  const cssMap = { hug: 'fit-content', fill: '1 (flex)', fixed: '120px' };
+  document.getElementById('hffACSS').textContent = hffState.A === 'fill' ? 'flex: 1' : (hffState.A === 'hug' ? 'fit-content' : '120px');
+  document.getElementById('hffBCSS').textContent = hffState.B === 'fill' ? '1' : (hffState.B === 'hug' ? 'fit-content (auto)' : '120px');
+}
+const _hffScope = document.getElementById('sizing');
+document.getElementById('hffContainerW').addEventListener('input', e => {
+  hffState.containerW = +e.target.value; updateHFF();
+  // container width affects whatever side is currently fill — flash the matching row(s)
+  ['A', 'B'].forEach(t => { if (hffState[t] === 'fill') flashCodeRow(_hffScope, t); });
+});
+document.querySelectorAll('.hff-btns').forEach(group => {
+  group.querySelectorAll('button').forEach(btn => {
+    btn.addEventListener('click', () => {
+      group.querySelectorAll('button').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      hffState[group.dataset.target] = btn.dataset.mode;
+      updateHFF();
+      flashCodeRow(_hffScope, group.dataset.target);
+    });
+  });
+});
+bindHoverSync(_hffScope);
+updateHFF();
+
+// ========= Game Levels =========
+let solvedCount = 0;
+const solved = { 1: false, 2: false, 3: false };
+
+function checkSolved(level) {
+  const wasSolved = solved[level];
+  if (!wasSolved && isLevelSolved(level)) {
+    solved[level] = true;
+    solvedCount++;
+    document.querySelector(`.level[data-level="${level}"]`).classList.add('solved');
+    document.querySelector(`.level[data-level="${level}"] .status`).textContent = '已通关 ✓';
+    document.getElementById('gameSolved').textContent = solvedCount;
+  }
+}
+
+function isLevelSolved(level) {
+  if (level === 1) {
+    return +document.getElementById('L1V').value === 24 && +document.getElementById('L1H').value === 40;
+  }
+  if (level === 2) {
+    return L2State.dir === 'column' && +document.getElementById('L2Gap').value === 16;
+  }
+  if (level === 3) {
+    return L3State.A === 'hug' && L3State.B === 'fill';
+  }
+}
+
+// Level 1
+const L1V = document.getElementById('L1V');
+const L1H = document.getElementById('L1H');
+const L1Frame = document.getElementById('L1Frame');
+function updateL1() {
+  const v = +L1V.value || 0, h = +L1H.value || 0;
+  L1Frame.style.padding = `${v}px ${h}px`;
+  document.querySelectorAll('.L1cv').forEach(el => el.textContent = `${v}px ${h}px`);
+  checkSolved(1);
+}
+L1V.addEventListener('input', updateL1);
+L1H.addEventListener('input', updateL1);
+
+// Level 2
+const L2State = { dir: 'row', gap: 4 };
+const L2Frame = document.getElementById('L2Frame');
+function updateL2() {
+  L2Frame.style.flexDirection = L2State.dir;
+  L2Frame.style.gap = L2State.gap + 'px';
+  checkSolved(2);
+}
+document.querySelectorAll('#L2Dir button').forEach(b => {
+  b.addEventListener('click', () => {
+    document.querySelectorAll('#L2Dir button').forEach(x => x.classList.remove('active'));
+    b.classList.add('active');
+    L2State.dir = b.dataset.v;
+    updateL2();
+  });
+});
+document.getElementById('L2Gap').addEventListener('input', e => { L2State.gap = +e.target.value || 0; updateL2(); });
+
+// Level 3
+const L3State = { A: 'fill', B: 'hug' };
+function updateL3() {
+  applyHFF(document.getElementById('L3A'), L3State.A);
+  applyHFF(document.getElementById('L3B'), L3State.B);
+  // restore padding
+  document.getElementById('L3A').style.padding = '0 14px';
+  document.getElementById('L3B').style.padding = '0 14px';
+  document.getElementById('L3A').style.height = '36px';
+  document.getElementById('L3B').style.height = '36px';
+  checkSolved(3);
+}
+document.querySelectorAll('#L3Aseg button').forEach(b => {
+  b.addEventListener('click', () => {
+    document.querySelectorAll('#L3Aseg button').forEach(x => x.classList.remove('active'));
+    b.classList.add('active');
+    L3State.A = b.dataset.v;
+    updateL3();
+  });
+});
+document.querySelectorAll('#L3Bseg button').forEach(b => {
+  b.addEventListener('click', () => {
+    document.querySelectorAll('#L3Bseg button').forEach(x => x.classList.remove('active'));
+    b.classList.add('active');
+    L3State.B = b.dataset.v;
+    updateL3();
+  });
+});
+
+// ========= Code Levels (live edit values) =========
+const codeSolved = { 1: false, 2: false, 3: false };
+
+function injectUserCSS(levelN, css) {
+  const id = `cl-style-${levelN}`;
+  let el = document.getElementById(id);
+  if (!el) {
+    el = document.createElement('style');
+    el.id = id;
+    document.head.appendChild(el);
+  }
+  el.textContent = css;
+}
+
+function markFieldWin(levelN, isWin) {
+  document.querySelectorAll(`[data-cl${levelN}]`).forEach(f => {
+    f.classList.toggle('win', isWin);
+  });
+}
+
+function checkCodeLevel(levelN) {
+  let pass = false;
+  if (levelN === 1) {
+    const el = document.querySelector('.btn-1');
+    if (el) {
+      const cs = getComputedStyle(el);
+      pass = cs.paddingTop === '24px' && cs.paddingBottom === '24px'
+          && cs.paddingLeft === '40px' && cs.paddingRight === '40px';
+    }
+  } else if (levelN === 2) {
+    const el = document.querySelector('.row-2');
+    if (el) {
+      const cs = getComputedStyle(el);
+      const gapVal = cs.rowGap !== 'normal' ? cs.rowGap : cs.gap;
+      pass = cs.flexDirection === 'column' && gapVal === '16px';
+    }
+  } else if (levelN === 3) {
+    const search = document.querySelector('.search-3');
+    const logo = document.querySelector('.logo-3');
+    if (search && logo) {
+      const ss = getComputedStyle(search);
+      const ls = getComputedStyle(logo);
+      pass = parseFloat(ss.flexGrow) >= 1 && parseFloat(ls.flexGrow) === 0;
+    }
+  }
+
+  markFieldWin(levelN, pass);
+
+  if (pass && !codeSolved[levelN]) {
+    codeSolved[levelN] = true;
+    document.querySelector(`.code-level[data-cl="${levelN}"]`).classList.add('solved');
+    document.querySelector(`.code-level[data-cl="${levelN}"] .status`).textContent = '已通关 ✓';
+    const c = Object.values(codeSolved).filter(Boolean).length;
+    document.getElementById('codeSolved').textContent = c;
+  }
+  return pass;
+}
+
+// Level 1: padding values
+function applyCL1() {
+  const v = +document.querySelector('[data-cl1="v"]').value || 0;
+  const h = +document.querySelector('[data-cl1="h"]').value || 0;
+  injectUserCSS(1, `.btn-1 { padding: ${v}px ${h}px; }`);
+  requestAnimationFrame(() => checkCodeLevel(1));
+}
+document.querySelectorAll('[data-cl1]').forEach(el => {
+  el.addEventListener('input', applyCL1);
+  el.addEventListener('change', applyCL1);
+});
+applyCL1();
+
+// Level 2: direction + gap
+function applyCL2() {
+  const dir = document.querySelector('[data-cl2="dir"]').value;
+  const gap = +document.querySelector('[data-cl2="gap"]').value || 0;
+  injectUserCSS(2, `.row-2 { flex-direction: ${dir}; gap: ${gap}px; }`);
+  requestAnimationFrame(() => checkCodeLevel(2));
+}
+document.querySelectorAll('[data-cl2]').forEach(el => {
+  el.addEventListener('input', applyCL2);
+  el.addEventListener('change', applyCL2);
+});
+applyCL2();
+
+// Level 3: flex of logo + search
+function applyCL3() {
+  const aEl = document.querySelector('[data-cl3="logo"]');
+  const bEl = document.querySelector('[data-cl3="search"]');
+  if (!aEl || !bEl) return;
+  const a = aEl.value;
+  const b = bEl.value;
+  // Use !important to ensure override regardless of cascade order surprises
+  injectUserCSS(3, `.nav-3 .logo-3 { flex: ${a} !important; min-width: 0 !important; } .nav-3 .search-3 { flex: ${b} !important; min-width: 0 !important; }`);
+  requestAnimationFrame(() => checkCodeLevel(3));
+}
+document.querySelectorAll('[data-cl3]').forEach(el => {
+  el.addEventListener('change', applyCL3);
+  el.addEventListener('input', applyCL3);
+});
+applyCL3();
+</script>
+
+
+<!-- 路线图弹窗 -->
+<div class="rm-modal" id="rm-modal" hidden>
+  <div class="rm-backdrop" data-rm-close></div>
+  <div class="rm-dialog" role="dialog" aria-label="完整路线图">
+    <button class="rm-close" data-rm-close aria-label="关闭">✕</button>
+    <div class="rm-header">
+      <div class="rm-tag">完整路线图 · ROADMAP</div>
+      <h3 class="rm-title">9 模块 <span class="rm-em">·</span> 28 篇</h3>
+      <p class="rm-sub">设计篇 5 模块 / 15 篇 + 工程篇 4 系列 / 13 篇</p>
+    </div>
+    <div class="rm-body">
+      <div class="rm-mod">
+        <div class="rm-mod-key">A · 单元素与组件</div>
+        <div class="rm-mod-list">
+          <a href="#" class="rm-cell rm-cell-locked"><span class="rm-cell-code">A0</span><span class="rm-cell-name">三件套 · HTML / CSS / JS</span><span class="rm-cell-tier">入门</span></a>
+          <a href="box-figma.html" class="rm-cell"><span class="rm-cell-code">A1</span><span class="rm-cell-name">盒子 · Auto Layout</span><span class="rm-cell-tier">基础</span></a>
+          <a href="#" class="rm-cell rm-cell-locked"><span class="rm-cell-code">A2</span><span class="rm-cell-name">组件 · Variants &amp; Props</span><span class="rm-cell-tier">基础</span></a>
+          <a href="#" class="rm-cell rm-cell-locked"><span class="rm-cell-code">A3</span><span class="rm-cell-name">Button System · 组件演化</span><span class="rm-cell-tier">进阶</span></a>
+        </div>
+      </div>
+      <div class="rm-mod">
+        <div class="rm-mod-key">B · 多组件协作</div>
+        <div class="rm-mod-list">
+          <a href="#" class="rm-cell rm-cell-locked"><span class="rm-cell-code">B0</span><span class="rm-cell-name">拼页面 · 组件嵌套</span><span class="rm-cell-tier">入门</span></a>
+          <a href="#" class="rm-cell rm-cell-locked"><span class="rm-cell-code">B1</span><span class="rm-cell-name">数据流 · 概念</span><span class="rm-cell-tier">基础</span></a>
+          <a href="#" class="rm-cell rm-cell-locked"><span class="rm-cell-code">B2</span><span class="rm-cell-name">数据流 · 实战 5 案例</span><span class="rm-cell-tier">进阶</span></a>
+        </div>
+      </div>
+      <div class="rm-mod">
+        <div class="rm-mod-key">C · 视觉系统</div>
+        <div class="rm-mod-list">
+          <a href="#" class="rm-cell rm-cell-locked"><span class="rm-cell-code">C0</span><span class="rm-cell-name">Variables / Tokens 入门</span><span class="rm-cell-tier">入门</span></a>
+          <a href="#" class="rm-cell rm-cell-locked"><span class="rm-cell-code">C1</span><span class="rm-cell-name">Colors / Type / Spacing</span><span class="rm-cell-tier">基础</span></a>
+          <a href="#" class="rm-cell rm-cell-locked"><span class="rm-cell-code">C2</span><span class="rm-cell-name">Theme 切换实战</span><span class="rm-cell-tier">进阶</span></a>
+        </div>
+      </div>
+      <div class="rm-mod">
+        <div class="rm-mod-key">D · 状态与交互</div>
+        <div class="rm-mod-list">
+          <a href="#" class="rm-cell rm-cell-locked"><span class="rm-cell-code">D0</span><span class="rm-cell-name">视觉态 · 看得见的状态</span><span class="rm-cell-tier">入门</span></a>
+          <a href="#" class="rm-cell rm-cell-locked"><span class="rm-cell-code">D1</span><span class="rm-cell-name">Interactive Component</span><span class="rm-cell-tier">基础</span></a>
+          <a href="#" class="rm-cell rm-cell-locked"><span class="rm-cell-code">D2</span><span class="rm-cell-name">动画 · Transition</span><span class="rm-cell-tier">进阶</span></a>
+        </div>
+      </div>
+      <div class="rm-mod">
+        <div class="rm-mod-key">E · 工程化</div>
+        <div class="rm-mod-list">
+          <a href="#" class="rm-cell rm-cell-locked"><span class="rm-cell-code">E0</span><span class="rm-cell-name">命名 / 图层规范</span><span class="rm-cell-tier">入门</span></a>
+          <a href="#" class="rm-cell rm-cell-locked"><span class="rm-cell-code">E2</span><span class="rm-cell-name">Handoff &amp; 设计系统</span><span class="rm-cell-tier">进阶</span></a>
+        </div>
+      </div>
+      <div class="rm-mod">
+        <div class="rm-mod-key">F · 工程入门</div>
+        <div class="rm-mod-list">
+          <a href="#" class="rm-cell rm-cell-locked"><span class="rm-cell-code">F1</span><span class="rm-cell-name">npm 是什么</span><span class="rm-cell-tier">入门</span></a>
+          <a href="#" class="rm-cell rm-cell-locked"><span class="rm-cell-code">F2</span><span class="rm-cell-name">import 与路径</span><span class="rm-cell-tier">入门</span></a>
+          <a href="#" class="rm-cell rm-cell-locked"><span class="rm-cell-code">F3</span><span class="rm-cell-name">dev vs build</span><span class="rm-cell-tier">基础</span></a>
+          <a href="#" class="rm-cell rm-cell-locked"><span class="rm-cell-code">F4</span><span class="rm-cell-name">看不见的文件</span><span class="rm-cell-tier">基础</span></a>
+        </div>
+      </div>
+      <div class="rm-mod">
+        <div class="rm-mod-key">G · 版本控制</div>
+        <div class="rm-mod-list">
+          <a href="#" class="rm-cell rm-cell-locked"><span class="rm-cell-code">G1</span><span class="rm-cell-name">commit / branch</span><span class="rm-cell-tier">入门</span></a>
+          <a href="#" class="rm-cell rm-cell-locked"><span class="rm-cell-code">G2</span><span class="rm-cell-name">冲突怎么解</span><span class="rm-cell-tier">基础</span></a>
+          <a href="#" class="rm-cell rm-cell-locked"><span class="rm-cell-code">G3</span><span class="rm-cell-name">PR / Review</span><span class="rm-cell-tier">进阶</span></a>
+        </div>
+      </div>
+      <div class="rm-mod">
+        <div class="rm-mod-key">H · 浏览器调试</div>
+        <div class="rm-mod-list">
+          <a href="#" class="rm-cell rm-cell-locked"><span class="rm-cell-code">H1</span><span class="rm-cell-name">DevTools Elements</span><span class="rm-cell-tier">入门</span></a>
+          <a href="#" class="rm-cell rm-cell-locked"><span class="rm-cell-code">H2</span><span class="rm-cell-name">Console 报错</span><span class="rm-cell-tier">基础</span></a>
+          <a href="#" class="rm-cell rm-cell-locked"><span class="rm-cell-code">H3</span><span class="rm-cell-name">Network 面板</span><span class="rm-cell-tier">进阶</span></a>
+        </div>
+      </div>
+      <div class="rm-mod">
+        <div class="rm-mod-key">J · 上线</div>
+        <div class="rm-mod-list">
+          <a href="#" class="rm-cell rm-cell-locked"><span class="rm-cell-code">J1</span><span class="rm-cell-name">DNS / 域名</span><span class="rm-cell-tier">基础</span></a>
+          <a href="#" class="rm-cell rm-cell-locked"><span class="rm-cell-code">J2</span><span class="rm-cell-name">Vercel 部署</span><span class="rm-cell-tier">基础</span></a>
+          <a href="#" class="rm-cell rm-cell-locked"><span class="rm-cell-code">J3</span><span class="rm-cell-name">缓存 / CDN</span><span class="rm-cell-tier">进阶</span></a>
+        </div>
+      </div>
+    </div>
+    <div class="rm-footer">
+      <span>未完待续 · 想看什么主题加我聊</span>
+      <span class="rm-wechat">微信 vanvan_0422</span>
+    </div>
+  </div>
+</div>
+<script>
+(function(){
+  var modal = document.getElementById('rm-modal');
+  if (!modal) return;
+  var openBtns = document.querySelectorAll('[data-rm-open]');
+  var closeBtns = modal.querySelectorAll('[data-rm-close]');
+  function open() { modal.hidden = false; document.body.style.overflow = 'hidden'; }
+  function close() { modal.hidden = true; document.body.style.overflow = ''; }
+  openBtns.forEach(function(b){ b.addEventListener('click', function(e){ e.preventDefault(); open(); }); });
+  closeBtns.forEach(function(b){ b.addEventListener('click', close); });
+  document.addEventListener('keydown', function(e){ if (e.key === 'Escape' && !modal.hidden) close(); });
+})();
+</script>
+</body>
+</html>
