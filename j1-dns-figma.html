@@ -1,0 +1,2309 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DNS / 域名 — 输入网址后，发生了 5 件事</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,300..900&family=Geist:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Noto+Sans+SC:wght@300;400;500;700;900&family=Noto+Serif+SC:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f3eee5;
+    --bg-2: #ebe4d4;
+    --ink: #16161d;
+    --ink-soft: #4a4a55;
+    --ink-mute: #8a8a92;
+    --line: #d5cdba;
+    --line-soft: #e3dcca;
+    --accent: #ff4d2e;
+    --accent-soft: #ffe4dc;
+    --blue: #0a4cff;
+    --blue-soft: #dde6ff;
+    --green: #1f6b3a;
+    --green-soft: #d4ecdb;
+    --yellow: #ffcf3d;
+    --paper: #faf7f0;
+    --shadow: 0 1px 0 rgba(0,0,0,0.04), 0 8px 24px rgba(22,22,29,0.06);
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'Geist', 'Noto Sans SC', system-ui, -apple-system, sans-serif;
+    font-size: 16px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    background-image: radial-gradient(circle at 1px 1px, rgba(22,22,29,0.05) 1px, transparent 0);
+    background-size: 24px 24px;
+  }
+
+  /* Typography */
+  .display-cn { font-family: 'Noto Serif SC', 'Fraunces', serif; font-weight: 900; letter-spacing: -0.01em; }
+  .display-en { font-family: 'Fraunces', 'Noto Serif SC', serif; font-weight: 600; letter-spacing: -0.02em; }
+  .mono { font-family: 'JetBrains Mono', monospace; }
+  .label { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-mute); }
+
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 0 32px; }
+
+  /* topbar */
+  .topbar {
+    border-bottom: 1px dashed var(--line);
+    padding: 16px 0;
+    background: rgba(243, 238, 229, 0.85);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    backdrop-filter: blur(8px);
+  }
+  .topbar-inner { display: flex; justify-content: space-between; align-items: center; gap: 24px; flex-wrap: wrap; }
+  .brand { font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 600; }
+  .brand .dot { display: inline-block; width: 8px; height: 8px; background: var(--accent); border-radius: 50%; margin-right: 8px; vertical-align: middle; animation: pulse 2s ease-in-out infinite; }
+  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+  .nav-links { display: flex; gap: 18px; font-size: 13px; flex-wrap: wrap; }
+  .nav-links a { color: var(--ink-soft); text-decoration: none; transition: color 0.2s; }
+  .nav-links a:hover { color: var(--accent); }
+  .nav-links a.current { color: var(--accent); font-weight: 600; }
+  a.brand { text-decoration: none; color: inherit; transition: color 0.2s; cursor: pointer; }
+  a.brand:hover { color: var(--accent); }
+
+  /* hero */
+  .hero { padding: 100px 0 80px; position: relative; overflow: hidden; }
+  .hero-meta { display: flex; gap: 24px; margin-bottom: 32px; align-items: center; flex-wrap: wrap; }
+  .hero-meta .pill { padding: 6px 12px; border: 1px solid var(--ink); border-radius: 100px; font-size: 11px; font-family: 'JetBrains Mono', monospace; letter-spacing: 0.05em; }
+  .hero-meta .pill.fill { background: var(--ink); color: var(--bg); }
+  .hero h1 {
+    font-family: 'Noto Serif SC', 'Fraunces', serif;
+    font-weight: 900;
+    font-size: clamp(48px, 7vw, 92px);
+    line-height: 0.95;
+    letter-spacing: -0.03em;
+    margin: 0 0 24px;
+  }
+  .hero h1 .em { font-family: 'Noto Serif SC', serif; font-weight: 500; color: var(--accent); }
+  .hero h1 .x { display: inline-block; transform: translateY(-0.05em); margin: 0 0.05em; color: var(--ink-mute); font-weight: 300; }
+  .hero p.lede { font-size: 20px; line-height: 1.5; max-width: 640px; color: var(--ink-soft); margin: 0 0 40px; }
+  .hero p.lede .em { font-family: 'Noto Serif SC', serif; color: var(--accent); font-weight: 500; }
+  .hero-grid { display: grid; grid-template-columns: 1.4fr 1fr; gap: 48px; align-items: end; }
+  @media (max-width: 880px) { .hero-grid { grid-template-columns: 1fr; } }
+  .hero-side { border-left: 1px dashed var(--line); padding-left: 24px; font-size: 13px; color: var(--ink-soft); }
+  .hero-side .row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px dashed var(--line); }
+  .hero-side .row:last-child { border-bottom: none; }
+  .hero-side .row .k { color: var(--ink-mute); font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.05em; text-transform: uppercase; }
+  .hero-side .row .v { font-weight: 500; }
+
+  /* hero address bar visual */
+  .hero-bar {
+    margin-top: 28px;
+    padding: 14px 18px 14px 14px;
+    background: white;
+    border: 1px solid var(--line);
+    border-radius: 100px;
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    box-shadow: var(--shadow);
+    max-width: 100%;
+    overflow: hidden;
+  }
+  .hero-bar .hb-dot { width: 8px; height: 8px; background: var(--accent); border-radius: 50%; flex-shrink: 0; animation: pulse 2s ease-in-out infinite; }
+  .hero-bar .hb-url { font-family: 'JetBrains Mono', monospace; font-size: 16px; font-weight: 500; color: var(--ink); letter-spacing: -0.01em; }
+  .hero-bar .hb-url .hb-dim { color: var(--ink-mute); }
+  .hero-bar .hb-cur { display: inline-block; width: 2px; height: 16px; background: var(--accent); margin-left: 1px; vertical-align: -3px; animation: blink 1s steps(2) infinite; }
+  @keyframes blink { 50% { opacity: 0; } }
+
+  /* section */
+  section { padding: 80px 0; border-top: 1px solid var(--line); position: relative; animation: fadeIn 0.6s ease-out backwards; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+  .section-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 48px; flex-wrap: wrap; gap: 16px; }
+  .section-num { font-family: 'JetBrains Mono', monospace; font-size: 13px; color: var(--ink-mute); letter-spacing: 0.1em; }
+  .section-num strong { color: var(--accent); }
+  .section-title {
+    font-family: 'Noto Serif SC', serif;
+    font-weight: 900;
+    font-size: clamp(32px, 4.5vw, 52px);
+    line-height: 1.05;
+    letter-spacing: -0.02em;
+    margin: 0;
+    max-width: 18ch;
+  }
+  .section-title .em { font-family: 'Noto Serif SC', serif; font-weight: 500; color: var(--accent); }
+  .section-sub { color: var(--ink-soft); font-size: 17px; max-width: 38ch; line-height: 1.55; margin: 0; }
+
+  .em { font-family: 'Noto Serif SC', serif; font-weight: 500; color: var(--accent); }
+
+  /* hint strip */
+  .hint-strip {
+    margin-top: 16px;
+    padding: 14px 18px;
+    background: var(--accent-soft);
+    border-left: 3px solid var(--accent);
+    border-radius: 4px;
+    font-size: 13px;
+    color: var(--ink);
+    line-height: 1.55;
+  }
+  .hint-strip .hint-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--accent);
+    letter-spacing: 0.12em;
+    margin-right: 10px;
+    text-transform: uppercase;
+  }
+
+  /* quote */
+  .quote-box {
+    margin: 32px 0 0;
+    padding: 24px 28px;
+    background: var(--paper);
+    border-left: 3px solid var(--ink);
+    border-radius: 0 6px 6px 0;
+    font-family: 'Noto Serif SC', serif;
+    font-size: 18px;
+    line-height: 1.55;
+    color: var(--ink);
+    font-weight: 500;
+  }
+  .quote-box .quote-mark { font-family: 'Noto Serif SC', serif; color: var(--accent); font-size: 28px; line-height: 1; margin-right: 8px; font-weight: 500; }
+  .quote-box .quote-attr { display: block; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ink-mute); margin-top: 12px; letter-spacing: 0.05em; font-weight: 400; }
+
+  /* === §01 alias / phonebook === */
+  .alias-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 28px;
+    margin-top: 24px;
+  }
+  @media (max-width: 880px) { .alias-grid { grid-template-columns: 1fr; } }
+  .alias-card {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 28px 30px;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+  .alias-card .alias-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--accent);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+  .alias-card h3 {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 22px;
+    margin: 0;
+    font-weight: 700;
+    line-height: 1.3;
+  }
+  .alias-card h3 .em { font-family: 'Noto Serif SC', serif; color: var(--accent); font-weight: 500; }
+  .alias-card p { margin: 0; color: var(--ink-soft); font-size: 14px; line-height: 1.65; }
+  .alias-card p strong { color: var(--ink); font-weight: 600; }
+
+  .alias-vis {
+    margin-top: 4px;
+    padding: 18px 20px;
+    background: white;
+    border: 1px dashed var(--line);
+    border-radius: 6px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    line-height: 1.9;
+    color: var(--ink);
+  }
+  .alias-vis .av-row { display: flex; align-items: center; gap: 10px; }
+  .alias-vis .av-label { font-size: 10px; color: var(--ink-mute); letter-spacing: 0.08em; min-width: 50px; }
+  .alias-vis .av-name { color: var(--ink); font-weight: 600; }
+  .alias-vis .av-num { color: var(--accent); font-weight: 500; letter-spacing: 0.02em; }
+  .alias-vis .av-arr { color: var(--ink-mute); }
+
+  .phonebook {
+    margin-top: 28px;
+    padding: 28px 32px;
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+  }
+  .phonebook h4 {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 18px;
+    margin: 0 0 16px;
+    font-weight: 700;
+  }
+  .phonebook h4 .em { font-family: 'Noto Serif SC', serif; color: var(--accent); font-weight: 500; }
+  .pb-row {
+    display: grid;
+    grid-template-columns: 1fr 16px 1fr;
+    gap: 14px;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px dashed var(--line);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+  }
+  .pb-row:last-child { border-bottom: none; }
+  .pb-name { color: var(--ink); font-weight: 600; }
+  .pb-arr { color: var(--accent); text-align: center; }
+  .pb-num { color: var(--ink-soft); }
+  .pb-foot {
+    margin-top: 14px;
+    font-size: 12px;
+    color: var(--ink-mute);
+    line-height: 1.5;
+    border-top: 1px dashed var(--line);
+    padding-top: 12px;
+  }
+
+  /* === §02 DNS journey === */
+  .dns-stage {
+    margin-top: 24px;
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  .dns-grid {
+    display: grid;
+    grid-template-columns: 1fr 360px;
+    gap: 0;
+    min-height: 580px;
+  }
+  @media (max-width: 920px) { .dns-grid { grid-template-columns: 1fr; } }
+
+  .dns-canvas {
+    background: var(--paper);
+    background-image:
+      linear-gradient(rgba(22,22,29,0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(22,22,29,0.04) 1px, transparent 1px);
+    background-size: 16px 16px;
+    padding: 28px 30px 24px;
+    position: relative;
+  }
+  .dns-trace {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    position: relative;
+  }
+  .dns-trace::before {
+    content: '';
+    position: absolute;
+    left: 21px;
+    top: 18px;
+    bottom: 18px;
+    width: 2px;
+    background: var(--line);
+    z-index: 0;
+  }
+  .dns-step {
+    display: grid;
+    grid-template-columns: 44px 1fr;
+    gap: 14px;
+    align-items: stretch;
+    position: relative;
+    z-index: 1;
+    transition: opacity 0.25s ease;
+    opacity: 0.35;
+  }
+  .dns-step.is-on { opacity: 1; }
+  .dns-step.is-past { opacity: 0.65; }
+  .dns-dot {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: white;
+    border: 2px solid var(--line);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--ink-mute);
+    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    flex-shrink: 0;
+  }
+  .dns-step.is-on .dns-dot {
+    background: var(--accent);
+    color: white;
+    border-color: var(--accent);
+    transform: scale(1.08);
+    box-shadow: 0 4px 14px rgba(255,77,46,0.35);
+  }
+  .dns-step.is-past .dns-dot {
+    background: var(--ink);
+    color: white;
+    border-color: var(--ink);
+  }
+  .dns-card {
+    background: white;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 12px 16px;
+    transition: all 0.25s ease;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .dns-step.is-on .dns-card { border-color: var(--accent); background: var(--accent-soft); }
+  .dns-step.is-past .dns-card { background: var(--bg-2); }
+  .dns-card-title {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--ink);
+    line-height: 1.3;
+  }
+  .dns-card-title .em { font-family: 'Noto Serif SC', serif; color: var(--accent); font-weight: 500; }
+  .dns-card-meta {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--ink-mute);
+    letter-spacing: 0.02em;
+  }
+  .dns-card-meta .ok { color: var(--green); font-weight: 600; }
+  .dns-card-meta .miss { color: var(--ink-mute); }
+  .dns-card-meta .hit { color: var(--accent); font-weight: 600; }
+
+  .dns-side {
+    background: var(--bg-2);
+    border-left: 1px solid var(--line);
+    padding: 28px 26px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+  @media (max-width: 920px) { .dns-side { border-left: none; border-top: 1px solid var(--line); } }
+  .dns-side-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--accent);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+  .dns-side-step {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--ink-mute);
+    letter-spacing: 0.05em;
+  }
+  .dns-side-step strong { color: var(--ink); font-weight: 700; }
+  .dns-side-title {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 22px;
+    font-weight: 800;
+    margin: 0;
+    line-height: 1.2;
+    letter-spacing: -0.01em;
+  }
+  .dns-side-title .em { font-family: 'Noto Serif SC', serif; color: var(--accent); font-weight: 500; }
+  .dns-side-desc {
+    font-size: 14px;
+    color: var(--ink-soft);
+    line-height: 1.65;
+    margin: 0;
+  }
+  .dns-side-desc strong { color: var(--ink); font-weight: 600; }
+  .dns-side-analogy {
+    margin-top: 4px;
+    padding: 12px 14px;
+    background: white;
+    border-radius: 4px;
+    border: 1px dashed var(--line);
+    font-size: 12.5px;
+    line-height: 1.55;
+    color: var(--ink);
+  }
+  .dns-side-analogy strong { color: var(--accent); font-weight: 600; }
+  .dns-side-analogy .lab {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--ink-mute);
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    display: block;
+    margin-bottom: 4px;
+  }
+
+  .dns-controls {
+    margin-top: auto;
+    padding-top: 16px;
+    border-top: 1px dashed var(--line);
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+  .dns-btn {
+    padding: 9px 14px;
+    background: var(--ink);
+    color: white;
+    border: none;
+    border-radius: 4px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.18s ease;
+    letter-spacing: 0.04em;
+  }
+  .dns-btn:hover { background: var(--accent); }
+  .dns-btn.primary { background: var(--accent); }
+  .dns-btn.primary:hover { background: var(--ink); }
+  .dns-btn.ghost {
+    background: transparent;
+    border: 1px dashed var(--ink-mute);
+    color: var(--ink-soft);
+  }
+  .dns-btn.ghost:hover { border-color: var(--ink); color: var(--ink); }
+  .dns-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  .dns-progress {
+    flex: 1;
+    min-width: 80px;
+    height: 4px;
+    background: var(--bg);
+    border-radius: 100px;
+    overflow: hidden;
+    border: 1px solid var(--line);
+  }
+  .dns-progress-bar {
+    height: 100%;
+    background: var(--accent);
+    width: 0%;
+    transition: width 0.4s ease;
+  }
+
+  /* === §03 5-step journey + interrupt === */
+  .trip-stage {
+    margin-top: 24px;
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 28px 30px;
+  }
+  .trip-flow {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 8px;
+    margin-bottom: 24px;
+  }
+  @media (max-width: 880px) { .trip-flow { grid-template-columns: repeat(2, 1fr); gap: 12px; } }
+  @media (max-width: 480px) { .trip-flow { grid-template-columns: 1fr; } }
+
+  .trip-step {
+    background: white;
+    border: 1.5px solid var(--line);
+    border-radius: 8px;
+    padding: 16px 14px 18px;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    user-select: none;
+  }
+  .trip-step:hover { transform: translateY(-2px); box-shadow: var(--shadow); }
+  .trip-step.is-running { border-color: var(--accent); background: var(--accent-soft); }
+  .trip-step.is-done { border-color: var(--green); background: var(--green-soft); }
+  .trip-step.is-broken {
+    border-color: var(--accent);
+    background: white;
+    border-style: dashed;
+    animation: tripShake 0.4s;
+  }
+  @keyframes tripShake {
+    0%, 100% { transform: translateX(0); }
+    20%, 60% { transform: translateX(-3px); }
+    40%, 80% { transform: translateX(3px); }
+  }
+
+  .trip-step::after {
+    content: '→';
+    position: absolute;
+    right: -12px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--ink-mute);
+    font-size: 14px;
+    z-index: 2;
+  }
+  .trip-step:last-child::after { display: none; }
+  @media (max-width: 880px) {
+    .trip-step::after { display: none; }
+  }
+
+  .trip-step-num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--ink-mute);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+  .trip-step-name {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--ink);
+    line-height: 1.25;
+  }
+  .trip-step-name .em { font-family: 'Noto Serif SC', serif; color: var(--accent); font-weight: 500; }
+  .trip-step-icon {
+    width: 100%;
+    height: 36px;
+    border-radius: 4px;
+    background: var(--bg-2);
+    position: relative;
+    overflow: hidden;
+  }
+  .trip-step.is-running .trip-step-icon {
+    background: white;
+  }
+  .trip-step.is-running .trip-step-icon::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; bottom: 0;
+    width: 30%;
+    background: linear-gradient(90deg, transparent, var(--accent), transparent);
+    animation: tripStream 1.2s linear infinite;
+  }
+  @keyframes tripStream {
+    0% { transform: translateX(-50%); }
+    100% { transform: translateX(350%); }
+  }
+  .trip-step.is-done .trip-step-icon {
+    background: var(--green);
+  }
+  .trip-step.is-done .trip-step-icon::before {
+    content: '✓';
+    color: white;
+    font-size: 18px;
+    font-weight: 700;
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .trip-step.is-broken .trip-step-icon {
+    background: var(--accent-soft);
+  }
+  .trip-step.is-broken .trip-step-icon::before {
+    content: '✕';
+    color: var(--accent);
+    font-size: 22px;
+    font-weight: 700;
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .trip-step-cut {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 0.08em;
+    color: var(--ink-mute);
+    text-transform: uppercase;
+    margin-top: -2px;
+    text-align: center;
+    padding: 2px 0;
+    border-top: 1px dashed var(--line);
+  }
+  .trip-step.is-broken .trip-step-cut { color: var(--accent); }
+
+  .trip-screen {
+    background: var(--ink);
+    border-radius: 8px;
+    padding: 24px 28px;
+    color: white;
+    display: grid;
+    grid-template-columns: 1.2fr 1fr;
+    gap: 24px;
+    min-height: 200px;
+    overflow: hidden;
+    position: relative;
+  }
+  @media (max-width: 880px) { .trip-screen { grid-template-columns: 1fr; gap: 16px; } }
+
+  .trip-mock {
+    background: white;
+    border-radius: 4px;
+    padding: 14px 16px;
+    color: var(--ink);
+    min-height: 160px;
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s;
+  }
+  .trip-mock-bar {
+    background: var(--bg);
+    border: 1px solid var(--line);
+    border-radius: 100px;
+    padding: 6px 12px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--ink-soft);
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .trip-mock-bar .tmb-status {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: var(--ink-mute);
+  }
+  .trip-mock.is-loading .trip-mock-bar .tmb-status { background: var(--yellow); animation: pulse 1s ease-in-out infinite; }
+  .trip-mock.is-done .trip-mock-bar .tmb-status { background: var(--green); }
+  .trip-mock.is-error .trip-mock-bar .tmb-status { background: var(--accent); }
+
+  .trip-mock-body {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    min-height: 100px;
+  }
+  .trip-mock-body .skel {
+    height: 8px;
+    background: var(--bg-2);
+    border-radius: 100px;
+    animation: tmShimmer 1.4s ease-in-out infinite;
+  }
+  .trip-mock-body .skel.w-90 { width: 90%; }
+  .trip-mock-body .skel.w-80 { width: 80%; }
+  .trip-mock-body .skel.w-60 { width: 60%; }
+  .trip-mock-body .skel.w-40 { width: 40%; }
+  @keyframes tmShimmer {
+    0%, 100% { opacity: 0.6; }
+    50% { opacity: 1; }
+  }
+  .trip-mock-body .render-h {
+    font-family: 'Noto Serif SC', serif;
+    font-weight: 700;
+    font-size: 18px;
+    color: var(--ink);
+    margin-bottom: 4px;
+  }
+  .trip-mock-body .render-p {
+    font-size: 12px;
+    color: var(--ink-soft);
+    line-height: 1.5;
+  }
+  .trip-mock-body .render-btn {
+    margin-top: 6px;
+    background: var(--accent);
+    color: white;
+    padding: 6px 12px;
+    border-radius: 3px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    display: inline-block;
+    align-self: flex-start;
+  }
+  .trip-mock-body .render-broken {
+    color: var(--accent);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 22px;
+    line-height: 1.3;
+    transform: rotate(-2deg) skewX(-4deg);
+    letter-spacing: 0.06em;
+  }
+  .trip-mock-body .render-broken-2 {
+    color: var(--ink);
+    font-family: 'Noto Serif SC', serif;
+    font-size: 14px;
+    font-weight: 700;
+    transform: translateX(60px) rotate(3deg);
+    background: var(--yellow);
+    padding: 2px 8px;
+  }
+  .trip-mock-body .render-broken-3 {
+    color: var(--blue);
+    font-size: 11px;
+    transform: translateY(-12px) rotate(-1deg);
+    width: 30%;
+    height: 12px;
+    background: var(--blue-soft);
+  }
+
+  .trip-mock.is-blank .trip-mock-body { opacity: 0; }
+  .trip-mock.is-error .trip-mock-body { display: flex; flex-direction: column; gap: 6px; align-items: flex-start; }
+  .trip-mock.is-error .trip-mock-bar { background: rgba(255,77,46,0.06); border-color: var(--accent); }
+
+  .trip-err {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .trip-err-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    color: var(--accent);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+  .trip-err-code {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14px;
+    color: var(--accent);
+    font-weight: 600;
+    word-break: break-all;
+    line-height: 1.4;
+  }
+  .trip-err-hint {
+    font-size: 11px;
+    color: var(--ink-soft);
+    line-height: 1.5;
+  }
+
+  .trip-info {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    color: white;
+  }
+  .trip-info-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--accent);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+  .trip-info-title {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 19px;
+    font-weight: 800;
+    margin: 0;
+    line-height: 1.2;
+    color: white;
+  }
+  .trip-info-title .em { font-family: 'Noto Serif SC', serif; color: var(--accent); font-weight: 500; }
+  .trip-info-desc {
+    font-size: 13px;
+    line-height: 1.65;
+    color: rgba(255,255,255,0.78);
+    margin: 0;
+  }
+  .trip-info-desc strong { color: white; font-weight: 600; }
+  .trip-info-meta {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--accent);
+    letter-spacing: 0.04em;
+    background: rgba(255,77,46,0.1);
+    padding: 6px 10px;
+    border-radius: 3px;
+    border-left: 2px solid var(--accent);
+    line-height: 1.5;
+  }
+  .trip-info-meta strong { color: white; font-weight: 600; }
+
+  .trip-controls {
+    margin-top: 22px;
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    flex-wrap: wrap;
+    padding-top: 18px;
+    border-top: 1px dashed var(--line);
+  }
+  .trip-controls-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--ink-mute);
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    margin-right: 4px;
+  }
+
+  .trip-btn {
+    padding: 9px 14px;
+    background: var(--ink);
+    color: white;
+    border: none;
+    border-radius: 4px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.18s ease;
+    letter-spacing: 0.03em;
+  }
+  .trip-btn:hover { background: var(--accent); }
+  .trip-btn.primary { background: var(--accent); }
+  .trip-btn.primary:hover { background: var(--ink); }
+  .trip-btn.ghost {
+    background: transparent;
+    border: 1px dashed var(--ink-mute);
+    color: var(--ink-soft);
+  }
+  .trip-btn.ghost:hover { border-color: var(--ink); color: var(--ink); }
+
+  /* === §04 URL anatomy === */
+  .url-stage {
+    margin-top: 24px;
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 0;
+    overflow: hidden;
+  }
+  .url-bar {
+    background: var(--ink);
+    padding: 28px 32px 22px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: center;
+    gap: 0;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: clamp(20px, 3vw, 32px);
+    letter-spacing: -0.01em;
+  }
+  .url-part {
+    color: rgba(255,255,255,0.42);
+    cursor: pointer;
+    padding: 4px 6px;
+    border-radius: 4px;
+    transition: all 0.18s;
+    border-bottom: 2px solid transparent;
+    position: relative;
+  }
+  .url-part:hover { color: white; background: rgba(255,255,255,0.06); }
+  .url-part.is-active {
+    color: var(--accent);
+    border-bottom-color: var(--accent);
+    background: rgba(255,77,46,0.08);
+  }
+  .url-info {
+    padding: 26px 32px 28px;
+    display: grid;
+    grid-template-columns: 140px 1fr;
+    gap: 24px;
+    background: var(--paper);
+    align-items: start;
+  }
+  @media (max-width: 720px) { .url-info { grid-template-columns: 1fr; gap: 12px; } }
+  .url-info-pin {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    background: var(--ink);
+    color: white;
+    padding: 6px 12px;
+    border-radius: 3px;
+    text-align: center;
+    letter-spacing: 0.04em;
+    align-self: start;
+  }
+  .url-info-body { display: flex; flex-direction: column; gap: 12px; }
+  .url-info-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--accent);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+  .url-info-title {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 22px;
+    margin: 0;
+    font-weight: 800;
+    line-height: 1.25;
+    letter-spacing: -0.01em;
+  }
+  .url-info-title .em { font-family: 'Noto Serif SC', serif; color: var(--accent); font-weight: 500; }
+  .url-info-desc { color: var(--ink-soft); font-size: 14px; line-height: 1.65; margin: 0; }
+  .url-info-desc strong { color: var(--ink); font-weight: 600; }
+  .url-info-desc code {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    background: var(--bg-2);
+    color: var(--ink);
+    padding: 1px 6px;
+    border-radius: 3px;
+  }
+  .url-info-extra {
+    margin-top: 4px;
+    padding: 10px 14px;
+    background: var(--bg-2);
+    border-radius: 4px;
+    font-size: 12.5px;
+    color: var(--ink-soft);
+    line-height: 1.55;
+  }
+  .url-info-extra strong { color: var(--ink); font-weight: 600; }
+  .url-info-extra .lab {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--ink-mute);
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    display: block;
+    margin-bottom: 3px;
+  }
+
+  /* === §05 designer pitfalls === */
+  .ts-stage {
+    margin-top: 24px;
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 28px 32px;
+  }
+  .ts-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 26px;
+  }
+  .ts-item {
+    display: grid;
+    grid-template-columns: 60px 1fr;
+    gap: 20px;
+    align-items: start;
+  }
+  @media (max-width: 600px) { .ts-item { grid-template-columns: 1fr; gap: 8px; } }
+  .ts-num {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 28px;
+    font-weight: 800;
+    color: var(--accent);
+    line-height: 1;
+    letter-spacing: -0.02em;
+  }
+  .ts-q {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--ink);
+    margin: 0 0 6px;
+    line-height: 1.4;
+  }
+  .ts-q .em { font-family: 'Noto Serif SC', serif; color: var(--accent); font-weight: 500; }
+  .ts-a {
+    color: var(--ink-soft);
+    font-size: 14px;
+    line-height: 1.65;
+    margin: 0 0 8px;
+  }
+  .ts-a strong { color: var(--ink); font-weight: 600; }
+  .ts-a code {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    background: var(--bg-2);
+    color: var(--ink);
+    padding: 1px 6px;
+    border-radius: 3px;
+  }
+  .ts-action {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--ink);
+    background: var(--accent-soft);
+    border-left: 3px solid var(--accent);
+    padding: 8px 12px;
+    border-radius: 0 4px 4px 0;
+    line-height: 1.5;
+    display: block;
+  }
+  .ts-action strong { color: var(--ink); font-weight: 700; }
+
+  /* === §06 cheatsheet === */
+  .cheat-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 18px;
+    margin-top: 24px;
+  }
+  @media (max-width: 880px) { .cheat-grid { grid-template-columns: 1fr; } }
+  .cheat-block {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 24px 26px;
+  }
+  .cheat-block h3 {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 18px;
+    font-weight: 800;
+    margin: 0 0 14px;
+    letter-spacing: -0.01em;
+  }
+  .cheat-block h3 .em { font-family: 'Noto Serif SC', serif; color: var(--accent); font-weight: 500; }
+  .cheat-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+  .cheat-table th, .cheat-table td {
+    text-align: left;
+    padding: 9px 10px;
+    border-bottom: 1px dashed var(--line);
+    vertical-align: top;
+  }
+  .cheat-table tr:last-child td { border-bottom: none; }
+  .cheat-table th {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--ink-mute);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    font-weight: 500;
+  }
+  .cheat-table .term {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12.5px;
+    color: var(--ink);
+    font-weight: 600;
+    white-space: nowrap;
+  }
+  .cheat-table .desc { color: var(--ink-soft); line-height: 1.5; }
+  .cheat-table .desc strong { color: var(--ink); font-weight: 600; }
+  .cheat-table .desc code {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11.5px;
+    background: var(--bg-2);
+    color: var(--ink);
+    padding: 1px 5px;
+    border-radius: 2px;
+  }
+  .cheat-block .cheat-foot {
+    margin-top: 16px;
+    font-size: 12px;
+    color: var(--ink-mute);
+    border-top: 1px dashed var(--line);
+    padding-top: 12px;
+    line-height: 1.55;
+  }
+
+  .cheat-mini {
+    margin-top: 18px;
+    padding: 22px 26px;
+    background: var(--ink);
+    color: white;
+    border-radius: 8px;
+  }
+  .cheat-mini h3 {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 18px;
+    font-weight: 800;
+    margin: 0 0 14px;
+    color: white;
+  }
+  .cheat-mini h3 .em { font-family: 'Noto Serif SC', serif; color: var(--accent); font-weight: 500; }
+  .cm-row {
+    display: grid;
+    grid-template-columns: 1fr 18px 1fr;
+    gap: 12px;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px dashed rgba(255,255,255,0.12);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12.5px;
+  }
+  .cm-row:last-child { border-bottom: none; }
+  .cm-err { color: var(--accent); font-weight: 600; word-break: break-all; }
+  .cm-arr { color: rgba(255,255,255,0.4); text-align: center; }
+  .cm-fix { color: rgba(255,255,255,0.85); font-weight: 500; }
+
+  /* ============= Unified next-post block ============= */
+  .next-post {
+    margin-top: 48px;
+    padding: 32px 36px;
+    background: var(--ink);
+    color: var(--bg);
+    border-radius: 8px;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 32px;
+    align-items: center;
+    text-decoration: none;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    position: relative;
+    overflow: hidden;
+  }
+  .next-post::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at 100% 0%, rgba(255,77,46,0.12), transparent 55%);
+    pointer-events: none;
+  }
+  .next-post:hover { transform: translateY(-2px); box-shadow: 0 14px 36px rgba(22,22,29,0.22); }
+  @media (max-width: 720px) { .next-post { grid-template-columns: 1fr; padding: 24px; gap: 20px; } }
+  .next-post .np-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--accent);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+    display: inline-block;
+  }
+  .next-post h4 {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 26px;
+    margin: 0 0 10px;
+    font-weight: 700;
+    color: white;
+    line-height: 1.25;
+    letter-spacing: -0.01em;
+  }
+  .next-post h4 .em {
+    font-family: 'Noto Serif SC', serif;
+    font-weight: 500;
+    color: var(--accent);
+  }
+  .next-post p {
+    margin: 0;
+    color: rgba(255,255,255,0.72);
+    font-size: 14px;
+    line-height: 1.65;
+    max-width: 560px;
+  }
+  .next-post p strong { color: white; font-weight: 600; }
+  .next-post .np-cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 24px;
+    background: var(--accent);
+    color: white;
+    border-radius: 4px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    white-space: nowrap;
+    transition: background 0.18s, color 0.18s, transform 0.18s;
+    position: relative;
+    z-index: 1;
+  }
+  .next-post:hover .np-cta { background: white; color: var(--ink); transform: translateX(2px); }
+  .next-post .np-cta .arr { font-family: 'Fraunces', serif; font-size: 18px; font-weight: 500; }
+
+  /* footer */
+  footer {
+    border-top: 1px solid var(--line);
+    padding: 56px 0 64px;
+    background: var(--bg);
+  }
+  .byline-wrap { position: relative; }
+  .byline {
+    display: flex;
+    gap: 28px;
+    align-items: center;
+    padding-bottom: 32px;
+    border-bottom: 1px dashed var(--line);
+    margin-bottom: 24px;
+    position: relative;
+  }
+  .byline::before {
+    content: '';
+    position: absolute;
+    top: -56px; left: 0;
+    width: 32px; height: 1px;
+    background: var(--accent);
+  }
+  .byline .avatar {
+    width: 96px; height: 96px;
+    border-radius: 50%;
+    object-fit: cover;
+    flex-shrink: 0;
+    border: 3px solid var(--paper);
+    box-shadow: 0 0 0 1px var(--line), 0 6px 20px rgba(22,22,29,0.10);
+    background: var(--paper);
+  }
+  .byline-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--ink-mute);
+    letter-spacing: 0.18em;
+    margin-bottom: 8px;
+  }
+  .byline-label .dot {
+    display: inline-block;
+    width: 6px; height: 6px;
+    background: var(--accent);
+    border-radius: 50%;
+    margin-right: 6px;
+    vertical-align: 1px;
+  }
+  .byline-name {
+    font-family: 'Noto Serif SC', 'Fraunces', serif;
+    font-size: clamp(28px, 4vw, 40px);
+    font-weight: 700;
+    line-height: 1.05;
+    letter-spacing: -0.01em;
+    margin: 0 0 8px;
+  }
+  .byline-name .em {
+    font-family: 'Noto Serif SC', serif;
+    font-weight: 500;
+    color: var(--accent);
+  }
+  .byline-tag {
+    font-size: 14px;
+    color: var(--ink-soft);
+    line-height: 1.55;
+    margin: 0;
+    max-width: 52ch;
+  }
+  .byline-contact { margin-top: 14px; padding-top: 14px; border-top: 1px dashed var(--line); display: flex; align-items: center; gap: 10px; flex-wrap: wrap; font-size: 12px; }
+  .byline-contact .contact-label { font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-mute); padding: 2px 8px; border: 1px solid var(--line); border-radius: 3px; }
+  .byline-contact .contact-id { font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 600; color: var(--ink); background: var(--accent-soft); padding: 3px 10px; border-radius: 4px; letter-spacing: 0.02em; }
+  .byline-contact .contact-hint { font-size: 12px; color: var(--ink-soft); }
+  .footer-meta {
+    text-align: center;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--ink-mute);
+    letter-spacing: 0.05em;
+  }
+  .footer-meta .heart { color: var(--accent); }
+  .footer-meta .mono { color: var(--ink-soft); font-weight: 500; }
+  @media (max-width: 600px) {
+    .byline { flex-direction: column; text-align: center; align-items: center; gap: 16px; }
+    .byline-tag { margin-left: auto; margin-right: auto; }
+  }
+
+  /* === Roadmap Modal === */
+  .rm-modal { position: fixed; inset: 0; z-index: 1000; display: flex; align-items: center; justify-content: center; padding: 30px 16px; }
+  .rm-modal[hidden] { display: none; }
+  .rm-backdrop { position: absolute; inset: 0; background: rgba(22,22,29,0.55); backdrop-filter: blur(4px); animation: rm-fade 0.2s; }
+  @keyframes rm-fade { from { opacity: 0; } to { opacity: 1; } }
+  .rm-dialog { position: relative; background: var(--bg); border-radius: 12px; max-width: 720px; width: 100%; max-height: calc(100vh - 60px); overflow-y: auto; padding: 32px 36px 24px; box-shadow: 0 30px 80px rgba(0,0,0,0.3); animation: rm-pop 0.25s cubic-bezier(0.4,0,0.2,1); }
+  @keyframes rm-pop { from { transform: scale(0.96) translateY(8px); opacity: 0; } to { transform: scale(1) translateY(0); opacity: 1; } }
+  .rm-close { position: absolute; top: 14px; right: 16px; background: transparent; border: none; cursor: pointer; font-size: 20px; color: var(--ink-mute); width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: all 0.15s; line-height: 1; }
+  .rm-close:hover { background: var(--bg-2); color: var(--ink); }
+  .rm-header { margin-bottom: 22px; padding-bottom: 18px; border-bottom: 1px dashed var(--line); }
+  .rm-tag { font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.1em; color: var(--accent); text-transform: uppercase; margin-bottom: 8px; }
+  .rm-title { font-family: 'Noto Serif SC', serif; font-size: 28px; margin: 0 0 6px; font-weight: 900; letter-spacing: -0.02em; line-height: 1.1; }
+  .rm-title .rm-em { font-family: 'Noto Serif SC', serif; color: var(--accent); font-weight: 500; }
+  .rm-sub { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--ink-mute); margin: 0; }
+  .rm-body { display: flex; flex-direction: column; gap: 18px; }
+  .rm-mod-key { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ink); font-weight: 700; margin-bottom: 8px; letter-spacing: 0.04em; text-transform: uppercase; }
+  .rm-mod-list { display: flex; flex-direction: column; gap: 6px; }
+  .rm-cell { display: grid; grid-template-columns: 36px 1fr auto; gap: 12px; align-items: center; padding: 9px 13px; border-radius: 5px; background: var(--paper); border: 1px solid var(--line); text-decoration: none; color: inherit; transition: all 0.15s; }
+  .rm-cell:hover { border-color: var(--accent); background: var(--accent-soft); transform: translateX(3px); }
+  .rm-cell.rm-cell-current { border-color: var(--accent); background: var(--accent-soft); }
+  .rm-cell-code { font-family: 'Noto Serif SC', serif; font-weight: 500; color: var(--accent); font-size: 15px; }
+  .rm-cell-name { font-size: 13px; color: var(--ink); }
+  .rm-cell-tier { font-family: 'JetBrains Mono', monospace; font-size: 9px; letter-spacing: 0.08em; color: var(--ink-mute); text-transform: uppercase; border: 1px solid var(--line); padding: 2px 7px; border-radius: 3px; }
+  .rm-cell-tier.rm-tier-current { background: var(--accent); color: white; border-color: var(--accent); }
+  .rm-footer { margin-top: 22px; padding-top: 16px; border-top: 1px dashed var(--line); display: flex; justify-content: space-between; align-items: center; font-size: 12px; color: var(--ink-soft); flex-wrap: wrap; gap: 8px; }
+  .rm-wechat { font-family: 'JetBrains Mono', monospace; background: var(--accent-soft); color: var(--ink); padding: 3px 10px; border-radius: 3px; font-weight: 600; letter-spacing: 0.02em; }
+  .nav-links a[data-rm-open] { cursor: pointer; }
+</style>
+</head>
+<body>
+
+<!-- Top bar -->
+<div class="topbar">
+  <div class="wrap topbar-inner">
+    <a href="index.html" class="brand"><span class="dot"></span>J1 · DNS / 域名上线</a>
+    <nav class="nav-links">
+      <a href="index.html#roadmap" data-rm-open>路线图</a>
+      <a href="index.html#manifesto">关于</a>
+    </nav>
+  </div>
+</div>
+
+<!-- Hero -->
+<header class="hero">
+  <div class="wrap">
+    <div class="hero-meta">
+      <span class="pill fill">实验互动 · INTERACTIVE</span>
+      <span class="pill">2026 · 设计 × 代码</span>
+      <span class="pill">J1 · 上线 · 入门</span>
+      <span class="label">阅读时长 ≈ 14 分钟</span>
+    </div>
+    <div class="hero-grid">
+      <div>
+        <h1>
+          <span class="display-cn">输入 fan.com 后，</span><br>
+          <span class="display-cn">发生了</span><span class="em">5 件事</span><span class="display-cn">。</span>
+        </h1>
+        <p class="lede">
+          你买了域名 <span class="mono">fan.com</span>，绑了 Vercel ——<br>
+          按下回车，浏览器报 <span class="em">404</span>、<span class="em">域名解析中</span>、或者 <span class="em">证书错误</span>。一脸懵。<br>
+          这一篇讲清：从地址栏到屏幕亮起，背后到底发生了什么。
+        </p>
+        <div class="hero-bar">
+          <span class="hb-dot"></span>
+          <span class="hb-url"><span class="hb-dim">https://</span>fan.com<span class="hb-cur"></span></span>
+        </div>
+      </div>
+      <div class="hero-side">
+        <div class="row"><span class="k">本页讲什么</span><span class="v">DNS / 域名 / 5 步旅程</span></div>
+        <div class="row"><span class="k">含互动</span><span class="v">DNS 旅程动画 + 中断游戏</span></div>
+        <div class="row"><span class="k">面向</span><span class="v">买了域名却报错的设计师</span></div>
+        <div class="row"><span class="k">前置知识</span><span class="v">看过 A0 三件套</span></div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- §01 alias / phonebook -->
+<section id="alias">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>01</strong> / 别名</div>
+        <h2 class="section-title">浏览器不知道<br><span class="em">fan.com</span> 是什么。</h2>
+      </div>
+      <p class="section-sub">
+        域名是给<strong>人</strong>看的别名。电脑只认数字 IP。
+        <strong>fan.com</strong> 必须先翻译成 <strong>104.21.5.32</strong> 才能继续走。
+      </p>
+    </div>
+
+    <div class="alias-grid">
+      <div class="alias-card">
+        <span class="alias-tag">FOR HUMANS · 给人看</span>
+        <h3>fan.com — 一串<span class="em">好记的字母</span></h3>
+        <p>你买的域名。本质上是一个<strong>别名</strong> —— 没有实际的"位置"含义，电脑也不知道它指向谁。</p>
+        <div class="alias-vis">
+          <div class="av-row"><span class="av-label">人脑</span><span class="av-name">fan.com</span> <span class="av-arr">→</span> <span class="av-num">"我的网站"</span></div>
+          <div class="av-row"><span class="av-label">电脑</span><span class="av-name">fan.com</span> <span class="av-arr">→</span> <span class="av-num">??? 不知道</span></div>
+        </div>
+      </div>
+      <div class="alias-card">
+        <span class="alias-tag">FOR MACHINES · 给电脑认</span>
+        <h3>104.21.5.32 — 一组<span class="em">数字坐标</span></h3>
+        <p>互联网上每台服务器都有一个<strong>IP 地址</strong>。这是真正的"门牌号"，电脑就靠它找路。</p>
+        <div class="alias-vis">
+          <div class="av-row"><span class="av-label">电脑</span><span class="av-num">104.21.5.32</span> <span class="av-arr">→</span> <span class="av-name">"知道往哪寄"</span></div>
+          <div class="av-row"><span class="av-label">人脑</span><span class="av-num">104.21.5.32</span> <span class="av-arr">→</span> <span class="av-name">??? 记不住</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="phonebook">
+      <h4><span class="em">·</span> 类比：你说"打给小明"，但手机只能拨号</h4>
+      <div class="pb-row"><span class="pb-name">小明</span><span class="pb-arr">→</span><span class="pb-num">138-XXXX-1234</span></div>
+      <div class="pb-row"><span class="pb-name">小红</span><span class="pb-arr">→</span><span class="pb-num">139-XXXX-5678</span></div>
+      <div class="pb-row"><span class="pb-name">fan.com</span><span class="pb-arr">→</span><span class="pb-num">104.21.5.32</span></div>
+      <div class="pb-row"><span class="pb-name">vercel.app</span><span class="pb-arr">→</span><span class="pb-num">76.76.21.21</span></div>
+      <div class="pb-foot">
+        <strong>通讯录 = DNS</strong>。每次你按"小明"的名字拨号，手机先去通讯录查号 → 再拨数字。
+        浏览器访问 fan.com 也是 —— 先去 DNS 查 IP，再连那个 IP。
+      </div>
+    </div>
+
+    <div class="quote-box">
+      <span class="quote-mark">"</span>
+      域名 = <span class="em">便条上的名字</span>，IP = <span class="em">真实门牌号</span>。
+      DNS 就是中间那本"名字 → 地址"的<strong>翻译手册</strong>。
+      <span class="quote-attr">—— 整篇文章的总开关</span>
+    </div>
+  </div>
+</section>
+
+<!-- §02 DNS 查询动画 -->
+<section id="dns">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>02</strong> / DNS 查询</div>
+        <h2 class="section-title">查一个 IP，<br>要<span class="em">问 4 次人</span>。</h2>
+      </div>
+      <p class="section-sub">
+        浏览器拿到 fan.com 后，DNS 查询不是一步到位 —— 它像问路一样，
+        一层层往上问，直到找到那个<strong>知道答案的人</strong>。
+      </p>
+    </div>
+
+    <div class="hint-strip">
+      <span class="hint-tag">玩法</span>点右下"下一步"逐帧看 DNS 怎么从你的电脑出发，最后拿回 IP。每一步配一个城市/邮局类比。
+    </div>
+
+    <div class="dns-stage">
+      <div class="dns-grid">
+        <div class="dns-canvas">
+          <ol class="dns-trace" id="dnsTrace">
+            <li class="dns-step is-on" data-step="0">
+              <div class="dns-dot">①</div>
+              <div class="dns-card">
+                <div class="dns-card-title">本机缓存 · <span class="em">browser cache</span></div>
+                <div class="dns-card-meta">浏览器先翻自己的小本本 → <span class="miss">没找过 fan.com</span></div>
+              </div>
+            </li>
+            <li class="dns-step" data-step="1">
+              <div class="dns-dot">②</div>
+              <div class="dns-card">
+                <div class="dns-card-title">本地 DNS · <span class="em">ISP / 路由器</span></div>
+                <div class="dns-card-meta">问运营商 → <span class="miss">运营商也没缓存，要去外面问</span></div>
+              </div>
+            </li>
+            <li class="dns-step" data-step="2">
+              <div class="dns-dot">③</div>
+              <div class="dns-card">
+                <div class="dns-card-title">根 DNS · <span class="em">root server</span></div>
+                <div class="dns-card-meta">问"全球总台" → <span class="ok">.com 那条线归 X 服务器管</span></div>
+              </div>
+            </li>
+            <li class="dns-step" data-step="3">
+              <div class="dns-dot">④</div>
+              <div class="dns-card">
+                <div class="dns-card-title">.com TLD · <span class="em">顶级域名服务器</span></div>
+                <div class="dns-card-meta">问 ".com 部门" → <span class="ok">fan.com 归名为 NS1.fan.com 的服务器管</span></div>
+              </div>
+            </li>
+            <li class="dns-step" data-step="4">
+              <div class="dns-dot">⑤</div>
+              <div class="dns-card">
+                <div class="dns-card-title">NS · <span class="em">权威服务器</span></div>
+                <div class="dns-card-meta">问 fan.com 自己的解析服务器 → <span class="ok">A 记录 = 104.21.5.32</span></div>
+              </div>
+            </li>
+            <li class="dns-step" data-step="5">
+              <div class="dns-dot">⑥</div>
+              <div class="dns-card">
+                <div class="dns-card-title">回程缓存 · <span class="em">cache &amp; return</span></div>
+                <div class="dns-card-meta">把 IP 沿路缓存回来 → <span class="hit">浏览器拿到 104.21.5.32 ✓</span></div>
+              </div>
+            </li>
+            <li class="dns-step" data-step="6">
+              <div class="dns-dot">★</div>
+              <div class="dns-card">
+                <div class="dns-card-title">完成 · <span class="em">资料就位</span></div>
+                <div class="dns-card-meta">从此浏览器知道 fan.com → 104.21.5.32（缓存几小时～几天）</div>
+              </div>
+            </li>
+          </ol>
+        </div>
+
+        <aside class="dns-side">
+          <div class="dns-side-tag">NARRATOR · 旁白</div>
+          <div class="dns-side-step" id="dnsStepNum"><strong>STEP 1</strong> / 7</div>
+          <h3 class="dns-side-title" id="dnsSideTitle">浏览器先翻<span class="em">自己的小本本</span></h3>
+          <p class="dns-side-desc" id="dnsSideDesc">
+            最快的办法 —— 看<strong>自己最近有没有访问过 fan.com</strong>。
+            访问过就有缓存，直接拿出 IP，跳过后面所有步骤。
+          </p>
+          <div class="dns-side-analogy" id="dnsSideAnalogy">
+            <span class="lab">类比 / Analogy</span>
+            像你<strong>翻通讯录</strong> —— 先在自己手机里搜"小明"，找到了直接拨号，没找到再问别人。
+          </div>
+
+          <div class="dns-controls">
+            <div class="dns-progress"><div class="dns-progress-bar" id="dnsBar" style="width:14%;"></div></div>
+            <button class="dns-btn ghost" id="dnsPrev">← 上一步</button>
+            <button class="dns-btn primary" id="dnsNext">下一步 →</button>
+            <button class="dns-btn ghost" id="dnsReset">↻ 重来</button>
+          </div>
+        </aside>
+      </div>
+    </div>
+
+    <div class="quote-box" style="margin-top:32px;">
+      <span class="quote-mark">"</span>
+      整套流程 <span class="em">10–200 ms</span> 完成 —— 你按回车的瞬间，浏览器已经问完了 4 个人。
+      所以你<strong>察觉不到</strong>它的存在 —— 直到出错。
+      <span class="quote-attr">—— DNS 是隐形基础设施</span>
+    </div>
+  </div>
+</section>
+
+<!-- §03 5 步旅程 + 中断游戏 -->
+<section id="trip">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>03</strong> / 5 步旅程</div>
+        <h2 class="section-title">中断哪一步，<br><span class="em">就报哪种错</span>。</h2>
+      </div>
+      <p class="section-sub">
+        DNS 只是开场。从地址栏到屏幕亮起，浏览器要走完整 5 步。
+        <strong>每一步对应一种报错</strong> —— 看到错误信息，就能反推卡在哪。
+      </p>
+    </div>
+
+    <div class="hint-strip">
+      <span class="hint-tag">玩法</span>点"开始"看完整跑一遍 → 再点任意一格"切断"它，看<strong>右边的网页变成什么样</strong>。错误代码 = 哪一步坏了。
+    </div>
+
+    <div class="trip-stage">
+      <div class="trip-flow" id="tripFlow">
+        <div class="trip-step" data-step="1">
+          <div class="trip-step-num">STEP 1</div>
+          <div class="trip-step-name">DNS <span class="em">查询</span></div>
+          <div class="trip-step-icon"></div>
+          <div class="trip-step-cut">点击切断</div>
+        </div>
+        <div class="trip-step" data-step="2">
+          <div class="trip-step-num">STEP 2</div>
+          <div class="trip-step-name">TCP <span class="em">连接</span></div>
+          <div class="trip-step-icon"></div>
+          <div class="trip-step-cut">点击切断</div>
+        </div>
+        <div class="trip-step" data-step="3">
+          <div class="trip-step-num">STEP 3</div>
+          <div class="trip-step-name">HTTP <span class="em">请求</span></div>
+          <div class="trip-step-icon"></div>
+          <div class="trip-step-cut">点击切断</div>
+        </div>
+        <div class="trip-step" data-step="4">
+          <div class="trip-step-num">STEP 4</div>
+          <div class="trip-step-name">服务器 <span class="em">响应</span></div>
+          <div class="trip-step-icon"></div>
+          <div class="trip-step-cut">点击切断</div>
+        </div>
+        <div class="trip-step" data-step="5">
+          <div class="trip-step-num">STEP 5</div>
+          <div class="trip-step-name">浏览器 <span class="em">渲染</span></div>
+          <div class="trip-step-icon"></div>
+          <div class="trip-step-cut">点击切断</div>
+        </div>
+      </div>
+
+      <div class="trip-screen">
+        <div class="trip-mock" id="tripMock">
+          <div class="trip-mock-bar">
+            <span class="tmb-status"></span>
+            <span id="tripMockUrl">https://fan.com</span>
+          </div>
+          <div class="trip-mock-body" id="tripMockBody">
+            <div class="render-h">范米花儿的网站</div>
+            <div class="render-p">设计 × 代码 实验室<br>欢迎来看看。</div>
+            <div class="render-btn">查看作品 →</div>
+          </div>
+        </div>
+        <div class="trip-info">
+          <div class="trip-info-tag" id="tripInfoTag">STATE · 当前状态</div>
+          <h3 class="trip-info-title" id="tripInfoTitle">待机中</h3>
+          <p class="trip-info-desc" id="tripInfoDesc">
+            点 <strong>开始</strong> 完整跑一次 5 步流程 → 看页面是怎么一步步出来的。
+            或者直接点任意一个步骤格子，<strong>切断那一步</strong>，看会出什么报错。
+          </p>
+          <div class="trip-info-meta" id="tripInfoMeta">
+            提示：每一步对应一种错误代码，看完你就能反推问题。
+          </div>
+        </div>
+      </div>
+
+      <div class="trip-controls">
+        <span class="trip-controls-label">PLAY · 操作</span>
+        <button class="trip-btn primary" id="tripPlay">▶ 开始（完整跑一次）</button>
+        <button class="trip-btn ghost" id="tripReset">↻ 重置</button>
+      </div>
+    </div>
+
+    <div class="quote-box" style="margin-top:32px;">
+      <span class="quote-mark">"</span>
+      不要看到 "404" 就以为<strong>所有错都叫 404</strong>。
+      <span class="em">DNS 错</span>、<span class="em">连不上</span>、<span class="em">404</span>、<span class="em">500</span>、<span class="em">空白页</span> ——
+      是 5 个完全不同的故事。
+      <span class="quote-attr">—— 看错误代码 = 看体检报告</span>
+    </div>
+  </div>
+</section>
+
+<!-- §04 URL anatomy -->
+<section id="url">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>04</strong> / 域名结构</div>
+        <h2 class="section-title">一段网址，<br><span class="em">5 个零件</span>。</h2>
+      </div>
+      <p class="section-sub">
+        看 AI 给你贴的链接 —— <code style="font-family:'JetBrains Mono',monospace;font-size:13px;background:var(--bg-2);padding:2px 6px;border-radius:3px;">https://www.fan.com:443/about</code>。
+        哪一段是"协议"？哪一段是"主域名"？看完这一节，扫一眼就能拆。
+      </p>
+    </div>
+
+    <div class="hint-strip">
+      <span class="hint-tag">互动</span>点击下面 URL 的任何一段 → 右下方会讲它是干什么的。
+    </div>
+
+    <div class="url-stage">
+      <div class="url-bar" id="urlBar">
+        <span class="url-part is-active" data-pk="protocol">https://</span><span class="url-part" data-pk="sub">www.</span><span class="url-part" data-pk="domain">fan.com</span><span class="url-part" data-pk="port">:443</span><span class="url-part" data-pk="path">/about</span>
+      </div>
+      <div class="url-info">
+        <div class="url-info-pin" id="urlInfoPin">protocol</div>
+        <div class="url-info-body">
+          <div class="url-info-tag" id="urlInfoTag">01 · PROTOCOL</div>
+          <h3 class="url-info-title" id="urlInfoTitle">协议 · <span class="em">用什么"语言"对话</span></h3>
+          <p class="url-info-desc" id="urlInfoDesc">
+            <strong>http</strong> 是基础版，<strong>https</strong> 加了一层"防偷听"加密。
+            <strong>2026 年所有正经网站都必须 https</strong> —— 没有的话浏览器会贴红色警告。
+          </p>
+          <div class="url-info-extra" id="urlInfoExtra">
+            <span class="lab">设计师视角</span>
+            装上 https = 浏览器地址栏出现<strong>小锁🔒</strong>。Vercel / Netlify 默认就给你装好了，不用自己折腾证书。
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="hint-strip" style="margin-top:20px;background:var(--bg-2);border-left-color:var(--ink);">
+      <span class="hint-tag" style="color:var(--ink);">速记</span>
+      <strong>协议 / 子域名 / 主域名 / 端口 / 路径</strong> —— 5 段。每一段都可以独立配置、独立出错。
+    </div>
+  </div>
+</section>
+
+<!-- §05 designer pitfalls -->
+<section id="pitfalls">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>05</strong> / 5 个坑</div>
+        <h2 class="section-title">设计师常踩的<br><span class="em">5 个坑</span>。</h2>
+      </div>
+      <p class="section-sub">
+        买了域名、绑了 Vercel，按下回车依然报错 —— 90% 是这 5 个坑里的一个。
+        每条<strong>怎么诊断 + 怎么修</strong> 一句话讲清。
+      </p>
+    </div>
+
+    <div class="ts-stage">
+      <ul class="ts-list">
+        <li class="ts-item">
+          <div class="ts-num">01</div>
+          <div>
+            <h3 class="ts-q">"我都买好域名了 —— 怎么打开还是<span class="em">显示买家</span>？"</h3>
+            <p class="ts-a">买域名 ≠ 解析。<strong>买</strong>是说"这个名字归我"，<strong>解析</strong>才是说"这个名字指向哪台服务器"。
+            没配 <code>A 记录</code> 或 <code>CNAME</code> —— 域名就是个空壳。</p>
+            <span class="ts-action"><strong>修：</strong>登录域名商（阿里云/Cloudflare/GoDaddy）→ DNS 设置 → 加一条 <code>A</code> 记录指向 Vercel/服务器的 IP。或者贴 Vercel 给的 <code>CNAME</code>。</span>
+          </div>
+        </li>
+
+        <li class="ts-item">
+          <div class="ts-num">02</div>
+          <div>
+            <h3 class="ts-q">"我配了，但<span class="em">现在还是没用</span>？"</h3>
+            <p class="ts-a">DNS 改完<strong>不是立刻生效</strong>。全球各地的缓存（你电脑、ISP、运营商）要陆续过期 —— 这个延迟叫 <code>TTL</code>，通常 <strong>10 分钟到 24 小时</strong>。</p>
+            <span class="ts-action"><strong>诊断：</strong>用 <code>dnschecker.org</code> 输入 fan.com，看全球各地是不是已经看到新 IP 了。<strong>修：</strong>等。换手机数据 / 用 <code>cmd /flushdns</code> 强清本地缓存。</span>
+          </div>
+        </li>
+
+        <li class="ts-item">
+          <div class="ts-num">03</div>
+          <div>
+            <h3 class="ts-q">"浏览器红警告：'<span class="em">不安全</span>'"</h3>
+            <p class="ts-a">证书没装 / 装错了。<strong>HTTPS 不是默认</strong>，要给域名签一张"合法身份证"（SSL 证书），浏览器才认。</p>
+            <span class="ts-action"><strong>修：</strong>用 Vercel/Netlify/Cloudflare 一类的现代平台 —— 它们<strong>自动装证书</strong>，你什么都不用做。自己买 VPS 的话，用 Let's Encrypt 免费证书，配 Caddy 一句话搞定。</span>
+          </div>
+        </li>
+
+        <li class="ts-item">
+          <div class="ts-num">04</div>
+          <div>
+            <h3 class="ts-q">"<span class="em">fan.com</span> 能打开，<span class="em">www.fan.com</span> 报错？"</h3>
+            <p class="ts-a">它们是<strong>两个不同的域名</strong>，要<strong>各自配解析</strong>。"裸域名"和"www 子域名"指向同一个 IP 不会自动同步。</p>
+            <span class="ts-action"><strong>修：</strong>DNS 里加两条记录 —— 一条 <code>@</code> 指向 IP，一条 <code>www</code> 指向 IP（或 CNAME 到主域名）。Vercel/Cloudflare 后台一般有"添加 www"按钮一键搞定。</span>
+          </div>
+        </li>
+
+        <li class="ts-item">
+          <div class="ts-num">05</div>
+          <div>
+            <h3 class="ts-q">"昨天还能打开，今天<span class="em">网站消失</span>了？"</h3>
+            <p class="ts-a">域名<strong>过期没续费</strong>。域名是租的不是买断的 —— 大多数 1 年起，到期不续费会先警告几天，然后被回收。</p>
+            <span class="ts-action"><strong>修：</strong>登录域名商续费。建议<strong>开自动续费</strong>。重要域名续 5 年起，不省那点钱。续费邮件务必看，丢了域名再抢回来非常贵。</span>
+          </div>
+        </li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- §06 Cheatsheet -->
+<section id="cheat">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>06</strong> / 速查</div>
+        <h2 class="section-title">截图保存<br>这一<span class="em">页</span>。</h2>
+      </div>
+      <p class="section-sub">
+        DNS 7 步流程 + 5 步旅程报错对照 + 域名 5 部分。
+        看到陌生词 / 报错码，扫一眼能定位问题。
+      </p>
+    </div>
+
+    <div class="cheat-grid">
+      <div class="cheat-block">
+        <h3><span class="em">·</span> DNS 查询 · 7 步</h3>
+        <table class="cheat-table">
+          <thead><tr><th>步骤</th><th>问谁</th></tr></thead>
+          <tbody>
+            <tr><td class="term">1 / 本机</td><td class="desc">浏览器自己的<strong>缓存</strong>。最近访问过就直接出结果。</td></tr>
+            <tr><td class="term">2 / 系统</td><td class="desc">操作系统的 <code>hosts</code> 文件 + DNS 缓存。开发常用 hosts 改向。</td></tr>
+            <tr><td class="term">3 / 本地</td><td class="desc">运营商或 <code>8.8.8.8</code> / <code>1.1.1.1</code> 这种<strong>公共 DNS</strong>。</td></tr>
+            <tr><td class="term">4 / 根</td><td class="desc">全球 13 组<strong>根服务器</strong>，告诉你 .com 归谁管。</td></tr>
+            <tr><td class="term">5 / TLD</td><td class="desc"><strong>顶级域名服务器</strong>，比如 .com / .cn 各管一摊。</td></tr>
+            <tr><td class="term">6 / NS</td><td class="desc"><strong>权威服务器</strong>，存着 fan.com 的真实 A 记录。</td></tr>
+            <tr><td class="term">7 / 缓存</td><td class="desc">回程一路缓存，下次再访问就<strong>直接命中</strong>。</td></tr>
+          </tbody>
+        </table>
+        <div class="cheat-foot">
+          实际生活中 <strong>3 / 7 步常见</strong>，4–6 步只在大量缓存失效时才一路问到底。
+        </div>
+      </div>
+
+      <div class="cheat-block">
+        <h3><span class="em">·</span> 域名 5 部分</h3>
+        <table class="cheat-table">
+          <thead><tr><th>段</th><th>是什么</th></tr></thead>
+          <tbody>
+            <tr><td class="term">https://</td><td class="desc"><strong>协议</strong>。带不带 s 决定要不要加密、有没有小锁。</td></tr>
+            <tr><td class="term">www.</td><td class="desc"><strong>子域名</strong>。可省略，可换成 blog. / app. / docs. 等等。</td></tr>
+            <tr><td class="term">fan.com</td><td class="desc"><strong>主域名</strong>。你买的那一段。.com / .cn / .io 是后缀。</td></tr>
+            <tr><td class="term">:443</td><td class="desc"><strong>端口</strong>。https 默认 443，http 默认 80，写不写都行。</td></tr>
+            <tr><td class="term">/about</td><td class="desc"><strong>路径</strong>。指向网站内的具体页面。可以无限叠加。</td></tr>
+          </tbody>
+        </table>
+        <div class="cheat-foot">
+          看到 <code>?key=value</code> 别慌 —— 是<strong>查询参数</strong>，分享带的 utm 来源就是它。
+        </div>
+      </div>
+    </div>
+
+    <div class="cheat-mini">
+      <h3><span class="em">·</span> 报错对照表 — 看到什么 → 知道哪一步坏了</h3>
+      <div class="cm-row"><span class="cm-err">DNS_PROBE_FINISHED_NXDOMAIN</span><span class="cm-arr">→</span><span class="cm-fix">STEP 1 / DNS 查询失败 — 域名打错 / 没解析 / DNS 没生效</span></div>
+      <div class="cm-row"><span class="cm-err">ERR_CONNECTION_REFUSED / TIMEOUT</span><span class="cm-arr">→</span><span class="cm-fix">STEP 2 / 连不上 — IP 错 / 服务器关着 / 防火墙挡住</span></div>
+      <div class="cm-row"><span class="cm-err">404 Not Found</span><span class="cm-arr">→</span><span class="cm-fix">STEP 3 / 服务器没这个路径 — 拼错 / 没部署</span></div>
+      <div class="cm-row"><span class="cm-err">500 Internal Server Error</span><span class="cm-arr">→</span><span class="cm-fix">STEP 3 / 服务器自己崩了 — 看后端日志</span></div>
+      <div class="cm-row"><span class="cm-err">空白页 / blank</span><span class="cm-arr">→</span><span class="cm-fix">STEP 4 / 没收到响应 — 网络中断 / CDN 故障</span></div>
+      <div class="cm-row"><span class="cm-err">页面错乱 / 字体没了</span><span class="cm-arr">→</span><span class="cm-fix">STEP 5 / 渲染问题 — CSS/JS 没加载，看控制台 Network 面板</span></div>
+      <div class="cm-row"><span class="cm-err">NET::ERR_CERT_*  / 不安全</span><span class="cm-arr">→</span><span class="cm-fix">STEP 2.5 / HTTPS 证书问题 — 没装 / 过期 / 域名不匹配</span></div>
+    </div>
+
+    <a href="j2-vercel-figma.html" class="next-post">
+      <div>
+        <div class="np-tag">下一篇 · NEXT · J2 · 上线</div>
+        <h4>一键部署<span class="em"> · </span>是怎么一键的</h4>
+        <p>域名、解析、证书 —— 你以为要手动配三天，<strong>Vercel 给你 30 秒搞完</strong>。这背后到底点了哪几下？连接 GitHub、跑 build、分发 CDN，一次讲透"git push → 上线"这条流水线。</p>
+      </div>
+      <span class="np-cta">继续阅读 <span class="arr">→</span></span>
+    </a>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div class="byline-wrap">
+      <div class="byline">
+        <img class="avatar" src="author.jpg" alt="范米花儿">
+        <div class="byline-meta">
+          <div class="byline-label"><span class="dot"></span>作者 · WRITTEN BY</div>
+          <h3 class="byline-name">嗨，我是 <span class="em">范米花儿</span></h3>
+          <p class="byline-tag">一份给设计师的代码入门 ——<br>不需要会写，知道大概怎么回事，跟前端 / AI 沟通就顺多了。</p>
+          <div class="byline-contact">
+            <span class="contact-label">微信</span>
+            <span class="contact-id">vanvan_0422</span>
+            <span class="contact-hint">想看什么主题，加我聊</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="footer-meta">
+      做于 <span class="mono">2026</span> · 用 <span class="heart">●</span> 写给 <span class="mono">DESIGNERS &amp; DEVELOPERS</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+// ==========================================================
+//  §02 DNS Journey — 7 步逐帧
+// ==========================================================
+(function () {
+  const trace = document.getElementById('dnsTrace');
+  if (!trace) return;
+  const steps = trace.querySelectorAll('.dns-step');
+  const stepNum = document.getElementById('dnsStepNum');
+  const sideTitle = document.getElementById('dnsSideTitle');
+  const sideDesc = document.getElementById('dnsSideDesc');
+  const sideAnalogy = document.getElementById('dnsSideAnalogy');
+  const bar = document.getElementById('dnsBar');
+  const btnPrev = document.getElementById('dnsPrev');
+  const btnNext = document.getElementById('dnsNext');
+  const btnReset = document.getElementById('dnsReset');
+
+  const total = steps.length; // 7
+  let cur = 0;
+
+  const dict = [
+    {
+      title: '浏览器先翻<span class="em">自己的小本本</span>',
+      desc: '最快的办法 —— 看<strong>自己最近有没有访问过 fan.com</strong>。访问过就有缓存，直接拿出 IP，跳过后面所有步骤。',
+      analogy: '<span class="lab">类比 / Analogy</span>像你<strong>翻通讯录</strong> —— 先在自己手机里搜"小明"，找到了直接拨号，没找到再问别人。'
+    },
+    {
+      title: '问<span class="em">本地 DNS</span>（运营商）',
+      desc: '本机没有 → 问<strong>"本地 DNS 服务器"</strong> —— 通常是运营商的，或者你设过的 8.8.8.8 / 1.1.1.1。它替你跑后面所有的活。',
+      analogy: '<span class="lab">类比 / Analogy</span>像你打电话<strong>问家附近的 7-11 店员</strong>："请问这条路在哪？" —— 他大概知道，或者帮你打几个电话问到。'
+    },
+    {
+      title: '问<span class="em">根 DNS</span>（全球总台）',
+      desc: '本地 DNS 也不知道 → 它去问<strong>"根服务器"</strong>。根服务器不直接给 IP，但能告诉你 ".com 那一摊归 X 服务器管"。',
+      analogy: '<span class="lab">类比 / Analogy</span>像你问邮局总台："寄美国的快件归谁管？" —— 总台说"美国部门在 3 楼，自己上去问"。'
+    },
+    {
+      title: '问<span class="em">.com 顶级域名服务器</span>',
+      desc: '本地 DNS 接着问 .com 那台 → 它说"<strong>fan.com 的解析归 NS1.fan.com 管</strong>"。再缩小一圈。',
+      analogy: '<span class="lab">类比 / Analogy</span>像你上 3 楼问"美国部门"："洛杉矶寄件归谁？" —— "去找西区的小张"。'
+    },
+    {
+      title: '问<span class="em">权威 NS 服务器</span>',
+      desc: '终于找到了真正"管"fan.com 的那台机器 —— 它存着<strong>A 记录：fan.com → 104.21.5.32</strong>。这就是答案。',
+      analogy: '<span class="lab">类比 / Analogy</span>像你找到小张本人："洛杉矶街 33 号" —— 终于拿到了真实地址。这一步取决于你<strong>买域名时填的 NS</strong>。'
+    },
+    {
+      title: '<span class="em">回程</span>一路缓存',
+      desc: '本地 DNS 拿到 IP → 沿着原路<strong>每一站都缓存</strong>一份，最后给浏览器。下次再访问 fan.com，直接命中本地缓存，毫秒级返回。',
+      analogy: '<span class="lab">类比 / Analogy</span>就像把<strong>"小张 = 洛杉矶街 33 号"</strong>记在自己手机通讯录里 —— 下次直接拨，不用再跑一遍。'
+    },
+    {
+      title: '完成 · <span class="em">浏览器拿到 IP</span>',
+      desc: '整套流程结束 —— 浏览器现在知道 <strong>fan.com = 104.21.5.32</strong>。准备进入下一阶段：用 IP 建立连接。这就是 §03 要讲的故事。',
+      analogy: '<span class="lab">类比 / Analogy</span>地址有了。下一步 —— 你掏出手机，<strong>开始拨号</strong>。'
+    }
+  ];
+
+  function render() {
+    steps.forEach((s, i) => {
+      s.classList.remove('is-on', 'is-past');
+      if (i < cur) s.classList.add('is-past');
+      else if (i === cur) s.classList.add('is-on');
+    });
+    stepNum.innerHTML = '<strong>STEP ' + (cur + 1) + '</strong> / ' + total;
+    sideTitle.innerHTML = dict[cur].title;
+    sideDesc.innerHTML = dict[cur].desc;
+    sideAnalogy.innerHTML = dict[cur].analogy;
+    bar.style.width = (((cur + 1) / total) * 100).toFixed(0) + '%';
+    btnPrev.disabled = cur === 0;
+    btnNext.disabled = cur === total - 1;
+  }
+
+  btnNext.addEventListener('click', () => { if (cur < total - 1) { cur++; render(); } });
+  btnPrev.addEventListener('click', () => { if (cur > 0) { cur--; render(); } });
+  btnReset.addEventListener('click', () => { cur = 0; render(); });
+
+  render();
+})();
+
+// ==========================================================
+//  §03 5 步旅程 + 中断
+// ==========================================================
+(function () {
+  const flow = document.getElementById('tripFlow');
+  if (!flow) return;
+  const stepEls = flow.querySelectorAll('.trip-step');
+  const mock = document.getElementById('tripMock');
+  const mockBody = document.getElementById('tripMockBody');
+  const mockUrl = document.getElementById('tripMockUrl');
+  const infoTag = document.getElementById('tripInfoTag');
+  const infoTitle = document.getElementById('tripInfoTitle');
+  const infoDesc = document.getElementById('tripInfoDesc');
+  const infoMeta = document.getElementById('tripInfoMeta');
+  const btnPlay = document.getElementById('tripPlay');
+  const btnReset = document.getElementById('tripReset');
+
+  const stepInfo = {
+    1: {
+      tag: 'STEP 1 / DNS 查询',
+      title: '把 fan.com <span class="em">翻译成 IP</span>',
+      desc: '浏览器拿着 fan.com 去 DNS 问出 IP 地址。<strong>这一步就是 §02 整套流程</strong>。',
+      meta: '耗时通常 10–200ms。在浏览器开发者工具 Network → Timing 里能看到。'
+    },
+    2: {
+      tag: 'STEP 2 / TCP 连接',
+      title: '跟 IP 建立<span class="em">"通话"</span>',
+      desc: '拿到 IP 后，浏览器要跟服务器<strong>"握手"</strong> —— 像打电话拨通了对方接起。HTTPS 还要多一步交换密钥。',
+      meta: '术语：TCP 三次握手 + TLS 握手。一共多花 50–200ms。'
+    },
+    3: {
+      tag: 'STEP 3 / HTTP 请求',
+      title: '说<span class="em">"我要 /about 这一页"</span>',
+      desc: '通话接通了，浏览器就发出真正的请求：<strong>"GET /about"</strong>。这是真正告诉服务器要什么的一刻。',
+      meta: '请求里还带 Cookie、User-Agent、Accept-Language 这些"自我介绍"。'
+    },
+    4: {
+      tag: 'STEP 4 / 服务器响应',
+      title: '服务器<span class="em">把 HTML 发回来</span>',
+      desc: '服务器查数据库、跑后端逻辑、生成一坨 HTML 文本 → 沿着同一条线发回浏览器。状态码 200 = 一切正常。',
+      meta: '这一步耗时最不可控 —— 取决于后端复杂度，10ms 到几十秒都可能。'
+    },
+    5: {
+      tag: 'STEP 5 / 浏览器渲染',
+      title: '把 HTML <span class="em">画成你看到的页面</span>',
+      desc: '浏览器拿到 HTML → 顺着读 → 边读边发请求拉 CSS / JS / 图片 / 字体 → 拼成最终的页面。',
+      meta: '这一步的速度，前端工程师能优化的 90% 都在这里。'
+    }
+  };
+
+  const breakInfo = {
+    1: {
+      tag: '✕ STEP 1 中断',
+      title: 'DNS 查不到 IP',
+      desc: '没有 IP，连"打去哪"都不知道。浏览器立刻给出 <strong>DNS 报错</strong>。',
+      meta: '诊断：先确认域名拼对没、A 记录配了没、TTL 过了没。',
+      err: 'DNS_PROBE_FINISHED_NXDOMAIN',
+      hint: '通常是：域名打错 / 域名没解析 / 改了 DNS 没生效。',
+      mock: 'error'
+    },
+    2: {
+      tag: '✕ STEP 2 中断',
+      title: '连接被拒 / 超时',
+      desc: 'IP 找到了，但<strong>连不上那台机器</strong>。可能是服务器关了、防火墙挡了、或者 IP 是错的。',
+      meta: '诊断：试 ping IP 能不能通，看 Vercel/服务器是不是挂了。',
+      err: 'ERR_CONNECTION_REFUSED',
+      hint: '通常是：服务器崩了 / 端口没开 / IP 改了但 DNS 没更新。',
+      mock: 'error'
+    },
+    3: {
+      tag: '✕ STEP 3 中断',
+      title: '服务器拒绝处理这个请求',
+      desc: '通话接通了，请求也发出了，但<strong>服务器看了一眼 → 摇头</strong>。要么没这个页面（404），要么自己崩了（500）。',
+      meta: '诊断：404 = 路径错；500 = 后端 bug，看后端日志。',
+      err: '404 Not Found / 500 Internal Server Error',
+      hint: '这是<strong>最常见的报错</strong>。99% 的"网站打不开"都是这种。',
+      mock: 'error-404'
+    },
+    4: {
+      tag: '✕ STEP 4 中断',
+      title: '响应没回来 / 网页空白',
+      desc: '请求发出去了，但<strong>响应中途丢了</strong>。可能是 CDN 故障、运营商抽风、网线被踢。',
+      meta: '诊断：刷新；切换网络（手机数据 vs WiFi）；用 curl / Network 面板看。',
+      err: 'net::ERR_EMPTY_RESPONSE',
+      hint: '罕见但棘手 —— 多是网络中间环节问题，不一定是你网站的锅。',
+      mock: 'blank'
+    },
+    5: {
+      tag: '✕ STEP 5 中断',
+      title: '页面变成<span class="em">乱码积木</span>',
+      desc: 'HTML 收到了，但<strong>CSS / JS / 字体 / 图片有的没加载</strong>。文字在但样式没了；按钮没反应；图标变方块。',
+      meta: '诊断：开 DevTools → Console 看红字；Network 面板看哪个文件红了。',
+      err: 'Mixed errors in Console',
+      hint: '前端工程师调 bug 的主战场。看控制台第一行红字 = 50% 的线索。',
+      mock: 'broken'
+    }
+  };
+
+  const skeletonHTML = '<div class="skel w-90"></div><div class="skel w-80"></div><div class="skel w-60"></div><div class="skel w-40"></div>';
+  const fullHTML = '<div class="render-h">范米花儿的网站</div><div class="render-p">设计 × 代码 实验室<br>欢迎来看看。</div><div class="render-btn">查看作品 →</div>';
+  const brokenHTML = '<div class="render-broken">范米花儿的网站</div><div class="render-broken-2">设计 × 代码 实</div><div class="render-broken-3"></div>';
+  const blank404 = '<div style="display:flex;flex-direction:column;gap:6px;font-family:\'JetBrains Mono\',monospace;"><div style="font-size:32px;font-weight:600;color:var(--ink);line-height:1;">404</div><div style="font-size:12px;color:var(--ink-soft);">Not Found · 这个页面不在这台服务器上</div></div>';
+
+  function setMock(state) {
+    mock.classList.remove('is-loading', 'is-done', 'is-error', 'is-blank');
+    if (state === 'idle') {
+      mockBody.innerHTML = fullHTML;
+    } else if (state === 'loading-skel') {
+      mock.classList.add('is-loading');
+      mockBody.innerHTML = skeletonHTML;
+    } else if (state === 'done') {
+      mock.classList.add('is-done');
+      mockBody.innerHTML = fullHTML;
+    } else if (state === 'error') {
+      mock.classList.add('is-error');
+      mockBody.innerHTML = '';
+    } else if (state === 'error-404') {
+      mock.classList.add('is-error');
+      mockBody.innerHTML = blank404;
+    } else if (state === 'blank') {
+      mock.classList.add('is-blank');
+      mockBody.innerHTML = '';
+    } else if (state === 'broken') {
+      mock.classList.add('is-error');
+      mockBody.innerHTML = brokenHTML;
+    }
+  }
+
+  function clearAll() {
+    stepEls.forEach(s => s.classList.remove('is-running', 'is-done', 'is-broken'));
+  }
+
+  function showState(stepKey) {
+    const info = stepInfo[stepKey];
+    if (!info) return;
+    infoTag.textContent = info.tag;
+    infoTitle.innerHTML = info.title;
+    infoDesc.innerHTML = info.desc;
+    infoMeta.innerHTML = info.meta;
+  }
+
+  function showBreak(stepKey) {
+    const info = breakInfo[stepKey];
+    if (!info) return;
+    infoTag.textContent = info.tag;
+    infoTitle.innerHTML = info.title;
+    let descHtml = info.desc;
+    if (info.err) {
+      descHtml += '<div style="margin-top:10px;font-family:\'JetBrains Mono\',monospace;font-size:12px;color:var(--accent);background:rgba(255,77,46,0.12);padding:6px 10px;border-radius:3px;border-left:2px solid var(--accent);word-break:break-all;">报错 · <strong style="color:white;font-weight:600;">' + info.err + '</strong></div>';
+    }
+    infoDesc.innerHTML = descHtml;
+    infoMeta.innerHTML = info.hint;
+    setMock(info.mock);
+  }
+
+  let playTimers = [];
+  function clearTimers() { playTimers.forEach(t => clearTimeout(t)); playTimers = []; }
+
+  function play() {
+    clearTimers();
+    clearAll();
+    setMock('idle');
+
+    const order = [1, 2, 3, 4, 5];
+    let acc = 0;
+    order.forEach((step, idx) => {
+      const startT = acc;
+      acc += 800;
+
+      // running
+      playTimers.push(setTimeout(() => {
+        clearAll();
+        const el = flow.querySelector('[data-step="' + step + '"]');
+        // mark previous done
+        order.slice(0, idx).forEach(p => {
+          flow.querySelector('[data-step="' + p + '"]').classList.add('is-done');
+        });
+        el.classList.add('is-running');
+        showState(step);
+        if (step === 1) setMock('idle');
+        else if (step >= 4) setMock('loading-skel');
+      }, startT));
+    });
+
+    // final done
+    playTimers.push(setTimeout(() => {
+      clearAll();
+      stepEls.forEach(s => s.classList.add('is-done'));
+      setMock('done');
+      infoTag.textContent = 'DONE · 全部完成';
+      infoTitle.innerHTML = '页面<span class="em">亮起来了</span> ✓';
+      infoDesc.innerHTML = '5 步都通过 → HTML、CSS、JS 全部渲染完成 → 你看到了完整的页面。<strong>这就是按下回车后发生的全部</strong>。';
+      infoMeta.innerHTML = '↑ 试试点任意一格"切断"它，看页面会变成什么样。';
+    }, acc));
+  }
+
+  function reset() {
+    clearTimers();
+    clearAll();
+    setMock('idle');
+    infoTag.textContent = 'STATE · 当前状态';
+    infoTitle.innerHTML = '待机中';
+    infoDesc.innerHTML = '点 <strong>开始</strong> 完整跑一次 5 步流程 → 看页面是怎么一步步出来的。或者直接点任意一个步骤格子，<strong>切断那一步</strong>，看会出什么报错。';
+    infoMeta.innerHTML = '提示：每一步对应一种错误代码，看完你就能反推问题。';
+  }
+
+  stepEls.forEach(el => {
+    el.addEventListener('click', () => {
+      clearTimers();
+      const stepKey = el.dataset.step;
+      // mark previous as done
+      stepEls.forEach(s => s.classList.remove('is-running', 'is-done', 'is-broken'));
+      const order = [1, 2, 3, 4, 5];
+      const idx = parseInt(stepKey) - 1;
+      order.slice(0, idx).forEach(p => {
+        flow.querySelector('[data-step="' + p + '"]').classList.add('is-done');
+      });
+      el.classList.add('is-broken');
+      showBreak(stepKey);
+    });
+  });
+
+  btnPlay.addEventListener('click', play);
+  btnReset.addEventListener('click', reset);
+})();
+
+// ==========================================================
+//  §04 URL anatomy
+// ==========================================================
+(function () {
+  const bar = document.getElementById('urlBar');
+  if (!bar) return;
+  const parts = bar.querySelectorAll('.url-part');
+  const pinEl = document.getElementById('urlInfoPin');
+  const tagEl = document.getElementById('urlInfoTag');
+  const titleEl = document.getElementById('urlInfoTitle');
+  const descEl = document.getElementById('urlInfoDesc');
+  const extraEl = document.getElementById('urlInfoExtra');
+
+  const dict = {
+    protocol: {
+      pin: 'protocol',
+      tag: '01 · PROTOCOL',
+      title: '协议 · <span class="em">用什么"语言"对话</span>',
+      desc: '<strong>http</strong> 是基础版，<strong>https</strong> 加了一层"防偷听"加密。<strong>2026 年所有正经网站都必须 https</strong> —— 没有的话浏览器会贴红色警告。',
+      extra: '<span class="lab">设计师视角</span>装上 https = 浏览器地址栏出现<strong>小锁🔒</strong>。Vercel / Netlify 默认就给你装好了，不用自己折腾证书。'
+    },
+    sub: {
+      pin: 'subdomain',
+      tag: '02 · SUBDOMAIN',
+      title: '子域名 · <span class="em">主域名前面的小帽子</span>',
+      desc: '<strong>www.</strong> 只是一个常见的"惯例"前缀，不是必须的。也可以是 <code>blog.</code>、<code>app.</code>、<code>docs.</code> —— 一个域名能开无限子域名。',
+      extra: '<span class="lab">设计师视角</span>子域名经常用于<strong>分隔产品线</strong>：主站、博客、文档各占一个。每个子域名都要单独配解析。'
+    },
+    domain: {
+      pin: 'domain',
+      tag: '03 · DOMAIN',
+      title: '主域名 · <span class="em">你买的那一段</span>',
+      desc: '这就是<strong>你花钱租回来的"名字"</strong>。<code>fan</code> 是名字，<code>.com</code> 是后缀（TLD）。两者拼起来才是完整的主域名。',
+      extra: '<span class="lab">设计师视角</span>不同后缀价格、规则差很大：<code>.com</code> 便宜稳；<code>.cn</code> 要备案；<code>.io</code> 价高但科技感；<code>.design</code> 适合作品集。'
+    },
+    port: {
+      pin: 'port',
+      tag: '04 · PORT',
+      title: '端口 · <span class="em">同一台机器上的"门牌号"</span>',
+      desc: '一台服务器可以同时跑很多服务（网站、邮箱、数据库），<strong>端口号区分谁是谁</strong>。<code>:443</code> = https 默认门，<code>:80</code> = http 默认门。',
+      extra: '<span class="lab">设计师视角</span>正经网站<strong>不写端口</strong>（默认就是 443）。本地开发常见的 <code>:3000</code> / <code>:5173</code> 才需要写出来。'
+    },
+    path: {
+      pin: 'path',
+      tag: '05 · PATH',
+      title: '路径 · <span class="em">网站内部的"哪个房间"</span>',
+      desc: '主域名只指向一台服务器，<strong>路径决定看哪一页</strong>。<code>/about</code>、<code>/blog/2026/dns</code>、<code>/projects/01</code> —— 都是这台服务器上不同的页面。',
+      extra: '<span class="lab">设计师视角</span>路径设计 = 信息架构。好的路径让人<strong>一看就懂层级</strong>，比如 <code>/work/clients/2025</code>。和 Figma 文件结构同个道理。'
+    }
+  };
+
+  function setActive(key) {
+    parts.forEach(p => p.classList.toggle('is-active', p.dataset.pk === key));
+    const d = dict[key];
+    if (!d) return;
+    pinEl.textContent = d.pin;
+    tagEl.textContent = d.tag;
+    titleEl.innerHTML = d.title;
+    descEl.innerHTML = d.desc;
+    extraEl.innerHTML = d.extra;
+  }
+
+  parts.forEach(p => {
+    p.addEventListener('click', () => setActive(p.dataset.pk));
+    p.addEventListener('mouseenter', () => setActive(p.dataset.pk));
+  });
+
+  setActive('protocol');
+})();
+
+// ==========================================================
+//  Roadmap modal
+// ==========================================================
+(function(){
+  var modal = document.getElementById('rm-modal');
+  if (!modal) return;
+  var openBtns = document.querySelectorAll('[data-rm-open]');
+  var closeBtns = modal.querySelectorAll('[data-rm-close]');
+  function open() { modal.hidden = false; document.body.style.overflow = 'hidden'; }
+  function close() { modal.hidden = true; document.body.style.overflow = ''; }
+  openBtns.forEach(function(b){ b.addEventListener('click', function(e){ e.preventDefault(); open(); }); });
+  closeBtns.forEach(function(b){ b.addEventListener('click', close); });
+  document.addEventListener('keydown', function(e){ if (e.key === 'Escape' && !modal.hidden) close(); });
+})();
+</script>
+
+
+<!-- 路线图弹窗 -->
+<div class="rm-modal" id="rm-modal" hidden>
+  <div class="rm-backdrop" data-rm-close></div>
+  <div class="rm-dialog" role="dialog" aria-label="完整路线图">
+    <button class="rm-close" data-rm-close aria-label="关闭">✕</button>
+    <div class="rm-header">
+      <div class="rm-tag">完整路线图 · ROADMAP</div>
+      <h3 class="rm-title">9 模块 <span class="rm-em">·</span> 28 篇</h3>
+      <p class="rm-sub">设计篇 5 模块 / 15 篇 + 工程篇 4 系列 / 13 篇</p>
+    </div>
+    <div class="rm-body">
+      <div class="rm-mod">
+        <div class="rm-mod-key">A · 单元素与组件</div>
+        <div class="rm-mod-list">
+          <a href="basics-figma.html" class="rm-cell"><span class="rm-cell-code">A0</span><span class="rm-cell-name">三件套 · HTML / CSS / JS</span><span class="rm-cell-tier">入门</span></a>
+          <a href="box-figma.html" class="rm-cell"><span class="rm-cell-code">A1</span><span class="rm-cell-name">盒子 · Auto Layout</span><span class="rm-cell-tier">基础</span></a>
+          <a href="components-figma.html" class="rm-cell"><span class="rm-cell-code">A2</span><span class="rm-cell-name">组件 · Variants &amp; Props</span><span class="rm-cell-tier">基础</span></a>
+          <a href="button-system-figma.html" class="rm-cell"><span class="rm-cell-code">A3</span><span class="rm-cell-name">Button System · 组件演化</span><span class="rm-cell-tier">进阶</span></a>
+        </div>
+      </div>
+      <div class="rm-mod">
+        <div class="rm-mod-key">B · 多组件协作</div>
+        <div class="rm-mod-list">
+          <a href="page-figma.html" class="rm-cell"><span class="rm-cell-code">B0</span><span class="rm-cell-name">拼页面 · 组件嵌套</span><span class="rm-cell-tier">入门</span></a>
+          <a href="data-flow-figma.html" class="rm-cell"><span class="rm-cell-code">B1</span><span class="rm-cell-name">数据流 · 概念</span><span class="rm-cell-tier">基础</span></a>
+          <a href="data-flow-cases-figma.html" class="rm-cell"><span class="rm-cell-code">B2</span><span class="rm-cell-name">数据流 · 实战 5 案例</span><span class="rm-cell-tier">进阶</span></a>
+        </div>
+      </div>
+      <div class="rm-mod">
+        <div class="rm-mod-key">C · 视觉系统</div>
+        <div class="rm-mod-list">
+          <a href="tokens-figma.html" class="rm-cell"><span class="rm-cell-code">C0</span><span class="rm-cell-name">Variables / Tokens 入门</span><span class="rm-cell-tier">入门</span></a>
+          <a href="colors-type-figma.html" class="rm-cell"><span class="rm-cell-code">C1</span><span class="rm-cell-name">Colors / Type / Spacing</span><span class="rm-cell-tier">基础</span></a>
+          <a href="theme-switch-figma.html" class="rm-cell"><span class="rm-cell-code">C2</span><span class="rm-cell-name">Theme 切换实战</span><span class="rm-cell-tier">进阶</span></a>
+        </div>
+      </div>
+      <div class="rm-mod">
+        <div class="rm-mod-key">D · 状态与交互</div>
+        <div class="rm-mod-list">
+          <a href="states-figma.html" class="rm-cell"><span class="rm-cell-code">D0</span><span class="rm-cell-name">视觉态 · 看得见的状态</span><span class="rm-cell-tier">入门</span></a>
+          <a href="interactive-figma.html" class="rm-cell"><span class="rm-cell-code">D1</span><span class="rm-cell-name">Interactive Component</span><span class="rm-cell-tier">基础</span></a>
+          <a href="transition-figma.html" class="rm-cell"><span class="rm-cell-code">D2</span><span class="rm-cell-name">动画 · Transition</span><span class="rm-cell-tier">进阶</span></a>
+        </div>
+      </div>
+      <div class="rm-mod">
+        <div class="rm-mod-key">E · 工程化</div>
+        <div class="rm-mod-list">
+          <a href="naming-figma.html" class="rm-cell"><span class="rm-cell-code">E0</span><span class="rm-cell-name">命名 / 图层规范</span><span class="rm-cell-tier">入门</span></a>
+          <a href="handoff-figma.html" class="rm-cell"><span class="rm-cell-code">E2</span><span class="rm-cell-name">Handoff &amp; 设计系统</span><span class="rm-cell-tier">进阶</span></a>
+        </div>
+      </div>
+      <div class="rm-mod">
+        <div class="rm-mod-key">F · 工程入门</div>
+        <div class="rm-mod-list">
+          <a href="f1-npm-figma.html" class="rm-cell"><span class="rm-cell-code">F1</span><span class="rm-cell-name">npm 是什么</span><span class="rm-cell-tier">入门</span></a>
+          <a href="f2-import-figma.html" class="rm-cell"><span class="rm-cell-code">F2</span><span class="rm-cell-name">import 与路径</span><span class="rm-cell-tier">入门</span></a>
+          <a href="f3-dev-build-figma.html" class="rm-cell"><span class="rm-cell-code">F3</span><span class="rm-cell-name">dev vs build</span><span class="rm-cell-tier">基础</span></a>
+          <a href="f4-hidden-files-figma.html" class="rm-cell"><span class="rm-cell-code">F4</span><span class="rm-cell-name">看不见的文件</span><span class="rm-cell-tier">基础</span></a>
+        </div>
+      </div>
+      <div class="rm-mod">
+        <div class="rm-mod-key">G · 版本控制</div>
+        <div class="rm-mod-list">
+          <a href="g1-commit-branch-figma.html" class="rm-cell"><span class="rm-cell-code">G1</span><span class="rm-cell-name">commit / branch</span><span class="rm-cell-tier">入门</span></a>
+          <a href="g2-conflict-figma.html" class="rm-cell"><span class="rm-cell-code">G2</span><span class="rm-cell-name">冲突怎么解</span><span class="rm-cell-tier">基础</span></a>
+          <a href="g3-pr-review-figma.html" class="rm-cell"><span class="rm-cell-code">G3</span><span class="rm-cell-name">PR / Review</span><span class="rm-cell-tier">进阶</span></a>
+        </div>
+      </div>
+      <div class="rm-mod">
+        <div class="rm-mod-key">H · 浏览器调试</div>
+        <div class="rm-mod-list">
+          <a href="h1-devtools-elements-figma.html" class="rm-cell"><span class="rm-cell-code">H1</span><span class="rm-cell-name">DevTools Elements</span><span class="rm-cell-tier">入门</span></a>
+          <a href="h2-console-error-figma.html" class="rm-cell"><span class="rm-cell-code">H2</span><span class="rm-cell-name">Console 报错</span><span class="rm-cell-tier">基础</span></a>
+          <a href="h3-network-figma.html" class="rm-cell"><span class="rm-cell-code">H3</span><span class="rm-cell-name">Network 面板</span><span class="rm-cell-tier">进阶</span></a>
+        </div>
+      </div>
+      <div class="rm-mod">
+        <div class="rm-mod-key">J · 上线</div>
+        <div class="rm-mod-list">
+          <a href="j1-dns-figma.html" class="rm-cell"><span class="rm-cell-code">J1</span><span class="rm-cell-name">DNS / 域名</span><span class="rm-cell-tier">基础</span></a>
+          <a href="j2-vercel-figma.html" class="rm-cell"><span class="rm-cell-code">J2</span><span class="rm-cell-name">Vercel 部署</span><span class="rm-cell-tier">基础</span></a>
+          <a href="j3-cache-cdn-figma.html" class="rm-cell"><span class="rm-cell-code">J3</span><span class="rm-cell-name">缓存 / CDN</span><span class="rm-cell-tier">进阶</span></a>
+        </div>
+      </div>
+    </div>
+    <div class="rm-footer">
+      <span>未完待续 · 想看什么主题加我聊</span>
+      <span class="rm-wechat">微信 vanvan_0422</span>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

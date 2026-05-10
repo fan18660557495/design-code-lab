@@ -1,0 +1,2956 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Network 面板：数据从哪来 — 页面没出来，先去 Network 看一眼</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,300..900&family=Geist:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Noto+Sans+SC:wght@300;400;500;700;900&family=Noto+Serif+SC:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f3eee5;
+    --bg-2: #ebe4d4;
+    --ink: #16161d;
+    --ink-soft: #4a4a55;
+    --ink-mute: #8a8a92;
+    --line: #d5cdba;
+    --line-soft: #e3dcca;
+    --accent: #ff4d2e;
+    --accent-soft: #ffe4dc;
+    --blue: #0a4cff;
+    --blue-soft: #dde6ff;
+    --green: #1f6b3a;
+    --green-soft: #d4ecdb;
+    --yellow: #ffcf3d;
+    --yellow-soft: #fff4cc;
+    --paper: #faf7f0;
+    --shadow: 0 1px 0 rgba(0,0,0,0.04), 0 8px 24px rgba(22,22,29,0.06);
+
+    /* DevTools palette */
+    --dt-bg: #1f1f1f;
+    --dt-bg-2: #2a2a2a;
+    --dt-bg-row: #232323;
+    --dt-bg-row-alt: #1f1f1f;
+    --dt-bg-row-hover: #2c2c2c;
+    --dt-bg-row-err: #3a1a1a;
+    --dt-bg-row-warn: #3a3018;
+    --dt-line: #3c3c3c;
+    --dt-line-soft: #2a2a2a;
+    --dt-text: #d4d4d4;
+    --dt-text-2: #b8b8b8;
+    --dt-mute: #888;
+    --dt-mute-2: #6a6a6a;
+    --dt-red: #ff5050;
+    --dt-orange: #ffaa55;
+    --dt-yellow: #ffcc66;
+    --dt-green: #6acc7a;
+    --dt-blue: #5cb6ff;
+    --dt-link: #5e9eff;
+    --dt-purple: #c586c0;
+
+    /* Status code colors */
+    --st-ok: #4ec77c;
+    --st-ok-soft: #d4ecdb;
+    --st-warn: #e89c2a;
+    --st-warn-soft: #ffe9c8;
+    --st-err: #d63a1f;
+    --st-err-soft: #ffd6cc;
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'Geist', 'Noto Sans SC', system-ui, -apple-system, sans-serif;
+    font-size: 16px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    background-image:
+      radial-gradient(circle at 1px 1px, rgba(22,22,29,0.05) 1px, transparent 0);
+    background-size: 24px 24px;
+  }
+
+  /* Typography */
+  .display-cn { font-family: 'Noto Serif SC', 'Fraunces', serif; font-weight: 900; letter-spacing: -0.01em; }
+  .mono { font-family: 'JetBrains Mono', monospace; }
+  .label { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-mute); }
+  .em { font-family: 'Noto Serif SC', serif; font-weight: 500; color: var(--accent); }
+
+  /* Layout */
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 0 32px; }
+
+  /* Top bar */
+  .topbar {
+    border-bottom: 1px dashed var(--line);
+    padding: 16px 0;
+    background: var(--bg);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    backdrop-filter: blur(8px);
+    background: rgba(243, 238, 229, 0.85);
+  }
+  .topbar-inner { display: flex; justify-content: space-between; align-items: center; gap: 24px; }
+  .brand { font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 600; }
+  .brand .dot { display: inline-block; width: 8px; height: 8px; background: var(--accent); border-radius: 50%; margin-right: 8px; vertical-align: middle; animation: pulse 2s ease-in-out infinite; }
+  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+  .nav-links { display: flex; gap: 20px; font-size: 13px; }
+  .nav-links a { color: var(--ink-soft); text-decoration: none; transition: color 0.2s; cursor: pointer; }
+  .nav-links a:hover { color: var(--accent); }
+  .nav-links a.current { color: var(--accent); font-weight: 600; }
+  a.brand { text-decoration: none; color: inherit; transition: color 0.2s; cursor: pointer; }
+  a.brand:hover { color: var(--accent); }
+
+  /* Hero */
+  .hero { padding: 100px 0 80px; position: relative; overflow: hidden; }
+  .hero-meta { display: flex; gap: 24px; margin-bottom: 32px; align-items: center; flex-wrap: wrap; }
+  .hero-meta .pill { padding: 6px 12px; border: 1px solid var(--ink); border-radius: 100px; font-size: 11px; font-family: 'JetBrains Mono', monospace; letter-spacing: 0.05em; }
+  .hero-meta .pill.fill { background: var(--ink); color: var(--bg); }
+  .hero h1 {
+    font-family: 'Noto Serif SC', 'Fraunces', serif;
+    font-weight: 900;
+    font-size: clamp(48px, 7vw, 92px);
+    line-height: 0.98;
+    letter-spacing: -0.03em;
+    margin: 0 0 24px;
+  }
+  .hero h1 .em { font-family: 'Noto Serif SC', serif; font-weight: 500; color: var(--accent); }
+  .hero p.lede {
+    font-size: 20px;
+    line-height: 1.5;
+    max-width: 640px;
+    color: var(--ink-soft);
+    margin: 0 0 40px;
+  }
+  .hero p.lede .em { font-family: 'Noto Serif SC', serif; color: var(--accent); }
+  .hero-grid {
+    display: grid;
+    grid-template-columns: 1.4fr 1fr;
+    gap: 48px;
+    align-items: end;
+  }
+  @media (max-width: 880px) { .hero-grid { grid-template-columns: 1fr; } }
+  .hero-side {
+    border-left: 1px dashed var(--line);
+    padding-left: 24px;
+    font-size: 13px;
+    color: var(--ink-soft);
+  }
+  .hero-side .row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px dashed var(--line); gap: 12px; }
+  .hero-side .row:last-child { border-bottom: none; }
+  .hero-side .row .k { color: var(--ink-mute); font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.05em; text-transform: uppercase; }
+  .hero-side .row .v { font-weight: 500; text-align: right; }
+
+  /* Section */
+  section { padding: 80px 0; border-top: 1px solid var(--line); position: relative; }
+  .section-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 56px; flex-wrap: wrap; gap: 16px; }
+  .section-num { font-family: 'JetBrains Mono', monospace; font-size: 13px; color: var(--ink-mute); letter-spacing: 0.1em; }
+  .section-num strong { color: var(--accent); }
+  .section-title {
+    font-family: 'Noto Serif SC', serif;
+    font-weight: 900;
+    font-size: clamp(32px, 4.5vw, 52px);
+    line-height: 1.05;
+    letter-spacing: -0.02em;
+    margin: 0;
+    max-width: 22ch;
+  }
+  .section-title .em { font-family: 'Noto Serif SC', serif; font-weight: 500; color: var(--accent); }
+  .section-sub { color: var(--ink-soft); font-size: 17px; max-width: 38ch; line-height: 1.55; margin: 0; }
+  .section-sub .em { font-family: 'Noto Serif SC', serif; color: var(--accent); }
+
+  /* Helper hint strip */
+  .hint-strip {
+    margin-top: 8px;
+    padding: 14px 18px;
+    background: var(--accent-soft);
+    border-left: 3px solid var(--accent);
+    border-radius: 4px;
+    font-size: 13px;
+    color: var(--ink);
+    line-height: 1.55;
+  }
+  .hint-strip .hint-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--accent);
+    letter-spacing: 0.12em;
+    margin-right: 10px;
+    text-transform: uppercase;
+  }
+
+  /* ==================================================
+     DevTools Network panel mock
+     ================================================== */
+  .devtools {
+    background: var(--dt-bg);
+    border-radius: 6px;
+    overflow: hidden;
+    border: 1px solid #0a0a0a;
+    box-shadow: 0 12px 40px rgba(0,0,0,0.18);
+    font-family: 'Menlo', 'Consolas', 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--dt-text);
+    line-height: 1.5;
+  }
+  .dt-tabs {
+    display: flex;
+    background: #2c2c2c;
+    border-bottom: 1px solid #111;
+    padding: 0 8px;
+    gap: 0;
+    align-items: stretch;
+  }
+  .dt-tab {
+    padding: 8px 12px;
+    font-size: 11px;
+    color: #999;
+    border-right: 1px solid #111;
+    user-select: none;
+  }
+  .dt-tab.active {
+    color: #fff;
+    background: var(--dt-bg);
+    border-bottom: 2px solid var(--dt-blue);
+    margin-bottom: -1px;
+    position: relative;
+  }
+  .dt-tab.active.network::before {
+    content: '●';
+    color: #ff5050;
+    margin-right: 6px;
+    font-size: 8px;
+  }
+
+  /* Network toolbar — record dot, clear, filter row, type filters */
+  .nt-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 6px 12px;
+    background: #252525;
+    border-bottom: 1px solid var(--dt-line);
+    font-size: 11px;
+    color: var(--dt-mute);
+    user-select: none;
+  }
+  .nt-rec {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--dt-red);
+    font-weight: 600;
+    font-size: 11px;
+  }
+  .nt-rec::before {
+    content: '';
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background: var(--dt-red);
+    box-shadow: 0 0 6px rgba(255, 80, 80, 0.6);
+    animation: rec-pulse 1.6s ease-in-out infinite;
+  }
+  @keyframes rec-pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.4; transform: scale(0.85); }
+  }
+  .nt-clear, .nt-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 18px;
+    height: 18px;
+    color: var(--dt-mute);
+    cursor: default;
+    font-size: 13px;
+  }
+  .nt-divider {
+    width: 1px;
+    height: 14px;
+    background: var(--dt-line);
+  }
+  .nt-search {
+    flex: 1;
+    background: #131313;
+    border: 1px solid var(--dt-line);
+    color: var(--dt-text);
+    padding: 3px 8px;
+    border-radius: 3px;
+    font-size: 11px;
+    max-width: 240px;
+  }
+  .nt-checkbox {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 10.5px;
+    color: var(--dt-mute);
+  }
+  .nt-checkbox::before {
+    content: '';
+    width: 10px;
+    height: 10px;
+    border: 1px solid var(--dt-mute);
+    border-radius: 2px;
+    display: inline-block;
+  }
+  .nt-checkbox.checked::before {
+    background: var(--dt-blue);
+    border-color: var(--dt-blue);
+  }
+  .nt-pill {
+    padding: 1px 8px;
+    border-radius: 100px;
+    font-size: 10px;
+    font-weight: 500;
+    color: var(--dt-mute);
+    border: 1px solid transparent;
+  }
+  .nt-pill.active {
+    background: rgba(94, 158, 255, 0.18);
+    color: var(--dt-blue);
+    border-color: rgba(94, 158, 255, 0.35);
+  }
+
+  /* Network table — Name / Status / Type / Size / Time / Waterfall */
+  .nt-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: 'Menlo', 'JetBrains Mono', monospace;
+    font-size: 11.5px;
+    background: var(--dt-bg);
+  }
+  .nt-table thead th {
+    background: #2a2a2a;
+    color: var(--dt-text-2);
+    font-weight: 500;
+    font-size: 10.5px;
+    text-align: left;
+    padding: 5px 10px;
+    border-right: 1px solid var(--dt-line);
+    border-bottom: 1px solid var(--dt-line);
+    user-select: none;
+    white-space: nowrap;
+  }
+  .nt-table thead th.sortable::after {
+    content: ' ▾';
+    color: var(--dt-mute-2);
+    font-size: 9px;
+    margin-left: 4px;
+  }
+  .nt-table thead th:last-child { border-right: none; }
+  .nt-table tbody tr {
+    background: var(--dt-bg);
+    border-bottom: 1px solid #2a2a2a;
+    transition: background 0.12s;
+  }
+  .nt-table tbody tr:nth-child(even) { background: #232323; }
+  .nt-table tbody tr td {
+    padding: 4px 10px;
+    border-right: 1px solid var(--dt-line-soft);
+    color: var(--dt-text);
+    font-size: 11.5px;
+    vertical-align: middle;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 200px;
+  }
+  .nt-table tbody tr td:last-child { border-right: none; }
+
+  .nt-name {
+    color: var(--dt-link);
+    display: flex;
+    align-items: center;
+    gap: 7px;
+  }
+  .nt-name .nt-fav {
+    width: 12px;
+    height: 12px;
+    flex-shrink: 0;
+    border-radius: 2px;
+    display: inline-block;
+    background: var(--dt-mute-2);
+    font-size: 9px;
+    line-height: 12px;
+    text-align: center;
+    color: white;
+    font-weight: 700;
+  }
+  .nt-name .nt-fav.html { background: #e44d26; }
+  .nt-name .nt-fav.css { background: #2965f1; }
+  .nt-name .nt-fav.js { background: #f0db4f; color: #000; }
+  .nt-name .nt-fav.img { background: #5a5a5a; }
+  .nt-name .nt-fav.api { background: #c586c0; }
+  .nt-name .nt-fav.font { background: #4a90e2; }
+
+  /* Status code colors inside table */
+  .nt-status {
+    font-weight: 600;
+  }
+  .nt-status.ok { color: var(--dt-green); }
+  .nt-status.warn { color: var(--dt-orange); }
+  .nt-status.err { color: var(--dt-red); }
+  .nt-status.pending { color: var(--dt-mute); font-style: normal; }
+
+  /* Type column color */
+  .nt-type { color: var(--dt-text-2); }
+  .nt-size, .nt-time { color: var(--dt-text-2); text-align: right; }
+
+  /* Waterfall column — visualize timing */
+  .nt-table th.nt-th-water,
+  .nt-table td.nt-td-water {
+    width: 240px;
+    min-width: 200px;
+    max-width: 280px;
+  }
+  .nt-water-bar {
+    position: relative;
+    height: 12px;
+    background: transparent;
+    width: 100%;
+  }
+  .nt-water-bar .nt-wb {
+    position: absolute;
+    top: 2px;
+    height: 8px;
+    background: var(--dt-blue);
+    border-radius: 1px;
+    opacity: 0.85;
+  }
+  .nt-water-bar .nt-wb.queued { background: #6a6a6a; opacity: 0.6; }
+  .nt-water-bar .nt-wb.api { background: #c586c0; }
+  .nt-water-bar .nt-wb.slow { background: var(--dt-orange); }
+  .nt-water-bar .nt-wb.err { background: var(--dt-red); }
+
+  /* ==================================================
+     §01 Anatomy of a request — browser ↔ server
+     ================================================== */
+  .req-anatomy {
+    margin-top: 28px;
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 32px 32px 28px;
+    position: relative;
+    overflow: hidden;
+  }
+  .req-anatomy::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(circle at 0% 50%, rgba(255,77,46,0.06), transparent 40%),
+      radial-gradient(circle at 100% 50%, rgba(10,76,255,0.05), transparent 40%);
+    pointer-events: none;
+  }
+
+  .req-stage {
+    position: relative;
+    display: grid;
+    grid-template-columns: 1fr 1.2fr 1fr;
+    gap: 0;
+    align-items: stretch;
+    min-height: 320px;
+    z-index: 1;
+  }
+  @media (max-width: 880px) { .req-stage { grid-template-columns: 1fr; min-height: 0; gap: 18px; } }
+
+  .req-side {
+    background: var(--bg);
+    border: 1.5px solid var(--ink);
+    border-radius: 10px;
+    padding: 22px 24px 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    position: relative;
+  }
+  .req-side .rs-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    color: var(--accent);
+    text-transform: uppercase;
+    margin-bottom: 2px;
+  }
+  .req-side .rs-name {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 22px;
+    font-weight: 800;
+    margin: 0 0 4px;
+    letter-spacing: -0.01em;
+  }
+  .req-side .rs-desc {
+    font-size: 12.5px;
+    color: var(--ink-soft);
+    line-height: 1.55;
+    margin: 0 0 6px;
+  }
+  .req-side .rs-icon {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 36px;
+    color: var(--ink);
+    line-height: 1;
+    margin-bottom: 2px;
+  }
+  .req-side.client .rs-icon::before { content: '◳'; }
+  .req-side.server .rs-icon::before { content: '◰'; }
+
+  .req-flow {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: stretch;
+    gap: 14px;
+    padding: 0 18px;
+    position: relative;
+  }
+  @media (max-width: 880px) { .req-flow { padding: 0; } }
+
+  .req-arrow {
+    position: relative;
+    border: 1px solid var(--line);
+    background: var(--bg);
+    border-radius: 8px;
+    padding: 14px 18px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .req-arrow:hover { border-color: var(--accent); transform: translateX(2px); }
+  .req-arrow.is-active { border-color: var(--accent); background: var(--accent-soft); box-shadow: 0 6px 18px rgba(255,77,46,0.12); }
+  .req-arrow .ra-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9.5px;
+    letter-spacing: 0.12em;
+    color: var(--accent);
+    text-transform: uppercase;
+    margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .req-arrow .ra-tag::before {
+    content: '';
+    width: 6px;
+    height: 6px;
+    background: var(--accent);
+    border-radius: 50%;
+  }
+  .req-arrow .ra-line {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--ink);
+    margin-bottom: 4px;
+  }
+  .req-arrow .ra-method {
+    color: var(--accent);
+    font-weight: 700;
+    margin-right: 6px;
+  }
+  .req-arrow .ra-status-200 { color: var(--green); font-weight: 700; margin-right: 6px; }
+  .req-arrow .ra-meta {
+    font-size: 11px;
+    color: var(--ink-soft);
+    line-height: 1.5;
+  }
+  .req-arrow .ra-meta code {
+    font-family: 'JetBrains Mono', monospace;
+    background: var(--bg-2);
+    padding: 1px 5px;
+    border-radius: 3px;
+    font-size: 10.5px;
+  }
+
+  /* Request arrow icon — rendered as a thin horizontal line w/ chevron */
+  .req-arrow::after {
+    content: '→';
+    position: absolute;
+    right: -10px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-family: 'Fraunces', serif;
+    font-size: 24px;
+    color: var(--accent);
+    background: var(--paper);
+    width: 22px;
+    text-align: center;
+    z-index: 2;
+  }
+  .req-arrow.response::after {
+    content: '←';
+    right: auto;
+    left: -10px;
+  }
+  @media (max-width: 880px) { .req-arrow::after, .req-arrow.response::after { display: none; } }
+
+  /* Anatomy callouts */
+  .req-callouts {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 14px;
+    margin-top: 28px;
+  }
+  @media (max-width: 880px) { .req-callouts { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 540px) { .req-callouts { grid-template-columns: 1fr; } }
+  .req-callout {
+    background: var(--bg);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 14px 16px;
+    transition: all 0.2s;
+  }
+  .req-callout.is-active {
+    border-color: var(--accent);
+    background: var(--accent-soft);
+  }
+  .req-callout .rc-num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    color: var(--accent);
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+  .req-callout .rc-name {
+    font-family: 'Noto Serif SC', serif;
+    font-weight: 700;
+    font-size: 14px;
+    margin-bottom: 4px;
+    color: var(--ink);
+  }
+  .req-callout .rc-desc {
+    font-size: 12px;
+    color: var(--ink-soft);
+    line-height: 1.5;
+  }
+  .req-callout .rc-desc code {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10.5px;
+    background: var(--bg-2);
+    padding: 1px 5px;
+    border-radius: 3px;
+  }
+
+  /* ==================================================
+     §02 Status code 三大类
+     ================================================== */
+  .status-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 18px;
+    margin-top: 24px;
+  }
+  @media (max-width: 880px) { .status-grid { grid-template-columns: 1fr; } }
+
+  .status-card {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    overflow: hidden;
+    position: relative;
+  }
+  .status-card.ok { border-top: 4px solid var(--st-ok); }
+  .status-card.warn { border-top: 4px solid var(--st-warn); }
+  .status-card.err { border-top: 4px solid var(--st-err); }
+
+  .status-card .sc-head {
+    padding: 22px 24px 16px;
+    border-bottom: 1px dashed var(--line);
+  }
+  .status-card .sc-tag {
+    display: inline-block;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    padding: 3px 10px;
+    border-radius: 100px;
+    margin-bottom: 12px;
+  }
+  .status-card.ok .sc-tag { background: var(--st-ok-soft); color: var(--green); }
+  .status-card.warn .sc-tag { background: var(--st-warn-soft); color: #a8651a; }
+  .status-card.err .sc-tag { background: var(--st-err-soft); color: var(--st-err); }
+
+  .status-card .sc-title {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 26px;
+    font-weight: 900;
+    margin: 0 0 4px;
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+  }
+  .status-card.ok .sc-title { color: var(--green); }
+  .status-card.warn .sc-title { color: var(--st-warn); }
+  .status-card.err .sc-title { color: var(--st-err); }
+
+  .status-card .sc-cn {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 16px;
+    font-weight: 700;
+    margin: 0 0 10px;
+  }
+  .status-card .sc-blame {
+    font-size: 12px;
+    color: var(--ink-soft);
+    margin: 0 0 4px;
+    line-height: 1.55;
+  }
+  .status-card .sc-blame strong { color: var(--ink); font-weight: 600; }
+
+  .status-card .sc-list {
+    padding: 18px 24px 22px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .status-line {
+    display: grid;
+    grid-template-columns: 56px 1fr;
+    gap: 12px;
+    align-items: baseline;
+  }
+  .status-line .sl-code {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 16px;
+    font-weight: 700;
+    text-align: right;
+  }
+  .status-card.ok .sl-code { color: var(--green); }
+  .status-card.warn .sl-code { color: var(--st-warn); }
+  .status-card.err .sl-code { color: var(--st-err); }
+  .status-line .sl-body {
+    font-size: 12.5px;
+    color: var(--ink-soft);
+    line-height: 1.5;
+  }
+  .status-line .sl-body strong {
+    color: var(--ink);
+    font-weight: 600;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    margin-right: 4px;
+  }
+
+  .status-summary {
+    margin-top: 28px;
+    padding: 18px 22px;
+    background: var(--ink);
+    color: white;
+    border-radius: 8px;
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 18px;
+    align-items: center;
+  }
+  @media (max-width: 720px) { .status-summary { grid-template-columns: 1fr; } }
+  .status-summary .ss-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    color: var(--accent);
+    text-transform: uppercase;
+    padding: 4px 10px;
+    background: rgba(255,77,46,0.18);
+    border-radius: 3px;
+    white-space: nowrap;
+  }
+  .status-summary .ss-text {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 16px;
+    line-height: 1.6;
+    color: rgba(255,255,255,0.92);
+  }
+  .status-summary .ss-text strong { color: white; font-weight: 700; }
+  .status-summary .ss-text .em { color: var(--accent); font-weight: 500; }
+
+  /* ==================================================
+     §03 Network detective game
+     ================================================== */
+  .game-stage {
+    margin-top: 16px;
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  .game-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 22px;
+    background: var(--ink);
+    color: white;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+  .game-bar .gb-left { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+  .game-bar .gb-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    padding: 3px 9px;
+    border-radius: 3px;
+    background: var(--accent);
+    color: white;
+  }
+  .game-bar .gb-title {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 17px;
+    font-weight: 700;
+    margin: 0;
+  }
+  .game-bar .gb-progress {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: rgba(255,255,255,0.6);
+  }
+  .game-bar .gb-dots { display: flex; gap: 4px; }
+  .game-bar .gb-dot {
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.18);
+    border: 1px solid rgba(255,255,255,0.25);
+    transition: all 0.2s;
+  }
+  .game-bar .gb-dot.solved { background: #4ec77c; border-color: #4ec77c; }
+  .game-bar .gb-dot.current { background: var(--accent); border-color: var(--accent); transform: scale(1.2); box-shadow: 0 0 0 3px rgba(255,77,46,0.25); }
+
+  .game-stage-body { padding: 24px 26px 28px; }
+  .game-q { margin-bottom: 18px; }
+  .game-q .gq-num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    color: var(--accent);
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+  .game-q .gq-title {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 22px;
+    font-weight: 800;
+    margin: 0 0 8px;
+    line-height: 1.3;
+  }
+
+  .game-context {
+    margin: 14px 0 18px;
+    padding: 12px 16px;
+    background: var(--bg-2);
+    border-left: 3px solid var(--ink);
+    border-radius: 4px;
+    font-size: 13px;
+    color: var(--ink-soft);
+    line-height: 1.5;
+  }
+  .game-context .gc-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--ink);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-right: 8px;
+    font-weight: 700;
+  }
+  .game-context code {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    background: var(--paper);
+    padding: 1px 6px;
+    border-radius: 3px;
+  }
+
+  /* Network rows in game mode are clickable */
+  .game-net .nt-table tbody tr {
+    cursor: pointer;
+    transition: all 0.15s;
+    user-select: none;
+  }
+  .game-net .nt-table tbody tr:hover {
+    background: rgba(94, 158, 255, 0.10) !important;
+    box-shadow: inset 3px 0 0 rgba(94, 158, 255, 0.6);
+  }
+  .game-net .nt-table tbody tr.is-correct {
+    background: rgba(78, 199, 124, 0.22) !important;
+    box-shadow: inset 3px 0 0 #4ec77c, 0 0 0 1px rgba(78, 199, 124, 0.5);
+  }
+  .game-net .nt-table tbody tr.is-correct td { color: #b6f0c8; }
+  .game-net .nt-table tbody tr.is-correct .nt-name { color: #b6f0c8; }
+  .game-net .nt-table tbody tr.is-wrong-flash {
+    animation: shakeWrong 0.42s ease-out;
+  }
+  @keyframes shakeWrong {
+    0%, 100% { transform: translateX(0); }
+    20% { transform: translateX(-6px); background: rgba(255, 80, 80, 0.25) !important; }
+    40% { transform: translateX(6px); background: rgba(255, 80, 80, 0.25) !important; }
+    60% { transform: translateX(-4px); }
+    80% { transform: translateX(4px); }
+  }
+
+  /* Response-detail panel for Q4 */
+  .nt-detail {
+    background: #1f1f1f;
+    border-top: 1px solid var(--dt-line);
+    padding: 0;
+    display: none;
+  }
+  .nt-detail.show { display: block; animation: slideIn 0.22s ease-out; }
+  .nt-detail-tabs {
+    display: flex;
+    background: #2a2a2a;
+    border-bottom: 1px solid var(--dt-line);
+    padding: 0 8px;
+  }
+  .nt-detail-tab {
+    padding: 6px 12px;
+    font-size: 10.5px;
+    color: var(--dt-mute);
+    border-right: 1px solid var(--dt-line);
+  }
+  .nt-detail-tab.active {
+    color: white;
+    background: var(--dt-bg);
+    border-bottom: 2px solid var(--dt-blue);
+    margin-bottom: -1px;
+  }
+  .nt-detail-body {
+    padding: 12px 14px;
+    font-family: 'Menlo', 'JetBrains Mono', monospace;
+    font-size: 11.5px;
+    line-height: 1.7;
+    color: var(--dt-text);
+    max-height: 280px;
+    overflow-y: auto;
+  }
+  .nt-detail-body .json-key { color: #9cdcfe; }
+  .nt-detail-body .json-str { color: #ce9178; }
+  .nt-detail-body .json-num { color: #b5cea8; }
+  .nt-detail-body .json-bool { color: #569cd6; }
+  .nt-detail-body .json-null { color: var(--dt-mute); font-style: normal; }
+  .nt-detail-body .json-bracket { color: var(--dt-text); }
+  .nt-detail-body .json-comment { color: var(--dt-mute-2); font-style: normal; }
+
+  /* Game feedback */
+  .game-feedback {
+    margin-top: 18px;
+    padding: 16px 20px;
+    border-radius: 6px;
+    font-size: 14px;
+    line-height: 1.55;
+    display: none;
+  }
+  .game-feedback.show { display: block; animation: slideIn 0.28s ease-out; }
+  @keyframes slideIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+  .game-feedback.is-good {
+    background: var(--green-soft);
+    border-left: 3px solid var(--green);
+    color: var(--ink);
+  }
+  .game-feedback.is-bad {
+    background: var(--accent-soft);
+    border-left: 3px solid var(--accent);
+    color: var(--ink);
+  }
+  .game-feedback .gf-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-right: 10px;
+    padding: 2px 8px;
+    border-radius: 3px;
+  }
+  .game-feedback.is-good .gf-tag { background: var(--green); color: white; }
+  .game-feedback.is-bad .gf-tag { background: var(--accent); color: white; }
+  .game-feedback strong { color: var(--ink); font-weight: 600; }
+  .game-feedback code {
+    font-family: 'JetBrains Mono', monospace;
+    background: rgba(0,0,0,0.06);
+    padding: 1px 6px;
+    border-radius: 3px;
+    font-size: 12.5px;
+  }
+
+  .game-controls {
+    margin-top: 22px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    padding-top: 18px;
+    border-top: 1px dashed var(--line);
+  }
+  .game-controls .gc-meta {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--ink-mute);
+    letter-spacing: 0.05em;
+  }
+  .game-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 18px;
+    background: var(--ink);
+    color: white;
+    border: none;
+    border-radius: 4px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 0.05em;
+    cursor: pointer;
+    transition: all 0.18s;
+  }
+  .game-btn:hover:not(:disabled) { background: var(--accent); transform: translateX(2px); }
+  .game-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+  .game-btn.ghost {
+    background: transparent;
+    border: 1px solid var(--line);
+    color: var(--ink-soft);
+  }
+  .game-btn.ghost:hover { background: var(--bg-2); color: var(--ink); transform: none; }
+  .game-btn .arr { font-family: 'Fraunces', serif; font-size: 14px; font-weight: 500; }
+
+  .game-end {
+    text-align: center;
+    padding: 40px 20px;
+    display: none;
+  }
+  .game-end.show { display: block; animation: fadeIn 0.4s ease-out; }
+  .game-end .ge-emoji {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 36px;
+    color: var(--accent);
+    margin-bottom: 8px;
+    letter-spacing: 0.4em;
+  }
+  .game-end h3 {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 32px;
+    font-weight: 900;
+    margin: 0 0 16px;
+    line-height: 1.15;
+    letter-spacing: -0.02em;
+  }
+  .game-end h3 .em { color: var(--accent); font-weight: 500; }
+  .game-end p {
+    font-size: 15px;
+    color: var(--ink-soft);
+    line-height: 1.6;
+    max-width: 50ch;
+    margin: 0 auto 14px;
+  }
+  .game-end p strong { color: var(--ink); font-weight: 600; }
+  .game-end .ge-stats {
+    display: flex;
+    justify-content: center;
+    gap: 28px;
+    margin: 26px 0 22px;
+    flex-wrap: wrap;
+  }
+  .game-end .ge-stat { text-align: center; }
+  .game-end .ge-stat .ge-num {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 36px;
+    font-weight: 900;
+    color: var(--accent);
+    line-height: 1;
+  }
+  .game-end .ge-stat .ge-cap {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    color: var(--ink-mute);
+    text-transform: uppercase;
+    margin-top: 6px;
+  }
+
+  /* ==================================================
+     §04 Response anatomy — JSON viewer with hover hints
+     ================================================== */
+  .resp-stage {
+    margin-top: 24px;
+    display: grid;
+    grid-template-columns: 1.3fr 1fr;
+    gap: 28px;
+    align-items: start;
+  }
+  @media (max-width: 980px) { .resp-stage { grid-template-columns: 1fr; } }
+
+  .resp-json {
+    background: var(--dt-bg);
+    border-radius: 8px;
+    border: 1px solid #0a0a0a;
+    overflow: hidden;
+    font-family: 'Menlo', 'JetBrains Mono', monospace;
+    font-size: 13px;
+    line-height: 1.75;
+  }
+  .resp-json-head {
+    background: #2a2a2a;
+    padding: 8px 14px;
+    color: var(--dt-text);
+    font-size: 11px;
+    border-bottom: 1px solid var(--dt-line);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .resp-json-head .rjh-l { display: flex; align-items: center; gap: 10px; }
+  .resp-json-head .rjh-status {
+    color: var(--dt-green);
+    font-weight: 700;
+  }
+  .resp-json-head .rjh-mute { color: var(--dt-mute); font-size: 10.5px; }
+  .resp-json-body {
+    padding: 18px 20px 20px;
+    color: var(--dt-text);
+    overflow-x: auto;
+  }
+  .rj-line { display: block; white-space: pre; }
+  .rj-key { color: #9cdcfe; cursor: pointer; transition: background 0.15s; padding: 1px 4px; margin: 0 -4px; border-radius: 3px; }
+  .rj-key:hover { background: rgba(94, 158, 255, 0.18); }
+  .rj-key.active { background: rgba(255, 77, 46, 0.25); color: #ffb098; }
+  .rj-str { color: #ce9178; }
+  .rj-num { color: #b5cea8; }
+  .rj-bool { color: #569cd6; }
+  .rj-null { color: var(--dt-mute); }
+  .rj-bracket { color: var(--dt-text); }
+  .rj-empty {
+    color: var(--dt-orange);
+    background: rgba(255, 170, 85, 0.18);
+    padding: 1px 5px;
+    border-radius: 3px;
+    cursor: pointer;
+  }
+  .rj-empty:hover { background: rgba(255, 170, 85, 0.32); }
+  .rj-empty.active { background: rgba(255, 77, 46, 0.32); color: #ffb098; }
+  .rj-indent { color: transparent; user-select: none; }
+
+  .resp-side {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 22px 24px;
+    position: sticky;
+    top: 88px;
+  }
+  .resp-side .rs-default {
+    font-size: 13px;
+    color: var(--ink-soft);
+    line-height: 1.6;
+  }
+  .resp-side .rs-default-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    color: var(--ink-mute);
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+  .resp-side .rs-default h4 {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 18px;
+    font-weight: 800;
+    margin: 0 0 8px;
+    color: var(--ink);
+  }
+
+  .resp-info { display: none; animation: fadeIn 0.25s ease-out; }
+  .resp-info.show { display: block; }
+  .resp-info .ri-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    color: var(--accent);
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+  .resp-info h4 {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 20px;
+    font-weight: 800;
+    margin: 0 0 8px;
+    color: var(--ink);
+    letter-spacing: -0.01em;
+  }
+  .resp-info p {
+    font-size: 13px;
+    color: var(--ink-soft);
+    line-height: 1.6;
+    margin: 0 0 12px;
+  }
+  .resp-info p strong { color: var(--ink); font-weight: 600; }
+  .resp-info code {
+    font-family: 'JetBrains Mono', monospace;
+    background: var(--bg-2);
+    padding: 1px 6px;
+    border-radius: 3px;
+    font-size: 12px;
+  }
+  .resp-info .ri-bug {
+    margin-top: 14px;
+    padding: 12px 14px;
+    background: var(--accent-soft);
+    border-left: 3px solid var(--accent);
+    border-radius: 4px;
+    font-size: 12.5px;
+    color: var(--ink);
+    line-height: 1.55;
+  }
+  .resp-info .ri-bug-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--accent);
+    letter-spacing: 0.12em;
+    margin-right: 8px;
+    text-transform: uppercase;
+  }
+
+  /* ==================================================
+     §05 Five skills
+     ================================================== */
+  .skills-list {
+    margin-top: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+  }
+  .skill-card {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    overflow: hidden;
+    display: grid;
+    grid-template-columns: 56px 1fr 1.2fr;
+    gap: 0;
+  }
+  @media (max-width: 880px) { .skill-card { grid-template-columns: 1fr; } }
+
+  .skill-card .sk-num {
+    background: var(--ink);
+    color: var(--bg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Noto Serif SC', serif;
+    font-size: 26px;
+    font-weight: 900;
+  }
+  @media (max-width: 880px) {
+    .skill-card .sk-num { padding: 12px; font-size: 22px; }
+  }
+
+  .skill-card .sk-text {
+    padding: 22px 26px;
+    border-right: 1px dashed var(--line);
+  }
+  @media (max-width: 880px) {
+    .skill-card .sk-text { border-right: none; border-bottom: 1px dashed var(--line); }
+  }
+  .skill-card .sk-name {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 19px;
+    font-weight: 800;
+    margin: 0 0 4px;
+    letter-spacing: -0.01em;
+  }
+  .skill-card .sk-key {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--accent);
+    margin-bottom: 10px;
+    letter-spacing: 0.05em;
+  }
+  .skill-card .sk-desc {
+    font-size: 13px;
+    color: var(--ink-soft);
+    line-height: 1.6;
+    margin: 0;
+  }
+  .skill-card .sk-desc strong { color: var(--ink); font-weight: 600; }
+  .skill-card .sk-desc code {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    background: var(--bg-2);
+    padding: 1px 6px;
+    border-radius: 3px;
+  }
+
+  .skill-card .sk-mock {
+    padding: 16px 20px;
+    background: var(--bg);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 8px;
+    min-height: 100px;
+  }
+
+  /* Mock pieces inside skill cards */
+  .mk-kbd {
+    display: inline-flex;
+    gap: 6px;
+    align-items: center;
+  }
+  .mk-key {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    font-weight: 600;
+    background: var(--paper);
+    border: 1px solid var(--line);
+    padding: 4px 10px;
+    border-radius: 4px;
+    box-shadow: 0 2px 0 var(--line);
+    color: var(--ink);
+  }
+  .mk-key.modifier { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+  .mk-arrow {
+    font-family: 'Fraunces', serif;
+    color: var(--ink-mute);
+    font-size: 14px;
+  }
+  .mk-arrow-text {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--ink-mute);
+    letter-spacing: 0.05em;
+  }
+
+  .mk-toolbar-mock {
+    background: var(--dt-bg);
+    border-radius: 4px;
+    padding: 8px 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    border: 1px solid #0a0a0a;
+    flex-wrap: wrap;
+  }
+  .mk-toolbar-mock .mk-rec-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--dt-red);
+    box-shadow: 0 0 4px rgba(255,80,80,0.6);
+  }
+  .mk-toolbar-mock .mk-pill {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9.5px;
+    color: var(--dt-mute);
+    padding: 1px 7px;
+    border-radius: 100px;
+    border: 1px solid var(--dt-line);
+  }
+  .mk-toolbar-mock .mk-pill.on {
+    background: rgba(94, 158, 255, 0.18);
+    color: var(--dt-blue);
+    border-color: rgba(94, 158, 255, 0.35);
+    font-weight: 600;
+  }
+  .mk-toolbar-mock .mk-mini-search {
+    flex: 1;
+    background: #131313;
+    border: 1px solid var(--dt-line);
+    border-radius: 3px;
+    padding: 2px 6px;
+    color: var(--dt-text);
+    font-size: 10px;
+    min-width: 90px;
+  }
+
+  .mk-tab-mock {
+    display: flex;
+    gap: 0;
+    background: #2a2a2a;
+    border-radius: 4px 4px 0 0;
+    overflow: hidden;
+    font-size: 10px;
+    border: 1px solid #0a0a0a;
+    border-bottom: 0;
+  }
+  .mk-tab-mock .mk-tab {
+    padding: 5px 10px;
+    color: var(--dt-mute);
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .mk-tab-mock .mk-tab.active {
+    background: var(--dt-bg);
+    color: white;
+    border-bottom: 2px solid var(--dt-blue);
+  }
+  .mk-tab-body {
+    background: var(--dt-bg);
+    padding: 8px 10px;
+    border: 1px solid #0a0a0a;
+    border-top: 0;
+    border-radius: 0 0 4px 4px;
+    color: var(--dt-text);
+    font-family: 'Menlo', 'JetBrains Mono', monospace;
+    font-size: 10.5px;
+    line-height: 1.6;
+  }
+  .mk-tab-body .mk-key-l { color: #9cdcfe; }
+  .mk-tab-body .mk-str-l { color: #ce9178; }
+
+  .mk-curl {
+    background: var(--ink);
+    color: #d8d8e0;
+    padding: 10px 12px;
+    border-radius: 4px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10.5px;
+    line-height: 1.55;
+    overflow-x: auto;
+    position: relative;
+  }
+  .mk-curl::before {
+    content: '$';
+    color: var(--accent);
+    font-weight: 700;
+    margin-right: 6px;
+  }
+  .mk-copy-pill {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    color: rgba(255,255,255,0.6);
+    border: 1px solid rgba(255,255,255,0.18);
+    padding: 1px 7px;
+    border-radius: 3px;
+    letter-spacing: 0.06em;
+  }
+
+  /* ==================================================
+     §06 Cheatsheet
+     ================================================== */
+  .cheat-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+    margin-top: 24px;
+  }
+  @media (max-width: 880px) { .cheat-grid { grid-template-columns: 1fr; } }
+  .cheat-card {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 24px;
+    position: relative;
+  }
+  .cheat-card.status { border-top: 4px solid var(--st-warn); }
+  .cheat-card.cols { border-top: 4px solid var(--blue); }
+  .cheat-card.skills { border-top: 4px solid var(--accent); }
+  .cheat-card.diag { border-top: 4px solid var(--green); }
+  .cheat-card .cc-num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--ink-mute);
+    letter-spacing: 0.1em;
+    margin-bottom: 4px;
+    text-transform: uppercase;
+  }
+  .cheat-card h4 {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 22px;
+    margin: 0 0 6px;
+    font-weight: 800;
+    letter-spacing: -0.01em;
+  }
+  .cheat-card .cc-sub {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--ink-soft);
+    margin-bottom: 16px;
+    letter-spacing: 0.05em;
+  }
+  .cheat-card dl { margin: 0; padding: 0; font-size: 13px; }
+  .cheat-card dl dt {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--ink-mute);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-top: 14px;
+  }
+  .cheat-card dl dt:first-of-type { margin-top: 0; }
+  .cheat-card dl dd {
+    margin: 4px 0 0;
+    color: var(--ink-soft);
+    font-size: 13px;
+    line-height: 1.55;
+  }
+  .cheat-card dl dd strong { color: var(--ink); font-weight: 600; }
+  .cheat-card dl dd code {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11.5px;
+    background: var(--bg-2);
+    padding: 1px 6px;
+    border-radius: 3px;
+    color: var(--ink);
+  }
+  .cheat-card dl dd .ok { color: var(--green); font-weight: 700; font-family: 'JetBrains Mono', monospace; }
+  .cheat-card dl dd .warn { color: var(--st-warn); font-weight: 700; font-family: 'JetBrains Mono', monospace; }
+  .cheat-card dl dd .err { color: var(--st-err); font-weight: 700; font-family: 'JetBrains Mono', monospace; }
+
+  /* ==================================================
+     Next post + footer (shared)
+     ================================================== */
+  .next-post {
+    margin-top: 48px;
+    padding: 32px 36px;
+    background: var(--ink);
+    color: var(--bg);
+    border-radius: 8px;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 32px;
+    align-items: center;
+    text-decoration: none;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    position: relative;
+    overflow: hidden;
+  }
+  .next-post::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at 100% 0%, rgba(255,77,46,0.12), transparent 55%);
+    pointer-events: none;
+  }
+  .next-post:hover { transform: translateY(-2px); box-shadow: 0 14px 36px rgba(22,22,29,0.22); }
+  @media (max-width: 720px) { .next-post { grid-template-columns: 1fr; padding: 24px; gap: 20px; } }
+  .next-post .np-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--accent);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+    display: inline-block;
+  }
+  .next-post h4 {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 26px;
+    margin: 0 0 10px;
+    font-weight: 700;
+    color: white;
+    line-height: 1.25;
+    letter-spacing: -0.01em;
+  }
+  .next-post h4 .em {
+    font-family: 'Noto Serif SC', serif;
+    font-weight: 500;
+    color: var(--accent);
+  }
+  .next-post p {
+    margin: 0;
+    color: rgba(255,255,255,0.72);
+    font-size: 14px;
+    line-height: 1.65;
+    max-width: 560px;
+  }
+  .next-post p strong { color: white; font-weight: 600; }
+  .next-post .np-cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 24px;
+    background: var(--accent);
+    color: white;
+    border-radius: 4px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    white-space: nowrap;
+    transition: background 0.18s, color 0.18s, transform 0.18s;
+    position: relative;
+    z-index: 1;
+  }
+  .next-post:hover .np-cta { background: white; color: var(--ink); transform: translateX(2px); }
+  .next-post .np-cta .arr { font-family: 'Fraunces', serif; font-size: 18px; font-weight: 500; }
+
+  footer {
+    border-top: 1px solid var(--line);
+    padding: 56px 0 64px;
+    background: var(--bg);
+  }
+  .byline {
+    display: flex;
+    gap: 28px;
+    align-items: center;
+    padding-bottom: 32px;
+    border-bottom: 1px dashed var(--line);
+    margin-bottom: 24px;
+    position: relative;
+  }
+  .byline::before {
+    content: '';
+    position: absolute;
+    top: -56px; left: 0;
+    width: 32px; height: 1px;
+    background: var(--accent);
+  }
+  .byline .avatar {
+    width: 96px; height: 96px;
+    border-radius: 50%;
+    object-fit: cover;
+    flex-shrink: 0;
+    border: 3px solid var(--paper);
+    box-shadow: 0 0 0 1px var(--line), 0 6px 20px rgba(22,22,29,0.10);
+    background: var(--paper);
+  }
+  .byline-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--ink-mute);
+    letter-spacing: 0.18em;
+    margin-bottom: 8px;
+  }
+  .byline-label .dot {
+    display: inline-block;
+    width: 6px; height: 6px;
+    background: var(--accent);
+    border-radius: 50%;
+    margin-right: 6px;
+    vertical-align: 1px;
+  }
+  .byline-name {
+    font-family: 'Noto Serif SC', 'Fraunces', serif;
+    font-size: clamp(28px, 4vw, 40px);
+    font-weight: 700;
+    line-height: 1.05;
+    letter-spacing: -0.01em;
+    margin: 0 0 8px;
+  }
+  .byline-name .em {
+    font-family: 'Noto Serif SC', serif;
+    font-weight: 500;
+    color: var(--accent);
+  }
+  .byline-tag {
+    font-size: 14px;
+    color: var(--ink-soft);
+    line-height: 1.55;
+    margin: 0;
+    max-width: 52ch;
+  }
+  .byline-contact {
+    margin-top: 14px;
+    padding-top: 14px;
+    border-top: 1px dashed var(--line);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    font-size: 12px;
+  }
+  .byline-contact .contact-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--ink-mute);
+    padding: 2px 8px;
+    border: 1px solid var(--line);
+    border-radius: 3px;
+  }
+  .byline-contact .contact-id {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--ink);
+    background: var(--accent-soft);
+    padding: 3px 10px;
+    border-radius: 4px;
+    letter-spacing: 0.02em;
+  }
+  .byline-contact .contact-hint { font-size: 12px; color: var(--ink-soft); }
+  .footer-meta {
+    text-align: center;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--ink-mute);
+    letter-spacing: 0.05em;
+  }
+  .footer-meta .heart { color: var(--accent); }
+  .footer-meta .mono { color: var(--ink-soft); font-weight: 500; }
+  @media (max-width: 600px) {
+    .byline { flex-direction: column; text-align: center; align-items: center; gap: 16px; }
+    .byline-tag { margin-left: auto; margin-right: auto; }
+  }
+
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+  section { animation: fadeIn 0.6s ease-out backwards; }
+
+  /* === Roadmap Modal === */
+  .rm-modal { position: fixed; inset: 0; z-index: 1000; display: flex; align-items: center; justify-content: center; padding: 30px 16px; }
+  .rm-modal[hidden] { display: none; }
+  .rm-backdrop { position: absolute; inset: 0; background: rgba(22,22,29,0.55); backdrop-filter: blur(4px); animation: rm-fade 0.2s; }
+  @keyframes rm-fade { from { opacity: 0; } to { opacity: 1; } }
+  .rm-dialog { position: relative; background: var(--bg); border-radius: 12px; max-width: 720px; width: 100%; max-height: calc(100vh - 60px); overflow-y: auto; padding: 32px 36px 24px; box-shadow: 0 30px 80px rgba(0,0,0,0.3); animation: rm-pop 0.25s cubic-bezier(0.4,0,0.2,1); }
+  @keyframes rm-pop { from { transform: scale(0.96) translateY(8px); opacity: 0; } to { transform: scale(1) translateY(0); opacity: 1; } }
+  .rm-close { position: absolute; top: 14px; right: 16px; background: transparent; border: none; cursor: pointer; font-size: 20px; color: var(--ink-mute); width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: all 0.15s; line-height: 1; }
+  .rm-close:hover { background: var(--bg-2); color: var(--ink); }
+  .rm-header { margin-bottom: 22px; padding-bottom: 18px; border-bottom: 1px dashed var(--line); }
+  .rm-tag { font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.1em; color: var(--accent); text-transform: uppercase; margin-bottom: 8px; }
+  .rm-title { font-family: 'Noto Serif SC', serif; font-size: 28px; margin: 0 0 6px; font-weight: 900; letter-spacing: -0.02em; line-height: 1.1; }
+  .rm-title .rm-em { font-family: 'Noto Serif SC', serif; color: var(--accent); font-weight: 500; }
+  .rm-sub { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--ink-mute); margin: 0; }
+  .rm-body { display: flex; flex-direction: column; gap: 18px; }
+  .rm-mod-key { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ink); font-weight: 700; margin-bottom: 8px; letter-spacing: 0.04em; text-transform: uppercase; }
+  .rm-mod-list { display: flex; flex-direction: column; gap: 6px; }
+  .rm-cell { display: grid; grid-template-columns: 36px 1fr auto; gap: 12px; align-items: center; padding: 9px 13px; border-radius: 5px; background: var(--paper); border: 1px solid var(--line); text-decoration: none; color: inherit; transition: all 0.15s; }
+  .rm-cell:hover { border-color: var(--accent); background: var(--accent-soft); transform: translateX(3px); }
+  .rm-cell-code { font-family: 'Noto Serif SC', serif; font-weight: 500; color: var(--accent); font-size: 15px; }
+  .rm-cell-name { font-size: 13px; color: var(--ink); }
+  .rm-cell-tier { font-family: 'JetBrains Mono', monospace; font-size: 9px; letter-spacing: 0.08em; color: var(--ink-mute); text-transform: uppercase; border: 1px solid var(--line); padding: 2px 7px; border-radius: 3px; }
+  .rm-footer { margin-top: 22px; padding-top: 16px; border-top: 1px dashed var(--line); display: flex; justify-content: space-between; align-items: center; font-size: 12px; color: var(--ink-soft); flex-wrap: wrap; gap: 8px; }
+  .rm-wechat { font-family: 'JetBrains Mono', monospace; background: var(--accent-soft); color: var(--ink); padding: 3px 10px; border-radius: 3px; font-weight: 600; letter-spacing: 0.02em; }
+  .nav-links a[data-rm-open] { cursor: pointer; }
+</style>
+</head>
+<body>
+
+<!-- Top bar -->
+<div class="topbar">
+  <div class="wrap topbar-inner">
+    <a href="index.html" class="brand"><span class="dot"></span>H3 · NETWORK 数据从哪来</a>
+    <nav class="nav-links">
+      <a href="index.html#roadmap" data-rm-open>路线图</a>
+      <a href="index.html#manifesto">关于</a>
+    </nav>
+  </div>
+</div>
+
+<!-- Hero -->
+<header class="hero">
+  <div class="wrap">
+    <div class="hero-meta">
+      <span class="pill fill">实验互动 · INTERACTIVE</span>
+      <span class="pill">2026 · 设计 × 代码</span>
+      <span class="pill">H3 · 浏览器调试 · 完结</span>
+      <span class="label">阅读时长 ≈ 14 分钟</span>
+    </div>
+    <div class="hero-grid">
+      <div>
+        <h1>
+          <span class="display-cn">数据不是</span><br>
+          <span class="display-cn">页面长出来的，</span><br>
+          <span class="display-cn">是</span><span class="em">问回来的</span><span class="display-cn">。</span>
+        </h1>
+        <p class="lede">
+          AI 给你写完登录页，跑起来一看 —— 用户名出现了，但购物车永远是空的。<br>
+          页面上每一块"动态内容" —— 用户名、商品列表、订单数 —— 背后<span class="em">都有一次（或多次）"问后端要数据"</span>。<br>
+          这一次问得通不通，能不能拿到、拿到的对不对，全在 <strong>Network 面板</strong>里写着。
+        </p>
+      </div>
+      <div class="hero-side">
+        <div class="row"><span class="k">本页讲什么</span><span class="v">读懂 Network 面板</span></div>
+        <div class="row"><span class="k">含互动</span><span class="v">侦探游戏 5 道题</span></div>
+        <div class="row"><span class="k">面向</span><span class="v">设计师 · AI 写代码</span></div>
+        <div class="row"><span class="k">前置知识</span><span class="v">无 · 会按 F12 即可</span></div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- Section 1: Anatomy of one request -->
+<section id="anatomy">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>01</strong> / 一次请求长啥样</div>
+        <h2 class="section-title">浏览器和服务器，<br><span class="em">一来一回</span>。</h2>
+      </div>
+      <p class="section-sub">
+        每一次"页面上出现新东西" —— 用户名、商品、头像 —— 背后都是这两个动作：<span class="em">浏览器问</span>、<span class="em">服务器答</span>。点中间的箭头看每一段是什么。
+      </p>
+    </div>
+
+    <div class="hint-strip">
+      <span class="hint-tag">互动</span>点中间两个长条："去"是请求，"回"是响应。每点一个，下面对应的小卡会高亮。这是整篇文章的基础模型。
+    </div>
+
+    <div class="req-anatomy">
+      <div class="req-stage">
+
+        <!-- Client side -->
+        <div class="req-side client">
+          <div class="rs-tag">CLIENT · 浏览器</div>
+          <div class="rs-icon"></div>
+          <h3 class="rs-name">你的电脑</h3>
+          <p class="rs-desc">页面在这里。设计师每天打开 F12 那个 Chrome / Safari，就是它。</p>
+          <p class="rs-desc" style="font-size:11.5px;color:var(--ink-mute);font-family:'JetBrains Mono',monospace;">localhost:5173 / your-app.com</p>
+        </div>
+
+        <!-- Flow: request → response -->
+        <div class="req-flow">
+          <div class="req-arrow request" data-anatomy="req">
+            <div class="ra-tag">① 请求 · REQUEST</div>
+            <div class="ra-line"><span class="ra-method">GET</span>/api/user/cart</div>
+            <div class="ra-meta">
+              <code>Cookie</code> · <code>Authorization</code> · <code>User-Agent</code>
+              <br>"我是 Fan，能不能给我看看我购物车有啥？"
+            </div>
+          </div>
+          <div class="req-arrow response" data-anatomy="res">
+            <div class="ra-tag">② 响应 · RESPONSE</div>
+            <div class="ra-line"><span class="ra-status-200">200 OK</span>application/json</div>
+            <div class="ra-meta">
+              <code>{"data":{"cart":[...]}}</code>
+              <br>"我是后端，给你 → 这是你的购物车"
+            </div>
+          </div>
+        </div>
+
+        <!-- Server side -->
+        <div class="req-side server">
+          <div class="rs-tag">SERVER · 后端</div>
+          <div class="rs-icon"></div>
+          <h3 class="rs-name">服务器</h3>
+          <p class="rs-desc">不在你电脑上。在某个机房 / AWS / 你公司的后端工程师那里。它有数据库。</p>
+          <p class="rs-desc" style="font-size:11.5px;color:var(--ink-mute);font-family:'JetBrains Mono',monospace;">api.your-app.com</p>
+        </div>
+
+      </div>
+
+      <!-- 4 callouts under the flow -->
+      <div class="req-callouts">
+        <div class="req-callout" data-callout="method">
+          <div class="rc-num">A · 方法 / METHOD</div>
+          <div class="rc-name">GET / POST</div>
+          <p class="rc-desc"><strong>GET</strong> 是"取" —— 去拿数据。<strong>POST</strong> 是"送" —— 提交表单 / 创建订单。还有 <code>PUT</code>（改）、<code>DELETE</code>（删）。</p>
+        </div>
+        <div class="req-callout" data-callout="url">
+          <div class="rc-num">B · 地址 / URL</div>
+          <div class="rc-name">/api/...</div>
+          <p class="rc-desc">问的是哪扇门。比如 <code>/api/user/cart</code> 就是"用户的购物车那扇门"，<code>/api/login</code> 是"登录那扇门"。</p>
+        </div>
+        <div class="req-callout" data-callout="headers">
+          <div class="rc-num">C · 头 / HEADERS</div>
+          <div class="rc-name">Cookie · Auth</div>
+          <p class="rc-desc">夹在请求里的"身份证"。常见的有 <code>Cookie</code>（你登录后浏览器存的小纸条）、<code>Authorization</code>（token），告诉服务器"我是谁"。</p>
+        </div>
+        <div class="req-callout" data-callout="body">
+          <div class="rc-num">D · 响应体 / BODY</div>
+          <div class="rc-name">JSON 数据</div>
+          <p class="rc-desc">服务器回的实质内容。99% 是一坨 JSON：<code>{ key: value }</code> 嵌套。页面上看得见的内容（用户名、价格…）就是从这里读出来的。</p>
+        </div>
+      </div>
+
+      <div class="hint-strip" style="margin-top:24px;">
+        <span class="hint-tag">心智</span>每次页面"出新数据" —— 不是页面"自动长出来"，而是<strong>有一次完整的"问 → 答"</strong>。少了任何一步，页面就空 / 错。Network 面板，就是把这一来一回每次都摊在桌面上。
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Section 2: status code 三大类 -->
+<section id="status">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>02</strong> / 状态码</div>
+        <h2 class="section-title">数字背后<br>是<span class="em">三种心情</span></h2>
+      </div>
+      <p class="section-sub">
+        服务器回的每条响应，都带一个 <strong>3 位数</strong>。叫 <strong>status code</strong>。看头一位就知道这次顺没顺：<span class="em">2 顺</span>、<span class="em">4 是你错</span>、<span class="em">5 是它挂</span>。
+      </p>
+    </div>
+
+    <div class="status-grid">
+
+      <!-- 2xx -->
+      <div class="status-card ok">
+        <div class="sc-head">
+          <div class="sc-tag">2xx · GREEN</div>
+          <h3 class="sc-title">2xx 顺</h3>
+          <h4 class="sc-cn">成功 · 拿到了</h4>
+          <p class="sc-blame">服务器说：<strong>"收到了，给你"</strong>。看到 2 开头你就放心 —— 这条请求本身没问题。</p>
+        </div>
+        <div class="sc-list">
+          <div class="status-line">
+            <div class="sl-code">200</div>
+            <div class="sl-body"><strong>OK</strong>万事顺利。最常见的成功码。</div>
+          </div>
+          <div class="status-line">
+            <div class="sl-code">201</div>
+            <div class="sl-body"><strong>Created</strong>新东西创建成功。注册新账号、发了一条新评论 → 通常回 201。</div>
+          </div>
+          <div class="status-line">
+            <div class="sl-code">204</div>
+            <div class="sl-body"><strong>No Content</strong>成功了，但没有数据要返给你。删除操作常见。</div>
+          </div>
+          <div class="status-line">
+            <div class="sl-code">304</div>
+            <div class="sl-body"><strong>Not Modified</strong>3 开头是"重定向 / 缓存"。304 = "你之前缓存过，没变，直接用本地的"。看到不慌。</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 4xx -->
+      <div class="status-card warn">
+        <div class="sc-head">
+          <div class="sc-tag">4xx · ORANGE</div>
+          <h3 class="sc-title">4xx 你错了</h3>
+          <h4 class="sc-cn">前端 · 请求不对</h4>
+          <p class="sc-blame"><strong>问题在你（或调用接口的代码）这边</strong>。要么没登录、要么地址写错、要么没权限。<strong>需要你 / 工程师改前端</strong>。</p>
+        </div>
+        <div class="sc-list">
+          <div class="status-line">
+            <div class="sl-code">400</div>
+            <div class="sl-body"><strong>Bad Request</strong>"你发的东西我看不懂" —— 通常是参数缺了或格式错了。</div>
+          </div>
+          <div class="status-line">
+            <div class="sl-code">401</div>
+            <div class="sl-body"><strong>Unauthorized</strong>"你是谁？没登录" —— token 过期 / 没传。设计师最常撞这一个。</div>
+          </div>
+          <div class="status-line">
+            <div class="sl-code">403</div>
+            <div class="sl-body"><strong>Forbidden</strong>"知道你是谁，但你没权限" —— 比如普通用户访问管理员接口。</div>
+          </div>
+          <div class="status-line">
+            <div class="sl-code">404</div>
+            <div class="sl-body"><strong>Not Found</strong>"这个地址我不认识" —— URL 拼错 / 接口名变了 / 路径变了。</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 5xx -->
+      <div class="status-card err">
+        <div class="sc-head">
+          <div class="sc-tag">5xx · RED</div>
+          <h3 class="sc-title">5xx 它挂了</h3>
+          <h4 class="sc-cn">后端 · 服务器自己出问题</h4>
+          <p class="sc-blame"><strong>问题在服务器</strong>。请求是对的，但它内部出毛病了 —— 数据库挂了、代码崩了、超时了。<strong>找后端工程师</strong>，跟你没关系。</p>
+        </div>
+        <div class="sc-list">
+          <div class="status-line">
+            <div class="sl-code">500</div>
+            <div class="sl-body"><strong>Internal Server Error</strong>"我（服务器）自己出 bug 了" —— 一般后端代码报错。最常见的 5xx。</div>
+          </div>
+          <div class="status-line">
+            <div class="sl-code">502</div>
+            <div class="sl-body"><strong>Bad Gateway</strong>"中间环节坏了" —— 比如负载均衡 / 网关在跟真的服务器之间断了。</div>
+          </div>
+          <div class="status-line">
+            <div class="sl-code">503</div>
+            <div class="sl-body"><strong>Service Unavailable</strong>"我现在挤不动了" —— 服务器在维护或被打爆了。</div>
+          </div>
+          <div class="status-line">
+            <div class="sl-code">504</div>
+            <div class="sl-body"><strong>Gateway Timeout</strong>"等太久了" —— 后端处理超时。可能是数据库慢爆。</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="status-summary">
+      <span class="ss-tag">一句话记法</span>
+      <div class="ss-text">
+        看到红字 / 橙字 → <strong>先看头一位数字</strong>。<span class="em">2 顺</span> 不用管；<span class="em">4 你错</span>（前端 / 401 没登录最常见）；<span class="em">5 它挂</span>（后端的事）。<br>
+        <strong>设计师只要做一件事：把这个数字截图给工程师</strong>。其他他们一看就知道。
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- Section 3: Detective game -->
+<section id="game">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>03</strong> / 侦探游戏</div>
+        <h2 class="section-title">在 10 行请求里<br>找出<span class="em">那一个不对的</span></h2>
+      </div>
+      <p class="section-sub">
+        这一段是这一篇的灵魂。<span class="em">5 道题</span>，每道给你一张几乎真的 Network 面板 —— 你的任务：<strong>在一堆请求里点出"哪一行不对劲"</strong>。点对了变绿，点错了摇一下，再来一次。
+      </p>
+    </div>
+
+    <div class="hint-strip">
+      <span class="hint-tag">玩法</span>每题给你一个场景（"我刚刷新了页面，购物车没出来"），你看 Network 面板，<strong>点你认为最关键 / 最可疑的那一行</strong>。表格列名：Name / Status / Type / Size / Time / Waterfall。
+    </div>
+
+    <div class="game-stage" id="gameStage">
+      <div class="game-bar">
+        <div class="gb-left">
+          <span class="gb-tag">侦探</span>
+          <h3 class="gb-title" id="gameTitle">Q1 · 哪个是 API 调用</h3>
+        </div>
+        <div class="gb-progress">
+          <span id="gbCounter">1 / 5</span>
+          <div class="gb-dots" id="gbDots">
+            <span class="gb-dot current"></span>
+            <span class="gb-dot"></span>
+            <span class="gb-dot"></span>
+            <span class="gb-dot"></span>
+            <span class="gb-dot"></span>
+          </div>
+        </div>
+      </div>
+
+      <div class="game-stage-body">
+        <div id="gameQuestion"></div>
+
+        <div class="game-feedback" id="gameFeedback">
+          <span class="gf-tag" id="gfTag">提示</span>
+          <span id="gfText"></span>
+        </div>
+
+        <div class="game-controls">
+          <span class="gc-meta" id="gcMeta">点击你认为最关键的那一行</span>
+          <button class="game-btn" id="gameNext" disabled>下一题 <span class="arr">→</span></button>
+        </div>
+      </div>
+
+      <div class="game-end" id="gameEnd">
+        <div class="ge-emoji">★ ★ ★</div>
+        <h3>你刚学会的，<br>是 <span class="em">看见数据流向</span></h3>
+        <p>从今往后，页面上少了什么、慢了什么 —— 你的第一反应不是"刷新一下试试"，而是 <strong>F12 → Network → 看那一条</strong>。这是工程师每天都在做的事，你现在也会了。</p>
+        <div class="ge-stats">
+          <div class="ge-stat">
+            <div class="ge-num" id="geScore">5</div>
+            <div class="ge-cap">道题答对</div>
+          </div>
+          <div class="ge-stat">
+            <div class="ge-num" id="geMistakes">0</div>
+            <div class="ge-cap">次试错</div>
+          </div>
+        </div>
+        <p>下一篇 <strong>J1 · DNS</strong> —— 在浏览器键入网址按下回车之后，到底发生了什么。</p>
+        <button class="game-btn ghost" id="gameRestart">重玩一次 ↺</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Section 4: Response anatomy -->
+<section id="response">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>04</strong> / Response 怎么读</div>
+        <h2 class="section-title">服务器吐回来的<br>那坨 <span class="em">JSON</span></h2>
+      </div>
+      <p class="section-sub">
+        点开任何一条 API 请求 → 切到 <strong>Response</strong> 标签，你会看到一坨像下面这样的东西。它叫 <strong>JSON</strong>，是后端跟前端说话的"标准格式"。把鼠标 hover 到任何一个 key 上，看右边的解释。
+      </p>
+    </div>
+
+    <div class="hint-strip">
+      <span class="hint-tag">互动</span>下面是 <code class="mono" style="font-size:12px;background:var(--bg-2);padding:1px 6px;border-radius:3px;">/api/user/me</code> 的真实响应。<strong>移动鼠标到不同的字段上</strong>（colored 的 key 都可以点）—— 右边会换上对应的解释。注意那个橙色的 <code style="font-family:'JetBrains Mono',monospace;font-size:12px;background:rgba(255,170,85,0.18);padding:1px 5px;border-radius:3px;color:#a8651a;">[]</code> —— 这就是设计师追的"购物车为啥是空"的元凶。
+    </div>
+
+    <div class="resp-stage">
+
+      <!-- Left: JSON viewer -->
+      <div class="resp-json">
+        <div class="resp-json-head">
+          <div class="rjh-l">
+            <span class="rjh-status">200 OK</span>
+            <span>application/json</span>
+          </div>
+          <span class="rjh-mute">242 B · 84 ms</span>
+        </div>
+        <div class="resp-json-body" id="respBody">
+<span class="rj-line"><span class="rj-bracket">{</span></span>
+<span class="rj-line">  <span class="rj-key" data-key="status">"status"</span>: <span class="rj-str">"success"</span>,</span>
+<span class="rj-line">  <span class="rj-key" data-key="message">"message"</span>: <span class="rj-str">"User profile loaded"</span>,</span>
+<span class="rj-line">  <span class="rj-key" data-key="data">"data"</span>: <span class="rj-bracket">{</span></span>
+<span class="rj-line">    <span class="rj-key" data-key="user">"user"</span>: <span class="rj-bracket">{</span></span>
+<span class="rj-line">      <span class="rj-key" data-key="user.id">"id"</span>: <span class="rj-num">1042</span>,</span>
+<span class="rj-line">      <span class="rj-key" data-key="user.name">"name"</span>: <span class="rj-str">"Fan"</span>,</span>
+<span class="rj-line">      <span class="rj-key" data-key="user.email">"email"</span>: <span class="rj-str">"fan@example.com"</span>,</span>
+<span class="rj-line">      <span class="rj-key" data-key="user.avatar">"avatar"</span>: <span class="rj-str">"https://cdn.../u1042.jpg"</span>,</span>
+<span class="rj-line">      <span class="rj-key" data-key="user.verified">"verified"</span>: <span class="rj-bool">true</span></span>
+<span class="rj-line">    <span class="rj-bracket">}</span>,</span>
+<span class="rj-line">    <span class="rj-key" data-key="cart">"cart"</span>: <span class="rj-empty" data-key="cart-empty">[]</span>,</span>
+<span class="rj-line">    <span class="rj-key" data-key="orders">"orders"</span>: <span class="rj-bracket">[</span></span>
+<span class="rj-line">      <span class="rj-bracket">{</span> <span class="rj-key" data-key="order.id">"id"</span>: <span class="rj-str">"o-9981"</span>, <span class="rj-key" data-key="order.total">"total"</span>: <span class="rj-num">128.00</span> <span class="rj-bracket">}</span>,</span>
+<span class="rj-line">      <span class="rj-bracket">{</span> <span class="rj-key" data-key="order.id">"id"</span>: <span class="rj-str">"o-9994"</span>, <span class="rj-key" data-key="order.total">"total"</span>: <span class="rj-num">59.50</span> <span class="rj-bracket">}</span></span>
+<span class="rj-line">    <span class="rj-bracket">]</span>,</span>
+<span class="rj-line">    <span class="rj-key" data-key="lastSeen">"lastSeen"</span>: <span class="rj-null">null</span></span>
+<span class="rj-line">  <span class="rj-bracket">}</span></span>
+<span class="rj-line"><span class="rj-bracket">}</span></span>
+        </div>
+      </div>
+
+      <!-- Right: side panel — explains the hovered field -->
+      <div class="resp-side">
+        <div class="rs-default" id="respDefault">
+          <div class="rs-default-tag">— 等你 hover</div>
+          <h4>把鼠标移到任何一个字段上</h4>
+          <p>JSON 的每一层 key 都有意义。这边会告诉你：这个字段是什么、设计师能从它读出什么、什么时候它"看上去对，其实是 bug"。</p>
+          <p style="margin-top:14px;color:var(--ink-mute);font-size:12px;">提示：那个橙色的 <code style="font-family:'JetBrains Mono',monospace;font-size:11.5px;background:var(--bg-2);padding:1px 6px;border-radius:3px;color:var(--st-warn);">[]</code> 特别值得点一下 —— 90% 的"页面空白" bug 都长这样。</p>
+        </div>
+
+        <!-- All info panels -->
+        <div class="resp-info" data-info="status">
+          <div class="ri-tag">顶层 · TOP-LEVEL</div>
+          <h4>"status" — 这次响应整体顺不顺</h4>
+          <p>注意：<strong>这跟 HTTP 状态码不是一回事</strong>。HTTP 200 是"网络层成功"；这里的 <code>"status"</code> 是<strong>业务层成功</strong> —— 后端工程师约定的字段，告诉前端"逻辑也通了"。常见值：<code>"success"</code> / <code>"error"</code> / <code>"fail"</code>。</p>
+          <div class="ri-bug"><span class="ri-bug-tag">坑</span>有些后端会回 HTTP 200，但 <code>status: "error"</code>。一看 200 就以为没事是错的 —— 还要看这个字段。</div>
+        </div>
+
+        <div class="resp-info" data-info="message">
+          <div class="ri-tag">顶层 · TOP-LEVEL</div>
+          <h4>"message" — 给人看的话</h4>
+          <p>一句人话，多用于报错。<code>"Invalid email"</code> / <code>"User not found"</code> / <code>"操作成功"</code>。设计师可以直接把这句话当 toast 提示文案。</p>
+        </div>
+
+        <div class="resp-info" data-info="data">
+          <div class="ri-tag">顶层 · TOP-LEVEL</div>
+          <h4>"data" — 真正的数据在这里</h4>
+          <p>大多数后端会把"实际数据"包在一层 <code>data</code> 里 —— 这样 <code>status</code> 和 <code>data</code> 不会撞名。<strong>设计师 80% 的时间要看的，都是这一坨。</strong></p>
+        </div>
+
+        <div class="resp-info" data-info="user">
+          <div class="ri-tag">嵌套对象 · OBJECT</div>
+          <h4>"user" — 用户对象</h4>
+          <p>大括号 <code>{}</code> 表示<strong>一个对象</strong>。里面是这个用户的全部字段。<br>页面上"小头像 + 名字 + 蓝色对勾"那块 UI，就是从这里读出来的。</p>
+        </div>
+
+        <div class="resp-info" data-info="user.id">
+          <div class="ri-tag">字段 · FIELD</div>
+          <h4>"id" — 用户唯一编号</h4>
+          <p>每个用户在数据库里都有一个 id。设计师一般不显示它，但"删除 / 编辑 / 跳到详情"这些操作背后都靠这个。看到 <code>1042</code> 就是数字编号。</p>
+        </div>
+
+        <div class="resp-info" data-info="user.name">
+          <div class="ri-tag">字段 · FIELD</div>
+          <h4>"name" — 显示名</h4>
+          <p>页面右上角那个名字。设计师能问的：<strong>是不是 null？是不是空字符串？是不是用户没填过的默认值（"User_xxx"）？</strong> 这三种情况 UI 应该长不一样。</p>
+        </div>
+
+        <div class="resp-info" data-info="user.email">
+          <div class="ri-tag">字段 · FIELD</div>
+          <h4>"email" — 邮箱</h4>
+          <p>注意敏感性。前端有时候会显示打码版（<code>f***@example.com</code>），那是前端处理出来的，不是后端给的。后端会给完整的，前端要负责掩码。</p>
+        </div>
+
+        <div class="resp-info" data-info="user.avatar">
+          <div class="ri-tag">字段 · FIELD</div>
+          <h4>"avatar" — 头像 URL</h4>
+          <p>是个网址字符串。<strong>头像不出来</strong>的常见原因：① 这个 URL 是 null / 空 → 页面要 fallback 到默认头像；② URL 有但加载 404（去 Img 列单独看）。</p>
+        </div>
+
+        <div class="resp-info" data-info="user.verified">
+          <div class="ri-tag">字段 · FIELD · BOOLEAN</div>
+          <h4>"verified" — 真 / 假</h4>
+          <p><code>true</code> / <code>false</code> 是<strong>布尔值</strong>。两种状态。设计师最常用它来决定：<strong>显不显示那个蓝勾对号</strong>、<strong>能不能进某个页面</strong>。</p>
+        </div>
+
+        <div class="resp-info" data-info="cart">
+          <div class="ri-tag">嵌套数组 · ARRAY</div>
+          <h4>"cart" — 购物车列表</h4>
+          <p>方括号 <code>[]</code> 表示<strong>一个数组（list）</strong>。里面是 0 个、1 个、N 个对象。页面上"购物车里有 3 件商品"那块 UI，就是 cart 数组的长度 + 每一项渲染。</p>
+        </div>
+
+        <div class="resp-info" data-info="cart-empty">
+          <div class="ri-tag">★ 关键 · BUG 候选</div>
+          <h4>空数组 <code style="background:rgba(255,170,85,0.22);color:var(--st-warn);">[]</code> —— 是空的</h4>
+          <p>设计师追的"购物车永远空" —— <strong>大概率长这样</strong>。<br><br>它<strong>不是 bug</strong>（请求成功了），但页面看上去就像 bug。可能性：<br>① 这个用户真的购物车空 → 设计要做 empty state；<br>② 后端没把购物车关联上 → 找后端；<br>③ token 错了，拿到的是别人的（空）账户 → 找 401 类问题。</p>
+          <div class="ri-bug"><span class="ri-bug-tag">区分</span><code>[]</code> = 数组但没东西。<code>null</code> = 完全没有这个字段。两个跟设计页面要做的逻辑<strong>完全不一样</strong>。</div>
+        </div>
+
+        <div class="resp-info" data-info="orders">
+          <div class="ri-tag">嵌套数组 · ARRAY</div>
+          <h4>"orders" — 订单列表</h4>
+          <p>这次有 2 条。每条又是一个对象（<code>{ id, total }</code>）。<strong>数组里嵌对象</strong>是最常见的结构 —— 列表页 / 表格页基本都长这样。</p>
+        </div>
+
+        <div class="resp-info" data-info="order.id">
+          <div class="ri-tag">字段 · FIELD</div>
+          <h4>"id" — 订单号</h4>
+          <p>跟 user.id 一样的概念，每个订单的唯一编号。这次是字符串（<code>"o-9981"</code>），跟 user.id 是数字不一样。<strong>id 不一定是数字</strong>，有时候后端用字符串。</p>
+        </div>
+
+        <div class="resp-info" data-info="order.total">
+          <div class="ri-tag">字段 · FIELD · NUMBER</div>
+          <h4>"total" — 订单金额</h4>
+          <p>注意单位。这里是 <code>128.00</code> —— 是 128 块，还是 128 分？<strong>这要看后端文档</strong>。常见的坑：人民币用分存（12800），但前端不知道，直接显示 12800 元。</p>
+        </div>
+
+        <div class="resp-info" data-info="lastSeen">
+          <div class="ri-tag">特殊值 · NULL</div>
+          <h4>null — 完全没有这个值</h4>
+          <p><code>null</code> 不是字符串 "null"，是<strong>"这里啥都没有"</strong>的特殊值。比如这个用户从来没上线过，所以 lastSeen 是 null。<strong>设计要决定：null 时显示啥？</strong>—— 通常是占位符 "-" / "暂无" / 隐藏整行。</p>
+        </div>
+
+      </div>
+
+    </div>
+
+    <div class="hint-strip" style="margin-top:32px;">
+      <span class="hint-tag">设计师能读出的</span>① 字段是不是缺了？ ② 是不是 null / 空数组 / 0？ ③ 数字单位对不对？ ④ <code class="mono" style="font-size:12px;background:var(--bg-2);padding:1px 6px;border-radius:3px;">"status": "error"</code> 时 message 写的什么。<strong>这 4 件事不需要懂代码</strong>，凭眼睛读 JSON 就能发现 80% 的"页面不对劲"。
+    </div>
+  </div>
+</section>
+
+<!-- Section 5: Five skills -->
+<section id="skills">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>05</strong> / 5 个技能</div>
+        <h2 class="section-title">设计师最该<br>掌握的<span class="em">五件事</span></h2>
+      </div>
+      <p class="section-sub">
+        Network 面板按钮一堆。<strong>设计师不需要全会</strong>。会下面 5 件事，已经能自己定位 80% 的"页面没数据"问题。
+      </p>
+    </div>
+
+    <div class="skills-list">
+
+      <!-- Skill 1: Open -->
+      <div class="skill-card">
+        <div class="sk-num">1</div>
+        <div class="sk-text">
+          <h3 class="sk-name">打开 Network 面板</h3>
+          <div class="sk-key">F12 → 切到 Network 标签</div>
+          <p class="sk-desc">右键页面 → "检查"，或者直接 <code>F12</code>（Mac 是 <code>⌥⌘I</code>）。打开后顶上一排 tab —— Elements / Console / <strong>Network</strong> / Sources / Application。点 Network。</p>
+        </div>
+        <div class="sk-mock">
+          <div class="mk-kbd">
+            <span class="mk-key modifier">⌥</span>
+            <span class="mk-key modifier">⌘</span>
+            <span class="mk-key">I</span>
+            <span class="mk-arrow-text">Mac</span>
+          </div>
+          <div class="mk-kbd">
+            <span class="mk-key">F12</span>
+            <span class="mk-arrow-text">Win</span>
+          </div>
+          <div class="mk-tab-mock">
+            <span class="mk-tab">Elements</span>
+            <span class="mk-tab">Console</span>
+            <span class="mk-tab active">Network</span>
+            <span class="mk-tab">Sources</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Skill 2: refresh -->
+      <div class="skill-card">
+        <div class="sk-num">2</div>
+        <div class="sk-text">
+          <h3 class="sk-name">刷新一次，看所有请求</h3>
+          <div class="sk-key">Cmd / Ctrl + R</div>
+          <p class="sk-desc">Network 面板要在<strong>"录制"状态下</strong>才能抓请求 —— 看左上角那个 <strong>红色小圆点</strong>，亮着就是在录。然后<strong>刷新页面</strong>，所有请求都会蹦出来排成表。</p>
+        </div>
+        <div class="sk-mock">
+          <div class="mk-toolbar-mock">
+            <span class="mk-rec-dot"></span>
+            <span style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--dt-red);font-weight:600;">REC</span>
+            <span class="mk-pill">⊘ clear</span>
+            <span class="mk-pill">preserve log</span>
+          </div>
+          <div class="mk-kbd" style="margin-top:6px;">
+            <span class="mk-key modifier">⌘</span>
+            <span class="mk-key">R</span>
+            <span class="mk-arrow">→</span>
+            <span class="mk-arrow-text">所有请求出现</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Skill 3: filter Fetch/XHR -->
+      <div class="skill-card">
+        <div class="sk-num">3</div>
+        <div class="sk-text">
+          <h3 class="sk-name">过滤 Fetch / XHR</h3>
+          <div class="sk-key">只看 API 调用，屏蔽图片 CSS</div>
+          <p class="sk-desc">面板顶部一排 type 过滤按钮：<strong>All / Fetch/XHR / JS / CSS / Img / Font</strong>。设计师 90% 只关心 <strong>Fetch/XHR</strong> —— 这就是"代码在问后端要数据"那批请求。点一下，其他全藏。</p>
+        </div>
+        <div class="sk-mock">
+          <div class="mk-toolbar-mock">
+            <span class="mk-pill">All</span>
+            <span class="mk-pill on">Fetch/XHR</span>
+            <span class="mk-pill">JS</span>
+            <span class="mk-pill">CSS</span>
+            <span class="mk-pill">Img</span>
+            <span class="mk-pill">Font</span>
+          </div>
+          <span style="font-family:'JetBrains Mono',monospace;font-size:10.5px;color:var(--ink-mute);margin-top:8px;letter-spacing:0.04em;">↑ 只看 API · 其他全藏</span>
+        </div>
+      </div>
+
+      <!-- Skill 4: inspect a request -->
+      <div class="skill-card">
+        <div class="sk-num">4</div>
+        <div class="sk-text">
+          <h3 class="sk-name">点开一条请求 · 看 Headers / Payload / Response</h3>
+          <div class="sk-key">右侧抽屉 · 5 个 tab</div>
+          <p class="sk-desc">点表格里任何一行 → 右边会展开一个面板，里面 5 个 tab：<strong>Headers</strong>（请求 / 响应头）、<strong>Payload</strong>（你提交了啥）、<strong>Preview</strong>（漂亮版 JSON）、<strong>Response</strong>（原始响应）、<strong>Timing</strong>。最常用的是 <strong>Preview</strong>。</p>
+        </div>
+        <div class="sk-mock">
+          <div class="mk-tab-mock">
+            <span class="mk-tab">Headers</span>
+            <span class="mk-tab">Payload</span>
+            <span class="mk-tab active">Preview</span>
+            <span class="mk-tab">Response</span>
+          </div>
+          <div class="mk-tab-body">
+            <span class="mk-key-l">▾ data:</span> {<br>
+            &nbsp;&nbsp;<span class="mk-key-l">user:</span> {<span class="mk-str-l">"Fan"</span>}<br>
+            &nbsp;&nbsp;<span class="mk-key-l">cart:</span> []<br>
+            }
+          </div>
+        </div>
+      </div>
+
+      <!-- Skill 5: copy as cURL -->
+      <div class="skill-card">
+        <div class="sk-num">5</div>
+        <div class="sk-text">
+          <h3 class="sk-name">复制 cURL 给工程师</h3>
+          <div class="sk-key">右键 → Copy → Copy as cURL</div>
+          <p class="sk-desc">想让工程师 1 秒复现你这个请求？<strong>右键那一行 → Copy → Copy as cURL</strong>。粘贴给他，他在终端一跑就能完整重放你这次请求。<strong>不用截图、不用描述，他什么都看得见</strong>。</p>
+        </div>
+        <div class="sk-mock">
+          <div class="mk-curl">
+<span class="mk-copy-pill">cURL</span>curl 'https://api.app.com/user/me' \<br>&nbsp;&nbsp;-H 'Cookie: session=xxx' \<br>&nbsp;&nbsp;-H 'Authorization: Bearer ...'
+          </div>
+          <span style="font-family:'JetBrains Mono',monospace;font-size:10.5px;color:var(--ink-mute);margin-top:6px;letter-spacing:0.04em;">→ 工程师粘贴到终端就能跑</span>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="hint-strip" style="margin-top:28px;">
+      <span class="hint-tag">套路</span>这 5 件事按顺序串起来，就是 <strong>"页面有问题 → 自查 → 找工程师"</strong> 的标准流程：① 打开 Network → ② 刷新看请求 → ③ 过滤 Fetch/XHR → ④ 点开可疑那条看 Response → ⑤ 看不懂就 Copy as cURL 给工程师。<span class="em">每一步都不需要会写代码</span>。
+    </div>
+  </div>
+</section>
+
+<!-- Section 6: Cheatsheet -->
+<section id="cheat">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>06</strong> / 速查卡</div>
+        <h2 class="section-title">四张卡片<br><span class="em">塞进口袋</span></h2>
+      </div>
+      <p class="section-sub">
+        全篇精华浓缩成四张卡。打开 Network 面板感觉懵 —— 按这个顺序读，几乎不会卡。
+      </p>
+    </div>
+
+    <div class="cheat-grid">
+      <div class="cheat-card status">
+        <div class="cc-num">PART 01 · 状态码</div>
+        <h4>三位数 · 三种心情</h4>
+        <div class="cc-sub">看头一位</div>
+        <dl>
+          <dt>2xx · 顺</dt>
+          <dd><span class="ok">200</span> OK · <span class="ok">201</span> Created · <span class="ok">204</span> 没内容。<strong>不用管</strong>。</dd>
+          <dt>4xx · 你错</dt>
+          <dd><span class="warn">401</span> 没登录 · <span class="warn">403</span> 没权限 · <span class="warn">404</span> 地址错 · <span class="warn">400</span> 参数错。<strong>前端 / 你的事</strong>。</dd>
+          <dt>5xx · 它挂</dt>
+          <dd><span class="err">500</span> 后端挂 · <span class="err">502</span> 网关错 · <span class="err">503</span> 维护中 · <span class="err">504</span> 超时。<strong>后端的事</strong>。</dd>
+        </dl>
+      </div>
+
+      <div class="cheat-card cols">
+        <div class="cc-num">PART 02 · 表头六列</div>
+        <h4>Network 表格</h4>
+        <div class="cc-sub">columns explained</div>
+        <dl>
+          <dt>Name</dt>
+          <dd>请求的<strong>地址 / 文件名</strong>。<code>/api/user</code> / <code>logo.png</code>。</dd>
+          <dt>Status</dt>
+          <dd>HTTP 状态码。<strong>看头一位即可</strong>。</dd>
+          <dt>Type</dt>
+          <dd>请求类型。<code>fetch</code>/<code>xhr</code> = API 调用；<code>document</code>/<code>script</code>/<code>stylesheet</code>/<code>png</code> = 资源。</dd>
+          <dt>Size</dt>
+          <dd>响应有多大。<strong>0 B / "(failed)"</strong> 通常意味着挂了。</dd>
+          <dt>Time</dt>
+          <dd>请求花了多久。<strong>&gt; 1 s 就该警觉</strong>，&gt; 5 s 几乎一定有问题。</dd>
+          <dt>Waterfall</dt>
+          <dd>视觉化时间条。<strong>哪条最长就是哪条最慢</strong>。</dd>
+        </dl>
+      </div>
+
+      <div class="cheat-card skills">
+        <div class="cc-num">PART 03 · 五个技能</div>
+        <h4>设计师够用</h4>
+        <div class="cc-sub">5 skills</div>
+        <dl>
+          <dt>Skill 01</dt>
+          <dd>打开 → <code>F12</code> 切到 <strong>Network</strong>。</dd>
+          <dt>Skill 02</dt>
+          <dd>录制 → 看左上红点 → <code>Cmd+R</code> 刷新。</dd>
+          <dt>Skill 03</dt>
+          <dd>过滤 → 点 <strong>Fetch/XHR</strong>，只看 API。</dd>
+          <dt>Skill 04</dt>
+          <dd>点开 → 看 <strong>Preview / Response</strong>，找空字段、null。</dd>
+          <dt>Skill 05</dt>
+          <dd>给工程师 → 右键 → <strong>Copy as cURL</strong>。</dd>
+        </dl>
+      </div>
+
+      <div class="cheat-card diag">
+        <div class="cc-num">PART 04 · 诊断 4 步</div>
+        <h4>页面没数据时</h4>
+        <div class="cc-sub">debug recipe</div>
+        <dl>
+          <dt>STEP 1 · 有没有这条请求</dt>
+          <dd>Network 里完全找不到 → 前端代码<strong>没发出去</strong>。是个前端 bug。</dd>
+          <dt>STEP 2 · status 是什么</dt>
+          <dd>看头一位。<span class="warn">4xx</span> = 前端的事；<span class="err">5xx</span> = 后端的事；<span class="ok">2xx</span> 还出错 → 看下一步。</dd>
+          <dt>STEP 3 · Response 里的字段</dt>
+          <dd>2xx 但页面空 → 90% 是 <code>data: []</code> / <code>data: null</code>。<strong>请求成功，但内容是空的</strong>。</dd>
+          <dt>STEP 4 · 截图给工程师</dt>
+          <dd>看不懂就把 <strong>整张 Network 截图 + cURL</strong> 发给工程师。<strong>比"我这边不行"有用 100 倍。</strong></dd>
+        </dl>
+      </div>
+    </div>
+
+    <a href="j1-dns-figma.html" class="next-post">
+      <div>
+        <div class="np-tag">下一篇 · NEXT · J1 · 网络基础</div>
+        <h4>从 fan.com <span class="em">→</span> 屏幕上发生了什么</h4>
+        <p>H 系列到这里就完结了 —— Console 会读、Network 会查、报错有线索。<strong>下一站，往下挖一层</strong>：你在地址栏敲 <code style="font-family:'JetBrains Mono',monospace;background:rgba(255,255,255,0.10);padding:1px 7px;border-radius:3px;color:#ffd987;">fan.com</code> 按下回车 → 屏幕上出现页面，这中间到底发生了什么？</p>
+      </div>
+      <span class="np-cta">继续阅读 <span class="arr">→</span></span>
+    </a>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div class="byline">
+      <img class="avatar" src="author.jpg" alt="范米花儿">
+      <div class="byline-meta">
+        <div class="byline-label"><span class="dot"></span>作者 · WRITTEN BY</div>
+        <h3 class="byline-name">嗨，我是 <span class="em">范米花儿</span></h3>
+        <p class="byline-tag">一份给设计师的代码入门 ——<br>不需要会写，知道大概怎么回事，跟前端 / AI 沟通就顺多了。</p>
+        <div class="byline-contact">
+          <span class="contact-label">微信</span>
+          <span class="contact-id">vanvan_0422</span>
+          <span class="contact-hint">想看什么主题，加我聊</span>
+        </div>
+      </div>
+    </div>
+    <div class="footer-meta">
+      做于 <span class="mono">2026</span> · 用 <span class="heart">●</span> 写给 <span class="mono">DESIGNERS &amp; DEVELOPERS</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+// ========= §01 Anatomy: arrows + callouts hover sync =========
+(function () {
+  const arrows = document.querySelectorAll('.req-arrow');
+  const callouts = document.querySelectorAll('.req-callout');
+
+  // Mapping: which callouts highlight when each arrow is active
+  const ARROW_MAP = {
+    req: ['method', 'url', 'headers'],
+    res: ['body']
+  };
+
+  function activate(arrowKey) {
+    arrows.forEach(a => a.classList.toggle('is-active', a.dataset.anatomy === arrowKey));
+    const keys = ARROW_MAP[arrowKey] || [];
+    callouts.forEach(c => c.classList.toggle('is-active', keys.includes(c.dataset.callout)));
+  }
+
+  arrows.forEach(arrow => {
+    arrow.addEventListener('click', () => activate(arrow.dataset.anatomy));
+    arrow.addEventListener('mouseenter', () => activate(arrow.dataset.anatomy));
+  });
+
+  // also support clicking individual callouts for reverse interaction
+  callouts.forEach(c => {
+    c.addEventListener('mouseenter', () => {
+      const k = c.dataset.callout;
+      const arrowKey = (k === 'body') ? 'res' : 'req';
+      activate(arrowKey);
+      // highlight only this callout
+      callouts.forEach(x => x.classList.toggle('is-active', x === c));
+    });
+  });
+
+  // default state
+  setTimeout(() => activate('req'), 400);
+})();
+
+// ========= §03 Detective game =========
+(function () {
+  const stage = document.getElementById('gameStage');
+  if (!stage) return;
+
+  // Each question has its own table HTML and a "correct" row id (data-pick)
+  const QUESTIONS = [
+    {
+      title: 'Q1 · 哪个是 API 调用',
+      context: '你刚打开购物车页面，刷新一下 → Network 面板蹦出 8 条请求。<strong>哪一条是"代码在问后端要购物车数据"</strong>？提示：不是 .css 不是 .js 不是图片 —— 看 Type 列。',
+      table: 'q1',
+      correct: 'q1-api',
+      good: '<strong>对！</strong> <code>cart</code> 这条 —— Type 列写着 <code>fetch</code>（说明是 JS 在问后端），Name 是 <code>/api/user/cart</code>（说明是后端的 API 接口）。<br>区分 API 和资源的两个铁律：① <strong>Type</strong> 是 fetch / xhr；② <strong>Name</strong> 通常带 <code>/api/</code>。剩下 <code>.css</code> / <code>.js</code> / <code>.png</code> 都是浏览器在加载页面骨架，跟"数据"无关。',
+      bad: '看错列了。判断"是不是 API"看 <strong>Type 列</strong>：<code>fetch</code> / <code>xhr</code> 才是 API；<code>script</code> / <code>stylesheet</code> / <code>png</code> 都是浏览器加载页面用的资源文件。再看一眼 Type 列。'
+    },
+    {
+      title: 'Q2 · 哪个 401 了',
+      context: '页面用户名出来了，但购物车空空。你怀疑某条请求 401 了（没登录 / token 错）。<strong>找出哪一行 Status 是 401</strong>。提示：4xx 在面板里通常是<span style="color:var(--st-warn);font-weight:600;">橙色字</span>。',
+      table: 'q2',
+      correct: 'q2-401',
+      good: '<strong>正中。</strong> <code>/api/user/cart</code> 那一行 —— Status <span style="color:var(--st-warn);font-weight:700;">401</span>（橙色）。<br>这一刻一切就对上了：购物车请求<strong>因为 token 失效被服务器拒了</strong>，所以返回的是空，所以页面看上去是空的。修法：去看登录态 / 重新登录。',
+      bad: '不对。<strong>4xx 是橙色 / 黄色</strong>，5xx 是红色，2xx 是绿色。再扫一眼 Status 列 —— 找以 4 开头的、字是橙色的那条。'
+    },
+    {
+      title: 'Q3 · 哪个最慢',
+      context: '页面打开很慢 —— 大概要 3 秒才出来。哪条请求是"罪魁祸首"？提示：<strong>Time 列写时长</strong>，但更直观的是看 <strong>Waterfall（瀑布图）</strong>—— 哪条蓝条最长就是它最慢。',
+      table: 'q3',
+      correct: 'q3-slow',
+      good: '<strong>厉害。</strong> <code>/api/products/search</code> —— Time <strong>2.34 s</strong>（其他请求都在几十到几百毫秒）。Waterfall 列里它的橙色长条比谁都长。<br>这种慢请求 99% 是后端的事 —— 数据库查询慢、没加索引、外部调用阻塞。设计师能做的：<strong>截图给后端看 Time + Waterfall</strong>，他们立刻知道哪 SQL 该优化。',
+      bad: '再看看 Time 列 / Waterfall 长度。<strong>慢请求的特征：Time 是几秒（比其他请求大一个数量级），Waterfall 那条横条特别长</strong>。找最长的那条。'
+    },
+    {
+      title: 'Q4 · 点开看 Response 里的 cart',
+      context: '<code>/api/user/me</code> 这条请求是 200 OK，看上去成功了 —— 但用户的购物车页面就是空。<strong>点这一行打开它，看 Response 标签 → user.cart 字段是什么</strong>？看完直接点你认为最可疑的那一行。',
+      table: 'q4',
+      correct: 'q4-me',
+      good: '<strong>找到了。</strong> 你点开了 <code>/api/user/me</code> → Response → <code>data.cart</code> 是 <code>[]</code>（空数组）。<br>这是设计师追"页面没数据"的<strong>真正答案</strong>：请求成功（200 OK），<strong>但拿到的数据本来就是空</strong>。下一步：找后端确认"这个用户的购物车是不是真的空，还是后端没关联上"。<br><strong>注意</strong>：200 OK ≠ 数据正确。要进一步看 Response 的内容。',
+      bad: '继续看。这一题想强调的是：<strong>点开 Response 看里面的字段</strong>。可疑的是 <code>/api/user/me</code> 这条 —— 它包含 user 和 cart，最有可能是空数组的源头。'
+    },
+    {
+      title: 'Q5 · 哪个请求出现了两次',
+      context: '页面看着没事，但工程师让你看一眼："是不是有重复请求？" 同一个接口被请求两次 = 浪费、闪烁、性能问题。<strong>找出名字一模一样的那两条</strong>。',
+      table: 'q5',
+      correct: 'q5-dup',
+      good: '<strong>对了。</strong> <code>/api/user/me</code> 出现了<strong>两次</strong>（第 3 行和第 7 行）。<br>常见原因：① 两个组件都"自己请求一遍"，没共享数据；② React 严格模式下 useEffect 跑两次；③ 路由切换没清干净。<br>设计师能做的：<strong>截图给工程师看"这两条是重复的"</strong>，他们立刻知道是 cache / state 管理出问题。',
+      bad: '换个思路。看 <strong>Name 列</strong> —— 哪两个名字写得一模一样？重复请求的特征：同一个 URL 在表里出现两次 / 多次。'
+    }
+  ];
+
+  // Build the table HTML for each question
+  function tableHTML(qid) {
+    const tableHead = `
+      <table class="nt-table">
+        <thead>
+          <tr>
+            <th class="sortable" style="width:34%;">Name</th>
+            <th class="sortable" style="width:7%;">Status</th>
+            <th class="sortable" style="width:11%;">Type</th>
+            <th class="sortable" style="width:9%;">Size</th>
+            <th class="sortable" style="width:9%;">Time</th>
+            <th class="nt-th-water" style="width:30%;">Waterfall</th>
+          </tr>
+        </thead>
+        <tbody>`;
+    const tableFoot = `</tbody></table>`;
+
+    if (qid === 'q1') {
+      return tableShell('q1', tableHead + `
+        <tr><td><span class="nt-name"><span class="nt-fav html">H</span>cart</span></td><td><span class="nt-status ok">200</span></td><td class="nt-type">document</td><td class="nt-size">12.4 kB</td><td class="nt-time">88 ms</td><td class="nt-td-water"><div class="nt-water-bar"><span class="nt-wb" style="left:0%;width:14%;"></span></div></td></tr>
+        <tr><td><span class="nt-name"><span class="nt-fav css">C</span>main.css</span></td><td><span class="nt-status ok">200</span></td><td class="nt-type">stylesheet</td><td class="nt-size">42.1 kB</td><td class="nt-time">32 ms</td><td class="nt-td-water"><div class="nt-water-bar"><span class="nt-wb" style="left:12%;width:5%;"></span></div></td></tr>
+        <tr><td><span class="nt-name"><span class="nt-fav js">J</span>app.bundle.js</span></td><td><span class="nt-status ok">200</span></td><td class="nt-type">script</td><td class="nt-size">218 kB</td><td class="nt-time">142 ms</td><td class="nt-td-water"><div class="nt-water-bar"><span class="nt-wb" style="left:14%;width:24%;"></span></div></td></tr>
+        <tr><td><span class="nt-name"><span class="nt-fav font">F</span>geist-regular.woff2</span></td><td><span class="nt-status ok">200</span></td><td class="nt-type">font</td><td class="nt-size">38.6 kB</td><td class="nt-time">45 ms</td><td class="nt-td-water"><div class="nt-water-bar"><span class="nt-wb" style="left:38%;width:7%;"></span></div></td></tr>
+        <tr data-pick="q1-api"><td><span class="nt-name"><span class="nt-fav api">{}</span>cart</span></td><td><span class="nt-status ok">200</span></td><td class="nt-type">fetch</td><td class="nt-size">1.2 kB</td><td class="nt-time">214 ms</td><td class="nt-td-water"><div class="nt-water-bar"><span class="nt-wb api" style="left:42%;width:36%;"></span></div></td></tr>
+        <tr><td><span class="nt-name"><span class="nt-fav img">P</span>logo.svg</span></td><td><span class="nt-status ok">200</span></td><td class="nt-type">svg</td><td class="nt-size">2.4 kB</td><td class="nt-time">28 ms</td><td class="nt-td-water"><div class="nt-water-bar"><span class="nt-wb" style="left:46%;width:4%;"></span></div></td></tr>
+        <tr><td><span class="nt-name"><span class="nt-fav img">P</span>banner.jpg</span></td><td><span class="nt-status ok">200</span></td><td class="nt-type">jpeg</td><td class="nt-size">128 kB</td><td class="nt-time">96 ms</td><td class="nt-td-water"><div class="nt-water-bar"><span class="nt-wb" style="left:50%;width:13%;"></span></div></td></tr>
+        <tr><td><span class="nt-name"><span class="nt-fav img">P</span>icon-cart.svg</span></td><td><span class="nt-status ok">200</span></td><td class="nt-type">svg</td><td class="nt-size">1.1 kB</td><td class="nt-time">22 ms</td><td class="nt-td-water"><div class="nt-water-bar"><span class="nt-wb" style="left:64%;width:3%;"></span></div></td></tr>
+      ` + tableFoot);
+    }
+
+    if (qid === 'q2') {
+      return tableShell('q2', tableHead + `
+        <tr><td><span class="nt-name"><span class="nt-fav html">H</span>shop</span></td><td><span class="nt-status ok">200</span></td><td class="nt-type">document</td><td class="nt-size">14 kB</td><td class="nt-time">102 ms</td><td class="nt-td-water"><div class="nt-water-bar"><span class="nt-wb" style="left:0%;width:14%;"></span></div></td></tr>
+        <tr><td><span class="nt-name"><span class="nt-fav css">C</span>main.css</span></td><td><span class="nt-status ok">200</span></td><td class="nt-type">stylesheet</td><td class="nt-size">42 kB</td><td class="nt-time">28 ms</td><td class="nt-td-water"><div class="nt-water-bar"><span class="nt-wb" style="left:14%;width:4%;"></span></div></td></tr>
+        <tr><td><span class="nt-name"><span class="nt-fav js">J</span>app.bundle.js</span></td><td><span class="nt-status ok">200</span></td><td class="nt-type">script</td><td class="nt-size">218 kB</td><td class="nt-time">156 ms</td><td class="nt-td-water"><div class="nt-water-bar"><span class="nt-wb" style="left:18%;width:22%;"></span></div></td></tr>
+        <tr><td><span class="nt-name"><span class="nt-fav api">{}</span>me</span></td><td><span class="nt-status ok">200</span></td><td class="nt-type">fetch</td><td class="nt-size">684 B</td><td class="nt-time">128 ms</td><td class="nt-td-water"><div class="nt-water-bar"><span class="nt-wb api" style="left:42%;width:18%;"></span></div></td></tr>
+        <tr data-pick="q2-401"><td><span class="nt-name"><span class="nt-fav api">{}</span>cart</span></td><td><span class="nt-status warn">401</span></td><td class="nt-type">fetch</td><td class="nt-size">82 B</td><td class="nt-time">96 ms</td><td class="nt-td-water"><div class="nt-water-bar"><span class="nt-wb slow" style="left:43%;width:14%;"></span></div></td></tr>
+        <tr><td><span class="nt-name"><span class="nt-fav api">{}</span>banners</span></td><td><span class="nt-status ok">200</span></td><td class="nt-type">fetch</td><td class="nt-size">2.4 kB</td><td class="nt-time">112 ms</td><td class="nt-td-water"><div class="nt-water-bar"><span class="nt-wb api" style="left:48%;width:16%;"></span></div></td></tr>
+        <tr><td><span class="nt-name"><span class="nt-fav img">P</span>banner.jpg</span></td><td><span class="nt-status ok">200</span></td><td class="nt-type">jpeg</td><td class="nt-size">128 kB</td><td class="nt-time">88 ms</td><td class="nt-td-water"><div class="nt-water-bar"><span class="nt-wb" style="left:62%;width:12%;"></span></div></td></tr>
+        <tr><td><span class="nt-name"><span class="nt-fav img">P</span>avatar.jpg</span></td><td><span class="nt-status ok">200</span></td><td class="nt-type">jpeg</td><td class="nt-size">14 kB</td><td class="nt-time">41 ms</td><td class="nt-td-water"><div class="nt-water-bar"><span class="nt-wb" style="left:60%;width:5%;"></span></div></td></tr>
+      ` + tableFoot);
+    }
+
+    if (qid === 'q3') {
+      return tableShell('q3', tableHead + `
+        <tr><td><span class="nt-name"><span class="nt-fav html">H</span>search</span></td><td><span class="nt-status ok">200</span></td><td class="nt-type">document</td><td class="nt-size">12 kB</td><td class="nt-time">88 ms</td><td class="nt-td-water"><div class="nt-water-bar"><span class="nt-wb" style="left:0%;width:4%;"></span></div></td></tr>
+        <tr><td><span class="nt-name"><span class="nt-fav css">C</span>main.css</span></td><td><span class="nt-status ok">200</span></td><td class="nt-type">stylesheet</td><td class="nt-size">42 kB</td><td class="nt-time">26 ms</td><td class="nt-td-water"><div class="nt-water-bar"><span class="nt-wb" style="left:4%;width:1%;"></span></div></td></tr>
+        <tr><td><span class="nt-name"><span class="nt-fav js">J</span>app.bundle.js</span></td><td><span class="nt-status ok">200</span></td><td class="nt-type">script</td><td class="nt-size">218 kB</td><td class="nt-time">132 ms</td><td class="nt-td-water"><div class="nt-water-bar"><span class="nt-wb" style="left:5%;width:6%;"></span></div></td></tr>
+        <tr><td><span class="nt-name"><span class="nt-fav api">{}</span>me</span></td><td><span class="nt-status ok">200</span></td><td class="nt-type">fetch</td><td class="nt-size">684 B</td><td class="nt-time">142 ms</td><td class="nt-td-water"><div class="nt-water-bar"><span class="nt-wb api" style="left:11%;width:6%;"></span></div></td></tr>
+        <tr><td><span class="nt-name"><span class="nt-fav api">{}</span>categories</span></td><td><span class="nt-status ok">200</span></td><td class="nt-type">fetch</td><td class="nt-size">3.1 kB</td><td class="nt-time">86 ms</td><td class="nt-td-water"><div class="nt-water-bar"><span class="nt-wb api" style="left:17%;width:4%;"></span></div></td></tr>
+        <tr data-pick="q3-slow"><td><span class="nt-name"><span class="nt-fav api">{}</span>products/search</span></td><td><span class="nt-status ok">200</span></td><td class="nt-type">fetch</td><td class="nt-size">412 kB</td><td class="nt-time" style="color:var(--dt-orange);font-weight:600;">2.34 s</td><td class="nt-td-water"><div class="nt-water-bar"><span class="nt-wb slow" style="left:21%;width:78%;"></span></div></td></tr>
+        <tr><td><span class="nt-name"><span class="nt-fav img">P</span>banner.jpg</span></td><td><span class="nt-status ok">200</span></td><td class="nt-type">jpeg</td><td class="nt-size">128 kB</td><td class="nt-time">112 ms</td><td class="nt-td-water"><div class="nt-water-bar"><span class="nt-wb" style="left:21%;width:6%;"></span></div></td></tr>
+        <tr><td><span class="nt-name"><span class="nt-fav img">P</span>p-1.jpg</span></td><td><span class="nt-status ok">200</span></td><td class="nt-type">jpeg</td><td class="nt-size">42 kB</td><td class="nt-time">94 ms</td><td class="nt-td-water"><div class="nt-water-bar"><span class="nt-wb" style="left:80%;width:4%;"></span></div></td></tr>
+      ` + tableFoot);
+    }
+
+    if (qid === 'q4') {
+      // Q4: clicking any row but the right one is "wrong"; click on q4-me opens detail panel + correct
+      return tableShell('q4', tableHead + `
+        <tr><td><span class="nt-name"><span class="nt-fav html">H</span>profile</span></td><td><span class="nt-status ok">200</span></td><td class="nt-type">document</td><td class="nt-size">14 kB</td><td class="nt-time">88 ms</td><td class="nt-td-water"><div class="nt-water-bar"><span class="nt-wb" style="left:0%;width:14%;"></span></div></td></tr>
+        <tr><td><span class="nt-name"><span class="nt-fav js">J</span>app.bundle.js</span></td><td><span class="nt-status ok">200</span></td><td class="nt-type">script</td><td class="nt-size">218 kB</td><td class="nt-time">142 ms</td><td class="nt-td-water"><div class="nt-water-bar"><span class="nt-wb" style="left:14%;width:24%;"></span></div></td></tr>
+        <tr data-pick="q4-me"><td><span class="nt-name"><span class="nt-fav api">{}</span>user/me</span></td><td><span class="nt-status ok">200</span></td><td class="nt-type">fetch</td><td class="nt-size">684 B</td><td class="nt-time">128 ms</td><td class="nt-td-water"><div class="nt-water-bar"><span class="nt-wb api" style="left:38%;width:18%;"></span></div></td></tr>
+        <tr><td><span class="nt-name"><span class="nt-fav api">{}</span>orders</span></td><td><span class="nt-status ok">200</span></td><td class="nt-type">fetch</td><td class="nt-size">2.8 kB</td><td class="nt-time">156 ms</td><td class="nt-td-water"><div class="nt-water-bar"><span class="nt-wb api" style="left:42%;width:20%;"></span></div></td></tr>
+        <tr><td><span class="nt-name"><span class="nt-fav api">{}</span>notifications</span></td><td><span class="nt-status ok">200</span></td><td class="nt-type">fetch</td><td class="nt-size">486 B</td><td class="nt-time">62 ms</td><td class="nt-td-water"><div class="nt-water-bar"><span class="nt-wb api" style="left:48%;width:8%;"></span></div></td></tr>
+        <tr><td><span class="nt-name"><span class="nt-fav img">P</span>avatar.jpg</span></td><td><span class="nt-status ok">200</span></td><td class="nt-type">jpeg</td><td class="nt-size">14 kB</td><td class="nt-time">52 ms</td><td class="nt-td-water"><div class="nt-water-bar"><span class="nt-wb" style="left:56%;width:6%;"></span></div></td></tr>
+      ` + tableFoot + `
+      <div class="nt-detail" id="q4Detail">
+        <div class="nt-detail-tabs">
+          <span class="nt-detail-tab">Headers</span>
+          <span class="nt-detail-tab">Payload</span>
+          <span class="nt-detail-tab active">Preview</span>
+          <span class="nt-detail-tab">Response</span>
+          <span class="nt-detail-tab">Timing</span>
+        </div>
+        <div class="nt-detail-body">
+<span class="json-bracket">{</span><br>
+&nbsp;&nbsp;<span class="json-key">"status"</span>: <span class="json-str">"success"</span>,<br>
+&nbsp;&nbsp;<span class="json-key">"data"</span>: <span class="json-bracket">{</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="json-key">"user"</span>: <span class="json-bracket">{</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="json-key">"id"</span>: <span class="json-num">1042</span>, <span class="json-key">"name"</span>: <span class="json-str">"Fan"</span>, <span class="json-key">"verified"</span>: <span class="json-bool">true</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="json-bracket">}</span>,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="json-key">"cart"</span>: <span style="color:var(--dt-orange);background:rgba(255,170,85,0.18);padding:1px 5px;border-radius:3px;">[]</span><span class="json-comment"> // ← 空数组</span>,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="json-key">"orders"</span>: <span class="json-bracket">[ ... ]</span><br>
+&nbsp;&nbsp;<span class="json-bracket">}</span><br>
+<span class="json-bracket">}</span>
+        </div>
+      </div>`);
+    }
+
+    if (qid === 'q5') {
+      return tableShell('q5', tableHead + `
+        <tr><td><span class="nt-name"><span class="nt-fav html">H</span>dashboard</span></td><td><span class="nt-status ok">200</span></td><td class="nt-type">document</td><td class="nt-size">14 kB</td><td class="nt-time">82 ms</td><td class="nt-td-water"><div class="nt-water-bar"><span class="nt-wb" style="left:0%;width:14%;"></span></div></td></tr>
+        <tr><td><span class="nt-name"><span class="nt-fav js">J</span>app.bundle.js</span></td><td><span class="nt-status ok">200</span></td><td class="nt-type">script</td><td class="nt-size">218 kB</td><td class="nt-time">132 ms</td><td class="nt-td-water"><div class="nt-water-bar"><span class="nt-wb" style="left:14%;width:24%;"></span></div></td></tr>
+        <tr data-pick="q5-dup"><td><span class="nt-name"><span class="nt-fav api">{}</span>user/me</span></td><td><span class="nt-status ok">200</span></td><td class="nt-type">fetch</td><td class="nt-size">684 B</td><td class="nt-time">122 ms</td><td class="nt-td-water"><div class="nt-water-bar"><span class="nt-wb api" style="left:38%;width:16%;"></span></div></td></tr>
+        <tr><td><span class="nt-name"><span class="nt-fav api">{}</span>notifications</span></td><td><span class="nt-status ok">200</span></td><td class="nt-type">fetch</td><td class="nt-size">486 B</td><td class="nt-time">68 ms</td><td class="nt-td-water"><div class="nt-water-bar"><span class="nt-wb api" style="left:40%;width:8%;"></span></div></td></tr>
+        <tr><td><span class="nt-name"><span class="nt-fav api">{}</span>stats</span></td><td><span class="nt-status ok">200</span></td><td class="nt-type">fetch</td><td class="nt-size">1.1 kB</td><td class="nt-time">96 ms</td><td class="nt-td-water"><div class="nt-water-bar"><span class="nt-wb api" style="left:48%;width:12%;"></span></div></td></tr>
+        <tr><td><span class="nt-name"><span class="nt-fav img">P</span>avatar.jpg</span></td><td><span class="nt-status ok">200</span></td><td class="nt-type">jpeg</td><td class="nt-size">14 kB</td><td class="nt-time">42 ms</td><td class="nt-td-water"><div class="nt-water-bar"><span class="nt-wb" style="left:54%;width:5%;"></span></div></td></tr>
+        <tr data-pick="q5-dup"><td><span class="nt-name"><span class="nt-fav api">{}</span>user/me</span></td><td><span class="nt-status ok">200</span></td><td class="nt-type">fetch</td><td class="nt-size">684 B</td><td class="nt-time">98 ms</td><td class="nt-td-water"><div class="nt-water-bar"><span class="nt-wb api" style="left:62%;width:12%;"></span></div></td></tr>
+        <tr><td><span class="nt-name"><span class="nt-fav api">{}</span>activity</span></td><td><span class="nt-status ok">200</span></td><td class="nt-type">fetch</td><td class="nt-size">2.6 kB</td><td class="nt-time">88 ms</td><td class="nt-td-water"><div class="nt-water-bar"><span class="nt-wb api" style="left:74%;width:11%;"></span></div></td></tr>
+      ` + tableFoot);
+    }
+
+    return '';
+  }
+
+  function tableShell(qid, inner) {
+    return `
+<div class="devtools game-net" data-q="${qid}">
+  <div class="dt-tabs">
+    <span class="dt-tab">Elements</span>
+    <span class="dt-tab">Console</span>
+    <span class="dt-tab active network">Network</span>
+    <span class="dt-tab">Sources</span>
+    <span class="dt-tab">Application</span>
+  </div>
+  <div class="nt-toolbar">
+    <span class="nt-rec">REC</span>
+    <span class="nt-clear">⊘</span>
+    <span class="nt-divider"></span>
+    <span class="nt-checkbox checked">Preserve log</span>
+    <span class="nt-checkbox">Disable cache</span>
+    <span class="nt-divider"></span>
+    <input class="nt-search" placeholder="Filter" disabled>
+    <span class="nt-pill">All</span>
+    <span class="nt-pill active">Fetch/XHR</span>
+    <span class="nt-pill">JS</span>
+    <span class="nt-pill">CSS</span>
+    <span class="nt-pill">Img</span>
+  </div>
+  ${inner}
+</div>`;
+  }
+
+  let qIndex = 0;
+  let mistakes = 0;
+  let solved = false;
+
+  const titleEl = document.getElementById('gameTitle');
+  const counterEl = document.getElementById('gbCounter');
+  const dotsEl = document.getElementById('gbDots');
+  const questionEl = document.getElementById('gameQuestion');
+  const feedbackEl = document.getElementById('gameFeedback');
+  const gfTagEl = document.getElementById('gfTag');
+  const gfTextEl = document.getElementById('gfText');
+  const gcMetaEl = document.getElementById('gcMeta');
+  const nextBtn = document.getElementById('gameNext');
+  const endEl = document.getElementById('gameEnd');
+  const scoreEl = document.getElementById('geScore');
+  const mistakesEl = document.getElementById('geMistakes');
+  const restartBtn = document.getElementById('gameRestart');
+
+  function renderQuestion() {
+    const q = QUESTIONS[qIndex];
+    solved = false;
+
+    titleEl.textContent = q.title;
+    counterEl.textContent = (qIndex + 1) + ' / ' + QUESTIONS.length;
+
+    Array.from(dotsEl.children).forEach((d, i) => {
+      d.classList.remove('current', 'solved');
+      if (i < qIndex) d.classList.add('solved');
+      else if (i === qIndex) d.classList.add('current');
+    });
+
+    questionEl.innerHTML = `
+<div class="game-q">
+  <div class="gq-num">题目 ${qIndex + 1} · 5</div>
+  <h3 class="gq-title">${q.title.replace(/^Q\d+ · /, '')}</h3>
+</div>
+<div class="game-context">
+  <span class="gc-tag">背景</span>${q.context}
+</div>
+${tableHTML(q.table)}
+`;
+
+    feedbackEl.classList.remove('show', 'is-good', 'is-bad');
+    nextBtn.disabled = true;
+    gcMetaEl.textContent = '点击你认为最关键的那一行';
+
+    if (qIndex === QUESTIONS.length - 1) {
+      nextBtn.innerHTML = '玩通了 <span class="arr">→</span>';
+    } else {
+      nextBtn.innerHTML = '下一题 <span class="arr">→</span>';
+    }
+
+    // For Q5: there are TWO rows with data-pick="q5-dup". Both count as correct.
+    // For Q4: clicking the right row should also reveal the response detail panel.
+    const pickRows = questionEl.querySelectorAll('tr[data-pick]');
+    const allRows = questionEl.querySelectorAll('tbody tr');
+
+    allRows.forEach(row => {
+      row.addEventListener('click', () => handlePick(row, q));
+    });
+  }
+
+  function handlePick(row, q) {
+    if (solved) return;
+    const pick = row.dataset.pick;
+
+    if (pick === q.correct) {
+      // For Q5 mark BOTH duplicates green
+      if (q.correct === 'q5-dup') {
+        questionEl.querySelectorAll('tr[data-pick="q5-dup"]').forEach(r => r.classList.add('is-correct'));
+      } else {
+        row.classList.add('is-correct');
+      }
+
+      // For Q4 also reveal detail panel
+      if (q.correct === 'q4-me') {
+        const detail = questionEl.querySelector('#q4Detail');
+        if (detail) detail.classList.add('show');
+      }
+
+      solved = true;
+      questionEl.querySelectorAll('tbody tr').forEach(r => {
+        if (!r.classList.contains('is-correct')) r.style.pointerEvents = 'none';
+      });
+
+      feedbackEl.classList.remove('is-bad');
+      feedbackEl.classList.add('is-good', 'show');
+      gfTagEl.textContent = '答对';
+      gfTextEl.innerHTML = q.good;
+
+      nextBtn.disabled = false;
+      gcMetaEl.textContent = '点对了 · 这就是数据问题的位置';
+
+      Array.from(dotsEl.children)[qIndex].classList.remove('current');
+      Array.from(dotsEl.children)[qIndex].classList.add('solved');
+    } else {
+      mistakes++;
+      row.classList.remove('is-wrong-flash');
+      void row.offsetWidth;
+      row.classList.add('is-wrong-flash');
+
+      feedbackEl.classList.remove('is-good');
+      feedbackEl.classList.add('is-bad', 'show');
+      gfTagEl.textContent = '再看看';
+      gfTextEl.innerHTML = q.bad;
+    }
+  }
+
+  nextBtn.addEventListener('click', () => {
+    if (qIndex < QUESTIONS.length - 1) {
+      qIndex++;
+      renderQuestion();
+      stage.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    } else {
+      questionEl.style.display = 'none';
+      feedbackEl.style.display = 'none';
+      document.querySelector('.game-controls').style.display = 'none';
+      endEl.classList.add('show');
+      scoreEl.textContent = QUESTIONS.length;
+      mistakesEl.textContent = mistakes;
+    }
+  });
+
+  restartBtn.addEventListener('click', () => {
+    qIndex = 0;
+    mistakes = 0;
+    questionEl.style.display = '';
+    feedbackEl.style.display = '';
+    document.querySelector('.game-controls').style.display = '';
+    endEl.classList.remove('show');
+    renderQuestion();
+    stage.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
+
+  renderQuestion();
+})();
+
+// ========= §04 Response anatomy: hover keys → swap right panel =========
+(function () {
+  const body = document.getElementById('respBody');
+  if (!body) return;
+  const defaultPane = document.getElementById('respDefault');
+  const sidePanels = document.querySelectorAll('.resp-info');
+  const allKeys = body.querySelectorAll('[data-key]');
+
+  function show(key) {
+    let found = false;
+    sidePanels.forEach(p => {
+      const match = p.dataset.info === key;
+      p.classList.toggle('show', match);
+      if (match) found = true;
+    });
+    defaultPane.style.display = found ? 'none' : '';
+    allKeys.forEach(k => k.classList.toggle('active', k.dataset.key === key));
+  }
+
+  function clearAll() {
+    sidePanels.forEach(p => p.classList.remove('show'));
+    defaultPane.style.display = '';
+    allKeys.forEach(k => k.classList.remove('active'));
+  }
+
+  allKeys.forEach(k => {
+    k.addEventListener('mouseenter', () => show(k.dataset.key));
+    k.addEventListener('click', () => show(k.dataset.key));
+  });
+
+  body.addEventListener('mouseleave', clearAll);
+})();
+</script>
+
+
+<!-- 路线图弹窗 -->
+<div class="rm-modal" id="rm-modal" hidden>
+  <div class="rm-backdrop" data-rm-close></div>
+  <div class="rm-dialog" role="dialog" aria-label="完整路线图">
+    <button class="rm-close" data-rm-close aria-label="关闭">✕</button>
+    <div class="rm-header">
+      <div class="rm-tag">完整路线图 · ROADMAP</div>
+      <h3 class="rm-title">9 模块 <span class="rm-em">·</span> 28 篇</h3>
+      <p class="rm-sub">设计篇 5 模块 / 15 篇 + 工程篇 4 系列 / 13 篇</p>
+    </div>
+    <div class="rm-body">
+      <div class="rm-mod">
+        <div class="rm-mod-key">A · 单元素与组件</div>
+        <div class="rm-mod-list">
+          <a href="basics-figma.html" class="rm-cell"><span class="rm-cell-code">A0</span><span class="rm-cell-name">三件套 · HTML / CSS / JS</span><span class="rm-cell-tier">入门</span></a>
+          <a href="box-figma.html" class="rm-cell"><span class="rm-cell-code">A1</span><span class="rm-cell-name">盒子 · Auto Layout</span><span class="rm-cell-tier">基础</span></a>
+          <a href="components-figma.html" class="rm-cell"><span class="rm-cell-code">A2</span><span class="rm-cell-name">组件 · Variants &amp; Props</span><span class="rm-cell-tier">基础</span></a>
+          <a href="button-system-figma.html" class="rm-cell"><span class="rm-cell-code">A3</span><span class="rm-cell-name">Button System · 组件演化</span><span class="rm-cell-tier">进阶</span></a>
+        </div>
+      </div>
+      <div class="rm-mod">
+        <div class="rm-mod-key">B · 多组件协作</div>
+        <div class="rm-mod-list">
+          <a href="page-figma.html" class="rm-cell"><span class="rm-cell-code">B0</span><span class="rm-cell-name">拼页面 · 组件嵌套</span><span class="rm-cell-tier">入门</span></a>
+          <a href="data-flow-figma.html" class="rm-cell"><span class="rm-cell-code">B1</span><span class="rm-cell-name">数据流 · 概念</span><span class="rm-cell-tier">基础</span></a>
+          <a href="data-flow-cases-figma.html" class="rm-cell"><span class="rm-cell-code">B2</span><span class="rm-cell-name">数据流 · 实战 5 案例</span><span class="rm-cell-tier">进阶</span></a>
+        </div>
+      </div>
+      <div class="rm-mod">
+        <div class="rm-mod-key">C · 视觉系统</div>
+        <div class="rm-mod-list">
+          <a href="tokens-figma.html" class="rm-cell"><span class="rm-cell-code">C0</span><span class="rm-cell-name">Variables / Tokens 入门</span><span class="rm-cell-tier">入门</span></a>
+          <a href="colors-type-figma.html" class="rm-cell"><span class="rm-cell-code">C1</span><span class="rm-cell-name">Colors / Type / Spacing</span><span class="rm-cell-tier">基础</span></a>
+          <a href="theme-switch-figma.html" class="rm-cell"><span class="rm-cell-code">C2</span><span class="rm-cell-name">Theme 切换实战</span><span class="rm-cell-tier">进阶</span></a>
+        </div>
+      </div>
+      <div class="rm-mod">
+        <div class="rm-mod-key">D · 状态与交互</div>
+        <div class="rm-mod-list">
+          <a href="states-figma.html" class="rm-cell"><span class="rm-cell-code">D0</span><span class="rm-cell-name">视觉态 · 看得见的状态</span><span class="rm-cell-tier">入门</span></a>
+          <a href="interactive-figma.html" class="rm-cell"><span class="rm-cell-code">D1</span><span class="rm-cell-name">Interactive Component</span><span class="rm-cell-tier">基础</span></a>
+          <a href="transition-figma.html" class="rm-cell"><span class="rm-cell-code">D2</span><span class="rm-cell-name">动画 · Transition</span><span class="rm-cell-tier">进阶</span></a>
+        </div>
+      </div>
+      <div class="rm-mod">
+        <div class="rm-mod-key">E · 工程化</div>
+        <div class="rm-mod-list">
+          <a href="naming-figma.html" class="rm-cell"><span class="rm-cell-code">E0</span><span class="rm-cell-name">命名 / 图层规范</span><span class="rm-cell-tier">入门</span></a>
+          <a href="handoff-figma.html" class="rm-cell"><span class="rm-cell-code">E2</span><span class="rm-cell-name">Handoff &amp; 设计系统</span><span class="rm-cell-tier">进阶</span></a>
+        </div>
+      </div>
+      <div class="rm-mod">
+        <div class="rm-mod-key">F · 工程入门</div>
+        <div class="rm-mod-list">
+          <a href="f1-npm-figma.html" class="rm-cell"><span class="rm-cell-code">F1</span><span class="rm-cell-name">npm 是什么</span><span class="rm-cell-tier">入门</span></a>
+          <a href="f2-import-figma.html" class="rm-cell"><span class="rm-cell-code">F2</span><span class="rm-cell-name">import 与路径</span><span class="rm-cell-tier">入门</span></a>
+          <a href="f3-dev-build-figma.html" class="rm-cell"><span class="rm-cell-code">F3</span><span class="rm-cell-name">dev vs build</span><span class="rm-cell-tier">基础</span></a>
+          <a href="f4-hidden-files-figma.html" class="rm-cell"><span class="rm-cell-code">F4</span><span class="rm-cell-name">看不见的文件</span><span class="rm-cell-tier">基础</span></a>
+        </div>
+      </div>
+      <div class="rm-mod">
+        <div class="rm-mod-key">G · 版本控制</div>
+        <div class="rm-mod-list">
+          <a href="g1-commit-branch-figma.html" class="rm-cell"><span class="rm-cell-code">G1</span><span class="rm-cell-name">commit / branch</span><span class="rm-cell-tier">入门</span></a>
+          <a href="g2-conflict-figma.html" class="rm-cell"><span class="rm-cell-code">G2</span><span class="rm-cell-name">冲突怎么解</span><span class="rm-cell-tier">基础</span></a>
+          <a href="g3-pr-review-figma.html" class="rm-cell"><span class="rm-cell-code">G3</span><span class="rm-cell-name">PR / Review</span><span class="rm-cell-tier">进阶</span></a>
+        </div>
+      </div>
+      <div class="rm-mod">
+        <div class="rm-mod-key">H · 浏览器调试</div>
+        <div class="rm-mod-list">
+          <a href="h1-devtools-elements-figma.html" class="rm-cell"><span class="rm-cell-code">H1</span><span class="rm-cell-name">DevTools Elements</span><span class="rm-cell-tier">入门</span></a>
+          <a href="h2-console-error-figma.html" class="rm-cell"><span class="rm-cell-code">H2</span><span class="rm-cell-name">Console 报错</span><span class="rm-cell-tier">基础</span></a>
+          <a href="h3-network-figma.html" class="rm-cell"><span class="rm-cell-code">H3</span><span class="rm-cell-name">Network 面板</span><span class="rm-cell-tier">进阶</span></a>
+        </div>
+      </div>
+      <div class="rm-mod">
+        <div class="rm-mod-key">J · 上线</div>
+        <div class="rm-mod-list">
+          <a href="j1-dns-figma.html" class="rm-cell"><span class="rm-cell-code">J1</span><span class="rm-cell-name">DNS / 域名</span><span class="rm-cell-tier">基础</span></a>
+          <a href="j2-vercel-figma.html" class="rm-cell"><span class="rm-cell-code">J2</span><span class="rm-cell-name">Vercel 部署</span><span class="rm-cell-tier">基础</span></a>
+          <a href="j3-cache-cdn-figma.html" class="rm-cell"><span class="rm-cell-code">J3</span><span class="rm-cell-name">缓存 / CDN</span><span class="rm-cell-tier">进阶</span></a>
+        </div>
+      </div>
+    </div>
+    <div class="rm-footer">
+      <span>未完待续 · 想看什么主题加我聊</span>
+      <span class="rm-wechat">微信 vanvan_0422</span>
+    </div>
+  </div>
+</div>
+<script>
+(function(){
+  var modal = document.getElementById('rm-modal');
+  if (!modal) return;
+  var openBtns = document.querySelectorAll('[data-rm-open]');
+  var closeBtns = modal.querySelectorAll('[data-rm-close]');
+  function open() { modal.hidden = false; document.body.style.overflow = 'hidden'; }
+  function close() { modal.hidden = true; document.body.style.overflow = ''; }
+  openBtns.forEach(function(b){ b.addEventListener('click', function(e){ e.preventDefault(); open(); }); });
+  closeBtns.forEach(function(b){ b.addEventListener('click', close); });
+  document.addEventListener('keydown', function(e){ if (e.key === 'Escape' && !modal.hidden) close(); });
+})();
+</script>
+</body>
+</html>

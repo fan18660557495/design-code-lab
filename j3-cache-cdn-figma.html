@@ -1,0 +1,2422 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>缓存 / CDN：改了为啥没生效 — 4 层缓存全图谱</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,300..900&family=Geist:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Noto+Sans+SC:wght@300;400;500;700;900&family=Noto+Serif+SC:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f3eee5;
+    --bg-2: #ebe4d4;
+    --ink: #16161d;
+    --ink-soft: #4a4a55;
+    --ink-mute: #8a8a92;
+    --line: #d5cdba;
+    --line-soft: #e3dcca;
+    --accent: #ff4d2e;
+    --accent-soft: #ffe4dc;
+    --blue: #0a4cff;
+    --blue-soft: #dde6ff;
+    --green: #1f6b3a;
+    --green-soft: #d4ecdb;
+    --yellow: #ffcf3d;
+    --paper: #faf7f0;
+    --shadow: 0 1px 0 rgba(0,0,0,0.04), 0 8px 24px rgba(22,22,29,0.06);
+
+    /* §02/§03 layer colors */
+    --layer-browser: #6a4cff;
+    --layer-cdn: #0a4cff;
+    --layer-server: #1f6b3a;
+    --layer-db: #b45309;
+    --hit: #1f6b3a;
+    --miss: #ff4d2e;
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'Geist', 'Noto Sans SC', system-ui, -apple-system, sans-serif;
+    font-size: 16px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    background-image: radial-gradient(circle at 1px 1px, rgba(22,22,29,0.05) 1px, transparent 0);
+    background-size: 24px 24px;
+  }
+
+  /* Typography (no italic per spec) */
+  .display-cn { font-family: 'Noto Serif SC', 'Fraunces', serif; font-weight: 900; letter-spacing: -0.01em; }
+  .mono { font-family: 'JetBrains Mono', monospace; }
+  .label { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-mute); }
+
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 0 32px; }
+
+  /* topbar */
+  .topbar {
+    border-bottom: 1px dashed var(--line);
+    padding: 16px 0;
+    background: rgba(243, 238, 229, 0.85);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    backdrop-filter: blur(8px);
+  }
+  .topbar-inner { display: flex; justify-content: space-between; align-items: center; gap: 24px; flex-wrap: wrap; }
+  .brand { font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 600; }
+  .brand .dot { display: inline-block; width: 8px; height: 8px; background: var(--accent); border-radius: 50%; margin-right: 8px; vertical-align: middle; animation: pulse 2s ease-in-out infinite; }
+  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+  .nav-links { display: flex; gap: 18px; font-size: 13px; flex-wrap: wrap; }
+  .nav-links a { color: var(--ink-soft); text-decoration: none; transition: color 0.2s; }
+  .nav-links a:hover { color: var(--accent); }
+  .nav-links a.current { color: var(--accent); font-weight: 600; }
+  a.brand { text-decoration: none; color: inherit; transition: color 0.2s; cursor: pointer; }
+  a.brand:hover { color: var(--accent); }
+
+  /* hero */
+  .hero { padding: 100px 0 80px; position: relative; overflow: hidden; }
+  .hero-meta { display: flex; gap: 24px; margin-bottom: 32px; align-items: center; flex-wrap: wrap; }
+  .hero-meta .pill { padding: 6px 12px; border: 1px solid var(--ink); border-radius: 100px; font-size: 11px; font-family: 'JetBrains Mono', monospace; letter-spacing: 0.05em; }
+  .hero-meta .pill.fill { background: var(--ink); color: var(--bg); }
+  .hero h1 {
+    font-family: 'Noto Serif SC', 'Fraunces', serif;
+    font-weight: 900;
+    font-size: clamp(46px, 6.5vw, 86px);
+    line-height: 0.98;
+    letter-spacing: -0.03em;
+    margin: 0 0 24px;
+  }
+  .hero h1 .em { font-family: 'Noto Serif SC', serif; font-weight: 500; color: var(--accent); }
+  .hero h1 .x { display: inline-block; transform: translateY(-0.05em); margin: 0 0.05em; color: var(--ink-mute); font-weight: 300; }
+  .hero p.lede { font-size: 20px; line-height: 1.5; max-width: 640px; color: var(--ink-soft); margin: 0 0 40px; }
+  .hero p.lede .em { font-family: 'Noto Serif SC', serif; color: var(--accent); font-weight: 500; }
+  .hero-grid { display: grid; grid-template-columns: 1.4fr 1fr; gap: 48px; align-items: end; }
+  @media (max-width: 880px) { .hero-grid { grid-template-columns: 1fr; } }
+  .hero-side { border-left: 1px dashed var(--line); padding-left: 24px; font-size: 13px; color: var(--ink-soft); }
+  .hero-side .row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px dashed var(--line); }
+  .hero-side .row:last-child { border-bottom: none; }
+  .hero-side .row .k { color: var(--ink-mute); font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.05em; text-transform: uppercase; }
+  .hero-side .row .v { font-weight: 500; }
+
+  /* section */
+  section { padding: 80px 0; border-top: 1px solid var(--line); position: relative; animation: fadeIn 0.6s ease-out backwards; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+  .section-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 48px; flex-wrap: wrap; gap: 16px; }
+  .section-num { font-family: 'JetBrains Mono', monospace; font-size: 13px; color: var(--ink-mute); letter-spacing: 0.1em; }
+  .section-num strong { color: var(--accent); }
+  .section-title {
+    font-family: 'Noto Serif SC', serif;
+    font-weight: 900;
+    font-size: clamp(32px, 4.5vw, 52px);
+    line-height: 1.05;
+    letter-spacing: -0.02em;
+    margin: 0;
+    max-width: 18ch;
+  }
+  .section-title .em { font-family: 'Noto Serif SC', serif; font-weight: 500; color: var(--accent); }
+  .section-sub { color: var(--ink-soft); font-size: 17px; max-width: 38ch; line-height: 1.55; margin: 0; }
+
+  .em { font-family: 'Noto Serif SC', serif; font-weight: 500; color: var(--accent); }
+
+  /* hint strip */
+  .hint-strip {
+    margin-top: 16px;
+    padding: 14px 18px;
+    background: var(--accent-soft);
+    border-left: 3px solid var(--accent);
+    border-radius: 4px;
+    font-size: 13px;
+    color: var(--ink);
+    line-height: 1.55;
+  }
+  .hint-strip .hint-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--accent);
+    letter-spacing: 0.12em;
+    margin-right: 10px;
+    text-transform: uppercase;
+  }
+
+  /* quote box */
+  .quote-box {
+    margin: 32px 0 0;
+    padding: 24px 28px;
+    background: var(--paper);
+    border-left: 3px solid var(--ink);
+    border-radius: 0 6px 6px 0;
+    font-family: 'Noto Serif SC', serif;
+    font-size: 18px;
+    line-height: 1.55;
+    color: var(--ink);
+    font-weight: 500;
+  }
+  .quote-box .quote-mark {
+    font-family: 'Noto Serif SC', serif;
+    color: var(--accent);
+    font-size: 28px;
+    line-height: 1;
+    margin-right: 8px;
+    font-weight: 500;
+  }
+  .quote-box .quote-attr {
+    display: block;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--ink-mute);
+    margin-top: 12px;
+    letter-spacing: 0.05em;
+    font-weight: 400;
+  }
+
+  /* problem grid (used in §01) */
+  .problem-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; margin-top: 24px; }
+  @media (max-width: 880px) { .problem-grid { grid-template-columns: 1fr; } }
+  .problem-card {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 28px;
+    position: relative;
+  }
+  .problem-card.bad { border-color: var(--accent); background: var(--accent-soft); }
+  .problem-card.good { border-color: var(--green); background: var(--green-soft); }
+  .problem-card .tag {
+    position: absolute; top: -12px; left: 24px;
+    background: var(--bg); padding: 2px 10px;
+    font-family: 'JetBrains Mono', monospace; font-size: 11px;
+    letter-spacing: 0.1em;
+  }
+  .problem-card.bad .tag { color: var(--accent); border: 1px solid var(--accent); }
+  .problem-card.good .tag { color: var(--green); border: 1px solid var(--green); }
+  .problem-card h3 { font-family: 'Noto Serif SC', serif; font-size: 22px; margin: 0 0 12px; font-weight: 700; }
+  .problem-card p { margin: 0 0 12px; color: var(--ink-soft); font-size: 14px; line-height: 1.55; }
+  .problem-card p:last-child { margin-bottom: 0; }
+  .problem-card .blackbox-vis {
+    margin-top: 16px;
+    padding: 16px 18px;
+    background: rgba(255,255,255,0.55);
+    border-radius: 4px;
+    border: 1px dashed var(--line);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    line-height: 1.7;
+    color: var(--ink-soft);
+  }
+  .problem-card .blackbox-vis .arrow { color: var(--accent); margin: 0 6px; }
+  .problem-card .blackbox-vis .q { color: var(--ink-mute); }
+  .problem-card .blackbox-vis strong { color: var(--ink); font-weight: 600; }
+
+  /* §01 store analogy */
+  .store-grid {
+    margin-top: 28px;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+  }
+  @media (max-width: 880px) { .store-grid { grid-template-columns: 1fr; } }
+  .store-cell {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 22px 22px 20px;
+    position: relative;
+    overflow: hidden;
+  }
+  .store-cell .store-emoji {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 36px;
+    line-height: 1;
+    margin-bottom: 10px;
+    color: var(--accent);
+    font-weight: 500;
+  }
+  .store-cell .store-title {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 17px;
+    font-weight: 700;
+    margin: 0 0 6px;
+    color: var(--ink);
+  }
+  .store-cell .store-meta {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--ink-mute);
+    margin-bottom: 8px;
+  }
+  .store-cell .store-desc {
+    font-size: 13px;
+    line-height: 1.55;
+    color: var(--ink-soft);
+    margin: 0;
+  }
+  .store-cell .store-desc strong { color: var(--ink); font-weight: 600; }
+
+  /* === §02 4-layer cache map === */
+  .map-stage {
+    margin-top: 28px;
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 32px 28px 24px;
+    overflow-x: auto;
+  }
+  .map-rail {
+    display: grid;
+    grid-template-columns: repeat(7, auto);
+    align-items: center;
+    gap: 0;
+    min-width: 760px;
+  }
+  .map-node {
+    background: white;
+    border: 1.5px solid var(--ink);
+    border-radius: 10px;
+    padding: 16px 14px 14px;
+    min-width: 130px;
+    text-align: center;
+    position: relative;
+  }
+  .map-node.is-browser { border-color: var(--layer-browser); background: #f1edff; }
+  .map-node.is-cdn { border-color: var(--layer-cdn); background: var(--blue-soft); }
+  .map-node.is-server { border-color: var(--layer-server); background: var(--green-soft); }
+  .map-node.is-db { border-color: var(--layer-db); background: #fff0d8; }
+  .map-node .map-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--ink-mute);
+    margin-bottom: 4px;
+  }
+  .map-node .map-title {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 14px;
+    font-weight: 700;
+    margin: 0 0 6px;
+    color: var(--ink);
+  }
+  .map-node .map-sub {
+    font-size: 11px;
+    color: var(--ink-soft);
+    line-height: 1.4;
+    margin: 0 0 8px;
+  }
+  .map-node .map-stat {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--ink);
+    padding-top: 6px;
+    border-top: 1px dashed rgba(22,22,29,0.18);
+  }
+  .map-node .map-stat .dot {
+    display: inline-block;
+    width: 5px; height: 5px;
+    border-radius: 50%;
+    background: var(--accent);
+    margin-right: 4px;
+    vertical-align: middle;
+  }
+  .map-node.is-browser .map-tag { color: var(--layer-browser); }
+  .map-node.is-cdn .map-tag { color: var(--layer-cdn); }
+  .map-node.is-server .map-tag { color: var(--layer-server); }
+  .map-node.is-db .map-tag { color: var(--layer-db); }
+  .map-arr {
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 500;
+    color: var(--ink-mute);
+    font-size: 22px;
+    padding: 0 8px;
+    user-select: none;
+  }
+
+  .map-legend {
+    margin-top: 20px;
+    padding-top: 18px;
+    border-top: 1px dashed var(--line);
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--ink-soft);
+    letter-spacing: 0.04em;
+  }
+  .map-legend .lg-item { display: flex; align-items: center; gap: 6px; }
+  .map-legend .lg-sw { width: 12px; height: 12px; border-radius: 3px; border: 1.5px solid; }
+  .map-legend .lg-sw.b { background: #f1edff; border-color: var(--layer-browser); }
+  .map-legend .lg-sw.c { background: var(--blue-soft); border-color: var(--layer-cdn); }
+  .map-legend .lg-sw.s { background: var(--green-soft); border-color: var(--layer-server); }
+  .map-legend .lg-sw.d { background: #fff0d8; border-color: var(--layer-db); }
+
+  /* === §03 cache exploration game === */
+  .game-stage {
+    margin-top: 24px;
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+  .game-bar {
+    background: var(--bg-2);
+    padding: 14px 22px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    border-bottom: 1px solid var(--line);
+    flex-wrap: wrap;
+  }
+  .game-url {
+    flex: 1;
+    min-width: 260px;
+    background: white;
+    border: 1.5px solid var(--ink);
+    border-radius: 100px;
+    padding: 8px 16px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .game-url .url-lock { color: var(--green); font-weight: 700; }
+  .game-url .url-text { color: var(--ink); flex: 1; }
+  .game-url .url-text .h { color: var(--ink-mute); }
+  .game-btn {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    padding: 7px 14px;
+    border-radius: 100px;
+    border: 1.5px solid var(--ink);
+    background: var(--ink);
+    color: var(--bg);
+    cursor: pointer;
+    transition: all 0.18s;
+    letter-spacing: 0.04em;
+    white-space: nowrap;
+  }
+  .game-btn:hover { background: var(--accent); border-color: var(--accent); color: white; }
+  .game-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .game-btn.ghost { background: transparent; color: var(--ink); }
+  .game-btn.ghost:hover { background: var(--accent-soft); color: var(--accent); border-color: var(--accent); }
+
+  .game-stack {
+    padding: 28px 22px 24px;
+    background:
+      linear-gradient(180deg, rgba(255,255,255,0.5), transparent 60%),
+      var(--paper);
+  }
+  .game-trip-status {
+    text-align: center;
+    margin-bottom: 18px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--ink-soft);
+    letter-spacing: 0.06em;
+    min-height: 16px;
+  }
+  .game-trip-status .live {
+    display: inline-block;
+    background: var(--ink);
+    color: var(--bg);
+    padding: 4px 12px;
+    border-radius: 100px;
+    font-size: 11px;
+  }
+  .game-trip-status .live.success { background: var(--green); }
+  .game-trip-status .live.fresh { background: var(--accent); }
+
+  .game-shelves {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 14px;
+    position: relative;
+  }
+  @media (max-width: 880px) { .game-shelves { grid-template-columns: 1fr 1fr; } }
+  @media (max-width: 540px) { .game-shelves { grid-template-columns: 1fr; } }
+
+  .game-shelf {
+    background: white;
+    border: 1.5px solid var(--ink);
+    border-radius: 10px;
+    padding: 14px 14px 16px;
+    position: relative;
+    transition: all 0.25s ease;
+  }
+  .game-shelf .shelf-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px;
+  }
+  .game-shelf .shelf-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    color: var(--ink-mute);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+  .game-shelf .shelf-speed {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    color: var(--ink);
+    background: var(--bg-2);
+    padding: 2px 6px;
+    border-radius: 3px;
+    letter-spacing: 0.04em;
+  }
+  .game-shelf .shelf-title {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 15px;
+    font-weight: 700;
+    margin: 0 0 4px;
+    color: var(--ink);
+  }
+  .game-shelf .shelf-place {
+    font-size: 11px;
+    color: var(--ink-soft);
+    line-height: 1.45;
+    margin: 0 0 12px;
+  }
+  .game-shelf.is-browser { border-color: var(--layer-browser); background: linear-gradient(180deg, white, #f8f5ff); }
+  .game-shelf.is-cdn     { border-color: var(--layer-cdn); background: linear-gradient(180deg, white, #f0f4ff); }
+  .game-shelf.is-server  { border-color: var(--layer-server); background: linear-gradient(180deg, white, #f1f8f3); }
+  .game-shelf.is-db      { border-color: var(--layer-db); background: linear-gradient(180deg, white, #fff7ec); }
+  .game-shelf.is-browser .shelf-tag { color: var(--layer-browser); }
+  .game-shelf.is-cdn .shelf-tag { color: var(--layer-cdn); }
+  .game-shelf.is-server .shelf-tag { color: var(--layer-server); }
+  .game-shelf.is-db .shelf-tag { color: var(--layer-db); }
+
+  .shelf-box {
+    border: 1.5px dashed rgba(22,22,29,0.18);
+    border-radius: 6px;
+    padding: 14px 12px;
+    text-align: center;
+    transition: all 0.22s ease;
+    position: relative;
+    min-height: 92px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 4px;
+    background: rgba(255,255,255,0.55);
+  }
+  .shelf-box .box-state {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.06em;
+    color: var(--ink-mute);
+  }
+  .shelf-box .box-content {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--ink-mute);
+    line-height: 1.4;
+  }
+  .shelf-box .box-color {
+    width: 40px; height: 18px;
+    border-radius: 4px;
+    margin: 4px auto 0;
+    display: none;
+    border: 1px solid rgba(22,22,29,0.15);
+  }
+  .game-shelf.has-cache .shelf-box {
+    background: rgba(255,255,255,0.95);
+    border-style: solid;
+  }
+  .game-shelf.has-cache .shelf-box .box-state { color: var(--ink); }
+  .game-shelf.has-cache .shelf-box .box-content { color: var(--ink); }
+  .game-shelf.has-cache .shelf-box .box-color { display: block; }
+
+  .game-shelf.is-checking .shelf-box {
+    box-shadow: 0 0 0 3px rgba(255,77,46,0.4);
+    border-color: var(--accent);
+    animation: gameCheck 0.5s ease;
+  }
+  @keyframes gameCheck {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.04); }
+    100% { transform: scale(1); }
+  }
+  .game-shelf.is-hit .shelf-box {
+    box-shadow: 0 0 0 3px rgba(31,107,58,0.35);
+    border-color: var(--green);
+  }
+  .game-shelf.is-hit::after {
+    content: 'HIT';
+    position: absolute;
+    top: 8px; right: 10px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    background: var(--green);
+    color: white;
+    padding: 2px 6px;
+    border-radius: 3px;
+    letter-spacing: 0.08em;
+    animation: badgePop 0.3s ease;
+  }
+  .game-shelf.is-miss::after {
+    content: 'MISS';
+    position: absolute;
+    top: 8px; right: 10px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    background: var(--accent);
+    color: white;
+    padding: 2px 6px;
+    border-radius: 3px;
+    letter-spacing: 0.08em;
+    animation: badgePop 0.3s ease;
+  }
+  @keyframes badgePop {
+    from { opacity: 0; transform: scale(0.6); }
+    to { opacity: 1; transform: scale(1); }
+  }
+
+  /* purge banner inside shelf */
+  .game-shelf .shelf-purge {
+    margin-top: 10px;
+    text-align: center;
+  }
+  .shelf-purge button {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    padding: 4px 10px;
+    background: transparent;
+    border: 1px solid var(--ink-mute);
+    color: var(--ink-mute);
+    border-radius: 100px;
+    cursor: pointer;
+    letter-spacing: 0.05em;
+    transition: all 0.15s;
+  }
+  .shelf-purge button:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: var(--accent-soft);
+  }
+
+  /* trip log */
+  .game-log {
+    margin-top: 22px;
+    padding: 16px 18px;
+    background: var(--ink);
+    color: #d8d8e0;
+    border-radius: 8px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    line-height: 1.7;
+    max-height: 200px;
+    overflow-y: auto;
+  }
+  .game-log .log-empty { color: #6e6e7a; }
+  .game-log .log-row { margin-bottom: 6px; padding-left: 14px; position: relative; }
+  .game-log .log-row::before {
+    content: '›';
+    position: absolute;
+    left: 0;
+    color: #ff8a6e;
+  }
+  .game-log .log-row.ok { color: #a8e6a3; }
+  .game-log .log-row.miss { color: #ff8a6e; }
+  .game-log .log-row.title { color: #ffd166; margin-top: 8px; font-weight: 600; }
+  .game-log .log-row.title:first-child { margin-top: 0; }
+  .game-log .log-row.summary { color: #8ec5ff; }
+
+  /* §03 challenges */
+  .challenge-stage {
+    margin-top: 28px;
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 28px 28px 24px;
+  }
+  .challenge-stage .ch-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--accent);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+  .challenge-stage h3 {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 22px;
+    margin: 0 0 6px;
+    font-weight: 700;
+  }
+  .challenge-stage > p.ch-intro {
+    font-size: 14px;
+    color: var(--ink-soft);
+    margin: 0 0 22px;
+    line-height: 1.55;
+  }
+  .ch-block {
+    margin-bottom: 22px;
+    padding-bottom: 22px;
+    border-bottom: 1px dashed var(--line);
+  }
+  .ch-block:last-child { margin-bottom: 0; padding-bottom: 0; border-bottom: none; }
+  .ch-num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    background: var(--ink);
+    color: var(--bg);
+    padding: 3px 8px;
+    border-radius: 3px;
+    letter-spacing: 0.06em;
+    margin-right: 8px;
+    vertical-align: 2px;
+  }
+  .ch-q {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 17px;
+    font-weight: 600;
+    margin: 0 0 12px;
+    color: var(--ink);
+    line-height: 1.5;
+  }
+  .ch-options {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .ch-opt {
+    background: white;
+    border: 1.5px solid var(--line);
+    border-radius: 6px;
+    padding: 11px 14px;
+    font-size: 14px;
+    color: var(--ink);
+    cursor: pointer;
+    transition: all 0.15s;
+    text-align: left;
+    line-height: 1.5;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-family: inherit;
+  }
+  .ch-opt:hover { border-color: var(--accent); background: var(--accent-soft); }
+  .ch-opt .ch-letter {
+    width: 22px; height: 22px;
+    flex-shrink: 0;
+    border: 1.5px solid var(--ink-mute);
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--ink-mute);
+  }
+  .ch-opt.is-correct {
+    border-color: var(--green);
+    background: var(--green-soft);
+    color: var(--ink);
+  }
+  .ch-opt.is-correct .ch-letter {
+    background: var(--green);
+    border-color: var(--green);
+    color: white;
+  }
+  .ch-opt.is-wrong {
+    border-color: var(--accent);
+    background: var(--accent-soft);
+    color: var(--ink);
+    opacity: 0.7;
+  }
+  .ch-opt.is-wrong .ch-letter {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: white;
+  }
+  .ch-explain {
+    margin-top: 10px;
+    padding: 12px 14px;
+    background: var(--bg-2);
+    border-left: 3px solid var(--green);
+    border-radius: 0 4px 4px 0;
+    font-size: 13px;
+    color: var(--ink);
+    line-height: 1.55;
+    display: none;
+  }
+  .ch-explain.shown { display: block; animation: fadeIn 0.3s ease; }
+  .ch-explain strong { color: var(--accent); font-weight: 600; }
+  .ch-explain code { font-family: 'JetBrains Mono', monospace; background: rgba(22,22,29,0.06); padding: 1px 5px; border-radius: 3px; font-size: 12px; }
+
+  /* §04 fixes / cards */
+  .fix-grid {
+    margin-top: 24px;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+  }
+  @media (max-width: 880px) { .fix-grid { grid-template-columns: 1fr; } }
+  .fix-card {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 24px 22px 22px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .fix-card .fix-num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--accent);
+    line-height: 1;
+    letter-spacing: -0.02em;
+  }
+  .fix-card h3 {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 19px;
+    font-weight: 700;
+    margin: 0;
+    line-height: 1.25;
+    color: var(--ink);
+  }
+  .fix-card p {
+    font-size: 13px;
+    color: var(--ink-soft);
+    line-height: 1.55;
+    margin: 0;
+  }
+  .fix-card p strong { color: var(--ink); font-weight: 600; }
+  .fix-card .fix-shortcut {
+    margin-top: auto;
+    padding: 12px 14px;
+    background: var(--ink);
+    color: var(--bg);
+    border-radius: 5px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.04em;
+    line-height: 1.5;
+  }
+  .fix-card .fix-shortcut .kbd {
+    display: inline-block;
+    background: rgba(255,255,255,0.16);
+    color: white;
+    padding: 2px 7px;
+    border-radius: 3px;
+    border: 1px solid rgba(255,255,255,0.2);
+    margin: 0 2px;
+    font-weight: 500;
+  }
+  .fix-card .fix-shortcut .accent { color: var(--accent); }
+  .fix-card .fix-mock {
+    background: white;
+    border: 1px dashed var(--line);
+    border-radius: 5px;
+    padding: 14px 12px;
+    margin-top: 6px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    line-height: 1.65;
+    color: var(--ink-soft);
+  }
+  .fix-card .fix-mock .row {
+    display: flex; justify-content: space-between; gap: 6px;
+    padding: 3px 0;
+    border-bottom: 1px dashed rgba(22,22,29,0.08);
+  }
+  .fix-card .fix-mock .row:last-child { border-bottom: none; }
+  .fix-card .fix-mock .row .v { color: var(--ink); font-weight: 500; }
+
+  /* §05 headers */
+  .header-stage {
+    margin-top: 24px;
+    background: var(--ink);
+    color: #d8d8e0;
+    border-radius: 10px;
+    padding: 0;
+    overflow: hidden;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0;
+  }
+  @media (max-width: 880px) { .header-stage { grid-template-columns: 1fr; } }
+  .header-list {
+    padding: 22px 22px 18px;
+    border-right: 1px solid #2a2a35;
+  }
+  @media (max-width: 880px) { .header-list { border-right: none; border-bottom: 1px solid #2a2a35; } }
+  .header-list-title {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: #6e6e7a;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-bottom: 14px;
+  }
+  .hdr-row {
+    padding: 12px 14px;
+    border-radius: 6px;
+    margin-bottom: 6px;
+    cursor: pointer;
+    transition: all 0.15s;
+    border: 1px solid transparent;
+    background: rgba(255,255,255,0.02);
+  }
+  .hdr-row:hover { background: rgba(255,138,110,0.08); }
+  .hdr-row.is-active {
+    background: rgba(255,138,110,0.15);
+    border-color: rgba(255,138,110,0.4);
+  }
+  .hdr-row .hdr-key {
+    color: #ff8a6e;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    font-weight: 500;
+  }
+  .hdr-row .hdr-val {
+    color: #a8e6a3;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    margin-left: 6px;
+  }
+  .hdr-row .hdr-mini {
+    font-family: 'Geist', sans-serif;
+    font-size: 11px;
+    color: #8a8a92;
+    margin-top: 4px;
+    line-height: 1.5;
+  }
+
+  .header-info {
+    padding: 24px 26px;
+    background: #1c1c25;
+    color: #d8d8e0;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .header-info-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--accent);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+  .header-info-name {
+    font-family: 'Noto Serif SC', serif;
+    font-weight: 800;
+    font-size: 22px;
+    color: white;
+    margin: 0;
+    letter-spacing: -0.01em;
+  }
+  .header-info-desc {
+    font-size: 13.5px;
+    color: #c8c8d2;
+    line-height: 1.65;
+    margin: 0;
+  }
+  .header-info-desc strong { color: white; font-weight: 600; }
+  .header-info-desc code {
+    font-family: 'JetBrains Mono', monospace;
+    background: rgba(255,255,255,0.08);
+    color: #ffd166;
+    padding: 1px 6px;
+    border-radius: 3px;
+    font-size: 12px;
+  }
+  .header-info-block {
+    margin-top: 6px;
+    padding-top: 12px;
+    border-top: 1px dashed #383844;
+  }
+  .header-info-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: #8a8a92;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+  .header-info-text {
+    font-size: 13px;
+    color: #c8c8d2;
+    line-height: 1.55;
+    margin: 0;
+  }
+  .header-info-text code {
+    font-family: 'JetBrains Mono', monospace;
+    background: rgba(255,255,255,0.08);
+    color: #a8e6a3;
+    padding: 1px 5px;
+    border-radius: 3px;
+    font-size: 12px;
+  }
+
+  /* devtools mock for §05 */
+  .devtools-mock {
+    margin-top: 20px;
+    background: white;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  .devtools-mock .dt-tabs {
+    display: flex;
+    background: var(--bg-2);
+    border-bottom: 1px solid var(--line);
+    padding: 0 8px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+  }
+  .devtools-mock .dt-tab {
+    padding: 8px 14px;
+    color: var(--ink-mute);
+    border-bottom: 2px solid transparent;
+  }
+  .devtools-mock .dt-tab.active {
+    color: var(--ink);
+    border-bottom-color: var(--accent);
+    font-weight: 500;
+  }
+  .devtools-mock .dt-body {
+    padding: 14px 18px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--ink-soft);
+    line-height: 1.85;
+  }
+  .devtools-mock .dt-body .k { color: var(--accent); font-weight: 500; }
+  .devtools-mock .dt-body .v { color: var(--ink); }
+  .devtools-mock .dt-body .row {
+    border-bottom: 1px dashed var(--line);
+    padding: 4px 0;
+  }
+  .devtools-mock .dt-body .row:last-child { border-bottom: none; }
+
+  /* §06 cheatsheet */
+  .cheat-card {
+    margin-top: 24px;
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 30px 32px 28px;
+  }
+  .cheat-card h3 {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 22px;
+    font-weight: 700;
+    margin: 0 0 4px;
+    color: var(--ink);
+  }
+  .cheat-card .cheat-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--accent);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 16px;
+  }
+  .cheat-card table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 8px;
+    font-size: 13px;
+  }
+  .cheat-card th, .cheat-card td {
+    text-align: left;
+    padding: 10px 12px;
+    border-bottom: 1px dashed var(--line);
+    vertical-align: top;
+  }
+  .cheat-card th {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink-mute);
+    font-weight: 500;
+    border-bottom: 1px solid var(--ink);
+  }
+  .cheat-card td .mono { color: var(--ink); font-weight: 500; }
+  .cheat-card td strong { color: var(--ink); font-weight: 600; }
+  .cheat-card td.tier { color: var(--accent); font-family: 'JetBrains Mono', monospace; font-size: 11px; }
+  .cheat-card .cheat-foot {
+    margin-top: 18px;
+    padding-top: 14px;
+    border-top: 1px dashed var(--line);
+    font-size: 13px;
+    color: var(--ink-soft);
+    line-height: 1.6;
+  }
+  .cheat-card .cheat-foot strong { color: var(--ink); font-weight: 600; }
+
+  /* decision tree */
+  .tree-card {
+    margin-top: 24px;
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 28px 28px 24px;
+  }
+  .tree-card h3 {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 20px;
+    margin: 0 0 4px;
+    font-weight: 700;
+  }
+  .tree-card .tree-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--accent);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 18px;
+  }
+  .tree-flow { font-family: 'Geist', 'Noto Sans SC', sans-serif; font-size: 13px; }
+  .tree-flow .tnode {
+    background: white;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 10px 14px;
+    margin-bottom: 10px;
+    line-height: 1.55;
+  }
+  .tree-flow .tnode.q { border-color: var(--ink); background: var(--bg-2); font-weight: 500; }
+  .tree-flow .tnode.a { border-color: var(--green); background: var(--green-soft); }
+  .tree-flow .tnode.fix { border-color: var(--accent); background: var(--accent-soft); }
+  .tree-flow .tnode .step-num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--ink-mute);
+    letter-spacing: 0.05em;
+    margin-right: 6px;
+  }
+  .tree-flow .tnode strong { color: var(--ink); font-weight: 600; }
+  .tree-flow .tnode code { font-family: 'JetBrains Mono', monospace; background: rgba(22,22,29,0.06); padding: 1px 5px; border-radius: 3px; font-size: 12px; }
+  .tree-flow .tarr {
+    text-align: center;
+    color: var(--ink-mute);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    margin: -2px 0 6px;
+  }
+
+  /* ============= Unified next-post block ============= */
+  .next-post {
+    margin-top: 48px;
+    padding: 32px 36px;
+    background: var(--ink);
+    color: var(--bg);
+    border-radius: 8px;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 32px;
+    align-items: center;
+    text-decoration: none;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    position: relative;
+    overflow: hidden;
+  }
+  .next-post::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at 100% 0%, rgba(255,77,46,0.12), transparent 55%);
+    pointer-events: none;
+  }
+  .next-post:hover { transform: translateY(-2px); box-shadow: 0 14px 36px rgba(22,22,29,0.22); }
+  @media (max-width: 720px) { .next-post { grid-template-columns: 1fr; padding: 24px; gap: 20px; } }
+  .next-post .np-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--accent);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+    display: inline-block;
+  }
+  .next-post h4 {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 26px;
+    margin: 0 0 10px;
+    font-weight: 700;
+    color: white;
+    line-height: 1.25;
+    letter-spacing: -0.01em;
+  }
+  .next-post h4 .em {
+    font-family: 'Noto Serif SC', serif;
+    font-weight: 500;
+    color: var(--accent);
+  }
+  .next-post p {
+    margin: 0;
+    color: rgba(255,255,255,0.72);
+    font-size: 14px;
+    line-height: 1.65;
+    max-width: 560px;
+  }
+  .next-post p strong { color: white; font-weight: 600; }
+  .next-post .np-cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 24px;
+    background: var(--accent);
+    color: white;
+    border-radius: 4px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    white-space: nowrap;
+    transition: background 0.18s, color 0.18s, transform 0.18s;
+    position: relative;
+    z-index: 1;
+  }
+  .next-post:hover .np-cta { background: white; color: var(--ink); transform: translateX(2px); }
+  .next-post .np-cta .arr { font-family: 'Fraunces', serif; font-size: 18px; font-weight: 500; }
+
+  /* footer */
+  footer {
+    border-top: 1px solid var(--line);
+    padding: 56px 0 64px;
+    background: var(--bg);
+  }
+  .byline-wrap { position: relative; }
+  .byline {
+    display: flex;
+    gap: 28px;
+    align-items: center;
+    padding-bottom: 32px;
+    border-bottom: 1px dashed var(--line);
+    margin-bottom: 24px;
+    position: relative;
+  }
+  .byline::before {
+    content: '';
+    position: absolute;
+    top: -56px; left: 0;
+    width: 32px; height: 1px;
+    background: var(--accent);
+  }
+  .byline .avatar {
+    width: 96px; height: 96px;
+    border-radius: 50%;
+    object-fit: cover;
+    flex-shrink: 0;
+    border: 3px solid var(--paper);
+    box-shadow: 0 0 0 1px var(--line), 0 6px 20px rgba(22,22,29,0.10);
+    background: var(--paper);
+  }
+  .byline-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--ink-mute);
+    letter-spacing: 0.18em;
+    margin-bottom: 8px;
+  }
+  .byline-label .dot {
+    display: inline-block;
+    width: 6px; height: 6px;
+    background: var(--accent);
+    border-radius: 50%;
+    margin-right: 6px;
+    vertical-align: 1px;
+  }
+  .byline-name {
+    font-family: 'Noto Serif SC', 'Fraunces', serif;
+    font-size: clamp(28px, 4vw, 40px);
+    font-weight: 700;
+    line-height: 1.05;
+    letter-spacing: -0.01em;
+    margin: 0 0 8px;
+  }
+  .byline-name .em {
+    font-family: 'Noto Serif SC', serif;
+    font-weight: 500;
+    color: var(--accent);
+  }
+  .byline-tag {
+    font-size: 14px;
+    color: var(--ink-soft);
+    line-height: 1.55;
+    margin: 0;
+    max-width: 52ch;
+  }
+  .byline-contact { margin-top: 14px; padding-top: 14px; border-top: 1px dashed var(--line); display: flex; align-items: center; gap: 10px; flex-wrap: wrap; font-size: 12px; }
+  .byline-contact .contact-label { font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-mute); padding: 2px 8px; border: 1px solid var(--line); border-radius: 3px; }
+  .byline-contact .contact-id { font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 600; color: var(--ink); background: var(--accent-soft); padding: 3px 10px; border-radius: 4px; letter-spacing: 0.02em; }
+  .byline-contact .contact-hint { font-size: 12px; color: var(--ink-soft); }
+  .footer-meta {
+    text-align: center;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--ink-mute);
+    letter-spacing: 0.05em;
+  }
+  .footer-meta .heart { color: var(--accent); }
+  .footer-meta .mono { color: var(--ink-soft); font-weight: 500; }
+  @media (max-width: 600px) {
+    .byline { flex-direction: column; text-align: center; align-items: center; gap: 16px; }
+    .byline-tag { margin-left: auto; margin-right: auto; }
+  }
+
+  /* === Roadmap Modal === */
+  .rm-modal { position: fixed; inset: 0; z-index: 1000; display: flex; align-items: center; justify-content: center; padding: 30px 16px; }
+  .rm-modal[hidden] { display: none; }
+  .rm-backdrop { position: absolute; inset: 0; background: rgba(22,22,29,0.55); backdrop-filter: blur(4px); animation: rm-fade 0.2s; }
+  @keyframes rm-fade { from { opacity: 0; } to { opacity: 1; } }
+  .rm-dialog { position: relative; background: var(--bg); border-radius: 12px; max-width: 720px; width: 100%; max-height: calc(100vh - 60px); overflow-y: auto; padding: 32px 36px 24px; box-shadow: 0 30px 80px rgba(0,0,0,0.3); animation: rm-pop 0.25s cubic-bezier(0.4,0,0.2,1); }
+  @keyframes rm-pop { from { transform: scale(0.96) translateY(8px); opacity: 0; } to { transform: scale(1) translateY(0); opacity: 1; } }
+  .rm-close { position: absolute; top: 14px; right: 16px; background: transparent; border: none; cursor: pointer; font-size: 20px; color: var(--ink-mute); width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: all 0.15s; line-height: 1; }
+  .rm-close:hover { background: var(--bg-2); color: var(--ink); }
+  .rm-header { margin-bottom: 22px; padding-bottom: 18px; border-bottom: 1px dashed var(--line); }
+  .rm-tag { font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.1em; color: var(--accent); text-transform: uppercase; margin-bottom: 8px; }
+  .rm-title { font-family: 'Noto Serif SC', serif; font-size: 28px; margin: 0 0 6px; font-weight: 900; letter-spacing: -0.02em; line-height: 1.1; }
+  .rm-title .rm-em { font-family: 'Noto Serif SC', serif; color: var(--accent); font-weight: 500; }
+  .rm-sub { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--ink-mute); margin: 0; }
+  .rm-body { display: flex; flex-direction: column; gap: 18px; }
+  .rm-mod-key { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ink); font-weight: 700; margin-bottom: 8px; letter-spacing: 0.04em; text-transform: uppercase; }
+  .rm-mod-list { display: flex; flex-direction: column; gap: 6px; }
+  .rm-cell { display: grid; grid-template-columns: 36px 1fr auto; gap: 12px; align-items: center; padding: 9px 13px; border-radius: 5px; background: var(--paper); border: 1px solid var(--line); text-decoration: none; color: inherit; transition: all 0.15s; }
+  .rm-cell:hover { border-color: var(--accent); background: var(--accent-soft); transform: translateX(3px); }
+  .rm-cell.rm-cell-current { border-color: var(--accent); background: var(--accent-soft); }
+  .rm-cell-code { font-family: 'Fraunces', serif; font-weight: 500; color: var(--accent); font-size: 15px; }
+  .rm-cell-name { font-size: 13px; color: var(--ink); }
+  .rm-cell-tier { font-family: 'JetBrains Mono', monospace; font-size: 9px; letter-spacing: 0.08em; color: var(--ink-mute); text-transform: uppercase; border: 1px solid var(--line); padding: 2px 7px; border-radius: 3px; }
+  .rm-cell-tier.rm-tier-current { background: var(--accent); color: white; border-color: var(--accent); }
+  .rm-footer { margin-top: 22px; padding-top: 16px; border-top: 1px dashed var(--line); display: flex; justify-content: space-between; align-items: center; font-size: 12px; color: var(--ink-soft); flex-wrap: wrap; gap: 8px; }
+  .rm-wechat { font-family: 'JetBrains Mono', monospace; background: var(--accent-soft); color: var(--ink); padding: 3px 10px; border-radius: 3px; font-weight: 600; letter-spacing: 0.02em; }
+  .nav-links a[data-rm-open] { cursor: pointer; }
+
+</style>
+</head>
+<body>
+
+<!-- Top bar -->
+<div class="topbar">
+  <div class="wrap topbar-inner">
+    <a href="index.html" class="brand"><span class="dot"></span>J3 · 缓存 / CDN · 上线系列完结</a>
+    <nav class="nav-links">
+      <a href="index.html#roadmap" data-rm-open>路线图</a>
+      <a href="index.html#manifesto">关于</a>
+    </nav>
+  </div>
+</div>
+
+<!-- Hero -->
+<header class="hero">
+  <div class="wrap">
+    <div class="hero-meta">
+      <span class="pill fill">实验互动 · INTERACTIVE</span>
+      <span class="pill">2026 · 设计 × 代码</span>
+      <span class="pill">J3 · 上线系列 · 完结</span>
+      <span class="label">阅读时长 ≈ 14 分钟</span>
+    </div>
+    <div class="hero-grid">
+      <div>
+        <h1>
+          <span class="display-cn">你以为请求到了服务器，</span><br>
+          <span class="display-cn">其实</span><span class="em">半路就被截了</span><span class="display-cn">。</span>
+        </h1>
+        <p class="lede">
+          缓存 (cache) 是好事 —— 没它，每次刷新都要重新下载所有资源，网页慢得像 1995 年。<br>
+          但它也是<span class="em">"我明明改了啊"</span>这句话最常见的元凶。一次讲清 4 层缓存、每层挡在哪、怎么绕。
+        </p>
+      </div>
+      <div class="hero-side">
+        <div class="row"><span class="k">本页讲什么</span><span class="v">浏览器 / CDN / 服务端 / SW</span></div>
+        <div class="row"><span class="k">含互动</span><span class="v">缓存层探险游戏</span></div>
+        <div class="row"><span class="k">面向</span><span class="v">设计师 / 上线后排查</span></div>
+        <div class="row"><span class="k">前置知识</span><span class="v">看过 J1 / J2</span></div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- §01 Cache is a good thing -->
+<section id="why">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>01</strong> / 缓存为什么存在</div>
+        <h2 class="section-title">缓存<br>是<span class="em">好事</span>。</h2>
+      </div>
+      <p class="section-sub">
+        在骂它之前，先承认一件事 ——
+        没有缓存，<strong>整个网络都会慢成你不想用</strong>。
+      </p>
+    </div>
+
+    <div class="problem-grid">
+      <div class="problem-card bad">
+        <span class="tag">NO CACHE · 没有缓存的世界</span>
+        <h3>每一次刷新 = 全量下载</h3>
+        <p>你打开任何一个网站，浏览器都得把所有图片、字体、JS、CSS 全部从服务器拖一遍，每次都从头来。</p>
+        <div class="blackbox-vis">
+          <strong>第 1 次访问</strong> <span class="arrow">→</span> 下载 <strong>3 MB</strong> 资源<br>
+          <strong>第 2 次访问</strong> <span class="arrow">→</span> 又下载 <strong>3 MB</strong><br>
+          <strong>第 3 次访问</strong> <span class="arrow">→</span> 还在下载 <strong>3 MB</strong> <span class="q">(无情)</span>
+        </div>
+      </div>
+
+      <div class="problem-card good">
+        <span class="tag">WITH CACHE · 有缓存的世界</span>
+        <h3>第二次起 = 直接从就近的"小卖部"取</h3>
+        <p>资源被存到了你电脑里 / 离你最近的 CDN 节点 / 服务端的内存。下一次只问"还是那个吗"，就秒返回。</p>
+        <div class="blackbox-vis">
+          <strong>第 1 次</strong> <span class="arrow">→</span> 完整下载 <strong>3 MB</strong><br>
+          <strong>第 2 次</strong> <span class="arrow">→</span> 0 KB · 直接<strong>毫秒级</strong>命中<br>
+          <strong>第 N 次</strong> <span class="arrow">→</span> 仍然 0 KB · 网页起飞
+        </div>
+      </div>
+    </div>
+
+    <h3 style="font-family:'Noto Serif SC',serif;font-weight:700;font-size:22px;margin:48px 0 6px;">便利店 vs 超市 —— 类比</h3>
+    <p style="color:var(--ink-soft);font-size:15px;line-height:1.6;margin:0 0 8px;max-width:60ch;">
+      把"取一个文件"想成"买一瓶水"。同一瓶水，跑超市远，便利店近。<strong>缓存就是你家楼下的便利店</strong>。但便利店货可能是上周的 —— 这就是<span class="em">缓存过期 / 过旧</span>。
+    </p>
+
+    <div class="store-grid">
+      <div class="store-cell">
+        <div class="store-emoji">家</div>
+        <div class="store-meta">L0 · 你身边</div>
+        <h4 class="store-title">浏览器缓存</h4>
+        <p class="store-desc">就在你电脑里。<strong>1 ms 内</strong>拿到。</p>
+      </div>
+      <div class="store-cell">
+        <div class="store-emoji">店</div>
+        <div class="store-meta">L1 · 楼下便利店</div>
+        <h4 class="store-title">CDN 节点</h4>
+        <p class="store-desc">离你最近的节点。<strong>50 ms</strong> 左右。</p>
+      </div>
+      <div class="store-cell">
+        <div class="store-emoji">仓</div>
+        <div class="store-meta">L2 · 城市超市</div>
+        <h4 class="store-title">服务端 / 数据库</h4>
+        <p class="store-desc">真正的源头。<strong>200 ms+</strong>，跨海更慢。</p>
+      </div>
+    </div>
+
+    <div class="quote-box">
+      <span class="quote-mark">"</span>
+      只要存在缓存，就一定会有<span class="em">"上游已经更新，下游还是旧的"</span>这种瞬间。
+      问题不是去消灭缓存 —— 是<strong>知道每一层挡在哪、怎么让它放新货过去</strong>。
+      <span class="quote-attr">—— 接下来 5 节都在讲这件事</span>
+    </div>
+  </div>
+</section>
+
+<!-- §02 4-layer cache map -->
+<section id="map">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>02</strong> / 4 层全图谱</div>
+        <h2 class="section-title">从你到数据库<br>中间<span class="em">站着 4 层</span>。</h2>
+      </div>
+      <p class="section-sub">
+        每一次"打开网页"，都是一场接力。请求从<strong>左</strong>边的你出发，依次问<strong>每一站</strong>"我要的东西你那有吗"。
+        谁先点头，谁就直接返回 ——<strong>越靠左越快</strong>。
+      </p>
+    </div>
+
+    <div class="hint-strip">
+      <span class="hint-tag">读图</span>下面 4 个站点 + 1 个源头 = 完整路径。请求向右走，响应向左回。每站标的是<strong>命中速度 + 谁能清它</strong>。
+    </div>
+
+    <div class="map-stage">
+      <div class="map-rail">
+        <div class="map-node is-browser">
+          <div class="map-tag">L0 · BROWSER</div>
+          <div class="map-title">浏览器缓存</div>
+          <p class="map-sub">你电脑里。<br>每个用户都有自己的一份。</p>
+          <div class="map-stat"><span><span class="dot" style="background:var(--layer-browser);"></span>&lt; 1 ms</span></div>
+        </div>
+        <div class="map-arr">→</div>
+        <div class="map-node is-cdn">
+          <div class="map-tag">L1 · CDN EDGE</div>
+          <div class="map-title">CDN 边缘节点</div>
+          <p class="map-sub">Cloudflare / Vercel Edge<br>全球各地的"便利店"</p>
+          <div class="map-stat"><span><span class="dot" style="background:var(--layer-cdn);"></span>~ 50 ms</span></div>
+        </div>
+        <div class="map-arr">→</div>
+        <div class="map-node is-server">
+          <div class="map-tag">L2 · SERVER</div>
+          <div class="map-title">服务端缓存</div>
+          <p class="map-sub">Redis / 反向代理<br>公司内部的"仓库"</p>
+          <div class="map-stat"><span><span class="dot" style="background:var(--layer-server);"></span>~ 200 ms</span></div>
+        </div>
+        <div class="map-arr">→</div>
+        <div class="map-node is-db">
+          <div class="map-tag">L3 · ORIGIN</div>
+          <div class="map-title">数据库 / 源</div>
+          <p class="map-sub">真正的源头。<br>所有缓存都从这取一遍。</p>
+          <div class="map-stat"><span><span class="dot" style="background:var(--layer-db);"></span>~ 1 s</span></div>
+        </div>
+      </div>
+
+      <div class="map-legend">
+        <span class="lg-item"><span class="lg-sw b"></span>L0 · 你能清</span>
+        <span class="lg-item"><span class="lg-sw c"></span>L1 · Vercel / Cloudflare 后台清</span>
+        <span class="lg-item"><span class="lg-sw s"></span>L2 · 后端工程师清</span>
+        <span class="lg-item"><span class="lg-sw d"></span>L3 · 改完代码会自动到这</span>
+      </div>
+    </div>
+
+    <div class="quote-box" style="margin-top:36px;">
+      <span class="quote-mark">"</span>
+      你 push 了新代码 —— 它<strong>第一时间到的是 L3 数据库 / 源</strong>。
+      但用户面前还隔着 L2 / L1 / L0 三道 ——
+      <span class="em">每一道都还在端着旧的那一份</span>。
+      <span class="quote-attr">—— 这就是"改了没生效"的本质</span>
+    </div>
+
+    <div class="hint-strip" style="margin-top:24px;background:var(--bg-2);border-left-color:var(--ink);">
+      <span class="hint-tag" style="color:var(--ink);">补充一层</span>
+      还有一种更刁钻的缓存叫 <strong>Service Worker</strong> —— 也住在你浏览器里，比 L0 更先一步拦截请求，常用于 PWA 离线网页。如果你改完什么都试了还是旧的，多半是它。后面 §04 会讲怎么处理。
+    </div>
+  </div>
+</section>
+
+<!-- §03 Cache exploration game -->
+<section id="game">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>03</strong> / 探险游戏</div>
+        <h2 class="section-title">你点一下"刷新"，<br>它<span class="em">真的去哪了</span>？</h2>
+      </div>
+      <p class="section-sub">
+        这一节是这一篇的灵魂。地址栏输 <span class="mono">fan.com/style.css</span>，
+        <strong>点"刷新页面"</strong> ——
+        看请求<strong>到底走到哪一层</strong>就被截胡了。
+      </p>
+    </div>
+
+    <div class="hint-strip">
+      <span class="hint-tag">玩法</span>
+      上方是浏览器地址栏，下方是 4 个货架。点"刷新页面"，看请求一步步走。再点货架下方的"清缓存"按钮，下一次刷新看路径怎么变。
+    </div>
+
+    <div class="game-stage" id="gameStage">
+      <!-- url + buttons -->
+      <div class="game-bar">
+        <div class="game-url">
+          <span class="url-lock">●</span>
+          <span class="url-text"><span class="h">https://</span>fan.com/<span style="color:var(--accent);">style.css</span></span>
+        </div>
+        <button class="game-btn" id="gameRefresh">刷新页面 ↻</button>
+        <button class="game-btn ghost" id="gamePush">假装 push 新版 ⤴</button>
+      </div>
+
+      <!-- shelves -->
+      <div class="game-stack">
+        <div class="game-trip-status" id="gameTripStatus">
+          <span style="color:var(--ink-mute);">▸ 还没刷新过 · 点上方"刷新页面"开始</span>
+        </div>
+
+        <div class="game-shelves" id="gameShelves">
+          <div class="game-shelf is-browser" data-layer="browser">
+            <div class="shelf-head">
+              <span class="shelf-tag">L0 · BROWSER</span>
+              <span class="shelf-speed">&lt; 1 ms</span>
+            </div>
+            <h4 class="shelf-title">浏览器缓存</h4>
+            <p class="shelf-place">你电脑硬盘里</p>
+            <div class="shelf-box">
+              <div class="box-state" data-state>EMPTY</div>
+              <div class="box-content" data-content>· 没货 ·</div>
+              <div class="box-color" data-color></div>
+            </div>
+            <div class="shelf-purge"><button data-purge="browser">清浏览器缓存 (Cmd+Shift+R)</button></div>
+          </div>
+
+          <div class="game-shelf is-cdn" data-layer="cdn">
+            <div class="shelf-head">
+              <span class="shelf-tag">L1 · CDN EDGE</span>
+              <span class="shelf-speed">~ 50 ms</span>
+            </div>
+            <h4 class="shelf-title">CDN 边缘</h4>
+            <p class="shelf-place">离你最近的节点</p>
+            <div class="shelf-box">
+              <div class="box-state" data-state>EMPTY</div>
+              <div class="box-content" data-content>· 没货 ·</div>
+              <div class="box-color" data-color></div>
+            </div>
+            <div class="shelf-purge"><button data-purge="cdn">在 Vercel 面板 purge</button></div>
+          </div>
+
+          <div class="game-shelf is-server" data-layer="server">
+            <div class="shelf-head">
+              <span class="shelf-tag">L2 · SERVER</span>
+              <span class="shelf-speed">~ 200 ms</span>
+            </div>
+            <h4 class="shelf-title">服务端缓存</h4>
+            <p class="shelf-place">公司机房 Redis</p>
+            <div class="shelf-box">
+              <div class="box-state" data-state>EMPTY</div>
+              <div class="box-content" data-content>· 没货 ·</div>
+              <div class="box-color" data-color></div>
+            </div>
+            <div class="shelf-purge"><button data-purge="server">让后端 flush redis</button></div>
+          </div>
+
+          <div class="game-shelf is-db" data-layer="db">
+            <div class="shelf-head">
+              <span class="shelf-tag">L3 · ORIGIN</span>
+              <span class="shelf-speed">~ 1 s</span>
+            </div>
+            <h4 class="shelf-title">源 / 数据库</h4>
+            <p class="shelf-place">真正存的地方</p>
+            <div class="shelf-box">
+              <div class="box-state" data-state>FRESH</div>
+              <div class="box-content" data-content>style.css v1</div>
+              <div class="box-color" data-color style="background:#ff4d2e;"></div>
+            </div>
+            <div class="shelf-purge"><button data-purge="db">改代码 push 一次</button></div>
+          </div>
+        </div>
+
+        <div class="game-log" id="gameLog">
+          <div class="log-empty">› 还没有请求 — 点上方刷新键开始</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="hint-strip" style="margin-top:18px;">
+      <span class="hint-tag">观察</span>
+      第一次会一路打到 L3 (慢)，但<strong>回程会"顺手往每个货架放一份"</strong>。所以第二次刷新就秒命中 L0 了。这就是 <span class="mono">cache fill</span>。
+    </div>
+
+    <!-- ===== Challenge 3 questions ===== -->
+    <div class="challenge-stage">
+      <div class="ch-tag">挑战 3 题 · CHALLENGE</div>
+      <h3>玩完了来对几道</h3>
+      <p class="ch-intro">这 3 道题就是设计师上线时最常遇到的 3 个坑。如果都能答对 —— 这一篇可以收工了。</p>
+
+      <div class="ch-block" data-q="q1">
+        <h4 class="ch-q"><span class="ch-num">Q1</span>你在 GitHub push 了改完颜色的新 CSS，但访问页面还是旧的。<strong>第一步</strong>该怎么办？</h4>
+        <div class="ch-options">
+          <button class="ch-opt" data-correct="false">
+            <span class="ch-letter">A</span>
+            <span>立刻报警 / 让前端工程师全员排查</span>
+          </button>
+          <button class="ch-opt" data-correct="true">
+            <span class="ch-letter">B</span>
+            <span>先 hard refresh (Cmd+Shift+R) — 大概率是浏览器在端旧的</span>
+          </button>
+          <button class="ch-opt" data-correct="false">
+            <span class="ch-letter">C</span>
+            <span>退出登录、清 cookie、重启电脑</span>
+          </button>
+        </div>
+        <div class="ch-explain" data-explain>
+          <strong>对了。</strong>第一反应永远是 <code>Cmd+Shift+R</code> (Mac) / <code>Ctrl+Shift+R</code> (Win)。这一步 <strong>30 秒</strong>，能解决八成 "改了没生效"。如果不奏效，再看下一题。
+        </div>
+      </div>
+
+      <div class="ch-block" data-q="q2">
+        <h4 class="ch-q"><span class="ch-num">Q2</span>你 hard refresh 完，<strong>还是旧的</strong>。这说明问题在哪？</h4>
+        <div class="ch-options">
+          <button class="ch-opt" data-correct="false">
+            <span class="ch-letter">A</span>
+            <span>电脑坏了 — 该换电脑了</span>
+          </button>
+          <button class="ch-opt" data-correct="false">
+            <span class="ch-letter">B</span>
+            <span>可能源代码根本没改对 — 但只有一种可能</span>
+          </button>
+          <button class="ch-opt" data-correct="true">
+            <span class="ch-letter">C</span>
+            <span>L1 (CDN) 还在端旧的 — 浏览器问 CDN，CDN 直接说"我有，不用回源"</span>
+          </button>
+        </div>
+        <div class="ch-explain" data-explain>
+          <strong>对。</strong>hard refresh 只清了你这一台电脑的 L0。CDN 那一份还在缓存有效期里，根本不会去问源。这时候要么去 Vercel / Cloudflare 面板手动 <code>purge cache</code>，要么<strong>等它过期</strong> (默认几小时到几天)。
+        </div>
+      </div>
+
+      <div class="ch-block" data-q="q3">
+        <h4 class="ch-q"><span class="ch-num">Q3</span>下一次发版，怎么<strong>从机制上保证</strong>所有用户都立刻看到新版？</h4>
+        <div class="ch-options">
+          <button class="ch-opt" data-correct="false">
+            <span class="ch-letter">A</span>
+            <span>每次发版都群发一封"请清缓存"邮件</span>
+          </button>
+          <button class="ch-opt" data-correct="true">
+            <span class="ch-letter">B</span>
+            <span>给打包后的文件名加上 hash (如 <code class="mono">style.a3f7c.css</code>)</span>
+          </button>
+          <button class="ch-opt" data-correct="false">
+            <span class="ch-letter">C</span>
+            <span>把所有缓存的 max-age 改成 0 — 永不缓存</span>
+          </button>
+        </div>
+        <div class="ch-explain" data-explain>
+          <strong>对。</strong>这是行业默认做法 —— Next / Vite / webpack 都内置了。改完颜色 → 文件名变 → 浏览器看到的是<strong>新文件名</strong>，所有缓存都不认，自然回源拿新的。<br>
+          C 选项看着对，但会让网站慢得像 1995 年 —— 缓存的好处全没了。
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- §04 designer's 3 weapons -->
+<section id="fixes">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>04</strong> / 设计师的 3 把武器</div>
+        <h2 class="section-title">3 个清缓存操作<br><span class="em">绝大多数能解决</span>。</h2>
+      </div>
+      <p class="section-sub">
+        排查顺序：先清自己的 (L0)，不行再让平台清 (L1)，再不行才是<strong>整个流程出错了</strong>。
+      </p>
+    </div>
+
+    <div class="fix-grid">
+      <div class="fix-card">
+        <div class="fix-num">01</div>
+        <h3>Hard Refresh</h3>
+        <p>跳过 L0 浏览器缓存，逼浏览器至少去问一次 CDN。<strong>每天多用</strong> — 设计师上线后第一反射动作。</p>
+        <div class="fix-mock">
+          <div class="row"><span>Mac</span><span class="v">Cmd + Shift + R</span></div>
+          <div class="row"><span>Win / Linux</span><span class="v">Ctrl + Shift + R</span></div>
+          <div class="row"><span>Safari</span><span class="v">Cmd + Option + E → Cmd + R</span></div>
+        </div>
+        <div class="fix-shortcut">
+          <span class="accent">›</span> 关键键位 <br>
+          <span class="kbd">Cmd</span><span style="opacity:0.5;">+</span><span class="kbd">Shift</span><span style="opacity:0.5;">+</span><span class="kbd">R</span>
+        </div>
+      </div>
+
+      <div class="fix-card">
+        <div class="fix-num">02</div>
+        <h3>平台 Purge</h3>
+        <p>登 Vercel / Cloudflare / Netlify 后台，找 <strong>Cache</strong> 或 <strong>Purge</strong> 按钮，点一下 — L1 整个边缘节点的缓存被强制丢弃。</p>
+        <div class="fix-mock">
+          <div class="row"><span>Vercel</span><span class="v">Project → Settings → Data Cache → Purge Everything</span></div>
+          <div class="row"><span>Cloudflare</span><span class="v">Caching → Configuration → Purge Cache</span></div>
+          <div class="row"><span>Netlify</span><span class="v">Builds → Trigger deploy → Clear cache</span></div>
+        </div>
+        <div class="fix-shortcut">
+          <span class="accent">›</span> 谁能点 <br>
+          有平台账号 <strong>权限</strong> 的人 — 通常是工程师 / 团队 admin。
+        </div>
+      </div>
+
+      <div class="fix-card">
+        <div class="fix-num">03</div>
+        <h3>无痕窗口</h3>
+        <p>无痕 / 隐身模式不会用任何旧缓存。<strong>3 秒切一个</strong>，看到的就是<strong>真用户视角</strong>。验证页面用它最稳。</p>
+        <div class="fix-mock">
+          <div class="row"><span>Chrome</span><span class="v">Cmd / Ctrl + Shift + N</span></div>
+          <div class="row"><span>Safari</span><span class="v">Cmd + Shift + N</span></div>
+          <div class="row"><span>Firefox</span><span class="v">Cmd / Ctrl + Shift + P</span></div>
+        </div>
+        <div class="fix-shortcut">
+          <span class="accent">›</span> 关键键位 <br>
+          <span class="kbd">Cmd</span><span style="opacity:0.5;">+</span><span class="kbd">Shift</span><span style="opacity:0.5;">+</span><span class="kbd">N</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="hint-strip" style="margin-top:28px;background:var(--bg-2);border-left-color:var(--ink);">
+      <span class="hint-tag" style="color:var(--ink);">还有一个 (技巧)</span>
+      DevTools 打开时，可以勾上 <strong>Network → Disable cache</strong>。只要这个 DevTools 窗口开着，浏览器一律不读 L0。设计师做大改的时候建议常开。
+    </div>
+  </div>
+</section>
+
+<!-- §05 cache headers -->
+<section id="headers">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>05</strong> / cache header</div>
+        <h2 class="section-title">几个字段<br>设计师该<span class="em">看得懂</span>。</h2>
+      </div>
+      <p class="section-sub">
+        你不用会写、不用会改，但 ——
+        <strong>看到 DevTools Network 里的 Headers</strong>，知道哪些字段在控制缓存。
+        点左边切换。
+      </p>
+    </div>
+
+    <div class="hint-strip">
+      <span class="hint-tag">互动</span>左边是 4 个真实出现的 cache header，点一个 → 右边讲它在干什么。
+    </div>
+
+    <div class="header-stage" id="hdrStage">
+      <div class="header-list">
+        <div class="header-list-title">RESPONSE HEADERS · 响应头节选</div>
+
+        <div class="hdr-row" data-hk="max-age">
+          <span class="hdr-key">Cache-Control:</span>
+          <span class="hdr-val">max-age=3600</span>
+          <div class="hdr-mini">缓存 1 小时再回源</div>
+        </div>
+        <div class="hdr-row" data-hk="no-cache">
+          <span class="hdr-key">Cache-Control:</span>
+          <span class="hdr-val">no-cache</span>
+          <div class="hdr-mini">每次都回源问一遍</div>
+        </div>
+        <div class="hdr-row" data-hk="immutable">
+          <span class="hdr-key">Cache-Control:</span>
+          <span class="hdr-val">public, max-age=31536000, immutable</span>
+          <div class="hdr-mini">永远不再问 — 给打包文件用的</div>
+        </div>
+        <div class="hdr-row" data-hk="etag">
+          <span class="hdr-key">ETag:</span>
+          <span class="hdr-val">"a3f7c8e2"</span>
+          <div class="hdr-mini">文件指纹 — 没变就 304</div>
+        </div>
+      </div>
+
+      <div class="header-info">
+        <div class="header-info-tag" id="hdrTag">↑ POINT TO A HEADER</div>
+        <h3 class="header-info-name" id="hdrName">max-age — 缓存有效期</h3>
+        <p class="header-info-desc" id="hdrDesc">告诉浏览器 / CDN：拿到这个文件后，<strong>3600 秒 (1 小时)</strong> 内别再来问我，直接用就行。过了 1 小时，下一次请求会去回源验证。</p>
+        <div class="header-info-block">
+          <div class="header-info-label">设计师视角</div>
+          <p class="header-info-text" id="hdrMeta">如果你刚发版，但用户那 max-age=3600 还没走完 —— 他<strong>就是会看到旧的</strong>，直到这小时过完。这是为什么平台要 purge。</p>
+        </div>
+        <div class="header-info-block">
+          <div class="header-info-label">在哪看</div>
+          <p class="header-info-text" id="hdrWhere">DevTools <code>Network</code> → 选一个请求 → 看 <code>Response Headers</code> → 找 <code>Cache-Control</code> 这一行。</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- DevTools mock -->
+    <div class="devtools-mock">
+      <div class="dt-tabs">
+        <span class="dt-tab">Headers</span>
+        <span class="dt-tab active">Cache</span>
+        <span class="dt-tab">Preview</span>
+        <span class="dt-tab">Response</span>
+        <span class="dt-tab">Timing</span>
+      </div>
+      <div class="dt-body">
+        <div class="row"><span class="k">Request URL:</span> <span class="v">https://fan.com/_next/static/style.a3f7c.css</span></div>
+        <div class="row"><span class="k">Status Code:</span> <span class="v" style="color:var(--green);">200 OK (from disk cache)</span></div>
+        <div class="row"><span class="k">Cache-Control:</span> <span class="v">public, max-age=31536000, immutable</span></div>
+        <div class="row"><span class="k">ETag:</span> <span class="v">"a3f7c8e2"</span></div>
+        <div class="row"><span class="k">Age:</span> <span class="v">14523 (≈ 4 hours since CDN cached)</span></div>
+        <div class="row"><span class="k">x-vercel-cache:</span> <span class="v" style="color:var(--green);">HIT</span></div>
+      </div>
+    </div>
+
+    <div class="quote-box" style="margin-top:32px;">
+      <span class="quote-mark">"</span>
+      看到 <span class="mono">x-vercel-cache: HIT</span> 或 <span class="mono">200 OK (from disk cache)</span> ——
+      就<span class="em">心里有数</span>了：这次根本没回源，看到的就是缓存。
+      <span class="quote-attr">—— 一行字胜过一万句"为什么没生效"</span>
+    </div>
+  </div>
+</section>
+
+<!-- §06 Cheatsheet -->
+<section id="cheat">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>06</strong> / 速查卡</div>
+        <h2 class="section-title">一张<br>钉墙上<span class="em">就够了</span>。</h2>
+      </div>
+      <p class="section-sub">
+        4 层图谱、决策树、3 个清缓存操作、4 个 cache-control 值 —— 配一杯咖啡的容量，
+        <strong>下次遇上"改了没生效"，按这张走就行</strong>。
+      </p>
+    </div>
+
+    <!-- decision tree -->
+    <div class="tree-card">
+      <div class="tree-tag">DECISION TREE · 决策树</div>
+      <h3>"改了没生效" 排查 5 步</h3>
+
+      <div class="tree-flow">
+        <div class="tnode q"><span class="step-num">START</span>你 push 了新代码 / 改了样式，访问网址 <strong>仍是旧的</strong>。</div>
+        <div class="tarr">↓</div>
+        <div class="tnode fix"><span class="step-num">STEP 1</span>先 <strong>hard refresh</strong> (<code>Cmd+Shift+R</code>) → 解决八成情况。</div>
+        <div class="tarr">↓ 仍旧</div>
+        <div class="tnode fix"><span class="step-num">STEP 2</span>开<strong>无痕窗口</strong>访问 — 跳过本机所有缓存。还旧 → 不是你电脑的问题。</div>
+        <div class="tarr">↓ 仍旧</div>
+        <div class="tnode fix"><span class="step-num">STEP 3</span>登 Vercel / Cloudflare 后台 → <strong>Purge Cache</strong> → 等 30 秒。</div>
+        <div class="tarr">↓ 仍旧</div>
+        <div class="tnode fix"><span class="step-num">STEP 4</span>DevTools <code>Network</code> 看请求是 <span class="mono">200</span> 还是 <span class="mono">200 (from cache)</span>，看 <code>x-vercel-cache</code> 是 <span class="mono">HIT</span> 还是 <span class="mono">MISS</span>。</div>
+        <div class="tarr">↓ 仍旧</div>
+        <div class="tnode a"><span class="step-num">STEP 5</span><strong>问工程师</strong>：可能是 Service Worker / 服务端 Redis / 或者你 push 的分支根本没部署。</div>
+      </div>
+    </div>
+
+    <!-- cheat table -->
+    <div class="cheat-card">
+      <div class="cheat-tag">CHEATSHEET · 速查卡</div>
+      <h3>4 层缓存 + 4 个 header + 3 个动作</h3>
+
+      <table>
+        <thead>
+          <tr>
+            <th style="width:18%;">层 / 字段</th>
+            <th style="width:12%;">速度</th>
+            <th>它在干什么</th>
+            <th style="width:24%;">谁来清 / 怎么用</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="tier">L0 BROWSER</td>
+            <td><span class="mono">&lt; 1 ms</span></td>
+            <td>你电脑里的浏览器缓存。每个用户一份。</td>
+            <td><span class="mono">Cmd+Shift+R</span> · 你自己</td>
+          </tr>
+          <tr>
+            <td class="tier">L1 CDN</td>
+            <td><span class="mono">~ 50 ms</span></td>
+            <td>Cloudflare / Vercel Edge — 离你最近的"便利店"。</td>
+            <td>平台后台 <strong>Purge</strong>·  工程师</td>
+          </tr>
+          <tr>
+            <td class="tier">L2 SERVER</td>
+            <td><span class="mono">~ 200 ms</span></td>
+            <td>服务端的 Redis / 反向代理 — 公司机房里的仓库。</td>
+            <td>flush redis · 后端工程师</td>
+          </tr>
+          <tr>
+            <td class="tier">L3 ORIGIN</td>
+            <td><span class="mono">~ 1 s</span></td>
+            <td>真正的源头 (代码 / 数据库)。每次发版第一个到这。</td>
+            <td>git push (会自动)</td>
+          </tr>
+          <tr style="background:var(--bg-2);"><td colspan="4" style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.06em;color:var(--ink-mute);">— 4 个 cache-control 值 —</td></tr>
+          <tr>
+            <td><span class="mono">max-age=3600</span></td>
+            <td><span class="mono">1 h</span></td>
+            <td>缓存这个文件 1 小时，过期再回源。</td>
+            <td>普通页面常用</td>
+          </tr>
+          <tr>
+            <td><span class="mono">no-cache</span></td>
+            <td><span class="mono">每次问</span></td>
+            <td>每次都问源 (但还是会带 ETag 校验)。</td>
+            <td>动态数据 / API</td>
+          </tr>
+          <tr>
+            <td><span class="mono">no-store</span></td>
+            <td><span class="mono">不存</span></td>
+            <td>完全不缓存，每次都重新下载。</td>
+            <td>密码 / 隐私页面</td>
+          </tr>
+          <tr>
+            <td><span class="mono">immutable</span></td>
+            <td><span class="mono">永久</span></td>
+            <td>永远不再问源 — 配合文件名 hash 才能用。</td>
+            <td>打包后的 JS / CSS</td>
+          </tr>
+          <tr style="background:var(--bg-2);"><td colspan="4" style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.06em;color:var(--ink-mute);">— 3 个清缓存动作 —</td></tr>
+          <tr>
+            <td><strong>hard refresh</strong></td>
+            <td><span class="mono">10 s</span></td>
+            <td>跳过 L0，强制问 CDN 一次。</td>
+            <td><span class="mono">Cmd+Shift+R</span></td>
+          </tr>
+          <tr>
+            <td><strong>purge CDN</strong></td>
+            <td><span class="mono">30 s</span></td>
+            <td>把 L1 整个边缘缓存丢掉。</td>
+            <td>Vercel / Cloudflare 后台</td>
+          </tr>
+          <tr>
+            <td><strong>无痕窗口</strong></td>
+            <td><span class="mono">3 s</span></td>
+            <td>用真用户视角访问，跳过所有本机缓存。</td>
+            <td><span class="mono">Cmd+Shift+N</span></td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="cheat-foot">
+        看到 <strong>"为什么我改了网站没生效"</strong> 的瞬间，先问自己：<strong>"我清到第几层了？"</strong> — 这一句话就能让你和工程师沟通顺畅 100 倍。
+      </div>
+    </div>
+
+    <!-- next post: end of J series -->
+    <a href="index.html" class="next-post">
+      <div>
+        <div class="np-tag">完结撒花 · END OF SERIES</div>
+        <h4>J 系列<span class="em"> · </span>到这里结束 / <span class="em">回到全部文章</span></h4>
+        <p>恭喜你 —— 把 <strong>J1 域名 → J2 部署 → J3 缓存</strong> 整条链路都跑通了。从设计师视角看上线这件事，已经<strong>不再是黑箱</strong>。回首页继续逛，或者加微信告诉我下次想看什么。</p>
+      </div>
+      <span class="np-cta">回到全部文章 <span class="arr">→</span></span>
+    </a>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div class="byline-wrap">
+      <div class="byline">
+        <img class="avatar" src="author.jpg" alt="范米花儿">
+        <div class="byline-meta">
+          <div class="byline-label"><span class="dot"></span>作者 · WRITTEN BY</div>
+          <h3 class="byline-name">嗨，我是 <span class="em">范米花儿</span></h3>
+          <p class="byline-tag">一份给设计师的代码入门 ——<br>不需要会写，知道大概怎么回事，跟前端 / AI 沟通就顺多了。</p>
+          <div class="byline-contact">
+            <span class="contact-label">微信</span>
+            <span class="contact-id">vanvan_0422</span>
+            <span class="contact-hint">想看什么主题，加我聊</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="footer-meta">
+      做于 <span class="mono">2026</span> · 用 <span class="heart">●</span> 写给 <span class="mono">DESIGNERS &amp; DEVELOPERS</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+// ==========================================================
+//  §03 Cache exploration game
+// ==========================================================
+(function () {
+  var stage = document.getElementById('gameStage');
+  if (!stage) return;
+
+  // canonical layer order (request flow: browser → cdn → server → db)
+  var ORDER = ['browser', 'cdn', 'server', 'db'];
+  var META = {
+    browser: { tag: 'L0', name: 'browser', speed: '< 1 ms', tag2: '浏览器' },
+    cdn:     { tag: 'L1', name: 'CDN edge', speed: '~ 50 ms', tag2: 'CDN 边缘' },
+    server:  { tag: 'L2', name: 'server', speed: '~ 200 ms', tag2: '服务端' },
+    db:      { tag: 'L3', name: 'origin / db', speed: '~ 1 s', tag2: '数据库 / 源' }
+  };
+
+  // initial state: only db has fresh content
+  // each shelf state: { hasCache: bool, version: 'v1' | 'v2' | ..., color: hex }
+  var state = {
+    browser: { hasCache: false, version: null, color: null },
+    cdn:     { hasCache: false, version: null, color: null },
+    server:  { hasCache: false, version: null, color: null },
+    db:      { hasCache: true,  version: 'v1', color: '#ff4d2e' }
+  };
+
+  // version → color mapping (so user can SEE old vs new)
+  var VERSION_COLOR = {
+    v1: '#ff4d2e',  // orange (initial)
+    v2: '#1f6b3a',  // green (after push)
+    v3: '#0a4cff'   // blue (third push)
+  };
+
+  var refreshBtn = document.getElementById('gameRefresh');
+  var pushBtn    = document.getElementById('gamePush');
+  var status     = document.getElementById('gameTripStatus');
+  var logEl      = document.getElementById('gameLog');
+
+  var tripCount = 0;
+  var pushCount = 1; // v1 already in db at start
+
+  // hook up purge buttons
+  document.querySelectorAll('[data-purge]').forEach(function (btn) {
+    btn.addEventListener('click', function (e) {
+      e.preventDefault();
+      var layer = btn.dataset.purge;
+      if (layer === 'db') {
+        // "improve" — actually means push v(N+1) to db
+        doPush();
+        return;
+      }
+      purge(layer);
+    });
+  });
+
+  pushBtn.addEventListener('click', doPush);
+  refreshBtn.addEventListener('click', doRefresh);
+
+  // initial paint
+  paint();
+  paintEmptyLog();
+
+  function paintEmptyLog() {
+    logEl.innerHTML = '<div class="log-empty">› 还没有请求 — 点上方刷新键开始</div>';
+  }
+
+  function paint() {
+    ORDER.forEach(function (layer) {
+      var shelf = stage.querySelector('.game-shelf[data-layer="' + layer + '"]');
+      var stateBox = shelf.querySelector('[data-state]');
+      var contentBox = shelf.querySelector('[data-content]');
+      var colorBox = shelf.querySelector('[data-color]');
+      var s = state[layer];
+
+      shelf.classList.remove('is-checking', 'is-hit', 'is-miss');
+      shelf.classList.toggle('has-cache', s.hasCache);
+
+      if (s.hasCache) {
+        stateBox.textContent = layer === 'db' ? 'FRESH' : 'CACHED';
+        contentBox.textContent = 'style.css ' + s.version;
+        colorBox.style.background = s.color || '#ff4d2e';
+      } else {
+        stateBox.textContent = 'EMPTY';
+        contentBox.textContent = '· 没货 ·';
+      }
+    });
+  }
+
+  function setStatus(text, kind) {
+    var cls = kind ? ('live ' + kind) : 'live';
+    status.innerHTML = '<span class="' + cls + '">' + text + '</span>';
+  }
+
+  function clearStatus(text) {
+    status.innerHTML = '<span style="color:var(--ink-mute);">▸ ' + text + '</span>';
+  }
+
+  function appendLog(text, kind) {
+    // remove empty placeholder if present
+    var empty = logEl.querySelector('.log-empty');
+    if (empty) empty.remove();
+    var row = document.createElement('div');
+    row.className = 'log-row' + (kind ? ' ' + kind : '');
+    row.innerHTML = text;
+    logEl.appendChild(row);
+    logEl.scrollTop = logEl.scrollHeight;
+  }
+
+  function flashShelf(layer, kind, ms) {
+    return new Promise(function (resolve) {
+      var shelf = stage.querySelector('.game-shelf[data-layer="' + layer + '"]');
+      shelf.classList.remove('is-hit', 'is-miss');
+      shelf.classList.add('is-checking');
+      if (kind === 'hit') shelf.classList.add('is-hit');
+      if (kind === 'miss') shelf.classList.add('is-miss');
+      setTimeout(function () {
+        shelf.classList.remove('is-checking');
+        resolve();
+      }, ms || 600);
+    });
+  }
+
+  function disableBtns(b) {
+    refreshBtn.disabled = b;
+    pushBtn.disabled = b;
+    document.querySelectorAll('.shelf-purge button').forEach(function (btn) { btn.disabled = b; });
+  }
+
+  // === push: bump version in db ===
+  function doPush() {
+    pushCount += 1;
+    var newVer = 'v' + pushCount;
+    var newColor = VERSION_COLOR[newVer] || ('#' + Math.floor(Math.random() * 0xffffff).toString(16).padStart(6, '0'));
+    state.db.version = newVer;
+    state.db.color = newColor;
+    state.db.hasCache = true;
+    appendLog('› git push — db 现在是 <strong>' + newVer + '</strong> · 但 L0/L1/L2 还在端旧的', 'title');
+    paint();
+    var versionLabel = newVer === 'v2' ? '改完颜色' : '又改了一次';
+    setStatus('PUSHED · ' + versionLabel + ' → 源头是 ' + newVer, 'fresh');
+  }
+
+  // === purge: clear a layer ===
+  function purge(layer) {
+    var s = state[layer];
+    if (!s.hasCache) {
+      appendLog('› ' + META[layer].tag + ' 本来就空，不用清', 'miss');
+      return;
+    }
+    s.hasCache = false;
+    s.version = null;
+    s.color = null;
+    paint();
+    appendLog('› 清了 <strong>' + META[layer].tag + ' (' + META[layer].tag2 + ')</strong> · 下次刷新会向更后面问', 'title');
+    setStatus('PURGED · ' + META[layer].tag + ' 已清空', 'fresh');
+  }
+
+  // === refresh: simulate request walk ===
+  async function doRefresh() {
+    disableBtns(true);
+    tripCount += 1;
+    appendLog('————— 第 ' + tripCount + ' 次刷新 —————', 'title');
+    setStatus('REQUESTING · GET /style.css …');
+
+    // go layer by layer until we find a hit (or hit db)
+    var hitAt = null;
+    for (var i = 0; i < ORDER.length; i++) {
+      var layer = ORDER[i];
+      var s = state[layer];
+      if (s.hasCache) {
+        await flashShelf(layer, 'hit', 700);
+        appendLog('› <strong>' + META[layer].tag + ' (' + META[layer].tag2 + ') HIT</strong> · 命中 ' + s.version + ' · ' + META[layer].speed, 'ok');
+        hitAt = layer;
+        break;
+      } else {
+        await flashShelf(layer, 'miss', 500);
+        appendLog('› ' + META[layer].tag + ' (' + META[layer].tag2 + ') MISS · 空 · 继续往下问', 'miss');
+      }
+    }
+
+    if (!hitAt) {
+      // shouldn't happen since db is always seeded after push, but safety:
+      hitAt = 'db';
+    }
+
+    // on the way back, fill all empty layers BEFORE the hit point with the hit version
+    var hitVersion = state[hitAt].version;
+    var hitColor = state[hitAt].color;
+
+    if (hitAt !== 'browser') {
+      var fillStart = ORDER.indexOf(hitAt) - 1;
+      for (var j = fillStart; j >= 0; j--) {
+        var fLayer = ORDER[j];
+        if (!state[fLayer].hasCache) {
+          state[fLayer].hasCache = true;
+          state[fLayer].version = hitVersion;
+          state[fLayer].color = hitColor;
+          paint();
+          await flashShelf(fLayer, 'hit', 380);
+          appendLog('› 回程顺手把 ' + META[fLayer].tag + ' 也填上 (' + hitVersion + ')', 'ok');
+        }
+      }
+    }
+
+    // summary
+    var summary = '✓ 用户拿到了 <strong>' + hitVersion + '</strong> · 命中在 <strong>' + META[hitAt].tag + '</strong>';
+    if (state.db.version !== hitVersion) {
+      summary += ' · ⚠ 注意：源头其实是 ' + state.db.version + ' — <strong>用户看到旧的</strong>';
+    }
+    appendLog(summary, 'summary');
+
+    if (state.db.version !== hitVersion) {
+      setStatus('STALE · 用户看到 ' + hitVersion + '，源头已是 ' + state.db.version, 'fresh');
+    } else {
+      setStatus('FRESH · ' + hitVersion + ' 命中在 ' + META[hitAt].tag, 'success');
+    }
+
+    disableBtns(false);
+  }
+})();
+
+// ==========================================================
+//  §03 Challenge — quiz answers
+// ==========================================================
+(function () {
+  document.querySelectorAll('.ch-block').forEach(function (block) {
+    var opts = block.querySelectorAll('.ch-opt');
+    var explain = block.querySelector('[data-explain]');
+    var answered = false;
+
+    opts.forEach(function (opt) {
+      opt.addEventListener('click', function () {
+        if (answered) return;
+        answered = true;
+        var isCorrect = opt.dataset.correct === 'true';
+        if (isCorrect) {
+          opt.classList.add('is-correct');
+        } else {
+          opt.classList.add('is-wrong');
+          // also reveal the correct one
+          opts.forEach(function (o) {
+            if (o.dataset.correct === 'true') o.classList.add('is-correct');
+          });
+        }
+        // disable other options visually
+        opts.forEach(function (o) {
+          if (o !== opt && !o.classList.contains('is-correct')) {
+            o.style.cursor = 'default';
+            o.style.opacity = '0.55';
+          }
+        });
+        if (explain) explain.classList.add('shown');
+      });
+    });
+  });
+})();
+
+// ==========================================================
+//  §05 Header explorer — hover/click swap
+// ==========================================================
+(function () {
+  var stage = document.getElementById('hdrStage');
+  if (!stage) return;
+  var rows = stage.querySelectorAll('.hdr-row');
+  var tagEl  = document.getElementById('hdrTag');
+  var nameEl = document.getElementById('hdrName');
+  var descEl = document.getElementById('hdrDesc');
+  var metaEl = document.getElementById('hdrMeta');
+  var whereEl = document.getElementById('hdrWhere');
+
+  var dict = {
+    'max-age': {
+      tag: '01 · TIMER',
+      name: 'max-age — 缓存有效期',
+      desc: '告诉浏览器 / CDN：拿到这个文件后，<strong>3600 秒 (1 小时)</strong> 内别再来问我，直接用。过了 1 小时，下一次请求才会回源。',
+      meta: '如果你刚发版，但用户那一份还在 max-age 期内 —— 他<strong>就是会看到旧的</strong>，直到时间过完。这就是为什么平台要 purge。',
+      where: 'DevTools <code>Network</code> → 选请求 → <code>Response Headers</code> → 看 <code>Cache-Control</code>。'
+    },
+    'no-cache': {
+      tag: '02 · ASK EVERY TIME',
+      name: 'no-cache — 每次都问',
+      desc: '<strong>注意命名陷阱</strong>：no-cache <strong>不是</strong>不缓存，是<strong>"每次都先回源验证一下还能不能用"</strong>。配合 ETag 用，一致就 304 (省带宽)，不一致才重新下载。',
+      meta: '设计师改 HTML 文档的时候很常见 —— HTML 一般 no-cache，每次都拿最新结构；HTML 里链接的 JS/CSS 才是 immutable + hash。',
+      where: '想真的禁用，得用 <code>no-store</code>。两个名字差一个字，行为完全不同。'
+    },
+    'immutable': {
+      tag: '03 · NEVER ASK',
+      name: 'immutable — 永远不再问',
+      desc: '"这文件以后<strong>永远不会变</strong>" — 浏览器一年内都不用再问。配合<strong>文件名带 hash</strong> 用 (如 <span style="color:#ffd166;">style.a3f7c.css</span>)。代码一改，hash 变 → 文件名变 → 浏览器自然去拿新文件。',
+      meta: 'Next / Vite / webpack 打包出来的 JS / CSS 默认就这样。设计师只要看到带一串字符的文件名 —— 那就是它。',
+      where: 'max-age 通常是 <code>31536000</code> (1 年)。技术上不是无限，但实际效果等于"永久缓存"。'
+    },
+    'etag': {
+      tag: '04 · FINGERPRINT',
+      name: 'ETag — 文件指纹',
+      desc: 'ETag 是一串<strong>能代表文件内容</strong>的短字符 (像哈希)。浏览器下次问的时候带上这个指纹，源比一下：一样 → <code>304 Not Modified</code> 不传文件；不一样 → 传新的。',
+      meta: '一个轻量级"还是那个吗"的对话 —— 比 max-age 更省、但每次还是要去问一次。常和 no-cache 搭配。',
+      where: 'Status 看到 <code>304</code> 就是 ETag 起作用了。看到 <code>200</code> 才是真重新下载。'
+    }
+  };
+
+  function setActive(key) {
+    rows.forEach(function (r) { r.classList.toggle('is-active', r.dataset.hk === key); });
+    var d = dict[key];
+    if (!d) return;
+    tagEl.textContent = d.tag;
+    nameEl.innerHTML = d.name;
+    descEl.innerHTML = d.desc;
+    metaEl.innerHTML = d.meta;
+    whereEl.innerHTML = d.where;
+  }
+
+  rows.forEach(function (row) {
+    row.addEventListener('mouseenter', function () { setActive(row.dataset.hk); });
+    row.addEventListener('click',      function () { setActive(row.dataset.hk); });
+  });
+
+  // default
+  setTimeout(function () { setActive('max-age'); }, 600);
+})();
+
+// ==========================================================
+//  Roadmap modal
+// ==========================================================
+(function () {
+  var modal = document.getElementById('rm-modal');
+  if (!modal) return;
+  var openBtns = document.querySelectorAll('[data-rm-open]');
+  var closeBtns = modal.querySelectorAll('[data-rm-close]');
+  function open()  { modal.hidden = false; document.body.style.overflow = 'hidden'; }
+  function close() { modal.hidden = true;  document.body.style.overflow = ''; }
+  openBtns.forEach(function (b)  { b.addEventListener('click', function (e) { e.preventDefault(); open(); }); });
+  closeBtns.forEach(function (b) { b.addEventListener('click', close); });
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && !modal.hidden) close(); });
+})();
+</script>
+
+
+<!-- 路线图弹窗 (沿用 basics) -->
+<div class="rm-modal" id="rm-modal" hidden>
+  <div class="rm-backdrop" data-rm-close></div>
+  <div class="rm-dialog" role="dialog" aria-label="完整路线图">
+    <button class="rm-close" data-rm-close aria-label="关闭">✕</button>
+    <div class="rm-header">
+      <div class="rm-tag">完整路线图 · ROADMAP</div>
+      <h3 class="rm-title">9 模块 <span class="rm-em">·</span> 28 篇</h3>
+      <p class="rm-sub">设计篇 5 模块 / 15 篇 + 工程篇 4 系列 / 13 篇</p>
+    </div>
+    <div class="rm-body">
+      <div class="rm-mod">
+        <div class="rm-mod-key">A · 单元素与组件</div>
+        <div class="rm-mod-list">
+          <a href="basics-figma.html" class="rm-cell"><span class="rm-cell-code">A0</span><span class="rm-cell-name">三件套 · HTML / CSS / JS</span><span class="rm-cell-tier">入门</span></a>
+          <a href="box-figma.html" class="rm-cell"><span class="rm-cell-code">A1</span><span class="rm-cell-name">盒子 · Auto Layout</span><span class="rm-cell-tier">基础</span></a>
+          <a href="components-figma.html" class="rm-cell"><span class="rm-cell-code">A2</span><span class="rm-cell-name">组件 · Variants &amp; Props</span><span class="rm-cell-tier">基础</span></a>
+          <a href="button-system-figma.html" class="rm-cell"><span class="rm-cell-code">A3</span><span class="rm-cell-name">Button System · 组件演化</span><span class="rm-cell-tier">进阶</span></a>
+        </div>
+      </div>
+      <div class="rm-mod">
+        <div class="rm-mod-key">B · 多组件协作</div>
+        <div class="rm-mod-list">
+          <a href="page-figma.html" class="rm-cell"><span class="rm-cell-code">B0</span><span class="rm-cell-name">拼页面 · 组件嵌套</span><span class="rm-cell-tier">入门</span></a>
+          <a href="data-flow-figma.html" class="rm-cell"><span class="rm-cell-code">B1</span><span class="rm-cell-name">数据流 · 概念</span><span class="rm-cell-tier">基础</span></a>
+          <a href="data-flow-cases-figma.html" class="rm-cell"><span class="rm-cell-code">B2</span><span class="rm-cell-name">数据流 · 实战 5 案例</span><span class="rm-cell-tier">进阶</span></a>
+        </div>
+      </div>
+      <div class="rm-mod">
+        <div class="rm-mod-key">C · 视觉系统</div>
+        <div class="rm-mod-list">
+          <a href="tokens-figma.html" class="rm-cell"><span class="rm-cell-code">C0</span><span class="rm-cell-name">Variables / Tokens 入门</span><span class="rm-cell-tier">入门</span></a>
+          <a href="colors-type-figma.html" class="rm-cell"><span class="rm-cell-code">C1</span><span class="rm-cell-name">Colors / Type / Spacing</span><span class="rm-cell-tier">基础</span></a>
+          <a href="theme-switch-figma.html" class="rm-cell"><span class="rm-cell-code">C2</span><span class="rm-cell-name">Theme 切换实战</span><span class="rm-cell-tier">进阶</span></a>
+        </div>
+      </div>
+      <div class="rm-mod">
+        <div class="rm-mod-key">D · 状态与交互</div>
+        <div class="rm-mod-list">
+          <a href="states-figma.html" class="rm-cell"><span class="rm-cell-code">D0</span><span class="rm-cell-name">视觉态 · 看得见的状态</span><span class="rm-cell-tier">入门</span></a>
+          <a href="interactive-figma.html" class="rm-cell"><span class="rm-cell-code">D1</span><span class="rm-cell-name">Interactive Component</span><span class="rm-cell-tier">基础</span></a>
+          <a href="transition-figma.html" class="rm-cell"><span class="rm-cell-code">D2</span><span class="rm-cell-name">动画 · Transition</span><span class="rm-cell-tier">进阶</span></a>
+        </div>
+      </div>
+      <div class="rm-mod">
+        <div class="rm-mod-key">E · 工程化</div>
+        <div class="rm-mod-list">
+          <a href="naming-figma.html" class="rm-cell"><span class="rm-cell-code">E0</span><span class="rm-cell-name">命名 / 图层规范</span><span class="rm-cell-tier">入门</span></a>
+          <a href="handoff-figma.html" class="rm-cell"><span class="rm-cell-code">E2</span><span class="rm-cell-name">Handoff &amp; 设计系统</span><span class="rm-cell-tier">进阶</span></a>
+        </div>
+      </div>
+      <div class="rm-mod">
+        <div class="rm-mod-key">F · 工程入门</div>
+        <div class="rm-mod-list">
+          <a href="f1-npm-figma.html" class="rm-cell"><span class="rm-cell-code">F1</span><span class="rm-cell-name">npm 是什么</span><span class="rm-cell-tier">入门</span></a>
+          <a href="f2-import-figma.html" class="rm-cell"><span class="rm-cell-code">F2</span><span class="rm-cell-name">import 与路径</span><span class="rm-cell-tier">入门</span></a>
+          <a href="f3-dev-build-figma.html" class="rm-cell"><span class="rm-cell-code">F3</span><span class="rm-cell-name">dev vs build</span><span class="rm-cell-tier">基础</span></a>
+          <a href="f4-hidden-files-figma.html" class="rm-cell"><span class="rm-cell-code">F4</span><span class="rm-cell-name">看不见的文件</span><span class="rm-cell-tier">基础</span></a>
+        </div>
+      </div>
+      <div class="rm-mod">
+        <div class="rm-mod-key">G · 版本控制</div>
+        <div class="rm-mod-list">
+          <a href="g1-commit-branch-figma.html" class="rm-cell"><span class="rm-cell-code">G1</span><span class="rm-cell-name">commit / branch</span><span class="rm-cell-tier">入门</span></a>
+          <a href="g2-conflict-figma.html" class="rm-cell"><span class="rm-cell-code">G2</span><span class="rm-cell-name">冲突怎么解</span><span class="rm-cell-tier">基础</span></a>
+          <a href="g3-pr-review-figma.html" class="rm-cell"><span class="rm-cell-code">G3</span><span class="rm-cell-name">PR / Review</span><span class="rm-cell-tier">进阶</span></a>
+        </div>
+      </div>
+      <div class="rm-mod">
+        <div class="rm-mod-key">H · 浏览器调试</div>
+        <div class="rm-mod-list">
+          <a href="h1-devtools-elements-figma.html" class="rm-cell"><span class="rm-cell-code">H1</span><span class="rm-cell-name">DevTools Elements</span><span class="rm-cell-tier">入门</span></a>
+          <a href="h2-console-error-figma.html" class="rm-cell"><span class="rm-cell-code">H2</span><span class="rm-cell-name">Console 报错</span><span class="rm-cell-tier">基础</span></a>
+          <a href="h3-network-figma.html" class="rm-cell"><span class="rm-cell-code">H3</span><span class="rm-cell-name">Network 面板</span><span class="rm-cell-tier">进阶</span></a>
+        </div>
+      </div>
+      <div class="rm-mod">
+        <div class="rm-mod-key">J · 上线</div>
+        <div class="rm-mod-list">
+          <a href="j1-dns-figma.html" class="rm-cell"><span class="rm-cell-code">J1</span><span class="rm-cell-name">DNS / 域名</span><span class="rm-cell-tier">基础</span></a>
+          <a href="j2-vercel-figma.html" class="rm-cell"><span class="rm-cell-code">J2</span><span class="rm-cell-name">Vercel 部署</span><span class="rm-cell-tier">基础</span></a>
+          <a href="j3-cache-cdn-figma.html" class="rm-cell"><span class="rm-cell-code">J3</span><span class="rm-cell-name">缓存 / CDN</span><span class="rm-cell-tier">进阶</span></a>
+        </div>
+      </div>
+    </div>
+    <div class="rm-footer">
+      <span>未完待续 · 想看什么主题加我聊</span>
+      <span class="rm-wechat">微信 vanvan_0422</span>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

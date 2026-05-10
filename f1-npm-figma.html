@@ -1,0 +1,2158 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>npm 是什么 — 不是网站，是零件市场</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,300..900&family=Geist:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Noto+Sans+SC:wght@300;400;500;700;900&family=Noto+Serif+SC:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f3eee5;
+    --bg-2: #ebe4d4;
+    --ink: #16161d;
+    --ink-soft: #4a4a55;
+    --ink-mute: #8a8a92;
+    --line: #d5cdba;
+    --line-soft: #e3dcca;
+    --accent: #ff4d2e;
+    --accent-soft: #ffe4dc;
+    --blue: #0a4cff;
+    --blue-soft: #dde6ff;
+    --green: #1f6b3a;
+    --green-soft: #d4ecdb;
+    --yellow: #ffcf3d;
+    --paper: #faf7f0;
+    --shadow: 0 1px 0 rgba(0,0,0,0.04), 0 8px 24px rgba(22,22,29,0.06);
+
+    /* §03 dependency tree colors */
+    --pkg-react: #61dafb;
+    --pkg-next: #ffffff;
+    --pkg-tailwind: #38bdf8;
+    --pkg-shadcn: #b45309;
+    --node-stroke: #c4b896;
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'Geist', 'Noto Sans SC', system-ui, -apple-system, sans-serif;
+    font-size: 16px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    background-image: radial-gradient(circle at 1px 1px, rgba(22,22,29,0.05) 1px, transparent 0);
+    background-size: 24px 24px;
+  }
+
+  /* Typography */
+  .display-cn { font-family: 'Noto Serif SC', 'Fraunces', serif; font-weight: 900; letter-spacing: -0.01em; }
+  .display-en { font-family: 'Fraunces', 'Noto Serif SC', serif; font-weight: 600; font-style: italic; letter-spacing: -0.02em; }
+  .mono { font-family: 'JetBrains Mono', monospace; }
+  .label { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-mute); }
+
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 0 32px; }
+
+  /* topbar */
+  .topbar {
+    border-bottom: 1px dashed var(--line);
+    padding: 16px 0;
+    background: rgba(243, 238, 229, 0.85);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    backdrop-filter: blur(8px);
+  }
+  .topbar-inner { display: flex; justify-content: space-between; align-items: center; gap: 24px; flex-wrap: wrap; }
+  .brand { font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 600; }
+  .brand .dot { display: inline-block; width: 8px; height: 8px; background: var(--accent); border-radius: 50%; margin-right: 8px; vertical-align: middle; animation: pulse 2s ease-in-out infinite; }
+  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+  .nav-links { display: flex; gap: 18px; font-size: 13px; flex-wrap: wrap; }
+  .nav-links a { color: var(--ink-soft); text-decoration: none; transition: color 0.2s; }
+  .nav-links a:hover { color: var(--accent); }
+  .nav-links a.current { color: var(--accent); font-weight: 600; }
+  a.brand { text-decoration: none; color: inherit; transition: color 0.2s; cursor: pointer; }
+  a.brand:hover { color: var(--accent); }
+
+  /* hero */
+  .hero { padding: 100px 0 80px; position: relative; overflow: hidden; }
+  .hero-meta { display: flex; gap: 24px; margin-bottom: 32px; align-items: center; flex-wrap: wrap; }
+  .hero-meta .pill { padding: 6px 12px; border: 1px solid var(--ink); border-radius: 100px; font-size: 11px; font-family: 'JetBrains Mono', monospace; letter-spacing: 0.05em; }
+  .hero-meta .pill.fill { background: var(--ink); color: var(--bg); }
+  .hero h1 {
+    font-family: 'Noto Serif SC', 'Fraunces', serif;
+    font-weight: 900;
+    font-size: clamp(48px, 7vw, 92px);
+    line-height: 0.95;
+    letter-spacing: -0.03em;
+    margin: 0 0 24px;
+  }
+  .hero h1 .em { font-family: 'Noto Serif SC', serif; font-weight: 500; color: var(--accent); }
+  .hero h1 .x { display: inline-block; transform: translateY(-0.05em); margin: 0 0.05em; color: var(--ink-mute); font-weight: 300; }
+  .hero p.lede { font-size: 20px; line-height: 1.5; max-width: 640px; color: var(--ink-soft); margin: 0 0 40px; }
+  .hero p.lede .em { font-family: 'Noto Serif SC', serif; color: var(--accent); font-weight: 500; }
+  .hero-grid { display: grid; grid-template-columns: 1.4fr 1fr; gap: 48px; align-items: end; }
+  @media (max-width: 880px) { .hero-grid { grid-template-columns: 1fr; } }
+  .hero-side { border-left: 1px dashed var(--line); padding-left: 24px; font-size: 13px; color: var(--ink-soft); }
+  .hero-side .row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px dashed var(--line); }
+  .hero-side .row:last-child { border-bottom: none; }
+  .hero-side .row .k { color: var(--ink-mute); font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.05em; text-transform: uppercase; }
+  .hero-side .row .v { font-weight: 500; }
+
+  /* section */
+  section { padding: 80px 0; border-top: 1px solid var(--line); position: relative; animation: fadeIn 0.6s ease-out backwards; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+  .section-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 48px; flex-wrap: wrap; gap: 16px; }
+  .section-num { font-family: 'JetBrains Mono', monospace; font-size: 13px; color: var(--ink-mute); letter-spacing: 0.1em; }
+  .section-num strong { color: var(--accent); }
+  .section-title {
+    font-family: 'Noto Serif SC', serif;
+    font-weight: 900;
+    font-size: clamp(32px, 4.5vw, 52px);
+    line-height: 1.05;
+    letter-spacing: -0.02em;
+    margin: 0;
+    max-width: 18ch;
+  }
+  .section-title .em { font-family: 'Noto Serif SC', serif; font-weight: 500; color: var(--accent); }
+  .section-sub { color: var(--ink-soft); font-size: 17px; max-width: 38ch; line-height: 1.55; margin: 0; }
+
+  .em { font-family: 'Noto Serif SC', serif; font-weight: 500; color: var(--accent); }
+
+  /* problem comparison */
+  .problem-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; margin-top: 24px; }
+  @media (max-width: 880px) { .problem-grid { grid-template-columns: 1fr; } }
+  .problem-card {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 28px;
+    position: relative;
+  }
+  .problem-card.bad { border-color: var(--accent); background: var(--accent-soft); }
+  .problem-card.good { border-color: var(--green); background: var(--green-soft); }
+  .problem-card .tag {
+    position: absolute; top: -12px; left: 24px;
+    background: var(--bg); padding: 2px 10px;
+    font-family: 'JetBrains Mono', monospace; font-size: 11px;
+    letter-spacing: 0.1em;
+  }
+  .problem-card.bad .tag { color: var(--accent); border: 1px solid var(--accent); }
+  .problem-card.good .tag { color: var(--green); border: 1px solid var(--green); }
+  .problem-card h3 { font-family: 'Noto Serif SC', serif; font-size: 22px; margin: 0 0 12px; font-weight: 700; }
+  .problem-card p { margin: 0 0 12px; color: var(--ink-soft); font-size: 14px; line-height: 1.55; }
+  .problem-card p:last-child { margin-bottom: 0; }
+  .problem-card .blackbox-vis {
+    margin-top: 16px;
+    padding: 16px 18px;
+    background: rgba(255,255,255,0.55);
+    border-radius: 4px;
+    border: 1px dashed var(--line);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    line-height: 1.7;
+    color: var(--ink-soft);
+  }
+  .problem-card .blackbox-vis .arrow { color: var(--accent); margin: 0 6px; }
+  .problem-card .blackbox-vis .q { color: var(--ink-mute); }
+  .problem-card .blackbox-vis strong { color: var(--ink); font-weight: 600; }
+
+  /* hint strip */
+  .hint-strip {
+    margin-top: 16px;
+    padding: 14px 18px;
+    background: var(--accent-soft);
+    border-left: 3px solid var(--accent);
+    border-radius: 4px;
+    font-size: 13px;
+    color: var(--ink);
+    line-height: 1.55;
+  }
+  .hint-strip .hint-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--accent);
+    letter-spacing: 0.12em;
+    margin-right: 10px;
+    text-transform: uppercase;
+  }
+
+  /* quote box */
+  .quote-box {
+    margin: 32px 0 0;
+    padding: 24px 28px;
+    background: var(--paper);
+    border-left: 3px solid var(--ink);
+    border-radius: 0 6px 6px 0;
+    font-family: 'Noto Serif SC', serif;
+    font-size: 18px;
+    line-height: 1.55;
+    color: var(--ink);
+    font-weight: 500;
+  }
+  .quote-box .quote-mark {
+    font-family: 'Noto Serif SC', serif;
+    color: var(--accent);
+    font-size: 28px;
+    line-height: 1;
+    margin-right: 8px;
+    font-weight: 500;
+  }
+  .quote-box .quote-attr {
+    display: block;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--ink-mute);
+    margin-top: 12px;
+    letter-spacing: 0.05em;
+    font-weight: 400;
+  }
+
+  /* === §02 package.json explorer === */
+  .pkg-stage {
+    margin-top: 24px;
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 0;
+    display: grid;
+    grid-template-columns: 1.05fr 1fr;
+    gap: 0;
+    overflow: hidden;
+  }
+  @media (max-width: 880px) { .pkg-stage { grid-template-columns: 1fr; } }
+
+  .pkg-code {
+    background: var(--ink);
+    color: #d8d8e0;
+    padding: 24px 28px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    line-height: 1.85;
+    position: relative;
+    overflow-x: auto;
+  }
+  .pkg-code .code-head {
+    position: absolute;
+    top: 12px; left: 14px;
+    width: 8px; height: 8px; border-radius: 50%;
+    background: #ff5f56;
+    box-shadow: 14px 0 0 #ffbd2e, 28px 0 0 #27c93f;
+  }
+  .pkg-code .code-fname {
+    position: absolute; top: 10px; right: 16px;
+    font-size: 10px; color: #6e6e7a; letter-spacing: 0.08em;
+  }
+  .pkg-code pre { margin: 0; padding-top: 18px; }
+  .pkg-code .ckey { color: #ff8a6e; }
+  .pkg-code .cstr { color: #a8e6a3; }
+  .pkg-code .cnum { color: #8ec5ff; }
+  .pkg-code .cpunc { color: #6e6e7a; }
+  .pkg-code .pkg-line {
+    display: block;
+    padding: 0 8px;
+    margin: 0 -8px;
+    border-radius: 3px;
+    cursor: pointer;
+    transition: background 0.18s;
+    border-left: 2px solid transparent;
+  }
+  .pkg-code .pkg-line:hover { background: rgba(255,138,110,0.08); }
+  .pkg-code .pkg-line.is-active {
+    background: rgba(255,138,110,0.18);
+    border-left-color: #ff8a6e;
+  }
+
+  .pkg-info {
+    padding: 28px 32px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    background: var(--paper);
+  }
+  .pkg-info-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--accent);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+  .pkg-info-name {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 24px;
+    font-weight: 800;
+    margin: 0;
+    color: var(--ink);
+    letter-spacing: -0.01em;
+  }
+  .pkg-info-name .pin {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    background: var(--ink);
+    color: var(--bg);
+    padding: 2px 8px;
+    border-radius: 3px;
+    margin-right: 10px;
+    font-weight: 500;
+    letter-spacing: 0.05em;
+    vertical-align: 3px;
+  }
+  .pkg-info-desc {
+    color: var(--ink-soft);
+    font-size: 14px;
+    line-height: 1.6;
+    margin: 0;
+  }
+  .pkg-info-section {
+    padding-top: 12px;
+    border-top: 1px dashed var(--line);
+  }
+  .pkg-info-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--ink-mute);
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+  .pkg-info-text {
+    font-size: 13px;
+    color: var(--ink-soft);
+    line-height: 1.6;
+    margin: 0;
+  }
+  .pkg-info-text strong { color: var(--ink); font-weight: 600; }
+  .pkg-info-meta {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--ink);
+    background: var(--bg-2);
+    padding: 4px 10px;
+    border-radius: 3px;
+    display: inline-block;
+    margin-top: 4px;
+  }
+
+  /* === §03 dependency tree game === */
+  .dep-stage {
+    margin-top: 24px;
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 0;
+    overflow: hidden;
+  }
+  .dep-grid {
+    display: grid;
+    grid-template-columns: 240px 1fr;
+    gap: 0;
+    min-height: 540px;
+  }
+  @media (max-width: 880px) { .dep-grid { grid-template-columns: 1fr; } }
+
+  .dep-shop {
+    background: var(--bg-2);
+    padding: 24px 22px;
+    border-right: 1px solid var(--line);
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+  @media (max-width: 880px) { .dep-shop { border-right: none; border-bottom: 1px solid var(--line); } }
+  .dep-shop-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--ink-mute);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+  .dep-shop-title {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 18px;
+    font-weight: 700;
+    margin: 0 0 6px;
+    color: var(--ink);
+  }
+  .dep-shop-hint {
+    font-size: 12px;
+    color: var(--ink-soft);
+    line-height: 1.55;
+    margin: 0 0 10px;
+  }
+  .dep-seed {
+    background: white;
+    border: 1.5px solid var(--ink);
+    border-radius: 6px;
+    padding: 12px 14px;
+    cursor: pointer;
+    transition: all 0.18s ease;
+    user-select: none;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .dep-seed:hover {
+    transform: translateX(3px);
+    box-shadow: 0 4px 12px rgba(22,22,29,0.08);
+    border-color: var(--accent);
+  }
+  .dep-seed.is-loaded { background: var(--accent-soft); border-color: var(--accent); }
+  .dep-seed.is-loaded::after {
+    content: '✓ 装了';
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--accent);
+    letter-spacing: 0.05em;
+    margin-top: 2px;
+  }
+  .dep-seed-name {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--ink);
+  }
+  .dep-seed-desc {
+    font-size: 11px;
+    color: var(--ink-mute);
+    line-height: 1.45;
+  }
+  .dep-seed-cost {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--accent);
+    letter-spacing: 0.05em;
+    margin-top: 2px;
+  }
+  .dep-shop-reset {
+    margin-top: auto;
+    padding: 10px 14px;
+    background: transparent;
+    border: 1px dashed var(--ink-mute);
+    border-radius: 4px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--ink-soft);
+    cursor: pointer;
+    transition: all 0.15s;
+    letter-spacing: 0.05em;
+  }
+  .dep-shop-reset:hover { border-color: var(--ink); color: var(--ink); }
+
+  .dep-canvas {
+    background: var(--paper);
+    background-image:
+      linear-gradient(rgba(22,22,29,0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(22,22,29,0.04) 1px, transparent 1px);
+    background-size: 16px 16px;
+    padding: 24px 28px 28px;
+    position: relative;
+    overflow: auto;
+    max-height: 720px;
+  }
+  .dep-stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0;
+    background: var(--ink);
+    color: white;
+    border-radius: 6px;
+    margin-bottom: 20px;
+    overflow: hidden;
+  }
+  @media (max-width: 600px) { .dep-stats { grid-template-columns: 1fr; } }
+  .dep-stat {
+    padding: 14px 18px;
+    border-right: 1px solid rgba(255,255,255,0.1);
+  }
+  .dep-stat:last-child { border-right: none; }
+  @media (max-width: 600px) {
+    .dep-stat { border-right: none; border-bottom: 1px solid rgba(255,255,255,0.1); }
+    .dep-stat:last-child { border-bottom: none; }
+  }
+  .dep-stat-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    color: rgba(255,255,255,0.55);
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+  .dep-stat-num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 22px;
+    font-weight: 600;
+    color: white;
+    line-height: 1.1;
+  }
+  .dep-stat-num.warn { color: var(--accent); }
+  .dep-stat-sub {
+    font-size: 11px;
+    color: rgba(255,255,255,0.5);
+    margin-top: 4px;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  .dep-empty {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--ink-mute);
+    font-size: 14px;
+    line-height: 1.6;
+    border: 1.5px dashed var(--line);
+    border-radius: 6px;
+    background: rgba(255,255,255,0.4);
+  }
+  .dep-empty .dep-empty-big {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 32px;
+    color: var(--ink-soft);
+    font-weight: 700;
+    margin-bottom: 10px;
+    display: block;
+  }
+
+  /* tree visualization */
+  .dep-tree { font-family: 'JetBrains Mono', monospace; font-size: 12.5px; }
+  .dep-tree-root {
+    background: white;
+    border: 1.5px solid var(--ink);
+    border-radius: 6px;
+    padding: 10px 14px;
+    margin-bottom: 16px;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .dep-tree-root .dep-root-icon {
+    width: 12px; height: 12px; background: var(--accent); border-radius: 2px;
+  }
+  .dep-tree-root .dep-root-name {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--ink);
+  }
+  .dep-tree-root .dep-root-meta {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--ink-mute);
+  }
+
+  .dep-pkg {
+    margin-bottom: 4px;
+    position: relative;
+  }
+  .dep-pkg-row {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 9px 4px 4px;
+    border-radius: 3px;
+    background: white;
+    border: 1px solid var(--line);
+    transition: all 0.18s;
+    max-width: 100%;
+  }
+  .dep-pkg-row.dep-direct {
+    background: var(--accent-soft);
+    border-color: var(--accent);
+  }
+  .dep-pkg-row.dep-trans {
+    background: var(--bg);
+    border-color: var(--line-soft);
+  }
+  .dep-pkg-row.is-grow {
+    animation: depGrow 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) backwards;
+  }
+  @keyframes depGrow {
+    0%   { opacity: 0; transform: translateX(-12px) scale(0.92); }
+    100% { opacity: 1; transform: translateX(0) scale(1); }
+  }
+  .dep-pkg-mark {
+    width: 14px; height: 14px;
+    flex-shrink: 0;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 8px;
+    color: white;
+    font-weight: 700;
+  }
+  .dep-pkg-row.dep-direct .dep-pkg-mark { background: var(--accent); }
+  .dep-pkg-row.dep-trans .dep-pkg-mark { background: var(--ink-mute); }
+  .dep-pkg-name {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--ink);
+  }
+  .dep-pkg-row.dep-trans .dep-pkg-name { font-weight: 500; color: var(--ink-soft); }
+  .dep-pkg-ver {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10.5px;
+    color: var(--ink-mute);
+  }
+  .dep-pkg-size {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--accent);
+    background: rgba(255,77,46,0.1);
+    padding: 1px 5px;
+    border-radius: 2px;
+  }
+  .dep-pkg-row.dep-trans .dep-pkg-size { color: var(--ink-mute); background: rgba(0,0,0,0.04); }
+
+  .dep-children {
+    margin-left: 18px;
+    border-left: 1px dashed var(--node-stroke);
+    padding-left: 14px;
+    padding-top: 4px;
+    padding-bottom: 2px;
+  }
+
+  /* === §04 commands === */
+  .cmd-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 18px;
+    margin-top: 24px;
+  }
+  @media (max-width: 880px) { .cmd-grid { grid-template-columns: 1fr; } }
+  .cmd-card {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+  .cmd-card .cmd-head {
+    background: var(--ink);
+    color: white;
+    padding: 14px 18px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+  }
+  .cmd-card .cmd-head .cmd-prompt {
+    color: var(--accent);
+    font-weight: 600;
+  }
+  .cmd-card .cmd-body {
+    padding: 22px 22px 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    flex: 1;
+  }
+  .cmd-card h4 {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 19px;
+    margin: 0;
+    font-weight: 800;
+    letter-spacing: -0.01em;
+  }
+  .cmd-card .cmd-1liner {
+    color: var(--ink-soft);
+    font-size: 13.5px;
+    line-height: 1.55;
+    margin: 0;
+  }
+  .cmd-card .cmd-1liner strong { color: var(--ink); font-weight: 600; }
+  .cmd-card .cmd-anim {
+    background: var(--bg);
+    border: 1px dashed var(--line);
+    border-radius: 6px;
+    padding: 18px;
+    min-height: 130px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .cmd-card .cmd-foot {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--ink-mute);
+    background: var(--bg-2);
+    padding: 8px 12px;
+    border-radius: 4px;
+    line-height: 1.5;
+  }
+  .cmd-card .cmd-foot strong { color: var(--ink); font-weight: 600; }
+
+  /* install animation: boxes flying into a shelf */
+  .ci-shelf {
+    width: 100%;
+    height: 100%;
+    position: relative;
+  }
+  .ci-shelf-row {
+    position: absolute;
+    bottom: 14px;
+    left: 0; right: 0;
+    height: 2px;
+    background: var(--ink);
+  }
+  .ci-shelf-row::before, .ci-shelf-row::after {
+    content: '';
+    position: absolute;
+    top: 0; bottom: -10px;
+    width: 2px;
+    background: var(--ink);
+  }
+  .ci-shelf-row::before { left: 0; }
+  .ci-shelf-row::after { right: 0; }
+  .ci-box {
+    position: absolute;
+    width: 18px; height: 16px;
+    background: var(--accent);
+    border: 1px solid var(--ink);
+    border-radius: 2px;
+    bottom: 16px;
+    animation: ciDrop 2.4s ease-in-out infinite;
+  }
+  .ci-box.b1 { left: 12%; animation-delay: 0s; background: var(--accent); }
+  .ci-box.b2 { left: 28%; animation-delay: 0.4s; background: var(--yellow); }
+  .ci-box.b3 { left: 44%; animation-delay: 0.8s; background: var(--blue); }
+  .ci-box.b4 { left: 60%; animation-delay: 1.2s; background: var(--green); }
+  .ci-box.b5 { left: 76%; animation-delay: 1.6s; background: var(--accent); }
+  @keyframes ciDrop {
+    0%   { transform: translateY(-90px) rotate(-12deg); opacity: 0; }
+    20%  { opacity: 1; }
+    50%  { transform: translateY(0) rotate(0); }
+    100% { transform: translateY(0) rotate(0); }
+  }
+
+  /* dev animation: pulsing server + dot streaming */
+  .cd-server {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 14px;
+  }
+  .cd-stamp {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--ink);
+    background: white;
+    border: 1px solid var(--ink);
+    padding: 6px 12px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .cd-stamp .cd-led {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--green);
+    animation: cdPulse 1.6s ease-in-out infinite;
+  }
+  @keyframes cdPulse {
+    0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(31, 107, 58, 0.4); }
+    50%      { opacity: 0.6; box-shadow: 0 0 0 5px rgba(31, 107, 58, 0); }
+  }
+  .cd-url {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--ink-soft);
+    border-bottom: 1px dashed var(--ink-soft);
+  }
+  .cd-stream {
+    width: 80%;
+    height: 14px;
+    background: var(--bg-2);
+    border-radius: 100px;
+    overflow: hidden;
+    position: relative;
+  }
+  .cd-stream::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; bottom: 0;
+    width: 30%;
+    background: linear-gradient(90deg, transparent, var(--accent), transparent);
+    animation: cdStream 1.8s linear infinite;
+  }
+  @keyframes cdStream {
+    0%   { transform: translateX(-50%); }
+    100% { transform: translateX(350%); }
+  }
+
+  /* build animation: many boxes squishing into 1 */
+  .cb-stage {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+  }
+  .cb-source {
+    display: grid;
+    grid-template-columns: repeat(3, 8px);
+    gap: 3px;
+  }
+  .cb-source span {
+    width: 8px; height: 8px;
+    background: var(--ink-mute);
+    border-radius: 1px;
+    opacity: 0.85;
+    animation: cbShrink 2.6s ease-in-out infinite;
+  }
+  .cb-source span:nth-child(1) { animation-delay: 0s; }
+  .cb-source span:nth-child(2) { animation-delay: 0.1s; }
+  .cb-source span:nth-child(3) { animation-delay: 0.2s; }
+  .cb-source span:nth-child(4) { animation-delay: 0.3s; }
+  .cb-source span:nth-child(5) { animation-delay: 0.4s; }
+  .cb-source span:nth-child(6) { animation-delay: 0.5s; }
+  .cb-source span:nth-child(7) { animation-delay: 0.6s; }
+  .cb-source span:nth-child(8) { animation-delay: 0.7s; }
+  .cb-source span:nth-child(9) { animation-delay: 0.8s; }
+  @keyframes cbShrink {
+    0%, 30%   { transform: scale(1); opacity: 0.85; }
+    50%, 70%  { transform: scale(0.4); opacity: 0.3; }
+    90%, 100% { transform: scale(1); opacity: 0.85; }
+  }
+  .cb-arr {
+    font-family: 'Noto Serif SC', serif;
+    color: var(--accent);
+    font-size: 22px;
+    font-weight: 700;
+  }
+  .cb-output {
+    width: 38px; height: 44px;
+    background: var(--accent);
+    border: 1px solid var(--ink);
+    border-radius: 3px;
+    position: relative;
+    box-shadow: 2px 2px 0 var(--ink);
+  }
+  .cb-output::after {
+    content: 'dist';
+    position: absolute;
+    bottom: -16px; left: 50%;
+    transform: translateX(-50%);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--ink);
+    letter-spacing: 0.05em;
+  }
+
+  /* === §05 troubleshoot list === */
+  .ts-stage {
+    margin-top: 24px;
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 28px 32px;
+  }
+  .ts-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+  }
+  .ts-item {
+    display: grid;
+    grid-template-columns: 60px 1fr;
+    gap: 20px;
+    align-items: start;
+  }
+  @media (max-width: 600px) { .ts-item { grid-template-columns: 1fr; gap: 8px; } }
+  .ts-num {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 28px;
+    font-weight: 800;
+    color: var(--accent);
+    line-height: 1;
+    letter-spacing: -0.02em;
+  }
+  .ts-q {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--ink);
+    margin: 0 0 6px;
+    line-height: 1.4;
+  }
+  .ts-q .em { font-family: 'Noto Serif SC', serif; color: var(--accent); font-weight: 500; }
+  .ts-a {
+    color: var(--ink-soft);
+    font-size: 14px;
+    line-height: 1.65;
+    margin: 0 0 8px;
+  }
+  .ts-a strong { color: var(--ink); font-weight: 600; }
+  .ts-a code {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    background: var(--bg-2);
+    color: var(--ink);
+    padding: 1px 6px;
+    border-radius: 3px;
+  }
+  .ts-action {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--ink);
+    background: var(--accent-soft);
+    border-left: 3px solid var(--accent);
+    padding: 8px 12px;
+    border-radius: 0 4px 4px 0;
+    line-height: 1.5;
+    display: block;
+  }
+
+  /* === §06 cheatsheet === */
+  .cheat-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 18px;
+    margin-top: 24px;
+  }
+  @media (max-width: 880px) { .cheat-grid { grid-template-columns: 1fr; } }
+  .cheat-block {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 24px 26px;
+  }
+  .cheat-block h3 {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 18px;
+    font-weight: 800;
+    margin: 0 0 14px;
+    letter-spacing: -0.01em;
+  }
+  .cheat-block h3 .em { font-family: 'Noto Serif SC', serif; color: var(--accent); font-weight: 500; }
+  .cheat-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+  .cheat-table th, .cheat-table td {
+    text-align: left;
+    padding: 9px 10px;
+    border-bottom: 1px dashed var(--line);
+  }
+  .cheat-table tr:last-child td { border-bottom: none; }
+  .cheat-table th {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--ink-mute);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    font-weight: 500;
+  }
+  .cheat-table .term {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12.5px;
+    color: var(--ink);
+    font-weight: 600;
+    white-space: nowrap;
+  }
+  .cheat-table .desc { color: var(--ink-soft); line-height: 1.5; }
+  .cheat-table .desc strong { color: var(--ink); font-weight: 600; }
+  .cheat-block .cheat-foot {
+    margin-top: 16px;
+    font-size: 12px;
+    color: var(--ink-mute);
+    border-top: 1px dashed var(--line);
+    padding-top: 12px;
+    line-height: 1.55;
+  }
+
+  /* ============= Unified next-post block ============= */
+  .next-post {
+    margin-top: 48px;
+    padding: 32px 36px;
+    background: var(--ink);
+    color: var(--bg);
+    border-radius: 8px;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 32px;
+    align-items: center;
+    text-decoration: none;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    position: relative;
+    overflow: hidden;
+  }
+  .next-post::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at 100% 0%, rgba(255,77,46,0.12), transparent 55%);
+    pointer-events: none;
+  }
+  .next-post:hover { transform: translateY(-2px); box-shadow: 0 14px 36px rgba(22,22,29,0.22); }
+  @media (max-width: 720px) { .next-post { grid-template-columns: 1fr; padding: 24px; gap: 20px; } }
+  .next-post .np-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--accent);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+    display: inline-block;
+  }
+  .next-post h4 {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 26px;
+    margin: 0 0 10px;
+    font-weight: 700;
+    color: white;
+    line-height: 1.25;
+    letter-spacing: -0.01em;
+  }
+  .next-post h4 .em {
+    font-family: 'Noto Serif SC', serif;
+    font-weight: 500;
+    color: var(--accent);
+  }
+  .next-post p {
+    margin: 0;
+    color: rgba(255,255,255,0.72);
+    font-size: 14px;
+    line-height: 1.65;
+    max-width: 560px;
+  }
+  .next-post p strong { color: white; font-weight: 600; }
+  .next-post .np-cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 24px;
+    background: var(--accent);
+    color: white;
+    border-radius: 4px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    white-space: nowrap;
+    transition: background 0.18s, color 0.18s, transform 0.18s;
+    position: relative;
+    z-index: 1;
+  }
+  .next-post:hover .np-cta { background: white; color: var(--ink); transform: translateX(2px); }
+  .next-post .np-cta .arr { font-family: 'Fraunces', serif; font-style: italic; font-size: 18px; font-weight: 500; }
+
+  /* footer */
+  footer {
+    border-top: 1px solid var(--line);
+    padding: 56px 0 64px;
+    background: var(--bg);
+  }
+  .byline-wrap { position: relative; }
+  .byline {
+    display: flex;
+    gap: 28px;
+    align-items: center;
+    padding-bottom: 32px;
+    border-bottom: 1px dashed var(--line);
+    margin-bottom: 24px;
+    position: relative;
+  }
+  .byline::before {
+    content: '';
+    position: absolute;
+    top: -56px; left: 0;
+    width: 32px; height: 1px;
+    background: var(--accent);
+  }
+  .byline .avatar {
+    width: 96px; height: 96px;
+    border-radius: 50%;
+    object-fit: cover;
+    flex-shrink: 0;
+    border: 3px solid var(--paper);
+    box-shadow: 0 0 0 1px var(--line), 0 6px 20px rgba(22,22,29,0.10);
+    background: var(--paper);
+  }
+  .byline-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--ink-mute);
+    letter-spacing: 0.18em;
+    margin-bottom: 8px;
+  }
+  .byline-label .dot {
+    display: inline-block;
+    width: 6px; height: 6px;
+    background: var(--accent);
+    border-radius: 50%;
+    margin-right: 6px;
+    vertical-align: 1px;
+  }
+  .byline-name {
+    font-family: 'Noto Serif SC', 'Fraunces', serif;
+    font-size: clamp(28px, 4vw, 40px);
+    font-weight: 700;
+    line-height: 1.05;
+    letter-spacing: -0.01em;
+    margin: 0 0 8px;
+  }
+  .byline-name .em {
+    font-family: 'Noto Serif SC', serif;
+    font-weight: 500;
+    color: var(--accent);
+  }
+  .byline-tag {
+    font-size: 14px;
+    color: var(--ink-soft);
+    line-height: 1.55;
+    margin: 0;
+    max-width: 52ch;
+  }
+  .byline-contact { margin-top: 14px; padding-top: 14px; border-top: 1px dashed var(--line); display: flex; align-items: center; gap: 10px; flex-wrap: wrap; font-size: 12px; }
+  .byline-contact .contact-label { font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-mute); padding: 2px 8px; border: 1px solid var(--line); border-radius: 3px; }
+  .byline-contact .contact-id { font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 600; color: var(--ink); background: var(--accent-soft); padding: 3px 10px; border-radius: 4px; letter-spacing: 0.02em; }
+  .byline-contact .contact-hint { font-size: 12px; color: var(--ink-soft); }
+  .footer-meta {
+    text-align: center;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--ink-mute);
+    letter-spacing: 0.05em;
+  }
+  .footer-meta .heart { color: var(--accent); }
+  .footer-meta .mono { color: var(--ink-soft); font-weight: 500; }
+  @media (max-width: 600px) {
+    .byline { flex-direction: column; text-align: center; align-items: center; gap: 16px; }
+    .byline-tag { margin-left: auto; margin-right: auto; }
+  }
+
+  /* === Roadmap Modal === */
+  .rm-modal { position: fixed; inset: 0; z-index: 1000; display: flex; align-items: center; justify-content: center; padding: 30px 16px; }
+  .rm-modal[hidden] { display: none; }
+  .rm-backdrop { position: absolute; inset: 0; background: rgba(22,22,29,0.55); backdrop-filter: blur(4px); animation: rm-fade 0.2s; }
+  @keyframes rm-fade { from { opacity: 0; } to { opacity: 1; } }
+  .rm-dialog { position: relative; background: var(--bg); border-radius: 12px; max-width: 720px; width: 100%; max-height: calc(100vh - 60px); overflow-y: auto; padding: 32px 36px 24px; box-shadow: 0 30px 80px rgba(0,0,0,0.3); animation: rm-pop 0.25s cubic-bezier(0.4,0,0.2,1); }
+  @keyframes rm-pop { from { transform: scale(0.96) translateY(8px); opacity: 0; } to { transform: scale(1) translateY(0); opacity: 1; } }
+  .rm-close { position: absolute; top: 14px; right: 16px; background: transparent; border: none; cursor: pointer; font-size: 20px; color: var(--ink-mute); width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: all 0.15s; line-height: 1; }
+  .rm-close:hover { background: var(--bg-2); color: var(--ink); }
+  .rm-header { margin-bottom: 22px; padding-bottom: 18px; border-bottom: 1px dashed var(--line); }
+  .rm-tag { font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.1em; color: var(--accent); text-transform: uppercase; margin-bottom: 8px; }
+  .rm-title { font-family: 'Noto Serif SC', serif; font-size: 28px; margin: 0 0 6px; font-weight: 900; letter-spacing: -0.02em; line-height: 1.1; }
+  .rm-title .rm-em { font-family: 'Noto Serif SC', serif; color: var(--accent); font-weight: 500; }
+  .rm-sub { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--ink-mute); margin: 0; }
+  .rm-body { display: flex; flex-direction: column; gap: 18px; }
+  .rm-mod-key { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ink); font-weight: 700; margin-bottom: 8px; letter-spacing: 0.04em; text-transform: uppercase; }
+  .rm-mod-list { display: flex; flex-direction: column; gap: 6px; }
+  .rm-cell { display: grid; grid-template-columns: 36px 1fr auto; gap: 12px; align-items: center; padding: 9px 13px; border-radius: 5px; background: var(--paper); border: 1px solid var(--line); text-decoration: none; color: inherit; transition: all 0.15s; }
+  .rm-cell:hover { border-color: var(--accent); background: var(--accent-soft); transform: translateX(3px); }
+  .rm-cell.rm-cell-current { border-color: var(--accent); background: var(--accent-soft); }
+  .rm-cell-code { font-family: 'Fraunces', serif; font-style: italic; font-weight: 500; color: var(--accent); font-size: 15px; }
+  .rm-cell-name { font-size: 13px; color: var(--ink); }
+  .rm-cell-tier { font-family: 'JetBrains Mono', monospace; font-size: 9px; letter-spacing: 0.08em; color: var(--ink-mute); text-transform: uppercase; border: 1px solid var(--line); padding: 2px 7px; border-radius: 3px; }
+  .rm-cell-tier.rm-tier-current { background: var(--accent); color: white; border-color: var(--accent); }
+  .rm-footer { margin-top: 22px; padding-top: 16px; border-top: 1px dashed var(--line); display: flex; justify-content: space-between; align-items: center; font-size: 12px; color: var(--ink-soft); flex-wrap: wrap; gap: 8px; }
+  .rm-wechat { font-family: 'JetBrains Mono', monospace; background: var(--accent-soft); color: var(--ink); padding: 3px 10px; border-radius: 3px; font-weight: 600; letter-spacing: 0.02em; }
+  .nav-links a[data-rm-open] { cursor: pointer; }
+</style>
+</head>
+<body>
+
+<!-- Top bar -->
+<div class="topbar">
+  <div class="wrap topbar-inner">
+    <a href="index.html" class="brand"><span class="dot"></span>F1 · NPM / 工程入门</a>
+    <nav class="nav-links">
+      <a href="index.html#roadmap" data-rm-open>路线图</a>
+      <a href="index.html#manifesto">关于</a>
+    </nav>
+  </div>
+</div>
+
+<!-- Hero -->
+<header class="hero">
+  <div class="wrap">
+    <div class="hero-meta">
+      <span class="pill fill">实验互动 · INTERACTIVE</span>
+      <span class="pill">2026 · 设计 × 代码</span>
+      <span class="pill">F1 · 入门 · 工程</span>
+      <span class="label">阅读时长 ≈ 12 分钟</span>
+    </div>
+    <div class="hero-grid">
+      <div>
+        <h1>
+          <span class="display-cn">npm 不是网站，</span><br>
+          <span class="display-cn">是</span><span class="em">零件市场</span><span class="display-cn">。</span>
+        </h1>
+        <p class="lede">
+          你跑了一句 <span class="mono">npm install</span>，硬盘里多出 <span class="em">1.2 GB</span> 的 <span class="mono">node_modules</span>。<br>
+          那不是出错，是机制如此。<br>
+          这一篇用一个能玩的小游戏，让你亲眼看见 1.2 GB 是怎么变出来的。
+        </p>
+      </div>
+      <div class="hero-side">
+        <div class="row"><span class="k">本页讲什么</span><span class="v">npm 整套机制</span></div>
+        <div class="row"><span class="k">含互动</span><span class="v">依赖树小游戏</span></div>
+        <div class="row"><span class="k">面向</span><span class="v">设计师 / AI 协作</span></div>
+        <div class="row"><span class="k">前置知识</span><span class="v">看过 A0 三件套</span></div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- §01 Misconceptions -->
+<section id="problem">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>01</strong> / 误解</div>
+        <h2 class="section-title">你以为 vs<br><span class="em">实际上</span></h2>
+      </div>
+      <p class="section-sub">
+        npm 是这套体系里最容易被误会的角色。先把三个最常见的误解摆出来 ——
+        看完这页，你不会再卡在这里。
+      </p>
+    </div>
+
+    <div class="problem-grid">
+      <div class="problem-card bad">
+        <span class="tag">YOU THINK · 你以为</span>
+        <h3>"npm 就是一个网站，跟 GitHub 差不多"</h3>
+        <p>看 AI 跟你说 "npm install xxx"，你可能下意识当它是某种 GitHub 命令。</p>
+        <div class="blackbox-vis">
+          <strong>npm</strong> <span class="arrow">≈</span> <span class="q">"GitHub 的另一种说法"</span><br>
+          <strong>node_modules</strong> <span class="arrow">→</span> <span class="q">"看着像 bug，要不要删？"</span><br>
+          <strong>install</strong> <span class="arrow">→</span> <span class="q">"装完一次就好了吧"</span>
+        </div>
+      </div>
+
+      <div class="problem-card good">
+        <span class="tag">ACTUALLY · 实际上</span>
+        <h3>"npm 是一整套零件市场 + 配方 + 仓库"</h3>
+        <p>三件东西要分开看：<strong>npm</strong> 是公共仓库（零件市场）；<strong>package.json</strong> 是你写的购物清单（配方）；<strong>node_modules</strong> 是已经买回家的零件柜。</p>
+        <div class="blackbox-vis">
+          <strong>npm</strong> <span class="arrow">=</span> 全世界共用的<strong>零件市场</strong><br>
+          <strong>package.json</strong> <span class="arrow">=</span> 你的<strong>购物清单 / 配方</strong><br>
+          <strong>node_modules</strong> <span class="arrow">=</span> 真实的<strong>零件柜</strong>（1.2 GB 是它）
+        </div>
+      </div>
+    </div>
+
+    <div class="quote-box">
+      <span class="quote-mark">"</span>
+      项目源代码常常只有 <span class="em">2 MB</span>，但 node_modules 动不动就 <span class="em">1 GB</span>。
+      不是文件失控，是这个生态本来就这么运转的。
+      <span class="quote-attr">—— 看完这页就懂了</span>
+    </div>
+  </div>
+</section>
+
+<!-- §02 package.json -->
+<section id="package">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>02</strong> / 配方表</div>
+        <h2 class="section-title">package.json<br>是<span class="em">配方表</span>。</h2>
+      </div>
+      <p class="section-sub">
+        每个项目根目录都有一份。它不写代码，写的是"这个项目<strong>叫什么、想要什么、怎么跑</strong>"。
+        相当于做菜前先列的清单。
+      </p>
+    </div>
+
+    <div class="hint-strip">
+      <span class="hint-tag">互动</span>左边是真实的 package.json，右边是讲解。点 / hover 任何一行，看它在干什么。
+    </div>
+
+    <div class="pkg-stage" id="pkgStage">
+      <div class="pkg-code">
+        <span class="code-head"></span>
+        <span class="code-fname">package.json</span>
+<pre><span class="cpunc">{</span>
+<span class="pkg-line" data-pk="name">  <span class="ckey">"name"</span>: <span class="cstr">"my-design-portfolio"</span>,</span>
+<span class="pkg-line" data-pk="version">  <span class="ckey">"version"</span>: <span class="cstr">"0.1.0"</span>,</span>
+<span class="pkg-line" data-pk="private">  <span class="ckey">"private"</span>: <span class="cnum">true</span>,</span>
+<span class="pkg-line" data-pk="scripts">  <span class="ckey">"scripts"</span>: <span class="cpunc">{</span></span>
+<span class="pkg-line" data-pk="scripts">    <span class="ckey">"dev"</span>: <span class="cstr">"next dev"</span>,</span>
+<span class="pkg-line" data-pk="scripts">    <span class="ckey">"build"</span>: <span class="cstr">"next build"</span>,</span>
+<span class="pkg-line" data-pk="scripts">    <span class="ckey">"start"</span>: <span class="cstr">"next start"</span></span>
+<span class="pkg-line" data-pk="scripts">  <span class="cpunc">}</span>,</span>
+<span class="pkg-line" data-pk="dependencies">  <span class="ckey">"dependencies"</span>: <span class="cpunc">{</span></span>
+<span class="pkg-line" data-pk="dependencies">    <span class="ckey">"next"</span>: <span class="cstr">"15.0.2"</span>,</span>
+<span class="pkg-line" data-pk="dependencies">    <span class="ckey">"react"</span>: <span class="cstr">"19.0.0"</span>,</span>
+<span class="pkg-line" data-pk="dependencies">    <span class="ckey">"react-dom"</span>: <span class="cstr">"19.0.0"</span></span>
+<span class="pkg-line" data-pk="dependencies">  <span class="cpunc">}</span>,</span>
+<span class="pkg-line" data-pk="devDependencies">  <span class="ckey">"devDependencies"</span>: <span class="cpunc">{</span></span>
+<span class="pkg-line" data-pk="devDependencies">    <span class="ckey">"tailwindcss"</span>: <span class="cstr">"4.0.0"</span>,</span>
+<span class="pkg-line" data-pk="devDependencies">    <span class="ckey">"typescript"</span>: <span class="cstr">"5.6.0"</span></span>
+<span class="pkg-line" data-pk="devDependencies">  <span class="cpunc">}</span></span>
+<span class="cpunc">}</span></pre>
+      </div>
+
+      <div class="pkg-info">
+        <div class="pkg-info-tag" id="pkgInfoTag">↑ POINT TO A LINE</div>
+        <h3 class="pkg-info-name" id="pkgInfoName"><span class="pin">name</span>项目身份证</h3>
+        <p class="pkg-info-desc" id="pkgInfoDesc">项目的英文名 —— 不光给你看，也是发包到 npm 仓库时的 ID。私人项目随便起，准备发布的话得是全网唯一。</p>
+        <div class="pkg-info-section">
+          <div class="pkg-info-label">类比 / Designer 视角</div>
+          <p class="pkg-info-text" id="pkgInfoMeta">像 Figma 文件名 —— 你和别人都靠它指代这份东西。</p>
+        </div>
+        <div class="pkg-info-section">
+          <div class="pkg-info-label">注意</div>
+          <p class="pkg-info-text" id="pkgInfoNote"><strong>一行写错</strong> —— 整个 npm install 直接报错。这文件是结构化的，不是注释。</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="hint-strip" style="margin-top:20px;background:var(--bg-2);border-left-color:var(--ink);">
+      <span class="hint-tag" style="color:var(--ink);">三段重点</span>
+      <strong>scripts</strong> = 项目能跑的命令；
+      <strong>dependencies</strong> = 上线后必需的零件；
+      <strong>devDependencies</strong> = 只在你开发时用、上线不带走（比如打包工具、TS 编译器）。
+    </div>
+  </div>
+</section>
+
+<!-- §03 Dependency tree game (核心小游戏) -->
+<section id="deptree">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>03</strong> / 零件市场</div>
+        <h2 class="section-title">点一下<br>看着<span class="em">长大</span>。</h2>
+      </div>
+      <p class="section-sub">
+        你说"装一个 react"。npm 不只装一个 ——
+        它把 react 需要的朋友、朋友的朋友，全拖来一起安装。下面这棵树会让你<strong>亲眼看见</strong>。
+      </p>
+    </div>
+
+    <div class="hint-strip">
+      <span class="hint-tag">玩法</span>左边是"种子包"，点一个 → 中间这棵依赖树会自己长出来。看顶部数字怎么蹦。
+    </div>
+
+    <div class="dep-stage">
+      <div class="dep-grid">
+        <!-- Left: seed market -->
+        <aside class="dep-shop">
+          <div>
+            <div class="dep-shop-tag">SEEDS · 种子包</div>
+            <h3 class="dep-shop-title">点一下试试</h3>
+            <p class="dep-shop-hint">每个看着只是 1 个包，但都是冰山一角。</p>
+          </div>
+          <button class="dep-seed" data-seed="react">
+            <span class="dep-seed-name">react</span>
+            <span class="dep-seed-desc">写 UI 的那个 React</span>
+            <span class="dep-seed-cost">~ 8 个朋友 · 6 MB</span>
+          </button>
+          <button class="dep-seed" data-seed="next">
+            <span class="dep-seed-name">next</span>
+            <span class="dep-seed-desc">React 的全家桶框架</span>
+            <span class="dep-seed-cost">~ 200 个朋友 · 320 MB</span>
+          </button>
+          <button class="dep-seed" data-seed="tailwind">
+            <span class="dep-seed-name">tailwindcss</span>
+            <span class="dep-seed-desc">写 CSS 的工具</span>
+            <span class="dep-seed-cost">~ 25 个朋友 · 18 MB</span>
+          </button>
+          <button class="dep-seed" data-seed="shadcn">
+            <span class="dep-seed-name">shadcn/ui</span>
+            <span class="dep-seed-desc">设计师常用 UI 组件</span>
+            <span class="dep-seed-cost">~ 60 个朋友 · 42 MB</span>
+          </button>
+          <button class="dep-shop-reset" id="depReset">↻ 清空 / 从头来</button>
+        </aside>
+
+        <!-- Right: canvas -->
+        <div class="dep-canvas">
+          <div class="dep-stats">
+            <div class="dep-stat">
+              <div class="dep-stat-label">你装了</div>
+              <div class="dep-stat-num" id="depDirect">0</div>
+              <div class="dep-stat-sub">直接依赖 · directly added</div>
+            </div>
+            <div class="dep-stat">
+              <div class="dep-stat-label">实际拉了</div>
+              <div class="dep-stat-num warn" id="depTotal">0</div>
+              <div class="dep-stat-sub">含传递依赖 · transitive</div>
+            </div>
+            <div class="dep-stat">
+              <div class="dep-stat-label">node_modules</div>
+              <div class="dep-stat-num warn" id="depSize">0 MB</div>
+              <div class="dep-stat-sub">实际占硬盘</div>
+            </div>
+          </div>
+
+          <div id="depTreeWrap">
+            <div class="dep-empty" id="depEmpty">
+              <span class="dep-empty-big">空</span>
+              package.json 还没写任何依赖<br>
+              <span style="opacity:0.7;">←  点左边任意种子包开始</span>
+            </div>
+
+            <div class="dep-tree" id="depTree" style="display:none;">
+              <div class="dep-tree-root">
+                <span class="dep-root-icon"></span>
+                <span class="dep-root-name">my-project</span>
+                <span class="dep-root-meta">/ package.json · 你的项目根</span>
+              </div>
+              <div id="depTreeBody"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="quote-box" style="margin-top:32px;">
+      <span class="quote-mark">"</span>
+      你写了 <strong>1</strong> 个名字，npm 拖来 <span class="em">200+</span> 个文件夹。
+      —— 这就是为什么 node_modules 那么大。每个零件都带着自己的零件。
+      <span class="quote-attr">—— 这不是 bug，是依赖图机制本身</span>
+    </div>
+  </div>
+</section>
+
+<!-- §04 Three commands -->
+<section id="commands">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>04</strong> / 三条命令</div>
+        <h2 class="section-title">最常用的三条<br><span class="em">真实含义</span>。</h2>
+      </div>
+      <p class="section-sub">
+        AI 给你的指令里 90% 都是这三条。
+        知道它们各自<strong>在你电脑上做了什么</strong>，沟通和排错都顺。
+      </p>
+    </div>
+
+    <div class="cmd-grid">
+      <!-- npm install -->
+      <div class="cmd-card">
+        <div class="cmd-head">
+          <span class="cmd-prompt">$</span>
+          <span>npm install</span>
+        </div>
+        <div class="cmd-body">
+          <h4>去市场<span class="em">取零件</span></h4>
+          <p class="cmd-1liner">读 package.json → 把所有零件下载到 <code class="mono" style="background:var(--bg-2);padding:1px 5px;border-radius:2px;font-size:12px;">node_modules/</code> → 同时拍一张<strong>进货单</strong>（package-lock.json）。</p>
+          <div class="cmd-anim">
+            <div class="ci-shelf">
+              <div class="ci-box b1"></div>
+              <div class="ci-box b2"></div>
+              <div class="ci-box b3"></div>
+              <div class="ci-box b4"></div>
+              <div class="ci-box b5"></div>
+              <div class="ci-shelf-row"></div>
+            </div>
+          </div>
+          <div class="cmd-foot">
+            <strong>什么时候跑：</strong>第一次拿到代码 / 改了 package.json / 删过 node_modules 之后。
+          </div>
+        </div>
+      </div>
+
+      <!-- npm run dev -->
+      <div class="cmd-card">
+        <div class="cmd-head">
+          <span class="cmd-prompt">$</span>
+          <span>npm run dev</span>
+        </div>
+        <div class="cmd-body">
+          <h4>启动一台<span class="em">开发服务器</span></h4>
+          <p class="cmd-1liner">在你电脑上跑起一个本地小网站（通常 <code class="mono" style="background:var(--bg-2);padding:1px 5px;border-radius:2px;font-size:12px;">localhost:3000</code>）。改代码自动刷新。<strong>别人看不到</strong> —— 只有你自己能访问。</p>
+          <div class="cmd-anim">
+            <div class="cd-server">
+              <div class="cd-stamp">
+                <span class="cd-led"></span>
+                <span>dev server · running</span>
+              </div>
+              <div class="cd-url">→ localhost:3000</div>
+              <div class="cd-stream"></div>
+            </div>
+          </div>
+          <div class="cmd-foot">
+            <strong>什么时候跑：</strong>每次开始写代码 / 改设计的时候。<strong>关掉终端就停</strong>。
+          </div>
+        </div>
+      </div>
+
+      <!-- npm run build -->
+      <div class="cmd-card">
+        <div class="cmd-head">
+          <span class="cmd-prompt">$</span>
+          <span>npm run build</span>
+        </div>
+        <div class="cmd-body">
+          <h4>打包成<span class="em">上线版本</span></h4>
+          <p class="cmd-1liner">把所有源码 + 图片 + 样式压缩、合并、优化 → 输出到 <code class="mono" style="background:var(--bg-2);padding:1px 5px;border-radius:2px;font-size:12px;">dist/</code> 或 <code class="mono" style="background:var(--bg-2);padding:1px 5px;border-radius:2px;font-size:12px;">.next/</code>。这个文件夹才是真正<strong>能丢服务器</strong>的东西。</p>
+          <div class="cmd-anim">
+            <div class="cb-stage">
+              <div class="cb-source">
+                <span></span><span></span><span></span>
+                <span></span><span></span><span></span>
+                <span></span><span></span><span></span>
+              </div>
+              <div class="cb-arr">→</div>
+              <div class="cb-output"></div>
+            </div>
+          </div>
+          <div class="cmd-foot">
+            <strong>什么时候跑：</strong>准备上线前。本地开发<strong>用不到</strong>。
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="hint-strip" style="margin-top:24px;">
+      <span class="hint-tag">关键</span>
+      <code style="background:var(--bg-2);padding:1px 6px;border-radius:3px;">install</code> 是<strong>取零件</strong>、
+      <code style="background:var(--bg-2);padding:1px 6px;border-radius:3px;">dev</code> 是<strong>试装样品</strong>、
+      <code style="background:var(--bg-2);padding:1px 6px;border-radius:3px;">build</code> 是<strong>正式发货</strong>。
+      —— 跟买家具同一套逻辑。
+    </div>
+  </div>
+</section>
+
+<!-- §05 When AI tells you -->
+<section id="ai">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>05</strong> / AI 协作</div>
+        <h2 class="section-title">AI 让你 install<br>怎么<span class="em">看懂</span>。</h2>
+      </div>
+      <p class="section-sub">
+        Claude / Cursor / GPT 给的安装指令，看着像咒语。
+        4 个最常碰到的问题 —— 各配一句话答案。
+      </p>
+    </div>
+
+    <div class="ts-stage">
+      <ul class="ts-list">
+        <li class="ts-item">
+          <div class="ts-num">01</div>
+          <div>
+            <h3 class="ts-q">"npm install <span class="em">framer-motion</span>" —— 这一句是什么意思？</h3>
+            <p class="ts-a">"去市场<strong>取一个新零件</strong>叫 framer-motion，加进我的清单"。
+            它会做两件事：<code>node_modules/</code> 多一个新文件夹；<code>package.json</code> 的 dependencies 多一行。</p>
+            <span class="ts-action">→ 看完终端没报错就 OK，可以继续写代码。</span>
+          </div>
+        </li>
+
+        <li class="ts-item">
+          <div class="ts-num">02</div>
+          <div>
+            <h3 class="ts-q">"npm install -<span class="em">D</span> @types/node" —— 那个 -D 是什么？</h3>
+            <p class="ts-a"><code>-D</code> = <code>--save-dev</code>，意思是<strong>装到 devDependencies</strong> 里 —— 只在<strong>开发</strong>时用，上线版本不带走。
+            常见的 -D 包：TypeScript 类型定义、ESLint、构建工具。</p>
+            <span class="ts-action">→ 看 AI 在哪一段叫你装。装组件库通常没 -D；装编译工具通常有 -D。直接照抄就行。</span>
+          </div>
+        </li>
+
+        <li class="ts-item">
+          <div class="ts-num">03</div>
+          <div>
+            <h3 class="ts-q">报错了 —— 第一步先看哪？</h3>
+            <p class="ts-a">不要先看 node_modules（看不出名堂）。<strong>先看 package.json</strong> —— AI 是不是把版本写错了？包名打错？
+            然后再看终端最后<strong>红色那一段</strong>（不是中间，是最后），把它复制回去问 AI。</p>
+            <span class="ts-action">→ 90% 的报错都在终端最后 5 行。截屏给 AI。</span>
+          </div>
+        </li>
+
+        <li class="ts-item">
+          <div class="ts-num">04</div>
+          <div>
+            <h3 class="ts-q">"npm install 没用，要 <span class="em">rm -rf node_modules</span>" —— 为什么？</h3>
+            <p class="ts-a">有时 node_modules 里某个零件状态<strong>损坏</strong>了 —— 半装一半、版本对不上、缓存出问题。这时候 install 不会自己修。
+            <code>rm -rf node_modules</code> = "把整个零件柜清空"，再 <code>npm install</code> = 重新进一遍货。</p>
+            <span class="ts-action">→ 这是终极重启大法。代价：要等几分钟重新下载。</span>
+          </div>
+        </li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- §06 Cheatsheet -->
+<section id="cheat">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>06</strong> / 速查</div>
+        <h2 class="section-title">截图保存<br>这一<span class="em">页</span>。</h2>
+      </div>
+      <p class="section-sub">
+        术语对照 + 工具家族 + 关键文件。
+        看到陌生词查一眼，比每次都问 AI 快。
+      </p>
+    </div>
+
+    <div class="cheat-grid">
+      <div class="cheat-block">
+        <h3><span class="em">·</span> 术语对照表</h3>
+        <table class="cheat-table">
+          <thead>
+            <tr><th>术语</th><th>是什么</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="term">package</td>
+              <td class="desc"><strong>一个零件</strong>。被打包好可以分享的代码。比如 react、tailwindcss。</td>
+            </tr>
+            <tr>
+              <td class="term">module</td>
+              <td class="desc">一个 <strong>.js 文件</strong>。一个 package 通常含很多 module。</td>
+            </tr>
+            <tr>
+              <td class="term">dependency</td>
+              <td class="desc">项目<strong>需要</strong>的零件。dependencies 字段里写的就是它。</td>
+            </tr>
+            <tr>
+              <td class="term">devDep</td>
+              <td class="desc"><strong>只开发时</strong>用的零件 —— 上线版本不带它。</td>
+            </tr>
+            <tr>
+              <td class="term">lockfile</td>
+              <td class="desc"><strong>进货单</strong>。锁死所有零件的精确版本，确保你和别人装出一样的东西。</td>
+            </tr>
+          </tbody>
+        </table>
+        <div class="cheat-foot">
+          看到 <code>peerDependencies</code> 别慌 —— 是"我要求你这边也得有 X"，进阶概念。先记前 5 个。
+        </div>
+      </div>
+
+      <div class="cheat-block">
+        <h3><span class="em">·</span> 包管理器三兄弟</h3>
+        <table class="cheat-table">
+          <thead>
+            <tr><th>名字</th><th>区别</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="term">npm</td>
+              <td class="desc"><strong>官方默认</strong>，跟 Node.js 一起装的。最常见。本文讲的就是它。</td>
+            </tr>
+            <tr>
+              <td class="term">yarn</td>
+              <td class="desc">早期更快的<strong>替代品</strong>，命令几乎一样。<code>yarn add</code> = <code>npm install</code>。</td>
+            </tr>
+            <tr>
+              <td class="term">pnpm</td>
+              <td class="desc">现在最流行 —— <strong>共享零件柜</strong>，10 个项目只占 1 份硬盘。命令也类似。</td>
+            </tr>
+            <tr>
+              <td class="term">bun</td>
+              <td class="desc">新选手，主打<strong>极快</strong>。Vibe coding 圈里越来越多人用。</td>
+            </tr>
+            <tr>
+              <td class="term">区别</td>
+              <td class="desc">三者<strong>互通</strong> —— 都读同一份 package.json。看到不同命令，对应换一下就行。</td>
+            </tr>
+          </tbody>
+        </table>
+        <div class="cheat-foot">
+          AI 用哪个就跟哪个走。<strong>不要混用</strong>（同一个项目里别一会儿 npm 一会儿 pnpm）。
+        </div>
+      </div>
+    </div>
+
+    <div class="cheat-block" style="margin-top:18px;">
+      <h3><span class="em">·</span> 你会在项目根目录看到的关键文件</h3>
+      <table class="cheat-table">
+        <thead>
+          <tr><th>文件名</th><th>含义</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="term">package.json</td>
+            <td class="desc"><strong>配方表</strong>。手写。所有清单都在这。</td>
+          </tr>
+          <tr>
+            <td class="term">package-lock.json</td>
+            <td class="desc"><strong>进货单</strong>。npm 自动生成。<strong>不要手改</strong>，但要提交到 git —— 别人才能装出一样的版本。</td>
+          </tr>
+          <tr>
+            <td class="term">node_modules/</td>
+            <td class="desc"><strong>零件柜</strong>。所有装好的零件都在这。<strong>不提交 git</strong>（太大，并且能从配方+进货单重建）。</td>
+          </tr>
+          <tr>
+            <td class="term">.gitignore</td>
+            <td class="desc">里面通常第一行就写着 <code>node_modules</code> —— 告诉 git "这文件夹别管"。</td>
+          </tr>
+          <tr>
+            <td class="term">yarn.lock / pnpm-lock.yaml</td>
+            <td class="desc">如果项目用的是 yarn 或 pnpm，进货单文件名就不一样。<strong>作用一样</strong>。</td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="cheat-foot">
+        看到一个项目，<strong>先扫一眼 package.json 里的 dependencies</strong> 就大概知道这是个什么项目了 —— React、Vue、Next、还是后端。
+      </div>
+    </div>
+
+    <a href="f2-import-figma.html" class="next-post">
+      <div>
+        <div class="np-tag">下一篇 · NEXT · F2 · 入门</div>
+        <h4>一份代码<span class="em"> · </span>怎么找到另一份</h4>
+        <p>装完零件，下一步是<strong>用</strong>它们。<code>import</code> 是怎么把一个文件里的代码喂给另一个文件的？相对路径 / 绝对路径 / 别名 —— 一次讲清。</p>
+      </div>
+      <span class="np-cta">继续阅读 <span class="arr">→</span></span>
+    </a>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div class="byline-wrap">
+      <div class="byline">
+        <img class="avatar" src="author.jpg" alt="范米花儿">
+        <div class="byline-meta">
+          <div class="byline-label"><span class="dot"></span>作者 · WRITTEN BY</div>
+          <h3 class="byline-name">嗨，我是 <span class="em">范米花儿</span></h3>
+          <p class="byline-tag">一份给设计师的代码入门 ——<br>不需要会写，知道大概怎么回事，跟前端 / AI 沟通就顺多了。</p>
+          <div class="byline-contact">
+            <span class="contact-label">微信</span>
+            <span class="contact-id">vanvan_0422</span>
+            <span class="contact-hint">想看什么主题，加我聊</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="footer-meta">
+      做于 <span class="mono">2026</span> · 用 <span class="heart">●</span> 写给 <span class="mono">DESIGNERS &amp; DEVELOPERS</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+// ==========================================================
+//  §02 package.json — line ↔ explanation
+// ==========================================================
+(function () {
+  const stage = document.getElementById('pkgStage');
+  if (!stage) return;
+  const lines = stage.querySelectorAll('.pkg-line');
+  const tagEl  = document.getElementById('pkgInfoTag');
+  const nameEl = document.getElementById('pkgInfoName');
+  const descEl = document.getElementById('pkgInfoDesc');
+  const metaEl = document.getElementById('pkgInfoMeta');
+  const noteEl = document.getElementById('pkgInfoNote');
+
+  const dict = {
+    name: {
+      tag: '01 · IDENTITY',
+      pin: 'name',
+      title: '项目身份证',
+      desc: '项目的英文名 —— 不光给你看，也是发包到 npm 仓库时的 ID。私人项目随便起，准备发布的话得是全网唯一。',
+      meta: '像 Figma 文件名 —— 你和别人都靠它指代这份东西。',
+      note: '<strong>必填</strong>。删了它，npm install 直接报错。'
+    },
+    version: {
+      tag: '02 · VERSION',
+      pin: 'version',
+      title: '版本号 · semver',
+      desc: '语义化版本：<strong>大版本.小版本.补丁</strong>。0.1.0 = 还在打磨，1.0.0 = 正式。每次发布要手动 +1。',
+      meta: '类似 Figma 文件的 v1 / v2，但代码圈对版本号<strong>极其</strong>敏感。',
+      note: '只是个数字 —— 但跟 dependencies 里 "react": "19.0.0" 是同一套规则。'
+    },
+    private: {
+      tag: '03 · PRIVATE',
+      pin: 'private',
+      title: '别发到公网',
+      desc: '<code>true</code> = 这是私人项目，<strong>禁止发到 npm 公共市场</strong>（误操作的安全网）。99% 的项目都是 true。',
+      meta: '相当于 Figma 文件的"仅自己可见"。',
+      note: '只有写库 / 做开源工具的人才会去掉这一行。'
+    },
+    scripts: {
+      tag: '04 · SCRIPTS',
+      pin: 'scripts',
+      title: '能跑的命令清单',
+      desc: '"npm run dev" 实际上是查这个表 → 找到 dev 这个 key → 执行 "next dev" 这个命令。<strong>项目所有"按钮"在这里定义</strong>。',
+      meta: '类似 Figma 里的 Plugin —— 一组能调用的预设动作。',
+      note: 'AI 让你 "npm run X" 时，先来这查 X 是不是真的存在。不存在就报错。'
+    },
+    dependencies: {
+      tag: '05 · DEPENDENCIES',
+      pin: 'deps',
+      title: '上线后必需的零件',
+      desc: '<strong>真的会跟着代码上线</strong>的零件：React、Next、组件库、工具函数。每一项都进 node_modules。',
+      meta: '类比：做菜清单里的"米、盐、油" —— 缺了菜出不来。',
+      note: '"^15.0.2" 里的 ^ 是"小版本可以自动升"。版本号开头的小符号有讲究，下次再说。'
+    },
+    devDependencies: {
+      tag: '06 · DEV DEPENDENCIES',
+      pin: 'devDeps',
+      title: '只开发时用的零件',
+      desc: '只在你<strong>写代码</strong>时帮忙的工具：TypeScript 编译器、ESLint、打包器、测试框架。<strong>上线版本不带它们</strong>。',
+      meta: '类比：做菜的"案板、锅铲" —— 上桌时它们留在厨房。',
+      note: 'AI 给的命令带 "-D" 或 "--save-dev"，就装到这里。'
+    }
+  };
+
+  function setActive(key) {
+    lines.forEach(l => l.classList.toggle('is-active', l.dataset.pk === key));
+    const d = dict[key];
+    if (!d) return;
+    tagEl.textContent = d.tag;
+    nameEl.innerHTML = '<span class="pin">' + d.pin + '</span>' + d.title;
+    descEl.innerHTML = d.desc;
+    metaEl.innerHTML = d.meta;
+    noteEl.innerHTML = d.note;
+  }
+
+  lines.forEach(line => {
+    line.addEventListener('mouseenter', () => setActive(line.dataset.pk));
+    line.addEventListener('click',      () => setActive(line.dataset.pk));
+  });
+
+  // Default: highlight name
+  setTimeout(() => setActive('name'), 600);
+})();
+
+// ==========================================================
+//  §03 Dependency tree game
+// ==========================================================
+(function () {
+  // Each seed has: a list of direct deps (visible names) and a hidden total count
+  // Plus a representative tree to render. We don't enumerate 200 packages literally —
+  // the visualization shows the principle (a few visible + "and N more...") and
+  // the stats add up the real cost.
+  const seeds = {
+    react: {
+      label: 'react',
+      direct: 1,
+      total: 8,
+      sizeMB: 6,
+      tree: [
+        { name: 'react', ver: '19.0.0', size: '0.4 MB', type: 'direct', children: [
+          { name: 'loose-envify', ver: '1.4.0', size: '8 KB', type: 'trans' },
+          { name: 'js-tokens', ver: '4.0.0', size: '6 KB', type: 'trans' },
+          { name: 'scheduler', ver: '0.25.0', size: '60 KB', type: 'trans' },
+          { name: '... + 5 个间接依赖', ver: '', size: '~ 5.5 MB', type: 'trans' }
+        ]}
+      ]
+    },
+    next: {
+      label: 'next',
+      direct: 1,
+      total: 215,
+      sizeMB: 320,
+      tree: [
+        { name: 'next', ver: '15.0.2', size: '32 MB', type: 'direct', children: [
+          { name: 'react', ver: '19.0.0', size: '0.4 MB', type: 'trans', children: [
+            { name: 'scheduler', ver: '0.25.0', size: '60 KB', type: 'trans' }
+          ]},
+          { name: '@swc/core', ver: '1.7.40', size: '88 MB', type: 'trans' },
+          { name: '@next/swc-darwin', ver: '15.0.2', size: '52 MB', type: 'trans' },
+          { name: 'styled-jsx', ver: '5.1.6', size: '120 KB', type: 'trans' },
+          { name: 'postcss', ver: '8.4.31', size: '300 KB', type: 'trans' },
+          { name: 'caniuse-lite', ver: '1.0.30', size: '6 MB', type: 'trans' },
+          { name: '... + 208 个间接依赖', ver: '', size: '~ 173 MB', type: 'trans' }
+        ]}
+      ]
+    },
+    tailwind: {
+      label: 'tailwindcss',
+      direct: 1,
+      total: 28,
+      sizeMB: 18,
+      tree: [
+        { name: 'tailwindcss', ver: '4.0.0', size: '4 MB', type: 'direct', children: [
+          { name: 'lightningcss', ver: '1.27.0', size: '8 MB', type: 'trans' },
+          { name: 'postcss', ver: '8.4.31', size: '300 KB', type: 'trans' },
+          { name: '@tailwindcss/oxide', ver: '4.0.0', size: '3.5 MB', type: 'trans' },
+          { name: '... + 25 个间接依赖', ver: '', size: '~ 2.2 MB', type: 'trans' }
+        ]}
+      ]
+    },
+    shadcn: {
+      label: 'shadcn/ui (radix + cva + clsx + ...)',
+      direct: 6,
+      total: 64,
+      sizeMB: 42,
+      tree: [
+        { name: '@radix-ui/react-dialog', ver: '1.1.2', size: '180 KB', type: 'direct', children: [
+          { name: '@radix-ui/react-primitive', ver: '2.0.0', size: '40 KB', type: 'trans' },
+          { name: '@radix-ui/react-portal', ver: '1.1.1', size: '12 KB', type: 'trans' },
+          { name: '@radix-ui/react-focus-scope', ver: '1.1.0', size: '14 KB', type: 'trans' }
+        ]},
+        { name: '@radix-ui/react-dropdown-menu', ver: '2.1.2', size: '210 KB', type: 'direct' },
+        { name: 'class-variance-authority', ver: '0.7.0', size: '14 KB', type: 'direct' },
+        { name: 'clsx', ver: '2.1.1', size: '8 KB', type: 'direct' },
+        { name: 'tailwind-merge', ver: '2.5.4', size: '180 KB', type: 'direct' },
+        { name: 'lucide-react', ver: '0.453.0', size: '36 MB', type: 'direct', children: [
+          { name: '... 含 1500+ icon SVG', ver: '', size: '~ 35 MB', type: 'trans' }
+        ]},
+        { name: '... + 50 个间接依赖', ver: '', size: '~ 5 MB', type: 'trans' }
+      ]
+    }
+  };
+
+  const loaded = new Set();
+  let totals = { direct: 0, total: 0, sizeMB: 0 };
+
+  const directEl = document.getElementById('depDirect');
+  const totalEl  = document.getElementById('depTotal');
+  const sizeEl   = document.getElementById('depSize');
+  const emptyEl  = document.getElementById('depEmpty');
+  const treeEl   = document.getElementById('depTree');
+  const treeBody = document.getElementById('depTreeBody');
+
+  function fmtSize(mb) {
+    if (mb < 1) return Math.round(mb * 1024) + ' KB';
+    if (mb < 1024) return mb + ' MB';
+    return (mb/1024).toFixed(2) + ' GB';
+  }
+
+  function renderTree() {
+    if (loaded.size === 0) {
+      emptyEl.style.display = '';
+      treeEl.style.display = 'none';
+      return;
+    }
+    emptyEl.style.display = 'none';
+    treeEl.style.display = '';
+    treeBody.innerHTML = '';
+
+    let idx = 0;
+    loaded.forEach(seedKey => {
+      const seed = seeds[seedKey];
+      seed.tree.forEach(pkg => {
+        treeBody.appendChild(buildNode(pkg, idx));
+        idx += countNodes(pkg);
+      });
+    });
+  }
+
+  function countNodes(pkg) {
+    let n = 1;
+    if (pkg.children) pkg.children.forEach(c => n += countNodes(c));
+    return n;
+  }
+
+  function buildNode(pkg, delayIndex) {
+    const wrapper = document.createElement('div');
+    wrapper.className = 'dep-pkg';
+
+    const row = document.createElement('div');
+    row.className = 'dep-pkg-row dep-' + pkg.type + ' is-grow';
+    row.style.animationDelay = (delayIndex * 60) + 'ms';
+
+    const mark = document.createElement('span');
+    mark.className = 'dep-pkg-mark';
+    mark.textContent = pkg.type === 'direct' ? '★' : '·';
+    row.appendChild(mark);
+
+    const name = document.createElement('span');
+    name.className = 'dep-pkg-name';
+    name.textContent = pkg.name;
+    row.appendChild(name);
+
+    if (pkg.ver) {
+      const ver = document.createElement('span');
+      ver.className = 'dep-pkg-ver';
+      ver.textContent = '@' + pkg.ver;
+      row.appendChild(ver);
+    }
+
+    if (pkg.size) {
+      const sz = document.createElement('span');
+      sz.className = 'dep-pkg-size';
+      sz.textContent = pkg.size;
+      row.appendChild(sz);
+    }
+
+    wrapper.appendChild(row);
+
+    if (pkg.children && pkg.children.length) {
+      const children = document.createElement('div');
+      children.className = 'dep-children';
+      let cIdx = delayIndex + 1;
+      pkg.children.forEach(c => {
+        children.appendChild(buildNode(c, cIdx));
+        cIdx += countNodes(c);
+      });
+      wrapper.appendChild(children);
+    }
+
+    return wrapper;
+  }
+
+  function recompute() {
+    totals = { direct: 0, total: 0, sizeMB: 0 };
+    loaded.forEach(k => {
+      const s = seeds[k];
+      totals.direct += s.direct;
+      totals.total  += s.total;
+      totals.sizeMB += s.sizeMB;
+    });
+    directEl.textContent = totals.direct;
+    totalEl.textContent  = totals.total;
+    sizeEl.textContent   = fmtSize(totals.sizeMB);
+  }
+
+  function bumpStat(el) {
+    el.animate(
+      [{ transform: 'scale(1)' }, { transform: 'scale(1.18)' }, { transform: 'scale(1)' }],
+      { duration: 380, easing: 'cubic-bezier(0.34, 1.56, 0.64, 1)' }
+    );
+  }
+
+  document.querySelectorAll('.dep-seed').forEach(seedBtn => {
+    seedBtn.addEventListener('click', () => {
+      const key = seedBtn.dataset.seed;
+      if (loaded.has(key)) {
+        // Already loaded — flash to remind
+        seedBtn.animate(
+          [{ transform: 'translateX(0)' }, { transform: 'translateX(-3px)' }, { transform: 'translateX(3px)' }, { transform: 'translateX(0)' }],
+          { duration: 280, easing: 'ease-out' }
+        );
+        return;
+      }
+      loaded.add(key);
+      seedBtn.classList.add('is-loaded');
+      renderTree();
+      recompute();
+      bumpStat(directEl);
+      bumpStat(totalEl);
+      bumpStat(sizeEl);
+    });
+  });
+
+  document.getElementById('depReset').addEventListener('click', () => {
+    loaded.clear();
+    document.querySelectorAll('.dep-seed.is-loaded').forEach(s => s.classList.remove('is-loaded'));
+    renderTree();
+    recompute();
+  });
+
+  // Init
+  recompute();
+})();
+
+// ==========================================================
+//  Roadmap modal
+// ==========================================================
+(function(){
+  var modal = document.getElementById('rm-modal');
+  if (!modal) return;
+  var openBtns = document.querySelectorAll('[data-rm-open]');
+  var closeBtns = modal.querySelectorAll('[data-rm-close]');
+  function open() { modal.hidden = false; document.body.style.overflow = 'hidden'; }
+  function close() { modal.hidden = true; document.body.style.overflow = ''; }
+  openBtns.forEach(function(b){ b.addEventListener('click', function(e){ e.preventDefault(); open(); }); });
+  closeBtns.forEach(function(b){ b.addEventListener('click', close); });
+  document.addEventListener('keydown', function(e){ if (e.key === 'Escape' && !modal.hidden) close(); });
+})();
+</script>
+
+
+<!-- 路线图弹窗 -->
+<div class="rm-modal" id="rm-modal" hidden>
+  <div class="rm-backdrop" data-rm-close></div>
+  <div class="rm-dialog" role="dialog" aria-label="完整路线图">
+    <button class="rm-close" data-rm-close aria-label="关闭">✕</button>
+    <div class="rm-header">
+      <div class="rm-tag">完整路线图 · ROADMAP</div>
+      <h3 class="rm-title">9 模块 <span class="rm-em">·</span> 28 篇</h3>
+      <p class="rm-sub">设计篇 5 模块 / 15 篇 + 工程篇 4 系列 / 13 篇</p>
+    </div>
+    <div class="rm-body">
+      <div class="rm-mod">
+        <div class="rm-mod-key">A · 单元素与组件</div>
+        <div class="rm-mod-list">
+          <a href="basics-figma.html" class="rm-cell"><span class="rm-cell-code">A0</span><span class="rm-cell-name">三件套 · HTML / CSS / JS</span><span class="rm-cell-tier">入门</span></a>
+          <a href="box-figma.html" class="rm-cell"><span class="rm-cell-code">A1</span><span class="rm-cell-name">盒子 · Auto Layout</span><span class="rm-cell-tier">基础</span></a>
+          <a href="components-figma.html" class="rm-cell"><span class="rm-cell-code">A2</span><span class="rm-cell-name">组件 · Variants &amp; Props</span><span class="rm-cell-tier">基础</span></a>
+          <a href="button-system-figma.html" class="rm-cell"><span class="rm-cell-code">A3</span><span class="rm-cell-name">Button System · 组件演化</span><span class="rm-cell-tier">进阶</span></a>
+        </div>
+      </div>
+      <div class="rm-mod">
+        <div class="rm-mod-key">B · 多组件协作</div>
+        <div class="rm-mod-list">
+          <a href="page-figma.html" class="rm-cell"><span class="rm-cell-code">B0</span><span class="rm-cell-name">拼页面 · 组件嵌套</span><span class="rm-cell-tier">入门</span></a>
+          <a href="data-flow-figma.html" class="rm-cell"><span class="rm-cell-code">B1</span><span class="rm-cell-name">数据流 · 概念</span><span class="rm-cell-tier">基础</span></a>
+          <a href="data-flow-cases-figma.html" class="rm-cell"><span class="rm-cell-code">B2</span><span class="rm-cell-name">数据流 · 实战 5 案例</span><span class="rm-cell-tier">进阶</span></a>
+        </div>
+      </div>
+      <div class="rm-mod">
+        <div class="rm-mod-key">C · 视觉系统</div>
+        <div class="rm-mod-list">
+          <a href="tokens-figma.html" class="rm-cell"><span class="rm-cell-code">C0</span><span class="rm-cell-name">Variables / Tokens 入门</span><span class="rm-cell-tier">入门</span></a>
+          <a href="colors-type-figma.html" class="rm-cell"><span class="rm-cell-code">C1</span><span class="rm-cell-name">Colors / Type / Spacing</span><span class="rm-cell-tier">基础</span></a>
+          <a href="theme-switch-figma.html" class="rm-cell"><span class="rm-cell-code">C2</span><span class="rm-cell-name">Theme 切换实战</span><span class="rm-cell-tier">进阶</span></a>
+        </div>
+      </div>
+      <div class="rm-mod">
+        <div class="rm-mod-key">D · 状态与交互</div>
+        <div class="rm-mod-list">
+          <a href="states-figma.html" class="rm-cell"><span class="rm-cell-code">D0</span><span class="rm-cell-name">视觉态 · 看得见的状态</span><span class="rm-cell-tier">入门</span></a>
+          <a href="interactive-figma.html" class="rm-cell"><span class="rm-cell-code">D1</span><span class="rm-cell-name">Interactive Component</span><span class="rm-cell-tier">基础</span></a>
+          <a href="transition-figma.html" class="rm-cell"><span class="rm-cell-code">D2</span><span class="rm-cell-name">动画 · Transition</span><span class="rm-cell-tier">进阶</span></a>
+        </div>
+      </div>
+      <div class="rm-mod">
+        <div class="rm-mod-key">E · 工程化</div>
+        <div class="rm-mod-list">
+          <a href="naming-figma.html" class="rm-cell"><span class="rm-cell-code">E0</span><span class="rm-cell-name">命名 / 图层规范</span><span class="rm-cell-tier">入门</span></a>
+          <a href="handoff-figma.html" class="rm-cell"><span class="rm-cell-code">E2</span><span class="rm-cell-name">Handoff &amp; 设计系统</span><span class="rm-cell-tier">进阶</span></a>
+        </div>
+      </div>
+      <div class="rm-mod">
+        <div class="rm-mod-key">F · 工程入门</div>
+        <div class="rm-mod-list">
+          <a href="f1-npm-figma.html" class="rm-cell"><span class="rm-cell-code">F1</span><span class="rm-cell-name">npm 是什么</span><span class="rm-cell-tier">入门</span></a>
+          <a href="f2-import-figma.html" class="rm-cell"><span class="rm-cell-code">F2</span><span class="rm-cell-name">import 与路径</span><span class="rm-cell-tier">入门</span></a>
+          <a href="f3-dev-build-figma.html" class="rm-cell"><span class="rm-cell-code">F3</span><span class="rm-cell-name">dev vs build</span><span class="rm-cell-tier">基础</span></a>
+          <a href="f4-hidden-files-figma.html" class="rm-cell"><span class="rm-cell-code">F4</span><span class="rm-cell-name">看不见的文件</span><span class="rm-cell-tier">基础</span></a>
+        </div>
+      </div>
+      <div class="rm-mod">
+        <div class="rm-mod-key">G · 版本控制</div>
+        <div class="rm-mod-list">
+          <a href="g1-commit-branch-figma.html" class="rm-cell"><span class="rm-cell-code">G1</span><span class="rm-cell-name">commit / branch</span><span class="rm-cell-tier">入门</span></a>
+          <a href="g2-conflict-figma.html" class="rm-cell"><span class="rm-cell-code">G2</span><span class="rm-cell-name">冲突怎么解</span><span class="rm-cell-tier">基础</span></a>
+          <a href="g3-pr-review-figma.html" class="rm-cell"><span class="rm-cell-code">G3</span><span class="rm-cell-name">PR / Review</span><span class="rm-cell-tier">进阶</span></a>
+        </div>
+      </div>
+      <div class="rm-mod">
+        <div class="rm-mod-key">H · 浏览器调试</div>
+        <div class="rm-mod-list">
+          <a href="h1-devtools-elements-figma.html" class="rm-cell"><span class="rm-cell-code">H1</span><span class="rm-cell-name">DevTools Elements</span><span class="rm-cell-tier">入门</span></a>
+          <a href="h2-console-error-figma.html" class="rm-cell"><span class="rm-cell-code">H2</span><span class="rm-cell-name">Console 报错</span><span class="rm-cell-tier">基础</span></a>
+          <a href="h3-network-figma.html" class="rm-cell"><span class="rm-cell-code">H3</span><span class="rm-cell-name">Network 面板</span><span class="rm-cell-tier">进阶</span></a>
+        </div>
+      </div>
+      <div class="rm-mod">
+        <div class="rm-mod-key">J · 上线</div>
+        <div class="rm-mod-list">
+          <a href="j1-dns-figma.html" class="rm-cell"><span class="rm-cell-code">J1</span><span class="rm-cell-name">DNS / 域名</span><span class="rm-cell-tier">基础</span></a>
+          <a href="j2-vercel-figma.html" class="rm-cell"><span class="rm-cell-code">J2</span><span class="rm-cell-name">Vercel 部署</span><span class="rm-cell-tier">基础</span></a>
+          <a href="j3-cache-cdn-figma.html" class="rm-cell"><span class="rm-cell-code">J3</span><span class="rm-cell-name">缓存 / CDN</span><span class="rm-cell-tier">进阶</span></a>
+        </div>
+      </div>
+    </div>
+    <div class="rm-footer">
+      <span>未完待续 · 想看什么主题加我聊</span>
+      <span class="rm-wechat">微信 vanvan_0422</span>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

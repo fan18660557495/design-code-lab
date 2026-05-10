@@ -1,0 +1,2671 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>项目里看不见的文件 — .env / node_modules / .gitignore</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,300..900&family=Geist:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Noto+Sans+SC:wght@300;400;500;700;900&family=Noto+Serif+SC:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f3eee5;
+    --bg-2: #ebe4d4;
+    --ink: #16161d;
+    --ink-soft: #4a4a55;
+    --ink-mute: #8a8a92;
+    --line: #d5cdba;
+    --line-soft: #e3dcca;
+    --accent: #ff4d2e;
+    --accent-soft: #ffe4dc;
+    --blue: #0a4cff;
+    --blue-soft: #dde6ff;
+    --green: #1f6b3a;
+    --green-soft: #d4ecdb;
+    --yellow: #ffcf3d;
+    --paper: #faf7f0;
+    --shadow: 0 1px 0 rgba(0,0,0,0.04), 0 8px 24px rgba(22,22,29,0.06);
+
+    /* file kind colors */
+    --kind-config: #0a4cff;     /* blue */
+    --kind-hidden: #ff4d2e;     /* accent */
+    --kind-build:  #8a8a92;     /* mute */
+    --kind-source: #1f6b3a;     /* green */
+    --kind-asset:  #b45309;     /* amber */
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'Geist', 'Noto Sans SC', system-ui, -apple-system, sans-serif;
+    font-size: 16px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    background-image: radial-gradient(circle at 1px 1px, rgba(22,22,29,0.05) 1px, transparent 0);
+    background-size: 24px 24px;
+  }
+
+  /* Typography */
+  .display-cn { font-family: 'Noto Serif SC', 'Fraunces', serif; font-weight: 900; letter-spacing: -0.01em; }
+  .mono { font-family: 'JetBrains Mono', monospace; }
+  .label { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-mute); }
+
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 0 32px; }
+
+  /* topbar */
+  .topbar {
+    border-bottom: 1px dashed var(--line);
+    padding: 16px 0;
+    background: rgba(243, 238, 229, 0.85);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    backdrop-filter: blur(8px);
+  }
+  .topbar-inner { display: flex; justify-content: space-between; align-items: center; gap: 24px; flex-wrap: wrap; }
+  .brand { font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 600; }
+  .brand .dot { display: inline-block; width: 8px; height: 8px; background: var(--accent); border-radius: 50%; margin-right: 8px; vertical-align: middle; animation: pulse 2s ease-in-out infinite; }
+  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+  .nav-links { display: flex; gap: 18px; font-size: 13px; flex-wrap: wrap; }
+  .nav-links a { color: var(--ink-soft); text-decoration: none; transition: color 0.2s; }
+  .nav-links a:hover { color: var(--accent); }
+  .nav-links a.current { color: var(--accent); font-weight: 600; }
+  a.brand { text-decoration: none; color: inherit; transition: color 0.2s; cursor: pointer; }
+  a.brand:hover { color: var(--accent); }
+
+  /* hero */
+  .hero { padding: 100px 0 80px; position: relative; overflow: hidden; }
+  .hero-meta { display: flex; gap: 24px; margin-bottom: 32px; align-items: center; flex-wrap: wrap; }
+  .hero-meta .pill { padding: 6px 12px; border: 1px solid var(--ink); border-radius: 100px; font-size: 11px; font-family: 'JetBrains Mono', monospace; letter-spacing: 0.05em; }
+  .hero-meta .pill.fill { background: var(--ink); color: var(--bg); }
+  .hero-meta .pill.warn { border-color: var(--accent); color: var(--accent); }
+  .hero h1 {
+    font-family: 'Noto Serif SC', 'Fraunces', serif;
+    font-weight: 900;
+    font-size: clamp(48px, 7vw, 92px);
+    line-height: 0.95;
+    letter-spacing: -0.03em;
+    margin: 0 0 24px;
+  }
+  .hero h1 .em { font-family: 'Noto Serif SC', serif; font-weight: 500; color: var(--accent); }
+  .hero p.lede { font-size: 20px; line-height: 1.5; max-width: 640px; color: var(--ink-soft); margin: 0 0 40px; }
+  .hero p.lede .em { font-family: 'Noto Serif SC', serif; color: var(--accent); font-weight: 500; }
+  .hero-grid { display: grid; grid-template-columns: 1.4fr 1fr; gap: 48px; align-items: end; }
+  @media (max-width: 880px) { .hero-grid { grid-template-columns: 1fr; } }
+  .hero-side { border-left: 1px dashed var(--line); padding-left: 24px; font-size: 13px; color: var(--ink-soft); }
+  .hero-side .row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px dashed var(--line); }
+  .hero-side .row:last-child { border-bottom: none; }
+  .hero-side .row .k { color: var(--ink-mute); font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.05em; text-transform: uppercase; }
+  .hero-side .row .v { font-weight: 500; }
+
+  /* hero terminal accent */
+  .hero-warn-strip {
+    margin-top: 28px;
+    background: var(--ink);
+    color: white;
+    padding: 14px 18px;
+    border-radius: 6px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    flex-wrap: wrap;
+    box-shadow: 0 8px 18px rgba(22,22,29,0.18);
+  }
+  .hero-warn-strip .ws-tag {
+    font-size: 10px;
+    letter-spacing: 0.16em;
+    color: var(--accent);
+    text-transform: uppercase;
+    border: 1px solid var(--accent);
+    padding: 3px 8px;
+    border-radius: 100px;
+  }
+  .hero-warn-strip .ws-text { color: rgba(255,255,255,0.85); }
+  .hero-warn-strip .ws-text strong { color: white; font-weight: 600; }
+  .hero-warn-strip .ws-text .em { color: var(--accent); font-weight: 600; font-family: 'JetBrains Mono', monospace; }
+
+  /* section */
+  section { padding: 80px 0; border-top: 1px solid var(--line); position: relative; animation: fadeIn 0.6s ease-out backwards; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+  .section-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 48px; flex-wrap: wrap; gap: 16px; }
+  .section-num { font-family: 'JetBrains Mono', monospace; font-size: 13px; color: var(--ink-mute); letter-spacing: 0.1em; }
+  .section-num strong { color: var(--accent); }
+  .section-title {
+    font-family: 'Noto Serif SC', serif;
+    font-weight: 900;
+    font-size: clamp(32px, 4.5vw, 52px);
+    line-height: 1.05;
+    letter-spacing: -0.02em;
+    margin: 0;
+    max-width: 18ch;
+  }
+  .section-title .em { font-family: 'Noto Serif SC', serif; font-weight: 500; color: var(--accent); }
+  .section-sub { color: var(--ink-soft); font-size: 17px; max-width: 38ch; line-height: 1.55; margin: 0; }
+
+  .em { font-family: 'Noto Serif SC', serif; font-weight: 500; color: var(--accent); }
+
+  /* hint strip */
+  .hint-strip {
+    margin-top: 16px;
+    padding: 14px 18px;
+    background: var(--accent-soft);
+    border-left: 3px solid var(--accent);
+    border-radius: 4px;
+    font-size: 13px;
+    color: var(--ink);
+    line-height: 1.55;
+  }
+  .hint-strip .hint-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--accent);
+    letter-spacing: 0.12em;
+    margin-right: 10px;
+    text-transform: uppercase;
+  }
+
+  /* quote box */
+  .quote-box {
+    margin: 32px 0 0;
+    padding: 24px 28px;
+    background: var(--paper);
+    border-left: 3px solid var(--ink);
+    border-radius: 0 6px 6px 0;
+    font-family: 'Noto Serif SC', serif;
+    font-size: 18px;
+    line-height: 1.55;
+    color: var(--ink);
+    font-weight: 500;
+  }
+  .quote-box .quote-mark {
+    font-family: 'Noto Serif SC', serif;
+    color: var(--accent);
+    font-size: 28px;
+    line-height: 1;
+    margin-right: 8px;
+    font-weight: 500;
+  }
+  .quote-box .quote-attr {
+    display: block;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--ink-mute);
+    margin-top: 12px;
+    letter-spacing: 0.05em;
+    font-weight: 400;
+  }
+
+  /* === §01 project structure === */
+  .ps-stage {
+    margin-top: 24px;
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    overflow: hidden;
+    display: grid;
+    grid-template-columns: 1.05fr 1fr;
+  }
+  @media (max-width: 880px) { .ps-stage { grid-template-columns: 1fr; } }
+
+  .ps-tree {
+    background: var(--ink);
+    color: #d8d8e0;
+    padding: 22px 24px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    line-height: 1.95;
+    position: relative;
+    overflow-x: auto;
+  }
+  .ps-tree-head {
+    position: absolute;
+    top: 12px; left: 14px;
+    width: 8px; height: 8px; border-radius: 50%;
+    background: #ff5f56;
+    box-shadow: 14px 0 0 #ffbd2e, 28px 0 0 #27c93f;
+  }
+  .ps-tree-fname {
+    position: absolute; top: 10px; right: 16px;
+    font-size: 10px; color: #6e6e7a; letter-spacing: 0.08em;
+  }
+  .ps-tree pre { margin: 0; padding-top: 18px; }
+  .ps-row {
+    display: block;
+    padding: 0 8px;
+    margin: 0 -8px;
+    border-radius: 3px;
+    cursor: pointer;
+    transition: background 0.15s;
+    border-left: 2px solid transparent;
+  }
+  .ps-row:hover { background: rgba(255,255,255,0.06); }
+  .ps-row.is-active { background: rgba(255,255,255,0.10); border-left-color: var(--accent); }
+  .ps-row .ps-tw { color: #555560; }
+  .ps-row .ps-name { color: #d8d8e0; }
+  .ps-row[data-kind="config"] .ps-name { color: #8ec5ff; }
+  .ps-row[data-kind="hidden"] .ps-name { color: #ff8a6e; }
+  .ps-row[data-kind="build"]  .ps-name { color: #6e6e7a; }
+  .ps-row[data-kind="source"] .ps-name { color: #a8e6a3; }
+  .ps-row[data-kind="asset"]  .ps-name { color: #ffcf3d; }
+  .ps-row .ps-anno {
+    color: #6e6e7a;
+    font-size: 11px;
+    margin-left: 8px;
+  }
+
+  .ps-info {
+    padding: 28px 32px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    background: var(--paper);
+  }
+  .ps-info-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--accent);
+  }
+  .ps-info-name {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 24px;
+    font-weight: 800;
+    margin: 0;
+    color: var(--ink);
+    letter-spacing: -0.01em;
+  }
+  .ps-info-name .pin {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    background: var(--ink);
+    color: var(--bg);
+    padding: 2px 8px;
+    border-radius: 3px;
+    margin-right: 10px;
+    font-weight: 500;
+    letter-spacing: 0.05em;
+    vertical-align: 3px;
+  }
+  .ps-info-desc {
+    color: var(--ink-soft);
+    font-size: 14px;
+    line-height: 1.6;
+    margin: 0;
+  }
+  .ps-info-section {
+    padding-top: 12px;
+    border-top: 1px dashed var(--line);
+  }
+  .ps-info-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--ink-mute);
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+  .ps-info-text {
+    font-size: 13px;
+    color: var(--ink-soft);
+    line-height: 1.6;
+    margin: 0;
+  }
+  .ps-info-text strong { color: var(--ink); font-weight: 600; }
+  .ps-info-decision {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    padding: 8px 12px;
+    border-radius: 4px;
+    line-height: 1.5;
+    display: block;
+    margin-top: 4px;
+  }
+  .ps-info-decision[data-decision="commit"] {
+    background: var(--green-soft);
+    color: var(--green);
+    border-left: 3px solid var(--green);
+  }
+  .ps-info-decision[data-decision="ignore"] {
+    background: var(--accent-soft);
+    color: var(--accent);
+    border-left: 3px solid var(--accent);
+  }
+  .ps-info-decision[data-decision="depends"] {
+    background: var(--bg-2);
+    color: var(--ink);
+    border-left: 3px solid var(--ink-mute);
+  }
+
+  /* legend */
+  .ps-legend {
+    margin-top: 18px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px 22px;
+    padding: 14px 18px;
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    font-size: 12px;
+    color: var(--ink-soft);
+    align-items: center;
+  }
+  .ps-legend-item { display: flex; align-items: center; gap: 6px; }
+  .ps-legend-item .dot { width: 10px; height: 10px; border-radius: 2px; }
+  .ps-legend-item .dot.config { background: var(--kind-config); }
+  .ps-legend-item .dot.hidden { background: var(--kind-hidden); }
+  .ps-legend-item .dot.build  { background: var(--kind-build); }
+  .ps-legend-item .dot.source { background: var(--kind-source); }
+  .ps-legend-item .dot.asset  { background: var(--kind-asset); }
+  .ps-legend-item .name { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--ink); }
+
+  /* === §02 .env incident === */
+  .env-stage {
+    margin-top: 24px;
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  .env-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0;
+    border-bottom: 1px solid var(--line);
+  }
+  @media (max-width: 880px) { .env-grid { grid-template-columns: 1fr; } }
+  .env-cell { padding: 26px 30px; }
+  .env-cell.left { border-right: 1px dashed var(--line); }
+  @media (max-width: 880px) { .env-cell.left { border-right: none; border-bottom: 1px dashed var(--line); } }
+  .env-cell h4 {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 19px;
+    margin: 0 0 12px;
+    font-weight: 800;
+    letter-spacing: -0.01em;
+  }
+  .env-cell h4 .em { font-family: 'Noto Serif SC', serif; color: var(--accent); font-weight: 500; }
+  .env-cell p {
+    font-size: 13.5px;
+    color: var(--ink-soft);
+    line-height: 1.65;
+    margin: 0 0 10px;
+  }
+  .env-cell p strong { color: var(--ink); font-weight: 600; }
+
+  .env-file {
+    background: var(--ink);
+    color: #d8d8e0;
+    padding: 18px 20px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12.5px;
+    line-height: 1.85;
+    border-radius: 6px;
+    position: relative;
+    margin-top: 6px;
+  }
+  .env-file::before {
+    content: '.env';
+    position: absolute;
+    top: 8px; right: 12px;
+    font-size: 10px;
+    color: #6e6e7a;
+    letter-spacing: 0.08em;
+  }
+  .env-file .ek { color: #ff8a6e; }
+  .env-file .ev { color: #a8e6a3; }
+  .env-file .epn { color: #ffcf3d; }
+  .env-file .ec { color: #6e6e7a; }
+  .env-file .blink {
+    display: inline-block;
+    width: 6px; height: 14px;
+    background: var(--accent);
+    vertical-align: -2px;
+    animation: ebl 1.1s steps(1) infinite;
+  }
+  @keyframes ebl { 50% { opacity: 0; } }
+
+  /* incident timeline */
+  .env-incident {
+    background: var(--bg-2);
+    padding: 26px 30px;
+    border-top: 1px dashed var(--line);
+  }
+  .env-incident-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.16em;
+    color: var(--accent);
+    text-transform: uppercase;
+    margin-bottom: 10px;
+    display: inline-block;
+    padding: 3px 8px;
+    border: 1px solid var(--accent);
+    border-radius: 100px;
+  }
+  .env-incident h4 {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 22px;
+    margin: 0 0 14px;
+    font-weight: 800;
+    letter-spacing: -0.01em;
+    line-height: 1.3;
+  }
+  .env-incident h4 .em { font-family: 'Noto Serif SC', serif; color: var(--accent); font-weight: 500; }
+
+  .env-timeline {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 12px;
+    margin-top: 16px;
+  }
+  @media (max-width: 880px) { .env-timeline { grid-template-columns: 1fr; } }
+  .env-step {
+    background: white;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 14px 14px 16px;
+    position: relative;
+  }
+  .env-step.is-bad { border-color: var(--accent); background: var(--accent-soft); }
+  .env-step .es-num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--ink-mute);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+  .env-step.is-bad .es-num { color: var(--accent); }
+  .env-step .es-time {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--ink);
+    font-weight: 600;
+    margin-bottom: 6px;
+  }
+  .env-step .es-event {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--ink);
+    margin: 0 0 4px;
+    line-height: 1.35;
+  }
+  .env-step .es-detail {
+    font-size: 11.5px;
+    color: var(--ink-soft);
+    line-height: 1.5;
+    margin: 0;
+  }
+  .env-step .es-detail strong { color: var(--ink); font-weight: 600; }
+  .env-step .es-detail .em { font-family: 'JetBrains Mono', monospace; color: var(--accent); font-weight: 600; }
+
+  .env-rules {
+    margin-top: 28px;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 14px;
+  }
+  @media (max-width: 880px) { .env-rules { grid-template-columns: 1fr; } }
+  .env-rule {
+    background: white;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 16px 18px;
+  }
+  .env-rule .er-no {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--accent);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+  .env-rule .er-text {
+    font-size: 13px;
+    color: var(--ink);
+    line-height: 1.55;
+    margin: 0;
+  }
+  .env-rule .er-text strong { font-weight: 700; }
+  .env-rule code {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    background: var(--bg-2);
+    color: var(--ink);
+    padding: 1px 6px;
+    border-radius: 3px;
+  }
+
+  /* === §03 .gitignore visual === */
+  .gi-stage {
+    margin-top: 24px;
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  .gi-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    min-height: 480px;
+  }
+  @media (max-width: 980px) { .gi-grid { grid-template-columns: 1fr; } }
+
+  .gi-col {
+    padding: 22px 22px 24px;
+    border-right: 1px dashed var(--line);
+    display: flex;
+    flex-direction: column;
+  }
+  .gi-col:last-child { border-right: none; }
+  @media (max-width: 980px) {
+    .gi-col { border-right: none; border-bottom: 1px dashed var(--line); }
+    .gi-col:last-child { border-bottom: none; }
+  }
+  .gi-col-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    color: var(--ink-mute);
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+  .gi-col-title {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 16px;
+    font-weight: 700;
+    margin: 0 0 14px;
+    color: var(--ink);
+  }
+  .gi-col-title .em { font-family: 'Noto Serif SC', serif; color: var(--accent); font-weight: 500; }
+
+  /* left: project files list */
+  .gi-files { display: flex; flex-direction: column; gap: 4px; }
+  .gi-file {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 7px 10px;
+    border-radius: 4px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12.5px;
+    background: white;
+    border: 1px solid var(--line-soft);
+    transition: all 0.25s;
+  }
+  .gi-file .gi-icon {
+    width: 8px; height: 8px;
+    border-radius: 1px;
+    background: var(--ink-mute);
+    flex-shrink: 0;
+  }
+  .gi-file[data-kind="config"] .gi-icon { background: var(--kind-config); }
+  .gi-file[data-kind="hidden"] .gi-icon { background: var(--kind-hidden); }
+  .gi-file[data-kind="build"]  .gi-icon { background: var(--kind-build); }
+  .gi-file[data-kind="source"] .gi-icon { background: var(--kind-source); }
+  .gi-file[data-kind="asset"]  .gi-icon { background: var(--kind-asset); }
+  .gi-file .gi-name { color: var(--ink); }
+  .gi-file.is-ignored {
+    opacity: 0.35;
+    background: repeating-linear-gradient(
+      45deg, transparent, transparent 4px, rgba(255,77,46,0.06) 4px, rgba(255,77,46,0.06) 8px
+    ), white;
+    border-color: var(--accent);
+    border-style: dashed;
+  }
+  .gi-file.is-ignored .gi-name { text-decoration: line-through; color: var(--ink-mute); }
+  .gi-file.is-pulsed {
+    animation: gi-pulse 0.55s ease-out;
+  }
+  @keyframes gi-pulse {
+    0%   { transform: scale(1); }
+    40%  { transform: scale(1.04); background-color: var(--accent-soft); }
+    100% { transform: scale(1); }
+  }
+
+  /* center: .gitignore code */
+  .gi-code-wrap {
+    background: var(--ink);
+    border-radius: 6px;
+    overflow: hidden;
+  }
+  .gi-code-head {
+    background: rgba(255,255,255,0.06);
+    padding: 8px 12px;
+    color: #d8d8e0;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.06em;
+    border-bottom: 1px solid rgba(255,255,255,0.07);
+  }
+  .gi-code-head .gi-fname { color: #ff8a6e; }
+  .gi-code-body {
+    padding: 14px 16px 18px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    line-height: 1.85;
+    color: #d8d8e0;
+    counter-reset: gi-line;
+  }
+  .gi-line {
+    display: block;
+    padding: 1px 8px;
+    margin: 0 -8px;
+    border-radius: 3px;
+    cursor: pointer;
+    transition: background 0.15s;
+    border-left: 2px solid transparent;
+    position: relative;
+  }
+  .gi-line::before {
+    counter-increment: gi-line;
+    content: counter(gi-line);
+    color: #4a4a55;
+    margin-right: 10px;
+    font-size: 10.5px;
+  }
+  .gi-line:hover { background: rgba(255,255,255,0.06); }
+  .gi-line.is-active {
+    background: rgba(255,138,110,0.15);
+    border-left-color: #ff8a6e;
+  }
+  .gi-line .gi-rule { color: #ff8a6e; }
+  .gi-line .gi-cmt  { color: #6e6e7a; }
+  .gi-line.is-cmt { cursor: default; }
+  .gi-line.is-cmt:hover { background: transparent; }
+
+  /* right: outcome */
+  .gi-out {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    flex: 1;
+  }
+  .gi-out-stat {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+  .gi-out-cell {
+    padding: 12px 14px;
+    border-radius: 6px;
+    border: 1px solid var(--line);
+    background: white;
+  }
+  .gi-out-cell.up {
+    border-color: var(--green);
+    background: var(--green-soft);
+  }
+  .gi-out-cell.no {
+    border-color: var(--accent);
+    background: var(--accent-soft);
+  }
+  .gi-out-cell .lbl {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--ink-mute);
+    margin-bottom: 4px;
+  }
+  .gi-out-cell.up .lbl { color: var(--green); }
+  .gi-out-cell.no .lbl { color: var(--accent); }
+  .gi-out-cell .num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--ink);
+    line-height: 1.1;
+  }
+  .gi-out-cell .sub {
+    font-size: 11px;
+    color: var(--ink-soft);
+    margin-top: 2px;
+  }
+
+  .gi-out-list { display: flex; flex-direction: column; gap: 5px; flex: 1; overflow: auto; }
+  .gi-out-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 6px 10px;
+    background: white;
+    border: 1px solid var(--line-soft);
+    border-radius: 4px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+  }
+  .gi-out-item.up { border-left: 3px solid var(--green); }
+  .gi-out-item.no { border-left: 3px solid var(--accent); opacity: 0.6; }
+  .gi-out-item .gi-out-name { color: var(--ink); }
+  .gi-out-item.no .gi-out-name { text-decoration: line-through; color: var(--ink-mute); }
+  .gi-out-item .gi-out-state {
+    font-size: 10px;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+  .gi-out-item.up .gi-out-state { color: var(--green); }
+  .gi-out-item.no .gi-out-state { color: var(--accent); }
+
+  /* === §04 drag & drop game === */
+  .dd-stage {
+    margin-top: 24px;
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  .dd-statbar {
+    background: var(--ink);
+    color: white;
+    padding: 14px 22px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 14px;
+  }
+  .dd-statbar .dd-prog {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: rgba(255,255,255,0.65);
+    letter-spacing: 0.06em;
+  }
+  .dd-statbar .dd-prog strong { color: white; font-weight: 600; }
+  .dd-statbar .dd-score {
+    display: flex;
+    gap: 14px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: rgba(255,255,255,0.65);
+  }
+  .dd-statbar .dd-score .ok { color: var(--green-soft); }
+  .dd-statbar .dd-score .ok strong { color: #b6e8c2; font-weight: 700; font-size: 14px; }
+  .dd-statbar .dd-score .bad { color: var(--accent-soft); }
+  .dd-statbar .dd-score .bad strong { color: #ffb39e; font-weight: 700; font-size: 14px; }
+  .dd-statbar .dd-reset {
+    background: transparent;
+    border: 1px solid rgba(255,255,255,0.25);
+    color: white;
+    padding: 6px 14px;
+    border-radius: 4px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    cursor: pointer;
+    letter-spacing: 0.05em;
+    transition: all 0.15s;
+  }
+  .dd-statbar .dd-reset:hover { background: var(--accent); border-color: var(--accent); }
+
+  .dd-pool-wrap {
+    padding: 24px 24px 12px;
+    border-bottom: 1px dashed var(--line);
+  }
+  .dd-pool-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 14px;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .dd-pool-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    color: var(--ink-mute);
+    text-transform: uppercase;
+  }
+  .dd-pool-hint {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--ink-soft);
+  }
+  .dd-pool-hint .em { font-family: 'JetBrains Mono', monospace; color: var(--accent); font-weight: 600; }
+
+  .dd-pool {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    min-height: 52px;
+  }
+  .dd-card {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 14px 8px 12px;
+    border-radius: 6px;
+    background: white;
+    border: 1.5px solid var(--ink);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12.5px;
+    cursor: grab;
+    user-select: none;
+    transition: all 0.15s;
+    position: relative;
+    box-shadow: 0 1px 0 rgba(0,0,0,0.04);
+  }
+  .dd-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 14px rgba(22,22,29,0.12);
+    border-color: var(--accent);
+  }
+  .dd-card:active { cursor: grabbing; }
+  .dd-card .dd-icon {
+    width: 10px; height: 10px;
+    border-radius: 2px;
+    background: var(--ink-mute);
+  }
+  .dd-card[data-kind="config"] .dd-icon { background: var(--kind-config); }
+  .dd-card[data-kind="hidden"] .dd-icon { background: var(--kind-hidden); }
+  .dd-card[data-kind="build"]  .dd-icon { background: var(--kind-build); }
+  .dd-card[data-kind="source"] .dd-icon { background: var(--kind-source); }
+  .dd-card[data-kind="asset"]  .dd-icon { background: var(--kind-asset); }
+  .dd-card.dragging { opacity: 0.55; transform: rotate(-2deg); }
+  .dd-card.placed { display: none; }
+  .dd-card .dd-name { color: var(--ink); font-weight: 500; }
+  .dd-card .dd-mini-tag {
+    font-size: 9px;
+    color: var(--ink-mute);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    margin-left: 4px;
+  }
+
+  .dd-bins {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0;
+  }
+  @media (max-width: 880px) { .dd-bins { grid-template-columns: 1fr; } }
+  .dd-bin {
+    padding: 22px 24px 28px;
+    min-height: 240px;
+    border-right: 1px dashed var(--line);
+    display: flex;
+    flex-direction: column;
+    transition: all 0.18s;
+    position: relative;
+  }
+  .dd-bin:last-child { border-right: none; }
+  @media (max-width: 880px) {
+    .dd-bin { border-right: none; border-bottom: 1px dashed var(--line); }
+    .dd-bin:last-child { border-bottom: none; }
+  }
+  .dd-bin.commit { background: rgba(31,107,58,0.04); }
+  .dd-bin.local  { background: rgba(255,77,46,0.04); }
+  .dd-bin.over.commit { background: var(--green-soft); }
+  .dd-bin.over.local  { background: var(--accent-soft); }
+  .dd-bin-head {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 6px;
+  }
+  .dd-bin-emoji {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 18px;
+    width: 30px; height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    border: 1.5px solid var(--ink);
+    background: white;
+    font-weight: 700;
+  }
+  .dd-bin.commit .dd-bin-emoji { color: var(--green); border-color: var(--green); }
+  .dd-bin.local  .dd-bin-emoji { color: var(--accent); border-color: var(--accent); }
+  .dd-bin h4 {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 18px;
+    margin: 0;
+    font-weight: 800;
+    letter-spacing: -0.01em;
+  }
+  .dd-bin h4 .em { font-family: 'Noto Serif SC', serif; color: var(--accent); font-weight: 500; }
+  .dd-bin.commit h4 .em { color: var(--green); }
+  .dd-bin-sub {
+    font-size: 12px;
+    color: var(--ink-soft);
+    margin: 2px 0 14px;
+    line-height: 1.45;
+  }
+  .dd-bin-drop {
+    flex: 1;
+    border: 1.5px dashed var(--line);
+    border-radius: 6px;
+    background: rgba(255,255,255,0.5);
+    padding: 12px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-content: flex-start;
+    transition: all 0.18s;
+  }
+  .dd-bin.over .dd-bin-drop { border-color: currentColor; }
+  .dd-bin.commit.over .dd-bin-drop { border-color: var(--green); background: rgba(31,107,58,0.07); }
+  .dd-bin.local.over  .dd-bin-drop { border-color: var(--accent); background: rgba(255,77,46,0.07); }
+  .dd-bin-drop:empty::before {
+    content: '↓ 拖文件到这';
+    width: 100%;
+    text-align: center;
+    color: var(--ink-mute);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.05em;
+    align-self: center;
+    padding: 24px 0;
+    opacity: 0.55;
+  }
+
+  .dd-placed {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 11px;
+    border-radius: 100px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11.5px;
+    background: white;
+    border: 1px solid var(--line);
+    animation: dd-pop 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) backwards;
+  }
+  @keyframes dd-pop {
+    from { opacity: 0; transform: scale(0.6); }
+    to   { opacity: 1; transform: scale(1); }
+  }
+  .dd-placed.is-good { border-color: var(--green); color: var(--green); }
+  .dd-placed.is-bad  { border-color: var(--accent); color: var(--accent); text-decoration: line-through; }
+  .dd-placed .dd-mark { font-weight: 700; font-size: 10px; }
+
+  .dd-feedback {
+    margin: 0 24px 24px;
+    padding: 14px 18px;
+    background: var(--bg-2);
+    border-left: 3px solid var(--ink-mute);
+    border-radius: 0 4px 4px 0;
+    font-size: 13px;
+    line-height: 1.55;
+    color: var(--ink);
+    min-height: 50px;
+    transition: all 0.2s;
+  }
+  .dd-feedback.is-good { background: var(--green-soft); border-left-color: var(--green); }
+  .dd-feedback.is-bad  { background: var(--accent-soft); border-left-color: var(--accent); }
+  .dd-feedback .dd-fb-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-right: 10px;
+  }
+  .dd-feedback.is-good .dd-fb-tag { color: var(--green); }
+  .dd-feedback.is-bad  .dd-fb-tag { color: var(--accent); }
+  .dd-feedback strong { font-weight: 700; }
+  .dd-feedback code {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    background: rgba(255,255,255,0.55);
+    padding: 1px 6px;
+    border-radius: 3px;
+  }
+
+  .dd-result {
+    margin: 0 24px 24px;
+    padding: 22px 26px;
+    background: var(--ink);
+    color: white;
+    border-radius: 6px;
+    display: none;
+    animation: dd-pop 0.45s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  .dd-result.show { display: block; }
+  .dd-result-head {
+    display: flex;
+    align-items: baseline;
+    gap: 16px;
+    margin-bottom: 12px;
+    flex-wrap: wrap;
+  }
+  .dd-result-grade {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 36px;
+    font-weight: 900;
+    color: var(--accent);
+    line-height: 1;
+    letter-spacing: -0.02em;
+  }
+  .dd-result-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: rgba(255,255,255,0.55);
+    letter-spacing: 0.1em;
+  }
+  .dd-result-msg {
+    font-size: 14px;
+    line-height: 1.65;
+    color: rgba(255,255,255,0.85);
+    margin: 0;
+  }
+  .dd-result-msg strong { color: white; font-weight: 600; }
+  .dd-result-msg .em { font-family: 'JetBrains Mono', monospace; color: var(--accent); font-weight: 600; }
+
+  /* === §05 救命三连 === */
+  .rs-stage {
+    margin-top: 24px;
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 28px 32px;
+  }
+  .rs-warn {
+    margin: 0 0 24px;
+    padding: 16px 20px;
+    background: var(--accent);
+    color: white;
+    border-radius: 6px;
+    font-family: 'Noto Serif SC', serif;
+    font-size: 17px;
+    line-height: 1.55;
+    font-weight: 600;
+  }
+  .rs-warn strong { font-weight: 800; }
+  .rs-warn code {
+    font-family: 'JetBrains Mono', monospace;
+    background: rgba(255,255,255,0.18);
+    padding: 1px 7px;
+    border-radius: 3px;
+    font-size: 14px;
+  }
+  .rs-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+  }
+  .rs-item {
+    display: grid;
+    grid-template-columns: 60px 1fr;
+    gap: 20px;
+    align-items: start;
+  }
+  @media (max-width: 600px) { .rs-item { grid-template-columns: 1fr; gap: 8px; } }
+  .rs-num {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 28px;
+    font-weight: 800;
+    color: var(--accent);
+    line-height: 1;
+    letter-spacing: -0.02em;
+  }
+  .rs-q {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--ink);
+    margin: 0 0 6px;
+    line-height: 1.4;
+  }
+  .rs-q .em { font-family: 'Noto Serif SC', serif; color: var(--accent); font-weight: 500; }
+  .rs-a {
+    color: var(--ink-soft);
+    font-size: 14px;
+    line-height: 1.65;
+    margin: 0 0 8px;
+  }
+  .rs-a strong { color: var(--ink); font-weight: 600; }
+  .rs-a code {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    background: var(--bg-2);
+    color: var(--ink);
+    padding: 1px 6px;
+    border-radius: 3px;
+  }
+  .rs-cmd {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12.5px;
+    color: white;
+    background: var(--ink);
+    padding: 10px 14px;
+    border-radius: 4px;
+    margin-top: 6px;
+    line-height: 1.6;
+    display: block;
+    overflow-x: auto;
+  }
+  .rs-cmd .cm-prompt { color: var(--accent); margin-right: 6px; }
+  .rs-cmd .cm-cmt { color: #6e6e7a; }
+  .rs-action {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--ink);
+    background: var(--accent-soft);
+    border-left: 3px solid var(--accent);
+    padding: 8px 12px;
+    border-radius: 0 4px 4px 0;
+    line-height: 1.5;
+    display: block;
+    margin-top: 8px;
+  }
+
+  /* === §06 cheatsheet === */
+  .cheat-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 18px;
+    margin-top: 24px;
+  }
+  @media (max-width: 880px) { .cheat-grid { grid-template-columns: 1fr; } }
+  .cheat-block {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 24px 26px;
+  }
+  .cheat-block h3 {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 18px;
+    font-weight: 800;
+    margin: 0 0 14px;
+    letter-spacing: -0.01em;
+  }
+  .cheat-block h3 .em { font-family: 'Noto Serif SC', serif; color: var(--accent); font-weight: 500; }
+
+  /* decision tree visual */
+  .tree-deci {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .tree-q {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--ink);
+    background: var(--bg-2);
+    padding: 8px 12px;
+    border-radius: 4px;
+    border-left: 3px solid var(--ink);
+  }
+  .tree-a {
+    margin-left: 14px;
+    padding: 8px 12px;
+    border-radius: 4px;
+    border-left: 2px solid var(--line);
+    font-size: 13px;
+    color: var(--ink-soft);
+    line-height: 1.55;
+  }
+  .tree-a.up { border-left-color: var(--green); background: var(--green-soft); }
+  .tree-a.no { border-left-color: var(--accent); background: var(--accent-soft); }
+  .tree-a strong { color: var(--ink); font-weight: 700; }
+  .tree-a code {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    background: rgba(255,255,255,0.6);
+    padding: 1px 6px;
+    border-radius: 3px;
+  }
+
+  /* gitignore must-have list */
+  .gimust {
+    background: var(--ink);
+    color: #d8d8e0;
+    padding: 16px 18px;
+    border-radius: 6px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    line-height: 1.85;
+  }
+  .gimust .gm-rule { color: #ff8a6e; }
+  .gimust .gm-cmt  { color: #6e6e7a; }
+  .gimust .gm-fname {
+    color: #ff8a6e;
+    font-size: 11px;
+    border: 1px solid #555;
+    padding: 1px 6px;
+    border-radius: 3px;
+    margin-bottom: 8px;
+    display: inline-block;
+  }
+
+  /* checklist */
+  .checklist {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .checklist li {
+    display: grid;
+    grid-template-columns: 22px 1fr;
+    gap: 10px;
+    align-items: start;
+    font-size: 13px;
+    color: var(--ink-soft);
+    line-height: 1.55;
+    padding: 8px 0;
+    border-bottom: 1px dashed var(--line);
+  }
+  .checklist li:last-child { border-bottom: none; }
+  .checklist li::before {
+    content: '☐';
+    color: var(--accent);
+    font-weight: 700;
+    font-size: 16px;
+    line-height: 1;
+  }
+  .checklist li strong { color: var(--ink); font-weight: 700; }
+  .checklist li code {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    background: var(--bg-2);
+    padding: 1px 6px;
+    border-radius: 3px;
+    color: var(--ink);
+  }
+
+  /* ============= Unified next-post block ============= */
+  .next-post {
+    margin-top: 48px;
+    padding: 32px 36px;
+    background: var(--ink);
+    color: var(--bg);
+    border-radius: 8px;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 32px;
+    align-items: center;
+    text-decoration: none;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    position: relative;
+    overflow: hidden;
+  }
+  .next-post::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at 100% 0%, rgba(255,77,46,0.12), transparent 55%);
+    pointer-events: none;
+  }
+  .next-post:hover { transform: translateY(-2px); box-shadow: 0 14px 36px rgba(22,22,29,0.22); }
+  @media (max-width: 720px) { .next-post { grid-template-columns: 1fr; padding: 24px; gap: 20px; } }
+  .next-post .np-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--accent);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+    display: inline-block;
+  }
+  .next-post h4 {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 26px;
+    margin: 0 0 10px;
+    font-weight: 700;
+    color: white;
+    line-height: 1.25;
+    letter-spacing: -0.01em;
+  }
+  .next-post h4 .em {
+    font-family: 'Noto Serif SC', serif;
+    font-weight: 500;
+    color: var(--accent);
+  }
+  .next-post p {
+    margin: 0;
+    color: rgba(255,255,255,0.72);
+    font-size: 14px;
+    line-height: 1.65;
+    max-width: 560px;
+  }
+  .next-post p strong { color: white; font-weight: 600; }
+  .next-post .np-cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 24px;
+    background: var(--accent);
+    color: white;
+    border-radius: 4px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    white-space: nowrap;
+    transition: background 0.18s, color 0.18s, transform 0.18s;
+    position: relative;
+    z-index: 1;
+  }
+  .next-post:hover .np-cta { background: white; color: var(--ink); transform: translateX(2px); }
+  .next-post .np-cta .arr { font-family: 'Noto Serif SC', serif; font-size: 18px; font-weight: 500; }
+
+  /* footer */
+  footer {
+    border-top: 1px solid var(--line);
+    padding: 56px 0 64px;
+    background: var(--bg);
+  }
+  .byline-wrap { position: relative; }
+  .byline {
+    display: flex;
+    gap: 28px;
+    align-items: center;
+    padding-bottom: 32px;
+    border-bottom: 1px dashed var(--line);
+    margin-bottom: 24px;
+    position: relative;
+  }
+  .byline::before {
+    content: '';
+    position: absolute;
+    top: -56px; left: 0;
+    width: 32px; height: 1px;
+    background: var(--accent);
+  }
+  .byline .avatar {
+    width: 96px; height: 96px;
+    border-radius: 50%;
+    object-fit: cover;
+    flex-shrink: 0;
+    border: 3px solid var(--paper);
+    box-shadow: 0 0 0 1px var(--line), 0 6px 20px rgba(22,22,29,0.10);
+    background: var(--paper);
+  }
+  .byline-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--ink-mute);
+    letter-spacing: 0.18em;
+    margin-bottom: 8px;
+  }
+  .byline-label .dot {
+    display: inline-block;
+    width: 6px; height: 6px;
+    background: var(--accent);
+    border-radius: 50%;
+    margin-right: 6px;
+    vertical-align: 1px;
+  }
+  .byline-name {
+    font-family: 'Noto Serif SC', 'Fraunces', serif;
+    font-size: clamp(28px, 4vw, 40px);
+    font-weight: 700;
+    line-height: 1.05;
+    letter-spacing: -0.01em;
+    margin: 0 0 8px;
+  }
+  .byline-name .em {
+    font-family: 'Noto Serif SC', serif;
+    font-weight: 500;
+    color: var(--accent);
+  }
+  .byline-tag {
+    font-size: 14px;
+    color: var(--ink-soft);
+    line-height: 1.55;
+    margin: 0;
+    max-width: 52ch;
+  }
+  .byline-contact { margin-top: 14px; padding-top: 14px; border-top: 1px dashed var(--line); display: flex; align-items: center; gap: 10px; flex-wrap: wrap; font-size: 12px; }
+  .byline-contact .contact-label { font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-mute); padding: 2px 8px; border: 1px solid var(--line); border-radius: 3px; }
+  .byline-contact .contact-id { font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 600; color: var(--ink); background: var(--accent-soft); padding: 3px 10px; border-radius: 4px; letter-spacing: 0.02em; }
+  .byline-contact .contact-hint { font-size: 12px; color: var(--ink-soft); }
+  .footer-meta {
+    text-align: center;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--ink-mute);
+    letter-spacing: 0.05em;
+  }
+  .footer-meta .heart { color: var(--accent); }
+  .footer-meta .mono { color: var(--ink-soft); font-weight: 500; }
+  @media (max-width: 600px) {
+    .byline { flex-direction: column; text-align: center; align-items: center; gap: 16px; }
+    .byline-tag { margin-left: auto; margin-right: auto; }
+  }
+
+  /* tiny toast */
+  .toast {
+    position: fixed;
+    bottom: 24px; left: 50%;
+    transform: translateX(-50%) translateY(140%);
+    background: var(--ink);
+    color: var(--bg);
+    padding: 10px 18px;
+    border-radius: 100px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 1000;
+    pointer-events: none;
+    box-shadow: var(--shadow);
+  }
+  .toast.show { transform: translateX(-50%) translateY(0); }
+  .toast.bad { background: var(--accent); color: white; }
+  .toast.good { background: var(--green); color: white; }
+
+  /* === Roadmap Modal === */
+  .rm-modal { position: fixed; inset: 0; z-index: 1000; display: flex; align-items: center; justify-content: center; padding: 30px 16px; }
+  .rm-modal[hidden] { display: none; }
+  .rm-backdrop { position: absolute; inset: 0; background: rgba(22,22,29,0.55); backdrop-filter: blur(4px); animation: rm-fade 0.2s; }
+  @keyframes rm-fade { from { opacity: 0; } to { opacity: 1; } }
+  .rm-dialog { position: relative; background: var(--bg); border-radius: 12px; max-width: 720px; width: 100%; max-height: calc(100vh - 60px); overflow-y: auto; padding: 32px 36px 24px; box-shadow: 0 30px 80px rgba(0,0,0,0.3); animation: rm-pop 0.25s cubic-bezier(0.4,0,0.2,1); }
+  @keyframes rm-pop { from { transform: scale(0.96) translateY(8px); opacity: 0; } to { transform: scale(1) translateY(0); opacity: 1; } }
+  .rm-close { position: absolute; top: 14px; right: 16px; background: transparent; border: none; cursor: pointer; font-size: 20px; color: var(--ink-mute); width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: all 0.15s; line-height: 1; }
+  .rm-close:hover { background: var(--bg-2); color: var(--ink); }
+  .rm-header { margin-bottom: 22px; padding-bottom: 18px; border-bottom: 1px dashed var(--line); }
+  .rm-tag { font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.1em; color: var(--accent); text-transform: uppercase; margin-bottom: 8px; }
+  .rm-title { font-family: 'Noto Serif SC', serif; font-size: 28px; margin: 0 0 6px; font-weight: 900; letter-spacing: -0.02em; line-height: 1.1; }
+  .rm-title .rm-em { font-family: 'Noto Serif SC', serif; color: var(--accent); font-weight: 500; }
+  .rm-sub { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--ink-mute); margin: 0; }
+  .rm-body { display: flex; flex-direction: column; gap: 18px; }
+  .rm-mod-key { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ink); font-weight: 700; margin-bottom: 8px; letter-spacing: 0.04em; text-transform: uppercase; }
+  .rm-mod-list { display: flex; flex-direction: column; gap: 6px; }
+  .rm-cell { display: grid; grid-template-columns: 36px 1fr auto; gap: 12px; align-items: center; padding: 9px 13px; border-radius: 5px; background: var(--paper); border: 1px solid var(--line); text-decoration: none; color: inherit; transition: all 0.15s; }
+  .rm-cell:hover { border-color: var(--accent); background: var(--accent-soft); transform: translateX(3px); }
+  .rm-cell.rm-cell-current { border-color: var(--accent); background: var(--accent-soft); }
+  .rm-cell-code { font-family: 'JetBrains Mono', monospace; font-weight: 600; color: var(--accent); font-size: 13px; }
+  .rm-cell-name { font-size: 13px; color: var(--ink); }
+  .rm-cell-tier { font-family: 'JetBrains Mono', monospace; font-size: 9px; letter-spacing: 0.08em; color: var(--ink-mute); text-transform: uppercase; border: 1px solid var(--line); padding: 2px 7px; border-radius: 3px; }
+  .rm-cell-tier.rm-tier-current { background: var(--accent); color: white; border-color: var(--accent); }
+  .rm-footer { margin-top: 22px; padding-top: 16px; border-top: 1px dashed var(--line); display: flex; justify-content: space-between; align-items: center; font-size: 12px; color: var(--ink-soft); flex-wrap: wrap; gap: 8px; }
+  .rm-wechat { font-family: 'JetBrains Mono', monospace; background: var(--accent-soft); color: var(--ink); padding: 3px 10px; border-radius: 3px; font-weight: 600; letter-spacing: 0.02em; }
+  .nav-links a[data-rm-open] { cursor: pointer; }
+</style>
+</head>
+<body>
+
+<!-- Top bar -->
+<div class="topbar">
+  <div class="wrap topbar-inner">
+    <a href="index.html" class="brand"><span class="dot"></span>F4 · 隐藏文件 / 工程入门 · 完结</a>
+    <nav class="nav-links">
+      <a href="index.html#roadmap" data-rm-open>路线图</a>
+      <a href="index.html#manifesto">关于</a>
+    </nav>
+  </div>
+</div>
+
+<!-- Hero -->
+<header class="hero">
+  <div class="wrap">
+    <div class="hero-meta">
+      <span class="pill fill">实验互动 · INTERACTIVE</span>
+      <span class="pill">2026 · 设计 × 代码</span>
+      <span class="pill">F4 · 入门 · 工程</span>
+      <span class="pill warn">F 系列完结篇</span>
+      <span class="label">阅读时长 ≈ 14 分钟</span>
+    </div>
+    <div class="hero-grid">
+      <div>
+        <h1>
+          <span class="display-cn">有些文件，</span><br>
+          <span class="display-cn">是</span><span class="em">不能上传</span><span class="display-cn">的。</span>
+        </h1>
+        <p class="lede">
+          <span class="mono">.env</span> 是<span class="em">密码本</span>，绝对不能 commit。<br>
+          <span class="mono">node_modules</span> 不上传，但本地不能删。<br>
+          <span class="mono">.gitignore</span> 是给 git 看的<span class="em">不上传清单</span> —— 这一篇讲明白哪些文件归哪一档。
+        </p>
+        <div class="hero-warn-strip">
+          <span class="ws-tag">真实事故</span>
+          <span class="ws-text">某项目把 <strong>.env</strong> 上传到 GitHub 公开仓库，AWS key 被脚本扫到 → 5 小时后账单 <span class="em">$5,000</span>。</span>
+        </div>
+      </div>
+      <div class="hero-side">
+        <div class="row"><span class="k">本页讲什么</span><span class="v">5 类文件分类</span></div>
+        <div class="row"><span class="k">含互动</span><span class="v">拖拽分类游戏</span></div>
+        <div class="row"><span class="k">面向</span><span class="v">vibe coding 设计师</span></div>
+        <div class="row"><span class="k">前置知识</span><span class="v">看过 F1 npm</span></div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- §01 — 5 kinds of files -->
+<section id="kinds">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>01</strong> / 项目里 5 类</div>
+        <h2 class="section-title">每个文件夹<br>都<span class="em">有身份</span>。</h2>
+      </div>
+      <p class="section-sub">
+        打开任何一个 React / Next 项目，看到的东西<strong>都属于这 5 类之一</strong>。
+        分清楚之后，"删不删 / 传不传" 就有答案了。
+      </p>
+    </div>
+
+    <div class="hint-strip">
+      <span class="hint-tag">互动</span>左边是真实项目结构，<strong>hover / 点</strong>任意一行 → 右边告诉你这是什么、要不要 commit。
+    </div>
+
+    <div class="ps-stage" id="psStage">
+      <div class="ps-tree">
+        <span class="ps-tree-head"></span>
+        <span class="ps-tree-fname">my-design-portfolio/</span>
+<pre><span class="ps-row" data-pk="root" data-kind="config"><span class="ps-tw">📦 </span><span class="ps-name">my-design-portfolio/</span></span>
+<span class="ps-row" data-pk="package" data-kind="config"><span class="ps-tw">├─ </span><span class="ps-name">package.json</span><span class="ps-anno">// 项目身份证 + 清单</span></span>
+<span class="ps-row" data-pk="lock" data-kind="config"><span class="ps-tw">├─ </span><span class="ps-name">package-lock.json</span><span class="ps-anno">// 进货单</span></span>
+<span class="ps-row" data-pk="vite" data-kind="config"><span class="ps-tw">├─ </span><span class="ps-name">vite.config.js</span><span class="ps-anno">// 打包配置</span></span>
+<span class="ps-row" data-pk="ts" data-kind="config"><span class="ps-tw">├─ </span><span class="ps-name">tsconfig.json</span><span class="ps-anno">// TypeScript 设置</span></span>
+<span class="ps-row" data-pk="readme" data-kind="config"><span class="ps-tw">├─ </span><span class="ps-name">README.md</span><span class="ps-anno">// 说明书</span></span>
+<span class="ps-row" data-pk="env" data-kind="hidden"><span class="ps-tw">├─ </span><span class="ps-name">.env</span><span class="ps-anno">// ⚠ 密码本</span></span>
+<span class="ps-row" data-pk="envex" data-kind="hidden"><span class="ps-tw">├─ </span><span class="ps-name">.env.example</span><span class="ps-anno">// 密码本模板（无值）</span></span>
+<span class="ps-row" data-pk="gitignore" data-kind="hidden"><span class="ps-tw">├─ </span><span class="ps-name">.gitignore</span><span class="ps-anno">// 不上传清单</span></span>
+<span class="ps-row" data-pk="dsstore" data-kind="hidden"><span class="ps-tw">├─ </span><span class="ps-name">.DS_Store</span><span class="ps-anno">// macOS 偷偷生成</span></span>
+<span class="ps-row" data-pk="git" data-kind="hidden"><span class="ps-tw">├─ </span><span class="ps-name">.git/</span><span class="ps-anno">// git 自己的脑子</span></span>
+<span class="ps-row" data-pk="node" data-kind="build"><span class="ps-tw">├─ </span><span class="ps-name">node_modules/</span><span class="ps-anno">// 1.2 GB 零件柜</span></span>
+<span class="ps-row" data-pk="dist" data-kind="build"><span class="ps-tw">├─ </span><span class="ps-name">dist/</span><span class="ps-anno">// 打包产物</span></span>
+<span class="ps-row" data-pk="next" data-kind="build"><span class="ps-tw">├─ </span><span class="ps-name">.next/</span><span class="ps-anno">// Next 的缓存</span></span>
+<span class="ps-row" data-pk="src" data-kind="source"><span class="ps-tw">├─ </span><span class="ps-name">src/</span></span>
+<span class="ps-row" data-pk="app" data-kind="source"><span class="ps-tw">│  ├─ </span><span class="ps-name">App.tsx</span><span class="ps-anno">// 你写的代码</span></span>
+<span class="ps-row" data-pk="btn" data-kind="source"><span class="ps-tw">│  ├─ </span><span class="ps-name">Button.tsx</span><span class="ps-anno">// 你写的代码</span></span>
+<span class="ps-row" data-pk="css" data-kind="source"><span class="ps-tw">│  └─ </span><span class="ps-name">styles.css</span><span class="ps-anno">// 你写的样式</span></span>
+<span class="ps-row" data-pk="public" data-kind="asset"><span class="ps-tw">└─ </span><span class="ps-name">public/</span></span>
+<span class="ps-row" data-pk="logo" data-kind="asset"><span class="ps-tw">   ├─ </span><span class="ps-name">logo.png</span><span class="ps-anno">// 图片资源</span></span>
+<span class="ps-row" data-pk="font" data-kind="asset"><span class="ps-tw">   └─ </span><span class="ps-name">fonts/</span><span class="ps-anno">// 字体</span></span></pre>
+      </div>
+
+      <div class="ps-info">
+        <div class="ps-info-tag" id="psTag">↑ POINT TO A FILE</div>
+        <h3 class="ps-info-name" id="psName"><span class="pin">配置</span>项目身份证</h3>
+        <p class="ps-info-desc" id="psDesc">项目根目录最经典的一类。它们告诉机器"这个项目是什么、要怎么跑、用什么编译器"。手写、改动后要 commit。</p>
+        <div class="ps-info-section">
+          <div class="ps-info-label">Designer 视角</div>
+          <p class="ps-info-text" id="psMeta">类比 Figma 文件的 "File Settings + Library 引用" —— 没了它，项目装不起来。</p>
+        </div>
+        <div class="ps-info-section">
+          <div class="ps-info-label">commit 决策</div>
+          <span class="ps-info-decision" id="psDeci" data-decision="commit">✅ 必须 commit · 别人靠这份才能复原项目</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="ps-legend">
+      <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ink-mute); letter-spacing: 0.1em; text-transform: uppercase; margin-right:6px;">5 种颜色 · 5 类</span>
+      <span class="ps-legend-item"><span class="dot config"></span><span class="name">配置</span> · 项目说明书 / commit</span>
+      <span class="ps-legend-item"><span class="dot hidden"></span><span class="name">隐藏</span> · 看场景</span>
+      <span class="ps-legend-item"><span class="dot build"></span><span class="name">生成产物</span> · 不 commit</span>
+      <span class="ps-legend-item"><span class="dot source"></span><span class="name">源码</span> · 必须 commit</span>
+      <span class="ps-legend-item"><span class="dot asset"></span><span class="name">资源</span> · 视情况 commit</span>
+    </div>
+
+    <div class="quote-box">
+      <span class="quote-mark">"</span>
+      项目根目录第一眼像是<span class="em">一团乱麻</span> —— 但其实只有 5 种文件，每种各自有规矩。
+      你看不懂的不是文件，是<strong>分类</strong>。
+      <span class="quote-attr">—— 接下来 5 节就拆这 5 类</span>
+    </div>
+  </div>
+</section>
+
+<!-- §02 — .env  -->
+<section id="env">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>02</strong> / 密码本</div>
+        <h2 class="section-title">.env<br>是<span class="em">密码本</span>。</h2>
+      </div>
+      <p class="section-sub">
+        所有"<strong>不能让人看到的字符串</strong>"都集中放在这里 ——
+        API key、数据库密码、第三方服务的 token。这是 F 系列里<span class="em">最关键</span>的一节。
+      </p>
+    </div>
+
+    <div class="env-stage">
+      <div class="env-grid">
+        <div class="env-cell left">
+          <h4>它<span class="em">长什么样</span></h4>
+          <p>纯文本文件，每行一个 <code class="mono" style="background:var(--bg-2);padding:1px 6px;border-radius:3px;font-size:12px;">KEY=VALUE</code>。文件名前面有个点，所以默认是<strong>隐藏文件</strong> —— Finder 默认看不见。</p>
+          <div class="env-file">
+            <span class="ec"># 这是 .env —— 当成密码本看</span><br>
+            <span class="ek">OPENAI_API_KEY</span><span class="ec">=</span><span class="ev">sk-proj-aBc123XyZ...</span><br>
+            <span class="ek">AWS_ACCESS_KEY</span><span class="ec">=</span><span class="ev">AKIA1234...</span><br>
+            <span class="ek">AWS_SECRET</span><span class="ec">=</span><span class="ev">a8K2...</span><br>
+            <span class="ek">DATABASE_URL</span><span class="ec">=</span><span class="ev">postgresql://user:</span><span class="epn">PASSWORD</span><span class="ev">@host/db</span><br>
+            <span class="ek">STRIPE_SECRET</span><span class="ec">=</span><span class="ev">sk_live_...</span><span class="blink"></span>
+          </div>
+          <p style="margin-top:14px;">里面的每一串都<strong>等于钱</strong>。OpenAI key 被人拿到 → 账单飙；AWS key 被人拿到 → 直接挖矿；Stripe live key 被人拿到 → 转走客户付的钱。</p>
+        </div>
+        <div class="env-cell">
+          <h4>为什么 git <span class="em">必须忽略</span></h4>
+          <p>git 默认会把仓库里所有文件都 commit + push 上去。如果 <code>.env</code> 在仓库里，<strong>一个 git push 之后整个互联网都能看到</strong>。</p>
+          <p>更糟糕的是 —— GitHub 上有一群专门<strong>扫泄露 key</strong> 的爬虫机器人，<strong>分钟级</strong>就会扫到。一旦在公开仓库，<span class="em">视为永远泄露</span>。</p>
+          <p>所以：<code>.env</code> 这个文件名，几乎所有项目的 <code>.gitignore</code> <strong>第一行</strong>就写着它。这是行业默认。</p>
+          <p style="margin-top:14px;color:var(--ink);background:var(--accent-soft);padding:12px 14px;border-radius:4px;border-left:3px solid var(--accent);font-size:13px;">
+            <strong>一句话：</strong>.env 在你本地放着、用着 —— 但<strong>千万别让它进 git 历史</strong>。一进去就别想全删干净。
+          </p>
+        </div>
+      </div>
+
+      <div class="env-incident">
+        <span class="env-incident-tag">真实事故 · 5 小时 = $5,000</span>
+        <h4>一个开发者的<span class="em">周日早上</span></h4>
+        <p style="font-size:13.5px;color:var(--ink-soft);line-height:1.65;margin:0 0 6px;">这是 GitHub / AWS 上每周都在发生的事 —— 设计师 / 独立开发者中招的概率最高，因为不知道 .env 不能 commit。</p>
+
+        <div class="env-timeline">
+          <div class="env-step">
+            <div class="es-num">10:00</div>
+            <div class="es-time">提交代码</div>
+            <p class="es-event">git push</p>
+            <p class="es-detail">第一次开源个小项目，<strong>没看清楚</strong> .env 也跟着上去了。</p>
+          </div>
+          <div class="env-step is-bad">
+            <div class="es-num">10:02</div>
+            <div class="es-time">爬虫扫到</div>
+            <p class="es-event">机器人发现 KEY</p>
+            <p class="es-detail">GitHub 公开新提交。<span class="em">2 分钟内</span>就被扫到了。</p>
+          </div>
+          <div class="env-step is-bad">
+            <div class="es-num">10:30</div>
+            <div class="es-time">开始挖矿</div>
+            <p class="es-event">AWS 起 80 台服务器</p>
+            <p class="es-detail">攻击者用你的 AWS key 启了一批 GPU 实例挖矿。</p>
+          </div>
+          <div class="env-step is-bad">
+            <div class="es-num">15:00</div>
+            <div class="es-time">收到邮件</div>
+            <p class="es-event">"账单异常"</p>
+            <p class="es-detail">AWS 系统警报 —— 当前消费 <span class="em">$5,000+</span>，远超正常。</p>
+          </div>
+          <div class="env-step">
+            <div class="es-num">23:00</div>
+            <div class="es-time">善后</div>
+            <p class="es-event">补救</p>
+            <p class="es-detail">改密钥、清 git 历史、向 AWS 申诉。<strong>大部分情况下账单要自己出</strong>。</p>
+          </div>
+        </div>
+
+        <div class="env-rules">
+          <div class="env-rule">
+            <div class="er-no">规则 01</div>
+            <p class="er-text">只要用过 <code>OPENAI_API_KEY</code>、<code>AWS_*</code>、<code>STRIPE_*</code> —— 一定要先看 <code>.gitignore</code> 是不是有 <code>.env</code>。</p>
+          </div>
+          <div class="env-rule">
+            <div class="er-no">规则 02</div>
+            <p class="er-text">让 AI 给你写代码时，看到它 <strong>把 key 直接写死在 <code>.tsx</code> 里</strong> —— 立刻让它改成读 <code>.env</code>。</p>
+          </div>
+          <div class="env-rule">
+            <div class="er-no">规则 03</div>
+            <p class="er-text">真要分享配置 —— 提交一份 <strong>空模板</strong> <code>.env.example</code>，里面只有 key 名没有值。这是行业惯例。</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="quote-box" style="margin-top:32px;">
+      <span class="quote-mark">"</span>
+      .env 一旦 commit，<span class="em">就算你立刻删了</span>，git 历史里也永远留着 ——
+      搜历史快照就能翻出来。所以业内默认：<strong>泄露过的 key 视作永远泄露</strong>，必须替换，不能只删。
+      <span class="quote-attr">—— GitHub 自己的安全文档原话</span>
+    </div>
+  </div>
+</section>
+
+<!-- §03 — .gitignore visual -->
+<section id="gitignore">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>03</strong> / 不上传清单</div>
+        <h2 class="section-title">.gitignore<br>是<span class="em">门口的牌子</span>。</h2>
+      </div>
+      <p class="section-sub">
+        一个文本文件，里面每一行写一条规则。git 看到匹配的文件 / 文件夹 —— <strong>当作不存在</strong>。
+        不 commit、不 push、不变化检测。
+      </p>
+    </div>
+
+    <div class="hint-strip">
+      <span class="hint-tag">玩法</span>点中间 .gitignore 里<strong>任意一条规则</strong> —— 左边项目里命中的文件会变灰，右边显示统计。
+    </div>
+
+    <div class="gi-stage">
+      <div class="gi-grid">
+        <!-- left: project files -->
+        <div class="gi-col">
+          <div class="gi-col-tag">PROJECT FILES</div>
+          <h4 class="gi-col-title">项目里所有<span class="em">真实存在</span>的文件</h4>
+          <div class="gi-files" id="giFiles">
+            <div class="gi-file" data-file="package.json"      data-kind="config"><span class="gi-icon"></span><span class="gi-name">package.json</span></div>
+            <div class="gi-file" data-file="package-lock.json" data-kind="config"><span class="gi-icon"></span><span class="gi-name">package-lock.json</span></div>
+            <div class="gi-file" data-file="vite.config.js"    data-kind="config"><span class="gi-icon"></span><span class="gi-name">vite.config.js</span></div>
+            <div class="gi-file" data-file="README.md"         data-kind="config"><span class="gi-icon"></span><span class="gi-name">README.md</span></div>
+            <div class="gi-file" data-file=".env"              data-kind="hidden"><span class="gi-icon"></span><span class="gi-name">.env</span></div>
+            <div class="gi-file" data-file=".env.local"        data-kind="hidden"><span class="gi-icon"></span><span class="gi-name">.env.local</span></div>
+            <div class="gi-file" data-file=".env.example"      data-kind="hidden"><span class="gi-icon"></span><span class="gi-name">.env.example</span></div>
+            <div class="gi-file" data-file=".DS_Store"         data-kind="hidden"><span class="gi-icon"></span><span class="gi-name">.DS_Store</span></div>
+            <div class="gi-file" data-file="node_modules/"     data-kind="build"><span class="gi-icon"></span><span class="gi-name">node_modules/</span></div>
+            <div class="gi-file" data-file="dist/"             data-kind="build"><span class="gi-icon"></span><span class="gi-name">dist/</span></div>
+            <div class="gi-file" data-file=".next/"            data-kind="build"><span class="gi-icon"></span><span class="gi-name">.next/</span></div>
+            <div class="gi-file" data-file="src/App.tsx"       data-kind="source"><span class="gi-icon"></span><span class="gi-name">src/App.tsx</span></div>
+            <div class="gi-file" data-file="src/Button.tsx"    data-kind="source"><span class="gi-icon"></span><span class="gi-name">src/Button.tsx</span></div>
+            <div class="gi-file" data-file="src/styles.css"    data-kind="source"><span class="gi-icon"></span><span class="gi-name">src/styles.css</span></div>
+            <div class="gi-file" data-file="public/logo.png"   data-kind="asset"><span class="gi-icon"></span><span class="gi-name">public/logo.png</span></div>
+            <div class="gi-file" data-file="public/hero.jpg"   data-kind="asset"><span class="gi-icon"></span><span class="gi-name">public/hero.jpg</span></div>
+            <div class="gi-file" data-file="debug.log"         data-kind="build"><span class="gi-icon"></span><span class="gi-name">debug.log</span></div>
+          </div>
+        </div>
+
+        <!-- middle: .gitignore -->
+        <div class="gi-col">
+          <div class="gi-col-tag">GITIGNORE FILE</div>
+          <h4 class="gi-col-title">这就是 <span class="em">.gitignore</span> 的内容</h4>
+          <div class="gi-code-wrap">
+            <div class="gi-code-head">📄 <span class="gi-fname">.gitignore</span></div>
+            <div class="gi-code-body" id="giLines">
+<span class="gi-line is-cmt"><span class="gi-cmt"># 零件柜：太大了，能从清单重建</span></span>
+<span class="gi-line" data-rule="node_modules/"><span class="gi-rule">node_modules/</span></span>
+<span class="gi-line is-cmt"><span class="gi-cmt"># 打包产物：每次 build 重新生成</span></span>
+<span class="gi-line" data-rule="dist/"><span class="gi-rule">dist/</span></span>
+<span class="gi-line" data-rule=".next/"><span class="gi-rule">.next/</span></span>
+<span class="gi-line is-cmt"><span class="gi-cmt"># 密码本：永远不能上去</span></span>
+<span class="gi-line" data-rule=".env"><span class="gi-rule">.env</span></span>
+<span class="gi-line" data-rule=".env.local"><span class="gi-rule">.env.local</span></span>
+<span class="gi-line is-cmt"><span class="gi-cmt"># macOS 偷偷生成的</span></span>
+<span class="gi-line" data-rule=".DS_Store"><span class="gi-rule">.DS_Store</span></span>
+<span class="gi-line is-cmt"><span class="gi-cmt"># 各种 log 文件</span></span>
+<span class="gi-line" data-rule="*.log"><span class="gi-rule">*.log</span></span>
+            </div>
+          </div>
+          <p style="margin-top:14px;font-size:12px;color:var(--ink-soft);line-height:1.55;">
+            <span style="font-family:'JetBrains Mono',monospace;color:var(--ink-mute);font-size:10px;letter-spacing:0.08em;">语法</span>
+            一行一条。<code style="font-family:'JetBrains Mono',monospace;background:var(--bg-2);padding:1px 5px;border-radius:3px;font-size:11px;">/</code> 结尾 = 整个文件夹；
+            <code style="font-family:'JetBrains Mono',monospace;background:var(--bg-2);padding:1px 5px;border-radius:3px;font-size:11px;">*</code> = 通配符（*.log = 所有 .log）；
+            <code style="font-family:'JetBrains Mono',monospace;background:var(--bg-2);padding:1px 5px;border-radius:3px;font-size:11px;">#</code> 开头 = 注释。
+          </p>
+        </div>
+
+        <!-- right: outcome -->
+        <div class="gi-col">
+          <div class="gi-col-tag">RESULT</div>
+          <h4 class="gi-col-title">git 实际看到的<span class="em">结果</span></h4>
+          <div class="gi-out">
+            <div class="gi-out-stat">
+              <div class="gi-out-cell up">
+                <div class="lbl">会上传</div>
+                <div class="num" id="giUpNum">0</div>
+                <div class="sub">commit + push 这些</div>
+              </div>
+              <div class="gi-out-cell no">
+                <div class="lbl">已忽略</div>
+                <div class="num" id="giNoNum">0</div>
+                <div class="sub">git 当不存在</div>
+              </div>
+            </div>
+            <div class="gi-out-list" id="giOutList"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="quote-box" style="margin-top:32px;">
+      <span class="quote-mark">"</span>
+      <code style="font-family:'JetBrains Mono',monospace;background:var(--bg-2);padding:2px 8px;border-radius:3px;font-size:0.9em;">.gitignore</code> 是项目的<span class="em">门口牌子</span> ——
+      "这些东西别拿走"。git 看到了就装作没看到。
+      <span class="quote-attr">—— 写得越细，越不会出事</span>
+    </div>
+  </div>
+</section>
+
+<!-- §04 — drag & drop game -->
+<section id="game">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>04</strong> / 分类游戏</div>
+        <h2 class="section-title">12 张卡<br>放<span class="em">对位置</span>。</h2>
+      </div>
+      <p class="section-sub">
+        把上面的卡片拖到下面两个筐里 —— 每放一张，告诉你<strong>对错 + 为什么</strong>。
+        全放完会给你打分。这是这一篇的<span class="em">灵魂关卡</span>。
+      </p>
+    </div>
+
+    <div class="hint-strip">
+      <span class="hint-tag">玩法</span>用鼠标拖卡片 → 想 commit 的放左边绿筐，只在本机的放右边橙筐。<strong>不确定？看图标颜色配合 §01 的图例。</strong>
+    </div>
+
+    <div class="dd-stage">
+      <div class="dd-statbar">
+        <div class="dd-prog">进度 · <strong id="ddProg">0</strong> / 12</div>
+        <div class="dd-score">
+          <span class="ok">放对 · <strong id="ddOK">0</strong></span>
+          <span class="bad">放错 · <strong id="ddBad">0</strong></span>
+        </div>
+        <button class="dd-reset" id="ddReset">↻ 重置</button>
+      </div>
+
+      <div class="dd-pool-wrap">
+        <div class="dd-pool-head">
+          <span class="dd-pool-tag">↓ 拖这些文件到下面对应的筐</span>
+          <span class="dd-pool-hint">提示：<span class="em">.env</span> 一定不能 commit，<span class="em">node_modules</span> 也不能</span>
+        </div>
+        <div class="dd-pool" id="ddPool">
+          <!-- cards rendered by JS to allow random ordering -->
+        </div>
+      </div>
+
+      <div class="dd-bins">
+        <div class="dd-bin commit" data-bin="commit">
+          <div class="dd-bin-head">
+            <span class="dd-bin-emoji">✓</span>
+            <h4>上传到 <span class="em">GitHub</span></h4>
+          </div>
+          <p class="dd-bin-sub">这些文件 <strong>commit + push</strong> —— 别人拿到代码靠它们重建项目。</p>
+          <div class="dd-bin-drop" id="ddBinCommit"></div>
+        </div>
+        <div class="dd-bin local" data-bin="local">
+          <div class="dd-bin-head">
+            <span class="dd-bin-emoji">✕</span>
+            <h4>只在 <span class="em">本机</span></h4>
+          </div>
+          <p class="dd-bin-sub">这些文件 <strong>留在本地</strong> —— 不传 git。生成产物 / 密码 / 系统垃圾。</p>
+          <div class="dd-bin-drop" id="ddBinLocal"></div>
+        </div>
+      </div>
+
+      <div class="dd-feedback" id="ddFeedback">
+        <span class="dd-fb-tag" id="ddFbTag">提示</span>
+        <span id="ddFbText">把上面的卡拖到下面任意一个筐 —— 我会告诉你对不对。</span>
+      </div>
+
+      <div class="dd-result" id="ddResult">
+        <div class="dd-result-head">
+          <span class="dd-result-grade" id="ddGrade">A+</span>
+          <span class="dd-result-tag">FINAL · 12 / 12 完成</span>
+        </div>
+        <p class="dd-result-msg" id="ddResultMsg"></p>
+      </div>
+    </div>
+
+    <div class="quote-box" style="margin-top:32px;">
+      <span class="quote-mark">"</span>
+      记住一条简化版口诀：<strong>能从清单重建的、含密码的、系统偷偷生成的</strong> —— 三种<span class="em">不要</span> commit。
+      其他的都要。
+      <span class="quote-attr">—— 玩到全对，就内化了</span>
+    </div>
+  </div>
+</section>
+
+<!-- §05 — 救命三连 -->
+<section id="rescue">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>05</strong> / 救命三连</div>
+        <h2 class="section-title">不小心传了<br><span class="em">怎么办</span>。</h2>
+      </div>
+      <p class="section-sub">
+        发现 .env 已经在 GitHub 上了 —— 别慌，但<strong>速度第一</strong>。
+        三步救命，按顺序做。
+      </p>
+    </div>
+
+    <div class="rs-stage">
+      <div class="rs-warn">
+        ⚠ 黄金原则：<strong>一旦 .env 上了公开仓库，里面的所有 key 立刻视作泄露</strong>。
+        哪怕你 5 秒后就 <code>git rm</code> 了 —— 假设有爬虫已经扫到。这条不动摇。
+      </div>
+
+      <ul class="rs-list">
+        <li class="rs-item">
+          <div class="rs-num">01</div>
+          <div>
+            <h3 class="rs-q">第一步：<span class="em">立刻 rotate（替换）密钥</span></h3>
+            <p class="rs-a">去 OpenAI / AWS / Stripe 的控制台，<strong>把那个 key 删掉</strong> —— 重新生成一个新的。
+            原来那串 sk-proj... 从这一刻起作废，谁拿着也用不了。</p>
+            <span class="rs-action">→ 这一步比清 git 历史<strong>重要 100 倍</strong>。先做这个。</span>
+          </div>
+        </li>
+
+        <li class="rs-item">
+          <div class="rs-num">02</div>
+          <div>
+            <h3 class="rs-q">第二步：<span class="em">把 .env 从 git 里踢掉</span></h3>
+            <p class="rs-a">从仓库里删除这个文件，但<strong>本地保留</strong>（你还要用）。然后写进 .gitignore，下次 push 不会再带上去。</p>
+            <span class="rs-cmd">
+              <span class="cm-prompt">$</span>git rm --cached .env<br>
+              <span class="cm-prompt">$</span>echo ".env" >> .gitignore <span class="cm-cmt"># 加进忽略清单</span><br>
+              <span class="cm-prompt">$</span>git commit -m "remove .env from tracking"<br>
+              <span class="cm-prompt">$</span>git push
+            </span>
+            <span class="rs-action">→ 复制给 AI 让它解释每条命令。<code>--cached</code> 是关键 —— 只删 git 里的，不删硬盘上的。</span>
+          </div>
+        </li>
+
+        <li class="rs-item">
+          <div class="rs-num">03</div>
+          <div>
+            <h3 class="rs-q">第三步：<span class="em">极端时清 git 历史</span></h3>
+            <p class="rs-a">就算 .env 现在不在 HEAD 里 —— git 历史快照里还能搜到。
+            如果是<strong>开源项目 / 已经被 fork 过</strong>，需要用 <code>git filter-repo</code> 或 BFG Repo-Cleaner 重写整个历史。然后强制 push。</p>
+            <p class="rs-a" style="margin-top:8px;">这步<strong>有破坏性</strong>，对所有协作者都有影响。私人小项目通常跳过，<strong>直接干掉旧仓库重建</strong>更省事。</p>
+            <span class="rs-action">→ 这一步写在最后是因为：<strong>就算清干净了历史，密钥还是要换</strong>。第 1 步永远跳不过。</span>
+          </div>
+        </li>
+      </ul>
+
+      <div class="hint-strip" style="margin-top:24px;background:var(--accent-soft);">
+        <span class="hint-tag">设计师特供</span>
+        如果不知道用了什么 key —— 看 <code>.env</code> 的内容、看代码里 <code>process.env.XXX</code> 的地方。
+        <strong>每个用过的服务都要去换一次</strong>。AI 可以帮你列清单。
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- §06 — Cheatsheet -->
+<section id="cheat">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>06</strong> / 速查</div>
+        <h2 class="section-title">截图保存<br>这一<span class="em">页</span>。</h2>
+      </div>
+      <p class="section-sub">
+        commit 决策树 + .gitignore 必备清单 + 上传前自检 ——
+        想发项目到 GitHub 之前，<strong>过一遍这页</strong>。
+      </p>
+    </div>
+
+    <div class="cheat-grid">
+      <div class="cheat-block">
+        <h3><span class="em">·</span> 5 类文件 commit 决策树</h3>
+        <div class="tree-deci">
+          <div class="tree-q">这是哪一类？</div>
+
+          <div class="tree-a up">
+            <strong>· 配置文件</strong>（package.json / tsconfig.json / vite.config.js）<br>
+            → ✅ <strong>必须 commit</strong>。别人靠这份装项目。
+          </div>
+
+          <div class="tree-a up">
+            <strong>· 源码 .tsx / .css / .js</strong>（src/ 下的所有手写代码）<br>
+            → ✅ <strong>必须 commit</strong>。这就是项目本身。
+          </div>
+
+          <div class="tree-a up">
+            <strong>· 资源</strong>（public/ 下的 logo、字体、图片）<br>
+            → ✅ <strong>大部分要 commit</strong>。除非超过 50 MB —— 那要单独处理。
+          </div>
+
+          <div class="tree-a no">
+            <strong>· 隐藏 .env / .DS_Store</strong>（密码 + 系统垃圾）<br>
+            → ❌ <strong>绝对不 commit</strong>。.env 是密码本；.DS_Store 是 macOS 偷偷生成的没用文件。
+          </div>
+
+          <div class="tree-a no">
+            <strong>· 生成产物</strong>（node_modules / dist / .next）<br>
+            → ❌ <strong>不 commit</strong>。能从配置 + 源码自动重建，没意义传。
+          </div>
+
+          <div class="tree-a">
+            <strong>· 例外</strong>：<code>.env.example</code>（空模板）<strong>要 commit</strong>，
+            <code>.gitignore</code> 自己<strong>也要 commit</strong>。
+          </div>
+        </div>
+      </div>
+
+      <div class="cheat-block">
+        <h3><span class="em">·</span> .gitignore 必备 5 条</h3>
+        <div class="gimust">
+          <span class="gm-fname">.gitignore</span><br>
+          <span class="gm-cmt"># 1. 零件柜（最大头）</span><br>
+          <span class="gm-rule">node_modules/</span><br>
+          <br>
+          <span class="gm-cmt"># 2. 打包产物</span><br>
+          <span class="gm-rule">dist/</span><br>
+          <span class="gm-rule">.next/</span><br>
+          <span class="gm-rule">build/</span><br>
+          <br>
+          <span class="gm-cmt"># 3. 密码本（最重要）</span><br>
+          <span class="gm-rule">.env</span><br>
+          <span class="gm-rule">.env.local</span><br>
+          <span class="gm-rule">.env.*.local</span><br>
+          <br>
+          <span class="gm-cmt"># 4. 系统垃圾</span><br>
+          <span class="gm-rule">.DS_Store</span><br>
+          <span class="gm-rule">Thumbs.db</span><br>
+          <br>
+          <span class="gm-cmt"># 5. 各种 log</span><br>
+          <span class="gm-rule">*.log</span><br>
+          <span class="gm-rule">.cache/</span>
+        </div>
+        <p style="margin-top:14px;font-size:12px;color:var(--ink-soft);line-height:1.55;">
+          实际上 GitHub 给每种语言准备了<strong>官方模板</strong> —— 创建仓库时勾一下 "Add .gitignore: Node"，自动生成 100 行的版本，能省事很多。
+        </p>
+      </div>
+    </div>
+
+    <div class="cheat-block" style="margin-top:18px;">
+      <h3><span class="em">·</span> 上传到 GitHub 前 · <span class="em">自检 5 条</span></h3>
+      <ul class="checklist">
+        <li><span><strong>确认 .gitignore 存在</strong>，并且第一行就是 <code>node_modules/</code> 或 <code>.env</code>。</span></li>
+        <li><span><strong>用 git status 扫一眼</strong> —— <code>.env</code>、密码、API key 这些字眼<strong>不能</strong>在"to be committed" 列表里。</span></li>
+        <li><span><strong>搜 .tsx / .js 文件</strong>，看有没有<strong>硬编码的 key</strong>（"sk-..." / "AKIA..." / "sk_live_..."）。有就改成读 <code>process.env.XXX</code>。</span></li>
+        <li><span><strong>git log 看一眼历史</strong>，确认从来没有 commit 过 .env。万一有 —— 回 §05 救命。</span></li>
+        <li><span><strong>仓库设为 Private 还是 Public？</strong>不确定就先 Private。Public 之前再过一次以上 4 条。</span></li>
+      </ul>
+      <p style="margin-top:14px;font-size:12px;color:var(--ink-soft);line-height:1.55;border-top:1px dashed var(--line);padding-top:12px;">
+        <strong>最后一条最实用：</strong>去 GitHub 设置里开 <strong>Secret Scanning</strong>。它会自动扫你 push 的代码、发现 key 立刻邮件提醒。免费、强烈建议开。
+      </p>
+    </div>
+
+    <a href="g1-commit-branch-figma.html" class="next-post">
+      <div>
+        <div class="np-tag">下一篇 · NEXT · G1 · 版本控制</div>
+        <h4>Git 的 branch <span class="em">不是</span> Figma 的那种</h4>
+        <p>F 系列<strong>到此结束</strong> —— 你已经知道项目是什么、装什么、传什么、不传什么。下一站 G 系列从<strong>版本控制</strong>开始：commit、branch、merge —— 设计师视角讲清楚。</p>
+      </div>
+      <span class="np-cta">继续阅读 <span class="arr">→</span></span>
+    </a>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div class="byline-wrap">
+      <div class="byline">
+        <img class="avatar" src="author.jpg" alt="范米花儿">
+        <div class="byline-meta">
+          <div class="byline-label"><span class="dot"></span>作者 · WRITTEN BY</div>
+          <h3 class="byline-name">嗨，我是 <span class="em">范米花儿</span></h3>
+          <p class="byline-tag">一份给设计师的代码入门 ——<br>不需要会写，知道大概怎么回事，跟前端 / AI 沟通就顺多了。</p>
+          <div class="byline-contact">
+            <span class="contact-label">微信</span>
+            <span class="contact-id">vanvan_0422</span>
+            <span class="contact-hint">想看什么主题，加我聊</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="footer-meta">
+      做于 <span class="mono">2026</span> · 用 <span class="heart">●</span> 写给 <span class="mono">DESIGNERS &amp; DEVELOPERS</span>
+    </div>
+  </div>
+</footer>
+
+<div class="toast" id="toast">已重置</div>
+
+<script>
+// ==========================================================
+//  §01 project structure — row ↔ explanation
+// ==========================================================
+(function () {
+  const stage = document.getElementById('psStage');
+  if (!stage) return;
+  const rows  = stage.querySelectorAll('.ps-row');
+  const tagEl = document.getElementById('psTag');
+  const nameEl = document.getElementById('psName');
+  const descEl = document.getElementById('psDesc');
+  const metaEl = document.getElementById('psMeta');
+  const deciEl = document.getElementById('psDeci');
+
+  const dict = {
+    root: {
+      tag: '00 · ROOT', pin: '根目录', title: '一个完整的项目',
+      desc: '所有项目都长这样 —— 项目名当作根文件夹，里面装 5 类文件。设计师常误以为这是一团乱麻 —— 其实有规律。',
+      meta: '类比：Figma 文件本身 —— 名字 + 内部页面 + 资源。',
+      deci: 'commit', deciText: '✅ 整个项目都 commit · 当然要 git 管它'
+    },
+    package: {
+      tag: '01 · 配置 / CONFIG', pin: 'config', title: 'package.json · 项目身份证',
+      desc: '项目最重要的文件之一。写明项目叫什么、用什么零件、能跑什么命令。F1 那篇全程在讲它。',
+      meta: '类比：Figma File Settings + Library 引用清单。',
+      deci: 'commit', deciText: '✅ 必须 commit · 别人就靠它装项目'
+    },
+    lock: {
+      tag: '01 · 配置 / CONFIG', pin: 'config', title: 'package-lock.json · 进货单',
+      desc: 'npm 自动生成的"精确进货单"，锁死每个零件的版本。<strong>不要手改</strong>，但<strong>必须 commit</strong>。',
+      meta: '类比：摄影棚记录的精确器材清单 —— 别人复刻才能装出一样。',
+      deci: 'commit', deciText: '✅ commit · 让别人装出和你完全相同的版本'
+    },
+    vite: {
+      tag: '01 · 配置 / CONFIG', pin: 'config', title: 'vite.config.js · 打包配置',
+      desc: '告诉打包工具怎么处理这个项目 —— 别名、插件、构建目标。AI 偶尔会改它。',
+      meta: '类比：Figma 的 Plugin 设置 —— 调它影响整个文件的处理方式。',
+      deci: 'commit', deciText: '✅ commit · 项目核心配置'
+    },
+    ts: {
+      tag: '01 · 配置 / CONFIG', pin: 'config', title: 'tsconfig.json · TS 设置',
+      desc: 'TypeScript 编译器的开关清单：严不严格、目标版本、路径别名。改坏了整个项目都报错。',
+      meta: '类比：Auto Layout 的全局规则 —— 改一处影响全文件。',
+      deci: 'commit', deciText: '✅ commit · 影响所有 .tsx 文件的解释方式'
+    },
+    readme: {
+      tag: '01 · 配置 / CONFIG', pin: 'config', title: 'README.md · 项目说明书',
+      desc: '给人看的。第一眼介绍这个项目是干嘛的、怎么跑、谁写的。GitHub 主页直接显示它。',
+      meta: '类比：Figma 文件的 Cover 页 —— 别人打开第一眼看的。',
+      deci: 'commit', deciText: '✅ commit · 别人靠它认识你的项目'
+    },
+    env: {
+      tag: '02 · 隐藏 / HIDDEN', pin: '⚠ 危险', title: '.env · 密码本',
+      desc: '所有 API key、密码、token 都在这。<strong>这文件名前面有个点 → 默认隐藏</strong>。Finder 默认看不见。F4 这篇主要就在讲它。',
+      meta: '类比：钱包 + 钥匙串 —— 谁看到就能花你的钱。',
+      deci: 'ignore', deciText: '❌ 绝对不能 commit · 一上 GitHub 就视为永远泄露'
+    },
+    envex: {
+      tag: '02 · 隐藏 / HIDDEN', pin: 'template', title: '.env.example · 空模板',
+      desc: '一份没有真值的 .env，只有 key 名 —— 让协作者知道<strong>需要哪些密钥</strong>，但不暴露你的真值。这是行业惯例。',
+      meta: '类比：Figma 文件里的 placeholder 文字 —— 占位说明用。',
+      deci: 'commit', deciText: '✅ commit · 是模板不是真值，安全'
+    },
+    gitignore: {
+      tag: '02 · 隐藏 / HIDDEN', pin: 'rules', title: '.gitignore · 不上传清单',
+      desc: '项目里最重要的"门口牌子"。每行一条规则，告诉 git 哪些文件别管。它<strong>本身要 commit</strong> —— 让所有人共用同一份。',
+      meta: '类比：图书馆门口的"禁带书目" —— 大家照着办。',
+      deci: 'commit', deciText: '✅ commit · 团队所有人靠它判断什么不传'
+    },
+    dsstore: {
+      tag: '02 · 隐藏 / HIDDEN', pin: 'macOS', title: '.DS_Store · 系统垃圾',
+      desc: 'macOS 在每个文件夹里偷偷生成的小文件 —— 记录文件夹视图状态。<strong>无用</strong>，但 macOS 用户的项目里到处都是。',
+      meta: '类比：Figma 偶尔留下的 thumbnail 缓存 —— 没用，删了重建。',
+      deci: 'ignore', deciText: '❌ 不 commit · 全局加进 .gitignore 一了百了'
+    },
+    git: {
+      tag: '02 · 隐藏 / HIDDEN', pin: 'git 自己', title: '.git/ · 版本历史',
+      desc: 'git 自己用来记录所有版本历史的"大脑文件夹"。<strong>千万别手动碰</strong>。删了它 = 丢失所有 commit 记录。',
+      meta: '类比：Figma 的 Version History —— 但是是文件夹形式存在硬盘里。',
+      deci: 'depends', deciText: '◐ 不需要 commit · 它本身就是 git · 不能放进自己里'
+    },
+    node: {
+      tag: '03 · 生成产物 / BUILD', pin: '1.2 GB', title: 'node_modules/ · 零件柜',
+      desc: 'F1 主角。所有装好的零件在这。本地<strong>不能删</strong>（项目跑不起来），但<strong>不 commit</strong> —— 太大、能从 package.json 重建。',
+      meta: '类比：摄影棚里所有借来的器材柜 —— 用的时候在，不需要带走。',
+      deci: 'ignore', deciText: '❌ 不 commit · .gitignore 里几乎永远是第一行'
+    },
+    dist: {
+      tag: '03 · 生成产物 / BUILD', pin: 'output', title: 'dist/ · 打包产物',
+      desc: '<code>npm run build</code> 输出的文件夹 —— 压缩、优化后的<strong>上线版本</strong>。每次 build 重新生成，所以不传。',
+      meta: '类比：导出的 PDF —— 源文件改了重新导就行，不用版本管理它。',
+      deci: 'ignore', deciText: '❌ 不 commit · 自动生成的，传了也是浪费'
+    },
+    next: {
+      tag: '03 · 生成产物 / BUILD', pin: 'cache', title: '.next/ · Next 缓存',
+      desc: 'Next.js 项目特有 —— Next 的工作缓存 + 中间产物。占空间、变化快、自动重建。',
+      meta: '类比：Figma 的 Auto-save 临时文件 —— 一直在变，不用手管。',
+      deci: 'ignore', deciText: '❌ 不 commit · 完全自动生成'
+    },
+    src: {
+      tag: '04 · 源码 / SOURCE', pin: 'src/', title: 'src/ · 你写的代码',
+      desc: '所有<strong>手写的源代码</strong>都在这个文件夹里 —— .tsx 组件、.css 样式、.ts 类型。这是项目的<strong>本体</strong>。',
+      meta: '类比：Figma 文件里所有 Frame、组件、文字 —— 真正你设计的部分。',
+      deci: 'commit', deciText: '✅ 全部 commit · 这就是项目本身'
+    },
+    app: {
+      tag: '04 · 源码 / SOURCE', pin: '.tsx', title: 'App.tsx · 主组件',
+      desc: '一个典型的 React 组件文件。.tsx = TypeScript + JSX。手写的，必须 commit。',
+      meta: '类比：Figma 里的主页面 Frame —— 项目从这开始。',
+      deci: 'commit', deciText: '✅ commit · 你写的每一行代码都要进 git'
+    },
+    btn: {
+      tag: '04 · 源码 / SOURCE', pin: '.tsx', title: 'Button.tsx · 一个组件',
+      desc: '一个独立的小组件 —— 可能在多个地方被用。源码必须 commit。',
+      meta: '类比：Figma Library 里的 Button 组件。',
+      deci: 'commit', deciText: '✅ commit · 组件源代码'
+    },
+    css: {
+      tag: '04 · 源码 / SOURCE', pin: '.css', title: 'styles.css · 样式',
+      desc: '手写的 CSS 文件 —— 颜色、字号、间距规则。可能是全局样式或某组件专用。',
+      meta: '类比：Figma 的 Style / Variable 定义。',
+      deci: 'commit', deciText: '✅ commit · 视觉系统的源头'
+    },
+    public: {
+      tag: '05 · 资源 / ASSETS', pin: 'public/', title: 'public/ · 静态资源',
+      desc: '所有<strong>不会被代码处理</strong>的资源都丢这 —— 图片、字体、favicon、机器人协议文件。原样照搬到上线版本。',
+      meta: '类比：Figma 项目里的 Asset 资源页 —— 设计用的素材。',
+      deci: 'depends', deciText: '◐ 大部分要 commit · 但单文件 > 50 MB 要单独处理（Git LFS）'
+    },
+    logo: {
+      tag: '05 · 资源 / ASSETS', pin: 'image', title: 'logo.png · 品牌图',
+      desc: '小图片资源 —— 几十 KB 到几 MB。这种放心 commit。',
+      meta: '类比：Figma 里上传的 logo 图层。',
+      deci: 'commit', deciText: '✅ commit · 项目的视觉资产'
+    },
+    font: {
+      tag: '05 · 资源 / ASSETS', pin: 'fonts/', title: 'fonts/ · 字体文件',
+      desc: '自定义字体的 .woff2 / .ttf 文件。注意<strong>版权</strong> —— 不是所有字体都能 commit 到公开仓库。',
+      meta: '类比：Figma 用的 Custom Font —— 上传到平台前要确认有授权。',
+      deci: 'depends', deciText: '◐ 看授权 · 开源字体 commit · 商用付费字体不能上公开仓库'
+    }
+  };
+
+  function setActive(key) {
+    rows.forEach(r => r.classList.toggle('is-active', r.dataset.pk === key));
+    const d = dict[key];
+    if (!d) return;
+    tagEl.textContent = d.tag;
+    nameEl.innerHTML = '<span class="pin">' + d.pin + '</span>' + d.title;
+    descEl.innerHTML = d.desc;
+    metaEl.innerHTML = d.meta;
+    deciEl.dataset.decision = d.deci;
+    deciEl.innerHTML = d.deciText;
+  }
+
+  rows.forEach(row => {
+    row.addEventListener('mouseenter', () => setActive(row.dataset.pk));
+    row.addEventListener('click',      () => setActive(row.dataset.pk));
+  });
+
+  // default
+  setTimeout(() => setActive('env'), 600);
+})();
+
+// ==========================================================
+//  §03 .gitignore — click rule → grey out files
+// ==========================================================
+(function () {
+  const lines = document.querySelectorAll('#giLines .gi-line:not(.is-cmt)');
+  const files = document.querySelectorAll('#giFiles .gi-file');
+  const upNum = document.getElementById('giUpNum');
+  const noNum = document.getElementById('giNoNum');
+  const list  = document.getElementById('giOutList');
+  if (!lines.length) return;
+
+  // Active rules — Set of rule strings
+  const active = new Set();
+
+  // Pattern matcher: simplified .gitignore semantics
+  function matches(filename, rule) {
+    // exact name match (e.g. .env, .DS_Store)
+    if (filename === rule) return true;
+    // folder rule: 'node_modules/' matches anything starting with that
+    if (rule.endsWith('/')) {
+      return filename === rule || filename.startsWith(rule);
+    }
+    // wildcard: '*.log' → endsWith('.log')
+    if (rule.startsWith('*')) {
+      const ext = rule.slice(1);
+      return filename.endsWith(ext);
+    }
+    return false;
+  }
+
+  function recompute() {
+    let up = 0, no = 0;
+    const upItems = [];
+    const noItems = [];
+
+    files.forEach(f => {
+      const name = f.dataset.file;
+      let ignored = false;
+      for (const rule of active) {
+        if (matches(name, rule)) { ignored = true; break; }
+      }
+      f.classList.toggle('is-ignored', ignored);
+      if (ignored) {
+        no++;
+        noItems.push(name);
+      } else {
+        up++;
+        upItems.push(name);
+      }
+    });
+
+    upNum.textContent = up;
+    noNum.textContent = no;
+
+    // render outcome list
+    list.innerHTML = '';
+    upItems.forEach(name => {
+      const li = document.createElement('div');
+      li.className = 'gi-out-item up';
+      li.innerHTML = '<span class="gi-out-name">' + name + '</span><span class="gi-out-state">↑ 上传</span>';
+      list.appendChild(li);
+    });
+    noItems.forEach(name => {
+      const li = document.createElement('div');
+      li.className = 'gi-out-item no';
+      li.innerHTML = '<span class="gi-out-name">' + name + '</span><span class="gi-out-state">忽略</span>';
+      list.appendChild(li);
+    });
+  }
+
+  function pulseFiles(rule) {
+    files.forEach(f => {
+      if (matches(f.dataset.file, rule)) {
+        f.classList.add('is-pulsed');
+        setTimeout(() => f.classList.remove('is-pulsed'), 600);
+      }
+    });
+  }
+
+  lines.forEach(line => {
+    line.addEventListener('click', () => {
+      const rule = line.dataset.rule;
+      // toggle active rule
+      const isActive = line.classList.toggle('is-active');
+      if (isActive) {
+        active.add(rule);
+        pulseFiles(rule);
+      } else {
+        active.delete(rule);
+      }
+      recompute();
+    });
+  });
+
+  // Default state: all rules active to show "the .gitignore actually doing its job"
+  lines.forEach(l => {
+    const rule = l.dataset.rule;
+    if (rule) { l.classList.add('is-active'); active.add(rule); }
+  });
+  recompute();
+})();
+
+// ==========================================================
+//  §04 drag & drop classification game
+// ==========================================================
+(function () {
+  // 12 cards
+  const cardData = [
+    { id: 'package',       name: 'package.json',       kind: 'config', tag: '配置',   answer: 'commit', why: '项目身份证 —— 别人靠这份才能装出一模一样的项目。' },
+    { id: 'env',           name: '.env',                kind: 'hidden', tag: '隐藏',   answer: 'local',  why: '密码本 —— 一旦 commit，整个互联网都看得到，AWS/OpenAI key 立刻泄露。' },
+    { id: 'node_modules',  name: 'node_modules/',       kind: 'build',  tag: '产物',   answer: 'local',  why: '1.2 GB 零件柜。能从 package.json 重建，commit 等于浪费 GitHub 的硬盘。' },
+    { id: 'button',        name: 'src/Button.tsx',      kind: 'source', tag: '源码',   answer: 'commit', why: '你手写的组件 —— 这就是项目本身，必须 commit。' },
+    { id: 'dsstore',       name: '.DS_Store',           kind: 'hidden', tag: '隐藏',   answer: 'local',  why: 'macOS 偷偷生成的没用文件，跟项目内容无关，全局忽略一了百了。' },
+    { id: 'dist',          name: 'dist/index.js',       kind: 'build',  tag: '产物',   answer: 'local',  why: 'npm run build 自动生成的打包产物，每次 build 重出，不传。' },
+    { id: 'vite',          name: 'vite.config.js',      kind: 'config', tag: '配置',   answer: 'commit', why: '打包工具的配置 —— 项目核心配置，必须 commit 让别人能跑。' },
+    { id: 'logo',          name: 'public/logo.png',     kind: 'asset',  tag: '资源',   answer: 'commit', why: '设计资产，几十 KB 到几 MB，commit 没问题。但单文件 > 50 MB 要走 Git LFS。' },
+    { id: 'readme',        name: 'README.md',           kind: 'config', tag: '说明',   answer: 'commit', why: '项目说明书，GitHub 主页直接显示它，必须有。' },
+    { id: 'gitignore',     name: '.gitignore',          kind: 'hidden', tag: '隐藏',   answer: 'commit', why: '它本身要 commit —— 让团队所有人共用同一份"不上传清单"。' },
+    { id: 'tsconfig',      name: 'tsconfig.json',       kind: 'config', tag: '配置',   answer: 'commit', why: 'TypeScript 编译规则。删了项目编译都跑不起来，必须 commit。' },
+    { id: 'secrets',       name: 'secrets.json',        kind: 'hidden', tag: '密码',   answer: 'local',  why: '光听名字就知道是密码 —— 只要文件里有 API key / token / password，一律不 commit。' }
+  ];
+
+  const pool       = document.getElementById('ddPool');
+  const binCommit  = document.getElementById('ddBinCommit');
+  const binLocal   = document.getElementById('ddBinLocal');
+  const progEl     = document.getElementById('ddProg');
+  const okEl       = document.getElementById('ddOK');
+  const badEl      = document.getElementById('ddBad');
+  const fbBox      = document.getElementById('ddFeedback');
+  const fbTag      = document.getElementById('ddFbTag');
+  const fbText     = document.getElementById('ddFbText');
+  const result     = document.getElementById('ddResult');
+  const grade      = document.getElementById('ddGrade');
+  const resultMsg  = document.getElementById('ddResultMsg');
+  const resetBtn   = document.getElementById('ddReset');
+  const bins       = document.querySelectorAll('.dd-bin');
+
+  let state = {
+    placed: 0,
+    ok: 0,
+    bad: 0,
+    dragId: null
+  };
+
+  function shuffle(a) {
+    const b = a.slice();
+    for (let i = b.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [b[i], b[j]] = [b[j], b[i]];
+    }
+    return b;
+  }
+
+  function renderPool() {
+    pool.innerHTML = '';
+    shuffle(cardData).forEach(c => {
+      const el = document.createElement('div');
+      el.className = 'dd-card';
+      el.draggable = true;
+      el.dataset.id = c.id;
+      el.dataset.kind = c.kind;
+      el.dataset.answer = c.answer;
+      el.innerHTML = '<span class="dd-icon"></span><span class="dd-name">' + c.name + '</span><span class="dd-mini-tag">' + c.tag + '</span>';
+      el.addEventListener('dragstart', onDragStart);
+      el.addEventListener('dragend', onDragEnd);
+      pool.appendChild(el);
+    });
+  }
+
+  function onDragStart(e) {
+    state.dragId = e.currentTarget.dataset.id;
+    e.currentTarget.classList.add('dragging');
+    try { e.dataTransfer.setData('text/plain', state.dragId); } catch (_) {}
+    e.dataTransfer.effectAllowed = 'move';
+  }
+  function onDragEnd(e) {
+    e.currentTarget.classList.remove('dragging');
+    state.dragId = null;
+    bins.forEach(b => b.classList.remove('over'));
+  }
+
+  bins.forEach(bin => {
+    bin.addEventListener('dragover', e => {
+      e.preventDefault();
+      bin.classList.add('over');
+    });
+    bin.addEventListener('dragleave', () => bin.classList.remove('over'));
+    bin.addEventListener('drop', e => {
+      e.preventDefault();
+      bin.classList.remove('over');
+      const id = state.dragId || (e.dataTransfer ? e.dataTransfer.getData('text/plain') : null);
+      if (!id) return;
+      const card = pool.querySelector('.dd-card[data-id="' + id + '"]');
+      if (!card || card.classList.contains('placed')) return;
+
+      const data = cardData.find(c => c.id === id);
+      const target = bin.dataset.bin;       // 'commit' or 'local'
+      const correct = data.answer === target;
+
+      // place a chip in the bin
+      const dropZone = bin.querySelector('.dd-bin-drop');
+      const placed = document.createElement('span');
+      placed.className = 'dd-placed ' + (correct ? 'is-good' : 'is-bad');
+      placed.innerHTML = '<span class="dd-mark">' + (correct ? '✓' : '✕') + '</span>' + data.name;
+      dropZone.appendChild(placed);
+
+      card.classList.add('placed');
+      state.placed++;
+      if (correct) state.ok++; else state.bad++;
+      progEl.textContent = state.placed;
+      okEl.textContent = state.ok;
+      badEl.textContent = state.bad;
+
+      // feedback
+      fbBox.classList.remove('is-good', 'is-bad');
+      if (correct) {
+        fbBox.classList.add('is-good');
+        fbTag.textContent = '✓ 放对了';
+        fbText.innerHTML = '<strong>' + data.name + '</strong> · ' + data.why;
+      } else {
+        fbBox.classList.add('is-bad');
+        fbTag.textContent = '✕ 放错了';
+        const expectLabel = data.answer === 'commit' ? '✅ 上传到 GitHub' : '❌ 只在本机';
+        fbText.innerHTML = '<strong>' + data.name + '</strong> 应该放在 <strong>' + expectLabel + '</strong> · ' + data.why;
+      }
+
+      // toast
+      toast(correct ? '放对了 ✓' : '放错位置 ✕', correct ? 'good' : 'bad');
+
+      if (state.placed === cardData.length) showResult();
+    });
+  });
+
+  function showResult() {
+    const score = state.ok;
+    const total = cardData.length;
+    const ratio = score / total;
+    let g, msg;
+    if (ratio === 1) {
+      g = 'A+';
+      msg = '<strong>满分 12 / 12</strong>。<span class="em">五类文件、commit 决策、密码本意识</span>都到位了 —— F 系列内化完成。下一站 G 系列：Git 版本控制。';
+    } else if (ratio >= 0.85) {
+      g = 'A';
+      msg = '<strong>很好</strong>。错的那 1-2 个值得回 §01 看一眼分类图 —— 通常错在<strong>"隐藏文件不一定都要忽略"</strong> 这种边角情况上。';
+    } else if (ratio >= 0.6) {
+      g = 'B';
+      msg = '<strong>及格</strong>。回 §01 把 5 类的颜色记一下，再回来玩一次 —— 错的那几张往往是 <code style="background:rgba(255,255,255,0.12);padding:1px 6px;border-radius:3px;">.gitignore</code> 自己 / <code style="background:rgba(255,255,255,0.12);padding:1px 6px;border-radius:3px;">.env.example</code> / <code style="background:rgba(255,255,255,0.12);padding:1px 6px;border-radius:3px;">public/</code> 这种<strong>"看场景"</strong>的。';
+    } else {
+      g = 'C';
+      msg = '<strong>需要重新看 §01 + §02</strong>。重点：<span class="em">.env 不能 commit</span>，<span class="em">node_modules 也不</span>。这两条是底线。再玩一次。';
+    }
+    grade.textContent = g;
+    resultMsg.innerHTML = msg;
+    result.classList.add('show');
+    setTimeout(() => result.scrollIntoView({ behavior: 'smooth', block: 'center' }), 300);
+  }
+
+  function reset() {
+    state = { placed: 0, ok: 0, bad: 0, dragId: null };
+    progEl.textContent = '0';
+    okEl.textContent = '0';
+    badEl.textContent = '0';
+    binCommit.innerHTML = '';
+    binLocal.innerHTML = '';
+    result.classList.remove('show');
+    fbBox.classList.remove('is-good', 'is-bad');
+    fbTag.textContent = '提示';
+    fbText.textContent = '把上面的卡拖到下面任意一个筐 —— 我会告诉你对不对。';
+    renderPool();
+    toast('已重置');
+  }
+
+  resetBtn.addEventListener('click', reset);
+  renderPool();
+})();
+
+// ==========================================================
+//  Toast helper
+// ==========================================================
+const toastEl = document.getElementById('toast');
+let toastTimer;
+function toast(msg, kind) {
+  if (!toastEl) return;
+  toastEl.textContent = msg;
+  toastEl.className = 'toast show' + (kind ? ' ' + kind : '');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => { toastEl.className = 'toast'; }, 1600);
+}
+
+// ==========================================================
+//  Roadmap modal
+// ==========================================================
+(function(){
+  var modal = document.getElementById('rm-modal');
+  if (!modal) return;
+  var openBtns = document.querySelectorAll('[data-rm-open]');
+  var closeBtns = modal.querySelectorAll('[data-rm-close]');
+  function open() { modal.hidden = false; document.body.style.overflow = 'hidden'; }
+  function close() { modal.hidden = true; document.body.style.overflow = ''; }
+  openBtns.forEach(function(b){ b.addEventListener('click', function(e){ e.preventDefault(); open(); }); });
+  closeBtns.forEach(function(b){ b.addEventListener('click', close); });
+  document.addEventListener('keydown', function(e){ if (e.key === 'Escape' && !modal.hidden) close(); });
+})();
+</script>
+
+
+<!-- 路线图弹窗 -->
+<div class="rm-modal" id="rm-modal" hidden>
+  <div class="rm-backdrop" data-rm-close></div>
+  <div class="rm-dialog" role="dialog" aria-label="完整路线图">
+    <button class="rm-close" data-rm-close aria-label="关闭">✕</button>
+    <div class="rm-header">
+      <div class="rm-tag">完整路线图 · ROADMAP</div>
+      <h3 class="rm-title">5 模块 <span class="rm-em">×</span> 3 层难度</h3>
+      <p class="rm-sub">15 篇 · 未完待续 →</p>
+    </div>
+    <div class="rm-body">
+      <div class="rm-mod">
+        <div class="rm-mod-key">A · 单元素与组件</div>
+        <div class="rm-mod-list">
+          <a href="basics-figma.html" class="rm-cell"><span class="rm-cell-code">A0</span><span class="rm-cell-name">三件套 · HTML / CSS / JS</span><span class="rm-cell-tier">入门</span></a>
+          <a href="box-figma.html" class="rm-cell"><span class="rm-cell-code">A1</span><span class="rm-cell-name">盒子 · Auto Layout</span><span class="rm-cell-tier">基础</span></a>
+          <a href="components-figma.html" class="rm-cell"><span class="rm-cell-code">A2</span><span class="rm-cell-name">组件 · Variants &amp; Props</span><span class="rm-cell-tier">基础</span></a>
+          <a href="button-system-figma.html" class="rm-cell"><span class="rm-cell-code">A3</span><span class="rm-cell-name">Button System · 组件演化</span><span class="rm-cell-tier">进阶</span></a>
+        </div>
+      </div>
+      <div class="rm-mod">
+        <div class="rm-mod-key">B · 多组件协作</div>
+        <div class="rm-mod-list">
+          <a href="page-figma.html" class="rm-cell"><span class="rm-cell-code">B0</span><span class="rm-cell-name">拼页面 · 组件嵌套</span><span class="rm-cell-tier">入门</span></a>
+          <a href="data-flow-figma.html" class="rm-cell"><span class="rm-cell-code">B1</span><span class="rm-cell-name">数据流 · 概念</span><span class="rm-cell-tier">基础</span></a>
+          <a href="data-flow-cases-figma.html" class="rm-cell"><span class="rm-cell-code">B2</span><span class="rm-cell-name">数据流 · 实战 5 案例</span><span class="rm-cell-tier">进阶</span></a>
+        </div>
+      </div>
+      <div class="rm-mod">
+        <div class="rm-mod-key">C · 视觉系统</div>
+        <div class="rm-mod-list">
+          <a href="tokens-figma.html" class="rm-cell"><span class="rm-cell-code">C0</span><span class="rm-cell-name">Variables / Tokens 入门</span><span class="rm-cell-tier">入门</span></a>
+          <a href="colors-type-figma.html" class="rm-cell"><span class="rm-cell-code">C1</span><span class="rm-cell-name">Colors / Type / Spacing</span><span class="rm-cell-tier">基础</span></a>
+          <a href="theme-switch-figma.html" class="rm-cell"><span class="rm-cell-code">C2</span><span class="rm-cell-name">Theme 切换实战</span><span class="rm-cell-tier">进阶</span></a>
+        </div>
+      </div>
+      <div class="rm-mod">
+        <div class="rm-mod-key">D · 状态与交互</div>
+        <div class="rm-mod-list">
+          <a href="states-figma.html" class="rm-cell"><span class="rm-cell-code">D0</span><span class="rm-cell-name">视觉态 · 看得见的状态</span><span class="rm-cell-tier">入门</span></a>
+          <a href="interactive-figma.html" class="rm-cell"><span class="rm-cell-code">D1</span><span class="rm-cell-name">Interactive Component</span><span class="rm-cell-tier">基础</span></a>
+          <a href="transition-figma.html" class="rm-cell"><span class="rm-cell-code">D2</span><span class="rm-cell-name">动画 · Transition</span><span class="rm-cell-tier">进阶</span></a>
+        </div>
+      </div>
+      <div class="rm-mod">
+        <div class="rm-mod-key">E · 工程化</div>
+        <div class="rm-mod-list">
+          <a href="naming-figma.html" class="rm-cell"><span class="rm-cell-code">E0</span><span class="rm-cell-name">命名 / 图层规范</span><span class="rm-cell-tier">入门</span></a>
+          <a href="handoff-figma.html" class="rm-cell"><span class="rm-cell-code">E2</span><span class="rm-cell-name">Handoff &amp; 设计系统</span><span class="rm-cell-tier">进阶</span></a>
+        </div>
+      </div>
+      <div class="rm-mod">
+        <div class="rm-mod-key">F · 工程入门</div>
+        <div class="rm-mod-list">
+          <a href="f1-npm-figma.html" class="rm-cell"><span class="rm-cell-code">F1</span><span class="rm-cell-name">npm 是什么</span><span class="rm-cell-tier">入门</span></a>
+          <a href="f2-import-figma.html" class="rm-cell"><span class="rm-cell-code">F2</span><span class="rm-cell-name">import 与路径</span><span class="rm-cell-tier">入门</span></a>
+          <a href="f3-dev-build-figma.html" class="rm-cell"><span class="rm-cell-code">F3</span><span class="rm-cell-name">dev vs build</span><span class="rm-cell-tier">基础</span></a>
+          <a href="f4-hidden-files-figma.html" class="rm-cell rm-cell-current"><span class="rm-cell-code">F4</span><span class="rm-cell-name">看不见的文件</span><span class="rm-cell-tier rm-tier-current">基础</span></a>
+        </div>
+      </div>
+      <div class="rm-mod">
+        <div class="rm-mod-key">G · 版本控制</div>
+        <div class="rm-mod-list">
+          <a href="g1-commit-branch-figma.html" class="rm-cell"><span class="rm-cell-code">G1</span><span class="rm-cell-name">commit / branch</span><span class="rm-cell-tier">入门</span></a>
+          <a href="g2-conflict-figma.html" class="rm-cell"><span class="rm-cell-code">G2</span><span class="rm-cell-name">冲突怎么解</span><span class="rm-cell-tier">基础</span></a>
+          <a href="g3-pr-review-figma.html" class="rm-cell"><span class="rm-cell-code">G3</span><span class="rm-cell-name">PR / Review</span><span class="rm-cell-tier">进阶</span></a>
+        </div>
+      </div>
+      <div class="rm-mod">
+        <div class="rm-mod-key">H · 浏览器调试</div>
+        <div class="rm-mod-list">
+          <a href="h1-devtools-elements-figma.html" class="rm-cell"><span class="rm-cell-code">H1</span><span class="rm-cell-name">DevTools Elements</span><span class="rm-cell-tier">入门</span></a>
+          <a href="h2-console-error-figma.html" class="rm-cell"><span class="rm-cell-code">H2</span><span class="rm-cell-name">Console 报错</span><span class="rm-cell-tier">基础</span></a>
+          <a href="h3-network-figma.html" class="rm-cell"><span class="rm-cell-code">H3</span><span class="rm-cell-name">Network 面板</span><span class="rm-cell-tier">进阶</span></a>
+        </div>
+      </div>
+      <div class="rm-mod">
+        <div class="rm-mod-key">J · 上线</div>
+        <div class="rm-mod-list">
+          <a href="j1-dns-figma.html" class="rm-cell"><span class="rm-cell-code">J1</span><span class="rm-cell-name">DNS / 域名</span><span class="rm-cell-tier">基础</span></a>
+          <a href="j2-vercel-figma.html" class="rm-cell"><span class="rm-cell-code">J2</span><span class="rm-cell-name">Vercel 部署</span><span class="rm-cell-tier">基础</span></a>
+          <a href="j3-cache-cdn-figma.html" class="rm-cell"><span class="rm-cell-code">J3</span><span class="rm-cell-name">缓存 / CDN</span><span class="rm-cell-tier">进阶</span></a>
+        </div>
+      </div>
+    </div>
+    <div class="rm-footer">
+      <span>未完待续 · 想看什么主题加我聊</span>
+      <span class="rm-wechat">微信 vanvan_0422</span>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

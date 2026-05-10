@@ -1,0 +1,3033 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>一键部署，背后做了 7 件事 — Vercel / 上线流程拆解</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Noto+Sans+SC:wght@300;400;500;700;900&family=Noto+Serif+SC:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f3eee5;
+    --bg-2: #ebe4d4;
+    --ink: #16161d;
+    --ink-soft: #4a4a55;
+    --ink-mute: #8a8a92;
+    --line: #d5cdba;
+    --line-soft: #e3dcca;
+    --accent: #ff4d2e;
+    --accent-soft: #ffe4dc;
+    --blue: #0a4cff;
+    --blue-soft: #dde6ff;
+    --green: #1f6b3a;
+    --green-soft: #d4ecdb;
+    --yellow: #ffcf3d;
+    --paper: #faf7f0;
+    --shadow: 0 1px 0 rgba(0,0,0,0.04), 0 8px 24px rgba(22,22,29,0.06);
+
+    /* j2 deploy log palette */
+    --term-bg: #16161d;
+    --term-text: #d8d8e0;
+    --term-mute: #6e6e7a;
+    --term-ok: #a8e6a3;
+    --term-warn: #ffcf3d;
+    --term-err: #ff8a6e;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'Geist', 'Noto Sans SC', system-ui, -apple-system, sans-serif;
+    font-size: 16px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    background-image: radial-gradient(circle at 1px 1px, rgba(22,22,29,0.05) 1px, transparent 0);
+    background-size: 24px 24px;
+  }
+  /* Typography — strictly no italic */
+  .display-cn { font-family: 'Noto Serif SC', serif; font-weight: 900; letter-spacing: -0.01em; }
+  .mono { font-family: 'JetBrains Mono', monospace; }
+  .label { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-mute); }
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 0 32px; }
+  /* topbar */
+  .topbar {
+    border-bottom: 1px dashed var(--line);
+    padding: 16px 0;
+    background: rgba(243, 238, 229, 0.85);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    backdrop-filter: blur(8px);
+  }
+  .topbar-inner { display: flex; justify-content: space-between; align-items: center; gap: 24px; flex-wrap: wrap; }
+  .brand { font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 600; }
+  .brand .dot { display: inline-block; width: 8px; height: 8px; background: var(--accent); border-radius: 50%; margin-right: 8px; vertical-align: middle; animation: pulse 2s ease-in-out infinite; }
+  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+  .nav-links { display: flex; gap: 18px; font-size: 13px; flex-wrap: wrap; }
+  .nav-links a { color: var(--ink-soft); text-decoration: none; transition: color 0.2s; }
+  .nav-links a:hover { color: var(--accent); }
+  .nav-links a.current { color: var(--accent); font-weight: 600; }
+  a.brand { text-decoration: none; color: inherit; transition: color 0.2s; cursor: pointer; }
+  a.brand:hover { color: var(--accent); }
+  /* hero */
+  .hero { padding: 100px 0 80px; position: relative; overflow: hidden; }
+  .hero-meta { display: flex; gap: 24px; margin-bottom: 32px; align-items: center; flex-wrap: wrap; }
+  .hero-meta .pill { padding: 6px 12px; border: 1px solid var(--ink); border-radius: 100px; font-size: 11px; font-family: 'JetBrains Mono', monospace; letter-spacing: 0.05em; }
+  .hero-meta .pill.fill { background: var(--ink); color: var(--bg); }
+  .hero h1 {
+    font-family: 'Noto Serif SC', serif;
+    font-weight: 900;
+    font-size: clamp(48px, 7vw, 92px);
+    line-height: 0.95;
+    letter-spacing: -0.03em;
+    margin: 0 0 24px;
+  }
+  .hero h1 .em { font-family: 'Noto Serif SC', serif; font-weight: 500; color: var(--accent); }
+  .hero h1 .x { display: inline-block; transform: translateY(-0.05em); margin: 0 0.05em; color: var(--ink-mute); font-weight: 300; }
+  .hero p.lede { font-size: 20px; line-height: 1.5; max-width: 640px; color: var(--ink-soft); margin: 0 0 40px; }
+  .hero p.lede .em { font-family: 'Noto Serif SC', serif; color: var(--accent); font-weight: 500; }
+  .hero-grid { display: grid; grid-template-columns: 1.4fr 1fr; gap: 48px; align-items: end; }
+  @media (max-width: 880px) { .hero-grid { grid-template-columns: 1fr; } }
+  .hero-side { border-left: 1px dashed var(--line); padding-left: 24px; font-size: 13px; color: var(--ink-soft); }
+  .hero-side .row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px dashed var(--line); }
+  .hero-side .row:last-child { border-bottom: none; }
+  .hero-side .row .k { color: var(--ink-mute); font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.05em; text-transform: uppercase; }
+  .hero-side .row .v { font-weight: 500; }
+  /* section */
+  section { padding: 80px 0; border-top: 1px solid var(--line); position: relative; animation: fadeIn 0.6s ease-out backwards; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+  .section-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 48px; flex-wrap: wrap; gap: 16px; }
+  .section-num { font-family: 'JetBrains Mono', monospace; font-size: 13px; color: var(--ink-mute); letter-spacing: 0.1em; }
+  .section-num strong { color: var(--accent); }
+  .section-title {
+    font-family: 'Noto Serif SC', serif;
+    font-weight: 900;
+    font-size: clamp(32px, 4.5vw, 52px);
+    line-height: 1.05;
+    letter-spacing: -0.02em;
+    margin: 0;
+    max-width: 18ch;
+  }
+  .section-title .em { font-family: 'Noto Serif SC', serif; font-weight: 500; color: var(--accent); }
+  .section-sub { color: var(--ink-soft); font-size: 17px; max-width: 38ch; line-height: 1.55; margin: 0; }
+  .em { font-family: 'Noto Serif SC', serif; font-weight: 500; color: var(--accent); }
+  /* hint strip */
+  .hint-strip {
+    margin-top: 16px;
+    padding: 14px 18px;
+    background: var(--accent-soft);
+    border-left: 3px solid var(--accent);
+    border-radius: 4px;
+    font-size: 13px;
+    color: var(--ink);
+    line-height: 1.55;
+  }
+  .hint-strip .hint-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--accent);
+    letter-spacing: 0.12em;
+    margin-right: 10px;
+    text-transform: uppercase;
+  }
+  /* quote box */
+  .quote-box {
+    margin: 32px 0 0;
+    padding: 24px 28px;
+    background: var(--paper);
+    border-left: 3px solid var(--ink);
+    border-radius: 0 6px 6px 0;
+    font-family: 'Noto Serif SC', serif;
+    font-size: 18px;
+    line-height: 1.55;
+    color: var(--ink);
+    font-weight: 500;
+  }
+  .quote-box .quote-mark {
+    font-family: 'Noto Serif SC', serif;
+    color: var(--accent);
+    font-size: 28px;
+    line-height: 1;
+    margin-right: 8px;
+    font-weight: 500;
+  }
+  .quote-box .quote-attr {
+    display: block;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--ink-mute);
+    margin-top: 12px;
+    letter-spacing: 0.05em;
+    font-weight: 400;
+  }
+  /* === §01 Misconceptions: 3 stacked cards === */
+  .myth-stack { display: flex; flex-direction: column; gap: 22px; margin-top: 24px; }
+  .myth-card {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0;
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  @media (max-width: 720px) { .myth-card { grid-template-columns: 1fr; } }
+  .myth-side {
+    padding: 24px 26px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .myth-side.bad { background: var(--accent-soft); border-right: 1px dashed var(--accent); }
+  .myth-side.good { background: var(--paper); }
+  @media (max-width: 720px) {
+    .myth-side.bad { border-right: none; border-bottom: 1px dashed var(--accent); }
+  }
+  .myth-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+  .myth-side.bad .myth-tag { color: var(--accent); }
+  .myth-side.good .myth-tag { color: var(--green); }
+  .myth-side h3 {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 19px;
+    margin: 0;
+    font-weight: 700;
+    line-height: 1.35;
+  }
+  .myth-side p {
+    font-size: 13.5px;
+    color: var(--ink-soft);
+    line-height: 1.6;
+    margin: 0;
+  }
+  .myth-side p strong { color: var(--ink); font-weight: 600; }
+  .myth-side .myth-illust {
+    margin-top: 8px;
+    padding: 14px 16px;
+    background: rgba(255,255,255,0.55);
+    border: 1px dashed var(--line);
+    border-radius: 4px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    line-height: 1.7;
+    color: var(--ink-soft);
+  }
+  .myth-side .myth-illust .arrow { color: var(--accent); margin: 0 6px; }
+  .myth-side .myth-illust strong { color: var(--ink); font-weight: 600; }
+  .myth-side.good .myth-illust { background: var(--green-soft); border-color: var(--green); border-style: solid; }
+  .myth-side.good .myth-illust .arrow { color: var(--green); }
+  /* === §02 Pipeline: 7-step flow === */
+  .pipe-stage {
+    margin-top: 24px;
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 28px 24px 32px;
+  }
+  .pipe-controls {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    flex-wrap: wrap;
+    margin-bottom: 22px;
+    padding-bottom: 18px;
+    border-bottom: 1px dashed var(--line);
+  }
+  .pipe-play {
+    padding: 10px 18px;
+    background: var(--ink);
+    color: white;
+    border: none;
+    border-radius: 4px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    letter-spacing: 0.05em;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .pipe-play:hover { background: var(--accent); }
+  .pipe-play[disabled] { background: var(--ink-mute); cursor: not-allowed; }
+  .pipe-reset {
+    padding: 10px 14px;
+    background: transparent;
+    border: 1px dashed var(--ink-mute);
+    border-radius: 4px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--ink-soft);
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .pipe-reset:hover { border-color: var(--ink); color: var(--ink); }
+  .pipe-status {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--ink-mute);
+    letter-spacing: 0.05em;
+    margin-left: auto;
+  }
+  .pipe-status .live { color: var(--green); }
+  .pipe-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+  .pipe-step {
+    display: grid;
+    grid-template-columns: 56px 1fr;
+    gap: 18px;
+    padding: 18px 4px 18px 4px;
+    border-bottom: 1px dashed var(--line);
+    position: relative;
+    transition: all 0.25s;
+  }
+  .pipe-step:last-child { border-bottom: none; }
+  @media (max-width: 600px) {
+    .pipe-step { grid-template-columns: 44px 1fr; gap: 12px; }
+  }
+  .pipe-step::before {
+    content: '';
+    position: absolute;
+    left: 27px;
+    top: 56px;
+    bottom: -2px;
+    width: 1px;
+    background: var(--line);
+  }
+  .pipe-step:last-child::before { display: none; }
+  @media (max-width: 600px) { .pipe-step::before { left: 21px; top: 50px; } }
+  .pipe-num {
+    width: 56px; height: 56px;
+    border-radius: 50%;
+    background: var(--bg);
+    border: 1.5px solid var(--line);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--ink-mute);
+    letter-spacing: 0.05em;
+    transition: all 0.3s;
+    z-index: 1;
+    position: relative;
+  }
+  @media (max-width: 600px) { .pipe-num { width: 44px; height: 44px; font-size: 12px; } }
+  .pipe-step.is-active .pipe-num {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: white;
+    box-shadow: 0 0 0 6px var(--accent-soft);
+  }
+  .pipe-step.is-done .pipe-num {
+    background: var(--green);
+    border-color: var(--green);
+    color: white;
+  }
+  .pipe-step.is-done .pipe-num::after { content: '✓'; }
+  .pipe-step.is-done .pipe-num span { display: none; }
+  .pipe-body { padding-top: 6px; }
+  .pipe-actor {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    color: var(--ink-mute);
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+  .pipe-actor.you { color: var(--blue); }
+  .pipe-actor.gh { color: var(--ink); }
+  .pipe-actor.platform { color: var(--accent); }
+  .pipe-actor.cdn { color: var(--green); }
+  .pipe-step h4 {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 18px;
+    margin: 0 0 6px;
+    font-weight: 700;
+    line-height: 1.4;
+  }
+  .pipe-step p {
+    margin: 0;
+    color: var(--ink-soft);
+    font-size: 13.5px;
+    line-height: 1.6;
+  }
+  .pipe-step p strong { color: var(--ink); font-weight: 600; }
+  .pipe-step p code {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    background: var(--bg-2);
+    color: var(--ink);
+    padding: 1px 6px;
+    border-radius: 3px;
+  }
+  .pipe-vis {
+    margin-top: 10px;
+    padding: 12px 14px;
+    background: var(--bg);
+    border: 1px dashed var(--line);
+    border-radius: 4px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--ink-soft);
+    line-height: 1.55;
+    overflow-x: auto;
+  }
+  .pipe-vis .arr { color: var(--accent); margin: 0 6px; }
+  .pipe-vis strong { color: var(--ink); font-weight: 600; }
+  /* timeline summary block */
+  .pipe-summary {
+    margin-top: 24px;
+    padding: 18px 22px;
+    background: var(--bg-2);
+    border-left: 3px solid var(--ink);
+    border-radius: 0 4px 4px 0;
+    font-size: 13.5px;
+    line-height: 1.6;
+    color: var(--ink-soft);
+  }
+  .pipe-summary strong { color: var(--ink); font-weight: 600; }
+  /* === §03 Vercel deploy game (the soul of this article) === */
+  .deploy-stage {
+    margin-top: 24px;
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+  .deploy-toolbar {
+    background: var(--ink);
+    color: white;
+    padding: 12px 18px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+  }
+  .deploy-toolbar .dt-dots { display: flex; gap: 6px; }
+  .deploy-toolbar .dt-dots span {
+    width: 10px; height: 10px; border-radius: 50%;
+  }
+  .deploy-toolbar .dt-dots span:nth-child(1) { background: #ff5f56; }
+  .deploy-toolbar .dt-dots span:nth-child(2) { background: #ffbd2e; }
+  .deploy-toolbar .dt-dots span:nth-child(3) { background: #27c93f; }
+  .deploy-toolbar .dt-url {
+    flex: 1;
+    background: #2a2a35;
+    color: var(--term-mute);
+    padding: 5px 12px;
+    border-radius: 4px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    text-align: center;
+    letter-spacing: 0.02em;
+  }
+  .deploy-toolbar .dt-brand {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: white;
+    letter-spacing: 0.05em;
+    font-weight: 600;
+  }
+  .deploy-toolbar .dt-brand .tri { color: var(--accent); margin-right: 4px; font-size: 13px; }
+  /* Levels selector */
+  .deploy-levels {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0;
+    background: var(--bg-2);
+    border-bottom: 1px solid var(--line);
+  }
+  @media (max-width: 720px) { .deploy-levels { grid-template-columns: 1fr; } }
+  .level-btn {
+    background: transparent;
+    border: none;
+    border-right: 1px solid var(--line);
+    padding: 16px 18px;
+    text-align: left;
+    cursor: pointer;
+    font-family: inherit;
+    transition: all 0.15s;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    position: relative;
+  }
+  .level-btn:last-child { border-right: none; }
+  @media (max-width: 720px) {
+    .level-btn { border-right: none; border-bottom: 1px solid var(--line); }
+    .level-btn:last-child { border-bottom: none; }
+  }
+  .level-btn:hover { background: rgba(255,77,46,0.05); }
+  .level-btn.is-active { background: var(--paper); }
+  .level-btn.is-active::after {
+    content: '';
+    position: absolute;
+    left: 0; right: 0; bottom: -1px;
+    height: 2px;
+    background: var(--accent);
+  }
+  .level-btn .lv-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--accent);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+  .level-btn .lv-name {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--ink);
+    line-height: 1.3;
+  }
+  .level-btn .lv-sub {
+    font-size: 11.5px;
+    color: var(--ink-mute);
+    line-height: 1.45;
+  }
+  .level-btn .lv-medal {
+    position: absolute;
+    top: 12px; right: 14px;
+    font-size: 14px;
+    color: var(--green);
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+  .level-btn.is-cleared .lv-medal { opacity: 1; }
+  /* Main grid: top = drag zone + project shop; bottom = config + log */
+  .deploy-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0;
+    min-height: 540px;
+  }
+  @media (max-width: 880px) { .deploy-grid { grid-template-columns: 1fr; } }
+
+  .deploy-left {
+    padding: 24px 26px;
+    border-right: 1px solid var(--line);
+    background: var(--paper);
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+  }
+  @media (max-width: 880px) { .deploy-left { border-right: none; border-bottom: 1px solid var(--line); } }
+
+  .deploy-zone {
+    border: 2px dashed var(--line);
+    border-radius: 8px;
+    padding: 28px 18px;
+    text-align: center;
+    background: var(--bg);
+    transition: all 0.2s;
+    min-height: 130px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    position: relative;
+  }
+  .deploy-zone.is-dragover {
+    border-color: var(--accent);
+    background: var(--accent-soft);
+    transform: scale(1.01);
+  }
+  .deploy-zone.has-project {
+    border-color: var(--accent);
+    border-style: solid;
+    background: var(--accent-soft);
+  }
+  .deploy-zone .dz-big {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 26px;
+    color: var(--ink-soft);
+    font-weight: 700;
+    letter-spacing: -0.01em;
+  }
+  .deploy-zone .dz-hint {
+    font-size: 12.5px;
+    color: var(--ink-mute);
+    line-height: 1.5;
+  }
+  .deploy-zone .dz-folder {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14px;
+    color: var(--ink);
+    background: white;
+    padding: 6px 14px;
+    border-radius: 4px;
+    border: 1px solid var(--line);
+    margin-top: 4px;
+    font-weight: 600;
+  }
+  .deploy-zone.has-project .dz-big { color: var(--accent); font-size: 22px; }
+  .deploy-zone .dz-folder.show-only { display: none; }
+  .deploy-zone.has-project .dz-folder.show-only { display: inline-block; }
+
+  .project-shop-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--ink-mute);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-bottom: -6px;
+  }
+  .project-shop {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .proj-card {
+    background: white;
+    border: 1.5px solid var(--ink);
+    border-radius: 6px;
+    padding: 10px 14px;
+    cursor: grab;
+    transition: all 0.18s;
+    user-select: none;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .proj-card:hover {
+    transform: translateX(3px);
+    box-shadow: 0 4px 12px rgba(22,22,29,0.08);
+    border-color: var(--accent);
+  }
+  .proj-card:active { cursor: grabbing; }
+  .proj-card.is-disabled { opacity: 0.4; pointer-events: none; }
+  .proj-card.is-deployed {
+    background: var(--green-soft);
+    border-color: var(--green);
+  }
+  .proj-card.is-deployed::after {
+    content: '✓';
+    margin-left: auto;
+    color: var(--green);
+    font-weight: 700;
+  }
+  .proj-icon {
+    width: 32px; height: 32px;
+    border-radius: 4px;
+    background: var(--ink);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+  .proj-icon.next { background: var(--ink); }
+  .proj-icon.envapp { background: var(--blue); }
+  .proj-icon.broken { background: var(--accent); }
+  .proj-meta { flex: 1; min-width: 0; }
+  .proj-name { font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 600; color: var(--ink); }
+  .proj-desc { font-size: 11px; color: var(--ink-mute); line-height: 1.45; margin-top: 1px; }
+  /* Config panel */
+  .deploy-right {
+    padding: 24px 26px;
+    background: var(--paper);
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  .config-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--ink-mute);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+  .config-rows {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .config-row {
+    display: grid;
+    grid-template-columns: 130px 1fr;
+    gap: 10px;
+    align-items: center;
+  }
+  @media (max-width: 600px) { .config-row { grid-template-columns: 1fr; gap: 4px; } }
+  .config-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--ink-soft);
+    letter-spacing: 0.04em;
+  }
+  .config-input {
+    width: 100%;
+    padding: 7px 10px;
+    background: white;
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--ink);
+    transition: border-color 0.15s;
+  }
+  .config-input:focus { outline: none; border-color: var(--accent); }
+  .config-input.is-broken { border-color: var(--accent); background: var(--accent-soft); }
+  .config-input.is-fixed { border-color: var(--green); background: var(--green-soft); }
+  /* env panel */
+  .env-panel {
+    border-top: 1px dashed var(--line);
+    padding-top: 14px;
+    margin-top: 4px;
+  }
+  .env-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+  }
+  .env-head .env-title {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--ink-soft);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+  .env-head .env-add {
+    background: var(--bg-2);
+    border: 1px dashed var(--ink-mute);
+    border-radius: 3px;
+    padding: 3px 9px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--ink);
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .env-head .env-add:hover { border-color: var(--accent); color: var(--accent); }
+  .env-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    min-height: 24px;
+  }
+  .env-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr 24px;
+    gap: 6px;
+    align-items: center;
+  }
+  .env-row input {
+    padding: 5px 8px;
+    background: white;
+    border: 1px solid var(--line);
+    border-radius: 3px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--ink);
+  }
+  .env-row input:focus { outline: none; border-color: var(--accent); }
+  .env-row .env-del {
+    background: transparent;
+    border: none;
+    color: var(--ink-mute);
+    cursor: pointer;
+    font-size: 14px;
+    line-height: 1;
+    padding: 0;
+    transition: color 0.15s;
+  }
+  .env-row .env-del:hover { color: var(--accent); }
+  .env-empty {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--ink-mute);
+    padding: 6px 0;
+    font-style: normal;
+  }
+
+  .deploy-btn-row {
+    margin-top: auto;
+    padding-top: 14px;
+    border-top: 1px dashed var(--line);
+    display: flex;
+    gap: 10px;
+    align-items: center;
+  }
+  .deploy-btn {
+    flex: 1;
+    padding: 11px 18px;
+    background: var(--ink);
+    color: white;
+    border: none;
+    border-radius: 5px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .deploy-btn:hover:not([disabled]) { background: var(--accent); }
+  .deploy-btn[disabled] { background: var(--ink-mute); cursor: not-allowed; opacity: 0.6; }
+  .deploy-btn .tri { color: var(--accent); margin-right: 6px; font-size: 14px; }
+  .deploy-btn:hover:not([disabled]) .tri { color: white; }
+  .deploy-clear {
+    padding: 11px 14px;
+    background: transparent;
+    border: 1px dashed var(--ink-mute);
+    border-radius: 5px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--ink-soft);
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .deploy-clear:hover { border-color: var(--ink); color: var(--ink); }
+  /* Build log terminal */
+  .deploy-log {
+    background: var(--term-bg);
+    color: var(--term-text);
+    padding: 16px 20px 20px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    line-height: 1.7;
+    min-height: 240px;
+    max-height: 340px;
+    overflow-y: auto;
+    position: relative;
+    border-top: 1px solid var(--line);
+  }
+  .deploy-log::-webkit-scrollbar { width: 6px; }
+  .deploy-log::-webkit-scrollbar-track { background: rgba(255,255,255,0.04); }
+  .deploy-log::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 3px; }
+  .deploy-log .log-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+  }
+  .deploy-log .log-title {
+    font-size: 10px;
+    color: var(--term-mute);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+  .deploy-log .log-state {
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 3px 8px;
+    border-radius: 3px;
+  }
+  .deploy-log .log-state.idle { background: rgba(255,255,255,0.06); color: var(--term-mute); }
+  .deploy-log .log-state.running { background: rgba(255,207,61,0.15); color: var(--term-warn); }
+  .deploy-log .log-state.success { background: rgba(168,230,163,0.15); color: var(--term-ok); }
+  .deploy-log .log-state.failed { background: rgba(255,138,110,0.15); color: var(--term-err); }
+  .deploy-log .log-line {
+    display: block;
+    opacity: 0;
+    animation: logLineIn 0.25s ease-out forwards;
+  }
+  @keyframes logLineIn {
+    from { opacity: 0; transform: translateX(-6px); }
+    to { opacity: 1; transform: translateX(0); }
+  }
+  .deploy-log .lg-time { color: var(--term-mute); margin-right: 10px; }
+  .deploy-log .lg-info { color: var(--term-text); }
+  .deploy-log .lg-ok { color: var(--term-ok); }
+  .deploy-log .lg-warn { color: var(--term-warn); }
+  .deploy-log .lg-err { color: var(--term-err); font-weight: 500; }
+  .deploy-log .lg-detect { color: #8ec5ff; }
+  .deploy-log .lg-bar {
+    display: inline-block;
+    width: 160px;
+    height: 6px;
+    background: rgba(255,255,255,0.06);
+    border-radius: 100px;
+    margin: 0 8px;
+    vertical-align: 1px;
+    overflow: hidden;
+    position: relative;
+  }
+  .deploy-log .lg-bar-fill {
+    position: absolute;
+    top: 0; left: 0; bottom: 0;
+    background: var(--term-warn);
+    border-radius: 100px;
+    transition: width 0.2s linear;
+  }
+  .deploy-log .lg-empty {
+    color: var(--term-mute);
+    text-align: center;
+    padding: 40px 20px;
+    line-height: 1.6;
+  }
+  .deploy-log .lg-success-card {
+    margin-top: 12px;
+    padding: 12px 16px;
+    background: rgba(168,230,163,0.08);
+    border-left: 2px solid var(--term-ok);
+    border-radius: 0 4px 4px 0;
+  }
+  .deploy-log .lg-success-card .succ-label {
+    color: var(--term-ok);
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+  .deploy-log .lg-success-card .succ-url {
+    color: white;
+    font-size: 13px;
+    font-weight: 600;
+    word-break: break-all;
+  }
+  .deploy-log .lg-success-card .succ-url a {
+    color: white;
+    text-decoration: none;
+    border-bottom: 1px dashed rgba(255,255,255,0.4);
+  }
+  .deploy-log .lg-success-card .succ-meta {
+    color: var(--term-mute);
+    font-size: 10.5px;
+    margin-top: 6px;
+  }
+  .deploy-log .lg-fail-card {
+    margin-top: 12px;
+    padding: 12px 16px;
+    background: rgba(255,138,110,0.08);
+    border-left: 2px solid var(--term-err);
+    border-radius: 0 4px 4px 0;
+  }
+  .deploy-log .lg-fail-card .fail-label {
+    color: var(--term-err);
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+  .deploy-log .lg-fail-card .fail-msg {
+    color: var(--term-text);
+    font-size: 12px;
+    line-height: 1.55;
+  }
+  .deploy-log .lg-fail-card .fail-hint {
+    color: var(--term-mute);
+    font-size: 10.5px;
+    margin-top: 6px;
+  }
+  /* Mission panel */
+  .mission-panel {
+    background: var(--bg-2);
+    padding: 14px 22px;
+    border-top: 1px solid var(--line);
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    flex-wrap: wrap;
+  }
+  .mission-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--accent);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    background: var(--accent-soft);
+    padding: 3px 8px;
+    border-radius: 3px;
+  }
+  .mission-text {
+    font-size: 13px;
+    color: var(--ink);
+    line-height: 1.5;
+    flex: 1;
+  }
+  .mission-text strong { color: var(--accent); font-weight: 600; }
+  .mission-progress {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--ink-soft);
+  }
+  .mission-progress .num { color: var(--accent); font-weight: 600; }
+  /* === §04 Custom domain === */
+  .dom-stage {
+    margin-top: 24px;
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  .dom-steps {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0;
+  }
+  @media (max-width: 880px) { .dom-steps { grid-template-columns: 1fr 1fr; } }
+  @media (max-width: 600px) { .dom-steps { grid-template-columns: 1fr; } }
+  .dom-step {
+    padding: 22px 22px 24px;
+    border-right: 1px solid var(--line);
+    border-bottom: 1px solid var(--line);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    background: var(--paper);
+    position: relative;
+  }
+  .dom-step:last-child { border-right: none; }
+  @media (max-width: 880px) {
+    .dom-step:nth-child(2) { border-right: none; }
+  }
+  @media (max-width: 600px) {
+    .dom-step { border-right: none; }
+  }
+  .dom-step::after {
+    content: '→';
+    position: absolute;
+    right: -8px; top: 30px;
+    width: 16px; height: 16px;
+    background: var(--bg);
+    border: 1px solid var(--line);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--ink-mute);
+    z-index: 2;
+  }
+  .dom-step:last-child::after { display: none; }
+  @media (max-width: 880px) {
+    .dom-step:nth-child(2)::after { display: none; }
+  }
+  @media (max-width: 600px) {
+    .dom-step::after { display: none; }
+  }
+  .dom-num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--accent);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+  .dom-step h4 {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 16px;
+    margin: 0;
+    font-weight: 700;
+    line-height: 1.35;
+  }
+  .dom-step p {
+    margin: 0;
+    color: var(--ink-soft);
+    font-size: 12.5px;
+    line-height: 1.55;
+  }
+  .dom-step p strong { color: var(--ink); font-weight: 600; }
+  .dom-vis {
+    margin-top: 4px;
+    background: var(--bg);
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    padding: 10px 12px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    line-height: 1.55;
+    color: var(--ink-soft);
+  }
+  .dom-vis strong { color: var(--ink); font-weight: 600; }
+  /* DNS panel mock */
+  .dns-mock {
+    margin-top: 24px;
+    background: white;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    overflow: hidden;
+  }
+  .dns-mock-head {
+    background: #0a4cff;
+    color: white;
+    padding: 10px 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.05em;
+  }
+  .dns-mock-head .dns-icon {
+    width: 16px; height: 16px;
+    background: white;
+    border-radius: 3px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #0a4cff;
+    font-weight: 700;
+    font-size: 10px;
+  }
+  .dns-mock-head .dns-title { font-weight: 600; }
+  .dns-mock-head .dns-host { color: rgba(255,255,255,0.65); margin-left: auto; }
+  .dns-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+  }
+  .dns-table th {
+    background: var(--bg-2);
+    padding: 8px 14px;
+    text-align: left;
+    font-size: 10px;
+    color: var(--ink-mute);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    font-weight: 500;
+    border-bottom: 1px solid var(--line);
+  }
+  .dns-table td {
+    padding: 10px 14px;
+    border-bottom: 1px dashed var(--line);
+    color: var(--ink-soft);
+  }
+  .dns-table tr:last-child td { border-bottom: none; }
+  .dns-table .row-new {
+    background: var(--accent-soft);
+  }
+  .dns-table .row-new td { color: var(--ink); }
+  .dns-table .dns-tag {
+    background: var(--ink);
+    color: white;
+    padding: 1px 6px;
+    border-radius: 2px;
+    font-size: 10px;
+    letter-spacing: 0.05em;
+  }
+  .dns-table .dns-tag.new { background: var(--accent); }
+  .dns-mock-foot {
+    padding: 12px 16px;
+    background: var(--bg);
+    font-size: 11px;
+    color: var(--ink-mute);
+    border-top: 1px dashed var(--line);
+    line-height: 1.55;
+  }
+  .dns-mock-foot strong { color: var(--ink); font-weight: 600; }
+  /* === §05 Troubleshoot list === */
+  .ts-stage {
+    margin-top: 24px;
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 28px 32px;
+  }
+  .ts-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 28px;
+  }
+  .ts-item {
+    display: grid;
+    grid-template-columns: 60px 1fr;
+    gap: 20px;
+    align-items: start;
+  }
+  @media (max-width: 600px) { .ts-item { grid-template-columns: 1fr; gap: 8px; } }
+  .ts-num {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 28px;
+    font-weight: 800;
+    color: var(--accent);
+    line-height: 1;
+    letter-spacing: -0.02em;
+  }
+  .ts-q {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--ink);
+    margin: 0 0 6px;
+    line-height: 1.4;
+  }
+  .ts-q .em { font-family: 'Noto Serif SC', serif; color: var(--accent); font-weight: 500; }
+  .ts-a {
+    color: var(--ink-soft);
+    font-size: 14px;
+    line-height: 1.65;
+    margin: 0 0 10px;
+  }
+  .ts-a strong { color: var(--ink); font-weight: 600; }
+  .ts-a code {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    background: var(--bg-2);
+    color: var(--ink);
+    padding: 1px 6px;
+    border-radius: 3px;
+  }
+  .ts-diag {
+    margin-top: 8px;
+    background: var(--bg);
+    border: 1px solid var(--line);
+    border-radius: 5px;
+    overflow: hidden;
+  }
+  .ts-diag-head {
+    background: var(--ink);
+    color: white;
+    padding: 8px 14px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.05em;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .ts-diag-head .ts-diag-led {
+    width: 8px; height: 8px;
+    background: var(--accent);
+    border-radius: 50%;
+  }
+  .ts-diag-body {
+    padding: 12px 16px 14px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11.5px;
+    color: var(--ink-soft);
+    line-height: 1.7;
+  }
+  .ts-diag-body .ts-step {
+    display: grid;
+    grid-template-columns: 22px 1fr;
+    gap: 8px;
+    margin-bottom: 4px;
+  }
+  .ts-diag-body .ts-step:last-child { margin-bottom: 0; }
+  .ts-diag-body .ts-step .ts-step-num {
+    color: var(--accent);
+    font-weight: 600;
+  }
+  .ts-diag-body code {
+    color: var(--ink);
+    background: var(--bg-2);
+    padding: 1px 5px;
+    border-radius: 2px;
+    font-size: 11px;
+  }
+  .ts-action {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--ink);
+    background: var(--accent-soft);
+    border-left: 3px solid var(--accent);
+    padding: 8px 12px;
+    border-radius: 0 4px 4px 0;
+    line-height: 1.5;
+    display: block;
+    margin-top: 10px;
+  }
+  /* === §06 Cheatsheet === */
+  .cheat-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 18px;
+    margin-top: 24px;
+  }
+  @media (max-width: 880px) { .cheat-grid { grid-template-columns: 1fr; } }
+  .cheat-block {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 24px 26px;
+  }
+  .cheat-block h3 {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 18px;
+    font-weight: 800;
+    margin: 0 0 14px;
+    letter-spacing: -0.01em;
+  }
+  .cheat-block h3 .em { font-family: 'Noto Serif SC', serif; color: var(--accent); font-weight: 500; }
+  .cheat-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+  .cheat-table th, .cheat-table td {
+    text-align: left;
+    padding: 9px 10px;
+    border-bottom: 1px dashed var(--line);
+  }
+  .cheat-table tr:last-child td { border-bottom: none; }
+  .cheat-table th {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--ink-mute);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    font-weight: 500;
+  }
+  .cheat-table .term {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12.5px;
+    color: var(--ink);
+    font-weight: 600;
+    white-space: nowrap;
+  }
+  .cheat-table .desc { color: var(--ink-soft); line-height: 1.5; }
+  .cheat-table .desc strong { color: var(--ink); font-weight: 600; }
+  .cheat-block .cheat-foot {
+    margin-top: 16px;
+    font-size: 12px;
+    color: var(--ink-mute);
+    border-top: 1px dashed var(--line);
+    padding-top: 12px;
+    line-height: 1.55;
+  }
+  /* 7-step quick recap row */
+  .recap-row {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 6px;
+    margin-bottom: 14px;
+  }
+  @media (max-width: 720px) { .recap-row { grid-template-columns: repeat(4, 1fr); } }
+  @media (max-width: 480px) { .recap-row { grid-template-columns: repeat(2, 1fr); } }
+  .recap-cell {
+    background: var(--bg-2);
+    border: 1px solid var(--line-soft);
+    border-radius: 5px;
+    padding: 10px 8px;
+    text-align: center;
+    transition: all 0.15s;
+  }
+  .recap-cell:hover { background: var(--accent-soft); border-color: var(--accent); }
+  .recap-cell .rc-num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--accent);
+    letter-spacing: 0.08em;
+    margin-bottom: 4px;
+  }
+  .recap-cell .rc-text {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--ink);
+    line-height: 1.3;
+  }
+  /* Platform compare table */
+  .plat-compare {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 24px 26px;
+    margin-top: 18px;
+  }
+  .plat-compare h3 {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 18px;
+    font-weight: 800;
+    margin: 0 0 14px;
+    letter-spacing: -0.01em;
+  }
+  .plat-compare h3 .em { font-family: 'Noto Serif SC', serif; color: var(--accent); font-weight: 500; }
+  .plat-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+  .plat-table th, .plat-table td {
+    text-align: left;
+    padding: 10px 12px;
+    border-bottom: 1px dashed var(--line);
+    vertical-align: top;
+  }
+  .plat-table tr:last-child td { border-bottom: none; }
+  .plat-table th {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--ink-mute);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    font-weight: 500;
+    background: var(--bg-2);
+  }
+  .plat-table th.platform-col { text-align: center; min-width: 110px; }
+  .plat-table .row-name {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--ink);
+    font-weight: 600;
+    white-space: nowrap;
+    background: rgba(0,0,0,0.02);
+  }
+  .plat-table .cell-val {
+    font-size: 12px;
+    color: var(--ink-soft);
+    text-align: center;
+    line-height: 1.5;
+  }
+  .plat-table .cell-val strong { color: var(--ink); font-weight: 600; }
+  .plat-table .cell-val.mark-good { color: var(--green); }
+  .plat-table .cell-val.mark-mid { color: var(--ink-soft); }
+  /* ============= Unified next-post block ============= */
+  .next-post {
+    margin-top: 48px;
+    padding: 32px 36px;
+    background: var(--ink);
+    color: var(--bg);
+    border-radius: 8px;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 32px;
+    align-items: center;
+    text-decoration: none;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    position: relative;
+    overflow: hidden;
+  }
+  .next-post::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at 100% 0%, rgba(255,77,46,0.12), transparent 55%);
+    pointer-events: none;
+  }
+  .next-post:hover { transform: translateY(-2px); box-shadow: 0 14px 36px rgba(22,22,29,0.22); }
+  @media (max-width: 720px) { .next-post { grid-template-columns: 1fr; padding: 24px; gap: 20px; } }
+  .next-post .np-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--accent);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+    display: inline-block;
+  }
+  .next-post h4 {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 26px;
+    margin: 0 0 10px;
+    font-weight: 700;
+    color: white;
+    line-height: 1.25;
+    letter-spacing: -0.01em;
+  }
+  .next-post h4 .em {
+    font-family: 'Noto Serif SC', serif;
+    font-weight: 500;
+    color: var(--accent);
+  }
+  .next-post p {
+    margin: 0;
+    color: rgba(255,255,255,0.72);
+    font-size: 14px;
+    line-height: 1.65;
+    max-width: 560px;
+  }
+  .next-post p strong { color: white; font-weight: 600; }
+  .next-post .np-cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 24px;
+    background: var(--accent);
+    color: white;
+    border-radius: 4px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    white-space: nowrap;
+    transition: background 0.18s, color 0.18s, transform 0.18s;
+    position: relative;
+    z-index: 1;
+  }
+  .next-post:hover .np-cta { background: white; color: var(--ink); transform: translateX(2px); }
+  .next-post .np-cta .arr { font-family: 'Noto Serif SC', serif; font-size: 18px; font-weight: 500; }
+  /* footer */
+  footer {
+    border-top: 1px solid var(--line);
+    padding: 56px 0 64px;
+    background: var(--bg);
+  }
+  .byline-wrap { position: relative; }
+  .byline {
+    display: flex;
+    gap: 28px;
+    align-items: center;
+    padding-bottom: 32px;
+    border-bottom: 1px dashed var(--line);
+    margin-bottom: 24px;
+    position: relative;
+  }
+  .byline::before {
+    content: '';
+    position: absolute;
+    top: -56px; left: 0;
+    width: 32px; height: 1px;
+    background: var(--accent);
+  }
+  .byline .avatar {
+    width: 96px; height: 96px;
+    border-radius: 50%;
+    object-fit: cover;
+    flex-shrink: 0;
+    border: 3px solid var(--paper);
+    box-shadow: 0 0 0 1px var(--line), 0 6px 20px rgba(22,22,29,0.10);
+    background: var(--paper);
+  }
+  .byline-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--ink-mute);
+    letter-spacing: 0.18em;
+    margin-bottom: 8px;
+  }
+  .byline-label .dot {
+    display: inline-block;
+    width: 6px; height: 6px;
+    background: var(--accent);
+    border-radius: 50%;
+    margin-right: 6px;
+    vertical-align: 1px;
+  }
+  .byline-name {
+    font-family: 'Noto Serif SC', serif;
+    font-size: clamp(28px, 4vw, 40px);
+    font-weight: 700;
+    line-height: 1.05;
+    letter-spacing: -0.01em;
+    margin: 0 0 8px;
+  }
+  .byline-name .em {
+    font-family: 'Noto Serif SC', serif;
+    font-weight: 500;
+    color: var(--accent);
+  }
+  .byline-tag {
+    font-size: 14px;
+    color: var(--ink-soft);
+    line-height: 1.55;
+    margin: 0;
+    max-width: 52ch;
+  }
+  .byline-contact { margin-top: 14px; padding-top: 14px; border-top: 1px dashed var(--line); display: flex; align-items: center; gap: 10px; flex-wrap: wrap; font-size: 12px; }
+  .byline-contact .contact-label { font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-mute); padding: 2px 8px; border: 1px solid var(--line); border-radius: 3px; }
+  .byline-contact .contact-id { font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 600; color: var(--ink); background: var(--accent-soft); padding: 3px 10px; border-radius: 4px; letter-spacing: 0.02em; }
+  .byline-contact .contact-hint { font-size: 12px; color: var(--ink-soft); }
+  .footer-meta {
+    text-align: center;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--ink-mute);
+    letter-spacing: 0.05em;
+  }
+  .footer-meta .heart { color: var(--accent); }
+  .footer-meta .mono { color: var(--ink-soft); font-weight: 500; }
+  @media (max-width: 600px) {
+    .byline { flex-direction: column; text-align: center; align-items: center; gap: 16px; }
+    .byline-tag { margin-left: auto; margin-right: auto; }
+  }
+  /* === Roadmap Modal === */
+  .rm-modal { position: fixed; inset: 0; z-index: 1000; display: flex; align-items: center; justify-content: center; padding: 30px 16px; }
+  .rm-modal[hidden] { display: none; }
+  .rm-backdrop { position: absolute; inset: 0; background: rgba(22,22,29,0.55); backdrop-filter: blur(4px); animation: rm-fade 0.2s; }
+  @keyframes rm-fade { from { opacity: 0; } to { opacity: 1; } }
+  .rm-dialog { position: relative; background: var(--bg); border-radius: 12px; max-width: 720px; width: 100%; max-height: calc(100vh - 60px); overflow-y: auto; padding: 32px 36px 24px; box-shadow: 0 30px 80px rgba(0,0,0,0.3); animation: rm-pop 0.25s cubic-bezier(0.4,0,0.2,1); }
+  @keyframes rm-pop { from { transform: scale(0.96) translateY(8px); opacity: 0; } to { transform: scale(1) translateY(0); opacity: 1; } }
+  .rm-close { position: absolute; top: 14px; right: 16px; background: transparent; border: none; cursor: pointer; font-size: 20px; color: var(--ink-mute); width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: all 0.15s; line-height: 1; }
+  .rm-close:hover { background: var(--bg-2); color: var(--ink); }
+  .rm-header { margin-bottom: 22px; padding-bottom: 18px; border-bottom: 1px dashed var(--line); }
+  .rm-tag { font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.1em; color: var(--accent); text-transform: uppercase; margin-bottom: 8px; }
+  .rm-title { font-family: 'Noto Serif SC', serif; font-size: 28px; margin: 0 0 6px; font-weight: 900; letter-spacing: -0.02em; line-height: 1.1; }
+  .rm-title .rm-em { font-family: 'Noto Serif SC', serif; color: var(--accent); font-weight: 500; }
+  .rm-sub { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--ink-mute); margin: 0; }
+  .rm-body { display: flex; flex-direction: column; gap: 18px; }
+  .rm-mod-key { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ink); font-weight: 700; margin-bottom: 8px; letter-spacing: 0.04em; text-transform: uppercase; }
+  .rm-mod-list { display: flex; flex-direction: column; gap: 6px; }
+  .rm-cell { display: grid; grid-template-columns: 36px 1fr auto; gap: 12px; align-items: center; padding: 9px 13px; border-radius: 5px; background: var(--paper); border: 1px solid var(--line); text-decoration: none; color: inherit; transition: all 0.15s; }
+  .rm-cell:hover { border-color: var(--accent); background: var(--accent-soft); transform: translateX(3px); }
+  .rm-cell.rm-cell-current { border-color: var(--accent); background: var(--accent-soft); }
+  .rm-cell-code { font-family: 'Noto Serif SC', serif; font-weight: 500; color: var(--accent); font-size: 15px; }
+  .rm-cell-name { font-size: 13px; color: var(--ink); }
+  .rm-cell-tier { font-family: 'JetBrains Mono', monospace; font-size: 9px; letter-spacing: 0.08em; color: var(--ink-mute); text-transform: uppercase; border: 1px solid var(--line); padding: 2px 7px; border-radius: 3px; }
+  .rm-cell-tier.rm-tier-current { background: var(--accent); color: white; border-color: var(--accent); }
+  .rm-footer { margin-top: 22px; padding-top: 16px; border-top: 1px dashed var(--line); display: flex; justify-content: space-between; align-items: center; font-size: 12px; color: var(--ink-soft); flex-wrap: wrap; gap: 8px; }
+  .rm-wechat { font-family: 'JetBrains Mono', monospace; background: var(--accent-soft); color: var(--ink); padding: 3px 10px; border-radius: 3px; font-weight: 600; letter-spacing: 0.02em; }
+  .nav-links a[data-rm-open] { cursor: pointer; }
+</style>
+</head>
+<body>
+<!-- Top bar -->
+<div class="topbar">
+  <div class="wrap topbar-inner">
+    <a href="index.html" class="brand"><span class="dot"></span>J2 · Vercel / 一键部署</a>
+    <nav class="nav-links">
+      <a href="index.html#roadmap" data-rm-open>路线图</a>
+      <a href="index.html#manifesto">关于</a>
+    </nav>
+  </div>
+</div>
+<!-- Hero -->
+<header class="hero">
+  <div class="wrap">
+    <div class="hero-meta">
+      <span class="pill fill">实验互动 · INTERACTIVE</span>
+      <span class="pill">2026 · 设计 × 代码</span>
+      <span class="pill">J2 · 进阶 · 上线</span>
+      <span class="label">阅读时长 ≈ 14 分钟</span>
+    </div>
+    <div class="hero-grid">
+      <div>
+        <h1>
+          <span class="display-cn">一键部署，</span><br>
+          <span class="display-cn">背后做了</span><span class="em">7 件事</span><span class="display-cn">。</span>
+        </h1>
+        <p class="lede">
+          你点了一下 <span class="mono">Deploy</span>，<span class="em">10 秒后</span>全世界都能访问。<br>
+          这中间不是黑魔法 —— 是 <strong>7 个步骤</strong>在帮你跑。<br>
+          这一篇用一个能玩的部署模拟器，把"一键"拆成 7 件事。
+        </p>
+      </div>
+      <div class="hero-side">
+        <div class="row"><span class="k">本页讲什么</span><span class="v">Vercel 上线全流程</span></div>
+        <div class="row"><span class="k">含互动</span><span class="v">部署模拟器 · 3 关</span></div>
+        <div class="row"><span class="k">面向</span><span class="v">设计师 / AI 协作</span></div>
+        <div class="row"><span class="k">前置知识</span><span class="v">看过 G1 git 提交</span></div>
+      </div>
+    </div>
+  </div>
+</header>
+<!-- §01 Misconceptions -->
+<section id="misconception">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>01</strong> / 误解</div>
+        <h2 class="section-title">部署到底<br>是<span class="em">什么</span>。</h2>
+      </div>
+      <p class="section-sub">
+        设计师听到"部署"，脑子里通常浮现三种画面 —— 全是错的。
+        先把这三个误解清掉，后面才好看流程。
+      </p>
+    </div>
+
+    <div class="myth-stack">
+      <!-- Myth 1 -->
+      <div class="myth-card">
+        <div class="myth-side bad">
+          <span class="myth-tag">YOU THINK · 你以为</span>
+          <h3>"部署 = 把文件上传到服务器"</h3>
+          <p>就像把一个 <code class="mono">.fig</code> 拖到 Drive，对方就看得见。</p>
+          <div class="myth-illust">
+            <strong>电脑里的代码</strong> <span class="arrow">→</span> <strong>服务器</strong><br>
+            <span style="color:var(--ink-mute);">"复制粘贴一份就行了吧"</span>
+          </div>
+        </div>
+        <div class="myth-side good">
+          <span class="myth-tag">ACTUALLY · 实际上</span>
+          <h3>"部署 = 让平台帮你 build，再分发到 CDN"</h3>
+          <p>你给的是<strong>原料</strong>（源代码），平台先 <code class="mono">build</code> 成<strong>成品</strong>（HTML/CSS/JS），再把成品复制到全世界 50 个机房 —— 谁访问就从最近那个机房拿。</p>
+          <div class="myth-illust">
+            源码 <span class="arrow">→</span> <strong>build</strong> <span class="arrow">→</span> 成品 <span class="arrow">→</span> <strong>分发到 CDN</strong>
+          </div>
+        </div>
+      </div>
+
+      <!-- Myth 2 -->
+      <div class="myth-card">
+        <div class="myth-side bad">
+          <span class="myth-tag">YOU THINK · 你以为</span>
+          <h3>"我改了代码，网站就更新了"</h3>
+          <p>就像 Figma —— 改完保存，链接打开就是新版。</p>
+          <div class="myth-illust">
+            改代码 <span class="arrow">→</span> <span style="color:var(--ink-mute);">"网址自动新版"</span>
+          </div>
+        </div>
+        <div class="myth-side good">
+          <span class="myth-tag">ACTUALLY · 实际上</span>
+          <h3>"改完要再 deploy 一次，才更新"</h3>
+          <p>线上跑的是<strong>上次 build 出来的成品</strong>，跟你电脑上的源码已经断开关系。要让线上更新，必须重新触发部署 —— 通常是 <code class="mono">git push</code>，平台自动重 build。</p>
+          <div class="myth-illust">
+            改代码 <span class="arrow">→</span> <strong>git push</strong> <span class="arrow">→</span> 平台重 build <span class="arrow">→</span> 新版上线
+          </div>
+        </div>
+      </div>
+
+      <!-- Myth 3 -->
+      <div class="myth-card">
+        <div class="myth-side bad">
+          <span class="myth-tag">YOU THINK · 你以为</span>
+          <h3>"部署完就有 fan.com 这种域名了"</h3>
+          <p>类似 Notion 给的链接，发布完就直接是漂亮地址。</p>
+          <div class="myth-illust">
+            部署成功 <span class="arrow">→</span> <span style="color:var(--ink-mute);">"fan.com 自动归我"</span>
+          </div>
+        </div>
+        <div class="myth-side good">
+          <span class="myth-tag">ACTUALLY · 实际上</span>
+          <h3>"默认是 xxx.vercel.app，自定义域名要单独绑"</h3>
+          <p>平台先给一个<strong>临时地址</strong>（比如 <code class="mono">fan-portfolio-9j2k.vercel.app</code>）—— 立刻能访问。漂亮的 <code class="mono">fan.com</code> 是另一件事：你得先<strong>买域名</strong>，再去注册商改 <code class="mono">DNS</code> 记录指向 Vercel。<span class="em">§04 会教</span>。</p>
+          <div class="myth-illust">
+            部署成功 <span class="arrow">→</span> <strong>xxx.vercel.app</strong>（默认）<br>
+            <strong>fan.com</strong> <span class="arrow">→</span> 自己买 + 自己绑 DNS
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="quote-box">
+      <span class="quote-mark">"</span>
+      你不是在<strong>上传文件</strong>，你是在<strong>给平台一份配方</strong>，让它在云端做菜，再把成品端到全球桌上。
+      <span class="quote-attr">—— 这就是为什么本地能跑、线上挂的事会发生</span>
+    </div>
+  </div>
+</section>
+<!-- §02 git push → live: 7-step pipeline -->
+<section id="pipeline">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>02</strong> / 全链路</div>
+        <h2 class="section-title">git push 之后<br>发生了<span class="em">7 件事</span>。</h2>
+      </div>
+      <p class="section-sub">
+        从你按下回车那一刻，到全球能访问，中间 7 步 —— 都是平台自动跑。
+        点 <strong>开始</strong>，看它一步步亮起来。
+      </p>
+    </div>
+
+    <div class="hint-strip">
+      <span class="hint-tag">玩法</span>点"开始演示" → 7 步会按时间顺序点亮，每步对应平台日志里的一段输出。
+    </div>
+
+    <div class="pipe-stage">
+      <div class="pipe-controls">
+        <button class="pipe-play" id="pipePlay"><span class="tri">▶</span>&nbsp; 开始演示 · git push</button>
+        <button class="pipe-reset" id="pipeReset">↻ 重来</button>
+        <span class="pipe-status" id="pipeStatus">就绪 · idle</span>
+      </div>
+
+      <ol class="pipe-list" id="pipeList">
+        <li class="pipe-step" data-step="1">
+          <div class="pipe-num"><span>01</span></div>
+          <div class="pipe-body">
+            <div class="pipe-actor you">YOU · 你</div>
+            <h4>你 <code>git push</code> 到 GitHub</h4>
+            <p>本地仓库的提交，被推上远程仓库。这一步跟部署本身没关系 —— 但<strong>它是触发器</strong>。</p>
+            <div class="pipe-vis">
+              <strong>$ git push origin main</strong> <span class="arr">→</span> github.com/you/repo
+            </div>
+          </div>
+        </li>
+        <li class="pipe-step" data-step="2">
+          <div class="pipe-num"><span>02</span></div>
+          <div class="pipe-body">
+            <div class="pipe-actor gh">GITHUB</div>
+            <h4>GitHub 通知 Vercel · webhook</h4>
+            <p>GitHub 收到新 push 后，给 Vercel 打个电话："你接管的那个项目又有新代码了"。这条电话叫 <code>webhook</code>，本质是一个 HTTP 请求。</p>
+            <div class="pipe-vis">
+              github <span class="arr">→</span> POST /api/v1/hooks <span class="arr">→</span> <strong>vercel</strong>
+            </div>
+          </div>
+        </li>
+        <li class="pipe-step" data-step="3">
+          <div class="pipe-num"><span>03</span></div>
+          <div class="pipe-body">
+            <div class="pipe-actor platform">VERCEL · 平台</div>
+            <h4>Vercel 拉代码 · git clone</h4>
+            <p>Vercel 启动一台干净的<strong>云端虚拟机</strong>，把你的代码完整 clone 一份到这台临时机器上。每次部署都重新拉 —— 不复用上次的环境。</p>
+            <div class="pipe-vis">
+              <strong>vm.new()</strong> <span class="arr">→</span> git clone github.com/you/repo
+            </div>
+          </div>
+        </li>
+        <li class="pipe-step" data-step="4">
+          <div class="pipe-num"><span>04</span></div>
+          <div class="pipe-body">
+            <div class="pipe-actor platform">VERCEL · 平台</div>
+            <h4>跑 <code>npm install</code> · 装零件</h4>
+            <p>读你 <code>package.json</code>，把所有依赖装到云端那台机器的 <code>node_modules/</code>。这一步可能要 <strong>30 秒到 2 分钟</strong>，看依赖多不多。</p>
+            <div class="pipe-vis">
+              $ npm install <span class="arr">→</span> 320 packages installed
+            </div>
+          </div>
+        </li>
+        <li class="pipe-step" data-step="5">
+          <div class="pipe-num"><span>05</span></div>
+          <div class="pipe-body">
+            <div class="pipe-actor platform">VERCEL · 平台</div>
+            <h4>跑 <code>npm run build</code> · 打包</h4>
+            <p>把源码 + 资源压缩、合并、生成静态文件 —— 输出到 <code>.next/</code> 或 <code>dist/</code>。这是真正能上线的成品。<strong>build 失败，整个部署就停在这</strong>。</p>
+            <div class="pipe-vis">
+              $ npm run build <span class="arr">→</span> <strong>.next/</strong> · 42 pages compiled
+            </div>
+          </div>
+        </li>
+        <li class="pipe-step" data-step="6">
+          <div class="pipe-num"><span>06</span></div>
+          <div class="pipe-body">
+            <div class="pipe-actor cdn">CDN · 全球</div>
+            <h4>把成品分发到全球 CDN</h4>
+            <p>build 出来的文件被复制到 <strong>50+ 个 edge 节点</strong>（北京、东京、新加坡、法兰克福……）。用户访问时，从<strong>地理上最近的节点</strong>下载 —— 这就是为什么打开飞快。</p>
+            <div class="pipe-vis">
+              .next/ <span class="arr">→</span> sync to <strong>50 regions</strong> · pdx · sin · hkg · cdg · ...
+            </div>
+          </div>
+        </li>
+        <li class="pipe-step" data-step="7">
+          <div class="pipe-num"><span>07</span></div>
+          <div class="pipe-body">
+            <div class="pipe-actor cdn">DONE · 完成</div>
+            <h4>给你一个 URL</h4>
+            <p>平台生成一个临时域名（<code>fan-portfolio-9j2k.vercel.app</code>）—— 立刻能访问。同时还有一个<strong>固定生产域名</strong>（你绑过自定义域名的话）。整个过程从 push 到能访问，通常 <strong>15 秒到 2 分钟</strong>。</p>
+            <div class="pipe-vis">
+              <strong>https://fan-portfolio-9j2k.vercel.app</strong> · <span style="color:var(--green);">live</span>
+            </div>
+          </div>
+        </li>
+      </ol>
+
+      <div class="pipe-summary">
+        <strong>关键认知</strong> — 1、2 是 GitHub 那边的事，3-6 全在 Vercel 的<strong>云端临时机器</strong>上跑（你看不见）。
+        所以"本地能跑、线上挂" = 你电脑跟那台云端机器<strong>环境不一样</strong>。最常见原因：版本号没锁、env 没设、文件名大小写。
+      </div>
+    </div>
+  </div>
+</section>
+<!-- §03 Drag-to-deploy game (the soul) -->
+<section id="deploy">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>03</strong> / 部署模拟</div>
+        <h2 class="section-title">把项目<br>拖<span class="em">进来</span>。</h2>
+      </div>
+      <p class="section-sub">
+        这一段是这一篇的灵魂 —— 一个仿 Vercel 部署界面的小游戏。
+        拖项目 → 配 build → 看日志 → 出 URL。<strong>3 关</strong>，越来越像现实。
+      </p>
+    </div>
+
+    <div class="hint-strip">
+      <span class="hint-tag">玩法</span>选一个关卡 → 把左下的项目卡片<strong>拖到上方虚线框</strong>（或直接点） → 看右边日志跑完 → 通关。
+    </div>
+
+    <div class="deploy-stage" id="deployStage">
+
+      <!-- Vercel-like top toolbar -->
+      <div class="deploy-toolbar">
+        <div class="dt-dots"><span></span><span></span><span></span></div>
+        <div class="dt-url">vercel.com / new — 部署一个项目</div>
+        <div class="dt-brand"><span class="tri">▲</span> VERCEL</div>
+      </div>
+
+      <!-- Level switcher -->
+      <div class="deploy-levels" id="deployLevels">
+        <button class="level-btn is-active" data-level="1">
+          <span class="lv-tag">关卡 01 · 默认配置</span>
+          <span class="lv-name">部署一个 Next.js 项目</span>
+          <span class="lv-sub">最简单。直接拖 → 点 Deploy。</span>
+          <span class="lv-medal">✓</span>
+        </button>
+        <button class="level-btn" data-level="2">
+          <span class="lv-tag">关卡 02 · 环境变量</span>
+          <span class="lv-name">部署一个需要 .env 的项目</span>
+          <span class="lv-sub">先去 env 加变量，再 deploy。</span>
+          <span class="lv-medal">✓</span>
+        </button>
+        <button class="level-btn" data-level="3">
+          <span class="lv-tag">关卡 03 · build 翻车</span>
+          <span class="lv-name">看日志找错 → 修复</span>
+          <span class="lv-sub">build 命令打错了，改回来。</span>
+          <span class="lv-medal">✓</span>
+        </button>
+      </div>
+
+      <!-- Mission row -->
+      <div class="mission-panel">
+        <span class="mission-tag">任务</span>
+        <span class="mission-text" id="missionText">拖一个项目到上方虚线框 → 直接点 <strong>Deploy</strong> → 看日志跑完。</span>
+        <span class="mission-progress">已通关 <span class="num" id="missionDone">0</span> / 3</span>
+      </div>
+
+      <!-- Main grid -->
+      <div class="deploy-grid">
+        <!-- Left: drop zone + project shop -->
+        <div class="deploy-left">
+          <div class="deploy-zone" id="deployZone">
+            <span class="dz-big">把项目拖进来</span>
+            <span class="dz-hint">从下方选一个项目卡片，拖到这里 — 或者直接点它。</span>
+            <span class="dz-folder show-only" id="dzFolder">📁 (空)</span>
+          </div>
+
+          <div class="project-shop-tag">PROJECTS · 项目仓库</div>
+          <div class="project-shop" id="projectShop">
+            <!-- populated by JS based on level -->
+          </div>
+        </div>
+
+        <!-- Right: build config panel -->
+        <div class="deploy-right">
+          <div class="config-tag">BUILD &amp; OUTPUT SETTINGS · 配置</div>
+          <div class="config-rows">
+            <div class="config-row">
+              <span class="config-label">Framework</span>
+              <input class="config-input" id="cfgFramework" value="Next.js" readonly>
+            </div>
+            <div class="config-row">
+              <span class="config-label">Build Command</span>
+              <input class="config-input" id="cfgBuild" value="npm run build">
+            </div>
+            <div class="config-row">
+              <span class="config-label">Output Directory</span>
+              <input class="config-input" id="cfgOutput" value=".next">
+            </div>
+            <div class="config-row">
+              <span class="config-label">Install Command</span>
+              <input class="config-input" id="cfgInstall" value="npm install" readonly>
+            </div>
+          </div>
+
+          <div class="env-panel">
+            <div class="env-head">
+              <span class="env-title">Environment Variables · .env</span>
+              <button class="env-add" id="envAdd">+ Add Variable</button>
+            </div>
+            <div class="env-list" id="envList">
+              <!-- env rows go here -->
+            </div>
+          </div>
+
+          <div class="deploy-btn-row">
+            <button class="deploy-btn" id="deployBtn"><span class="tri">▲</span>Deploy</button>
+            <button class="deploy-clear" id="deployClear">清空</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Build log -->
+      <div class="deploy-log" id="deployLog">
+        <div class="log-head">
+          <span class="log-title">BUILD LOGS · 实时日志</span>
+          <span class="log-state idle" id="logState">IDLE</span>
+        </div>
+        <div id="logBody">
+          <div class="lg-empty">
+            点 <strong style="color:white;">Deploy</strong>，日志就会一行行打出来。<br>
+            （像真的在等部署一样。）
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="quote-box" style="margin-top:32px;">
+      <span class="quote-mark">"</span>
+      关 1 教你"默认配置"够用 90% 场景，关 2 让你看到<strong>没设 env 的下场</strong>，
+      关 3 教你<strong>看日志第一行红字</strong> —— 这是排错的全部秘诀。
+      <span class="quote-attr">—— 这三关玩透，下次 Vercel 真出问题，不慌</span>
+    </div>
+  </div>
+</section>
+<!-- §04 Custom domain -->
+<section id="domain">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>04</strong> / 自定义域名</div>
+        <h2 class="section-title">把 fan.com<br>绑<span class="em">上去</span>。</h2>
+      </div>
+      <p class="section-sub">
+        临时域名 <code class="mono">xxx.vercel.app</code> 不像样。
+        想要 <code class="mono">fan.com</code>？4 步。重点是 <strong>DNS</strong>。
+      </p>
+    </div>
+
+    <div class="dom-stage">
+      <div class="dom-steps">
+        <div class="dom-step">
+          <span class="dom-num">STEP 01 · 在 Vercel</span>
+          <h4>项目里 Add Domain</h4>
+          <p>Vercel 项目页 → <strong>Settings → Domains</strong> → 输入 <code class="mono">fan.com</code> → Add。
+          这一步只是<strong>告诉 Vercel</strong>："以后访问 fan.com 的人，请响应给他们我这个项目"。</p>
+          <div class="dom-vis">
+            Vercel <span style="color:var(--accent);">·</span> Settings → Domains → <strong>+ fan.com</strong>
+          </div>
+        </div>
+        <div class="dom-step">
+          <span class="dom-num">STEP 02 · 在域名注册商</span>
+          <h4>改 DNS 记录</h4>
+          <p>去你买域名的地方（Cloudflare / 阿里云 / GoDaddy），找<strong>DNS 管理</strong>。
+          按 Vercel 提示加一条 <code class="mono">A</code> 或 <code class="mono">CNAME</code> 记录。</p>
+          <div class="dom-vis">
+            Cloudflare <span style="color:var(--accent);">·</span> DNS → <strong>+ A 记录 → 76.76.21.21</strong>
+          </div>
+        </div>
+        <div class="dom-step">
+          <span class="dom-num">STEP 03 · 等</span>
+          <h4>DNS 全球生效</h4>
+          <p>DNS 改完不是立刻全球都知道 —— 各地 DNS 缓存陆续刷新，需要 <strong>5 分钟到 24 小时</strong>。
+          可以在 <code class="mono">whatsmydns.net</code> 查进度。</p>
+          <div class="dom-vis">
+            刚改完 <span style="color:var(--accent);">→</span> 中国能访问 · 美国还没生效<br>
+            <strong>耐心</strong> · 大部分 5-30 分钟内全球生效
+          </div>
+        </div>
+        <div class="dom-step">
+          <span class="dom-num">STEP 04 · Vercel 自动</span>
+          <h4>自动配 HTTPS 证书</h4>
+          <p>DNS 一生效，Vercel 立刻通过 <strong>Let's Encrypt</strong> 给你申请免费 SSL 证书 —— 你什么都不用做。
+          访问 <code class="mono">https://fan.com</code> 浏览器自动绿锁。</p>
+          <div class="dom-vis">
+            Let's Encrypt <span style="color:var(--accent);">→</span> SSL 自动签发 · <strong>https://fan.com ✓</strong>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- DNS panel mock (Cloudflare-style) -->
+    <div class="dns-mock">
+      <div class="dns-mock-head">
+        <span class="dns-icon">CF</span>
+        <span class="dns-title">Cloudflare · DNS Records</span>
+        <span class="dns-host">fan.com</span>
+      </div>
+      <table class="dns-table">
+        <thead>
+          <tr>
+            <th>Type</th>
+            <th>Name</th>
+            <th>Content</th>
+            <th>TTL</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><span class="dns-tag">A</span></td>
+            <td>fan.com</td>
+            <td>185.199.108.153</td>
+            <td>Auto</td>
+          </tr>
+          <tr>
+            <td><span class="dns-tag">MX</span></td>
+            <td>fan.com</td>
+            <td>mx1.gmail.com</td>
+            <td>Auto</td>
+          </tr>
+          <tr class="row-new">
+            <td><span class="dns-tag new">A</span></td>
+            <td>fan.com</td>
+            <td>76.76.21.21 <span style="color:var(--accent);">← Vercel 给的</span></td>
+            <td>Auto</td>
+          </tr>
+          <tr class="row-new">
+            <td><span class="dns-tag new">CNAME</span></td>
+            <td>www</td>
+            <td>cname.vercel-dns.com <span style="color:var(--accent);">← Vercel 给的</span></td>
+            <td>Auto</td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="dns-mock-foot">
+        <strong>真实截图大致长这样</strong> —— 上面两行是已有的（不要动），<strong>下面两行 = Vercel 提示你加的</strong>。橘色那条加好就行。<br>
+        小心：A 记录冲突的话，把旧的删掉。同一个 host 不能有两条 A 指不同 IP。
+      </div>
+    </div>
+
+    <div class="quote-box" style="margin-top:32px;">
+      <span class="quote-mark">"</span>
+      DNS 是<strong>电话簿</strong>：浏览器先查"fan.com 在哪"，电话簿告诉它"在 76.76.21.21"，浏览器才去那个地址。
+      改 DNS 就是<strong>改电话簿</strong>。
+      <span class="quote-attr">—— 你不是在挪文件，是在改"指路牌"</span>
+    </div>
+  </div>
+</section>
+
+<!-- §05 Three common failures -->
+<section id="trouble">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>05</strong> / 翻车现场</div>
+        <h2 class="section-title">部署最常见<br>三种<span class="em">翻车</span>。</h2>
+      </div>
+      <p class="section-sub">
+        每条都配诊断步骤 —— 按顺序排查，90% 能自己解决。
+        实在不行截图给 AI，把<strong>红字那一段</strong>带上。
+      </p>
+    </div>
+
+    <div class="ts-stage">
+      <ul class="ts-list">
+
+        <li class="ts-item">
+          <div class="ts-num">01</div>
+          <div>
+            <h3 class="ts-q">Build <span class="em">失败</span> —— 红色 ✕ 出现在日志里</h3>
+            <p class="ts-a">最常见。可能原因：依赖没装上、TypeScript 报错、文件名大小写不对（macOS 不区分，Linux 区分）。<strong>看日志最后红字那一段</strong>，第一行通常就是答案。</p>
+            <div class="ts-diag">
+              <div class="ts-diag-head"><span class="ts-diag-led"></span><span>诊断步骤 · 5 分钟</span></div>
+              <div class="ts-diag-body">
+                <div class="ts-step"><span class="ts-step-num">1.</span><span>打开 Vercel 项目页 → <code>Deployments</code> → 点失败那次。</span></div>
+                <div class="ts-step"><span class="ts-step-num">2.</span><span>看 <code>Build Logs</code> —— 找<strong>第一行红字</strong>（不是中间，是最早出现的红字）。</span></div>
+                <div class="ts-step"><span class="ts-step-num">3.</span><span>常见错：<code>Module not found</code> = 包没装；<code>Type error</code> = TS 报错；<code>EISDIR</code> = 文件路径错。</span></div>
+                <div class="ts-step"><span class="ts-step-num">4.</span><span>本地试 <code>npm run build</code> —— 复现一下，本地能跑通才能上线跑通。</span></div>
+              </div>
+            </div>
+            <span class="ts-action">→ 复制最后 10 行日志 + 截图 → 喂给 AI，90% 直接给答案。</span>
+          </div>
+        </li>
+
+        <li class="ts-item">
+          <div class="ts-num">02</div>
+          <div>
+            <h3 class="ts-q">环境变量<span class="em">没设</span> —— 本地能跑、线上挂</h3>
+            <p class="ts-a">本地 <code>.env</code> 里有 <code>OPENAI_API_KEY=sk-...</code>，但 Vercel 上没设过 —— 线上跑的时候这个变量是 <code>undefined</code>，调 API 直接 500。<strong>.env 文件不会上传到 Vercel</strong>，必须在 Vercel 后台手填。</p>
+            <div class="ts-diag">
+              <div class="ts-diag-head"><span class="ts-diag-led"></span><span>诊断步骤 · 2 分钟</span></div>
+              <div class="ts-diag-body">
+                <div class="ts-step"><span class="ts-step-num">1.</span><span>本地翻一下 <code>.env</code> 或 <code>.env.local</code>，记下所有非空变量名。</span></div>
+                <div class="ts-step"><span class="ts-step-num">2.</span><span>Vercel 项目 → <code>Settings → Environment Variables</code> → 一一加上。</span></div>
+                <div class="ts-step"><span class="ts-step-num">3.</span><span>注意：加完<strong>要重新 Deploy 一次</strong> —— 已部署的版本读不到新变量。</span></div>
+                <div class="ts-step"><span class="ts-step-num">4.</span><span>区分 <code>Production</code> / <code>Preview</code> / <code>Development</code> —— 一般三个都勾上。</span></div>
+              </div>
+            </div>
+            <span class="ts-action">→ 关 2 就是练这个：env 没加 → build OK → 运行时挂。</span>
+          </div>
+        </li>
+
+        <li class="ts-item">
+          <div class="ts-num">03</div>
+          <div>
+            <h3 class="ts-q">域名解析<span class="em">没生效</span> —— DNS 改完打不开</h3>
+            <p class="ts-a">刚改完 DNS 立刻访问 <code>fan.com</code> 报错或转圈 —— 大概率是 DNS 缓存还没刷新。
+            你电脑、ISP、各地 DNS 服务器都缓存着旧记录，得等。</p>
+            <div class="ts-diag">
+              <div class="ts-diag-head"><span class="ts-diag-led"></span><span>诊断步骤 · 等 + 临时绕过</span></div>
+              <div class="ts-diag-body">
+                <div class="ts-step"><span class="ts-step-num">1.</span><span>先去 <code>whatsmydns.net</code> 查 fan.com —— 看绿勾覆盖度。</span></div>
+                <div class="ts-step"><span class="ts-step-num">2.</span><span>如果大部分还是 ✕，<strong>等就完了</strong>。一般 5-30 分钟。极端情况 24 小时。</span></div>
+                <div class="ts-step"><span class="ts-step-num">3.</span><span>急着自己测：本机改 <code>hosts</code> 文件 —— 加一行 <code>76.76.21.21 fan.com</code>，临时强制走 Vercel。</span></div>
+                <div class="ts-step"><span class="ts-step-num">4.</span><span>测完<strong>记得删掉 hosts 那行</strong>，否则别人 DNS 已生效你还看老的。</span></div>
+              </div>
+            </div>
+            <span class="ts-action">→ 90% 情况是单纯没等够 —— 先泡杯咖啡再回来看。</span>
+          </div>
+        </li>
+
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- §06 Cheatsheet -->
+<section id="cheat">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>06</strong> / 速查</div>
+        <h2 class="section-title">截图保存<br>这一<span class="em">页</span>。</h2>
+      </div>
+      <p class="section-sub">
+        7 步流程速记 + 3 个翻车 + 三平台对比。
+        碰到不熟的词查一眼，比每次问 AI 快。
+      </p>
+    </div>
+
+    <!-- Recap row: 7 steps -->
+    <div class="cheat-block" style="margin-bottom: 18px;">
+      <h3><span class="em">·</span> 部署 7 步速记</h3>
+      <div class="recap-row">
+        <div class="recap-cell"><div class="rc-num">01</div><div class="rc-text">git push</div></div>
+        <div class="recap-cell"><div class="rc-num">02</div><div class="rc-text">webhook</div></div>
+        <div class="recap-cell"><div class="rc-num">03</div><div class="rc-text">git clone</div></div>
+        <div class="recap-cell"><div class="rc-num">04</div><div class="rc-text">npm install</div></div>
+        <div class="recap-cell"><div class="rc-num">05</div><div class="rc-text">npm run build</div></div>
+        <div class="recap-cell"><div class="rc-num">06</div><div class="rc-text">CDN 分发</div></div>
+        <div class="recap-cell"><div class="rc-num">07</div><div class="rc-text">URL 上线</div></div>
+      </div>
+      <div class="cheat-foot">
+        看到 Vercel 日志卡在哪一步 —— 对照这 7 个名字，<strong>立刻知道在干什么</strong>。
+      </div>
+    </div>
+
+    <!-- 3 failures + terms -->
+    <div class="cheat-grid">
+      <div class="cheat-block">
+        <h3><span class="em">·</span> 3 个翻车 · 速诊</h3>
+        <table class="cheat-table">
+          <thead>
+            <tr><th>症状</th><th>先查</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="term">build 失败</td>
+              <td class="desc">看日志<strong>第一行红字</strong>。 <code>Module not found</code> = 装包；<code>Type error</code> = TS。</td>
+            </tr>
+            <tr>
+              <td class="term">本地能跑、线上挂</td>
+              <td class="desc">查 <strong>Environment Variables</strong> —— .env 没在 Vercel 配过。加完<strong>要 redeploy</strong>。</td>
+            </tr>
+            <tr>
+              <td class="term">域名打不开</td>
+              <td class="desc">DNS 没生效。<code>whatsmydns.net</code> 查；急用先改本机 hosts。</td>
+            </tr>
+            <tr>
+              <td class="term">改了没更新</td>
+              <td class="desc">浏览器缓存或 CDN 缓存。<strong>Cmd+Shift+R 强刷</strong>，或在 URL 后加 <code>?v=2</code>。</td>
+            </tr>
+            <tr>
+              <td class="term">部署很慢</td>
+              <td class="desc">大概率 <code>npm install</code> 装了一堆 —— 看是不是 dependencies 写多了。</td>
+            </tr>
+          </tbody>
+        </table>
+        <div class="cheat-foot">
+          90% 的部署问题就这 5 类。卡住先来这看一眼。
+        </div>
+      </div>
+
+      <div class="cheat-block">
+        <h3><span class="em">·</span> 部署关键术语</h3>
+        <table class="cheat-table">
+          <thead>
+            <tr><th>词</th><th>是什么</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="term">build</td>
+              <td class="desc">把<strong>源码 → 成品</strong>的过程。压缩、合并、转 TS、生成 HTML。</td>
+            </tr>
+            <tr>
+              <td class="term">deploy</td>
+              <td class="desc">把成品<strong>送上线</strong>的过程。包含 build + 分发。</td>
+            </tr>
+            <tr>
+              <td class="term">CDN</td>
+              <td class="desc">遍布全球的<strong>缓存机房网</strong>。让访问者从最近的机房拿文件。</td>
+            </tr>
+            <tr>
+              <td class="term">DNS</td>
+              <td class="desc">域名 → IP 的<strong>电话簿</strong>。改 DNS = 改 fan.com 指向哪台机器。</td>
+            </tr>
+            <tr>
+              <td class="term">env</td>
+              <td class="desc"><code>.env</code>。装<strong>密钥/配置</strong>的文件。<strong>不上传 git，要在 Vercel 单独配</strong>。</td>
+            </tr>
+            <tr>
+              <td class="term">webhook</td>
+              <td class="desc">一种"事件回调"。GitHub 用它告诉 Vercel"代码变了"。</td>
+            </tr>
+          </tbody>
+        </table>
+        <div class="cheat-foot">
+          AI 用任何一个术语，回来这查一眼 —— 不再卡词。
+        </div>
+      </div>
+    </div>
+
+    <!-- Platform compare -->
+    <div class="plat-compare">
+      <h3><span class="em">·</span> 三大平台对比 · 选哪个？</h3>
+      <table class="plat-table">
+        <thead>
+          <tr>
+            <th>对比维度</th>
+            <th class="platform-col">Vercel</th>
+            <th class="platform-col">Netlify</th>
+            <th class="platform-col">Cloudflare Pages</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="row-name">起家</td>
+            <td class="cell-val">Next.js 官方家</td>
+            <td class="cell-val">最早做静态部署</td>
+            <td class="cell-val">CDN 帝国 + 边缘计算</td>
+          </tr>
+          <tr>
+            <td class="row-name">最适合</td>
+            <td class="cell-val mark-good"><strong>Next.js / React</strong></td>
+            <td class="cell-val mark-mid">静态站 / Hugo / Astro</td>
+            <td class="cell-val mark-mid">需要全球极速 / 大流量</td>
+          </tr>
+          <tr>
+            <td class="row-name">免费额度</td>
+            <td class="cell-val">100 GB / 月带宽</td>
+            <td class="cell-val">100 GB / 月带宽</td>
+            <td class="cell-val mark-good"><strong>无限带宽</strong>免费</td>
+          </tr>
+          <tr>
+            <td class="row-name">部署速度</td>
+            <td class="cell-val mark-good">最快</td>
+            <td class="cell-val mark-mid">快</td>
+            <td class="cell-val mark-mid">中</td>
+          </tr>
+          <tr>
+            <td class="row-name">国内访问</td>
+            <td class="cell-val mark-mid">一般 / 偶尔被墙</td>
+            <td class="cell-val mark-mid">一般</td>
+            <td class="cell-val mark-good">最稳（香港节点）</td>
+          </tr>
+          <tr>
+            <td class="row-name">配置易用度</td>
+            <td class="cell-val mark-good"><strong>最像 0 配置</strong></td>
+            <td class="cell-val mark-mid">易用</td>
+            <td class="cell-val mark-mid">稍复杂</td>
+          </tr>
+          <tr>
+            <td class="row-name">怎么选</td>
+            <td class="cell-val">Next.js → 默认它</td>
+            <td class="cell-val">不用 Next 又想简单</td>
+            <td class="cell-val">国内用户多 / 流量大</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <a href="j3-cache-cdn-figma.html" class="next-post">
+      <div>
+        <div class="np-tag">下一篇 · NEXT · J3 · 进阶</div>
+        <h4>改了为啥<span class="em"> · </span>没生效</h4>
+        <p>Vercel 显示 deploy 成功了，但<strong>访问还是老版本</strong>？这一篇讲<code>cache</code> 和 <code>CDN</code> 的"延迟陷阱"——浏览器缓存、CDN 缓存、Service Worker，哪个在背着你存东西，怎么强制刷新。</p>
+      </div>
+      <span class="np-cta">继续阅读 <span class="arr">→</span></span>
+    </a>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div class="byline-wrap">
+      <div class="byline">
+        <img class="avatar" src="author.jpg" alt="范米花儿">
+        <div class="byline-meta">
+          <div class="byline-label"><span class="dot"></span>作者 · WRITTEN BY</div>
+          <h3 class="byline-name">嗨，我是 <span class="em">范米花儿</span></h3>
+          <p class="byline-tag">一份给设计师的代码入门 ——<br>不需要会写，知道大概怎么回事，跟前端 / AI 沟通就顺多了。</p>
+          <div class="byline-contact">
+            <span class="contact-label">微信</span>
+            <span class="contact-id">vanvan_0422</span>
+            <span class="contact-hint">想看什么主题，加我聊</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="footer-meta">
+      做于 <span class="mono">2026</span> · 用 <span class="heart">●</span> 写给 <span class="mono">DESIGNERS &amp; DEVELOPERS</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+// ==========================================================
+//  §02 Pipeline — 7-step animated walkthrough
+// ==========================================================
+(function () {
+  const steps = document.querySelectorAll('#pipeList .pipe-step');
+  if (!steps.length) return;
+
+  const playBtn = document.getElementById('pipePlay');
+  const resetBtn = document.getElementById('pipeReset');
+  const statusEl = document.getElementById('pipeStatus');
+
+  const STEP_DURATIONS = [800, 700, 900, 1400, 1600, 1100, 800];
+  let timer = null;
+  let currentIndex = -1;
+
+  function setStatus(text, live) {
+    statusEl.innerHTML = live
+      ? '<span class="live">●</span> ' + text
+      : text;
+  }
+
+  function clearAll() {
+    steps.forEach(s => s.classList.remove('is-active', 'is-done'));
+    if (timer) {
+      clearTimeout(timer);
+      timer = null;
+    }
+    currentIndex = -1;
+  }
+
+  function play() {
+    clearAll();
+    playBtn.disabled = true;
+    setStatus('部署中 · running', true);
+    runStep(0);
+  }
+
+  function runStep(i) {
+    if (i > 0) steps[i - 1].classList.add('is-done');
+    if (i >= steps.length) {
+      setStatus('部署完成 · live ✓', false);
+      statusEl.style.color = 'var(--green)';
+      playBtn.disabled = false;
+      // scroll briefly to last step
+      return;
+    }
+    steps[i].classList.add('is-active');
+    currentIndex = i;
+    // bring step into view if needed
+    timer = setTimeout(() => {
+      steps[i].classList.remove('is-active');
+      runStep(i + 1);
+    }, STEP_DURATIONS[i] || 1000);
+  }
+
+  function reset() {
+    clearAll();
+    playBtn.disabled = false;
+    statusEl.style.color = '';
+    setStatus('就绪 · idle', false);
+  }
+
+  playBtn.addEventListener('click', play);
+  resetBtn.addEventListener('click', reset);
+})();
+
+
+// ==========================================================
+//  §03 Vercel deploy game — 3 levels, drag-to-deploy
+// ==========================================================
+(function () {
+  const stage = document.getElementById('deployStage');
+  if (!stage) return;
+
+  // Project library — projects shown vary by level
+  const projects = {
+    nextjsBasic: {
+      id: 'nextjsBasic',
+      name: 'fan-portfolio',
+      desc: 'Next.js · 个人作品集 · 默认配置',
+      icon: 'next',
+      iconText: 'N',
+      framework: 'Next.js',
+      build: 'npm run build',
+      output: '.next',
+      needsEnv: false,
+      isBroken: false,
+      finalUrl: 'fan-portfolio-9j2k.vercel.app'
+    },
+    aiChat: {
+      id: 'aiChat',
+      name: 'ai-chat-app',
+      desc: '需要 OPENAI_API_KEY · 不设直接挂',
+      icon: 'envapp',
+      iconText: 'E',
+      framework: 'Next.js',
+      build: 'npm run build',
+      output: '.next',
+      needsEnv: true,
+      requiredEnv: ['OPENAI_API_KEY'],
+      isBroken: false,
+      finalUrl: 'ai-chat-app-x4n2.vercel.app'
+    },
+    brokenCfg: {
+      id: 'brokenCfg',
+      name: 'design-blog',
+      desc: 'Build Command 写错了 · 看日志找出来',
+      icon: 'broken',
+      iconText: 'B',
+      framework: 'Next.js',
+      build: 'npm run buld',  // intentionally typo
+      output: '.next',
+      needsEnv: false,
+      isBroken: true,
+      brokenField: 'build',
+      brokenExpected: 'npm run build',
+      finalUrl: 'design-blog-7p2k.vercel.app'
+    }
+  };
+
+  // Level config: which projects are shown, what the goal is
+  const levels = {
+    1: {
+      projects: ['nextjsBasic'],
+      mission: '拖一个项目到上方虚线框 → 直接点 <strong>Deploy</strong> → 看日志跑完。',
+      target: 'nextjsBasic',
+      preEnv: []
+    },
+    2: {
+      projects: ['aiChat'],
+      mission: '这个项目需要 <strong>OPENAI_API_KEY</strong> —— 先去 env 面板 + Add Variable，再 Deploy。',
+      target: 'aiChat',
+      preEnv: []
+    },
+    3: {
+      projects: ['brokenCfg'],
+      mission: '直接 Deploy 会失败。看日志红字 → 修 <strong>Build Command</strong> 那一格 → 再 Deploy。',
+      target: 'brokenCfg',
+      preEnv: []
+    }
+  };
+
+  // State
+  let currentLevel = 1;
+  let droppedProject = null;
+  let cleared = new Set();
+  let isDeploying = false;
+  let envVars = []; // array of { key, value }
+
+  // DOM refs
+  const levelButtons = document.querySelectorAll('#deployLevels .level-btn');
+  const projectShop = document.getElementById('projectShop');
+  const deployZone = document.getElementById('deployZone');
+  const dzFolder = document.getElementById('dzFolder');
+  const missionText = document.getElementById('missionText');
+  const missionDone = document.getElementById('missionDone');
+  const cfgFramework = document.getElementById('cfgFramework');
+  const cfgBuild = document.getElementById('cfgBuild');
+  const cfgOutput = document.getElementById('cfgOutput');
+  const envList = document.getElementById('envList');
+  const envAddBtn = document.getElementById('envAdd');
+  const deployBtn = document.getElementById('deployBtn');
+  const deployClear = document.getElementById('deployClear');
+  const deployLog = document.getElementById('deployLog');
+  const logBody = document.getElementById('logBody');
+  const logState = document.getElementById('logState');
+
+  // -------- Level loading --------
+  function loadLevel(n) {
+    currentLevel = n;
+    levelButtons.forEach(b => {
+      b.classList.toggle('is-active', parseInt(b.dataset.level, 10) === n);
+    });
+    missionText.innerHTML = levels[n].mission;
+    droppedProject = null;
+    envVars = [];
+    isDeploying = false;
+    renderProjects();
+    renderEnv();
+    resetZone();
+    resetConfig();
+    resetLog();
+  }
+
+  function renderProjects() {
+    projectShop.innerHTML = '';
+    const lv = levels[currentLevel];
+    lv.projects.forEach(pid => {
+      const p = projects[pid];
+      const card = document.createElement('div');
+      card.className = 'proj-card';
+      card.draggable = true;
+      card.dataset.proj = p.id;
+      card.innerHTML = `
+        <div class="proj-icon ${p.icon}">${p.iconText}</div>
+        <div class="proj-meta">
+          <div class="proj-name">${p.name}</div>
+          <div class="proj-desc">${p.desc}</div>
+        </div>
+      `;
+      // Drag start
+      card.addEventListener('dragstart', e => {
+        e.dataTransfer.setData('text/plain', p.id);
+        e.dataTransfer.effectAllowed = 'copy';
+        card.style.opacity = '0.5';
+      });
+      card.addEventListener('dragend', () => { card.style.opacity = ''; });
+      // Click fallback (for mobile / accessibility)
+      card.addEventListener('click', () => {
+        if (isDeploying) return;
+        dropProject(p.id);
+      });
+      projectShop.appendChild(card);
+    });
+  }
+
+  function resetZone() {
+    deployZone.classList.remove('has-project', 'is-dragover');
+    const big = deployZone.querySelector('.dz-big');
+    big.textContent = '把项目拖进来';
+    const hint = deployZone.querySelector('.dz-hint');
+    hint.textContent = '从下方选一个项目卡片，拖到这里 — 或者直接点它。';
+    dzFolder.textContent = '📁 (空)';
+  }
+
+  function resetConfig() {
+    const lv = levels[currentLevel];
+    cfgFramework.value = 'Next.js';
+    cfgBuild.value = 'npm run build';
+    cfgBuild.classList.remove('is-broken', 'is-fixed');
+    cfgOutput.value = '.next';
+    deployBtn.disabled = false;
+  }
+
+  function resetLog() {
+    logBody.innerHTML = `
+      <div class="lg-empty">
+        点 <strong style="color:white;">Deploy</strong>，日志就会一行行打出来。<br>
+        （像真的在等部署一样。）
+      </div>
+    `;
+    setLogState('idle', 'IDLE');
+  }
+
+  function setLogState(cls, text) {
+    logState.className = 'log-state ' + cls;
+    logState.textContent = text;
+  }
+
+  // -------- Env panel --------
+  function renderEnv() {
+    envList.innerHTML = '';
+    if (!envVars.length) {
+      const empty = document.createElement('div');
+      empty.className = 'env-empty';
+      empty.textContent = '(无环境变量 · 默认就这样)';
+      envList.appendChild(empty);
+      return;
+    }
+    envVars.forEach((row, i) => {
+      const div = document.createElement('div');
+      div.className = 'env-row';
+      div.innerHTML = `
+        <input type="text" placeholder="KEY (e.g. OPENAI_API_KEY)" value="${escapeAttr(row.key)}" data-i="${i}" data-f="key">
+        <input type="text" placeholder="value" value="${escapeAttr(row.value)}" data-i="${i}" data-f="value">
+        <button class="env-del" data-i="${i}" aria-label="删除">×</button>
+      `;
+      envList.appendChild(div);
+    });
+    // Wire input changes
+    envList.querySelectorAll('input').forEach(inp => {
+      inp.addEventListener('input', e => {
+        const i = parseInt(e.target.dataset.i, 10);
+        const f = e.target.dataset.f;
+        envVars[i][f] = e.target.value;
+      });
+    });
+    envList.querySelectorAll('.env-del').forEach(btn => {
+      btn.addEventListener('click', e => {
+        const i = parseInt(e.target.dataset.i, 10);
+        envVars.splice(i, 1);
+        renderEnv();
+      });
+    });
+  }
+
+  function escapeAttr(s) {
+    return String(s).replace(/"/g, '&quot;').replace(/</g, '&lt;');
+  }
+
+  envAddBtn.addEventListener('click', () => {
+    if (isDeploying) return;
+    envVars.push({ key: '', value: '' });
+    renderEnv();
+    // Focus the new key field
+    setTimeout(() => {
+      const inputs = envList.querySelectorAll('input');
+      if (inputs.length) inputs[inputs.length - 2].focus();
+    }, 50);
+  });
+
+  // -------- Drag & drop --------
+  deployZone.addEventListener('dragover', e => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'copy';
+    deployZone.classList.add('is-dragover');
+  });
+  deployZone.addEventListener('dragleave', () => {
+    deployZone.classList.remove('is-dragover');
+  });
+  deployZone.addEventListener('drop', e => {
+    e.preventDefault();
+    deployZone.classList.remove('is-dragover');
+    const pid = e.dataTransfer.getData('text/plain');
+    if (pid) dropProject(pid);
+  });
+
+  function dropProject(pid) {
+    if (isDeploying) return;
+    const p = projects[pid];
+    if (!p) return;
+    droppedProject = p;
+    deployZone.classList.add('has-project');
+    deployZone.querySelector('.dz-big').textContent = '✓ 已识别项目';
+    deployZone.querySelector('.dz-hint').innerHTML = `Detected framework: <strong>${p.framework}</strong>`;
+    dzFolder.textContent = '📁 ' + p.name;
+
+    // Pre-fill config based on project
+    cfgFramework.value = p.framework;
+    cfgOutput.value = p.output;
+    if (p.isBroken) {
+      cfgBuild.value = p.build;
+      cfgBuild.classList.add('is-broken');
+      cfgBuild.classList.remove('is-fixed');
+    } else {
+      cfgBuild.value = p.build;
+      cfgBuild.classList.remove('is-broken', 'is-fixed');
+    }
+  }
+
+  // Track when user fixes the broken build command
+  cfgBuild.addEventListener('input', () => {
+    if (!droppedProject) return;
+    if (droppedProject.isBroken) {
+      if (cfgBuild.value.trim() === droppedProject.brokenExpected) {
+        cfgBuild.classList.remove('is-broken');
+        cfgBuild.classList.add('is-fixed');
+      } else {
+        cfgBuild.classList.add('is-broken');
+        cfgBuild.classList.remove('is-fixed');
+      }
+    }
+  });
+
+  // -------- Level switch --------
+  levelButtons.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const n = parseInt(btn.dataset.level, 10);
+      loadLevel(n);
+    });
+  });
+
+  // Clear button
+  deployClear.addEventListener('click', () => {
+    if (isDeploying) return;
+    droppedProject = null;
+    envVars = [];
+    renderEnv();
+    resetZone();
+    resetConfig();
+    resetLog();
+  });
+
+  // -------- Deploy logic --------
+  deployBtn.addEventListener('click', () => {
+    if (isDeploying) return;
+    if (!droppedProject) {
+      flashZone();
+      return;
+    }
+    runDeploy(droppedProject);
+  });
+
+  function flashZone() {
+    deployZone.animate(
+      [
+        { transform: 'translateX(0)' },
+        { transform: 'translateX(-4px)' },
+        { transform: 'translateX(4px)' },
+        { transform: 'translateX(0)' }
+      ],
+      { duration: 320, easing: 'ease-out' }
+    );
+  }
+
+  function runDeploy(p) {
+    isDeploying = true;
+    deployBtn.disabled = true;
+    setLogState('running', 'RUNNING');
+    logBody.innerHTML = '';
+
+    // Decide: will it fail?
+    const buildCmd = cfgBuild.value.trim();
+    const buildIsWrong = (buildCmd !== 'npm run build');
+    const envMissing = p.needsEnv && !p.requiredEnv.every(req =>
+      envVars.some(v => v.key.trim() === req && v.value.trim() !== '')
+    );
+
+    // Build the script
+    const script = [];
+    addLine(script, 'info', '12:34:01', 'Cloning github.com/you/' + p.name + ' (Branch: main)...');
+    addLine(script, 'info', '12:34:02', 'Cloned in 1.2s.');
+    addLine(script, 'detect', '12:34:02', 'Detecting framework... <strong>' + p.framework + '</strong>');
+    addLine(script, 'info', '12:34:03', 'Running install command: <code style="color:#ffc;">npm install</code>');
+
+    // npm install with progress bar
+    addProgressBar(script, '12:34:03', 'Installing dependencies', 320, 'packages');
+
+    addLine(script, 'ok', '12:34:24', '✓ 320 packages installed in 21s');
+    addLine(script, 'info', '12:34:24', 'Running build command: <code style="color:#ffc;">' + escapeText(buildCmd) + '</code>');
+
+    if (buildIsWrong) {
+      // Build fail path (level 3 default)
+      addLine(script, 'info', '12:34:25', 'sh: 1: ' + escapeText(buildCmd.split(' ').slice(-1)[0]) + ': not found');
+      addLine(script, 'err', '12:34:25', '✕ Error: <strong>npm ERR! Missing script: "' + escapeText(buildCmd.replace('npm run ','')) + '"</strong>');
+      addLine(script, 'err', '12:34:25', '✕ Build failed · exit code 1');
+      script.push({ type: 'fail', msg: '看日志最后那行 —— 是不是把 build 拼错了？正确写法是 <code style="color:#ffc;">npm run build</code>。改对再 Deploy。' });
+    } else {
+      // Build success
+      addProgressBar(script, '12:34:26', 'Building pages', 42, 'pages');
+      addLine(script, 'ok', '12:34:38', '✓ Compiled successfully');
+      addLine(script, 'info', '12:34:38', 'Generating static pages (42/42)');
+      addLine(script, 'ok', '12:34:40', '✓ Build output: .next · 4.2 MB');
+      addLine(script, 'info', '12:34:41', 'Uploading build outputs...');
+      addProgressBar(script, '12:34:41', 'Deploying to CDN', 50, 'regions');
+      addLine(script, 'ok', '12:34:48', '✓ Deployed to 50 edge regions worldwide');
+
+      if (envMissing) {
+        // Build OK, but runtime will fail — show warning + fail card (level 2 typical)
+        addLine(script, 'warn', '12:34:48', '⚠ Warning: app reads <strong>' + p.requiredEnv.join(', ') + '</strong> — not set in Environment Variables');
+        addLine(script, 'err', '12:34:49', '✕ Runtime error on first request: <strong>OPENAI_API_KEY is undefined</strong>');
+        addLine(script, 'err', '12:34:49', '✕ Deploy succeeded but app crashes · 500 Internal Server Error');
+        script.push({ type: 'fail', msg: '这个项目需要 <strong>' + p.requiredEnv.join(', ') + '</strong> —— 但你没在 env 面板里加。<br>解决：右边 + Add Variable → 填 KEY 和值 → 再 Deploy。' });
+      } else {
+        // True success
+        script.push({ type: 'success', url: p.finalUrl });
+      }
+    }
+
+    // Play the script with timing
+    playScript(script, p);
+  }
+
+  function addLine(arr, kind, time, text) {
+    arr.push({ type: 'line', kind, time, text, delay: 240 });
+  }
+  function addProgressBar(arr, time, label, target, unit) {
+    arr.push({ type: 'progress', time, label, target, unit });
+  }
+
+  function escapeText(s) {
+    return String(s)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  }
+
+  function playScript(script, project) {
+    let i = 0;
+    function next() {
+      if (i >= script.length) {
+        // done — final state already pushed as last item
+        return;
+      }
+      const item = script[i++];
+      if (item.type === 'line') {
+        renderLine(item);
+        setTimeout(next, item.delay);
+      } else if (item.type === 'progress') {
+        renderProgress(item, next);
+      } else if (item.type === 'success') {
+        renderSuccess(item, project);
+        // Mark level cleared
+        cleared.add(currentLevel);
+        updateMedals();
+        isDeploying = false;
+        deployBtn.disabled = false;
+        setLogState('success', 'READY · LIVE');
+        // Mark project as deployed in shop
+        const card = projectShop.querySelector(`[data-proj="${project.id}"]`);
+        if (card) card.classList.add('is-deployed');
+      } else if (item.type === 'fail') {
+        renderFail(item);
+        isDeploying = false;
+        deployBtn.disabled = false;
+        setLogState('failed', 'FAILED');
+      }
+    }
+    next();
+  }
+
+  function renderLine(item) {
+    const div = document.createElement('div');
+    div.className = 'log-line';
+    let kindClass = 'lg-info';
+    if (item.kind === 'ok') kindClass = 'lg-ok';
+    else if (item.kind === 'err') kindClass = 'lg-err';
+    else if (item.kind === 'warn') kindClass = 'lg-warn';
+    else if (item.kind === 'detect') kindClass = 'lg-detect';
+    div.innerHTML = `<span class="lg-time">${item.time}</span><span class="${kindClass}">${item.text}</span>`;
+    logBody.appendChild(div);
+    logBody.scrollTop = deployLog.scrollHeight;
+    deployLog.scrollTop = deployLog.scrollHeight;
+  }
+
+  function renderProgress(item, done) {
+    const div = document.createElement('div');
+    div.className = 'log-line';
+    div.innerHTML = `
+      <span class="lg-time">${item.time}</span>
+      <span class="lg-info">${item.label} <span class="lg-bar"><span class="lg-bar-fill" style="width:0%;"></span></span> <span class="lg-prog-num">0 / ${item.target}</span></span>
+    `;
+    logBody.appendChild(div);
+    deployLog.scrollTop = deployLog.scrollHeight;
+
+    const fill = div.querySelector('.lg-bar-fill');
+    const numEl = div.querySelector('.lg-prog-num');
+    let frame = 0;
+    const totalFrames = 18;
+    const tick = () => {
+      frame++;
+      const p = Math.min(1, frame / totalFrames);
+      const eased = p * p * (3 - 2 * p); // smoothstep
+      fill.style.width = (eased * 100) + '%';
+      numEl.textContent = Math.round(eased * item.target) + ' / ' + item.target + ' ' + item.unit;
+      if (frame < totalFrames) {
+        setTimeout(tick, 50);
+      } else {
+        fill.style.background = 'var(--term-ok)';
+        setTimeout(done, 200);
+      }
+    };
+    setTimeout(tick, 100);
+  }
+
+  function renderSuccess(item, project) {
+    const div = document.createElement('div');
+    div.className = 'lg-success-card';
+    div.innerHTML = `
+      <div class="succ-label">✓ DEPLOYMENT READY</div>
+      <div class="succ-url"><a href="javascript:void(0)" onclick="return false;">https://${item.url}</a></div>
+      <div class="succ-meta">部署用时 47s · 50 regions · HTTPS auto-issued · gzip on</div>
+    `;
+    logBody.appendChild(div);
+    deployLog.scrollTop = deployLog.scrollHeight;
+  }
+
+  function renderFail(item) {
+    const div = document.createElement('div');
+    div.className = 'lg-fail-card';
+    div.innerHTML = `
+      <div class="fail-label">✕ DEPLOYMENT FAILED</div>
+      <div class="fail-msg">${item.msg}</div>
+      <div class="fail-hint">提示：失败的部署不会替换线上版本 —— 用户看到的还是上次成功的那次。</div>
+    `;
+    logBody.appendChild(div);
+    deployLog.scrollTop = deployLog.scrollHeight;
+  }
+
+  function updateMedals() {
+    levelButtons.forEach(b => {
+      const n = parseInt(b.dataset.level, 10);
+      b.classList.toggle('is-cleared', cleared.has(n));
+    });
+    missionDone.textContent = cleared.size;
+  }
+
+  // -------- Init --------
+  loadLevel(1);
+  updateMedals();
+})();
+
+
+// ==========================================================
+//  Roadmap modal
+// ==========================================================
+(function(){
+  var modal = document.getElementById('rm-modal');
+  if (!modal) return;
+  var openBtns = document.querySelectorAll('[data-rm-open]');
+  var closeBtns = modal.querySelectorAll('[data-rm-close]');
+  function open() { modal.hidden = false; document.body.style.overflow = 'hidden'; }
+  function close() { modal.hidden = true; document.body.style.overflow = ''; }
+  openBtns.forEach(function(b){ b.addEventListener('click', function(e){ e.preventDefault(); open(); }); });
+  closeBtns.forEach(function(b){ b.addEventListener('click', close); });
+  document.addEventListener('keydown', function(e){ if (e.key === 'Escape' && !modal.hidden) close(); });
+})();
+</script>
+
+
+<!-- 路线图弹窗 -->
+<div class="rm-modal" id="rm-modal" hidden>
+  <div class="rm-backdrop" data-rm-close></div>
+  <div class="rm-dialog" role="dialog" aria-label="完整路线图">
+    <button class="rm-close" data-rm-close aria-label="关闭">✕</button>
+    <div class="rm-header">
+      <div class="rm-tag">完整路线图 · ROADMAP</div>
+      <h3 class="rm-title">9 模块 <span class="rm-em">·</span> 28 篇</h3>
+      <p class="rm-sub">设计篇 5 模块 / 15 篇 + 工程篇 4 系列 / 13 篇</p>
+    </div>
+    <div class="rm-body">
+      <div class="rm-mod">
+        <div class="rm-mod-key">A · 单元素与组件</div>
+        <div class="rm-mod-list">
+          <a href="basics-figma.html" class="rm-cell"><span class="rm-cell-code">A0</span><span class="rm-cell-name">三件套 · HTML / CSS / JS</span><span class="rm-cell-tier">入门</span></a>
+          <a href="box-figma.html" class="rm-cell"><span class="rm-cell-code">A1</span><span class="rm-cell-name">盒子 · Auto Layout</span><span class="rm-cell-tier">基础</span></a>
+          <a href="components-figma.html" class="rm-cell"><span class="rm-cell-code">A2</span><span class="rm-cell-name">组件 · Variants &amp; Props</span><span class="rm-cell-tier">基础</span></a>
+          <a href="button-system-figma.html" class="rm-cell"><span class="rm-cell-code">A3</span><span class="rm-cell-name">Button System · 组件演化</span><span class="rm-cell-tier">进阶</span></a>
+        </div>
+      </div>
+      <div class="rm-mod">
+        <div class="rm-mod-key">B · 多组件协作</div>
+        <div class="rm-mod-list">
+          <a href="page-figma.html" class="rm-cell"><span class="rm-cell-code">B0</span><span class="rm-cell-name">拼页面 · 组件嵌套</span><span class="rm-cell-tier">入门</span></a>
+          <a href="data-flow-figma.html" class="rm-cell"><span class="rm-cell-code">B1</span><span class="rm-cell-name">数据流 · 概念</span><span class="rm-cell-tier">基础</span></a>
+          <a href="data-flow-cases-figma.html" class="rm-cell"><span class="rm-cell-code">B2</span><span class="rm-cell-name">数据流 · 实战 5 案例</span><span class="rm-cell-tier">进阶</span></a>
+        </div>
+      </div>
+      <div class="rm-mod">
+        <div class="rm-mod-key">C · 视觉系统</div>
+        <div class="rm-mod-list">
+          <a href="tokens-figma.html" class="rm-cell"><span class="rm-cell-code">C0</span><span class="rm-cell-name">Variables / Tokens 入门</span><span class="rm-cell-tier">入门</span></a>
+          <a href="colors-type-figma.html" class="rm-cell"><span class="rm-cell-code">C1</span><span class="rm-cell-name">Colors / Type / Spacing</span><span class="rm-cell-tier">基础</span></a>
+          <a href="theme-switch-figma.html" class="rm-cell"><span class="rm-cell-code">C2</span><span class="rm-cell-name">Theme 切换实战</span><span class="rm-cell-tier">进阶</span></a>
+        </div>
+      </div>
+      <div class="rm-mod">
+        <div class="rm-mod-key">D · 状态与交互</div>
+        <div class="rm-mod-list">
+          <a href="states-figma.html" class="rm-cell"><span class="rm-cell-code">D0</span><span class="rm-cell-name">视觉态 · 看得见的状态</span><span class="rm-cell-tier">入门</span></a>
+          <a href="interactive-figma.html" class="rm-cell"><span class="rm-cell-code">D1</span><span class="rm-cell-name">Interactive Component</span><span class="rm-cell-tier">基础</span></a>
+          <a href="transition-figma.html" class="rm-cell"><span class="rm-cell-code">D2</span><span class="rm-cell-name">动画 · Transition</span><span class="rm-cell-tier">进阶</span></a>
+        </div>
+      </div>
+      <div class="rm-mod">
+        <div class="rm-mod-key">E · 工程化</div>
+        <div class="rm-mod-list">
+          <a href="naming-figma.html" class="rm-cell"><span class="rm-cell-code">E0</span><span class="rm-cell-name">命名 / 图层规范</span><span class="rm-cell-tier">入门</span></a>
+          <a href="handoff-figma.html" class="rm-cell"><span class="rm-cell-code">E2</span><span class="rm-cell-name">Handoff &amp; 设计系统</span><span class="rm-cell-tier">进阶</span></a>
+        </div>
+      </div>
+      <div class="rm-mod">
+        <div class="rm-mod-key">F · 工程入门</div>
+        <div class="rm-mod-list">
+          <a href="f1-npm-figma.html" class="rm-cell"><span class="rm-cell-code">F1</span><span class="rm-cell-name">npm 是什么</span><span class="rm-cell-tier">入门</span></a>
+          <a href="f2-import-figma.html" class="rm-cell"><span class="rm-cell-code">F2</span><span class="rm-cell-name">import 与路径</span><span class="rm-cell-tier">入门</span></a>
+          <a href="f3-dev-build-figma.html" class="rm-cell"><span class="rm-cell-code">F3</span><span class="rm-cell-name">dev vs build</span><span class="rm-cell-tier">基础</span></a>
+          <a href="f4-hidden-files-figma.html" class="rm-cell"><span class="rm-cell-code">F4</span><span class="rm-cell-name">看不见的文件</span><span class="rm-cell-tier">基础</span></a>
+        </div>
+      </div>
+      <div class="rm-mod">
+        <div class="rm-mod-key">G · 版本控制</div>
+        <div class="rm-mod-list">
+          <a href="g1-commit-branch-figma.html" class="rm-cell"><span class="rm-cell-code">G1</span><span class="rm-cell-name">commit / branch</span><span class="rm-cell-tier">入门</span></a>
+          <a href="g2-conflict-figma.html" class="rm-cell"><span class="rm-cell-code">G2</span><span class="rm-cell-name">冲突怎么解</span><span class="rm-cell-tier">基础</span></a>
+          <a href="g3-pr-review-figma.html" class="rm-cell"><span class="rm-cell-code">G3</span><span class="rm-cell-name">PR / Review</span><span class="rm-cell-tier">进阶</span></a>
+        </div>
+      </div>
+      <div class="rm-mod">
+        <div class="rm-mod-key">H · 浏览器调试</div>
+        <div class="rm-mod-list">
+          <a href="h1-devtools-elements-figma.html" class="rm-cell"><span class="rm-cell-code">H1</span><span class="rm-cell-name">DevTools Elements</span><span class="rm-cell-tier">入门</span></a>
+          <a href="h2-console-error-figma.html" class="rm-cell"><span class="rm-cell-code">H2</span><span class="rm-cell-name">Console 报错</span><span class="rm-cell-tier">基础</span></a>
+          <a href="h3-network-figma.html" class="rm-cell"><span class="rm-cell-code">H3</span><span class="rm-cell-name">Network 面板</span><span class="rm-cell-tier">进阶</span></a>
+        </div>
+      </div>
+      <div class="rm-mod">
+        <div class="rm-mod-key">J · 上线</div>
+        <div class="rm-mod-list">
+          <a href="j1-dns-figma.html" class="rm-cell"><span class="rm-cell-code">J1</span><span class="rm-cell-name">DNS / 域名</span><span class="rm-cell-tier">基础</span></a>
+          <a href="j2-vercel-figma.html" class="rm-cell"><span class="rm-cell-code">J2</span><span class="rm-cell-name">Vercel 部署</span><span class="rm-cell-tier">基础</span></a>
+          <a href="j3-cache-cdn-figma.html" class="rm-cell"><span class="rm-cell-code">J3</span><span class="rm-cell-name">缓存 / CDN</span><span class="rm-cell-tier">进阶</span></a>
+        </div>
+      </div>
+    </div>
+    <div class="rm-footer">
+      <span>未完待续 · 想看什么主题加我聊</span>
+      <span class="rm-wechat">微信 vanvan_0422</span>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

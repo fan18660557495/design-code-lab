@@ -1,0 +1,2844 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>./ 还是 ../  — 路径不是地图，是从哪儿出发</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,300..900&family=Geist:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Noto+Sans+SC:wght@300;400;500;700;900&family=Noto+Serif+SC:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f3eee5;
+    --bg-2: #ebe4d4;
+    --ink: #16161d;
+    --ink-soft: #4a4a55;
+    --ink-mute: #8a8a92;
+    --line: #d5cdba;
+    --line-soft: #e3dcca;
+    --accent: #ff4d2e;
+    --accent-soft: #ffe4dc;
+    --blue: #0a4cff;
+    --blue-soft: #dde6ff;
+    --green: #1f6b3a;
+    --green-soft: #d4ecdb;
+    --yellow: #ffcf3d;
+    --paper: #faf7f0;
+    --shadow: 0 1px 0 rgba(0,0,0,0.04), 0 8px 24px rgba(22,22,29,0.06);
+
+    /* path/folder color hints */
+    --c-pages: #6b4c9a;
+    --c-pages-soft: #ece1ff;
+    --c-comp: #b06c00;
+    --c-comp-soft: #fff0d4;
+    --c-lib: #1f6b3a;
+    --c-lib-soft: #d4ecdb;
+    --c-styles: #0a4cff;
+    --c-styles-soft: #dde6ff;
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'Geist', 'Noto Sans SC', system-ui, -apple-system, sans-serif;
+    font-size: 16px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    background-image: radial-gradient(circle at 1px 1px, rgba(22,22,29,0.05) 1px, transparent 0);
+    background-size: 24px 24px;
+  }
+
+  /* Typography */
+  .display-cn { font-family: 'Noto Serif SC', 'Fraunces', serif; font-weight: 900; letter-spacing: -0.01em; }
+  .display-en { font-family: 'Fraunces', 'Noto Serif SC', serif; font-weight: 600; font-style: italic; letter-spacing: -0.02em; }
+  .mono { font-family: 'JetBrains Mono', monospace; }
+  .label { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-mute); }
+
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 0 32px; }
+
+  /* topbar */
+  .topbar {
+    border-bottom: 1px dashed var(--line);
+    padding: 16px 0;
+    background: rgba(243, 238, 229, 0.85);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    backdrop-filter: blur(8px);
+  }
+  .topbar-inner { display: flex; justify-content: space-between; align-items: center; gap: 24px; flex-wrap: wrap; }
+  .brand { font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 600; }
+  .brand .dot { display: inline-block; width: 8px; height: 8px; background: var(--accent); border-radius: 50%; margin-right: 8px; vertical-align: middle; animation: pulse 2s ease-in-out infinite; }
+  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+  .nav-links { display: flex; gap: 18px; font-size: 13px; flex-wrap: wrap; }
+  .nav-links a { color: var(--ink-soft); text-decoration: none; transition: color 0.2s; }
+  .nav-links a:hover { color: var(--accent); }
+  .nav-links a.current { color: var(--accent); font-weight: 600; }
+  a.brand { text-decoration: none; color: inherit; transition: color 0.2s; cursor: pointer; }
+  a.brand:hover { color: var(--accent); }
+
+  /* hero */
+  .hero { padding: 100px 0 80px; position: relative; overflow: hidden; }
+  .hero-meta { display: flex; gap: 24px; margin-bottom: 32px; align-items: center; flex-wrap: wrap; }
+  .hero-meta .pill { padding: 6px 12px; border: 1px solid var(--ink); border-radius: 100px; font-size: 11px; font-family: 'JetBrains Mono', monospace; letter-spacing: 0.05em; }
+  .hero-meta .pill.fill { background: var(--ink); color: var(--bg); }
+  .hero h1 {
+    font-family: 'Noto Serif SC', 'Fraunces', serif;
+    font-weight: 900;
+    font-size: clamp(46px, 6.5vw, 84px);
+    line-height: 0.98;
+    letter-spacing: -0.03em;
+    margin: 0 0 24px;
+  }
+  .hero h1 .em { font-family: 'Noto Serif SC', serif; font-weight: 500; color: var(--accent); }
+  .hero h1 .x { display: inline-block; transform: translateY(-0.05em); margin: 0 0.05em; color: var(--ink-mute); font-weight: 300; }
+  .hero h1 .mono-em {
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 600;
+    font-size: 0.78em;
+    color: var(--accent);
+    letter-spacing: -0.01em;
+    background: var(--accent-soft);
+    padding: 2px 14px;
+    border-radius: 6px;
+    vertical-align: 0.06em;
+  }
+  .hero p.lede { font-size: 20px; line-height: 1.5; max-width: 640px; color: var(--ink-soft); margin: 0 0 40px; }
+  .hero p.lede .em { font-family: 'Noto Serif SC', serif; color: var(--accent); font-weight: 500; }
+  .hero p.lede code { font-family: 'JetBrains Mono', monospace; font-size: 0.86em; background: var(--bg-2); padding: 1px 7px; border-radius: 3px; color: var(--ink); }
+  .hero-grid { display: grid; grid-template-columns: 1.4fr 1fr; gap: 48px; align-items: end; }
+  @media (max-width: 880px) { .hero-grid { grid-template-columns: 1fr; } }
+  .hero-side { border-left: 1px dashed var(--line); padding-left: 24px; font-size: 13px; color: var(--ink-soft); }
+  .hero-side .row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px dashed var(--line); gap: 12px; }
+  .hero-side .row:last-child { border-bottom: none; }
+  .hero-side .row .k { color: var(--ink-mute); font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.05em; text-transform: uppercase; flex-shrink: 0; }
+  .hero-side .row .v { font-weight: 500; text-align: right; }
+
+  /* section */
+  section { padding: 80px 0; border-top: 1px solid var(--line); position: relative; animation: fadeIn 0.6s ease-out backwards; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+  .section-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 48px; flex-wrap: wrap; gap: 16px; }
+  .section-num { font-family: 'JetBrains Mono', monospace; font-size: 13px; color: var(--ink-mute); letter-spacing: 0.1em; }
+  .section-num strong { color: var(--accent); }
+  .section-title {
+    font-family: 'Noto Serif SC', serif;
+    font-weight: 900;
+    font-size: clamp(32px, 4.5vw, 52px);
+    line-height: 1.05;
+    letter-spacing: -0.02em;
+    margin: 0;
+    max-width: 18ch;
+  }
+  .section-title .em { font-family: 'Noto Serif SC', serif; font-weight: 500; color: var(--accent); }
+  .section-sub { color: var(--ink-soft); font-size: 17px; max-width: 38ch; line-height: 1.55; margin: 0; }
+
+  .em { font-family: 'Noto Serif SC', serif; font-weight: 500; color: var(--accent); }
+
+  /* hint strip */
+  .hint-strip {
+    margin-top: 16px;
+    padding: 14px 18px;
+    background: var(--accent-soft);
+    border-left: 3px solid var(--accent);
+    border-radius: 4px;
+    font-size: 13px;
+    color: var(--ink);
+    line-height: 1.55;
+  }
+  .hint-strip .hint-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--accent);
+    letter-spacing: 0.12em;
+    margin-right: 10px;
+    text-transform: uppercase;
+  }
+  .hint-strip code { font-family: 'JetBrains Mono', monospace; font-size: 12px; background: rgba(255,255,255,0.6); padding: 1px 6px; border-radius: 3px; }
+
+  /* quote */
+  .quote-box {
+    margin: 32px 0 0;
+    padding: 24px 28px;
+    background: var(--paper);
+    border-left: 3px solid var(--ink);
+    border-radius: 0 6px 6px 0;
+    font-family: 'Noto Serif SC', serif;
+    font-size: 18px;
+    line-height: 1.55;
+    color: var(--ink);
+    font-weight: 500;
+  }
+  .quote-box .quote-mark {
+    font-family: 'Noto Serif SC', serif;
+    color: var(--accent);
+    font-size: 28px;
+    line-height: 1;
+    margin-right: 8px;
+    font-weight: 500;
+  }
+  .quote-box .quote-attr {
+    display: block;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--ink-mute);
+    margin-top: 12px;
+    letter-spacing: 0.05em;
+    font-weight: 400;
+  }
+
+  /* ============= §01 Office floor plan ============= */
+  .office-stage {
+    margin-top: 24px;
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  .office-grid {
+    display: grid;
+    grid-template-columns: 1.3fr 1fr;
+    gap: 0;
+    min-height: 540px;
+  }
+  @media (max-width: 880px) { .office-grid { grid-template-columns: 1fr; } }
+
+  .office-canvas {
+    background: var(--paper);
+    background-image:
+      linear-gradient(rgba(22,22,29,0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(22,22,29,0.04) 1px, transparent 1px);
+    background-size: 16px 16px;
+    padding: 28px 32px;
+    border-right: 1px solid var(--line);
+    position: relative;
+  }
+  @media (max-width: 880px) { .office-canvas { border-right: none; border-bottom: 1px solid var(--line); } }
+  .office-building {
+    border: 1.5px solid var(--ink);
+    border-radius: 6px;
+    background: white;
+    overflow: hidden;
+    box-shadow: 4px 4px 0 var(--ink);
+  }
+  .office-roof {
+    background: var(--ink);
+    color: white;
+    padding: 10px 16px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    letter-spacing: 0.04em;
+  }
+  .office-roof .roof-tag { color: var(--accent); }
+  .office-roof .roof-rt { color: rgba(255,255,255,0.5); font-size: 10px; letter-spacing: 0.1em; }
+  .office-floor {
+    padding: 14px 16px;
+    border-bottom: 1px dashed var(--line);
+    cursor: pointer;
+    transition: background 0.18s;
+  }
+  .office-floor:last-child { border-bottom: none; }
+  .office-floor.is-active { background: var(--accent-soft); }
+  .office-floor-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 8px;
+  }
+  .office-floor-name {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--ink);
+  }
+  .office-floor-name .of-icon {
+    display: inline-block;
+    width: 12px; height: 10px;
+    background: var(--ink-mute);
+    border-radius: 2px 2px 0 0;
+    margin-right: 8px;
+    vertical-align: -1px;
+  }
+  .office-floor.is-active .of-icon { background: var(--accent); }
+  .office-floor-num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--ink-mute);
+    letter-spacing: 0.08em;
+  }
+  .office-floor.is-active .office-floor-num { color: var(--accent); }
+  .office-desks {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+  .office-desk {
+    background: var(--bg-2);
+    border: 1px solid var(--line);
+    padding: 5px 10px;
+    border-radius: 3px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--ink-soft);
+    cursor: pointer;
+    transition: all 0.15s;
+    user-select: none;
+  }
+  .office-desk:hover { border-color: var(--ink); color: var(--ink); transform: translateY(-1px); }
+  .office-desk.is-active {
+    background: var(--accent);
+    color: white;
+    border-color: var(--accent);
+  }
+
+  .office-info {
+    padding: 28px 32px;
+    background: var(--paper);
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+  .office-info-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--accent);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+  .office-info-name {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 22px;
+    font-weight: 800;
+    margin: 0;
+    color: var(--ink);
+    letter-spacing: -0.01em;
+  }
+  .office-info-name .pin {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    background: var(--ink);
+    color: var(--bg);
+    padding: 2px 8px;
+    border-radius: 3px;
+    margin-right: 10px;
+    font-weight: 500;
+    letter-spacing: 0.05em;
+    vertical-align: 3px;
+  }
+  .office-info-desc {
+    color: var(--ink-soft);
+    font-size: 14px;
+    line-height: 1.6;
+    margin: 0;
+  }
+  .office-info-desc code,
+  .office-info-meta code {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12.5px;
+    background: var(--bg-2);
+    color: var(--ink);
+    padding: 1px 5px;
+    border-radius: 3px;
+  }
+  .office-info-section {
+    padding-top: 12px;
+    border-top: 1px dashed var(--line);
+  }
+  .office-info-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--ink-mute);
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+  .office-info-meta {
+    font-size: 13px;
+    color: var(--ink-soft);
+    line-height: 1.6;
+    margin: 0;
+  }
+  .office-info-meta strong { color: var(--ink); font-weight: 600; }
+
+  /* ============= §02 Three paths ============= */
+  .paths-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 18px;
+    margin-top: 24px;
+  }
+  @media (max-width: 880px) { .paths-grid { grid-template-columns: 1fr; } }
+  .path-card {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+  .path-card .path-head {
+    background: var(--ink);
+    color: white;
+    padding: 14px 18px;
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+  }
+  .path-card .path-symbol {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--accent);
+    letter-spacing: -0.02em;
+  }
+  .path-card .path-headline {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 14px;
+    color: white;
+    font-weight: 500;
+  }
+  .path-card .path-body {
+    padding: 22px 22px 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    flex: 1;
+  }
+  .path-card h4 {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 19px;
+    margin: 0;
+    font-weight: 800;
+    letter-spacing: -0.01em;
+  }
+  .path-card h4 .em { font-family: 'Noto Serif SC', serif; color: var(--accent); font-weight: 500; }
+  .path-card .path-1liner {
+    color: var(--ink-soft);
+    font-size: 13.5px;
+    line-height: 1.55;
+    margin: 0;
+  }
+  .path-card .path-1liner strong { color: var(--ink); font-weight: 600; }
+  .path-card .path-1liner code {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    background: var(--bg-2);
+    padding: 1px 5px;
+    border-radius: 3px;
+    color: var(--ink);
+  }
+  .path-card .path-snippet {
+    background: var(--ink);
+    border-radius: 5px;
+    padding: 14px 16px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12.5px;
+    line-height: 1.7;
+    color: #d8d8e0;
+    overflow-x: auto;
+  }
+  .path-card .path-snippet .ckw  { color: #c8a3ff; }
+  .path-card .path-snippet .cstr { color: #a8e6a3; }
+  .path-card .path-snippet .csym { color: var(--accent); }
+  .path-card .path-snippet .ccomment { color: #6e6e7a; }
+  .path-card .path-snippet .cident { color: #ffce8a; }
+  .path-card .path-when {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--ink-mute);
+    background: var(--bg-2);
+    padding: 8px 12px;
+    border-radius: 4px;
+    line-height: 1.5;
+  }
+  .path-card .path-when strong { color: var(--ink); font-weight: 600; }
+
+  /* tiny mini-map under each card */
+  .path-mini {
+    display: grid;
+    grid-template-columns: 1fr 28px 1fr;
+    align-items: center;
+    background: var(--bg);
+    border: 1px dashed var(--line);
+    border-radius: 5px;
+    padding: 10px 12px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--ink-soft);
+    gap: 4px;
+  }
+  .path-mini .pm-cell {
+    background: white;
+    border: 1px solid var(--line);
+    border-radius: 3px;
+    padding: 4px 6px;
+    text-align: center;
+    line-height: 1.3;
+  }
+  .path-mini .pm-cell.from { border-color: var(--ink); color: var(--ink); font-weight: 600; }
+  .path-mini .pm-cell.to { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); font-weight: 600; }
+  .path-mini .pm-arrow { color: var(--accent); font-weight: 700; text-align: center; font-size: 14px; }
+
+  /* ============= §03 Path maze game ============= */
+  .maze-stage {
+    margin-top: 24px;
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  .maze-grid {
+    display: grid;
+    grid-template-columns: 0.95fr 1.1fr;
+    gap: 0;
+    min-height: 580px;
+  }
+  @media (max-width: 880px) { .maze-grid { grid-template-columns: 1fr; min-height: auto; } }
+
+  /* left: file tree */
+  .maze-tree-wrap {
+    background: var(--bg-2);
+    border-right: 1px solid var(--line);
+    padding: 24px 26px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+  @media (max-width: 880px) { .maze-tree-wrap { border-right: none; border-bottom: 1px solid var(--line); } }
+  .maze-tree-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--ink-mute);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+  .maze-tree-title {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 17px;
+    font-weight: 700;
+    margin: 0;
+    color: var(--ink);
+  }
+  .maze-tree {
+    background: white;
+    border: 1.5px solid var(--ink);
+    border-radius: 6px;
+    padding: 16px 18px 18px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12.5px;
+    line-height: 1.95;
+    box-shadow: 4px 4px 0 var(--ink);
+    flex: 1;
+  }
+  .maze-tree .mt-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 1px 6px;
+    margin: 0 -6px;
+    border-radius: 3px;
+    transition: all 0.18s;
+    position: relative;
+  }
+  .maze-tree .mt-row .mt-pad { color: var(--ink-mute); white-space: pre; user-select: none; }
+  .maze-tree .mt-row .mt-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 14px; height: 14px;
+    flex-shrink: 0;
+  }
+  .maze-tree .mt-row .mt-name { color: var(--ink); }
+  .maze-tree .mt-row.mt-folder .mt-name { color: var(--ink); font-weight: 600; }
+  .maze-tree .mt-row.mt-file .mt-name { color: var(--ink-soft); }
+  .maze-tree .mt-row.is-from {
+    background: rgba(22,22,29,0.85);
+    color: white;
+  }
+  .maze-tree .mt-row.is-from .mt-name { color: white; font-weight: 700; }
+  .maze-tree .mt-row.is-from .mt-pad { color: rgba(255,255,255,0.4); }
+  .maze-tree .mt-row.is-from::after {
+    content: 'YOU';
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 0.1em;
+    background: var(--accent);
+    color: white;
+    padding: 1px 6px;
+    border-radius: 2px;
+    margin-left: auto;
+    font-weight: 700;
+  }
+  .maze-tree .mt-row.is-to {
+    background: var(--accent-soft);
+    border: 1px dashed var(--accent);
+    margin: 1px -6px;
+  }
+  .maze-tree .mt-row.is-to .mt-name { color: var(--accent); font-weight: 700; }
+  .maze-tree .mt-row.is-to::after {
+    content: 'TARGET';
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 0.1em;
+    color: var(--accent);
+    margin-left: auto;
+    font-weight: 700;
+  }
+  .maze-tree .mt-folder-icon {
+    width: 12px; height: 10px;
+    background: var(--ink-mute);
+    border-radius: 2px;
+    position: relative;
+  }
+  .maze-tree .mt-folder-icon::before {
+    content: '';
+    position: absolute;
+    top: -3px; left: 0;
+    width: 6px; height: 4px;
+    background: var(--ink-mute);
+    border-radius: 1px 1px 0 0;
+  }
+  .maze-tree .mt-row.is-from .mt-folder-icon,
+  .maze-tree .mt-row.is-from .mt-folder-icon::before { background: white; }
+  .maze-tree .mt-file-dot {
+    width: 7px; height: 7px;
+    background: var(--ink-mute);
+    border-radius: 50%;
+  }
+  .maze-tree .mt-row.is-from .mt-file-dot { background: white; }
+  .maze-tree .mt-row.is-to .mt-file-dot { background: var(--accent); }
+
+  /* right: round panel */
+  .maze-panel {
+    padding: 24px 28px 28px;
+    background: var(--paper);
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  .maze-progress {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    gap: 14px;
+    padding-bottom: 14px;
+    border-bottom: 1px dashed var(--line);
+  }
+  .maze-progress-track {
+    display: flex;
+    gap: 6px;
+  }
+  .maze-progress-track .mpt-dot {
+    width: 18px; height: 6px;
+    background: var(--line);
+    border-radius: 100px;
+    transition: all 0.25s;
+  }
+  .maze-progress-track .mpt-dot.is-current { background: var(--accent); width: 32px; }
+  .maze-progress-track .mpt-dot.is-done { background: var(--ink); }
+  .maze-progress-meta {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--ink-mute);
+    letter-spacing: 0.06em;
+    text-align: center;
+  }
+  .maze-progress-meta strong { color: var(--ink); font-weight: 700; }
+  .maze-score {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--ink-mute);
+    letter-spacing: 0.05em;
+    text-align: right;
+  }
+  .maze-score strong { color: var(--accent); font-weight: 700; font-size: 14px; }
+
+  .maze-task {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 18px 20px;
+  }
+  .maze-task-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--accent);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+  .maze-task-q {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 17px;
+    font-weight: 700;
+    margin: 0 0 14px;
+    line-height: 1.4;
+    color: var(--ink);
+  }
+  .maze-task-q .em { font-family: 'Noto Serif SC', serif; color: var(--accent); font-weight: 500; }
+  .maze-task-route {
+    display: grid;
+    grid-template-columns: 1fr 24px 1fr;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    background: var(--bg);
+    border: 1px dashed var(--line);
+    border-radius: 5px;
+  }
+  .maze-task-route .mtr-cell {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    background: white;
+    border: 1px solid var(--line);
+    padding: 6px 10px;
+    border-radius: 4px;
+    text-align: center;
+    line-height: 1.3;
+    color: var(--ink-soft);
+  }
+  .maze-task-route .mtr-cell.from {
+    border-color: var(--ink);
+    color: var(--ink);
+    font-weight: 600;
+  }
+  .maze-task-route .mtr-cell.to {
+    background: var(--accent-soft);
+    border-color: var(--accent);
+    color: var(--accent);
+    font-weight: 700;
+  }
+  .maze-task-route .mtr-cell .mtr-sub {
+    display: block;
+    font-size: 9px;
+    letter-spacing: 0.08em;
+    color: var(--ink-mute);
+    margin-top: 2px;
+    font-weight: 500;
+    text-transform: uppercase;
+  }
+  .maze-task-route .mtr-cell.from .mtr-sub { color: var(--ink-mute); }
+  .maze-task-route .mtr-cell.to .mtr-sub { color: var(--accent); opacity: 0.7; }
+  .maze-task-route .mtr-arrow {
+    color: var(--accent);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 16px;
+    text-align: center;
+    font-weight: 700;
+  }
+
+  .maze-options {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+  @media (max-width: 480px) { .maze-options { grid-template-columns: 1fr; } }
+  .maze-opt {
+    background: white;
+    border: 1.5px solid var(--line);
+    border-radius: 5px;
+    padding: 14px 16px;
+    cursor: pointer;
+    transition: all 0.18s;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    color: var(--ink);
+    text-align: left;
+    line-height: 1.4;
+    position: relative;
+    user-select: none;
+  }
+  .maze-opt:hover:not(.is-locked) {
+    border-color: var(--ink);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(22,22,29,0.08);
+  }
+  .maze-opt::before {
+    content: attr(data-key);
+    position: absolute;
+    top: -8px; left: 14px;
+    background: var(--bg);
+    border: 1px solid var(--line);
+    color: var(--ink-mute);
+    font-size: 10px;
+    padding: 1px 6px;
+    border-radius: 3px;
+    letter-spacing: 0.05em;
+  }
+  .maze-opt.is-correct {
+    background: var(--green-soft);
+    border-color: var(--green);
+    color: var(--green);
+  }
+  .maze-opt.is-correct::before { background: var(--green); border-color: var(--green); color: white; }
+  .maze-opt.is-wrong {
+    background: var(--accent-soft);
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+  .maze-opt.is-wrong::before { background: var(--accent); border-color: var(--accent); color: white; }
+  .maze-opt.is-locked { cursor: default; }
+  .maze-opt.is-dim { opacity: 0.5; }
+  .maze-opt-trail {
+    display: block;
+    font-size: 10px;
+    color: var(--ink-mute);
+    margin-top: 4px;
+    font-family: 'JetBrains Mono', monospace;
+    letter-spacing: 0.02em;
+  }
+  .maze-opt.is-correct .maze-opt-trail { color: var(--green); }
+  .maze-opt.is-wrong .maze-opt-trail { color: var(--accent); opacity: 0.85; }
+
+  .maze-feedback {
+    padding: 14px 18px;
+    background: var(--bg);
+    border-left: 3px solid var(--ink-mute);
+    border-radius: 0 5px 5px 0;
+    font-size: 13.5px;
+    color: var(--ink);
+    line-height: 1.6;
+    min-height: 56px;
+    transition: all 0.2s;
+  }
+  .maze-feedback .mf-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--ink-mute);
+    display: block;
+    margin-bottom: 4px;
+  }
+  .maze-feedback.is-good { border-left-color: var(--green); background: var(--green-soft); }
+  .maze-feedback.is-good .mf-tag { color: var(--green); }
+  .maze-feedback.is-bad { border-left-color: var(--accent); background: var(--accent-soft); }
+  .maze-feedback.is-bad .mf-tag { color: var(--accent); }
+  .maze-feedback strong { color: var(--ink); font-weight: 700; }
+  .maze-feedback code {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    background: rgba(255,255,255,0.6);
+    padding: 1px 5px;
+    border-radius: 3px;
+    color: var(--ink);
+  }
+
+  .maze-controls {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    padding-top: 6px;
+    flex-wrap: wrap;
+  }
+  .maze-btn {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    letter-spacing: 0.05em;
+    padding: 10px 18px;
+    border-radius: 4px;
+    cursor: pointer;
+    border: 1px solid var(--ink);
+    background: var(--ink);
+    color: white;
+    transition: all 0.15s;
+  }
+  .maze-btn:hover { background: var(--accent); border-color: var(--accent); }
+  .maze-btn.maze-btn-ghost {
+    background: transparent;
+    color: var(--ink-soft);
+    border-color: var(--line);
+  }
+  .maze-btn.maze-btn-ghost:hover { color: var(--ink); border-color: var(--ink-mute); background: var(--bg-2); }
+  .maze-btn[disabled] { opacity: 0.4; cursor: not-allowed; }
+  .maze-btn[disabled]:hover { background: var(--ink); border-color: var(--ink); }
+
+  /* finish overlay */
+  .maze-finish {
+    background: var(--ink);
+    color: white;
+    border-radius: 8px;
+    padding: 28px 30px;
+    text-align: center;
+    margin-top: -2px;
+    position: relative;
+    overflow: hidden;
+  }
+  .maze-finish::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at 50% 0%, rgba(255,77,46,0.18), transparent 60%);
+    pointer-events: none;
+  }
+  .maze-finish .mfin-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--accent);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+  .maze-finish h4 {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 28px;
+    margin: 0 0 8px;
+    font-weight: 800;
+    color: white;
+  }
+  .maze-finish h4 .em { font-family: 'Noto Serif SC', serif; color: var(--accent); font-weight: 500; }
+  .maze-finish p {
+    color: rgba(255,255,255,0.7);
+    font-size: 14px;
+    line-height: 1.6;
+    margin: 0 0 14px;
+  }
+  .maze-finish .mfin-score {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    color: white;
+    background: rgba(255,255,255,0.08);
+    padding: 8px 14px;
+    border-radius: 4px;
+    display: inline-block;
+    margin-bottom: 14px;
+    border: 1px solid rgba(255,255,255,0.15);
+  }
+  .maze-finish .mfin-score strong { color: var(--accent); font-weight: 700; font-size: 18px; }
+  .maze-finish button {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    letter-spacing: 0.05em;
+    padding: 10px 18px;
+    border-radius: 4px;
+    cursor: pointer;
+    border: 1px solid var(--accent);
+    background: var(--accent);
+    color: white;
+    transition: all 0.15s;
+  }
+  .maze-finish button:hover { background: white; color: var(--ink); border-color: white; }
+
+  /* ============= §04 alias config ============= */
+  .alias-stage {
+    margin-top: 24px;
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  .alias-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0;
+  }
+  @media (max-width: 880px) { .alias-grid { grid-template-columns: 1fr; } }
+  .alias-pane {
+    padding: 24px 28px;
+    border-right: 1px solid var(--line);
+  }
+  .alias-pane:last-child { border-right: none; border-top: 1px solid var(--line); }
+  @media (min-width: 881px) { .alias-pane:last-child { border-top: none; } }
+  @media (max-width: 880px) { .alias-pane { border-right: none; } }
+  .alias-pane.is-config { background: var(--ink); color: #d8d8e0; padding: 0; border-right: none; }
+  .alias-pane-head {
+    padding: 14px 22px;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+    background: rgba(255,255,255,0.04);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: rgba(255,255,255,0.7);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .alias-pane-head .apt { color: var(--accent); }
+  .alias-pane-body {
+    padding: 22px 26px 26px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    line-height: 1.85;
+    overflow-x: auto;
+  }
+  .alias-pane-body .ckey { color: #ff8a6e; }
+  .alias-pane-body .cstr { color: #a8e6a3; }
+  .alias-pane-body .cnum { color: #8ec5ff; }
+  .alias-pane-body .cpunc { color: #6e6e7a; }
+  .alias-pane-body .ccomment { color: #6e6e7a; font-style: normal; }
+  .alias-pane-body .hl-line {
+    background: rgba(255,138,110,0.14);
+    border-left: 2px solid #ff8a6e;
+    margin: 0 -26px;
+    padding: 0 26px 0 24px;
+    display: block;
+  }
+
+  .alias-explain {
+    padding: 28px 30px;
+    background: var(--paper);
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  .alias-explain h4 {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 22px;
+    margin: 0;
+    font-weight: 800;
+    letter-spacing: -0.01em;
+  }
+  .alias-explain h4 .em { font-family: 'Noto Serif SC', serif; color: var(--accent); font-weight: 500; }
+  .alias-explain p {
+    margin: 0;
+    color: var(--ink-soft);
+    font-size: 14px;
+    line-height: 1.65;
+  }
+  .alias-explain p strong { color: var(--ink); font-weight: 600; }
+  .alias-explain p code {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12.5px;
+    background: var(--bg-2);
+    padding: 1px 6px;
+    border-radius: 3px;
+    color: var(--ink);
+  }
+  .alias-translate {
+    padding: 14px 16px;
+    background: var(--bg-2);
+    border-radius: 5px;
+    border-left: 3px solid var(--accent);
+    font-size: 13px;
+    line-height: 1.8;
+  }
+  .alias-translate .at-row {
+    display: grid;
+    grid-template-columns: 1fr 24px 1fr;
+    gap: 10px;
+    align-items: center;
+    margin: 4px 0;
+  }
+  .alias-translate .at-cell {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    background: white;
+    padding: 4px 8px;
+    border-radius: 3px;
+    text-align: center;
+    border: 1px solid var(--line);
+  }
+  .alias-translate .at-cell.from { color: var(--accent); font-weight: 600; border-color: var(--accent); background: var(--accent-soft); }
+  .alias-translate .at-cell.to { color: var(--ink); font-weight: 600; }
+  .alias-translate .at-arrow { color: var(--accent); font-weight: 700; text-align: center; }
+
+  .alias-warn {
+    padding: 14px 16px;
+    background: var(--accent-soft);
+    border-radius: 5px;
+    border-left: 3px solid var(--accent);
+    font-size: 13px;
+    color: var(--ink);
+    line-height: 1.55;
+  }
+  .alias-warn .aw-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--accent);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-right: 8px;
+  }
+  .alias-warn code {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    background: rgba(255,255,255,0.6);
+    padding: 1px 5px;
+    border-radius: 3px;
+  }
+
+  /* ============= §05 import errors ============= */
+  .err-stage {
+    margin-top: 24px;
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 28px 32px;
+  }
+  .err-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 28px;
+  }
+  .err-item {
+    display: grid;
+    grid-template-columns: 60px 1fr;
+    gap: 20px;
+    align-items: start;
+  }
+  @media (max-width: 600px) { .err-item { grid-template-columns: 1fr; gap: 8px; } }
+  .err-num {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 28px;
+    font-weight: 800;
+    color: var(--accent);
+    line-height: 1;
+    letter-spacing: -0.02em;
+  }
+  .err-content { display: flex; flex-direction: column; gap: 10px; }
+  .err-msg {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    color: white;
+    background: var(--ink);
+    padding: 10px 14px;
+    border-radius: 4px;
+    line-height: 1.5;
+    border-left: 3px solid var(--accent);
+    overflow-x: auto;
+  }
+  .err-msg .err-prefix { color: var(--accent); font-weight: 600; margin-right: 8px; }
+  .err-msg .err-quote { color: #ffd6c8; }
+  .err-msg .err-path { color: #8ec5ff; }
+  .err-q {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--ink);
+    margin: 0;
+    line-height: 1.4;
+  }
+  .err-q .em { font-family: 'Noto Serif SC', serif; color: var(--accent); font-weight: 500; }
+  .err-a {
+    color: var(--ink-soft);
+    font-size: 14px;
+    line-height: 1.65;
+    margin: 0;
+  }
+  .err-a strong { color: var(--ink); font-weight: 600; }
+  .err-a code {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    background: var(--bg-2);
+    color: var(--ink);
+    padding: 1px 6px;
+    border-radius: 3px;
+  }
+  .err-fix {
+    background: var(--green-soft);
+    border-left: 3px solid var(--green);
+    padding: 10px 14px;
+    border-radius: 0 4px 4px 0;
+    font-size: 13px;
+    line-height: 1.55;
+    color: var(--ink);
+  }
+  .err-fix .ef-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--green);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-right: 8px;
+    font-weight: 700;
+  }
+  .err-fix code {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    background: rgba(255,255,255,0.6);
+    padding: 1px 5px;
+    border-radius: 3px;
+    color: var(--ink);
+  }
+
+  /* ============= §06 cheatsheet ============= */
+  .cheat-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 18px;
+    margin-top: 24px;
+  }
+  @media (max-width: 880px) { .cheat-grid { grid-template-columns: 1fr; } }
+  .cheat-block {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 24px 26px;
+  }
+  .cheat-block h3 {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 18px;
+    font-weight: 800;
+    margin: 0 0 14px;
+    letter-spacing: -0.01em;
+  }
+  .cheat-block h3 .em { font-family: 'Noto Serif SC', serif; color: var(--accent); font-weight: 500; }
+  .cheat-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+  .cheat-table th, .cheat-table td {
+    text-align: left;
+    padding: 9px 10px;
+    border-bottom: 1px dashed var(--line);
+  }
+  .cheat-table tr:last-child td { border-bottom: none; }
+  .cheat-table th {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--ink-mute);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    font-weight: 500;
+  }
+  .cheat-table .term {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12.5px;
+    color: var(--ink);
+    font-weight: 600;
+    white-space: nowrap;
+  }
+  .cheat-table .desc { color: var(--ink-soft); line-height: 1.5; }
+  .cheat-table .desc strong { color: var(--ink); font-weight: 600; }
+  .cheat-table .desc code {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    background: var(--bg-2);
+    padding: 1px 5px;
+    border-radius: 3px;
+    color: var(--ink);
+  }
+  .cheat-block .cheat-foot {
+    margin-top: 16px;
+    font-size: 12px;
+    color: var(--ink-mute);
+    border-top: 1px dashed var(--line);
+    padding-top: 12px;
+    line-height: 1.55;
+  }
+  .cheat-block .cheat-foot code {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11.5px;
+    background: var(--bg-2);
+    padding: 1px 5px;
+    border-radius: 3px;
+  }
+
+  /* 三步法则卡 */
+  .rule-block {
+    margin-top: 18px;
+    background: var(--ink);
+    color: white;
+    border-radius: 8px;
+    padding: 28px 32px;
+    overflow: hidden;
+    position: relative;
+  }
+  .rule-block::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at 0% 100%, rgba(255,77,46,0.12), transparent 55%);
+    pointer-events: none;
+  }
+  .rule-block h3 {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 24px;
+    margin: 0 0 6px;
+    font-weight: 800;
+    letter-spacing: -0.01em;
+    color: white;
+  }
+  .rule-block h3 .em { font-family: 'Noto Serif SC', serif; color: var(--accent); font-weight: 500; }
+  .rule-block .rule-sub {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: rgba(255,255,255,0.5);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-bottom: 22px;
+  }
+  .rule-steps {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 18px;
+    position: relative;
+  }
+  @media (max-width: 720px) { .rule-steps { grid-template-columns: 1fr; } }
+  .rule-step {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 6px;
+    padding: 18px 20px;
+    position: relative;
+  }
+  .rule-step .rs-num {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 36px;
+    color: var(--accent);
+    line-height: 1;
+    font-weight: 800;
+    margin-bottom: 10px;
+    display: block;
+  }
+  .rule-step .rs-q {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 17px;
+    font-weight: 700;
+    color: white;
+    margin: 0 0 8px;
+    line-height: 1.3;
+  }
+  .rule-step .rs-a {
+    font-size: 13px;
+    color: rgba(255,255,255,0.65);
+    line-height: 1.55;
+    margin: 0;
+  }
+  .rule-step .rs-a code {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11.5px;
+    background: rgba(255,255,255,0.08);
+    color: white;
+    padding: 1px 5px;
+    border-radius: 3px;
+  }
+
+  /* ============= Unified next-post block ============= */
+  .next-post {
+    margin-top: 48px;
+    padding: 32px 36px;
+    background: var(--ink);
+    color: var(--bg);
+    border-radius: 8px;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 32px;
+    align-items: center;
+    text-decoration: none;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    position: relative;
+    overflow: hidden;
+  }
+  .next-post::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at 100% 0%, rgba(255,77,46,0.12), transparent 55%);
+    pointer-events: none;
+  }
+  .next-post:hover { transform: translateY(-2px); box-shadow: 0 14px 36px rgba(22,22,29,0.22); }
+  @media (max-width: 720px) { .next-post { grid-template-columns: 1fr; padding: 24px; gap: 20px; } }
+  .next-post .np-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--accent);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+    display: inline-block;
+  }
+  .next-post h4 {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 26px;
+    margin: 0 0 10px;
+    font-weight: 700;
+    color: white;
+    line-height: 1.25;
+    letter-spacing: -0.01em;
+  }
+  .next-post h4 .em {
+    font-family: 'Noto Serif SC', serif;
+    font-weight: 500;
+    color: var(--accent);
+  }
+  .next-post p {
+    margin: 0;
+    color: rgba(255,255,255,0.72);
+    font-size: 14px;
+    line-height: 1.65;
+    max-width: 560px;
+  }
+  .next-post p strong { color: white; font-weight: 600; }
+  .next-post p code {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    background: rgba(255,255,255,0.1);
+    padding: 1px 6px;
+    border-radius: 3px;
+    color: white;
+  }
+  .next-post .np-cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 24px;
+    background: var(--accent);
+    color: white;
+    border-radius: 4px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    white-space: nowrap;
+    transition: background 0.18s, color 0.18s, transform 0.18s;
+    position: relative;
+    z-index: 1;
+  }
+  .next-post:hover .np-cta { background: white; color: var(--ink); transform: translateX(2px); }
+  .next-post .np-cta .arr { font-family: 'Fraunces', serif; font-style: italic; font-size: 18px; font-weight: 500; }
+
+  /* footer */
+  footer {
+    border-top: 1px solid var(--line);
+    padding: 56px 0 64px;
+    background: var(--bg);
+  }
+  .byline-wrap { position: relative; }
+  .byline {
+    display: flex;
+    gap: 28px;
+    align-items: center;
+    padding-bottom: 32px;
+    border-bottom: 1px dashed var(--line);
+    margin-bottom: 24px;
+    position: relative;
+  }
+  .byline::before {
+    content: '';
+    position: absolute;
+    top: -56px; left: 0;
+    width: 32px; height: 1px;
+    background: var(--accent);
+  }
+  .byline .avatar {
+    width: 96px; height: 96px;
+    border-radius: 50%;
+    object-fit: cover;
+    flex-shrink: 0;
+    border: 3px solid var(--paper);
+    box-shadow: 0 0 0 1px var(--line), 0 6px 20px rgba(22,22,29,0.10);
+    background: var(--paper);
+  }
+  .byline-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--ink-mute);
+    letter-spacing: 0.18em;
+    margin-bottom: 8px;
+  }
+  .byline-label .dot {
+    display: inline-block;
+    width: 6px; height: 6px;
+    background: var(--accent);
+    border-radius: 50%;
+    margin-right: 6px;
+    vertical-align: 1px;
+  }
+  .byline-name {
+    font-family: 'Noto Serif SC', 'Fraunces', serif;
+    font-size: clamp(28px, 4vw, 40px);
+    font-weight: 700;
+    line-height: 1.05;
+    letter-spacing: -0.01em;
+    margin: 0 0 8px;
+  }
+  .byline-name .em {
+    font-family: 'Noto Serif SC', serif;
+    font-weight: 500;
+    color: var(--accent);
+  }
+  .byline-tag {
+    font-size: 14px;
+    color: var(--ink-soft);
+    line-height: 1.55;
+    margin: 0;
+    max-width: 52ch;
+  }
+  .byline-contact { margin-top: 14px; padding-top: 14px; border-top: 1px dashed var(--line); display: flex; align-items: center; gap: 10px; flex-wrap: wrap; font-size: 12px; }
+  .byline-contact .contact-label { font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-mute); padding: 2px 8px; border: 1px solid var(--line); border-radius: 3px; }
+  .byline-contact .contact-id { font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 600; color: var(--ink); background: var(--accent-soft); padding: 3px 10px; border-radius: 4px; letter-spacing: 0.02em; }
+  .byline-contact .contact-hint { font-size: 12px; color: var(--ink-soft); }
+  .footer-meta {
+    text-align: center;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--ink-mute);
+    letter-spacing: 0.05em;
+  }
+  .footer-meta .heart { color: var(--accent); }
+  .footer-meta .mono { color: var(--ink-soft); font-weight: 500; }
+  @media (max-width: 600px) {
+    .byline { flex-direction: column; text-align: center; align-items: center; gap: 16px; }
+    .byline-tag { margin-left: auto; margin-right: auto; }
+  }
+
+  /* === Roadmap Modal === */
+  .rm-modal { position: fixed; inset: 0; z-index: 1000; display: flex; align-items: center; justify-content: center; padding: 30px 16px; }
+  .rm-modal[hidden] { display: none; }
+  .rm-backdrop { position: absolute; inset: 0; background: rgba(22,22,29,0.55); backdrop-filter: blur(4px); animation: rm-fade 0.2s; }
+  @keyframes rm-fade { from { opacity: 0; } to { opacity: 1; } }
+  .rm-dialog { position: relative; background: var(--bg); border-radius: 12px; max-width: 720px; width: 100%; max-height: calc(100vh - 60px); overflow-y: auto; padding: 32px 36px 24px; box-shadow: 0 30px 80px rgba(0,0,0,0.3); animation: rm-pop 0.25s cubic-bezier(0.4,0,0.2,1); }
+  @keyframes rm-pop { from { transform: scale(0.96) translateY(8px); opacity: 0; } to { transform: scale(1) translateY(0); opacity: 1; } }
+  .rm-close { position: absolute; top: 14px; right: 16px; background: transparent; border: none; cursor: pointer; font-size: 20px; color: var(--ink-mute); width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: all 0.15s; line-height: 1; }
+  .rm-close:hover { background: var(--bg-2); color: var(--ink); }
+  .rm-header { margin-bottom: 22px; padding-bottom: 18px; border-bottom: 1px dashed var(--line); }
+  .rm-tag { font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.1em; color: var(--accent); text-transform: uppercase; margin-bottom: 8px; }
+  .rm-title { font-family: 'Noto Serif SC', serif; font-size: 28px; margin: 0 0 6px; font-weight: 900; letter-spacing: -0.02em; line-height: 1.1; }
+  .rm-title .rm-em { font-family: 'Noto Serif SC', serif; color: var(--accent); font-weight: 500; }
+  .rm-sub { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--ink-mute); margin: 0; }
+  .rm-body { display: flex; flex-direction: column; gap: 18px; }
+  .rm-mod-key { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ink); font-weight: 700; margin-bottom: 8px; letter-spacing: 0.04em; text-transform: uppercase; }
+  .rm-mod-list { display: flex; flex-direction: column; gap: 6px; }
+  .rm-cell { display: grid; grid-template-columns: 36px 1fr auto; gap: 12px; align-items: center; padding: 9px 13px; border-radius: 5px; background: var(--paper); border: 1px solid var(--line); text-decoration: none; color: inherit; transition: all 0.15s; }
+  .rm-cell:hover { border-color: var(--accent); background: var(--accent-soft); transform: translateX(3px); }
+  .rm-cell.rm-cell-current { border-color: var(--accent); background: var(--accent-soft); }
+  .rm-cell-code { font-family: 'Fraunces', serif; font-style: italic; font-weight: 500; color: var(--accent); font-size: 15px; }
+  .rm-cell-name { font-size: 13px; color: var(--ink); }
+  .rm-cell-tier { font-family: 'JetBrains Mono', monospace; font-size: 9px; letter-spacing: 0.08em; color: var(--ink-mute); text-transform: uppercase; border: 1px solid var(--line); padding: 2px 7px; border-radius: 3px; }
+  .rm-cell-tier.rm-tier-current { background: var(--accent); color: white; border-color: var(--accent); }
+  .rm-footer { margin-top: 22px; padding-top: 16px; border-top: 1px dashed var(--line); display: flex; justify-content: space-between; align-items: center; font-size: 12px; color: var(--ink-soft); flex-wrap: wrap; gap: 8px; }
+  .rm-wechat { font-family: 'JetBrains Mono', monospace; background: var(--accent-soft); color: var(--ink); padding: 3px 10px; border-radius: 3px; font-weight: 600; letter-spacing: 0.02em; }
+  .nav-links a[data-rm-open] { cursor: pointer; }
+</style>
+</head>
+<body>
+
+<!-- Top bar -->
+<div class="topbar">
+  <div class="wrap topbar-inner">
+    <a href="index.html" class="brand"><span class="dot"></span>F2 · Import / 工程入门</a>
+    <nav class="nav-links">
+      <a href="index.html#roadmap" data-rm-open>路线图</a>
+      <a href="index.html#manifesto">关于</a>
+    </nav>
+  </div>
+</div>
+
+<!-- Hero -->
+<header class="hero">
+  <div class="wrap">
+    <div class="hero-meta">
+      <span class="pill fill">实验互动 · INTERACTIVE</span>
+      <span class="pill">2026 · 设计 × 代码</span>
+      <span class="pill">F2 · 入门 · 工程</span>
+      <span class="label">阅读时长 ≈ 14 分钟</span>
+    </div>
+    <div class="hero-grid">
+      <div>
+        <h1>
+          <span class="mono-em">./</span> <span class="display-cn">还是</span> <span class="mono-em">../</span><br>
+          <span class="display-cn">路径不是地图，</span><br>
+          <span class="display-cn">是</span><span class="em">从哪儿出发</span><span class="display-cn">。</span>
+        </h1>
+        <p class="lede">
+          AI 给你写了 <code>import Button from './Button'</code>。<br>
+          Cursor 让你改成 <code>'@/components/Button'</code>。<br>
+          一行字符差一个点，路径就<span class="em">永远</span>是从你<strong>当前文件</strong>这里出发的 ——
+          先搞清这一件事，剩下都顺。
+        </p>
+      </div>
+      <div class="hero-side">
+        <div class="row"><span class="k">本页讲什么</span><span class="v">import 与三种路径</span></div>
+        <div class="row"><span class="k">含互动</span><span class="v">5 关路径迷宫</span></div>
+        <div class="row"><span class="k">面向</span><span class="v">设计师 / AI 协作</span></div>
+        <div class="row"><span class="k">前置</span><span class="v">看过 F1 · npm</span></div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- §01 文件就是同事座位 -->
+<section id="office">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>01</strong> / 心智模型</div>
+        <h2 class="section-title">文件就是<br><span class="em">同事座位</span>。</h2>
+      </div>
+      <p class="section-sub">
+        把整个项目想成一栋办公楼。每个文件夹是一层楼，每个文件是一个工位。
+        <strong>import 就是给同事打电话</strong> —— 路径是怎么找到他的座位号。
+      </p>
+    </div>
+
+    <div class="hint-strip">
+      <span class="hint-tag">互动</span>
+      点 / hover 任意楼层或工位，看右边的"楼层信息卡"。<strong>注意：</strong> 路径永远是从<code>你当前所在的工位</code>出发数的。
+    </div>
+
+    <div class="office-stage" id="officeStage">
+      <div class="office-grid">
+        <!-- Left: building -->
+        <div class="office-canvas">
+          <div class="office-building">
+            <div class="office-roof">
+              <span><span class="roof-tag">●</span> my-project /</span>
+              <span class="roof-rt">PROJECT ROOT</span>
+            </div>
+
+            <div class="office-floor" data-key="pages">
+              <div class="office-floor-head">
+                <span class="office-floor-name"><span class="of-icon"></span>src/pages/</span>
+                <span class="office-floor-num">3F · 页面层</span>
+              </div>
+              <div class="office-desks">
+                <span class="office-desk" data-key="page-home">Home.tsx</span>
+                <span class="office-desk" data-key="page-about">About.tsx</span>
+                <span class="office-desk" data-key="page-blog">Blog.tsx</span>
+              </div>
+            </div>
+
+            <div class="office-floor" data-key="components">
+              <div class="office-floor-head">
+                <span class="office-floor-name"><span class="of-icon"></span>src/components/</span>
+                <span class="office-floor-num">2F · 组件层</span>
+              </div>
+              <div class="office-desks">
+                <span class="office-desk" data-key="comp-button">Button.tsx</span>
+                <span class="office-desk" data-key="comp-card">Card.tsx</span>
+                <span class="office-desk" data-key="comp-nav">Nav.tsx</span>
+              </div>
+            </div>
+
+            <div class="office-floor" data-key="lib">
+              <div class="office-floor-head">
+                <span class="office-floor-name"><span class="of-icon"></span>src/lib/</span>
+                <span class="office-floor-num">1F · 工具层</span>
+              </div>
+              <div class="office-desks">
+                <span class="office-desk" data-key="lib-theme">theme.ts</span>
+                <span class="office-desk" data-key="lib-utils">utils.ts</span>
+              </div>
+            </div>
+
+            <div class="office-floor" data-key="root">
+              <div class="office-floor-head">
+                <span class="office-floor-name"><span class="of-icon" style="background:var(--ink-mute);"></span>./</span>
+                <span class="office-floor-num">G · 大堂 / 项目根</span>
+              </div>
+              <div class="office-desks">
+                <span class="office-desk" data-key="root-pkg">package.json</span>
+                <span class="office-desk" data-key="root-tsc">tsconfig.json</span>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- Right: info card -->
+        <div class="office-info">
+          <div class="office-info-tag" id="oiTag">↑ 点一个楼层 / 工位</div>
+          <h3 class="office-info-name" id="oiName"><span class="pin">3F</span>页面层 · pages/</h3>
+          <p class="office-info-desc" id="oiDesc">用户能看到的"屏幕"住在这。每个 <code>.tsx</code> 文件就是一个完整页面 —— 首页、关于页、博客页。</p>
+          <div class="office-info-section">
+            <div class="office-info-label">座位地址</div>
+            <p class="office-info-meta" id="oiAddr"><strong>3F</strong> · <code>src/pages/</code> 这一整层。</p>
+          </div>
+          <div class="office-info-section">
+            <div class="office-info-label">谁会从这打电话出去</div>
+            <p class="office-info-meta" id="oiCall">页面通常需要 <strong>组件</strong>（楼下 2F）和 <strong>工具</strong>（楼下 1F）—— 所以会从这里 import 它们。</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="quote-box">
+      <span class="quote-mark">"</span>
+      <strong>路径不是地图</strong>，是从 "我现在站在哪" 起算的方向指示。
+      你换个文件，<span class="em">同一个目标</span>的路径就完全不一样了 ——
+      这就是改 AI 代码时最常翻车的地方。
+      <span class="quote-attr">—— 这一篇要把这个反直觉点讲清</span>
+    </div>
+  </div>
+</section>
+
+<!-- §02 三种路径 -->
+<section id="three-paths">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>02</strong> / 三种路径</div>
+        <h2 class="section-title">同事 / 楼下<br>/ <span class="em">花名册</span>。</h2>
+      </div>
+      <p class="section-sub">
+        所有 import 路径都属于这三种之一。
+        看完这页，再看 AI 写的代码，就能<strong>一眼分辨</strong>这是哪种打电话方式。
+      </p>
+    </div>
+
+    <div class="paths-grid">
+      <!-- ./ same dept -->
+      <div class="path-card">
+        <div class="path-head">
+          <span class="path-symbol">./</span>
+          <span class="path-headline">同部门 / 同事</span>
+        </div>
+        <div class="path-body">
+          <h4>找<span class="em">同文件夹</span>的人</h4>
+          <p class="path-1liner"><code>./Button</code> = "我这层楼里，叫 Button 的那个工位"。<strong>不能跨楼层</strong>，只能在自己这层喊一声。</p>
+<pre class="path-snippet"><span class="ccomment">// 你在 src/pages/Home.tsx</span>
+<span class="ccomment">// 想找 src/pages/HeroBanner.tsx</span>
+
+<span class="ckw">import</span> <span class="cident">HeroBanner</span> <span class="ckw">from</span> <span class="cstr">'<span class="csym">./</span>HeroBanner'</span>;</pre>
+          <div class="path-mini">
+            <div class="pm-cell from">Home.tsx<br><span style="color:var(--ink-mute);font-size:9px;">3F · pages/</span></div>
+            <div class="pm-arrow">→</div>
+            <div class="pm-cell to">HeroBanner.tsx<br><span style="color:var(--accent);opacity:.7;font-size:9px;">3F · pages/</span></div>
+          </div>
+          <div class="path-when">
+            <strong>什么时候用：</strong>同一个文件夹里两个文件互相用。最常见，最不容易错。
+          </div>
+        </div>
+      </div>
+
+      <!-- ../ floor below -->
+      <div class="path-card">
+        <div class="path-head">
+          <span class="path-symbol">../</span>
+          <span class="path-headline">楼下 / 隔壁部门</span>
+        </div>
+        <div class="path-body">
+          <h4><span class="em">先出门</span>，再去找</h4>
+          <p class="path-1liner"><code>../</code> = "<strong>先回到上一层</strong>"。每多一个 <code>../</code> 就再上一层。然后再说要去哪。</p>
+<pre class="path-snippet"><span class="ccomment">// 你在 src/pages/Home.tsx</span>
+<span class="ccomment">// 想找 src/components/Button.tsx</span>
+
+<span class="ckw">import</span> <span class="cident">Button</span> <span class="ckw">from</span> <span class="cstr">'<span class="csym">../</span>components/Button'</span>;</pre>
+          <div class="path-mini">
+            <div class="pm-cell from">Home.tsx<br><span style="color:var(--ink-mute);font-size:9px;">3F · pages/</span></div>
+            <div class="pm-arrow">↑↓</div>
+            <div class="pm-cell to">Button.tsx<br><span style="color:var(--accent);opacity:.7;font-size:9px;">2F · components/</span></div>
+          </div>
+          <div class="path-when">
+            <strong>什么时候用：</strong>跨文件夹，但只跨一两层。<code>../../</code> 就是"上两层"，依此类推。
+          </div>
+        </div>
+      </div>
+
+      <!-- @/ alias -->
+      <div class="path-card">
+        <div class="path-head">
+          <span class="path-symbol">@/</span>
+          <span class="path-headline">公司花名册</span>
+        </div>
+        <div class="path-body">
+          <h4>查<span class="em">花名册</span>找座位</h4>
+          <p class="path-1liner"><code>@/</code> 不是真路径，是项目<strong>配的别名</strong>。永远代表 <code>src/</code>，不管你在哪层楼喊都一样。</p>
+<pre class="path-snippet"><span class="ccomment">// 你在哪都行 ——</span>
+<span class="ccomment">// 同一个 import，结果都对。</span>
+
+<span class="ckw">import</span> <span class="cident">Button</span> <span class="ckw">from</span> <span class="cstr">'<span class="csym">@/</span>components/Button'</span>;</pre>
+          <div class="path-mini">
+            <div class="pm-cell from">从哪都行<br><span style="color:var(--ink-mute);font-size:9px;">ANY · 任意楼层</span></div>
+            <div class="pm-arrow">⤳</div>
+            <div class="pm-cell to">src/components/Button<br><span style="color:var(--accent);opacity:.7;font-size:9px;">绝对位置</span></div>
+          </div>
+          <div class="path-when">
+            <strong>什么时候用：</strong>跨好几层文件夹时（<code>../../../</code> 太丑）。Next / Vite / 大多数模板都默认配好了。
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="hint-strip" style="margin-top:24px;background:var(--bg-2);border-left-color:var(--ink);">
+      <span class="hint-tag" style="color:var(--ink);">三句话记住</span>
+      <code>./</code> = <strong>同事</strong>；
+      <code>../</code> = <strong>楼下</strong>；
+      <code>@/</code> = <strong>查花名册</strong>。
+      —— 看到 import 字符串第一个字符，立刻知道这条电话在打哪儿。
+    </div>
+  </div>
+</section>
+
+<!-- §03 路径迷宫 -->
+<section id="maze">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>03</strong> / 核心小游戏</div>
+        <h2 class="section-title">路径迷宫<br>—— <span class="em">5 关</span>。</h2>
+      </div>
+      <p class="section-sub">
+        左边是真实的项目文件树。每一关给你<strong>起点</strong>（你在哪个文件）和<strong>目标</strong>（要 import 哪个）。
+        从 4 个候选路径里挑对的一个 —— 选错有反馈。
+      </p>
+    </div>
+
+    <div class="hint-strip">
+      <span class="hint-tag">玩法</span>
+      仔细看左边树里的 <strong>YOU</strong>（你在哪）和 <strong>TARGET</strong>（要 import 谁）。然后选下面四条路径里的对的那条。
+    </div>
+
+    <div class="maze-stage" id="mazeStage">
+      <div class="maze-grid">
+
+        <!-- Left: file tree -->
+        <div class="maze-tree-wrap">
+          <div>
+            <div class="maze-tree-tag">PROJECT TREE · 真实文件树</div>
+            <h3 class="maze-tree-title">my-project /</h3>
+          </div>
+          <div class="maze-tree" id="mazeTree">
+            <!-- rendered by JS -->
+          </div>
+        </div>
+
+        <!-- Right: round panel -->
+        <div class="maze-panel">
+
+          <div class="maze-progress">
+            <div class="maze-progress-track" id="mazeProgress">
+              <span class="mpt-dot is-current"></span>
+              <span class="mpt-dot"></span>
+              <span class="mpt-dot"></span>
+              <span class="mpt-dot"></span>
+              <span class="mpt-dot"></span>
+            </div>
+            <div class="maze-progress-meta">第 <strong id="mazeRound">1</strong> / 5 关</div>
+            <div class="maze-score">SCORE · <strong id="mazeScore">0</strong> / 5</div>
+          </div>
+
+          <div class="maze-task" id="mazeTask">
+            <div class="maze-task-tag" id="mazeTaskTag">ROUND 01 · 同部门</div>
+            <h3 class="maze-task-q" id="mazeTaskQ">
+              你在 <span class="em">Home.tsx</span>，要 import <span class="em">HeroBanner.tsx</span>。
+            </h3>
+            <div class="maze-task-route">
+              <div class="mtr-cell from" id="mazeFromCell">
+                Home.tsx
+                <span class="mtr-sub" id="mazeFromSub">3F · pages</span>
+              </div>
+              <div class="mtr-arrow">→</div>
+              <div class="mtr-cell to" id="mazeToCell">
+                HeroBanner.tsx
+                <span class="mtr-sub" id="mazeToSub">3F · pages</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="maze-options" id="mazeOpts">
+            <!-- rendered by JS -->
+          </div>
+
+          <div class="maze-feedback" id="mazeFeedback">
+            <span class="mf-tag">提示 · HINT</span>
+            点 4 条路径里你觉得对的那条 —— 选错给反馈，选对就过关。
+          </div>
+
+          <div class="maze-controls">
+            <button class="maze-btn maze-btn-ghost" id="mazeRestart">↻ 从第一关</button>
+            <button class="maze-btn" id="mazeNext" disabled>下一关 →</button>
+          </div>
+
+        </div>
+
+      </div>
+    </div>
+
+    <div class="quote-box" style="margin-top:32px;">
+      <span class="quote-mark">"</span>
+      路径错的<span class="em">90%</span> 都是同一种错：算 <code style="font-family:'JetBrains Mono',monospace;font-size:0.86em;background:var(--bg-2);padding:1px 5px;border-radius:3px;">../</code> 数错了 —— 多了或少了一层。
+      AI 偶尔也会数错。<strong>不要尽信，亲自走一遍这个路径</strong>。
+      <span class="quote-attr">—— 数 ../ 的时候手指头真的可以点屏幕</span>
+    </div>
+  </div>
+</section>
+
+<!-- §04 alias config -->
+<section id="alias">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>04</strong> / @/ 别名</div>
+        <h2 class="section-title">@/ 不是魔法<br>是<span class="em">项目花名册</span>。</h2>
+      </div>
+      <p class="section-sub">
+        看到 <code>@/components/Button</code> 别慌 ——
+        <code>@</code> 不是什么特殊字符，是项目的<strong>配置文件</strong>里写的别名。
+        AI 给的 alias 偶尔不对会 build 失败 —— 知道在哪改。
+      </p>
+    </div>
+
+    <div class="alias-stage">
+      <div class="alias-grid">
+        <!-- Config file -->
+        <div class="alias-pane is-config">
+          <div class="alias-pane-head">
+            <span><span class="apt">●</span> tsconfig.json</span>
+            <span>项目根目录</span>
+          </div>
+          <div class="alias-pane-body">
+<pre style="margin:0;"><span class="cpunc">{</span>
+  <span class="ckey">"compilerOptions"</span><span class="cpunc">:</span> <span class="cpunc">{</span>
+    <span class="ckey">"target"</span><span class="cpunc">:</span> <span class="cstr">"ES2020"</span><span class="cpunc">,</span>
+    <span class="ckey">"module"</span><span class="cpunc">:</span> <span class="cstr">"esnext"</span><span class="cpunc">,</span>
+    <span class="ckey">"jsx"</span><span class="cpunc">:</span> <span class="cstr">"preserve"</span><span class="cpunc">,</span>
+<span class="hl-line">    <span class="ckey">"baseUrl"</span><span class="cpunc">:</span> <span class="cstr">"."</span><span class="cpunc">,</span></span>
+<span class="hl-line">    <span class="ckey">"paths"</span><span class="cpunc">:</span> <span class="cpunc">{</span></span>
+<span class="hl-line">      <span class="ckey">"@/*"</span><span class="cpunc">:</span> <span class="cpunc">[</span><span class="cstr">"src/*"</span><span class="cpunc">]</span></span>
+<span class="hl-line">    <span class="cpunc">}</span></span>
+  <span class="cpunc">}</span>
+<span class="cpunc">}</span></pre>
+          </div>
+        </div>
+
+        <!-- Explain -->
+        <div class="alias-explain">
+          <h4>这 4 行是<span class="em">花名册</span>本人</h4>
+          <p>
+            <code>"paths"</code> 里写的就是<strong>所有别名</strong>。
+            上面这段告诉 TypeScript（和后续的打包器）：
+            "看到任何以 <code>@/</code> 开头的 import，<strong>都翻译成 <code>src/</code> 开头</strong>"。
+          </p>
+
+          <div class="alias-translate">
+            <div class="at-row">
+              <div class="at-cell from">@/components/Button</div>
+              <div class="at-arrow">⤳</div>
+              <div class="at-cell to">src/components/Button</div>
+            </div>
+            <div class="at-row">
+              <div class="at-cell from">@/lib/theme</div>
+              <div class="at-arrow">⤳</div>
+              <div class="at-cell to">src/lib/theme</div>
+            </div>
+            <div class="at-row">
+              <div class="at-cell from">@/pages/Home</div>
+              <div class="at-arrow">⤳</div>
+              <div class="at-cell to">src/pages/Home</div>
+            </div>
+          </div>
+
+          <p>
+            <strong>Vite</strong> 项目同样的事是写在 <code>vite.config.js</code> 的 <code>resolve.alias</code> 里。
+            <strong>Next</strong> 自动认 <code>tsconfig.json</code> 这一段，不用再配。
+            <strong>不同模板可能用 <code>~/</code> 或 <code>#/</code></strong> 代替 <code>@/</code> —— 看配置文件就知道。
+          </p>
+
+          <div class="alias-warn">
+            <span class="aw-tag">注意 · GOTCHA</span>
+            AI 偶尔会写出 <code>@/components/Button</code>，但项目里<strong>根本没配</strong>这个 alias —— 这时跑起来会 build 失败。看 <code>tsconfig.json</code> 有没有 <code>paths</code>，没有就改回 <code>./</code> / <code>../</code>。
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <div class="hint-strip" style="margin-top:24px;">
+      <span class="hint-tag">实战</span>
+      看到陌生项目，先扫一眼根目录的 <code>tsconfig.json</code> 或 <code>vite.config.js</code> —— 有没有 <code>paths</code> / <code>alias</code>。
+      <strong>有</strong>：可以放心用 <code>@/</code>。<strong>没有</strong>：老老实实 <code>./</code> / <code>../</code>。
+    </div>
+  </div>
+</section>
+
+<!-- §05 import errors -->
+<section id="errors">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>05</strong> / 三种报错</div>
+        <h2 class="section-title">90% 报错<br>都是这<span class="em">三种</span>。</h2>
+      </div>
+      <p class="section-sub">
+        改完 import，跑起来红屏一片别慌。
+        看终端最后<strong>红色那段</strong>，对照下面三种 —— 修法基本都在 30 秒内。
+      </p>
+    </div>
+
+    <div class="err-stage">
+      <ul class="err-list">
+
+        <li class="err-item">
+          <div class="err-num">01</div>
+          <div class="err-content">
+            <div class="err-msg">
+              <span class="err-prefix">Error:</span>
+              Cannot find module <span class="err-quote">'@/components/Button'</span> or its corresponding type declarations.
+            </div>
+            <h3 class="err-q">"<span class="em">Cannot find module</span>" —— 找不到那个文件</h3>
+            <p class="err-a">
+              翻译成人话："我按你给的路径走过去了，<strong>那地方没人</strong>"。
+              三种可能：<strong>(1)</strong> 路径打错了（最常见）；<strong>(2)</strong> 文件还没建；<strong>(3)</strong> 用了 <code>@/</code> 但项目没配 alias。
+            </p>
+            <div class="err-fix">
+              <span class="ef-tag">怎么修</span>
+              先把那个路径<strong>真的拿出来对一遍</strong> —— 在 VS Code / Cursor 里点开侧边栏，照着文件夹一层一层走。八九不离十是 <code>../</code> 数错了一层，或者大小写错了（<code>Button</code> ≠ <code>button</code>）。
+            </div>
+          </div>
+        </li>
+
+        <li class="err-item">
+          <div class="err-num">02</div>
+          <div class="err-content">
+            <div class="err-msg">
+              <span class="err-prefix">Error:</span>
+              Module not found: Can't resolve <span class="err-quote">'../lib/theme'</span> in <span class="err-path">/src/pages</span>
+            </div>
+            <h3 class="err-q">"<span class="em">Can't resolve</span>" —— 同一种病另一种说法</h3>
+            <p class="err-a">
+              这个是打包器（Vite / Webpack / Next）自己的报错口吻 —— 含义和上一条<strong>一模一样</strong>，只是说话方式不同。
+              留意它会告诉你 <code>in /src/pages</code> —— 这就是<strong>"出发地"</strong>。从这里开始数 <code>../</code>。
+            </p>
+            <div class="err-fix">
+              <span class="ef-tag">怎么修</span>
+              抓住报错里的"<strong>in 哪个文件夹</strong>"信息。从那里出发，对着实际文件树重新数一遍 <code>../</code>。如果 <code>../lib/theme</code> 不对，多半要改成 <code>../../lib/theme</code> —— 多一层。
+            </div>
+          </div>
+        </li>
+
+        <li class="err-item">
+          <div class="err-num">03</div>
+          <div class="err-content">
+            <div class="err-msg">
+              <span class="err-prefix">Error:</span>
+              Cannot find module <span class="err-quote">'./button'</span>. <span style="color:#ffce8a;">Did you mean './Button'?</span>
+            </div>
+            <h3 class="err-q">"<span class="em">Did you mean ./X</span>" —— 大小写 / 拼写错</h3>
+            <p class="err-a">
+              这是最贴心的报错。系统已经<strong>猜到</strong>你想要的是哪个，但给的字符串不完全一样。
+              90% 是 <strong>大小写</strong>（<code>button</code> vs <code>Button</code>）；剩下是少打了或多打了一个字符。
+            </p>
+            <div class="err-fix">
+              <span class="ef-tag">怎么修</span>
+              照报错里的 <code>Did you mean</code> 后面那个字符串<strong>原样改回去</strong>。Mac 本地不区分大小写所以你看着像对，<strong>但 Linux 服务器上线就崩</strong> —— 所以这种错一定要修。
+            </div>
+          </div>
+        </li>
+
+      </ul>
+    </div>
+
+    <div class="hint-strip" style="margin-top:24px;background:var(--bg-2);border-left-color:var(--ink);">
+      <span class="hint-tag" style="color:var(--ink);">通用方法</span>
+      报错里<strong>引号内的字符串</strong>就是那条 import。<strong>报错里的 in 路径</strong>就是出发地。
+      把这两个圈出来，问题立刻具体。
+    </div>
+  </div>
+</section>
+
+<!-- §06 Cheatsheet -->
+<section id="cheat">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>06</strong> / 速查</div>
+        <h2 class="section-title">截图保存<br>这一<span class="em">页</span>。</h2>
+      </div>
+      <p class="section-sub">
+        三步法则 + 符号速查 + 易错点。
+        遇到陌生 import 翻一眼，比每次都问 AI 快。
+      </p>
+    </div>
+
+    <!-- 三分钟法则 -->
+    <div class="rule-block">
+      <h3>路径<span class="em">三步法则</span></h3>
+      <div class="rule-sub">看到 import 先问这三个问题 · ASK 3 QUESTIONS</div>
+      <div class="rule-steps">
+        <div class="rule-step">
+          <span class="rs-num">1</span>
+          <h4 class="rs-q">我在哪？</h4>
+          <p class="rs-a">先确认 <strong>出发地</strong>。这条 import 写在哪个文件里？这个文件在哪个文件夹？—— 路径<strong>永远</strong>是从这里开始算。</p>
+        </div>
+        <div class="rule-step">
+          <span class="rs-num">2</span>
+          <h4 class="rs-q">目标在哪？</h4>
+          <p class="rs-a">那个要 import 的文件，<strong>真实位置</strong>是什么？打开侧边栏看一眼。别凭印象。</p>
+        </div>
+        <div class="rule-step">
+          <span class="rs-num">3</span>
+          <h4 class="rs-q">几楼几号？</h4>
+          <p class="rs-a">同层 → <code>./</code>；上一层 → <code>../</code>；上两层 → <code>../../</code>；跨好几层 → 用 <code>@/</code>（前提是项目配了）。</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="cheat-grid">
+      <div class="cheat-block">
+        <h3><span class="em">·</span> 符号速查</h3>
+        <table class="cheat-table">
+          <thead>
+            <tr><th>写法</th><th>含义</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="term">./</td>
+              <td class="desc"><strong>同文件夹</strong>。<code>./Button</code> = 同事，紧挨着。</td>
+            </tr>
+            <tr>
+              <td class="term">../</td>
+              <td class="desc"><strong>上一层</strong>文件夹。每多一个 <code>../</code> 多上一层。</td>
+            </tr>
+            <tr>
+              <td class="term">../../</td>
+              <td class="desc"><strong>上两层</strong>。三个就上三层 —— 看到 4 个以上，建议改 <code>@/</code>。</td>
+            </tr>
+            <tr>
+              <td class="term">@/</td>
+              <td class="desc"><strong>项目 src 根</strong>（最常见配置）。绝对位置，不管你在哪都一样。</td>
+            </tr>
+            <tr>
+              <td class="term">react / lodash</td>
+              <td class="desc"><strong>没有任何前缀</strong> = 来自 <code>node_modules/</code>，是装好的零件。</td>
+            </tr>
+          </tbody>
+        </table>
+        <div class="cheat-foot">
+          看 import 字符串<strong>第一个字符</strong>就够：<code>.</code> = 相对路径；<code>@</code> = 别名；字母 = npm 包。
+        </div>
+      </div>
+
+      <div class="cheat-block">
+        <h3><span class="em">·</span> 三个最容易翻车的点</h3>
+        <table class="cheat-table">
+          <thead>
+            <tr><th>陷阱</th><th>怎么躲</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="term">数错 ../</td>
+              <td class="desc"><strong>最常见</strong>。多一层 / 少一层。修法：手指头点屏幕一层一层数。</td>
+            </tr>
+            <tr>
+              <td class="term">大小写</td>
+              <td class="desc">Mac 本地不区分，<strong>Linux 服务器区分</strong>。<code>./button</code> ≠ <code>./Button</code>。</td>
+            </tr>
+            <tr>
+              <td class="term">用了未配的 @/</td>
+              <td class="desc">先看 <code>tsconfig.json</code> 有没有 <code>paths</code>。<strong>没有就别用</strong>。</td>
+            </tr>
+            <tr>
+              <td class="term">忘了文件后缀</td>
+              <td class="desc">大多数项目可以省 <code>.tsx</code> / <code>.ts</code> / <code>.js</code>，但<strong>带上更稳</strong>。</td>
+            </tr>
+            <tr>
+              <td class="term">移动文件忘改</td>
+              <td class="desc">把文件拖到别的文件夹后，所有 import 它的路径都得改。VS Code 会问你"要不要自动更新？"<strong>选是</strong>。</td>
+            </tr>
+          </tbody>
+        </table>
+        <div class="cheat-foot">
+          <strong>最稳的工作流</strong>：让 VS Code / Cursor 自动补全 —— 别手敲长路径。打 <code>"./</code> 它会列出当前文件夹里所有文件。
+        </div>
+      </div>
+    </div>
+
+    <div class="cheat-block" style="margin-top:18px;">
+      <h3><span class="em">·</span> import 整体语法长这样</h3>
+      <table class="cheat-table">
+        <thead>
+          <tr><th>形式</th><th>含义 / 例子</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="term">import X from './Y'</td>
+            <td class="desc"><strong>默认导出</strong>（default）。 <code>import Button from './Button'</code> —— 那个文件 <code>export default</code> 出来的东西，给它起个名叫 <code>Button</code>。</td>
+          </tr>
+          <tr>
+            <td class="term">import &#123; X &#125; from './Y'</td>
+            <td class="desc"><strong>命名导出</strong>（named）。 <code>import &#123; useState &#125; from 'react'</code> —— 从 react 里挑出名字叫 <code>useState</code> 的那个东西。</td>
+          </tr>
+          <tr>
+            <td class="term">import &#123; X, Y, Z &#125; from './m'</td>
+            <td class="desc">一次挑多个。<strong>大括号里的名字必须和源文件 export 的名字完全一致</strong>。</td>
+          </tr>
+          <tr>
+            <td class="term">import * as X from './Y'</td>
+            <td class="desc">把那个文件里所有 export 当成一个对象挂在 <code>X</code> 上。少见，但偶尔会看到。</td>
+          </tr>
+          <tr>
+            <td class="term">import './styles.css'</td>
+            <td class="desc"><strong>没有 from</strong>。表示"只是把这个文件加载进来" —— CSS 文件、副作用脚本常这样写。</td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="cheat-foot">
+        默认 vs 命名：<strong>看源文件</strong>有没有 <code>export default</code>。AI 给的写法不对，会报 <code>has no default export</code>，把大括号加 / 去掉就好。
+      </div>
+    </div>
+
+    <a href="f3-dev-build-figma.html" class="next-post">
+      <div>
+        <div class="np-tag">下一篇 · NEXT · F3 · 入门</div>
+        <h4>下一篇 <span class="em">→</span> localhost 不是真服务器</h4>
+        <p>路径和 import 搞清楚了。下一站讲 <code>npm run dev</code> 启动的 <strong>localhost:3000</strong> —— 那玩意是什么、为什么别人看不到、为什么 build 出来才能上线。</p>
+      </div>
+      <span class="np-cta">继续阅读 <span class="arr">→</span></span>
+    </a>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div class="byline-wrap">
+      <div class="byline">
+        <img class="avatar" src="author.jpg" alt="范米花儿">
+        <div class="byline-meta">
+          <div class="byline-label"><span class="dot"></span>作者 · WRITTEN BY</div>
+          <h3 class="byline-name">嗨，我是 <span class="em">范米花儿</span></h3>
+          <p class="byline-tag">一份给设计师的代码入门 ——<br>不需要会写，知道大概怎么回事，跟前端 / AI 沟通就顺多了。</p>
+          <div class="byline-contact">
+            <span class="contact-label">微信</span>
+            <span class="contact-id">vanvan_0422</span>
+            <span class="contact-hint">想看什么主题，加我聊</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="footer-meta">
+      做于 <span class="mono">2026</span> · 用 <span class="heart">●</span> 写给 <span class="mono">DESIGNERS &amp; DEVELOPERS</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+// ==========================================================
+//  §01 office floor plan — floor / desk hover & click
+// ==========================================================
+(function () {
+  const stage = document.getElementById('officeStage');
+  if (!stage) return;
+  const floors = stage.querySelectorAll('.office-floor');
+  const desks = stage.querySelectorAll('.office-desk');
+
+  const tagEl  = document.getElementById('oiTag');
+  const nameEl = document.getElementById('oiName');
+  const descEl = document.getElementById('oiDesc');
+  const addrEl = document.getElementById('oiAddr');
+  const callEl = document.getElementById('oiCall');
+
+  const dict = {
+    // floors
+    pages: {
+      tag: 'FLOOR · 3F',
+      pin: '3F',
+      title: '页面层 · pages/',
+      desc: '用户能看到的"屏幕"住在这。每个 <code>.tsx</code> 文件就是一个完整页面 —— 首页、关于页、博客页。',
+      addr: '<strong>3F</strong> · <code>src/pages/</code> 这一整层。',
+      call: '页面通常需要 <strong>组件</strong>（楼下 2F）和 <strong>工具</strong>（楼下 1F）—— 所以会从这里 import 它们。'
+    },
+    components: {
+      tag: 'FLOOR · 2F',
+      pin: '2F',
+      title: '组件层 · components/',
+      desc: '可以反复用的"积木"住在这。Button、Card、Nav —— 每个组件一个文件，多个页面共用。',
+      addr: '<strong>2F</strong> · <code>src/components/</code>。',
+      call: '组件可能用别的小组件（同层），也可能用工具（楼下 1F）。<strong>不应该</strong>反过来 import 页面 —— 那是反向打电话。'
+    },
+    lib: {
+      tag: 'FLOOR · 1F',
+      pin: '1F',
+      title: '工具层 · lib/',
+      desc: '不画 UI 的"幕后工具"住在这。<code>theme.ts</code> 存颜色变量，<code>utils.ts</code> 装小函数。<strong>纯逻辑，没有界面。</strong>',
+      addr: '<strong>1F</strong> · <code>src/lib/</code>（也叫 <code>utils/</code> 或 <code>helpers/</code>）。',
+      call: '基本只<strong>被</strong>别人 import，自己很少 import 别人 —— 楼最底层。'
+    },
+    root: {
+      tag: 'FLOOR · G',
+      pin: 'G',
+      title: '项目根 · 大堂',
+      desc: '配置文件住在这。<code>package.json</code>（清单）、<code>tsconfig.json</code>（TS 设置）、<code>vite.config.js</code>（打包设置）—— 都在这里。',
+      addr: '<strong>项目根</strong> · 没有 <code>src/</code> 前缀。',
+      call: '配置文件不参与 import 链路。但 <code>tsconfig.json</code> 里写的 <code>paths</code> 决定了 <code>@/</code> 别名长啥样。'
+    },
+    // desks
+    'page-home': {
+      tag: 'DESK · 3F',
+      pin: 'Home',
+      title: 'Home.tsx',
+      desc: '网站首页。从这里出发 import：找 <code>HeroBanner</code> 是 <code>./HeroBanner</code>（同事），找 <code>Button</code> 是 <code>../components/Button</code>（楼下）。',
+      addr: '<code>src/pages/Home.tsx</code>',
+      call: '常 import：组件层（<code>../components/*</code>）、工具层（<code>../lib/*</code>）。'
+    },
+    'page-about': {
+      tag: 'DESK · 3F',
+      pin: 'About',
+      title: 'About.tsx',
+      desc: '关于页。结构和 Home 一样 —— 从这里看出去，<strong>路径写法</strong>跟在 Home 里完全一致（因为同层楼）。',
+      addr: '<code>src/pages/About.tsx</code>',
+      call: '从同层喊：<code>./Home</code> 也行（如果想 import 隔壁工位）。'
+    },
+    'page-blog': {
+      tag: 'DESK · 3F',
+      pin: 'Blog',
+      title: 'Blog.tsx',
+      desc: '博客页。同层 3F。',
+      addr: '<code>src/pages/Blog.tsx</code>',
+      call: '想要 Card 组件 → <code>../components/Card</code>（先回到 src，再下到 components）。'
+    },
+    'comp-button': {
+      tag: 'DESK · 2F',
+      pin: 'Button',
+      title: 'Button.tsx',
+      desc: '按钮组件。<strong>会被各页面引用</strong>。从这里出发 import 主题：<code>../lib/theme</code>。',
+      addr: '<code>src/components/Button.tsx</code>',
+      call: '常 import：工具层（<code>../lib/*</code>）、其它组件（<code>./Icon</code> 等同事）。'
+    },
+    'comp-card': {
+      tag: 'DESK · 2F',
+      pin: 'Card',
+      title: 'Card.tsx',
+      desc: '卡片组件。<strong>组件用组件</strong>很常见 —— 比如 Card 里塞个 Button。这时是 <code>./Button</code>。',
+      addr: '<code>src/components/Card.tsx</code>',
+      call: '同层喊：<code>./Button</code>、<code>./Avatar</code>。'
+    },
+    'comp-nav': {
+      tag: 'DESK · 2F',
+      pin: 'Nav',
+      title: 'Nav.tsx',
+      desc: '导航栏组件。',
+      addr: '<code>src/components/Nav.tsx</code>',
+      call: '同层 + 工具层。'
+    },
+    'lib-theme': {
+      tag: 'DESK · 1F',
+      pin: 'theme',
+      title: 'theme.ts',
+      desc: '颜色 / 字号 / 间距常量。<strong>到处被 import</strong> —— 因为视觉系统的"真理"住在这。',
+      addr: '<code>src/lib/theme.ts</code>',
+      call: '通常不 import 别人，只<strong>被</strong> import。'
+    },
+    'lib-utils': {
+      tag: 'DESK · 1F',
+      pin: 'utils',
+      title: 'utils.ts',
+      desc: '小工具函数集合。比如格式化日期、生成 className。',
+      addr: '<code>src/lib/utils.ts</code>',
+      call: '通常不 import 别人。'
+    },
+    'root-pkg': {
+      tag: 'DESK · G',
+      pin: 'pkg',
+      title: 'package.json',
+      desc: '项目清单。<strong>不参与 import 链路</strong>，但写明了项目装了哪些 npm 零件 —— 没装的零件 import 不进来。',
+      addr: '项目根 · <code>./package.json</code>',
+      call: '看完 F1 你应该熟。'
+    },
+    'root-tsc': {
+      tag: 'DESK · G',
+      pin: 'tsc',
+      title: 'tsconfig.json',
+      desc: 'TypeScript 配置。这里的 <code>paths</code> 字段就是 <strong><code>@/</code> 别名的花名册</strong>。看 §04。',
+      addr: '项目根 · <code>./tsconfig.json</code>',
+      call: '决定了 <code>@/</code> 翻译成什么 —— 不修这里改不了别名。'
+    }
+  };
+
+  function setActive(key) {
+    if (!dict[key]) return;
+    floors.forEach(f => f.classList.remove('is-active'));
+    desks.forEach(d => d.classList.remove('is-active'));
+
+    const floor = stage.querySelector('.office-floor[data-key="' + key + '"]');
+    if (floor) floor.classList.add('is-active');
+    const desk = stage.querySelector('.office-desk[data-key="' + key + '"]');
+    if (desk) {
+      desk.classList.add('is-active');
+      // also light the parent floor
+      desk.closest('.office-floor').classList.add('is-active');
+    }
+
+    const d = dict[key];
+    tagEl.textContent = d.tag;
+    nameEl.innerHTML = '<span class="pin">' + d.pin + '</span>' + d.title;
+    descEl.innerHTML = d.desc;
+    addrEl.innerHTML = d.addr;
+    callEl.innerHTML = d.call;
+  }
+
+  floors.forEach(f => {
+    f.addEventListener('mouseenter', () => setActive(f.dataset.key));
+    f.addEventListener('click',      () => setActive(f.dataset.key));
+  });
+  desks.forEach(d => {
+    d.addEventListener('mouseenter', e => { e.stopPropagation(); setActive(d.dataset.key); });
+    d.addEventListener('click',      e => { e.stopPropagation(); setActive(d.dataset.key); });
+  });
+
+  // Default: highlight pages floor
+  setTimeout(() => setActive('pages'), 600);
+})();
+
+// ==========================================================
+//  §03 path maze game — 5 rounds
+// ==========================================================
+(function () {
+  const stage = document.getElementById('mazeStage');
+  if (!stage) return;
+
+  // The shared file tree (rendered once; YOU/TARGET highlight changes per round)
+  // Each entry: { id, name, type, depth, parent }
+  // depth = indentation level for the rendering
+  const tree = [
+    { id: 'src',          name: 'src/',          type: 'folder', depth: 0 },
+    { id: 'pages',        name: 'pages/',        type: 'folder', depth: 1 },
+    { id: 'p-home',       name: 'Home.tsx',      type: 'file',   depth: 2 },
+    { id: 'p-about',      name: 'About.tsx',     type: 'file',   depth: 2 },
+    { id: 'p-blog',       name: 'Blog.tsx',      type: 'file',   depth: 2 },
+    { id: 'pages-admin',  name: 'admin/',        type: 'folder', depth: 2 },
+    { id: 'p-dashboard',  name: 'Dashboard.tsx', type: 'file',   depth: 3 },
+    { id: 'components',   name: 'components/',   type: 'folder', depth: 1 },
+    { id: 'c-button',     name: 'Button.tsx',    type: 'file',   depth: 2 },
+    { id: 'c-card',       name: 'Card.tsx',      type: 'file',   depth: 2 },
+    { id: 'c-nav',        name: 'Nav.tsx',       type: 'file',   depth: 2 },
+    { id: 'lib',          name: 'lib/',          type: 'folder', depth: 1 },
+    { id: 'l-theme',      name: 'theme.ts',      type: 'file',   depth: 2 },
+    { id: 'l-utils',      name: 'utils.ts',      type: 'file',   depth: 2 },
+    { id: 'styles',       name: 'styles/',       type: 'folder', depth: 1 },
+    { id: 's-global',     name: 'global.css',    type: 'file',   depth: 2 }
+  ];
+
+  // 5 rounds, increasing difficulty
+  const rounds = [
+    {
+      tag: 'ROUND 01 · 同部门',
+      from: 'p-home',
+      to: 'p-about',
+      fromLabel: 'Home.tsx',
+      fromSub: 'src/pages/',
+      toLabel: 'About.tsx',
+      toSub: 'src/pages/',
+      narrative: '你在 <span class="em">Home.tsx</span>，要 import <span class="em">About.tsx</span>。两个住在同一层楼。',
+      correct: 'A',
+      options: [
+        { key: 'A', code: "'./About'",          trail: '同文件夹找同事' },
+        { key: 'B', code: "'../About'",         trail: '回上一层再找' },
+        { key: 'C', code: "'../../About'",      trail: '回两层再找' },
+        { key: 'D', code: "'@/About'",          trail: '查花名册到 src/About' }
+      ],
+      reasons: {
+        A: '✓ 对。两个文件都在 <code>pages/</code> 里 —— 是同事。<code>./</code> 就是"我这层楼里"，最干净。',
+        B: '✗ <code>../About</code> 是先<strong>退回 src/</strong>，再找 About —— 而 src/ 里根本没有 About.tsx 直接挂着。',
+        C: '✗ 多了一层。<code>../../</code> 已经退到项目根了，那里更没有 About.tsx。',
+        D: '✗ 项目里没有 <code>src/About.tsx</code> 直挂在 src 下 —— About 住在 <code>src/pages/About.tsx</code>。'
+      }
+    },
+    {
+      tag: 'ROUND 02 · 跨楼层',
+      from: 'p-home',
+      to: 'l-theme',
+      fromLabel: 'Home.tsx',
+      fromSub: 'src/pages/',
+      toLabel: 'theme.ts',
+      toSub: 'src/lib/',
+      narrative: '你在 <span class="em">Home.tsx</span>，想 import <span class="em">theme.ts</span>。',
+      correct: 'B',
+      options: [
+        { key: 'A', code: "'./theme'",            trail: 'pages/theme — 没这个文件' },
+        { key: 'B', code: "'../lib/theme'",       trail: '退到 src/，下到 lib/，找 theme' },
+        { key: 'C', code: "'../../lib/theme'",    trail: '退到项目根 — 多一层' },
+        { key: 'D', code: "'../theme'",           trail: '退到 src/ 直接找 — 没这文件' }
+      ],
+      reasons: {
+        A: '✗ <code>./</code> 只能找<strong>同文件夹</strong>的同事，<code>theme.ts</code> 不在你这层。',
+        B: '✓ 对。<code>../</code> 退到 <code>src/</code>，再下到 <code>lib/theme</code>。',
+        C: '✗ 多了一层。<code>../../</code> 已经退到项目根了，<code>lib/</code> 是 src 下的子文件夹，所以只需要 <code>../</code>。',
+        D: '✗ 退到 <code>src/</code> 直接找 theme.ts？不在那。它在 <code>src/lib/theme.ts</code> —— 还得再往里走一步。'
+      }
+    },
+    {
+      tag: 'ROUND 03 · 嵌套子文件夹',
+      from: 'p-dashboard',
+      to: 'c-button',
+      fromLabel: 'Dashboard.tsx',
+      fromSub: 'src/pages/admin/',
+      toLabel: 'Button.tsx',
+      toSub: 'src/components/',
+      narrative: '你在 <span class="em">Dashboard.tsx</span>（嵌在 <code>pages/admin/</code> 里），想 import <span class="em">Button.tsx</span>。',
+      correct: 'C',
+      options: [
+        { key: 'A', code: "'./Button'",                 trail: 'admin/Button — 没这个' },
+        { key: 'B', code: "'../components/Button'",     trail: '退一层到 pages/，找 components — 错位' },
+        { key: 'C', code: "'../../components/Button'",  trail: '退两层到 src/，下到 components/，找 Button' },
+        { key: 'D', code: "'@/Button'",                 trail: '查花名册到 src/Button — 直挂没有' }
+      ],
+      reasons: {
+        A: '✗ admin/ 里没 Button.tsx。',
+        B: '✗ <code>../</code> 只退到 <code>pages/</code>，但 <code>components/</code> 是 src 下的同辈，不是 pages 下。',
+        C: '✓ 对。<code>../../</code> 退两层到 <code>src/</code> —— 因为 Dashboard 嵌得深。然后下到 components。',
+        D: '✗ 项目里没有 <code>src/Button.tsx</code> 直挂。要写也得 <code>@/components/Button</code>。'
+      }
+    },
+    {
+      tag: 'ROUND 04 · 别名出场',
+      from: 'p-dashboard',
+      to: 'l-theme',
+      fromLabel: 'Dashboard.tsx',
+      fromSub: 'src/pages/admin/',
+      toLabel: 'theme.ts',
+      toSub: 'src/lib/',
+      narrative: '还在 <span class="em">Dashboard.tsx</span>，这次想 import <span class="em">theme.ts</span>。<strong>用 alias 写</strong>。',
+      correct: 'D',
+      options: [
+        { key: 'A', code: "'./theme'",              trail: '同文件夹 — 没这个' },
+        { key: 'B', code: "'../lib/theme'",         trail: '退到 pages/ 下找 lib — 错' },
+        { key: 'C', code: "'../../theme'",          trail: '退到 src/ 直接找 — 没这个' },
+        { key: 'D', code: "'@/lib/theme'",          trail: '查花名册到 src/lib/theme' }
+      ],
+      reasons: {
+        A: '✗ admin/ 里没有 theme.ts。',
+        B: '✗ <code>../</code> 只退到 pages/，那里没有 lib 文件夹。',
+        C: '✗ 退到 src/ 但 theme 不直挂在 src/，它在 <code>src/lib/theme.ts</code>。',
+        D: '✓ 对。<code>@/</code> = <code>src/</code>，<code>@/lib/theme</code> = <code>src/lib/theme</code>。深嵌套时用 alias 比 <code>../../../</code> 干净得多。'
+      }
+    },
+    {
+      tag: 'ROUND 05 · 反向走',
+      from: 'c-button',
+      to: 'l-utils',
+      fromLabel: 'Button.tsx',
+      fromSub: 'src/components/',
+      toLabel: 'utils.ts',
+      toSub: 'src/lib/',
+      narrative: '你在 <span class="em">Button.tsx</span>（组件层），想 import <span class="em">utils.ts</span>（工具层）。',
+      correct: 'B',
+      options: [
+        { key: 'A', code: "'./utils'",              trail: 'components/utils — 没这个' },
+        { key: 'B', code: "'../lib/utils'",         trail: '退到 src/，下到 lib/，找 utils' },
+        { key: 'C', code: "'../utils'",             trail: '退到 src/ 直接找 — 没这个' },
+        { key: 'D', code: "'../../lib/utils'",      trail: '退到项目根 — 多一层' }
+      ],
+      reasons: {
+        A: '✗ components/ 里没有 utils.ts。<code>./</code> 只看你身边。',
+        B: '✓ 对。<code>../</code> 退到 src/，下到 lib/，找 utils。<strong>同样的"退一层下一层"模式</strong>跟 R02 一样。',
+        C: '✗ <code>../utils</code> 找的是 <code>src/utils.ts</code> —— 项目里没有这个直挂文件。',
+        D: '✗ 多一层。components 是 src 下的子文件夹，只用退一层 <code>../</code>。'
+      }
+    }
+  ];
+
+  let round = 0;     // 0..4
+  let score = 0;
+  let answered = false;
+
+  const treeEl     = document.getElementById('mazeTree');
+  const progressEl = document.getElementById('mazeProgress');
+  const roundEl    = document.getElementById('mazeRound');
+  const scoreEl    = document.getElementById('mazeScore');
+  const taskTagEl  = document.getElementById('mazeTaskTag');
+  const taskQEl    = document.getElementById('mazeTaskQ');
+  const fromCellEl = document.getElementById('mazeFromCell');
+  const fromSubEl  = document.getElementById('mazeFromSub');
+  const toCellEl   = document.getElementById('mazeToCell');
+  const toSubEl    = document.getElementById('mazeToSub');
+  const optsEl     = document.getElementById('mazeOpts');
+  const fbEl       = document.getElementById('mazeFeedback');
+  const nextBtn    = document.getElementById('mazeNext');
+  const restartBtn = document.getElementById('mazeRestart');
+
+  function renderTree() {
+    treeEl.innerHTML = '';
+    const r = rounds[round];
+    tree.forEach(node => {
+      const row = document.createElement('div');
+      row.className = 'mt-row mt-' + node.type;
+      if (node.id === r.from) row.classList.add('is-from');
+      if (node.id === r.to)   row.classList.add('is-to');
+
+      // pad
+      const pad = document.createElement('span');
+      pad.className = 'mt-pad';
+      pad.textContent = '  '.repeat(node.depth) + (node.type === 'folder' ? '▾ ' : '· ');
+      row.appendChild(pad);
+
+      // icon
+      const icon = document.createElement('span');
+      icon.className = 'mt-icon';
+      const inner = document.createElement('span');
+      inner.className = node.type === 'folder' ? 'mt-folder-icon' : 'mt-file-dot';
+      icon.appendChild(inner);
+      row.appendChild(icon);
+
+      // name
+      const name = document.createElement('span');
+      name.className = 'mt-name';
+      name.textContent = node.name;
+      row.appendChild(name);
+
+      treeEl.appendChild(row);
+    });
+  }
+
+  function renderProgress() {
+    const dots = progressEl.querySelectorAll('.mpt-dot');
+    dots.forEach((d, i) => {
+      d.classList.remove('is-current', 'is-done');
+      if (i < round) d.classList.add('is-done');
+      else if (i === round) d.classList.add('is-current');
+    });
+    roundEl.textContent = round + 1;
+    scoreEl.textContent = score;
+  }
+
+  function renderTask() {
+    const r = rounds[round];
+    taskTagEl.textContent = r.tag;
+    taskQEl.innerHTML = r.narrative;
+
+    // route cells
+    fromCellEl.firstChild && (fromCellEl.firstChild.textContent = r.fromLabel + ' ');
+    // simpler — rebuild
+    fromCellEl.innerHTML = r.fromLabel + '<span class="mtr-sub">' + r.fromSub + '</span>';
+    toCellEl.innerHTML   = r.toLabel   + '<span class="mtr-sub">' + r.toSub   + '</span>';
+
+    // options
+    optsEl.innerHTML = '';
+    r.options.forEach(o => {
+      const btn = document.createElement('button');
+      btn.className = 'maze-opt';
+      btn.dataset.key = o.key;
+      btn.dataset.code = o.code;
+      btn.innerHTML = o.code + '<span class="maze-opt-trail">' + o.trail + '</span>';
+      btn.addEventListener('click', () => answer(o.key, btn));
+      optsEl.appendChild(btn);
+    });
+
+    // feedback reset
+    fbEl.className = 'maze-feedback';
+    fbEl.innerHTML = '<span class="mf-tag">提示 · HINT</span>看左边树里 YOU 和 TARGET，<strong>从 YOU 出发</strong>，想想要走多少层 / 走哪个方向。';
+
+    answered = false;
+    nextBtn.disabled = true;
+    nextBtn.textContent = round === rounds.length - 1 ? '看结果 →' : '下一关 →';
+  }
+
+  function answer(key, btn) {
+    if (answered) return;
+    const r = rounds[round];
+    const isCorrect = key === r.correct;
+
+    // dim siblings
+    optsEl.querySelectorAll('.maze-opt').forEach(b => b.classList.add('is-locked'));
+
+    if (isCorrect) {
+      btn.classList.add('is-correct');
+      score++;
+      fbEl.className = 'maze-feedback is-good';
+      fbEl.innerHTML = '<span class="mf-tag">对了 · CORRECT</span>' + r.reasons[key];
+    } else {
+      btn.classList.add('is-wrong');
+      // dim others, but show the correct one in green
+      optsEl.querySelectorAll('.maze-opt').forEach(b => {
+        if (b.dataset.key === r.correct) b.classList.add('is-correct');
+        else if (b !== btn) b.classList.add('is-dim');
+      });
+      fbEl.className = 'maze-feedback is-bad';
+      fbEl.innerHTML = '<span class="mf-tag">还差点 · NOT QUITE</span>' + r.reasons[key]
+        + '<br><br><strong>对的是：</strong> <code>' + r.options.find(o => o.key === r.correct).code + '</code> —— ' + r.reasons[r.correct].replace('✓ 对。', '');
+    }
+
+    answered = true;
+    nextBtn.disabled = false;
+    scoreEl.textContent = score;
+  }
+
+  function nextRound() {
+    if (!answered) return;
+    if (round < rounds.length - 1) {
+      round++;
+      renderProgress();
+      renderTree();
+      renderTask();
+    } else {
+      finish();
+    }
+  }
+
+  function finish() {
+    // Replace the panel content with a finish card
+    const panel = stage.querySelector('.maze-panel');
+    const remark =
+      score === 5 ? '满分。下次看 AI 给你写 import，扫一眼就知道对不对。' :
+      score >= 3  ? '过半 —— 已经能跟 AI 对得上话。回头再来一遍把规则吃进去。' :
+                    '别气馁。前几次都是这样。重点是分清"我在哪"和"目标在哪" —— 数 ../ 时手指头点屏幕。';
+
+    panel.innerHTML =
+      '<div class="maze-finish">' +
+      '<div class="mfin-tag">完成 · COMPLETED</div>' +
+      '<h4>5 关 <span class="em">→</span> 走完了</h4>' +
+      '<div class="mfin-score">SCORE · <strong>' + score + '</strong> / 5</div>' +
+      '<p>' + remark + '</p>' +
+      '<button id="mazeAgain">↻ 再来一遍</button>' +
+      '</div>';
+
+    document.getElementById('mazeAgain').addEventListener('click', restart);
+  }
+
+  function restart() {
+    round = 0;
+    score = 0;
+    answered = false;
+
+    // restore panel structure if we destroyed it on finish
+    const panel = stage.querySelector('.maze-panel');
+    if (!document.getElementById('mazeTask')) {
+      panel.innerHTML =
+        '<div class="maze-progress">' +
+          '<div class="maze-progress-track" id="mazeProgress">' +
+            '<span class="mpt-dot is-current"></span>' +
+            '<span class="mpt-dot"></span>' +
+            '<span class="mpt-dot"></span>' +
+            '<span class="mpt-dot"></span>' +
+            '<span class="mpt-dot"></span>' +
+          '</div>' +
+          '<div class="maze-progress-meta">第 <strong id="mazeRound">1</strong> / 5 关</div>' +
+          '<div class="maze-score">SCORE · <strong id="mazeScore">0</strong> / 5</div>' +
+        '</div>' +
+        '<div class="maze-task" id="mazeTask">' +
+          '<div class="maze-task-tag" id="mazeTaskTag"></div>' +
+          '<h3 class="maze-task-q" id="mazeTaskQ"></h3>' +
+          '<div class="maze-task-route">' +
+            '<div class="mtr-cell from" id="mazeFromCell"></div>' +
+            '<div class="mtr-arrow">→</div>' +
+            '<div class="mtr-cell to" id="mazeToCell"></div>' +
+          '</div>' +
+        '</div>' +
+        '<div class="maze-options" id="mazeOpts"></div>' +
+        '<div class="maze-feedback" id="mazeFeedback"></div>' +
+        '<div class="maze-controls">' +
+          '<button class="maze-btn maze-btn-ghost" id="mazeRestart">↻ 从第一关</button>' +
+          '<button class="maze-btn" id="mazeNext" disabled>下一关 →</button>' +
+        '</div>';
+      // re-bind
+      bindControls();
+    }
+    renderProgress();
+    renderTree();
+    renderTask();
+  }
+
+  function bindControls() {
+    document.getElementById('mazeNext').addEventListener('click', nextRound);
+    document.getElementById('mazeRestart').addEventListener('click', restart);
+  }
+
+  // initial
+  bindControls();
+  renderProgress();
+  renderTree();
+  renderTask();
+})();
+
+// ==========================================================
+//  Roadmap modal
+// ==========================================================
+(function(){
+  var modal = document.getElementById('rm-modal');
+  if (!modal) return;
+  var openBtns = document.querySelectorAll('[data-rm-open]');
+  var closeBtns = modal.querySelectorAll('[data-rm-close]');
+  function open() { modal.hidden = false; document.body.style.overflow = 'hidden'; }
+  function close() { modal.hidden = true; document.body.style.overflow = ''; }
+  openBtns.forEach(function(b){ b.addEventListener('click', function(e){ e.preventDefault(); open(); }); });
+  closeBtns.forEach(function(b){ b.addEventListener('click', close); });
+  document.addEventListener('keydown', function(e){ if (e.key === 'Escape' && !modal.hidden) close(); });
+})();
+</script>
+
+
+<!-- 路线图弹窗 -->
+<div class="rm-modal" id="rm-modal" hidden>
+  <div class="rm-backdrop" data-rm-close></div>
+  <div class="rm-dialog" role="dialog" aria-label="完整路线图">
+    <button class="rm-close" data-rm-close aria-label="关闭">✕</button>
+    <div class="rm-header">
+      <div class="rm-tag">完整路线图 · ROADMAP</div>
+      <h3 class="rm-title">9 模块 <span class="rm-em">·</span> 28 篇</h3>
+      <p class="rm-sub">设计篇 5 模块 / 15 篇 + 工程篇 4 系列 / 13 篇</p>
+    </div>
+    <div class="rm-body">
+      <div class="rm-mod">
+        <div class="rm-mod-key">A · 单元素与组件</div>
+        <div class="rm-mod-list">
+          <a href="basics-figma.html" class="rm-cell"><span class="rm-cell-code">A0</span><span class="rm-cell-name">三件套 · HTML / CSS / JS</span><span class="rm-cell-tier">入门</span></a>
+          <a href="box-figma.html" class="rm-cell"><span class="rm-cell-code">A1</span><span class="rm-cell-name">盒子 · Auto Layout</span><span class="rm-cell-tier">基础</span></a>
+          <a href="components-figma.html" class="rm-cell"><span class="rm-cell-code">A2</span><span class="rm-cell-name">组件 · Variants &amp; Props</span><span class="rm-cell-tier">基础</span></a>
+          <a href="button-system-figma.html" class="rm-cell"><span class="rm-cell-code">A3</span><span class="rm-cell-name">Button System · 组件演化</span><span class="rm-cell-tier">进阶</span></a>
+        </div>
+      </div>
+      <div class="rm-mod">
+        <div class="rm-mod-key">B · 多组件协作</div>
+        <div class="rm-mod-list">
+          <a href="page-figma.html" class="rm-cell"><span class="rm-cell-code">B0</span><span class="rm-cell-name">拼页面 · 组件嵌套</span><span class="rm-cell-tier">入门</span></a>
+          <a href="data-flow-figma.html" class="rm-cell"><span class="rm-cell-code">B1</span><span class="rm-cell-name">数据流 · 概念</span><span class="rm-cell-tier">基础</span></a>
+          <a href="data-flow-cases-figma.html" class="rm-cell"><span class="rm-cell-code">B2</span><span class="rm-cell-name">数据流 · 实战 5 案例</span><span class="rm-cell-tier">进阶</span></a>
+        </div>
+      </div>
+      <div class="rm-mod">
+        <div class="rm-mod-key">C · 视觉系统</div>
+        <div class="rm-mod-list">
+          <a href="tokens-figma.html" class="rm-cell"><span class="rm-cell-code">C0</span><span class="rm-cell-name">Variables / Tokens 入门</span><span class="rm-cell-tier">入门</span></a>
+          <a href="colors-type-figma.html" class="rm-cell"><span class="rm-cell-code">C1</span><span class="rm-cell-name">Colors / Type / Spacing</span><span class="rm-cell-tier">基础</span></a>
+          <a href="theme-switch-figma.html" class="rm-cell"><span class="rm-cell-code">C2</span><span class="rm-cell-name">Theme 切换实战</span><span class="rm-cell-tier">进阶</span></a>
+        </div>
+      </div>
+      <div class="rm-mod">
+        <div class="rm-mod-key">D · 状态与交互</div>
+        <div class="rm-mod-list">
+          <a href="states-figma.html" class="rm-cell"><span class="rm-cell-code">D0</span><span class="rm-cell-name">视觉态 · 看得见的状态</span><span class="rm-cell-tier">入门</span></a>
+          <a href="interactive-figma.html" class="rm-cell"><span class="rm-cell-code">D1</span><span class="rm-cell-name">Interactive Component</span><span class="rm-cell-tier">基础</span></a>
+          <a href="transition-figma.html" class="rm-cell"><span class="rm-cell-code">D2</span><span class="rm-cell-name">动画 · Transition</span><span class="rm-cell-tier">进阶</span></a>
+        </div>
+      </div>
+      <div class="rm-mod">
+        <div class="rm-mod-key">E · 工程化</div>
+        <div class="rm-mod-list">
+          <a href="naming-figma.html" class="rm-cell"><span class="rm-cell-code">E0</span><span class="rm-cell-name">命名 / 图层规范</span><span class="rm-cell-tier">入门</span></a>
+          <a href="handoff-figma.html" class="rm-cell"><span class="rm-cell-code">E2</span><span class="rm-cell-name">Handoff &amp; 设计系统</span><span class="rm-cell-tier">进阶</span></a>
+        </div>
+      </div>
+      <div class="rm-mod">
+        <div class="rm-mod-key">F · 工程入门</div>
+        <div class="rm-mod-list">
+          <a href="f1-npm-figma.html" class="rm-cell"><span class="rm-cell-code">F1</span><span class="rm-cell-name">npm 是什么</span><span class="rm-cell-tier">入门</span></a>
+          <a href="f2-import-figma.html" class="rm-cell"><span class="rm-cell-code">F2</span><span class="rm-cell-name">import 与路径</span><span class="rm-cell-tier">入门</span></a>
+          <a href="f3-dev-build-figma.html" class="rm-cell"><span class="rm-cell-code">F3</span><span class="rm-cell-name">dev vs build</span><span class="rm-cell-tier">基础</span></a>
+          <a href="f4-hidden-files-figma.html" class="rm-cell"><span class="rm-cell-code">F4</span><span class="rm-cell-name">看不见的文件</span><span class="rm-cell-tier">基础</span></a>
+        </div>
+      </div>
+      <div class="rm-mod">
+        <div class="rm-mod-key">G · 版本控制</div>
+        <div class="rm-mod-list">
+          <a href="g1-commit-branch-figma.html" class="rm-cell"><span class="rm-cell-code">G1</span><span class="rm-cell-name">commit / branch</span><span class="rm-cell-tier">入门</span></a>
+          <a href="g2-conflict-figma.html" class="rm-cell"><span class="rm-cell-code">G2</span><span class="rm-cell-name">冲突怎么解</span><span class="rm-cell-tier">基础</span></a>
+          <a href="g3-pr-review-figma.html" class="rm-cell"><span class="rm-cell-code">G3</span><span class="rm-cell-name">PR / Review</span><span class="rm-cell-tier">进阶</span></a>
+        </div>
+      </div>
+      <div class="rm-mod">
+        <div class="rm-mod-key">H · 浏览器调试</div>
+        <div class="rm-mod-list">
+          <a href="h1-devtools-elements-figma.html" class="rm-cell"><span class="rm-cell-code">H1</span><span class="rm-cell-name">DevTools Elements</span><span class="rm-cell-tier">入门</span></a>
+          <a href="h2-console-error-figma.html" class="rm-cell"><span class="rm-cell-code">H2</span><span class="rm-cell-name">Console 报错</span><span class="rm-cell-tier">基础</span></a>
+          <a href="h3-network-figma.html" class="rm-cell"><span class="rm-cell-code">H3</span><span class="rm-cell-name">Network 面板</span><span class="rm-cell-tier">进阶</span></a>
+        </div>
+      </div>
+      <div class="rm-mod">
+        <div class="rm-mod-key">J · 上线</div>
+        <div class="rm-mod-list">
+          <a href="j1-dns-figma.html" class="rm-cell"><span class="rm-cell-code">J1</span><span class="rm-cell-name">DNS / 域名</span><span class="rm-cell-tier">基础</span></a>
+          <a href="j2-vercel-figma.html" class="rm-cell"><span class="rm-cell-code">J2</span><span class="rm-cell-name">Vercel 部署</span><span class="rm-cell-tier">基础</span></a>
+          <a href="j3-cache-cdn-figma.html" class="rm-cell"><span class="rm-cell-code">J3</span><span class="rm-cell-name">缓存 / CDN</span><span class="rm-cell-tier">进阶</span></a>
+        </div>
+      </div>
+    </div>
+    <div class="rm-footer">
+      <span>未完待续 · 想看什么主题加我聊</span>
+      <span class="rm-wechat">微信 vanvan_0422</span>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

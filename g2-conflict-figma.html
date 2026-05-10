@@ -1,0 +1,2194 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Git 冲突怎么解 — 冲突不是 bug，是 git 在问你</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,300..900&family=Geist:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Noto+Sans+SC:wght@300;400;500;700;900&family=Noto+Serif+SC:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f3eee5;
+    --bg-2: #ebe4d4;
+    --ink: #16161d;
+    --ink-soft: #4a4a55;
+    --ink-mute: #8a8a92;
+    --line: #d5cdba;
+    --line-soft: #e3dcca;
+    --accent: #ff4d2e;
+    --accent-soft: #ffe4dc;
+    --blue: #0a4cff;
+    --blue-soft: #dde6ff;
+    --green: #1f6b3a;
+    --green-soft: #d4ecdb;
+    --yellow: #ffcf3d;
+    --paper: #faf7f0;
+    --shadow: 0 1px 0 rgba(0,0,0,0.04), 0 8px 24px rgba(22,22,29,0.06);
+
+    /* Conflict-specific */
+    --mine: #ff4d2e;
+    --mine-soft: #ffe4dc;
+    --theirs: #0a4cff;
+    --theirs-soft: #dde6ff;
+    --conflict: #d33;
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'Geist', 'Noto Sans SC', system-ui, -apple-system, sans-serif;
+    font-size: 16px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    background-image: radial-gradient(circle at 1px 1px, rgba(22,22,29,0.05) 1px, transparent 0);
+    background-size: 24px 24px;
+  }
+
+  /* Typography */
+  .display-cn { font-family: 'Noto Serif SC', serif; font-weight: 900; letter-spacing: -0.01em; }
+  .mono { font-family: 'JetBrains Mono', monospace; }
+  .label { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-mute); }
+
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 0 32px; }
+
+  /* Top bar */
+  .topbar {
+    border-bottom: 1px dashed var(--line);
+    padding: 16px 0;
+    background: var(--bg);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    backdrop-filter: blur(8px);
+    background: rgba(243, 238, 229, 0.85);
+  }
+  .topbar-inner { display: flex; justify-content: space-between; align-items: center; gap: 24px; }
+  .brand { font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 600; }
+  .brand .dot { display: inline-block; width: 8px; height: 8px; background: var(--accent); border-radius: 50%; margin-right: 8px; vertical-align: middle; animation: pulse 2s ease-in-out infinite; }
+  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+  .nav-links { display: flex; gap: 20px; font-size: 13px; }
+  .nav-links a { color: var(--ink-soft); text-decoration: none; transition: color 0.2s; cursor: pointer; }
+  .nav-links a:hover { color: var(--accent); }
+
+  a.brand { text-decoration: none; color: inherit; transition: color 0.2s; cursor: pointer; }
+  a.brand:hover { color: var(--accent); }
+
+  /* Hero */
+  .hero { padding: 100px 0 80px; position: relative; overflow: hidden; }
+  .hero-meta { display: flex; gap: 24px; margin-bottom: 32px; align-items: center; flex-wrap: wrap; }
+  .hero-meta .pill { padding: 6px 12px; border: 1px solid var(--ink); border-radius: 100px; font-size: 11px; font-family: 'JetBrains Mono', monospace; letter-spacing: 0.05em; }
+  .hero-meta .pill.fill { background: var(--ink); color: var(--bg); }
+  .hero h1 {
+    font-family: 'Noto Serif SC', serif;
+    font-weight: 900;
+    font-size: clamp(48px, 7vw, 92px);
+    line-height: 0.95;
+    letter-spacing: -0.03em;
+    margin: 0 0 24px;
+  }
+  .hero h1 .em {
+    font-family: 'Noto Serif SC', serif;
+    font-weight: 500;
+    color: var(--accent);
+  }
+  .hero p.lede {
+    font-size: 20px;
+    line-height: 1.55;
+    max-width: 640px;
+    color: var(--ink-soft);
+    margin: 0 0 40px;
+  }
+  .hero p.lede .em { color: var(--accent); font-weight: 600; }
+  .hero-grid { display: grid; grid-template-columns: 1.4fr 1fr; gap: 48px; align-items: end; }
+  @media (max-width: 880px) { .hero-grid { grid-template-columns: 1fr; } }
+  .hero-side { border-left: 1px dashed var(--line); padding-left: 24px; font-size: 13px; color: var(--ink-soft); }
+  .hero-side .row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px dashed var(--line); }
+  .hero-side .row:last-child { border-bottom: none; }
+  .hero-side .row .k { color: var(--ink-mute); font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.05em; text-transform: uppercase; }
+  .hero-side .row .v { font-weight: 500; }
+
+  /* Section */
+  section { padding: 80px 0; border-top: 1px solid var(--line); position: relative; }
+  .section-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 56px; flex-wrap: wrap; gap: 16px; }
+  .section-num { font-family: 'JetBrains Mono', monospace; font-size: 13px; color: var(--ink-mute); letter-spacing: 0.1em; }
+  .section-num strong { color: var(--accent); }
+  .section-title {
+    font-family: 'Noto Serif SC', serif;
+    font-weight: 900;
+    font-size: clamp(32px, 4.5vw, 52px);
+    line-height: 1.05;
+    letter-spacing: -0.02em;
+    margin: 0;
+    max-width: 18ch;
+  }
+  .section-title .em { font-family: 'Noto Serif SC', serif; font-weight: 500; color: var(--accent); }
+  .section-sub { color: var(--ink-soft); font-size: 17px; max-width: 38ch; line-height: 1.55; margin: 0; }
+  .em { font-family: 'Noto Serif SC', serif; font-weight: 500; color: var(--accent); }
+
+  /* Hint strip */
+  .hint-strip {
+    margin-top: 8px;
+    padding: 14px 18px;
+    background: var(--accent-soft);
+    border-left: 3px solid var(--accent);
+    border-radius: 4px;
+    font-size: 13px;
+    color: var(--ink);
+    line-height: 1.55;
+  }
+  .hint-strip .hint-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--accent);
+    letter-spacing: 0.12em;
+    margin-right: 10px;
+    text-transform: uppercase;
+  }
+
+  /* ============== §01 — Branching timeline ============== */
+  .branch-stage {
+    margin-top: 24px;
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 32px 28px 24px;
+    overflow: hidden;
+  }
+  .branch-controls {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 18px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+  .branch-controls .bc-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--ink-mute);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-right: 6px;
+  }
+  .branch-controls button {
+    background: var(--ink);
+    color: white;
+    border: 1px solid var(--ink);
+    padding: 8px 16px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.04em;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.18s;
+  }
+  .branch-controls button:hover { background: var(--accent); border-color: var(--accent); }
+  .branch-controls button.ghost {
+    background: transparent;
+    color: var(--ink);
+  }
+  .branch-controls button.ghost:hover { color: white; }
+
+  .branch-canvas {
+    background: var(--bg);
+    border: 1px dashed var(--line);
+    border-radius: 6px;
+    padding: 24px 16px;
+    position: relative;
+    min-height: 300px;
+  }
+  .branch-canvas svg { width: 100%; height: 280px; display: block; overflow: visible; }
+
+  .branch-status {
+    margin-top: 14px;
+    padding: 12px 16px;
+    background: white;
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--ink-soft);
+    line-height: 1.6;
+    min-height: 56px;
+  }
+  .branch-status .bs-tag {
+    color: var(--accent);
+    margin-right: 6px;
+  }
+  .branch-status strong { color: var(--ink); font-weight: 600; }
+  .branch-status .err { color: var(--conflict); font-weight: 600; }
+
+  .branch-legend {
+    display: flex;
+    gap: 18px;
+    margin-top: 14px;
+    flex-wrap: wrap;
+    font-size: 12px;
+    color: var(--ink-soft);
+  }
+  .branch-legend .lg-item { display: inline-flex; align-items: center; gap: 6px; font-family: 'JetBrains Mono', monospace; }
+  .branch-legend .lg-dot {
+    width: 10px; height: 10px; border-radius: 50%;
+  }
+
+  /* SVG node animations */
+  .node-circle { transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), fill 0.3s; transform-origin: center; transform-box: fill-box; }
+  .node-circle.is-pop { transform: scale(1.35); }
+  .node-label { font-family: 'JetBrains Mono', monospace; font-size: 10px; }
+  .branch-line { transition: stroke-dashoffset 0.6s ease-out; }
+  .conflict-burst {
+    opacity: 0;
+    transition: opacity 0.3s;
+    pointer-events: none;
+  }
+  .conflict-burst.show { opacity: 1; animation: burst 0.5s ease-out; }
+  @keyframes burst {
+    0%   { transform: scale(0); opacity: 0; }
+    60%  { transform: scale(1.3); opacity: 1; }
+    100% { transform: scale(1); opacity: 1; }
+  }
+
+  /* ============== §02 — Conflict marker anatomy ============== */
+  .anatomy-stage {
+    margin-top: 24px;
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    overflow: hidden;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0;
+  }
+  @media (max-width: 880px) { .anatomy-stage { grid-template-columns: 1fr; } }
+
+  .anatomy-code {
+    background: var(--ink);
+    color: #d8d8e0;
+    padding: 28px 24px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14px;
+    line-height: 2;
+    position: relative;
+    border-right: 1px solid var(--line);
+  }
+  @media (max-width: 880px) { .anatomy-code { border-right: none; border-bottom: 1px solid var(--line); } }
+
+  .anatomy-code .code-fname {
+    position: absolute; top: 10px; right: 16px;
+    font-size: 10px; color: #6e6e7a; letter-spacing: 0.08em;
+  }
+  .anatomy-code pre { margin: 0; padding-top: 14px; }
+
+  .anatomy-code .seg {
+    display: block;
+    padding: 2px 8px;
+    margin: 0 -8px;
+    border-left: 3px solid transparent;
+    cursor: pointer;
+    transition: background 0.2s, border-color 0.2s;
+    border-radius: 0 3px 3px 0;
+  }
+  .anatomy-code .seg:hover { background: rgba(255,255,255,0.04); }
+  .anatomy-code .seg.is-active { background: rgba(255, 138, 110, 0.12); border-left-color: var(--accent); }
+  .anatomy-code .seg-mine { color: #ffb39a; }
+  .anatomy-code .seg-mine.is-active { background: rgba(255, 77, 46, 0.18); border-left-color: var(--mine); }
+  .anatomy-code .seg-theirs { color: #8ec5ff; }
+  .anatomy-code .seg-theirs.is-active { background: rgba(10, 76, 255, 0.18); border-left-color: var(--theirs); }
+  .anatomy-code .seg-marker { color: #ff5e5e; font-weight: 600; }
+  .anatomy-code .seg-marker.is-active { background: rgba(211, 51, 51, 0.18); border-left-color: var(--conflict); }
+  .anatomy-code .ckey { color: #ff8a6e; }
+  .anatomy-code .cstr { color: #a8e6a3; }
+
+  .anatomy-explain {
+    background: var(--paper);
+    padding: 28px 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+  .anatomy-row {
+    padding: 14px 0;
+    border-bottom: 1px dashed var(--line);
+    cursor: pointer;
+    transition: opacity 0.2s;
+  }
+  .anatomy-row:last-child { border-bottom: none; }
+  .anatomy-row:not(.is-active) { opacity: 0.45; }
+  .anatomy-row.is-active { opacity: 1; }
+  .anatomy-row .ar-key {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.05em;
+    margin-bottom: 6px;
+    text-transform: uppercase;
+    color: var(--ink-mute);
+  }
+  .anatomy-row[data-key="mine"] .ar-key { color: var(--mine); }
+  .anatomy-row[data-key="theirs"] .ar-key { color: var(--theirs); }
+  .anatomy-row[data-key="marker"] .ar-key { color: var(--conflict); }
+  .anatomy-row .ar-title {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 17px;
+    font-weight: 700;
+    margin: 0 0 6px;
+    line-height: 1.3;
+  }
+  .anatomy-row .ar-desc {
+    font-size: 13px;
+    color: var(--ink-soft);
+    line-height: 1.55;
+    margin: 0;
+  }
+  .anatomy-row .ar-desc code {
+    font-family: 'JetBrains Mono', monospace;
+    background: var(--bg-2);
+    padding: 1px 6px;
+    border-radius: 3px;
+    font-size: 12px;
+    color: var(--ink);
+  }
+
+  /* ============== §03 — Game ============== */
+  .game-stage {
+    margin-top: 24px;
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  .game-head {
+    background: var(--ink);
+    color: white;
+    padding: 16px 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 14px;
+  }
+  .game-rounds {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+  }
+  .game-rounds .gr-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: rgba(255,255,255,0.5);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-right: 8px;
+  }
+  .game-rounds button {
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.16);
+    color: rgba(255,255,255,0.7);
+    padding: 6px 14px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    border-radius: 3px;
+    cursor: pointer;
+    transition: all 0.15s;
+    letter-spacing: 0.04em;
+  }
+  .game-rounds button:hover { background: rgba(255,255,255,0.16); color: white; }
+  .game-rounds button.active { background: var(--accent); border-color: var(--accent); color: white; }
+  .game-rounds button.done::after {
+    content: '✓';
+    margin-left: 6px;
+    color: var(--green-soft);
+  }
+  .game-meta {
+    display: flex;
+    gap: 16px;
+    align-items: center;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: rgba(255,255,255,0.7);
+    letter-spacing: 0.04em;
+  }
+  .game-meta .gm-tag { color: var(--accent); margin-right: 4px; }
+
+  .game-prompt {
+    padding: 22px 28px 18px;
+    border-bottom: 1px dashed var(--line);
+    background: var(--bg);
+  }
+  .game-prompt .gp-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--accent);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+  .game-prompt .gp-title {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 22px;
+    font-weight: 700;
+    margin: 0 0 8px;
+    line-height: 1.3;
+    letter-spacing: -0.01em;
+  }
+  .game-prompt .gp-desc {
+    font-size: 14px;
+    color: var(--ink-soft);
+    line-height: 1.55;
+    margin: 0;
+    max-width: 64ch;
+  }
+  .game-prompt .gp-desc strong { color: var(--ink); font-weight: 600; }
+  .game-prompt .gp-actors {
+    display: flex;
+    gap: 22px;
+    margin-top: 14px;
+    flex-wrap: wrap;
+    font-size: 12px;
+    color: var(--ink-soft);
+  }
+  .game-prompt .gp-actor {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .game-prompt .gp-actor .gp-chip {
+    width: 10px; height: 10px; border-radius: 50%;
+  }
+  .gp-chip.you { background: var(--mine); }
+  .gp-chip.them { background: var(--theirs); }
+
+  .game-grid {
+    display: grid;
+    grid-template-columns: 1fr 320px;
+    gap: 0;
+  }
+  @media (max-width: 880px) { .game-grid { grid-template-columns: 1fr; } }
+
+  .game-code {
+    background: var(--ink);
+    color: #d8d8e0;
+    padding: 24px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    line-height: 1.95;
+    position: relative;
+    overflow-x: auto;
+    min-height: 360px;
+  }
+  .game-code .gc-fname {
+    position: absolute; top: 10px; right: 16px;
+    font-size: 10px; color: #6e6e7a; letter-spacing: 0.08em;
+  }
+  .game-code pre { margin: 0; padding-top: 14px; }
+  .game-code .ckey { color: #ff8a6e; }
+  .game-code .cstr { color: #a8e6a3; }
+  .game-code .ccom { color: #6e6e7a; }
+  .game-code .ctag { color: #ff8a6e; }
+  .game-code .cattr { color: #ffd166; }
+  .game-code .cnum { color: #8ec5ff; }
+  .game-code .cfun { color: #c9b6ff; }
+
+  .game-code .gline {
+    display: block;
+    padding: 1px 8px;
+    margin: 0 -8px;
+    border-left: 3px solid transparent;
+    transition: background 0.4s ease, opacity 0.4s ease, max-height 0.5s ease, padding 0.4s ease, transform 0.4s ease;
+    overflow: hidden;
+  }
+  .game-code .gline.mine { background: rgba(255, 77, 46, 0.14); border-left-color: var(--mine); }
+  .game-code .gline.theirs { background: rgba(10, 76, 255, 0.14); border-left-color: var(--theirs); }
+  .game-code .gline.cmark { background: rgba(211, 51, 51, 0.18); border-left-color: var(--conflict); color: #ff8e8e; font-weight: 600; }
+  .game-code .gline.fade-out {
+    opacity: 0;
+    max-height: 0;
+    padding-top: 0;
+    padding-bottom: 0;
+    transform: translateX(-8px);
+  }
+  .game-code .gline.fade-in {
+    animation: lineSlide 0.5s ease-out;
+  }
+  @keyframes lineSlide {
+    0%   { background: rgba(255, 207, 61, 0.35); }
+    100% { background: transparent; }
+  }
+  .game-code .gline.kept-mine { background: rgba(255, 77, 46, 0.05); border-left-color: rgba(255, 77, 46, 0.5); }
+  .game-code .gline.kept-theirs { background: rgba(10, 76, 255, 0.05); border-left-color: rgba(10, 76, 255, 0.5); }
+
+  .game-actions {
+    background: var(--paper);
+    padding: 22px 22px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    border-left: 1px solid var(--line);
+  }
+  @media (max-width: 880px) { .game-actions { border-left: none; border-top: 1px solid var(--line); } }
+
+  .game-actions .ga-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--ink-mute);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+  .game-actions button {
+    width: 100%;
+    text-align: left;
+    background: white;
+    border: 1.5px solid var(--line);
+    border-radius: 5px;
+    padding: 12px 14px;
+    cursor: pointer;
+    transition: all 0.18s;
+    font-family: inherit;
+    color: var(--ink);
+  }
+  .game-actions button:hover {
+    border-color: var(--ink);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(22,22,29,0.08);
+  }
+  .game-actions button[data-pick="mine"]:hover { border-color: var(--mine); background: var(--mine-soft); }
+  .game-actions button[data-pick="theirs"]:hover { border-color: var(--theirs); background: var(--theirs-soft); }
+  .game-actions button[data-pick="both"]:hover { border-color: var(--green); background: var(--green-soft); }
+  .game-actions button[data-pick="manual"]:hover { border-color: var(--yellow); background: rgba(255,207,61,0.18); }
+
+  .game-actions button:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+  }
+  .game-actions button .ga-cmd {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--ink-mute);
+    margin-bottom: 4px;
+    letter-spacing: 0.04em;
+  }
+  .game-actions button .ga-name {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 15px;
+    font-weight: 700;
+    margin: 0;
+    line-height: 1.25;
+    color: var(--ink);
+  }
+  .game-actions button .ga-desc {
+    font-size: 12px;
+    color: var(--ink-soft);
+    margin-top: 4px;
+    line-height: 1.45;
+  }
+
+  .game-feedback {
+    padding: 0 28px 24px;
+    background: var(--paper);
+  }
+  .game-feedback .gfb-card {
+    background: var(--bg);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 18px 22px;
+    margin-top: 20px;
+    border-left: 4px solid var(--accent);
+    animation: fbSlide 0.4s ease-out;
+  }
+  @keyframes fbSlide {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .game-feedback .gfb-card.good { border-left-color: var(--green); }
+  .game-feedback .gfb-card.warn { border-left-color: var(--yellow); }
+  .game-feedback .gfb-card.bad { border-left-color: var(--conflict); }
+  .game-feedback .gfb-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+    color: var(--accent);
+  }
+  .gfb-card.good .gfb-tag { color: var(--green); }
+  .gfb-card.warn .gfb-tag { color: #b48010; }
+  .gfb-card.bad  .gfb-tag { color: var(--conflict); }
+  .game-feedback .gfb-title {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 17px;
+    font-weight: 700;
+    margin: 0 0 6px;
+    line-height: 1.35;
+  }
+  .game-feedback .gfb-desc {
+    font-size: 14px;
+    color: var(--ink-soft);
+    line-height: 1.6;
+    margin: 0;
+  }
+  .game-feedback .gfb-desc strong { color: var(--ink); font-weight: 600; }
+
+  .game-foot {
+    padding: 16px 28px;
+    background: var(--bg);
+    border-top: 1px dashed var(--line);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+  .game-foot .gf-progress {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--ink-soft);
+  }
+  .game-foot .gf-progress strong { color: var(--accent); }
+  .game-foot button {
+    background: var(--ink);
+    color: white;
+    border: none;
+    padding: 9px 18px;
+    border-radius: 4px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    cursor: pointer;
+    transition: background 0.18s;
+    letter-spacing: 0.04em;
+  }
+  .game-foot button:hover { background: var(--accent); }
+  .game-foot button.ghost {
+    background: transparent;
+    color: var(--ink-mute);
+    padding: 9px 12px;
+  }
+  .game-foot button.ghost:hover { color: var(--accent); background: transparent; }
+
+  /* ============== §04 — Habits ============== */
+  .habits-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    margin-top: 24px;
+  }
+  @media (max-width: 880px) { .habits-grid { grid-template-columns: 1fr; } }
+  .habit-card {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+  .habit-card .hc-num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--accent);
+    letter-spacing: 0.08em;
+    margin: 0;
+  }
+  .habit-card h4 {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 19px;
+    margin: 0;
+    font-weight: 700;
+    line-height: 1.3;
+    letter-spacing: -0.01em;
+  }
+  .habit-card .hc-cmd {
+    background: var(--ink);
+    color: #ffb39a;
+    padding: 8px 12px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    border-radius: 4px;
+    margin: 0;
+  }
+  .habit-card .hc-cmd .ccom { color: #6e6e7a; }
+  .habit-card p {
+    margin: 0;
+    font-size: 13.5px;
+    color: var(--ink-soft);
+    line-height: 1.6;
+  }
+  .habit-card .hc-bad {
+    margin: 0;
+    padding: 12px;
+    background: var(--accent-soft);
+    border-left: 3px solid var(--accent);
+    font-size: 12px;
+    color: var(--ink);
+    line-height: 1.5;
+    border-radius: 0 4px 4px 0;
+  }
+  .habit-card .hc-bad .hc-bad-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--accent);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-right: 6px;
+  }
+  .habit-card .hc-bad strong { color: var(--ink); font-weight: 600; }
+
+  /* ============== §05 — Abort ============== */
+  .abort-stage {
+    margin-top: 24px;
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 32px 32px 28px;
+  }
+  .abort-flow {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr auto 1fr;
+    gap: 12px;
+    align-items: stretch;
+    margin-bottom: 20px;
+  }
+  @media (max-width: 880px) {
+    .abort-flow { grid-template-columns: 1fr; }
+    .abort-flow .af-arr { transform: rotate(90deg); margin: 4px auto; }
+  }
+  .abort-step {
+    background: var(--bg);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 16px 14px;
+    text-align: center;
+    transition: all 0.2s;
+    cursor: pointer;
+  }
+  .abort-step:hover { border-color: var(--accent); transform: translateY(-2px); }
+  .abort-step.is-active { border-color: var(--accent); background: var(--accent-soft); }
+  .abort-step .as-num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--ink-mute);
+    letter-spacing: 0.1em;
+    margin-bottom: 8px;
+  }
+  .abort-step .as-cmd {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    color: var(--ink);
+    background: var(--ink);
+    color: #ffb39a;
+    padding: 6px 10px;
+    border-radius: 3px;
+    margin-bottom: 10px;
+    display: inline-block;
+  }
+  .abort-step .as-title {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 14px;
+    font-weight: 700;
+    margin: 0 0 4px;
+  }
+  .abort-step .as-desc {
+    font-size: 11.5px;
+    color: var(--ink-soft);
+    line-height: 1.4;
+    margin: 0;
+  }
+  .abort-flow .af-arr {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Noto Serif SC', serif;
+    font-size: 26px;
+    color: var(--ink-mute);
+    font-weight: 300;
+  }
+
+  .abort-detail {
+    background: var(--ink);
+    color: #d8d8e0;
+    padding: 22px 24px;
+    border-radius: 6px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    line-height: 1.95;
+    transition: opacity 0.25s;
+  }
+  .abort-detail .ad-title {
+    color: var(--accent);
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-bottom: 14px;
+    padding-bottom: 10px;
+    border-bottom: 1px dashed #2a2a36;
+  }
+  .abort-detail .ad-out {
+    color: #6e6e7a;
+  }
+  .abort-detail .ad-emit { color: #a8e6a3; }
+  .abort-detail .ad-warn { color: #ffd166; }
+  .abort-detail .ad-err  { color: #ff8e8e; }
+  .abort-detail .ad-prompt { color: #ffb39a; }
+  .abort-detail .ad-prompt::before { content: '$ '; color: #6e6e7a; }
+
+  .abort-quote {
+    margin-top: 24px;
+    padding: 20px 24px;
+    background: var(--green-soft);
+    border-left: 4px solid var(--green);
+    border-radius: 0 6px 6px 0;
+    font-family: 'Noto Serif SC', serif;
+    font-size: 17px;
+    line-height: 1.55;
+    color: var(--ink);
+  }
+  .abort-quote .aq-mark {
+    color: var(--green);
+    margin-right: 8px;
+    font-weight: 700;
+  }
+
+  /* ============== §06 — Cheatsheet ============== */
+  .cheat-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    margin-top: 32px;
+  }
+  @media (max-width: 880px) { .cheat-grid { grid-template-columns: 1fr; } }
+  .cheat-card {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 24px;
+    position: relative;
+  }
+  .cheat-card.markers { border-top: 4px solid var(--conflict); }
+  .cheat-card.picks { border-top: 4px solid var(--accent); }
+  .cheat-card.escape { border-top: 4px solid var(--green); }
+  .cheat-card .cc-num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--ink-mute);
+    letter-spacing: 0.1em;
+    margin-bottom: 4px;
+    text-transform: uppercase;
+  }
+  .cheat-card h4 {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 22px;
+    margin: 0 0 6px;
+    font-weight: 800;
+    letter-spacing: -0.01em;
+  }
+  .cheat-card .cc-sub {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--ink-soft);
+    margin-bottom: 16px;
+    letter-spacing: 0.05em;
+  }
+  .cheat-card dl { margin: 0; padding: 0; font-size: 13px; }
+  .cheat-card dl dt {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--ink-mute);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-top: 14px;
+  }
+  .cheat-card dl dt:first-child { margin-top: 0; }
+  .cheat-card dl dd {
+    margin: 4px 0 0;
+    color: var(--ink-soft);
+    font-size: 13px;
+    line-height: 1.55;
+  }
+  .cheat-card dl dd code {
+    font-family: 'JetBrains Mono', monospace;
+    background: var(--bg-2);
+    padding: 1px 6px;
+    border-radius: 3px;
+    font-size: 12px;
+    color: var(--ink);
+  }
+  .cheat-card dl dd strong { color: var(--ink); font-weight: 600; }
+
+  /* ============= Unified next-post block ============= */
+  .next-post {
+    margin-top: 48px;
+    padding: 32px 36px;
+    background: var(--ink);
+    color: var(--bg);
+    border-radius: 8px;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 32px;
+    align-items: center;
+    text-decoration: none;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    position: relative;
+    overflow: hidden;
+  }
+  .next-post::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at 100% 0%, rgba(255,77,46,0.12), transparent 55%);
+    pointer-events: none;
+  }
+  .next-post:hover { transform: translateY(-2px); box-shadow: 0 14px 36px rgba(22,22,29,0.22); }
+  @media (max-width: 720px) { .next-post { grid-template-columns: 1fr; padding: 24px; gap: 20px; } }
+  .next-post .np-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--accent);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+    display: inline-block;
+  }
+  .next-post h4 {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 26px;
+    margin: 0 0 10px;
+    font-weight: 700;
+    color: white;
+    line-height: 1.25;
+    letter-spacing: -0.01em;
+  }
+  .next-post h4 .em {
+    font-family: 'Noto Serif SC', serif;
+    font-weight: 500;
+    color: var(--accent);
+  }
+  .next-post p {
+    margin: 0;
+    color: rgba(255,255,255,0.72);
+    font-size: 14px;
+    line-height: 1.65;
+    max-width: 560px;
+  }
+  .next-post p strong { color: white; font-weight: 600; }
+  .next-post .np-cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 24px;
+    background: var(--accent);
+    color: white;
+    border-radius: 4px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    white-space: nowrap;
+    transition: background 0.18s, color 0.18s, transform 0.18s;
+    position: relative;
+    z-index: 1;
+  }
+  .next-post:hover .np-cta { background: white; color: var(--ink); transform: translateX(2px); }
+  .next-post .np-cta .arr { font-family: 'Noto Serif SC', serif; font-size: 18px; font-weight: 500; }
+
+  /* ============= Footer ============= */
+  footer {
+    border-top: 1px solid var(--line);
+    padding: 56px 0 64px;
+    background: var(--bg);
+  }
+  .byline {
+    display: flex;
+    gap: 28px;
+    align-items: center;
+    padding-bottom: 32px;
+    border-bottom: 1px dashed var(--line);
+    margin-bottom: 24px;
+    position: relative;
+  }
+  .byline::before {
+    content: '';
+    position: absolute;
+    top: -56px; left: 0;
+    width: 32px; height: 1px;
+    background: var(--accent);
+  }
+  .byline .avatar {
+    width: 96px; height: 96px;
+    border-radius: 50%;
+    object-fit: cover;
+    flex-shrink: 0;
+    border: 3px solid var(--paper);
+    box-shadow: 0 0 0 1px var(--line), 0 6px 20px rgba(22,22,29,0.10);
+    background: var(--paper);
+  }
+  .byline-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--ink-mute);
+    letter-spacing: 0.18em;
+    margin-bottom: 8px;
+  }
+  .byline-label .dot {
+    display: inline-block;
+    width: 6px; height: 6px;
+    background: var(--accent);
+    border-radius: 50%;
+    margin-right: 6px;
+    vertical-align: 1px;
+  }
+  .byline-name {
+    font-family: 'Noto Serif SC', serif;
+    font-size: clamp(28px, 4vw, 40px);
+    font-weight: 700;
+    line-height: 1.05;
+    letter-spacing: -0.01em;
+    margin: 0 0 8px;
+  }
+  .byline-name .em {
+    font-family: 'Noto Serif SC', serif;
+    font-weight: 500;
+    color: var(--accent);
+  }
+  .byline-tag {
+    font-size: 14px;
+    color: var(--ink-soft);
+    line-height: 1.55;
+    margin: 0;
+    max-width: 52ch;
+  }
+  .byline-contact { margin-top: 14px; padding-top: 14px; border-top: 1px dashed var(--line); display: flex; align-items: center; gap: 10px; flex-wrap: wrap; font-size: 12px; }
+  .byline-contact .contact-label { font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-mute); padding: 2px 8px; border: 1px solid var(--line); border-radius: 3px; }
+  .byline-contact .contact-id { font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 600; color: var(--ink); background: var(--accent-soft); padding: 3px 10px; border-radius: 4px; letter-spacing: 0.02em; }
+  .byline-contact .contact-hint { font-size: 12px; color: var(--ink-soft); }
+  .footer-meta {
+    text-align: center;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--ink-mute);
+    letter-spacing: 0.05em;
+  }
+  .footer-meta .heart { color: var(--accent); }
+  .footer-meta .mono { color: var(--ink-soft); font-weight: 500; }
+  @media (max-width: 600px) {
+    .byline { flex-direction: column; text-align: center; align-items: center; gap: 16px; }
+    .byline-tag { margin-left: auto; margin-right: auto; }
+  }
+
+  /* Subtle entry animation */
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+  section { animation: fadeIn 0.6s ease-out backwards; }
+
+  /* === Roadmap Modal === */
+  .rm-modal { position: fixed; inset: 0; z-index: 1000; display: flex; align-items: center; justify-content: center; padding: 30px 16px; }
+  .rm-modal[hidden] { display: none; }
+  .rm-backdrop { position: absolute; inset: 0; background: rgba(22,22,29,0.55); backdrop-filter: blur(4px); animation: rm-fade 0.2s; }
+  @keyframes rm-fade { from { opacity: 0; } to { opacity: 1; } }
+  .rm-dialog { position: relative; background: var(--bg); border-radius: 12px; max-width: 720px; width: 100%; max-height: calc(100vh - 60px); overflow-y: auto; padding: 32px 36px 24px; box-shadow: 0 30px 80px rgba(0,0,0,0.3); animation: rm-pop 0.25s cubic-bezier(0.4,0,0.2,1); }
+  @keyframes rm-pop { from { transform: scale(0.96) translateY(8px); opacity: 0; } to { transform: scale(1) translateY(0); opacity: 1; } }
+  .rm-close { position: absolute; top: 14px; right: 16px; background: transparent; border: none; cursor: pointer; font-size: 20px; color: var(--ink-mute); width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: all 0.15s; line-height: 1; }
+  .rm-close:hover { background: var(--bg-2); color: var(--ink); }
+  .rm-header { margin-bottom: 22px; padding-bottom: 18px; border-bottom: 1px dashed var(--line); }
+  .rm-tag { font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.1em; color: var(--accent); text-transform: uppercase; margin-bottom: 8px; }
+  .rm-title { font-family: 'Noto Serif SC', serif; font-size: 28px; margin: 0 0 6px; font-weight: 900; letter-spacing: -0.02em; line-height: 1.1; }
+  .rm-title .rm-em { font-family: 'Noto Serif SC', serif; color: var(--accent); font-weight: 500; }
+  .rm-sub { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--ink-mute); margin: 0; }
+  .rm-body { display: flex; flex-direction: column; gap: 18px; }
+  .rm-mod-key { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ink); font-weight: 700; margin-bottom: 8px; letter-spacing: 0.04em; text-transform: uppercase; }
+  .rm-mod-list { display: flex; flex-direction: column; gap: 6px; }
+  .rm-cell { display: grid; grid-template-columns: 36px 1fr auto; gap: 12px; align-items: center; padding: 9px 13px; border-radius: 5px; background: var(--paper); border: 1px solid var(--line); text-decoration: none; color: inherit; transition: all 0.15s; }
+  .rm-cell:hover { border-color: var(--accent); background: var(--accent-soft); transform: translateX(3px); }
+  .rm-cell-code { font-family: 'Noto Serif SC', serif; font-weight: 500; color: var(--accent); font-size: 15px; }
+  .rm-cell-name { font-size: 13px; color: var(--ink); }
+  .rm-cell-tier { font-family: 'JetBrains Mono', monospace; font-size: 9px; letter-spacing: 0.08em; color: var(--ink-mute); text-transform: uppercase; border: 1px solid var(--line); padding: 2px 7px; border-radius: 3px; }
+  .rm-footer { margin-top: 22px; padding-top: 16px; border-top: 1px dashed var(--line); display: flex; justify-content: space-between; align-items: center; font-size: 12px; color: var(--ink-soft); flex-wrap: wrap; gap: 8px; }
+  .rm-wechat { font-family: 'JetBrains Mono', monospace; background: var(--accent-soft); color: var(--ink); padding: 3px 10px; border-radius: 3px; font-weight: 600; letter-spacing: 0.02em; }
+  .nav-links a[data-rm-open] { cursor: pointer; }
+</style>
+</head>
+<body>
+
+<!-- Top bar -->
+<div class="topbar">
+  <div class="wrap topbar-inner">
+    <a href="index.html" class="brand"><span class="dot"></span>G2 · 版本控制 / 冲突现场</a>
+    <nav class="nav-links">
+      <a href="index.html#roadmap" data-rm-open>路线图</a>
+      <a href="index.html#manifesto">关于</a>
+    </nav>
+  </div>
+</div>
+
+<!-- Hero -->
+<header class="hero">
+  <div class="wrap">
+    <div class="hero-meta">
+      <span class="pill fill">实验互动 · INTERACTIVE</span>
+      <span class="pill">2026 · 设计 × 代码</span>
+      <span class="pill">G2 · 版本控制 · 冲突</span>
+      <span class="label">阅读 + 玩 ≈ 12 分钟</span>
+    </div>
+    <div class="hero-grid">
+      <div>
+        <h1>
+          <span class="display-cn">冲突不是 bug，</span><br>
+          <span class="display-cn">是 git 在</span><span class="em">问你</span><span class="display-cn">。</span>
+        </h1>
+        <p class="lede">
+          你刚把按钮改成<span class="em">橙色</span>，工程师同事也在改同一行，把它改成<span class="em">蓝色</span>。<br>
+          git 不知道你们俩谁说了算 —— 它把两份都摆出来，让你选。<br>
+          这一篇就专门拆这件事，读完你敢自己解一个冲突。
+        </p>
+      </div>
+      <div class="hero-side">
+        <div class="row"><span class="k">本页讲什么</span><span class="v">冲突 · 标记 · 怎么解</span></div>
+        <div class="row"><span class="k">含互动</span><span class="v">动画 + 3 轮救火游戏</span></div>
+        <div class="row"><span class="k">面向</span><span class="v">怕看见红字的设计师</span></div>
+        <div class="row"><span class="k">前置知识</span><span class="v">G1 · 知道什么是 commit</span></div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- §01 Branching timeline -->
+<section id="how">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>01</strong> / 起源</div>
+        <h2 class="section-title">冲突<br>是<span class="em">怎么</span>产生的</h2>
+      </div>
+      <p class="section-sub">
+        本质就一句话：<strong>同一行代码，两个人都改了，git 不替你做主</strong>。
+        来看一遍这件事的发生过程 —— 别急，按顺序点下面的按钮。
+      </p>
+    </div>
+
+    <div class="hint-strip">
+      <span class="hint-tag">动画</span>主线是黑色那条 <code>main</code>。两个分支从 main 分出去：你的（橙）和 ta 的（蓝）。两边都改了同一行 —— 合并的时候 boom。
+    </div>
+
+    <div class="branch-stage">
+      <div class="branch-controls">
+        <span class="bc-label">按顺序点 ›</span>
+        <button data-step="1">① 一切正常</button>
+        <button data-step="2">② 你拉一条分支改颜色</button>
+        <button data-step="3">③ ta 也拉一条分支改颜色</button>
+        <button data-step="4">④ ta 先合回 main</button>
+        <button data-step="5">⑤ 你合 — 冲突！</button>
+        <button class="ghost" data-step="0">↺ 重置</button>
+      </div>
+
+      <div class="branch-canvas">
+        <svg viewBox="0 0 920 280" preserveAspectRatio="xMidYMid meet" id="branchSvg">
+          <!-- main line baseline -->
+          <line x1="40" y1="140" x2="880" y2="140" stroke="#16161d" stroke-width="2" stroke-dasharray="4 6" />
+          <text x="40" y="128" font-family="JetBrains Mono" font-size="11" fill="#16161d" font-weight="600">main</text>
+
+          <!-- step 1: initial commits -->
+          <g data-show="1 2 3 4 5">
+            <circle class="node-circle" cx="80"  cy="140" r="8" fill="#16161d" />
+            <circle class="node-circle" cx="160" cy="140" r="8" fill="#16161d" />
+            <text class="node-label" x="80" y="170" text-anchor="middle" fill="#4a4a55">c1</text>
+            <text class="node-label" x="160" y="170" text-anchor="middle" fill="#4a4a55">c2</text>
+            <text x="120" y="118" font-family="JetBrains Mono" font-size="10" text-anchor="middle" fill="#8a8a92">两人都从 c2 出发</text>
+          </g>
+
+          <!-- step 2: your branch (orange) -->
+          <g data-show="2 3 4 5" opacity="0">
+            <path d="M 160 140 Q 200 140 240 80" stroke="#ff4d2e" stroke-width="2.5" fill="none" />
+            <circle class="node-circle" cx="280" cy="80" r="8" fill="#ff4d2e" />
+            <line x1="240" y1="80" x2="280" y2="80" stroke="#ff4d2e" stroke-width="2.5" />
+            <text class="node-label" x="280" y="68" text-anchor="middle" fill="#ff4d2e" font-weight="600">你</text>
+            <text x="280" y="100" font-family="JetBrains Mono" font-size="10" text-anchor="middle" fill="#ff4d2e">color: #ff5e1a</text>
+          </g>
+
+          <!-- step 3: their branch (blue) -->
+          <g data-show="3 4 5" opacity="0">
+            <path d="M 160 140 Q 200 140 240 200" stroke="#0a4cff" stroke-width="2.5" fill="none" />
+            <circle class="node-circle" cx="280" cy="200" r="8" fill="#0a4cff" />
+            <line x1="240" y1="200" x2="280" y2="200" stroke="#0a4cff" stroke-width="2.5" />
+            <text class="node-label" x="280" y="220" text-anchor="middle" fill="#0a4cff" font-weight="600">ta</text>
+            <text x="280" y="240" font-family="JetBrains Mono" font-size="10" text-anchor="middle" fill="#0a4cff">color: #1a8fff</text>
+          </g>
+
+          <!-- step 4: their merge into main first -->
+          <g data-show="4 5" opacity="0">
+            <line x1="280" y1="200" x2="440" y2="200" stroke="#0a4cff" stroke-width="2" stroke-dasharray="3 4" />
+            <path d="M 440 200 Q 480 200 520 140" stroke="#0a4cff" stroke-width="2.5" fill="none" />
+            <circle class="node-circle" cx="540" cy="140" r="9" fill="#0a4cff" stroke="#16161d" stroke-width="1.5" />
+            <text class="node-label" x="540" y="170" text-anchor="middle" fill="#0a4cff" font-weight="600">merge ta</text>
+            <text x="540" y="118" font-family="JetBrains Mono" font-size="10" text-anchor="middle" fill="#0a4cff">main = ta 的版本</text>
+          </g>
+
+          <!-- step 5: conflict burst -->
+          <g data-show="5" opacity="0">
+            <line x1="280" y1="80" x2="640" y2="80" stroke="#ff4d2e" stroke-width="2" stroke-dasharray="3 4" />
+            <path d="M 640 80 Q 680 80 720 140" stroke="#ff4d2e" stroke-width="2.5" fill="none" stroke-dasharray="4 5" />
+
+            <!-- conflict X -->
+            <g class="conflict-burst show" transform="translate(760, 140)">
+              <circle r="32" fill="#ffe4dc" stroke="#d33" stroke-width="2" />
+              <text x="0" y="6" text-anchor="middle" font-family="Noto Serif SC" font-size="24" fill="#d33" font-weight="900">!</text>
+              <text x="0" y="58" text-anchor="middle" font-family="JetBrains Mono" font-size="10" fill="#d33" font-weight="700">CONFLICT</text>
+            </g>
+
+            <!-- file label -->
+            <text x="760" y="210" text-anchor="middle" font-family="JetBrains Mono" font-size="10" fill="#4a4a55">同一行被两边都改了</text>
+            <text x="760" y="226" text-anchor="middle" font-family="JetBrains Mono" font-size="10" fill="#4a4a55">→ git 让你来选</text>
+          </g>
+        </svg>
+      </div>
+
+      <div class="branch-status" id="branchStatus">
+        <span class="bs-tag">›</span> 点上面的按钮看动画。
+      </div>
+
+      <div class="branch-legend">
+        <span class="lg-item"><span class="lg-dot" style="background:#16161d"></span> main · 主线</span>
+        <span class="lg-item"><span class="lg-dot" style="background:#ff4d2e"></span> 你的分支</span>
+        <span class="lg-item"><span class="lg-dot" style="background:#0a4cff"></span> ta 的分支</span>
+        <span class="lg-item"><span class="lg-dot" style="background:#d33"></span> 冲突点</span>
+      </div>
+    </div>
+
+    <div class="hint-strip" style="margin-top:24px;">
+      <span class="hint-tag">关键</span>注意 git 没"出错"。它做了它能做的事 —— 把 ta 的改动合进 main。
+      你再合的时候，main 第 12 行是蓝色，你的第 12 行是橙色 —— git 不替你乱选，它把两份摞起来给你看，让你来定。
+    </div>
+  </div>
+</section>
+
+<!-- §02 Conflict marker anatomy -->
+<section id="markers">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>02</strong> / 标记</div>
+        <h2 class="section-title">那一片<br><span class="em">红字</span>到底是什么</h2>
+      </div>
+      <p class="section-sub">
+        <code>&lt;&lt;&lt;&lt;&lt;&lt;&lt;</code> <code>=======</code> <code>&gt;&gt;&gt;&gt;&gt;&gt;&gt;</code> 不是乱码 ——
+        是 git 把<strong>两份草稿摞起来</strong>给你看的标记。三段，一段一段拆开看就懂。
+      </p>
+    </div>
+
+    <div class="hint-strip">
+      <span class="hint-tag">互动</span>把鼠标放到右边的解释上 → 左边代码对应那一段会高亮。
+    </div>
+
+    <div class="anatomy-stage">
+      <div class="anatomy-code">
+        <span class="code-fname">Button.tsx · 冲突中</span>
+<pre><span class="seg seg-marker" data-key="marker">&lt;&lt;&lt;&lt;&lt;&lt;&lt; HEAD</span>
+<span class="seg seg-mine" data-key="mine">  <span class="ckey">color</span>: <span class="cstr">'#ff5e1a'</span>,  <span style="color:#6e6e7a;">// ← 你这边</span></span>
+<span class="seg seg-marker" data-key="marker">=======</span>
+<span class="seg seg-theirs" data-key="theirs">  <span class="ckey">color</span>: <span class="cstr">'#1a8fff'</span>,  <span style="color:#6e6e7a;">// ← ta 那边</span></span>
+<span class="seg seg-marker" data-key="marker">&gt;&gt;&gt;&gt;&gt;&gt;&gt; feature-blue</span></pre>
+      </div>
+
+      <div class="anatomy-explain">
+        <div class="anatomy-row" data-key="marker">
+          <div class="ar-key">三个尖括号 · MARKER</div>
+          <div class="ar-title">这三行是 git 加的"分割线"</div>
+          <p class="ar-desc">
+            <code>&lt;&lt;&lt;&lt;&lt;&lt;&lt;</code> 表示"上面的草稿开始"，<code>=======</code> 是分隔线，
+            <code>&gt;&gt;&gt;&gt;&gt;&gt;&gt;</code> 表示"另一份草稿结束"。
+            <strong>解冲突 = 删掉这三行</strong>，加上你想保留的内容。
+          </p>
+        </div>
+
+        <div class="anatomy-row" data-key="mine">
+          <div class="ar-key">第一段 · 你这边 (HEAD)</div>
+          <div class="ar-title">"HEAD" 就是你当前的版本</div>
+          <p class="ar-desc">
+            上半段（橙色）是<strong>你正在工作的代码</strong>。git 把它叫 <code>HEAD</code>，意思是"你脑袋里这一份"。
+          </p>
+        </div>
+
+        <div class="anatomy-row" data-key="theirs">
+          <div class="ar-key">第二段 · ta 那边</div>
+          <div class="ar-title">是要合进来的别人的版本</div>
+          <p class="ar-desc">
+            下半段（蓝色）是<strong>你正打算合进来的另一个分支</strong>。结尾那行 <code>feature-blue</code> 就是分支名 ——
+            git 直接告诉你"冲突来自哪个分支"。
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <div class="hint-strip" style="margin-top:24px;">
+      <span class="hint-tag">记住</span>解冲突的全部操作 = <strong>编辑这个文件</strong>，删掉那三行尖括号 + <code>=======</code>，
+      留下你想要的内容。然后保存、<code>git add</code>、<code>git commit</code>。<strong>没了。</strong>
+    </div>
+  </div>
+</section>
+
+<!-- §03 Game -->
+<section id="game">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>03</strong> / 现场</div>
+        <h2 class="section-title">冲突<br><span class="em">救火</span>三连问</h2>
+      </div>
+      <p class="section-sub">
+        三轮，从简单到复杂。每一轮给你一段冲突中的代码、四个选项 —— 选一个，看代码怎么变。
+        <strong>选错也没关系</strong>，旁边有同事的反馈。
+      </p>
+    </div>
+
+    <div class="game-stage" id="gameStage">
+      <div class="game-head">
+        <div class="game-rounds">
+          <span class="gr-label">轮次 ›</span>
+          <button data-round="1" class="active">Round 1 · 颜色</button>
+          <button data-round="2">Round 2 · 函数</button>
+          <button data-round="3">Round 3 · 组件</button>
+        </div>
+        <div class="game-meta">
+          <span><span class="gm-tag">FILE</span><span id="gameFile">Button.tsx</span></span>
+        </div>
+      </div>
+
+      <div class="game-prompt">
+        <div class="gp-tag">场景 · ROUND <span id="roundNum">1</span></div>
+        <h3 class="gp-title" id="roundTitle">按钮颜色冲突</h3>
+        <p class="gp-desc" id="roundDesc">你把按钮改成品牌橙色，工程师同事同时把它改成产品蓝。两个人都 push 了，git 让你选。</p>
+        <div class="gp-actors">
+          <span class="gp-actor"><span class="gp-chip you"></span> 你 · <span id="youAction">改成橙色 #ff5e1a</span></span>
+          <span class="gp-actor"><span class="gp-chip them"></span> ta · <span id="themAction">改成蓝色 #1a8fff</span></span>
+        </div>
+      </div>
+
+      <div class="game-grid">
+        <div class="game-code" id="gameCode">
+          <span class="gc-fname"><span id="gameFname">Button.tsx</span></span>
+<pre id="gameCodeInner"></pre>
+        </div>
+
+        <div class="game-actions" id="gameActions">
+          <span class="ga-label">怎么解 ›</span>
+          <button data-pick="mine">
+            <div class="ga-cmd">// keep mine</div>
+            <div class="ga-name">保留我的</div>
+            <div class="ga-desc">用我这一份，丢掉 ta 的改动。</div>
+          </button>
+          <button data-pick="theirs">
+            <div class="ga-cmd">// keep theirs</div>
+            <div class="ga-name">保留 ta 的</div>
+            <div class="ga-desc">用 ta 的，丢掉我的改动。</div>
+          </button>
+          <button data-pick="both">
+            <div class="ga-cmd">// keep both</div>
+            <div class="ga-name">两个都要</div>
+            <div class="ga-desc">把两份都留下，挨着写。</div>
+          </button>
+          <button data-pick="manual">
+            <div class="ga-cmd">// manual edit</div>
+            <div class="ga-name">手动改</div>
+            <div class="ga-desc">两份都不完全对，手动拼一份。</div>
+          </button>
+        </div>
+      </div>
+
+      <div class="game-feedback" id="gameFeedback"></div>
+
+      <div class="game-foot">
+        <div class="gf-progress">完成 <strong id="doneCount">0</strong> / 3 轮</div>
+        <div>
+          <button class="ghost" id="resetGame">↺ 重新来</button>
+          <button id="nextRound" disabled>下一轮 →</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="hint-strip" style="margin-top:24px;">
+      <span class="hint-tag">现实</span>真的解冲突时，IDE（VSCode、Cursor 之类）会把上面这四个按钮直接显示在冲突标记上方 ——
+      你点哪个就插哪段。这游戏就是在模拟那个体验。
+    </div>
+  </div>
+</section>
+
+<!-- §04 Habits -->
+<section id="habits">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>04</strong> / 习惯</div>
+        <h2 class="section-title">怎么<span class="em">少</span>遇到冲突<br>三个工作习惯</h2>
+      </div>
+      <p class="section-sub">
+        冲突永远不会消失（多人协作就一定会有），但 90% 的冲突可以靠这三件事避免。
+        每条都配一个反例 —— 不这么做会怎样。
+      </p>
+    </div>
+
+    <div class="habits-grid">
+      <div class="habit-card">
+        <div class="hc-num">HABIT · 01</div>
+        <h4>开干前先 pull 一下</h4>
+        <pre class="hc-cmd">git pull <span class="ccom"># 把别人的改动先拉下来</span></pre>
+        <p>每天开始干活前、每次准备改一个新文件前，先 <code>git pull</code> 一下。把别人这段时间的改动先同步到你这边 —— 你后面动的就是<strong>最新的代码</strong>。</p>
+        <div class="hc-bad">
+          <span class="hc-bad-tag">不这么做</span>你昨天 fork 出来一份，今天直接接着改。等一周后想合回去 ——
+          <strong>整周的差距</strong>都堆在那里，冲突会非常多。
+        </div>
+      </div>
+
+      <div class="habit-card">
+        <div class="hc-num">HABIT · 02</div>
+        <h4>改之前在群里说一声</h4>
+        <pre class="hc-cmd">// "我现在改 Button.tsx 哈"</pre>
+        <p>动手改一个共享文件前，在 Slack / 飞书 / 微信群里说一句"我在改 X 文件"。同事看见了就会绕开 —— 这是<strong>最低成本的协调</strong>，比解冲突省事一百倍。</p>
+        <div class="hc-bad">
+          <span class="hc-bad-tag">不这么做</span>你和 ta 各自闷头改同一个文件 2 小时。
+          合并的时候发现两个人改了 80% 同样的地方 —— <strong>白干一个人的活</strong>。
+        </div>
+      </div>
+
+      <div class="habit-card">
+        <div class="hc-num">HABIT · 03</div>
+        <h4>小步 commit · 小步合</h4>
+        <pre class="hc-cmd">git commit -m <span class="ccom"># 每改一件事就提交</span></pre>
+        <p>一次只做一件事，做完就 commit + push。<strong>每个 commit 越小，冲突面积越小</strong>。改完颜色就提交、改完文案再提交，别攒一大坨。</p>
+        <div class="hc-bad">
+          <span class="hc-bad-tag">不这么做</span>三天没 commit，攒了 80 个改动一起提。
+          冲突起来会跨越好几个文件、几百行 —— <strong>解到怀疑人生</strong>。
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- §05 Abort -->
+<section id="abort">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>05</strong> / 反悔</div>
+        <h2 class="section-title">真的搞砸了？<br><span class="em">还能反悔</span></h2>
+      </div>
+      <p class="section-sub">
+        万一冲突太复杂、你改着改着把自己绕晕了 —— 别慌。
+        <strong>git 几乎所有操作都可以撤销</strong>。这是设计师最该记住的一件事。
+      </p>
+    </div>
+
+    <div class="hint-strip">
+      <span class="hint-tag">反悔三连</span>点下面三个步骤，看每一步的命令是什么、做了什么。
+    </div>
+
+    <div class="abort-stage">
+      <div class="abort-flow" id="abortFlow">
+        <div class="abort-step is-active" data-step="status">
+          <div class="as-num">STEP 01</div>
+          <div class="as-cmd">git status</div>
+          <div class="as-title">先看现状</div>
+          <p class="as-desc">git 告诉你"现在哪几个文件冲突中"。</p>
+        </div>
+        <div class="af-arr">→</div>
+        <div class="abort-step" data-step="abort">
+          <div class="as-num">STEP 02</div>
+          <div class="as-cmd">git merge --abort</div>
+          <div class="as-title">一键撤销</div>
+          <p class="as-desc">回到没冲突前的样子，<strong>就像没合过</strong>。</p>
+        </div>
+        <div class="af-arr">→</div>
+        <div class="abort-step" data-step="ask">
+          <div class="as-num">STEP 03</div>
+          <div class="as-cmd">// ask a friend</div>
+          <div class="as-title">叫工程师同事</div>
+          <p class="as-desc">让懂的人陪你看一眼，5 分钟搞定。</p>
+        </div>
+      </div>
+
+      <div class="abort-detail" id="abortDetail">
+        <div class="ad-title">STEP 01 · 看看现状</div>
+<pre><span class="ad-prompt">git status</span>
+<span class="ad-out">On branch main</span>
+<span class="ad-out">You have unmerged paths.</span>
+<span class="ad-out">  (fix conflicts and run "git commit")</span>
+<span class="ad-out">  (use "git merge --abort" to abort the merge)</span>
+
+<span class="ad-warn">Unmerged paths:</span>
+<span class="ad-err">    both modified:   src/Button.tsx</span>
+<span class="ad-err">    both modified:   src/styles.css</span>
+
+<span class="ad-emit">// 翻译：两个文件都被两边改了。</span>
+<span class="ad-emit">// 你看清楚到底是哪几个文件出问题了。</span></pre>
+      </div>
+    </div>
+
+    <div class="abort-quote">
+      <span class="aq-mark">"</span>
+      git 不会真的让你丢东西。<br>
+      <strong>每一步都可以反悔</strong> —— 这是它最贵的功能。
+    </div>
+  </div>
+</section>
+
+<!-- §06 Cheatsheet -->
+<section id="cheat">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>06</strong> / 速查</div>
+        <h2 class="section-title">三张<br><span class="em">速查卡</span></h2>
+      </div>
+      <p class="section-sub">
+        到这就结束了。下次再看到红字别慌，先想这三张卡。打印出来贴显示器边上也行。
+      </p>
+    </div>
+
+    <div class="cheat-grid">
+      <div class="cheat-card markers">
+        <div class="cc-num">CARD 01 · 标记</div>
+        <h4>三段标记</h4>
+        <div class="cc-sub">看到这个先别关页面</div>
+        <dl>
+          <dt>上半段</dt>
+          <dd><code>&lt;&lt;&lt;&lt;&lt;&lt;&lt; HEAD</code> 之后是<strong>你的版本</strong>。</dd>
+          <dt>分隔线</dt>
+          <dd><code>=======</code> 是中间的隔板。</dd>
+          <dt>下半段</dt>
+          <dd><code>&gt;&gt;&gt;&gt;&gt;&gt;&gt; 分支名</code> 之前是<strong>别人的版本</strong>。</dd>
+          <dt>解法</dt>
+          <dd>删掉这三行 + 留下你要的内容。</dd>
+        </dl>
+      </div>
+
+      <div class="cheat-card picks">
+        <div class="cc-num">CARD 02 · 选择</div>
+        <h4>三种选法</h4>
+        <div class="cc-sub">你只需要选一个</div>
+        <dl>
+          <dt>保留我的</dt>
+          <dd>留 HEAD 那段，删 ta 的。<br><code>git checkout --ours 文件名</code></dd>
+          <dt>保留 ta 的</dt>
+          <dd>留 ta 那段，删我的。<br><code>git checkout --theirs 文件名</code></dd>
+          <dt>两个都要 / 手动改</dt>
+          <dd><strong>直接打开文件</strong>编辑 —— IDE 会让这件事很简单。</dd>
+        </dl>
+      </div>
+
+      <div class="cheat-card escape">
+        <div class="cc-num">CARD 03 · 反悔</div>
+        <h4>救命三连</h4>
+        <div class="cc-sub">不会做就 abort</div>
+        <dl>
+          <dt>看现状</dt>
+          <dd><code>git status</code> · 看哪些文件冲突。</dd>
+          <dt>撤销整个 merge</dt>
+          <dd><code>git merge --abort</code> · 像没发生过。</dd>
+          <dt>找人</dt>
+          <dd>叫工程师同事 ——<strong>不丢人，是常态</strong>。</dd>
+        </dl>
+      </div>
+    </div>
+
+    <a href="g3-pr-review-figma.html" class="next-post">
+      <div>
+        <div class="np-tag">下一篇 · NEXT · G3 · 版本控制</div>
+        <h4>AI 写完了，<span class="em">怎么</span>交给同事看</h4>
+        <p>解完冲突、push 上去之后，下一步是 <strong>Pull Request / Code Review</strong> —— 同事在线上对你写的（或 AI 写的）代码挑刺。怎么读评论、怎么回？这一篇教你不当哑巴的设计师。</p>
+      </div>
+      <span class="np-cta">继续阅读 <span class="arr">→</span></span>
+    </a>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div class="byline">
+      <img class="avatar" src="author.jpg" alt="范米花儿">
+      <div class="byline-meta">
+        <div class="byline-label"><span class="dot"></span>作者 · WRITTEN BY</div>
+        <h3 class="byline-name">嗨，我是 <span class="em">范米花儿</span></h3>
+        <p class="byline-tag">一份给设计师的代码入门 ——<br>不需要会写，知道大概怎么回事，跟前端 / AI 沟通就顺多了。</p>
+        <div class="byline-contact">
+          <span class="contact-label">微信</span>
+          <span class="contact-id">vanvan_0422</span>
+          <span class="contact-hint">想看什么主题，加我聊</span>
+        </div>
+      </div>
+    </div>
+    <div class="footer-meta">
+      做于 <span class="mono">2026</span> · 用 <span class="heart">●</span> 写给 <span class="mono">DESIGNERS &amp; DEVELOPERS</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+// ========= §01 Branch timeline =========
+(function () {
+  const svg = document.getElementById('branchSvg');
+  const status = document.getElementById('branchStatus');
+  const buttons = document.querySelectorAll('.branch-controls button[data-step]');
+  if (!svg || !status) return;
+
+  const groups = svg.querySelectorAll('g[data-show]');
+
+  const stories = {
+    0: '<span class="bs-tag">›</span> 点上面的按钮看动画。',
+    1: '<span class="bs-tag">›</span> 时间线开始，<strong>main 分支</strong>上有两次提交（c1, c2）。一切正常。',
+    2: '<span class="bs-tag">›</span> 你拉了一条<strong>新分支</strong>（橙色）改 <code>color: #ff5e1a</code>。在自己的分支里改，<strong>不影响 main</strong>。',
+    3: '<span class="bs-tag">›</span> 同时，ta 也拉了一条分支（蓝色），改 <code>color: #1a8fff</code>。<strong>两个分支并行</strong>，互相不知道对方在改同一行。',
+    4: '<span class="bs-tag">›</span> ta 的分支先合回 main。main 上的颜色现在是<strong>蓝色</strong>。这一步 git 没冲突，因为只有 ta 改了。',
+    5: '<span class="bs-tag">›</span> <span class="err">CONFLICT！</span>你也想合回 main —— 但 main 第 12 行是蓝色，你的第 12 行是橙色。<strong>git 把两份都摆出来，让你选</strong>。这就是冲突。'
+  };
+
+  function setStep(n) {
+    n = Number(n);
+    groups.forEach(g => {
+      const showOn = g.dataset.show.split(' ').map(Number);
+      const visible = showOn.includes(n);
+      g.style.transition = 'opacity 0.5s';
+      g.style.opacity = visible ? 1 : 0;
+
+      // pop newest node
+      if (visible && showOn[0] === n) {
+        g.querySelectorAll('.node-circle').forEach(c => {
+          c.classList.add('is-pop');
+          setTimeout(() => c.classList.remove('is-pop'), 400);
+        });
+      }
+    });
+    status.innerHTML = stories[n];
+    buttons.forEach(b => b.classList.toggle('active', Number(b.dataset.step) === n));
+  }
+
+  buttons.forEach(b => b.addEventListener('click', () => setStep(b.dataset.step)));
+  setStep(0);
+})();
+
+// ========= §02 Anatomy hover sync =========
+(function () {
+  const segs = document.querySelectorAll('.anatomy-code .seg');
+  const rows = document.querySelectorAll('.anatomy-row');
+  if (!segs.length) return;
+
+  function setActive(key) {
+    segs.forEach(s => s.classList.toggle('is-active', s.dataset.key === key));
+    rows.forEach(r => r.classList.toggle('is-active', r.dataset.key === key));
+  }
+  function clear() {
+    segs.forEach(s => s.classList.remove('is-active'));
+    rows.forEach(r => r.classList.add('is-active')); // back to all-on
+  }
+
+  segs.forEach(s => {
+    s.addEventListener('mouseenter', () => setActive(s.dataset.key));
+  });
+  rows.forEach(r => {
+    r.addEventListener('mouseenter', () => setActive(r.dataset.key));
+  });
+
+  document.querySelector('.anatomy-stage').addEventListener('mouseleave', clear);
+
+  // Default — all opaque
+  rows.forEach(r => r.classList.add('is-active'));
+  setTimeout(() => setActive('marker'), 700);
+  setTimeout(clear, 2000);
+})();
+
+// ========= §03 Game =========
+(function () {
+  const stage = document.getElementById('gameStage');
+  if (!stage) return;
+
+  const roundButtons = stage.querySelectorAll('.game-rounds button');
+  const codeInner = document.getElementById('gameCodeInner');
+  const actionsBox = document.getElementById('gameActions');
+  const feedbackBox = document.getElementById('gameFeedback');
+  const roundNumEl = document.getElementById('roundNum');
+  const roundTitleEl = document.getElementById('roundTitle');
+  const roundDescEl = document.getElementById('roundDesc');
+  const youActionEl = document.getElementById('youAction');
+  const themActionEl = document.getElementById('themAction');
+  const fileEl = document.getElementById('gameFile');
+  const fnameEl = document.getElementById('gameFname');
+  const doneCountEl = document.getElementById('doneCount');
+  const nextBtn = document.getElementById('nextRound');
+  const resetBtn = document.getElementById('resetGame');
+
+  // ---------------- Round data ----------------
+  const ROUNDS = {
+    1: {
+      file: 'Button.tsx',
+      title: '按钮颜色冲突',
+      desc: '你把按钮改成品牌橙色，工程师同事同时把它改成产品蓝。两个人都 push 了，git 让你选。',
+      you: '改成橙色 #ff5e1a',
+      them: '改成蓝色 #1a8fff',
+      conflict: [
+        '<span class="ckey">export const</span> <span class="cfun">buttonStyle</span> = {',
+        '  <span class="gline cmark">&lt;&lt;&lt;&lt;&lt;&lt;&lt; HEAD</span>',
+        '  <span class="gline mine">  <span class="ckey">color</span>: <span class="cstr">\'#ff5e1a\'</span>,  <span class="ccom">// 你这边</span></span>',
+        '  <span class="gline cmark">=======</span>',
+        '  <span class="gline theirs">  <span class="ckey">color</span>: <span class="cstr">\'#1a8fff\'</span>,  <span class="ccom">// ta 那边</span></span>',
+        '  <span class="gline cmark">&gt;&gt;&gt;&gt;&gt;&gt;&gt; feature-blue</span>',
+        '  <span class="ckey">padding</span>: <span class="cstr">\'12px 24px\'</span>,',
+        '};'
+      ],
+      results: {
+        mine: [
+          '<span class="ckey">export const</span> <span class="cfun">buttonStyle</span> = {',
+          '<span class="gline kept-mine">  <span class="ckey">color</span>: <span class="cstr">\'#ff5e1a\'</span>,  <span class="ccom">// 留下你的</span></span>',
+          '  <span class="ckey">padding</span>: <span class="cstr">\'12px 24px\'</span>,',
+          '};'
+        ],
+        theirs: [
+          '<span class="ckey">export const</span> <span class="cfun">buttonStyle</span> = {',
+          '<span class="gline kept-theirs">  <span class="ckey">color</span>: <span class="cstr">\'#1a8fff\'</span>,  <span class="ccom">// 留下 ta 的</span></span>',
+          '  <span class="ckey">padding</span>: <span class="cstr">\'12px 24px\'</span>,',
+          '};'
+        ],
+        both: [
+          '<span class="ckey">export const</span> <span class="cfun">buttonStyle</span> = {',
+          '<span class="gline kept-mine">  <span class="ckey">color</span>: <span class="cstr">\'#ff5e1a\'</span>,</span>',
+          '<span class="gline kept-theirs">  <span class="ckey">color</span>: <span class="cstr">\'#1a8fff\'</span>,</span>',
+          '  <span class="ckey">padding</span>: <span class="cstr">\'12px 24px\'</span>,',
+          '};'
+        ],
+        manual: [
+          '<span class="ckey">export const</span> <span class="cfun">buttonStyle</span> = {',
+          '<span class="gline fade-in">  <span class="ckey">color</span>: <span class="cstr">\'#ff7a4d\'</span>,  <span class="ccom">// 找了个折中色</span></span>',
+          '  <span class="ckey">padding</span>: <span class="cstr">\'12px 24px\'</span>,',
+          '};'
+        ]
+      },
+      feedback: {
+        mine: { tier: 'good', tag: 'OK · 你赢了', title: '"按品牌走，颜色就是橙色。"', desc: '简单冲突里"保留我的"经常是对的 —— 前提是你和同事说一声。<strong>颜色这种小冲突，主张明确 + 沟通 = 最快解。</strong>' },
+        theirs: { tier: 'warn', tag: '注意 · 让步了', title: '"行吧，按 ta 的来。"', desc: '可能是 ta 的设计依据更强（比如品牌升级）。<strong>选 theirs 不丢人</strong>，但记得问一句"为什么是蓝"，免得下次又改。' },
+        both: { tier: 'bad', tag: '坏 · 留两份', title: '"两行都留 → 后面的覆盖前面的。"', desc: '同一个 <code>color</code> 写两次，第二个会覆盖第一个 —— 等于<strong>白留</strong>。颜色这种二选一的场景，不要"两个都要"。' },
+        manual: { tier: 'good', tag: 'OK · 折中', title: '"我们俩都退一步。"', desc: '想了一个新颜色 #ff7a4d，介于橙和蓝之间。<strong>设计师的视角值钱在这</strong> —— 但记得跟同事确认一下。' }
+      }
+    },
+    2: {
+      file: 'utils.ts',
+      title: '函数签名冲突',
+      desc: '你给函数加了"小数位数"参数，同事给同一个函数加了"货币符号"参数。两个都是真需求 —— 但加的方式不一样。',
+      you: '加了 decimals: number',
+      them: '加了 currency: string',
+      conflict: [
+        '<span class="ccom">// 把数字格式化成价格</span>',
+        '<span class="gline cmark">&lt;&lt;&lt;&lt;&lt;&lt;&lt; HEAD</span>',
+        '<span class="gline mine"><span class="ckey">export function</span> <span class="cfun">formatPrice</span>(value: <span class="cstr">number</span>, decimals: <span class="cstr">number</span>) {</span>',
+        '<span class="gline mine">  <span class="ckey">return</span> value.<span class="cfun">toFixed</span>(decimals);</span>',
+        '<span class="gline cmark">=======</span>',
+        '<span class="gline theirs"><span class="ckey">export function</span> <span class="cfun">formatPrice</span>(value: <span class="cstr">number</span>, currency: <span class="cstr">string</span>) {</span>',
+        '<span class="gline theirs">  <span class="ckey">return</span> currency + value.<span class="cfun">toString</span>();</span>',
+        '<span class="gline cmark">&gt;&gt;&gt;&gt;&gt;&gt;&gt; feature-currency</span>',
+        '}'
+      ],
+      results: {
+        mine: [
+          '<span class="ccom">// 把数字格式化成价格</span>',
+          '<span class="gline kept-mine"><span class="ckey">export function</span> <span class="cfun">formatPrice</span>(value: <span class="cstr">number</span>, decimals: <span class="cstr">number</span>) {</span>',
+          '<span class="gline kept-mine">  <span class="ckey">return</span> value.<span class="cfun">toFixed</span>(decimals);</span>',
+          '}'
+        ],
+        theirs: [
+          '<span class="ccom">// 把数字格式化成价格</span>',
+          '<span class="gline kept-theirs"><span class="ckey">export function</span> <span class="cfun">formatPrice</span>(value: <span class="cstr">number</span>, currency: <span class="cstr">string</span>) {</span>',
+          '<span class="gline kept-theirs">  <span class="ckey">return</span> currency + value.<span class="cfun">toString</span>();</span>',
+          '}'
+        ],
+        both: [
+          '<span class="ccom">// 把数字格式化成价格</span>',
+          '<span class="gline fade-in"><span class="ckey">export function</span> <span class="cfun">formatPrice</span>(</span>',
+          '<span class="gline kept-mine">  value: <span class="cstr">number</span>,</span>',
+          '<span class="gline kept-mine">  decimals: <span class="cstr">number</span>,</span>',
+          '<span class="gline kept-theirs">  currency: <span class="cstr">string</span>,</span>',
+          '<span class="gline fade-in">) {</span>',
+          '<span class="gline fade-in">  <span class="ckey">return</span> currency + value.<span class="cfun">toFixed</span>(decimals);</span>',
+          '}'
+        ],
+        manual: [
+          '<span class="ccom">// 把数字格式化成价格</span>',
+          '<span class="gline fade-in"><span class="ckey">export function</span> <span class="cfun">formatPrice</span>(value: <span class="cstr">number</span>, opts: { decimals?: <span class="cstr">number</span>; currency?: <span class="cstr">string</span> }) {</span>',
+          '<span class="gline fade-in">  <span class="ckey">const</span> { decimals = <span class="cnum">2</span>, currency = <span class="cstr">\'¥\'</span> } = opts;</span>',
+          '<span class="gline fade-in">  <span class="ckey">return</span> currency + value.<span class="cfun">toFixed</span>(decimals);</span>',
+          '}'
+        ]
+      },
+      feedback: {
+        mine: { tier: 'bad', tag: '坏 · 砍掉同事', title: '"等等，那 ta 加的货币符号呢？"', desc: '你保留了自己的 <code>decimals</code>，但<strong>把同事的 currency 整段删了</strong>。明天 ta 用到这个函数会一脸懵。两个都是真需求时，"二选一"是错的。' },
+        theirs: { tier: 'bad', tag: '坏 · 自己功能丢了', title: '"那我加的 decimals 呢？"', desc: '反过来，你的小数位数功能没了。<strong>你下次提交时还得再加一遍</strong>，相当于白干。' },
+        both: { tier: 'good', tag: 'OK · 合并参数', title: '"两个参数都要，那就一起放。"', desc: '把两个参数都加进去 —— 函数现在能<strong>同时控制小数位和货币符号</strong>。这是函数冲突最常见的解法：<strong>不二选一，合一起</strong>。' },
+        manual: { tier: 'good', tag: 'OK · 重新设计', title: '"既然两个参数，干脆做成 options。"', desc: '用一个 <code>opts</code> 对象包起来，以后再加参数也容易扩展。<strong>这是工程师视角的优雅解</strong> —— 设计师能想到这一层，会让同事印象深刻。' }
+      }
+    },
+    3: {
+      file: 'Card.tsx',
+      title: '组件结构冲突',
+      desc: '你在卡片里加了"标签 Tag"，同事在同一位置加了"评分 Rating"。两个都不能扔 —— 但塞在一起视觉怪怪的。',
+      you: '加了 <Tag />',
+      them: '加了 <Rating />',
+      conflict: [
+        '<span class="ckey">function</span> <span class="cfun">Card</span>() {',
+        '  <span class="ckey">return</span> (',
+        '    <span class="ctag">&lt;div</span> <span class="cattr">className</span>=<span class="cstr">"card"</span><span class="ctag">&gt;</span>',
+        '      <span class="ctag">&lt;h3&gt;</span>{title}<span class="ctag">&lt;/h3&gt;</span>',
+        '      <span class="gline cmark">&lt;&lt;&lt;&lt;&lt;&lt;&lt; HEAD</span>',
+        '      <span class="gline mine">  <span class="ctag">&lt;Tag</span> <span class="cattr">label</span>=<span class="cstr">"NEW"</span> <span class="ctag">/&gt;</span></span>',
+        '      <span class="gline cmark">=======</span>',
+        '      <span class="gline theirs">  <span class="ctag">&lt;Rating</span> <span class="cattr">value</span>={<span class="cnum">4.8</span>} <span class="ctag">/&gt;</span></span>',
+        '      <span class="gline cmark">&gt;&gt;&gt;&gt;&gt;&gt;&gt; feature-rating</span>',
+        '      <span class="ctag">&lt;p&gt;</span>{description}<span class="ctag">&lt;/p&gt;</span>',
+        '    <span class="ctag">&lt;/div&gt;</span>',
+        '  );',
+        '}'
+      ],
+      results: {
+        mine: [
+          '<span class="ckey">function</span> <span class="cfun">Card</span>() {',
+          '  <span class="ckey">return</span> (',
+          '    <span class="ctag">&lt;div</span> <span class="cattr">className</span>=<span class="cstr">"card"</span><span class="ctag">&gt;</span>',
+          '      <span class="ctag">&lt;h3&gt;</span>{title}<span class="ctag">&lt;/h3&gt;</span>',
+          '<span class="gline kept-mine">      <span class="ctag">&lt;Tag</span> <span class="cattr">label</span>=<span class="cstr">"NEW"</span> <span class="ctag">/&gt;</span></span>',
+          '      <span class="ctag">&lt;p&gt;</span>{description}<span class="ctag">&lt;/p&gt;</span>',
+          '    <span class="ctag">&lt;/div&gt;</span>',
+          '  );',
+          '}'
+        ],
+        theirs: [
+          '<span class="ckey">function</span> <span class="cfun">Card</span>() {',
+          '  <span class="ckey">return</span> (',
+          '    <span class="ctag">&lt;div</span> <span class="cattr">className</span>=<span class="cstr">"card"</span><span class="ctag">&gt;</span>',
+          '      <span class="ctag">&lt;h3&gt;</span>{title}<span class="ctag">&lt;/h3&gt;</span>',
+          '<span class="gline kept-theirs">      <span class="ctag">&lt;Rating</span> <span class="cattr">value</span>={<span class="cnum">4.8</span>} <span class="ctag">/&gt;</span></span>',
+          '      <span class="ctag">&lt;p&gt;</span>{description}<span class="ctag">&lt;/p&gt;</span>',
+          '    <span class="ctag">&lt;/div&gt;</span>',
+          '  );',
+          '}'
+        ],
+        both: [
+          '<span class="ckey">function</span> <span class="cfun">Card</span>() {',
+          '  <span class="ckey">return</span> (',
+          '    <span class="ctag">&lt;div</span> <span class="cattr">className</span>=<span class="cstr">"card"</span><span class="ctag">&gt;</span>',
+          '      <span class="ctag">&lt;h3&gt;</span>{title}<span class="ctag">&lt;/h3&gt;</span>',
+          '<span class="gline kept-mine">      <span class="ctag">&lt;Tag</span> <span class="cattr">label</span>=<span class="cstr">"NEW"</span> <span class="ctag">/&gt;</span></span>',
+          '<span class="gline kept-theirs">      <span class="ctag">&lt;Rating</span> <span class="cattr">value</span>={<span class="cnum">4.8</span>} <span class="ctag">/&gt;</span></span>',
+          '      <span class="ctag">&lt;p&gt;</span>{description}<span class="ctag">&lt;/p&gt;</span>',
+          '    <span class="ctag">&lt;/div&gt;</span>',
+          '  );',
+          '}'
+        ],
+        manual: [
+          '<span class="ckey">function</span> <span class="cfun">Card</span>() {',
+          '  <span class="ckey">return</span> (',
+          '    <span class="ctag">&lt;div</span> <span class="cattr">className</span>=<span class="cstr">"card"</span><span class="ctag">&gt;</span>',
+          '      <span class="ctag">&lt;h3&gt;</span>{title}<span class="ctag">&lt;/h3&gt;</span>',
+          '<span class="gline fade-in">      <span class="ctag">&lt;div</span> <span class="cattr">className</span>=<span class="cstr">"card-meta"</span><span class="ctag">&gt;</span></span>',
+          '<span class="gline kept-mine">        <span class="ctag">&lt;Tag</span> <span class="cattr">label</span>=<span class="cstr">"NEW"</span> <span class="ctag">/&gt;</span></span>',
+          '<span class="gline kept-theirs">        <span class="ctag">&lt;Rating</span> <span class="cattr">value</span>={<span class="cnum">4.8</span>} <span class="ctag">/&gt;</span></span>',
+          '<span class="gline fade-in">      <span class="ctag">&lt;/div&gt;</span></span>',
+          '      <span class="ctag">&lt;p&gt;</span>{description}<span class="ctag">&lt;/p&gt;</span>',
+          '    <span class="ctag">&lt;/div&gt;</span>',
+          '  );',
+          '}'
+        ]
+      },
+      feedback: {
+        mine: { tier: 'bad', tag: '坏 · 评分丢了', title: '"卡片上没评分了，PM 会找你的。"', desc: 'Tag 和 Rating 都是产品需求，<strong>砍掉哪一个都会被打回来</strong>。组件结构冲突里，"二选一"几乎都是错。' },
+        theirs: { tier: 'bad', tag: '坏 · 标签丢了', title: '"那个 NEW 标签呢？"', desc: '同样的问题。<strong>两个都是真功能，扔不得</strong>。' },
+        both: { tier: 'warn', tag: '注意 · 视觉怪', title: '"两个挨在一起，挤在一行了。"', desc: 'Tag 和 Rating 直接挨着 —— 功能都在，但<strong>视觉上没分组</strong>。能跑，但同事 review 时会让你"包一层"。' },
+        manual: { tier: 'good', tag: 'OK · 包了一层', title: '"塞进 .card-meta 里，整齐了。"', desc: '加一个 <code>&lt;div className="card-meta"&gt;</code> 把 Tag 和 Rating 装进去 —— <strong>视觉上是一组、代码上也是一组</strong>。这是设计师最该做的解法。' }
+      }
+    }
+  };
+
+  // ---------------- State ----------------
+  let currentRound = 1;
+  let solved = new Set();
+
+  function renderCode(lines) {
+    codeInner.innerHTML = lines.join('\n');
+  }
+
+  function loadRound(r) {
+    currentRound = r;
+    const data = ROUNDS[r];
+
+    roundButtons.forEach(b => b.classList.toggle('active', Number(b.dataset.round) === r));
+    roundNumEl.textContent = r;
+    roundTitleEl.textContent = data.title;
+    roundDescEl.textContent = data.desc;
+    youActionEl.textContent = data.you;
+    themActionEl.textContent = data.them;
+    fileEl.textContent = data.file;
+    fnameEl.textContent = data.file;
+    feedbackBox.innerHTML = '';
+    nextBtn.disabled = true;
+    nextBtn.textContent = (r === 3) ? '完成 ✓' : '下一轮 →';
+
+    // Reset action buttons
+    actionsBox.querySelectorAll('button').forEach(b => {
+      b.disabled = false;
+      b.style.outline = '';
+    });
+
+    renderCode(data.conflict);
+  }
+
+  function pick(choice) {
+    const data = ROUNDS[currentRound];
+    const result = data.results[choice];
+    const fb = data.feedback[choice];
+
+    // animate the conflict markers fading out, then swap
+    const allLines = codeInner.querySelectorAll('.gline');
+    allLines.forEach(l => l.classList.add('fade-out'));
+
+    setTimeout(() => {
+      renderCode(result);
+      // trigger fade-in animation on new lines
+      requestAnimationFrame(() => {
+        codeInner.querySelectorAll('.gline.fade-in').forEach(l => {
+          l.style.animation = 'none';
+          void l.offsetWidth;
+          l.style.animation = '';
+        });
+      });
+    }, 350);
+
+    // disable buttons, mark this one
+    actionsBox.querySelectorAll('button').forEach(b => { b.disabled = true; });
+    const picked = actionsBox.querySelector(`button[data-pick="${choice}"]`);
+    if (picked) {
+      picked.style.outline = '2px solid var(--accent)';
+      picked.style.outlineOffset = '2px';
+      picked.disabled = false;
+    }
+
+    // feedback card
+    feedbackBox.innerHTML = `
+      <div class="gfb-card ${fb.tier}">
+        <div class="gfb-tag">${fb.tag} · 工程师同事说</div>
+        <h4 class="gfb-title">${fb.title}</h4>
+        <p class="gfb-desc">${fb.desc}</p>
+      </div>`;
+
+    solved.add(currentRound);
+    doneCountEl.textContent = solved.size;
+    roundButtons.forEach(b => {
+      if (solved.has(Number(b.dataset.round))) b.classList.add('done');
+    });
+    nextBtn.disabled = false;
+  }
+
+  // ---------------- Wire up ----------------
+  actionsBox.addEventListener('click', e => {
+    const b = e.target.closest('button[data-pick]');
+    if (!b || b.disabled) return;
+    pick(b.dataset.pick);
+  });
+
+  roundButtons.forEach(b => {
+    b.addEventListener('click', () => loadRound(Number(b.dataset.round)));
+  });
+
+  nextBtn.addEventListener('click', () => {
+    if (currentRound < 3) {
+      loadRound(currentRound + 1);
+    } else {
+      // celebrate
+      feedbackBox.innerHTML = `
+        <div class="gfb-card good">
+          <div class="gfb-tag">完成 · 三轮都过了</div>
+          <h4 class="gfb-title">你已经会解 90% 的冲突了。</h4>
+          <p class="gfb-desc">剩下 10% 是<strong>跨好几个文件、几百行的大冲突</strong> —— 那种叫工程师同事陪你看，没毛病。下面 §05 教你怎么"反悔"。</p>
+        </div>`;
+      nextBtn.disabled = true;
+    }
+  });
+
+  resetBtn.addEventListener('click', () => {
+    solved.clear();
+    doneCountEl.textContent = 0;
+    roundButtons.forEach(b => b.classList.remove('done'));
+    loadRound(1);
+  });
+
+  // init
+  loadRound(1);
+})();
+
+// ========= §05 Abort flow =========
+(function () {
+  const flow = document.getElementById('abortFlow');
+  const detail = document.getElementById('abortDetail');
+  if (!flow || !detail) return;
+
+  const steps = flow.querySelectorAll('.abort-step');
+
+  const details = {
+    status: {
+      title: 'STEP 01 · 看看现状',
+      body:
+'<span class="ad-prompt">git status</span>\n' +
+'<span class="ad-out">On branch main</span>\n' +
+'<span class="ad-out">You have unmerged paths.</span>\n' +
+'<span class="ad-out">  (fix conflicts and run "git commit")</span>\n' +
+'<span class="ad-out">  (use "git merge --abort" to abort the merge)</span>\n\n' +
+'<span class="ad-warn">Unmerged paths:</span>\n' +
+'<span class="ad-err">    both modified:   src/Button.tsx</span>\n' +
+'<span class="ad-err">    both modified:   src/styles.css</span>\n\n' +
+'<span class="ad-emit">// 翻译：两个文件都被两边改了。</span>\n' +
+'<span class="ad-emit">// 你看清楚到底是哪几个文件出问题了。</span>'
+    },
+    abort: {
+      title: 'STEP 02 · 一键撤销',
+      body:
+'<span class="ad-prompt">git merge --abort</span>\n\n' +
+'<span class="ad-out">// 没有任何报错</span>\n' +
+'<span class="ad-out">// 屏幕上的红字消失了</span>\n' +
+'<span class="ad-out">// 文件回到没合之前的样子</span>\n\n' +
+'<span class="ad-prompt">git status</span>\n' +
+'<span class="ad-out">On branch main</span>\n' +
+'<span class="ad-emit">nothing to commit, working tree clean</span>\n\n' +
+'<span class="ad-emit">// 干净了。就像那次 merge 没发生过。</span>\n' +
+'<span class="ad-emit">// 你的改动还在自己的分支里，没丢。</span>'
+    },
+    ask: {
+      title: 'STEP 03 · 找人',
+      body:
+'<span class="ad-prompt">// 现在去问同事：</span>\n\n' +
+'<span class="ad-emit">"我刚要把 feature 合回 main，</span>\n' +
+'<span class="ad-emit"> 冲突太多看不懂，abort 了。</span>\n' +
+'<span class="ad-emit"> 能一起看一下吗？"</span>\n\n' +
+'<span class="ad-out">// 工程师同事的反应通常是：</span>\n' +
+'<span class="ad-out">//   "好啊，发个屏幕过来"</span>\n' +
+'<span class="ad-out">//   "啊这个简单 5 分钟解了"</span>\n\n' +
+'<span class="ad-warn">// 求助 ≠ 不会用 git。</span>\n' +
+'<span class="ad-warn">// 工程师之间也常常一起解冲突。</span>'
+    }
+  };
+
+  function setStep(key) {
+    steps.forEach(s => s.classList.toggle('is-active', s.dataset.step === key));
+    const d = details[key];
+    detail.style.opacity = 0;
+    setTimeout(() => {
+      detail.innerHTML = `<div class="ad-title">${d.title}</div><pre>${d.body}</pre>`;
+      detail.style.opacity = 1;
+    }, 150);
+  }
+
+  steps.forEach(s => {
+    s.addEventListener('click', () => setStep(s.dataset.step));
+  });
+})();
+</script>
+
+
+<!-- 路线图弹窗 -->
+<div class="rm-modal" id="rm-modal" hidden>
+  <div class="rm-backdrop" data-rm-close></div>
+  <div class="rm-dialog" role="dialog" aria-label="完整路线图">
+    <button class="rm-close" data-rm-close aria-label="关闭">✕</button>
+    <div class="rm-header">
+      <div class="rm-tag">完整路线图 · ROADMAP</div>
+      <h3 class="rm-title">9 模块 <span class="rm-em">·</span> 28 篇</h3>
+      <p class="rm-sub">设计篇 5 模块 / 15 篇 + 工程篇 4 系列 / 13 篇</p>
+    </div>
+    <div class="rm-body">
+      <div class="rm-mod">
+        <div class="rm-mod-key">A · 单元素与组件</div>
+        <div class="rm-mod-list">
+          <a href="basics-figma.html" class="rm-cell"><span class="rm-cell-code">A0</span><span class="rm-cell-name">三件套 · HTML / CSS / JS</span><span class="rm-cell-tier">入门</span></a>
+          <a href="box-figma.html" class="rm-cell"><span class="rm-cell-code">A1</span><span class="rm-cell-name">盒子 · Auto Layout</span><span class="rm-cell-tier">基础</span></a>
+          <a href="components-figma.html" class="rm-cell"><span class="rm-cell-code">A2</span><span class="rm-cell-name">组件 · Variants &amp; Props</span><span class="rm-cell-tier">基础</span></a>
+          <a href="button-system-figma.html" class="rm-cell"><span class="rm-cell-code">A3</span><span class="rm-cell-name">Button System · 组件演化</span><span class="rm-cell-tier">进阶</span></a>
+        </div>
+      </div>
+      <div class="rm-mod">
+        <div class="rm-mod-key">B · 多组件协作</div>
+        <div class="rm-mod-list">
+          <a href="page-figma.html" class="rm-cell"><span class="rm-cell-code">B0</span><span class="rm-cell-name">拼页面 · 组件嵌套</span><span class="rm-cell-tier">入门</span></a>
+          <a href="data-flow-figma.html" class="rm-cell"><span class="rm-cell-code">B1</span><span class="rm-cell-name">数据流 · 概念</span><span class="rm-cell-tier">基础</span></a>
+          <a href="data-flow-cases-figma.html" class="rm-cell"><span class="rm-cell-code">B2</span><span class="rm-cell-name">数据流 · 实战 5 案例</span><span class="rm-cell-tier">进阶</span></a>
+        </div>
+      </div>
+      <div class="rm-mod">
+        <div class="rm-mod-key">C · 视觉系统</div>
+        <div class="rm-mod-list">
+          <a href="tokens-figma.html" class="rm-cell"><span class="rm-cell-code">C0</span><span class="rm-cell-name">Variables / Tokens 入门</span><span class="rm-cell-tier">入门</span></a>
+          <a href="colors-type-figma.html" class="rm-cell"><span class="rm-cell-code">C1</span><span class="rm-cell-name">Colors / Type / Spacing</span><span class="rm-cell-tier">基础</span></a>
+          <a href="theme-switch-figma.html" class="rm-cell"><span class="rm-cell-code">C2</span><span class="rm-cell-name">Theme 切换实战</span><span class="rm-cell-tier">进阶</span></a>
+        </div>
+      </div>
+      <div class="rm-mod">
+        <div class="rm-mod-key">D · 状态与交互</div>
+        <div class="rm-mod-list">
+          <a href="states-figma.html" class="rm-cell"><span class="rm-cell-code">D0</span><span class="rm-cell-name">视觉态 · 看得见的状态</span><span class="rm-cell-tier">入门</span></a>
+          <a href="interactive-figma.html" class="rm-cell"><span class="rm-cell-code">D1</span><span class="rm-cell-name">Interactive Component</span><span class="rm-cell-tier">基础</span></a>
+          <a href="transition-figma.html" class="rm-cell"><span class="rm-cell-code">D2</span><span class="rm-cell-name">动画 · Transition</span><span class="rm-cell-tier">进阶</span></a>
+        </div>
+      </div>
+      <div class="rm-mod">
+        <div class="rm-mod-key">E · 工程化</div>
+        <div class="rm-mod-list">
+          <a href="naming-figma.html" class="rm-cell"><span class="rm-cell-code">E0</span><span class="rm-cell-name">命名 / 图层规范</span><span class="rm-cell-tier">入门</span></a>
+          <a href="handoff-figma.html" class="rm-cell"><span class="rm-cell-code">E2</span><span class="rm-cell-name">Handoff &amp; 设计系统</span><span class="rm-cell-tier">进阶</span></a>
+        </div>
+      </div>
+      <div class="rm-mod">
+        <div class="rm-mod-key">F · 工程入门</div>
+        <div class="rm-mod-list">
+          <a href="f1-npm-figma.html" class="rm-cell"><span class="rm-cell-code">F1</span><span class="rm-cell-name">npm 是什么</span><span class="rm-cell-tier">入门</span></a>
+          <a href="f2-import-figma.html" class="rm-cell"><span class="rm-cell-code">F2</span><span class="rm-cell-name">import 与路径</span><span class="rm-cell-tier">入门</span></a>
+          <a href="f3-dev-build-figma.html" class="rm-cell"><span class="rm-cell-code">F3</span><span class="rm-cell-name">dev vs build</span><span class="rm-cell-tier">基础</span></a>
+          <a href="f4-hidden-files-figma.html" class="rm-cell"><span class="rm-cell-code">F4</span><span class="rm-cell-name">看不见的文件</span><span class="rm-cell-tier">基础</span></a>
+        </div>
+      </div>
+      <div class="rm-mod">
+        <div class="rm-mod-key">G · 版本控制</div>
+        <div class="rm-mod-list">
+          <a href="g1-commit-branch-figma.html" class="rm-cell"><span class="rm-cell-code">G1</span><span class="rm-cell-name">commit / branch</span><span class="rm-cell-tier">入门</span></a>
+          <a href="g2-conflict-figma.html" class="rm-cell"><span class="rm-cell-code">G2</span><span class="rm-cell-name">冲突怎么解</span><span class="rm-cell-tier">基础</span></a>
+          <a href="g3-pr-review-figma.html" class="rm-cell"><span class="rm-cell-code">G3</span><span class="rm-cell-name">PR / Review</span><span class="rm-cell-tier">进阶</span></a>
+        </div>
+      </div>
+      <div class="rm-mod">
+        <div class="rm-mod-key">H · 浏览器调试</div>
+        <div class="rm-mod-list">
+          <a href="h1-devtools-elements-figma.html" class="rm-cell"><span class="rm-cell-code">H1</span><span class="rm-cell-name">DevTools Elements</span><span class="rm-cell-tier">入门</span></a>
+          <a href="h2-console-error-figma.html" class="rm-cell"><span class="rm-cell-code">H2</span><span class="rm-cell-name">Console 报错</span><span class="rm-cell-tier">基础</span></a>
+          <a href="h3-network-figma.html" class="rm-cell"><span class="rm-cell-code">H3</span><span class="rm-cell-name">Network 面板</span><span class="rm-cell-tier">进阶</span></a>
+        </div>
+      </div>
+      <div class="rm-mod">
+        <div class="rm-mod-key">J · 上线</div>
+        <div class="rm-mod-list">
+          <a href="j1-dns-figma.html" class="rm-cell"><span class="rm-cell-code">J1</span><span class="rm-cell-name">DNS / 域名</span><span class="rm-cell-tier">基础</span></a>
+          <a href="j2-vercel-figma.html" class="rm-cell"><span class="rm-cell-code">J2</span><span class="rm-cell-name">Vercel 部署</span><span class="rm-cell-tier">基础</span></a>
+          <a href="j3-cache-cdn-figma.html" class="rm-cell"><span class="rm-cell-code">J3</span><span class="rm-cell-name">缓存 / CDN</span><span class="rm-cell-tier">进阶</span></a>
+        </div>
+      </div>
+    </div>
+    <div class="rm-footer">
+      <span>未完待续 · 想看什么主题加我聊</span>
+      <span class="rm-wechat">微信 vanvan_0422</span>
+    </div>
+  </div>
+</div>
+<script>
+(function(){
+  var modal = document.getElementById('rm-modal');
+  if (!modal) return;
+  var openBtns = document.querySelectorAll('[data-rm-open]');
+  var closeBtns = modal.querySelectorAll('[data-rm-close]');
+  function open() { modal.hidden = false; document.body.style.overflow = 'hidden'; }
+  function close() { modal.hidden = true; document.body.style.overflow = ''; }
+  openBtns.forEach(function(b){ b.addEventListener('click', function(e){ e.preventDefault(); open(); }); });
+  closeBtns.forEach(function(b){ b.addEventListener('click', close); });
+  document.addEventListener('keydown', function(e){ if (e.key === 'Escape' && !modal.hidden) close(); });
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,3187 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DevTools Elements 面板 — 右键 inspect 是设计师的 X 光机</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,300..900&family=Geist:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Noto+Sans+SC:wght@300;400;500;700;900&family=Noto+Serif+SC:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f3eee5;
+    --bg-2: #ebe4d4;
+    --ink: #16161d;
+    --ink-soft: #4a4a55;
+    --ink-mute: #8a8a92;
+    --line: #d5cdba;
+    --line-soft: #e3dcca;
+    --accent: #ff4d2e;
+    --accent-soft: #ffe4dc;
+    --blue: #0a4cff;
+    --blue-soft: #dde6ff;
+    --green: #1f6b3a;
+    --green-soft: #d4ecdb;
+    --yellow: #ffcf3d;
+    --yellow-soft: #fff4cc;
+    --paper: #faf7f0;
+    --shadow: 0 1px 0 rgba(0,0,0,0.04), 0 8px 24px rgba(22,22,29,0.06);
+
+    /* DevTools dark palette — Chrome devtools accurate */
+    --dt-bg: #1f1f1f;
+    --dt-bg-2: #2a2a2a;
+    --dt-bg-3: #252525;
+    --dt-line: #3c3c3c;
+    --dt-text: #d4d4d4;
+    --dt-mute: #888;
+    --dt-mute-2: #6a6a6a;
+    --dt-blue: #5cb6ff;
+    --dt-link: #5e9eff;
+    --dt-purple: #c586c0;
+
+    /* Elements panel — DOM tree colors */
+    --el-tag: #5cb6ff;        /* <div> blue */
+    --el-attr: #ffd166;       /* class= yellow */
+    --el-str: #a8e6a3;        /* "..." green */
+    --el-text: #d4d4d4;
+    --el-comment: #6e6e7a;
+    --el-bracket: #888;
+    --el-selected: rgba(94, 158, 255, 0.18);
+    --el-hover: rgba(94, 158, 255, 0.10);
+
+    /* Box model colors — Chrome devtools palette */
+    --box-margin: #f7c373;    /* orange — margin */
+    --box-border: #ffd966;    /* yellow — border */
+    --box-padding: #b6cf94;   /* green — padding */
+    --box-content: #98c1ff;   /* blue — content */
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'Geist', 'Noto Sans SC', system-ui, -apple-system, sans-serif;
+    font-size: 16px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    background-image:
+      radial-gradient(circle at 1px 1px, rgba(22,22,29,0.05) 1px, transparent 0);
+    background-size: 24px 24px;
+  }
+
+  /* Typography */
+  .display-cn { font-family: 'Noto Serif SC', 'Fraunces', serif; font-weight: 900; letter-spacing: -0.01em; }
+  .mono { font-family: 'JetBrains Mono', monospace; }
+  .label { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-mute); }
+  .em { font-family: 'Noto Serif SC', serif; font-weight: 500; color: var(--accent); }
+
+  /* Layout */
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 0 32px; }
+
+  /* Top bar */
+  .topbar {
+    border-bottom: 1px dashed var(--line);
+    padding: 16px 0;
+    background: var(--bg);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    backdrop-filter: blur(8px);
+    background: rgba(243, 238, 229, 0.85);
+  }
+  .topbar-inner { display: flex; justify-content: space-between; align-items: center; gap: 24px; }
+  .brand { font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 600; }
+  .brand .dot { display: inline-block; width: 8px; height: 8px; background: var(--accent); border-radius: 50%; margin-right: 8px; vertical-align: middle; animation: pulse 2s ease-in-out infinite; }
+  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+  .nav-links { display: flex; gap: 20px; font-size: 13px; }
+  .nav-links a { color: var(--ink-soft); text-decoration: none; transition: color 0.2s; cursor: pointer; }
+  .nav-links a:hover { color: var(--accent); }
+  .nav-links a.current { color: var(--accent); font-weight: 600; }
+  a.brand { text-decoration: none; color: inherit; transition: color 0.2s; cursor: pointer; }
+  a.brand:hover { color: var(--accent); }
+
+  /* Hero */
+  .hero { padding: 100px 0 80px; position: relative; overflow: hidden; }
+  .hero-meta { display: flex; gap: 24px; margin-bottom: 32px; align-items: center; flex-wrap: wrap; }
+  .hero-meta .pill { padding: 6px 12px; border: 1px solid var(--ink); border-radius: 100px; font-size: 11px; font-family: 'JetBrains Mono', monospace; letter-spacing: 0.05em; }
+  .hero-meta .pill.fill { background: var(--ink); color: var(--bg); }
+  .hero h1 {
+    font-family: 'Noto Serif SC', 'Fraunces', serif;
+    font-weight: 900;
+    font-size: clamp(48px, 7vw, 92px);
+    line-height: 0.98;
+    letter-spacing: -0.03em;
+    margin: 0 0 24px;
+  }
+  .hero h1 .em { font-family: 'Noto Serif SC', serif; font-weight: 500; color: var(--accent); }
+  .hero p.lede {
+    font-size: 20px;
+    line-height: 1.5;
+    max-width: 640px;
+    color: var(--ink-soft);
+    margin: 0 0 40px;
+  }
+  .hero p.lede .em { font-family: 'Noto Serif SC', serif; color: var(--accent); }
+  .hero-grid {
+    display: grid;
+    grid-template-columns: 1.4fr 1fr;
+    gap: 48px;
+    align-items: end;
+  }
+  @media (max-width: 880px) { .hero-grid { grid-template-columns: 1fr; } }
+  .hero-side {
+    border-left: 1px dashed var(--line);
+    padding-left: 24px;
+    font-size: 13px;
+    color: var(--ink-soft);
+  }
+  .hero-side .row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px dashed var(--line); gap: 12px; }
+  .hero-side .row:last-child { border-bottom: none; }
+  .hero-side .row .k { color: var(--ink-mute); font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.05em; text-transform: uppercase; }
+  .hero-side .row .v { font-weight: 500; text-align: right; }
+
+  /* Section */
+  section { padding: 80px 0; border-top: 1px solid var(--line); position: relative; }
+  .section-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 56px; flex-wrap: wrap; gap: 16px; }
+  .section-num { font-family: 'JetBrains Mono', monospace; font-size: 13px; color: var(--ink-mute); letter-spacing: 0.1em; }
+  .section-num strong { color: var(--accent); }
+  .section-title {
+    font-family: 'Noto Serif SC', serif;
+    font-weight: 900;
+    font-size: clamp(32px, 4.5vw, 52px);
+    line-height: 1.05;
+    letter-spacing: -0.02em;
+    margin: 0;
+    max-width: 22ch;
+  }
+  .section-title .em { font-family: 'Noto Serif SC', serif; font-weight: 500; color: var(--accent); }
+  .section-sub { color: var(--ink-soft); font-size: 17px; max-width: 38ch; line-height: 1.55; margin: 0; }
+  .section-sub .em { font-family: 'Noto Serif SC', serif; color: var(--accent); }
+
+  /* Helper hint strip */
+  .hint-strip {
+    margin-top: 8px;
+    padding: 14px 18px;
+    background: var(--accent-soft);
+    border-left: 3px solid var(--accent);
+    border-radius: 4px;
+    font-size: 13px;
+    color: var(--ink);
+    line-height: 1.55;
+  }
+  .hint-strip .hint-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--accent);
+    letter-spacing: 0.12em;
+    margin-right: 10px;
+    text-transform: uppercase;
+  }
+
+  /* ==================================================
+     DevTools shell — shared base
+     ================================================== */
+  .devtools {
+    background: var(--dt-bg);
+    border-radius: 6px;
+    overflow: hidden;
+    border: 1px solid #0a0a0a;
+    box-shadow: 0 12px 40px rgba(0,0,0,0.18);
+    font-family: 'Menlo', 'Consolas', 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--dt-text);
+    line-height: 1.5;
+  }
+  .dt-tabs {
+    display: flex;
+    background: #2c2c2c;
+    border-bottom: 1px solid #111;
+    padding: 0 8px;
+    gap: 0;
+    align-items: stretch;
+  }
+  .dt-tab {
+    padding: 8px 12px;
+    font-size: 11px;
+    color: #999;
+    border-right: 1px solid #111;
+    user-select: none;
+  }
+  .dt-tab.active {
+    color: #fff;
+    background: var(--dt-bg);
+    border-bottom: 2px solid var(--dt-blue);
+    margin-bottom: -1px;
+    position: relative;
+  }
+  .dt-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 6px 12px;
+    background: var(--dt-bg);
+    border-bottom: 1px solid var(--dt-line);
+    font-size: 11px;
+    color: var(--dt-mute);
+    user-select: none;
+  }
+  .dt-toolbar .dt-icon-btn {
+    color: var(--dt-mute);
+    cursor: default;
+    padding: 0 4px;
+    font-size: 13px;
+  }
+  .dt-toolbar .dt-icon-btn.is-active { color: var(--dt-blue); }
+  .dt-toolbar .dt-filter {
+    background: #131313;
+    border: 1px solid var(--dt-line);
+    color: var(--dt-mute);
+    padding: 3px 8px;
+    border-radius: 3px;
+    font-size: 11px;
+    flex: 1;
+    max-width: 220px;
+  }
+  .dt-toolbar .dt-pill {
+    padding: 2px 8px;
+    border: 1px solid var(--dt-line);
+    border-radius: 100px;
+    font-size: 10px;
+    color: var(--dt-mute);
+  }
+
+  /* ==================================================
+     Elements panel — DOM tree
+     ================================================== */
+  .el-panel {
+    display: grid;
+    grid-template-columns: 1.3fr 1fr;
+    background: var(--dt-bg);
+    min-height: 420px;
+  }
+  .el-panel.col-1 { grid-template-columns: 1fr; }
+  .el-tree-pane {
+    background: var(--dt-bg);
+    border-right: 1px solid var(--dt-line);
+    overflow-y: auto;
+    padding: 6px 0;
+    max-height: 480px;
+  }
+  .el-tree-pane::-webkit-scrollbar,
+  .el-styles-pane::-webkit-scrollbar { width: 10px; }
+  .el-tree-pane::-webkit-scrollbar-track,
+  .el-styles-pane::-webkit-scrollbar-track { background: var(--dt-bg); }
+  .el-tree-pane::-webkit-scrollbar-thumb,
+  .el-styles-pane::-webkit-scrollbar-thumb { background: #3a3a3a; border-radius: 5px; }
+
+  .el-line {
+    display: block;
+    padding: 1px 8px 1px 0;
+    font-size: 12px;
+    line-height: 1.55;
+    color: var(--el-text);
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background 0.12s;
+    user-select: none;
+    position: relative;
+  }
+  .el-line:hover { background: var(--el-hover); }
+  .el-line.is-selected { background: var(--el-selected); box-shadow: inset 2px 0 0 var(--dt-blue); }
+  .el-line .el-toggle {
+    display: inline-block;
+    width: 12px;
+    color: var(--dt-mute);
+    font-size: 9px;
+    text-align: center;
+    margin-right: 1px;
+    cursor: pointer;
+  }
+  .el-line.has-children .el-toggle::before { content: '▾'; }
+  .el-line.collapsed .el-toggle::before { content: '▸'; }
+  .el-line.no-children .el-toggle { visibility: hidden; }
+  .el-line.collapsed + .el-children,
+  .el-line.collapsed ~ .el-children { display: none; }
+  .el-children { display: block; }
+  .el-line.collapsed { }
+  .el-children.is-hidden { display: none; }
+
+  .el-tag { color: var(--el-tag); }
+  .el-attr { color: var(--el-attr); }
+  .el-str { color: var(--el-str); }
+  .el-text { color: var(--el-text); }
+  .el-comment { color: var(--el-comment); font-style: normal; }
+  .el-bracket { color: var(--el-bracket); }
+  .el-eq { color: var(--dt-mute); }
+
+  .el-line .el-indent {
+    display: inline-block;
+    color: var(--dt-mute-2);
+    user-select: none;
+  }
+
+  /* Styles pane */
+  .el-styles-pane {
+    background: var(--dt-bg);
+    overflow-y: auto;
+    padding: 8px 0;
+    max-height: 480px;
+  }
+  .el-styles-head {
+    padding: 4px 12px 8px;
+    border-bottom: 1px solid var(--dt-line);
+    margin-bottom: 8px;
+    display: flex;
+    gap: 12px;
+    font-size: 11px;
+    color: var(--dt-mute);
+  }
+  .el-styles-head .esh-tab { cursor: default; padding-bottom: 4px; }
+  .el-styles-head .esh-tab.active { color: white; border-bottom: 2px solid var(--dt-blue); margin-bottom: -1px; }
+  .el-styles-head .esh-tab-state {
+    margin-left: auto;
+    padding: 1px 6px;
+    border-radius: 2px;
+    background: #2a2a2a;
+    font-size: 10px;
+    cursor: default;
+  }
+  .el-styles-head .esh-tab-state.is-on { background: var(--dt-blue); color: white; }
+
+  .el-rule {
+    padding: 6px 14px 8px;
+    border-bottom: 1px solid #2a2a2a;
+    font-family: 'Menlo', 'JetBrains Mono', monospace;
+    font-size: 12px;
+    line-height: 1.65;
+  }
+  .el-rule:last-child { border-bottom: none; }
+  .el-rule .el-selector { color: var(--dt-text); display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
+  .el-rule .el-selector .el-source {
+    color: var(--dt-link);
+    font-size: 10.5px;
+    text-decoration: underline;
+    text-decoration-color: rgba(94, 158, 255, 0.4);
+    text-underline-offset: 2px;
+  }
+  .el-rule.is-pseudo .el-selector { color: var(--dt-purple); }
+  .el-rule.is-inherited .el-selector { color: var(--dt-mute); }
+  .el-rule-body {
+    padding-left: 14px;
+    margin-top: 2px;
+  }
+  .el-prop {
+    display: flex;
+    gap: 0;
+    padding: 1px 0;
+  }
+  .el-prop .el-prop-key { color: #9cdcfe; }
+  .el-prop .el-prop-val { color: #ce9178; margin-left: 4px; }
+  .el-prop .el-prop-val.num { color: #b5cea8; }
+  .el-prop .el-prop-val.color { color: #ce9178; position: relative; }
+  .el-prop .el-color-chip {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    border-radius: 2px;
+    border: 1px solid rgba(255,255,255,0.18);
+    vertical-align: middle;
+    margin-right: 4px;
+  }
+  .el-prop .el-prop-end { color: var(--dt-mute); }
+
+  /* ==================================================
+     §01 Anatomy — DevTools layout with hover hotspots
+     ================================================== */
+  .anatomy-stage {
+    margin-top: 24px;
+    display: grid;
+    grid-template-columns: 1.4fr 1fr;
+    gap: 28px;
+    align-items: start;
+  }
+  @media (max-width: 980px) { .anatomy-stage { grid-template-columns: 1fr; } }
+
+  .anatomy-legend {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 24px;
+    position: sticky;
+    top: 88px;
+  }
+  .anatomy-legend h3 {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 18px;
+    font-weight: 700;
+    margin: 0 0 6px;
+  }
+  .anatomy-legend > p {
+    font-size: 13px;
+    color: var(--ink-soft);
+    margin: 0 0 18px;
+    line-height: 1.55;
+  }
+  .anatomy-step {
+    display: flex;
+    gap: 12px;
+    padding: 12px 8px;
+    border-top: 1px dashed var(--line);
+    cursor: pointer;
+    transition: background 0.15s;
+    margin: 0 -8px;
+    border-radius: 4px;
+  }
+  .anatomy-step:first-of-type { border-top: none; }
+  .anatomy-step:hover { background: var(--bg-2); }
+  .anatomy-step.is-active { background: var(--accent-soft); }
+  .anatomy-step .as-num {
+    flex-shrink: 0;
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    background: var(--ink);
+    color: var(--paper);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .anatomy-step[data-zone="dom"] .as-num { background: #4ea3ff; }
+  .anatomy-step[data-zone="styles"] .as-num { background: #ffb84d; color: var(--ink); }
+  .anatomy-step[data-zone="box"] .as-num { background: #6fbf8a; }
+  .anatomy-step .as-body { flex: 1; min-width: 0; }
+  .anatomy-step .as-title {
+    font-family: 'Noto Serif SC', serif;
+    font-weight: 700;
+    font-size: 14px;
+    margin: 0 0 4px;
+    color: var(--ink);
+  }
+  .anatomy-step .as-desc {
+    font-size: 12.5px;
+    color: var(--ink-soft);
+    line-height: 1.5;
+    margin: 0;
+  }
+  .anatomy-step .as-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9.5px;
+    letter-spacing: 0.08em;
+    color: var(--ink-mute);
+    text-transform: uppercase;
+    margin-bottom: 2px;
+  }
+
+  /* Anatomy DevTools layout — split with box model bottom */
+  .anatomy-dt { position: relative; }
+  .anatomy-dt .el-panel {
+    grid-template-columns: 1.3fr 1fr;
+    min-height: 320px;
+  }
+  .anatomy-dt .el-tree-pane,
+  .anatomy-dt .el-styles-pane { max-height: 320px; }
+
+  /* Box model panel — bottom strip in §01 */
+  .anatomy-box {
+    background: var(--dt-bg);
+    border-top: 1px solid var(--dt-line);
+    padding: 18px 20px 20px;
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    flex-wrap: wrap;
+    position: relative;
+  }
+  .anatomy-box .ab-title {
+    font-family: 'Menlo', 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--dt-mute);
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    margin-right: 4px;
+  }
+  .box-model {
+    background: transparent;
+    color: var(--dt-text);
+    font-family: 'Menlo', 'JetBrains Mono', monospace;
+    font-size: 10.5px;
+    width: 360px;
+    height: 200px;
+    position: relative;
+  }
+  .box-model .bm-margin,
+  .box-model .bm-border,
+  .box-model .bm-padding,
+  .box-model .bm-content {
+    position: absolute;
+    border: 1px dashed rgba(255,255,255,0.15);
+    display: flex;
+    align-items: flex-start;
+    justify-content: flex-start;
+    padding: 4px 6px;
+    transition: all 0.25s;
+  }
+  .box-model .bm-margin {
+    inset: 0;
+    background: rgba(247, 195, 115, 0.85);
+    color: #4a2a00;
+    font-weight: 600;
+  }
+  .box-model .bm-border {
+    inset: 28px 50px;
+    background: rgba(255, 217, 102, 0.85);
+    color: #4a3500;
+    font-weight: 600;
+  }
+  .box-model .bm-padding {
+    inset: 56px 90px;
+    background: rgba(182, 207, 148, 0.92);
+    color: #1f3a13;
+    font-weight: 600;
+  }
+  .box-model .bm-content {
+    inset: 84px 130px;
+    background: rgba(152, 193, 255, 0.95);
+    color: #0a2a55;
+    font-weight: 600;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+  }
+  .box-model .bm-num {
+    position: absolute;
+    font-size: 10.5px;
+    font-family: 'Menlo', 'JetBrains Mono', monospace;
+  }
+
+  .anatomy-box .ab-side {
+    flex: 1;
+    min-width: 200px;
+    color: var(--dt-mute);
+    font-family: 'Menlo', 'JetBrains Mono', monospace;
+    font-size: 11px;
+    line-height: 1.7;
+  }
+  .anatomy-box .ab-side .ab-row { display: flex; align-items: center; gap: 8px; padding: 2px 0; }
+  .anatomy-box .ab-side .ab-row .ab-sw { width: 12px; height: 12px; border-radius: 2px; flex-shrink: 0; }
+  .anatomy-box .ab-side .ab-row.margin .ab-sw { background: var(--box-margin); }
+  .anatomy-box .ab-side .ab-row.border .ab-sw { background: var(--box-border); }
+  .anatomy-box .ab-side .ab-row.padding .ab-sw { background: var(--box-padding); }
+  .anatomy-box .ab-side .ab-row.content .ab-sw { background: var(--box-content); }
+  .anatomy-box .ab-side .ab-row .ab-key { color: var(--dt-text); }
+  .anatomy-box .ab-side .ab-row .ab-val { margin-left: auto; color: var(--dt-mute); }
+
+  /* Anatomy zone callouts: glow when matching step active */
+  .anatomy-dt[data-zone="dom"] .el-tree-pane,
+  .anatomy-dt[data-zone="styles"] .el-styles-pane,
+  .anatomy-dt[data-zone="box"] .anatomy-box {
+    box-shadow: inset 0 0 0 2px var(--accent);
+    background: linear-gradient(rgba(255,77,46,0.05), rgba(255,77,46,0.02));
+  }
+  .anatomy-dt .el-tree-pane,
+  .anatomy-dt .el-styles-pane,
+  .anatomy-dt .anatomy-box { transition: box-shadow 0.3s, background 0.3s; }
+
+  .anatomy-dt[data-zone="dom"] .el-styles-pane,
+  .anatomy-dt[data-zone="dom"] .anatomy-box,
+  .anatomy-dt[data-zone="styles"] .el-tree-pane,
+  .anatomy-dt[data-zone="styles"] .anatomy-box,
+  .anatomy-dt[data-zone="box"] .el-tree-pane,
+  .anatomy-dt[data-zone="box"] .el-styles-pane {
+    opacity: 0.45;
+  }
+
+  /* ==================================================
+     §02 DOM Tree interactive — click element → select highlight
+     ================================================== */
+  .dom-stage {
+    margin-top: 24px;
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 18px 20px 24px;
+  }
+  .dom-stage .ds-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+    padding-bottom: 14px;
+    border-bottom: 1px dashed var(--line);
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .dom-stage .ds-bar .ds-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--accent);
+    background: var(--accent-soft);
+    padding: 4px 10px;
+    border-radius: 3px;
+  }
+  .dom-stage .ds-bar .ds-meta {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--ink-mute);
+  }
+  .dom-stage .ds-bar .ds-meta strong { color: var(--ink); }
+
+  .dom-pair {
+    display: grid;
+    grid-template-columns: 1fr 1.4fr;
+    gap: 0;
+    border: 1px solid #0a0a0a;
+    border-radius: 6px;
+    overflow: hidden;
+    background: var(--dt-bg);
+    box-shadow: 0 12px 40px rgba(0,0,0,0.18);
+  }
+  @media (max-width: 880px) { .dom-pair { grid-template-columns: 1fr; } }
+  .dom-preview {
+    background: #ffffff;
+    padding: 32px 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    min-height: 320px;
+    border-right: 1px solid #0a0a0a;
+  }
+  @media (max-width: 880px) {
+    .dom-preview { border-right: none; border-bottom: 1px solid #0a0a0a; }
+  }
+  .dom-preview .dp-card {
+    width: 100%;
+    max-width: 280px;
+    padding: 24px 22px;
+    background: #fafaf8;
+    border: 1px solid #e6e0d2;
+    border-radius: 8px;
+    text-align: center;
+    position: relative;
+  }
+  .dom-preview h4 {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 22px;
+    margin: 0 0 6px;
+    color: #1a1a22;
+  }
+  .dom-preview p {
+    margin: 0 0 18px;
+    font-size: 13px;
+    color: #5a5a65;
+  }
+  .dom-preview .dp-btn {
+    display: inline-block;
+    padding: 10px 22px;
+    background: #ff4d2e;
+    color: white;
+    border-radius: 4px;
+    font-size: 13px;
+    font-family: 'JetBrains Mono', monospace;
+    border: none;
+    cursor: default;
+  }
+
+  /* Selected element highlight */
+  .dom-preview [data-target] {
+    cursor: default;
+    transition: outline 0.18s, box-shadow 0.18s;
+    outline: 2px dashed transparent;
+    outline-offset: 2px;
+    border-radius: 2px;
+  }
+  .dom-preview [data-target].is-selected {
+    outline: 2px dashed var(--dt-blue);
+    box-shadow: 0 0 0 1px rgba(94, 158, 255, 0.3);
+  }
+  .dom-preview .dp-tip {
+    position: absolute;
+    bottom: 12px;
+    left: 16px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: #b0b0b8;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+
+  .dom-tree {
+    padding: 8px 0 12px;
+    font-family: 'Menlo', 'JetBrains Mono', monospace;
+    font-size: 12px;
+    line-height: 1.6;
+    color: var(--el-text);
+    overflow-y: auto;
+    max-height: 360px;
+  }
+  .dom-tree::-webkit-scrollbar { width: 10px; }
+  .dom-tree::-webkit-scrollbar-track { background: var(--dt-bg); }
+  .dom-tree::-webkit-scrollbar-thumb { background: #3a3a3a; border-radius: 5px; }
+
+  .dom-tree .el-line { padding-left: 8px; padding-right: 8px; }
+
+  /* ==================================================
+     §03 Game · Reverse Style Detective
+     ================================================== */
+  .game-stage {
+    margin-top: 16px;
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  .game-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 22px;
+    background: var(--ink);
+    color: white;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+  .game-bar .gb-left { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+  .game-bar .gb-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    padding: 3px 9px;
+    border-radius: 3px;
+    background: var(--accent);
+    color: white;
+  }
+  .game-bar .gb-title {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 17px;
+    font-weight: 700;
+    margin: 0;
+  }
+  .game-bar .gb-progress {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: rgba(255,255,255,0.6);
+  }
+  .game-bar .gb-dots { display: flex; gap: 4px; }
+  .game-bar .gb-dot {
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.18);
+    border: 1px solid rgba(255,255,255,0.25);
+    transition: all 0.2s;
+  }
+  .game-bar .gb-dot.solved { background: #4ec77c; border-color: #4ec77c; }
+  .game-bar .gb-dot.current { background: var(--accent); border-color: var(--accent); transform: scale(1.2); box-shadow: 0 0 0 3px rgba(255,77,46,0.25); }
+
+  .game-stage-body { padding: 24px 26px 28px; }
+
+  .gq-num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    color: var(--accent);
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+  .gq-title {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 22px;
+    font-weight: 800;
+    margin: 0 0 8px;
+    line-height: 1.3;
+  }
+  .gq-prompt {
+    font-size: 14px;
+    color: var(--ink-soft);
+    line-height: 1.6;
+    margin: 0;
+    max-width: 64ch;
+  }
+  .gq-prompt strong { color: var(--ink); font-weight: 600; }
+  .gq-prompt code {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12.5px;
+    background: var(--bg-2);
+    padding: 1px 6px;
+    border-radius: 3px;
+  }
+
+  .game-context {
+    margin: 14px 0 18px;
+    padding: 12px 16px;
+    background: var(--bg-2);
+    border-left: 3px solid var(--ink);
+    border-radius: 4px;
+    font-size: 13px;
+    color: var(--ink-soft);
+    line-height: 1.5;
+  }
+  .game-context .gc-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--ink);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-right: 8px;
+    font-weight: 700;
+  }
+
+  /* Game stage: card preview + DevTools panel side by side */
+  .game-arena {
+    display: grid;
+    grid-template-columns: 1fr 1.45fr;
+    gap: 18px;
+    margin: 16px 0;
+  }
+  @media (max-width: 980px) { .game-arena { grid-template-columns: 1fr; } }
+
+  .game-preview {
+    background: #ffffff;
+    border: 1px solid #0a0a0a;
+    border-radius: 6px;
+    padding: 28px 22px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 360px;
+    position: relative;
+    box-shadow: 0 12px 40px rgba(0,0,0,0.10);
+  }
+  .game-preview .gp-tag {
+    position: absolute;
+    top: 10px;
+    left: 14px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: #b0b0b8;
+  }
+  .game-preview .login-card {
+    width: 100%;
+    max-width: 280px;
+    padding: 28px 24px 24px;
+    background: #ffffff;
+    border: 1px solid #e6e0d2;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(22,22,29,0.06);
+    text-align: center;
+  }
+  .game-preview .login-card .lc-title {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 24px;
+    font-weight: 700;
+    color: #1a1a22;
+    margin: 0 0 6px;
+  }
+  .game-preview .login-card .lc-sub {
+    font-size: 12px;
+    color: #8a8a92;
+    margin: 0 0 22px;
+  }
+  .game-preview .login-card .lc-input {
+    width: 100%;
+    padding: 10px 12px;
+    margin-bottom: 12px;
+    border: 1px solid #d5cdba;
+    border-radius: 6px;
+    font-family: inherit;
+    font-size: 13px;
+    background: #faf7f0;
+    color: #1a1a22;
+    outline: none;
+    box-sizing: border-box;
+  }
+  .game-preview .login-card .lc-btn {
+    display: block;
+    width: 100%;
+    padding: 12px 20px;
+    background: #ff4d2e;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    cursor: pointer;
+    margin-top: 6px;
+    transition: background 0.18s;
+  }
+  .game-preview .login-card .lc-btn.is-hover {
+    background: #d63a1f;
+  }
+
+  /* Inspector pointer overlay */
+  .game-preview .gp-inspector {
+    position: absolute;
+    pointer-events: none;
+    border: 2px dashed var(--dt-blue);
+    border-radius: 3px;
+    background: rgba(94, 158, 255, 0.08);
+    transition: all 0.25s;
+    opacity: 0;
+  }
+  .game-preview .gp-inspector.show { opacity: 1; }
+  .game-preview .gp-inspector::after {
+    content: attr(data-label);
+    position: absolute;
+    top: -22px;
+    left: 0;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    background: var(--dt-blue);
+    color: white;
+    padding: 2px 6px;
+    border-radius: 2px;
+    letter-spacing: 0.04em;
+    white-space: nowrap;
+  }
+
+  /* DevTools mini panel for the game */
+  .game-dt {
+    background: var(--dt-bg);
+    border: 1px solid #0a0a0a;
+    border-radius: 6px;
+    overflow: hidden;
+    box-shadow: 0 12px 40px rgba(0,0,0,0.18);
+    display: flex;
+    flex-direction: column;
+  }
+  .game-dt .dt-tabs { padding: 0 4px; }
+  .game-dt .dt-tab { padding: 6px 10px; font-size: 10.5px; }
+  .game-dt .dt-toolbar { padding: 5px 10px; font-size: 10.5px; }
+  .game-dt .gdt-pane {
+    display: grid;
+    grid-template-columns: 1fr 1.05fr;
+    flex: 1;
+  }
+  .game-dt .gdt-tree {
+    padding: 6px 0 8px;
+    font-family: 'Menlo', 'JetBrains Mono', monospace;
+    font-size: 11.5px;
+    line-height: 1.55;
+    color: var(--el-text);
+    border-right: 1px solid var(--dt-line);
+    overflow-y: auto;
+    max-height: 320px;
+  }
+  .game-dt .gdt-tree::-webkit-scrollbar,
+  .game-dt .gdt-styles::-webkit-scrollbar { width: 8px; }
+  .game-dt .gdt-tree::-webkit-scrollbar-thumb,
+  .game-dt .gdt-styles::-webkit-scrollbar-thumb { background: #3a3a3a; }
+  .game-dt .gdt-tree .el-line { padding-left: 6px; padding-right: 6px; font-size: 11.5px; }
+  .game-dt .gdt-styles {
+    padding: 6px 0 12px;
+    overflow-y: auto;
+    max-height: 320px;
+  }
+  .game-dt .gdt-styles .el-rule {
+    padding: 5px 12px 7px;
+    font-size: 11.5px;
+  }
+  .game-dt .gdt-state-bar {
+    background: #2a2a2a;
+    padding: 5px 12px;
+    border-bottom: 1px solid #1a1a1a;
+    font-family: 'Menlo', 'JetBrains Mono', monospace;
+    font-size: 10.5px;
+    color: var(--dt-mute);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .game-dt .gdt-state-bar .gsb-toggle {
+    color: var(--dt-mute);
+    cursor: pointer;
+    padding: 2px 7px;
+    border: 1px solid var(--dt-line);
+    border-radius: 3px;
+    font-size: 10px;
+    user-select: none;
+    transition: all 0.18s;
+  }
+  .game-dt .gdt-state-bar .gsb-toggle:hover { color: white; border-color: var(--dt-blue); }
+  .game-dt .gdt-state-bar .gsb-toggle.is-on { color: white; background: var(--dt-blue); border-color: var(--dt-blue); }
+  .game-dt .gdt-state-bar .gsb-pseudo {
+    color: var(--dt-purple);
+    margin-left: 6px;
+  }
+  .game-dt .gdt-state-bar.is-on { background: linear-gradient(90deg, rgba(197, 134, 192, 0.20), transparent); }
+
+  /* Box model in game DevTools panel */
+  .game-dt .gdt-box {
+    border-top: 1px solid var(--dt-line);
+    padding: 12px 14px 14px;
+    background: var(--dt-bg);
+    display: none;
+  }
+  .game-dt .gdt-box.show { display: block; }
+  .game-dt .gdt-box .gb-title {
+    font-family: 'Menlo', 'JetBrains Mono', monospace;
+    font-size: 10.5px;
+    color: var(--dt-mute);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+  .gbox-mini {
+    width: 100%;
+    max-width: 280px;
+    height: 140px;
+    margin: 0 auto;
+    position: relative;
+    color: var(--dt-text);
+    font-family: 'Menlo', 'JetBrains Mono', monospace;
+    font-size: 9.5px;
+  }
+  .gbox-mini .gbm-margin,
+  .gbox-mini .gbm-border,
+  .gbox-mini .gbm-padding,
+  .gbox-mini .gbm-content {
+    position: absolute;
+    border: 1px dashed rgba(0,0,0,0.15);
+    display: flex;
+    align-items: flex-start;
+    justify-content: flex-start;
+    padding: 2px 4px;
+    transition: all 0.2s;
+  }
+  .gbox-mini .gbm-margin {
+    inset: 0;
+    background: rgba(247, 195, 115, 0.85);
+    color: #4a2a00;
+    font-weight: 600;
+  }
+  .gbox-mini .gbm-border {
+    inset: 18px 28px;
+    background: rgba(255, 217, 102, 0.85);
+    color: #4a3500;
+    font-weight: 600;
+  }
+  .gbox-mini .gbm-padding {
+    inset: 36px 56px;
+    background: rgba(182, 207, 148, 0.92);
+    color: #1f3a13;
+    font-weight: 600;
+  }
+  .gbox-mini .gbm-content {
+    inset: 56px 84px;
+    background: rgba(152, 193, 255, 0.95);
+    color: #0a2a55;
+    font-weight: 600;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+  }
+
+  /* Game choices */
+  .game-choices {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+    margin-top: 18px;
+  }
+  @media (max-width: 720px) { .game-choices { grid-template-columns: 1fr; } }
+  .gc-choice {
+    padding: 14px 16px;
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 5px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    color: var(--ink);
+    cursor: pointer;
+    text-align: left;
+    transition: all 0.15s;
+    line-height: 1.45;
+  }
+  .gc-choice:hover { border-color: var(--accent); background: var(--accent-soft); transform: translateX(2px); }
+  .gc-choice.is-correct { background: var(--green-soft); border-color: var(--green); color: var(--ink); box-shadow: inset 3px 0 0 var(--green); }
+  .gc-choice.is-correct::after { content: '✓ 对了'; float: right; color: var(--green); font-size: 11px; font-weight: 600; letter-spacing: 0.04em; }
+  .gc-choice.is-wrong { background: var(--accent-soft); border-color: var(--accent); color: #6a2a14; box-shadow: inset 3px 0 0 var(--accent); }
+  .gc-choice.is-wrong::after { content: '✕ 再看看'; float: right; color: var(--accent); font-size: 11px; font-weight: 600; letter-spacing: 0.04em; }
+  .gc-choice.is-disabled { pointer-events: none; opacity: 0.5; }
+  .gc-choice .gc-letter {
+    display: inline-block;
+    margin-right: 8px;
+    color: var(--ink-mute);
+    font-weight: 600;
+  }
+
+  .game-feedback {
+    margin-top: 16px;
+    padding: 14px 18px;
+    border-radius: 6px;
+    font-size: 14px;
+    line-height: 1.55;
+    display: none;
+  }
+  .game-feedback.show { display: block; animation: slideIn 0.28s ease-out; }
+  @keyframes slideIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+  .game-feedback.is-good {
+    background: var(--green-soft);
+    border-left: 3px solid var(--green);
+    color: var(--ink);
+  }
+  .game-feedback.is-bad {
+    background: var(--accent-soft);
+    border-left: 3px solid var(--accent);
+    color: var(--ink);
+  }
+  .game-feedback .gf-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-right: 10px;
+    padding: 2px 8px;
+    border-radius: 3px;
+  }
+  .game-feedback.is-good .gf-tag { background: var(--green); color: white; }
+  .game-feedback.is-bad .gf-tag { background: var(--accent); color: white; }
+  .game-feedback strong { color: var(--ink); font-weight: 600; }
+  .game-feedback code {
+    font-family: 'JetBrains Mono', monospace;
+    background: rgba(0,0,0,0.06);
+    padding: 1px 6px;
+    border-radius: 3px;
+    font-size: 12.5px;
+  }
+
+  .game-controls {
+    margin-top: 22px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    padding-top: 18px;
+    border-top: 1px dashed var(--line);
+  }
+  .game-controls .gc-meta {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--ink-mute);
+    letter-spacing: 0.05em;
+  }
+  .game-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 18px;
+    background: var(--ink);
+    color: white;
+    border: none;
+    border-radius: 4px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 0.05em;
+    cursor: pointer;
+    transition: all 0.18s;
+  }
+  .game-btn:hover:not(:disabled) { background: var(--accent); transform: translateX(2px); }
+  .game-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+  .game-btn.ghost {
+    background: transparent;
+    border: 1px solid var(--line);
+    color: var(--ink-soft);
+  }
+  .game-btn.ghost:hover { background: var(--bg-2); color: var(--ink); transform: none; }
+  .game-btn .arr { font-family: 'Fraunces', serif; font-size: 14px; font-weight: 500; }
+
+  /* End screen */
+  .game-end {
+    text-align: center;
+    padding: 40px 20px;
+    display: none;
+  }
+  .game-end.show { display: block; animation: fadeIn 0.4s ease-out; }
+  .game-end .ge-emoji {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 36px;
+    color: var(--accent);
+    margin-bottom: 8px;
+    letter-spacing: 0.4em;
+  }
+  .game-end h3 {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 32px;
+    font-weight: 900;
+    margin: 0 0 16px;
+    line-height: 1.15;
+    letter-spacing: -0.02em;
+  }
+  .game-end h3 .em { color: var(--accent); font-weight: 500; }
+  .game-end p {
+    font-size: 15px;
+    color: var(--ink-soft);
+    line-height: 1.6;
+    max-width: 50ch;
+    margin: 0 auto 14px;
+  }
+  .game-end p strong { color: var(--ink); font-weight: 600; }
+  .game-end .ge-stats {
+    display: flex;
+    justify-content: center;
+    gap: 28px;
+    margin: 26px 0 22px;
+    flex-wrap: wrap;
+  }
+  .game-end .ge-stat {
+    text-align: center;
+  }
+  .game-end .ge-stat .ge-num {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 36px;
+    font-weight: 900;
+    color: var(--accent);
+    line-height: 1;
+  }
+  .game-end .ge-stat .ge-cap {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    color: var(--ink-mute);
+    text-transform: uppercase;
+    margin-top: 6px;
+  }
+
+  /* ==================================================
+     §04 Box model — interactive padding slider
+     ================================================== */
+  .box-stage {
+    margin-top: 24px;
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  .box-stage .bs-head {
+    padding: 18px 22px 14px;
+    border-bottom: 1px dashed var(--line);
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  .box-stage .bs-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--accent);
+  }
+  .box-stage h4 {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 18px;
+    margin: 4px 0 0;
+    font-weight: 700;
+  }
+  .box-stage .bs-meta {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--ink-mute);
+  }
+
+  .box-stage-body {
+    display: grid;
+    grid-template-columns: 1.3fr 1fr;
+    gap: 0;
+    background: var(--dt-bg-3);
+  }
+  @media (max-width: 880px) { .box-stage-body { grid-template-columns: 1fr; } }
+
+  .bs-vis {
+    padding: 30px 24px;
+    background: var(--dt-bg);
+    border-right: 1px solid var(--dt-line);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 360px;
+    position: relative;
+  }
+  @media (max-width: 880px) {
+    .bs-vis { border-right: none; border-bottom: 1px solid var(--dt-line); }
+  }
+  .box-large {
+    width: 100%;
+    max-width: 380px;
+    height: 280px;
+    position: relative;
+    color: white;
+    font-family: 'Menlo', 'JetBrains Mono', monospace;
+    font-size: 12px;
+  }
+  .box-large .bl-margin,
+  .box-large .bl-border,
+  .box-large .bl-padding,
+  .box-large .bl-content {
+    position: absolute;
+    border: 1px dashed rgba(0,0,0,0.15);
+    display: flex;
+    align-items: flex-start;
+    justify-content: flex-start;
+    padding: 5px 8px;
+    transition: all 0.25s ease-out;
+    font-weight: 600;
+  }
+  .box-large .bl-margin {
+    inset: 0;
+    background: rgba(247, 195, 115, 0.92);
+    color: #4a2a00;
+  }
+  .box-large .bl-border {
+    inset: 30px 50px;
+    background: rgba(255, 217, 102, 0.92);
+    color: #4a3500;
+  }
+  .box-large .bl-padding {
+    inset: 60px 90px;
+    background: rgba(182, 207, 148, 0.95);
+    color: #1f3a13;
+  }
+  .box-large .bl-content {
+    inset: 90px 130px;
+    background: rgba(152, 193, 255, 0.98);
+    color: #0a2a55;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    font-size: 11.5px;
+  }
+
+  .bs-controls {
+    padding: 24px 28px;
+    color: var(--dt-text);
+    background: var(--dt-bg);
+  }
+  .bs-controls h5 {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 16px;
+    color: white;
+    margin: 0 0 4px;
+    font-weight: 700;
+  }
+  .bs-controls .bs-cap {
+    font-family: 'Menlo', 'JetBrains Mono', monospace;
+    font-size: 10.5px;
+    color: var(--dt-mute);
+    margin-bottom: 16px;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+  .bs-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 0;
+    border-top: 1px solid var(--dt-line);
+  }
+  .bs-row:first-of-type { border-top: none; }
+  .bs-row .bs-sw {
+    width: 14px;
+    height: 14px;
+    border-radius: 3px;
+    flex-shrink: 0;
+  }
+  .bs-row.margin .bs-sw { background: var(--box-margin); }
+  .bs-row.border .bs-sw { background: var(--box-border); }
+  .bs-row.padding .bs-sw { background: var(--box-padding); }
+  .bs-row.content .bs-sw { background: var(--box-content); }
+  .bs-row .bs-key {
+    font-family: 'Menlo', 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--dt-text);
+    min-width: 70px;
+  }
+  .bs-row input[type="range"] {
+    flex: 1;
+    -webkit-appearance: none;
+    appearance: none;
+    height: 4px;
+    background: #3a3a3a;
+    border-radius: 2px;
+    outline: none;
+    cursor: pointer;
+  }
+  .bs-row input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 14px; height: 14px;
+    background: var(--accent);
+    border-radius: 50%;
+    cursor: pointer;
+    border: 2px solid white;
+  }
+  .bs-row input[type="range"]::-moz-range-thumb {
+    width: 14px; height: 14px;
+    background: var(--accent);
+    border-radius: 50%;
+    cursor: pointer;
+    border: 2px solid white;
+  }
+  .bs-row .bs-val {
+    font-family: 'Menlo', 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: white;
+    background: #2a2a2a;
+    padding: 2px 8px;
+    border-radius: 3px;
+    min-width: 48px;
+    text-align: right;
+  }
+  .bs-summary {
+    margin-top: 16px;
+    padding: 12px 14px;
+    background: #131313;
+    border-radius: 4px;
+    font-family: 'Menlo', 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--dt-mute);
+    line-height: 1.7;
+  }
+  .bs-summary strong { color: white; }
+  .bs-summary .bs-formula { color: #ffb84d; }
+
+  /* ==================================================
+     §05 Five DevTools skills — card grid
+     ================================================== */
+  .skill-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 18px;
+    margin-top: 24px;
+  }
+  @media (max-width: 880px) { .skill-grid { grid-template-columns: 1fr; } }
+
+  .skill-card {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 22px 24px 24px;
+    position: relative;
+    overflow: hidden;
+  }
+  .skill-card.lg {
+    grid-column: span 2;
+  }
+  @media (max-width: 880px) { .skill-card.lg { grid-column: span 1; } }
+  .skill-card .sk-num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--ink-mute);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+  .skill-card .sk-num strong { color: var(--accent); }
+  .skill-card h4 {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 22px;
+    font-weight: 800;
+    margin: 0 0 4px;
+    letter-spacing: -0.01em;
+  }
+  .skill-card .sk-en {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--ink-mute);
+    margin-bottom: 14px;
+    letter-spacing: 0.04em;
+  }
+  .skill-card p {
+    font-size: 14px;
+    color: var(--ink-soft);
+    line-height: 1.6;
+    margin: 0 0 14px;
+  }
+  .skill-card p strong { color: var(--ink); font-weight: 600; }
+  .skill-card p code {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12.5px;
+    background: var(--bg-2);
+    padding: 1px 6px;
+    border-radius: 3px;
+  }
+  .sk-shortcut {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 9px;
+    background: var(--ink);
+    color: white;
+    border-radius: 4px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.04em;
+  }
+  .sk-shortcut .sks-key {
+    background: rgba(255,255,255,0.14);
+    padding: 1px 5px;
+    border-radius: 2px;
+    font-size: 10.5px;
+  }
+  .sk-shortcut .sks-plus { color: rgba(255,255,255,0.5); }
+
+  .sk-shortcuts {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 14px;
+  }
+  .sk-shortcuts .sks-platform {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--ink-mute);
+    margin-right: 4px;
+    align-self: center;
+    min-width: 36px;
+  }
+
+  .sk-mock {
+    background: var(--dt-bg);
+    border-radius: 5px;
+    padding: 10px 12px;
+    font-family: 'Menlo', 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--dt-text);
+    border: 1px solid #0a0a0a;
+    line-height: 1.7;
+    margin-top: 6px;
+  }
+  .sk-mock .skm-tag { color: var(--dt-mute); font-size: 9.5px; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 6px; }
+  .sk-mock .skm-line { display: flex; gap: 8px; }
+  .sk-mock .skm-key { color: #9cdcfe; }
+  .sk-mock .skm-val { color: #ce9178; }
+  .sk-mock .skm-num { color: #b5cea8; }
+  .sk-mock .skm-edit { background: rgba(94,158,255,0.16); padding: 0 4px; border-radius: 2px; outline: 1px dashed rgba(94,158,255,0.4); }
+
+  /* Computed panel mock */
+  .sk-computed {
+    background: var(--dt-bg);
+    border: 1px solid #0a0a0a;
+    border-radius: 5px;
+    overflow: hidden;
+    margin-top: 6px;
+  }
+  .sk-computed .skc-head {
+    background: #2a2a2a;
+    padding: 5px 10px;
+    font-family: 'Menlo', 'JetBrains Mono', monospace;
+    font-size: 10.5px;
+    color: var(--dt-mute);
+    letter-spacing: 0.04em;
+    border-bottom: 1px solid #1a1a1a;
+  }
+  .sk-computed table {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: 'Menlo', 'JetBrains Mono', monospace;
+    font-size: 11px;
+  }
+  .sk-computed td {
+    padding: 4px 10px;
+    border-bottom: 1px solid #2a2a2a;
+    color: var(--dt-text);
+  }
+  .sk-computed td:first-child { color: #9cdcfe; }
+  .sk-computed td:last-child { color: #ce9178; }
+  .sk-computed td .skc-trace { color: var(--dt-mute-2); font-size: 10px; margin-left: 6px; }
+
+  /* Device toolbar mock */
+  .sk-device {
+    background: var(--dt-bg);
+    border: 1px solid #0a0a0a;
+    border-radius: 5px;
+    padding: 10px 14px;
+    font-family: 'Menlo', 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--dt-text);
+    margin-top: 6px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  .sk-device .skd-pill {
+    padding: 2px 8px;
+    border: 1px solid var(--dt-line);
+    border-radius: 3px;
+    color: var(--dt-mute);
+  }
+  .sk-device .skd-pill.is-on { background: var(--dt-blue); color: white; border-color: var(--dt-blue); }
+  .sk-device .skd-size { color: var(--dt-mute); margin-left: auto; }
+
+  /* Inspect arrow icon mock */
+  .sk-arrow-mock {
+    background: var(--dt-bg);
+    border-radius: 5px;
+    border: 1px solid #0a0a0a;
+    padding: 10px 14px;
+    margin-top: 6px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: var(--dt-text);
+    font-family: 'Menlo', 'JetBrains Mono', monospace;
+    font-size: 11px;
+  }
+  .sk-arrow-mock .skam-icon {
+    width: 22px;
+    height: 22px;
+    border-radius: 3px;
+    background: var(--dt-blue);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 13px;
+    font-weight: 700;
+  }
+  .sk-arrow-mock .skam-icon.off {
+    background: transparent;
+    border: 1px solid var(--dt-line);
+    color: var(--dt-mute);
+  }
+
+  /* ==================================================
+     §06 Cheatsheet — three cards
+     ================================================== */
+  .cheat-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    margin-top: 24px;
+  }
+  @media (max-width: 880px) { .cheat-grid { grid-template-columns: 1fr; } }
+  .cheat-card {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 24px;
+    position: relative;
+  }
+  .cheat-card.panels { border-top: 4px solid var(--dt-blue); }
+  .cheat-card.box { border-top: 4px solid var(--box-padding); }
+  .cheat-card.steps { border-top: 4px solid var(--accent); }
+  .cheat-card .cc-num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--ink-mute);
+    letter-spacing: 0.1em;
+    margin-bottom: 4px;
+    text-transform: uppercase;
+  }
+  .cheat-card h4 {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 22px;
+    margin: 0 0 6px;
+    font-weight: 800;
+    letter-spacing: -0.01em;
+  }
+  .cheat-card .cc-sub {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--ink-soft);
+    margin-bottom: 16px;
+    letter-spacing: 0.05em;
+  }
+  .cheat-card dl { margin: 0; padding: 0; font-size: 13px; }
+  .cheat-card dl dt {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--ink-mute);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-top: 14px;
+  }
+  .cheat-card dl dt:first-of-type { margin-top: 0; }
+  .cheat-card dl dd {
+    margin: 4px 0 0;
+    color: var(--ink-soft);
+    font-size: 13px;
+    line-height: 1.55;
+  }
+  .cheat-card dl dd strong { color: var(--ink); font-weight: 600; }
+  .cheat-card dl dd code {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11.5px;
+    background: var(--bg-2);
+    padding: 1px 6px;
+    border-radius: 3px;
+    color: var(--ink);
+  }
+  .cheat-card dl dd .cc-sw {
+    display: inline-block;
+    width: 11px;
+    height: 11px;
+    border-radius: 2px;
+    vertical-align: -1px;
+    margin-right: 5px;
+  }
+  .cheat-card dl dd .cc-sw.margin { background: var(--box-margin); }
+  .cheat-card dl dd .cc-sw.border { background: var(--box-border); }
+  .cheat-card dl dd .cc-sw.padding { background: var(--box-padding); }
+  .cheat-card dl dd .cc-sw.content { background: var(--box-content); }
+
+  /* ==================================================
+     Next post + footer (shared)
+     ================================================== */
+  .next-post {
+    margin-top: 48px;
+    padding: 32px 36px;
+    background: var(--ink);
+    color: var(--bg);
+    border-radius: 8px;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 32px;
+    align-items: center;
+    text-decoration: none;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    position: relative;
+    overflow: hidden;
+  }
+  .next-post::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at 100% 0%, rgba(255,77,46,0.12), transparent 55%);
+    pointer-events: none;
+  }
+  .next-post:hover { transform: translateY(-2px); box-shadow: 0 14px 36px rgba(22,22,29,0.22); }
+  @media (max-width: 720px) { .next-post { grid-template-columns: 1fr; padding: 24px; gap: 20px; } }
+  .next-post .np-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--accent);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+    display: inline-block;
+  }
+  .next-post h4 {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 26px;
+    margin: 0 0 10px;
+    font-weight: 700;
+    color: white;
+    line-height: 1.25;
+    letter-spacing: -0.01em;
+  }
+  .next-post h4 .em {
+    font-family: 'Noto Serif SC', serif;
+    font-weight: 500;
+    color: var(--accent);
+  }
+  .next-post p {
+    margin: 0;
+    color: rgba(255,255,255,0.72);
+    font-size: 14px;
+    line-height: 1.65;
+    max-width: 560px;
+  }
+  .next-post p strong { color: white; font-weight: 600; }
+  .next-post .np-cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 24px;
+    background: var(--accent);
+    color: white;
+    border-radius: 4px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    white-space: nowrap;
+    transition: background 0.18s, color 0.18s, transform 0.18s;
+    position: relative;
+    z-index: 1;
+  }
+  .next-post:hover .np-cta { background: white; color: var(--ink); transform: translateX(2px); }
+  .next-post .np-cta .arr { font-family: 'Fraunces', serif; font-size: 18px; font-weight: 500; }
+
+  footer {
+    border-top: 1px solid var(--line);
+    padding: 56px 0 64px;
+    background: var(--bg);
+  }
+  .byline {
+    display: flex;
+    gap: 28px;
+    align-items: center;
+    padding-bottom: 32px;
+    border-bottom: 1px dashed var(--line);
+    margin-bottom: 24px;
+    position: relative;
+  }
+  .byline::before {
+    content: '';
+    position: absolute;
+    top: -56px; left: 0;
+    width: 32px; height: 1px;
+    background: var(--accent);
+  }
+  .byline .avatar {
+    width: 96px; height: 96px;
+    border-radius: 50%;
+    object-fit: cover;
+    flex-shrink: 0;
+    border: 3px solid var(--paper);
+    box-shadow: 0 0 0 1px var(--line), 0 6px 20px rgba(22,22,29,0.10);
+    background: var(--paper);
+  }
+  .byline-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--ink-mute);
+    letter-spacing: 0.18em;
+    margin-bottom: 8px;
+  }
+  .byline-label .dot {
+    display: inline-block;
+    width: 6px; height: 6px;
+    background: var(--accent);
+    border-radius: 50%;
+    margin-right: 6px;
+    vertical-align: 1px;
+  }
+  .byline-name {
+    font-family: 'Noto Serif SC', 'Fraunces', serif;
+    font-size: clamp(28px, 4vw, 40px);
+    font-weight: 700;
+    line-height: 1.05;
+    letter-spacing: -0.01em;
+    margin: 0 0 8px;
+  }
+  .byline-name .em {
+    font-family: 'Noto Serif SC', serif;
+    font-weight: 500;
+    color: var(--accent);
+  }
+  .byline-tag {
+    font-size: 14px;
+    color: var(--ink-soft);
+    line-height: 1.55;
+    margin: 0;
+    max-width: 52ch;
+  }
+  .byline-contact {
+    margin-top: 14px;
+    padding-top: 14px;
+    border-top: 1px dashed var(--line);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    font-size: 12px;
+  }
+  .byline-contact .contact-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--ink-mute);
+    padding: 2px 8px;
+    border: 1px solid var(--line);
+    border-radius: 3px;
+  }
+  .byline-contact .contact-id {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--ink);
+    background: var(--accent-soft);
+    padding: 3px 10px;
+    border-radius: 4px;
+    letter-spacing: 0.02em;
+  }
+  .byline-contact .contact-hint { font-size: 12px; color: var(--ink-soft); }
+  .footer-meta {
+    text-align: center;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--ink-mute);
+    letter-spacing: 0.05em;
+  }
+  .footer-meta .heart { color: var(--accent); }
+  .footer-meta .mono { color: var(--ink-soft); font-weight: 500; }
+  @media (max-width: 600px) {
+    .byline { flex-direction: column; text-align: center; align-items: center; gap: 16px; }
+    .byline-tag { margin-left: auto; margin-right: auto; }
+  }
+
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+  section { animation: fadeIn 0.6s ease-out backwards; }
+
+  /* === Roadmap Modal === */
+  .rm-modal { position: fixed; inset: 0; z-index: 1000; display: flex; align-items: center; justify-content: center; padding: 30px 16px; }
+  .rm-modal[hidden] { display: none; }
+  .rm-backdrop { position: absolute; inset: 0; background: rgba(22,22,29,0.55); backdrop-filter: blur(4px); animation: rm-fade 0.2s; }
+  @keyframes rm-fade { from { opacity: 0; } to { opacity: 1; } }
+  .rm-dialog { position: relative; background: var(--bg); border-radius: 12px; max-width: 720px; width: 100%; max-height: calc(100vh - 60px); overflow-y: auto; padding: 32px 36px 24px; box-shadow: 0 30px 80px rgba(0,0,0,0.3); animation: rm-pop 0.25s cubic-bezier(0.4,0,0.2,1); }
+  @keyframes rm-pop { from { transform: scale(0.96) translateY(8px); opacity: 0; } to { transform: scale(1) translateY(0); opacity: 1; } }
+  .rm-close { position: absolute; top: 14px; right: 16px; background: transparent; border: none; cursor: pointer; font-size: 20px; color: var(--ink-mute); width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: all 0.15s; line-height: 1; }
+  .rm-close:hover { background: var(--bg-2); color: var(--ink); }
+  .rm-header { margin-bottom: 22px; padding-bottom: 18px; border-bottom: 1px dashed var(--line); }
+  .rm-tag { font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.1em; color: var(--accent); text-transform: uppercase; margin-bottom: 8px; }
+  .rm-title { font-family: 'Noto Serif SC', serif; font-size: 28px; margin: 0 0 6px; font-weight: 900; letter-spacing: -0.02em; line-height: 1.1; }
+  .rm-title .rm-em { font-family: 'Noto Serif SC', serif; color: var(--accent); font-weight: 500; }
+  .rm-sub { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--ink-mute); margin: 0; }
+  .rm-body { display: flex; flex-direction: column; gap: 18px; }
+  .rm-mod-key { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ink); font-weight: 700; margin-bottom: 8px; letter-spacing: 0.04em; text-transform: uppercase; }
+  .rm-mod-list { display: flex; flex-direction: column; gap: 6px; }
+  .rm-cell { display: grid; grid-template-columns: 36px 1fr auto; gap: 12px; align-items: center; padding: 9px 13px; border-radius: 5px; background: var(--paper); border: 1px solid var(--line); text-decoration: none; color: inherit; transition: all 0.15s; }
+  .rm-cell:hover { border-color: var(--accent); background: var(--accent-soft); transform: translateX(3px); }
+  .rm-cell-code { font-family: 'Fraunces', serif; font-weight: 500; color: var(--accent); font-size: 15px; }
+  .rm-cell-name { font-size: 13px; color: var(--ink); }
+  .rm-cell-tier { font-family: 'JetBrains Mono', monospace; font-size: 9px; letter-spacing: 0.08em; color: var(--ink-mute); text-transform: uppercase; border: 1px solid var(--line); padding: 2px 7px; border-radius: 3px; }
+  .rm-footer { margin-top: 22px; padding-top: 16px; border-top: 1px dashed var(--line); display: flex; justify-content: space-between; align-items: center; font-size: 12px; color: var(--ink-soft); flex-wrap: wrap; gap: 8px; }
+  .rm-wechat { font-family: 'JetBrains Mono', monospace; background: var(--accent-soft); color: var(--ink); padding: 3px 10px; border-radius: 3px; font-weight: 600; letter-spacing: 0.02em; }
+  .nav-links a[data-rm-open] { cursor: pointer; }
+</style>
+</head>
+<body>
+
+<!-- Top bar -->
+<div class="topbar">
+  <div class="wrap topbar-inner">
+    <a href="index.html" class="brand"><span class="dot"></span>H1 · DEVTOOLS ELEMENTS 面板</a>
+    <nav class="nav-links">
+      <a href="index.html#roadmap" data-rm-open>路线图</a>
+      <a href="index.html#manifesto">关于</a>
+    </nav>
+  </div>
+</div>
+
+<!-- Hero -->
+<header class="hero">
+  <div class="wrap">
+    <div class="hero-meta">
+      <span class="pill fill">实验互动 · INTERACTIVE</span>
+      <span class="pill">2026 · 设计 × 代码</span>
+      <span class="pill">H1 · 浏览器调试</span>
+      <span class="label">阅读时长 ≈ 14 分钟</span>
+    </div>
+    <div class="hero-grid">
+      <div>
+        <h1>
+          <span class="display-cn">右键 inspect</span><br>
+          <span class="display-cn">是设计师的</span><span class="em">X 光机</span><span class="display-cn">。</span>
+        </h1>
+        <p class="lede">
+          网页跟 Figma 不一样 —— 它的"图层"全部是<span class="em">活的</span>：你可以打开任何一个网页，点一下 → 看到它的 HTML 结构、用了什么 CSS、字号几号、间距几像素。<br>
+          这一篇教你读懂 <code class="mono" style="font-size:15px;background:var(--bg-2);padding:1px 6px;border-radius:3px;">Elements</code> 面板 —— 从"看页面"变成<strong style="color:var(--ink);">看页面的骨架</strong>。
+        </p>
+      </div>
+      <div class="hero-side">
+        <div class="row"><span class="k">本页讲什么</span><span class="v">读 Elements 面板</span></div>
+        <div class="row"><span class="k">含互动</span><span class="v">侦探 5 道题</span></div>
+        <div class="row"><span class="k">面向</span><span class="v">设计师 · 看页面</span></div>
+        <div class="row"><span class="k">前置知识</span><span class="v">无 · 会按 F12 即可</span></div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- Section 1: Anatomy of Elements panel -->
+<section id="anatomy">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>01</strong> / 三块拼图</div>
+        <h2 class="section-title">Elements 面板<br>就<span class="em">三块</span>东西</h2>
+      </div>
+      <p class="section-sub">
+        F12 一开，看上去花花绿绿一大片 —— 别慌。Elements 面板永远只有三块：左边 <span class="em">DOM 树</span>、右边 <span class="em">Styles</span>、下面 <span class="em">盒模型</span>。看清这三块，就赢一半了。
+      </p>
+    </div>
+
+    <div class="hint-strip">
+      <span class="hint-tag">互动</span>点右侧的 1 / 2 / 3 步骤 —— 左边 DevTools 截图会高亮对应的那一块，剩下两块自动变暗，你就知道每块在哪、长啥样。
+    </div>
+
+    <div class="anatomy-stage">
+      <!-- Left: DevTools mock -->
+      <div class="devtools anatomy-dt" id="anatomyDt" data-zone="dom">
+        <div class="dt-tabs">
+          <span class="dt-tab active">Elements</span>
+          <span class="dt-tab">Console</span>
+          <span class="dt-tab">Sources</span>
+          <span class="dt-tab">Network</span>
+          <span class="dt-tab">Performance</span>
+        </div>
+        <div class="dt-toolbar">
+          <span class="dt-icon-btn" title="select element">⌖</span>
+          <span class="dt-icon-btn" title="device toolbar">▭</span>
+          <input class="dt-filter" placeholder="Find by string, selector, or XPath" disabled>
+        </div>
+
+        <div class="el-panel">
+          <!-- DOM tree pane -->
+          <div class="el-tree-pane">
+            <div class="el-line has-children"><span class="el-toggle"></span><span class="el-bracket">&lt;</span><span class="el-tag">html</span><span class="el-attr"> lang</span><span class="el-eq">=</span><span class="el-str">"zh-CN"</span><span class="el-bracket">&gt;</span></div>
+            <div class="el-children">
+              <div class="el-line has-children" style="padding-left:14px"><span class="el-toggle"></span><span class="el-bracket">&lt;</span><span class="el-tag">body</span><span class="el-bracket">&gt;</span></div>
+              <div class="el-children">
+                <div class="el-line has-children" style="padding-left:28px"><span class="el-toggle"></span><span class="el-bracket">&lt;</span><span class="el-tag">div</span><span class="el-attr"> class</span><span class="el-eq">=</span><span class="el-str">"page"</span><span class="el-bracket">&gt;</span></div>
+                <div class="el-children">
+                  <div class="el-line has-children is-selected" style="padding-left:42px"><span class="el-toggle"></span><span class="el-bracket">&lt;</span><span class="el-tag">div</span><span class="el-attr"> class</span><span class="el-eq">=</span><span class="el-str">"login-card"</span><span class="el-bracket">&gt;</span></div>
+                  <div class="el-children">
+                    <div class="el-line no-children" style="padding-left:56px"><span class="el-toggle"></span><span class="el-bracket">&lt;</span><span class="el-tag">h2</span><span class="el-bracket">&gt;</span><span class="el-text">登录</span><span class="el-bracket">&lt;/</span><span class="el-tag">h2</span><span class="el-bracket">&gt;</span></div>
+                    <div class="el-line no-children" style="padding-left:56px"><span class="el-toggle"></span><span class="el-bracket">&lt;</span><span class="el-tag">input</span><span class="el-attr"> class</span><span class="el-eq">=</span><span class="el-str">"input"</span><span class="el-attr"> type</span><span class="el-eq">=</span><span class="el-str">"email"</span><span class="el-bracket">&gt;</span></div>
+                    <div class="el-line no-children" style="padding-left:56px"><span class="el-toggle"></span><span class="el-bracket">&lt;</span><span class="el-tag">button</span><span class="el-attr"> class</span><span class="el-eq">=</span><span class="el-str">"button"</span><span class="el-bracket">&gt;</span><span class="el-text">登 录</span><span class="el-bracket">&lt;/</span><span class="el-tag">button</span><span class="el-bracket">&gt;</span></div>
+                  </div>
+                  <div class="el-line no-children" style="padding-left:42px"><span class="el-toggle"></span><span class="el-bracket">&lt;/</span><span class="el-tag">div</span><span class="el-bracket">&gt;</span></div>
+                </div>
+                <div class="el-line no-children" style="padding-left:28px"><span class="el-toggle"></span><span class="el-bracket">&lt;/</span><span class="el-tag">div</span><span class="el-bracket">&gt;</span></div>
+              </div>
+              <div class="el-line no-children" style="padding-left:14px"><span class="el-toggle"></span><span class="el-bracket">&lt;/</span><span class="el-tag">body</span><span class="el-bracket">&gt;</span></div>
+            </div>
+            <div class="el-line no-children"><span class="el-toggle"></span><span class="el-bracket">&lt;/</span><span class="el-tag">html</span><span class="el-bracket">&gt;</span></div>
+          </div>
+
+          <!-- Styles pane -->
+          <div class="el-styles-pane">
+            <div class="el-styles-head">
+              <span class="esh-tab active">Styles</span>
+              <span class="esh-tab">Computed</span>
+              <span class="esh-tab">Layout</span>
+              <span class="esh-tab-state">:hov</span>
+              <span class="esh-tab-state">.cls</span>
+            </div>
+            <div class="el-rule">
+              <div class="el-selector">.login-card <span class="el-source">style.css:24</span></div>
+              <div class="el-rule-body">
+                <div class="el-prop"><span class="el-prop-key">padding</span><span class="el-prop-end">:</span><span class="el-prop-val num"> 28px 24px</span><span class="el-prop-end">;</span></div>
+                <div class="el-prop"><span class="el-prop-key">background</span><span class="el-prop-end">:</span><span class="el-prop-val color"><span class="el-color-chip" style="background:#ffffff"></span>#ffffff</span><span class="el-prop-end">;</span></div>
+                <div class="el-prop"><span class="el-prop-key">border-radius</span><span class="el-prop-end">:</span><span class="el-prop-val num"> 12px</span><span class="el-prop-end">;</span></div>
+                <div class="el-prop"><span class="el-prop-key">box-shadow</span><span class="el-prop-end">:</span><span class="el-prop-val"> 0 4px 20px rgba(0,0,0,.06)</span><span class="el-prop-end">;</span></div>
+              </div>
+            </div>
+            <div class="el-rule is-inherited">
+              <div class="el-selector">Inherited from div.page</div>
+              <div class="el-rule-body">
+                <div class="el-prop"><span class="el-prop-key">font-family</span><span class="el-prop-end">:</span><span class="el-prop-val"> 'Geist', sans-serif</span><span class="el-prop-end">;</span></div>
+                <div class="el-prop"><span class="el-prop-key">color</span><span class="el-prop-end">:</span><span class="el-prop-val color"><span class="el-color-chip" style="background:#1a1a22"></span>#1a1a22</span><span class="el-prop-end">;</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Box model strip -->
+        <div class="anatomy-box">
+          <span class="ab-title">Box Model</span>
+          <div class="box-model">
+            <div class="bm-margin">margin</div>
+            <div class="bm-border">border</div>
+            <div class="bm-padding">padding</div>
+            <div class="bm-content">280 × 144</div>
+          </div>
+          <div class="ab-side">
+            <div class="ab-row margin"><span class="ab-sw"></span><span class="ab-key">margin</span><span class="ab-val">24px</span></div>
+            <div class="ab-row border"><span class="ab-sw"></span><span class="ab-key">border</span><span class="ab-val">1px</span></div>
+            <div class="ab-row padding"><span class="ab-sw"></span><span class="ab-key">padding</span><span class="ab-val">28px 24px</span></div>
+            <div class="ab-row content"><span class="ab-sw"></span><span class="ab-key">content</span><span class="ab-val">280 × 144</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right: legend / steps -->
+      <div class="anatomy-legend">
+        <h3>三块怎么读</h3>
+        <p>从左到右、从上到下，每一块解决一个问题。点一下试试。</p>
+
+        <div class="anatomy-step is-active" data-zone="dom">
+          <div class="as-num">1</div>
+          <div class="as-body">
+            <div class="as-tag">DOM TREE · 左边</div>
+            <div class="as-title">这页是怎么搭的</div>
+            <p class="as-desc">嵌套的 <strong>HTML 标签树</strong>。每一块视觉都对应一个标签 —— <code style="font-family:'JetBrains Mono',monospace;font-size:11.5px;background:var(--bg-2);padding:1px 5px;border-radius:3px;">&lt;div&gt;</code> 是盒子、<code style="font-family:'JetBrains Mono',monospace;font-size:11.5px;background:var(--bg-2);padding:1px 5px;border-radius:3px;">&lt;button&gt;</code> 是按钮。点开折叠图标，像看 Figma 图层面板一样。</p>
+          </div>
+        </div>
+
+        <div class="anatomy-step" data-zone="styles">
+          <div class="as-num">2</div>
+          <div class="as-body">
+            <div class="as-tag">STYLES · 右边</div>
+            <div class="as-title">这块用了什么 CSS</div>
+            <p class="as-desc">选中左边某个标签 → 右边自动列出<strong>它身上所有的样式规则</strong>。颜色、字号、padding、border-radius —— 网页上你看到的每个像素都来自这里某条规则。</p>
+          </div>
+        </div>
+
+        <div class="anatomy-step" data-zone="box">
+          <div class="as-num">3</div>
+          <div class="as-body">
+            <div class="as-tag">BOX MODEL · 下边</div>
+            <div class="as-title">间距和尺寸长这样</div>
+            <p class="as-desc">一张套娃图：<strong>margin / border / padding / content</strong> 四层。颜色是固定的 —— 橙、黄、绿、蓝。Figma 里一个数字代表 spacing，浏览器里要分清是 margin 还是 padding，差别很大。</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="hint-strip" style="margin-top:32px;">
+      <span class="hint-tag">认住</span>这三块的位置永远不变。Chrome / Safari / Firefox / Edge —— 只是颜色和按钮位置略有不同，<strong>"DOM 树 + Styles + 盒模型"</strong> 这个三件套在所有浏览器里都长一样。学会一次，到哪都能用。
+    </div>
+  </div>
+</section>
+
+<!-- Section 2: DOM tree -->
+<section id="dom">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>02</strong> / DOM 树</div>
+        <h2 class="section-title">点哪一块，<br>就<span class="em">框出哪一块</span></h2>
+      </div>
+      <p class="section-sub">
+        DOM 树跟 Figma 的<strong>图层面板</strong>是一回事 —— 都是嵌套结构。区别只有一个：网页里它是 <span class="em">HTML 标签</span>，每个标签有名字（div / button / h2）。点 DOM 里的某一行，左边页面预览会自动框出对应的元素。
+      </p>
+    </div>
+
+    <div class="hint-strip">
+      <span class="hint-tag">玩法</span>点下面 DOM 树里的任意一行 —— 左边的登录卡片对应的那块就会被<strong>蓝色虚线框</strong>圈出来，同时这一行也会高亮成蓝底。这就是浏览器里"图层 ↔ 页面"的双向同步。
+    </div>
+
+    <div class="dom-stage" id="domStage">
+      <div class="ds-bar">
+        <span class="ds-tag">DOM ↔ 页面 · 双向同步</span>
+        <span class="ds-meta">已选中 · <strong id="dsSelected">.login-card</strong></span>
+      </div>
+
+      <div class="dom-pair">
+        <!-- Left: rendered preview -->
+        <div class="dom-preview">
+          <span class="dp-tip">— 浏览器里看到的页面</span>
+          <div class="dp-card" data-target="card">
+            <h4 data-target="h4">欢迎回来</h4>
+            <p data-target="p">登录后查看你的工作台</p>
+            <button class="dp-btn" data-target="btn">登 录</button>
+          </div>
+        </div>
+
+        <!-- Right: DOM tree -->
+        <div class="dom-tree" id="domTree">
+          <div class="el-line no-children"><span class="el-toggle"></span><span class="el-comment">// 一段真实 React 渲染后的 HTML</span></div>
+          <div class="el-line has-children" data-pick="card"><span class="el-toggle"></span><span class="el-bracket">&lt;</span><span class="el-tag">div</span><span class="el-attr"> class</span><span class="el-eq">=</span><span class="el-str">"login-card"</span><span class="el-bracket">&gt;</span></div>
+          <div class="el-children">
+            <div class="el-line no-children" style="padding-left:24px" data-pick="h4"><span class="el-toggle"></span><span class="el-bracket">&lt;</span><span class="el-tag">h4</span><span class="el-attr"> class</span><span class="el-eq">=</span><span class="el-str">"title"</span><span class="el-bracket">&gt;</span><span class="el-text">欢迎回来</span><span class="el-bracket">&lt;/</span><span class="el-tag">h4</span><span class="el-bracket">&gt;</span></div>
+            <div class="el-line no-children" style="padding-left:24px" data-pick="p"><span class="el-toggle"></span><span class="el-bracket">&lt;</span><span class="el-tag">p</span><span class="el-attr"> class</span><span class="el-eq">=</span><span class="el-str">"sub"</span><span class="el-bracket">&gt;</span><span class="el-text">登录后查看你的工作台</span><span class="el-bracket">&lt;/</span><span class="el-tag">p</span><span class="el-bracket">&gt;</span></div>
+            <div class="el-line no-children" style="padding-left:24px" data-pick="btn"><span class="el-toggle"></span><span class="el-bracket">&lt;</span><span class="el-tag">button</span><span class="el-attr"> class</span><span class="el-eq">=</span><span class="el-str">"dp-btn"</span><span class="el-bracket">&gt;</span><span class="el-text">登 录</span><span class="el-bracket">&lt;/</span><span class="el-tag">button</span><span class="el-bracket">&gt;</span></div>
+          </div>
+          <div class="el-line no-children"><span class="el-toggle"></span><span class="el-bracket">&lt;/</span><span class="el-tag">div</span><span class="el-bracket">&gt;</span></div>
+
+          <div class="el-line no-children" style="margin-top:14px"><span class="el-toggle"></span><span class="el-comment">// 注意：缩进 = 嵌套层级</span></div>
+          <div class="el-line no-children"><span class="el-toggle"></span><span class="el-comment">// 一行越靠里 → 它越是"被装在前面那个里"</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="hint-strip" style="margin-top:24px;">
+      <span class="hint-tag">设计师视角</span>DOM 树 ≈ Figma 图层面板。<strong>缩进越深的元素，相当于在 Figma 里被嵌套在更里面的 frame</strong>。最顶层那个 <code style="font-family:'JetBrains Mono',monospace;font-size:12px;background:var(--bg-2);padding:1px 6px;border-radius:3px;">&lt;html&gt;</code> 就是 Figma 里的 page，往下逐层是 frame、组件、元素。
+    </div>
+  </div>
+</section>
+
+<!-- Section 3: Game · Reverse style detective -->
+<section id="game">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>03</strong> / 反向查样式</div>
+        <h2 class="section-title">5 道题，<br>把样式<span class="em">从页面里挖出来</span></h2>
+      </div>
+      <p class="section-sub">
+        这一段是这一篇的<strong>灵魂</strong>。<span class="em">5 道题</span>，每道给你一个登录卡片 + 一份 DevTools 截图，你要在 Styles 面板里找到对应的样式 —— 比如"按钮的 background-color 是哪个？"答对了你就会用 DevTools 反查任何一个网页的设计了。
+      </p>
+    </div>
+
+    <div class="hint-strip">
+      <span class="hint-tag">玩法</span>看上半屏的卡片 → 看右边的 DOM 和 Styles 面板 → 4 个选项里挑出正确答案。每道题都附"侦探提示"，点错给你看正确的那一行在哪。
+    </div>
+
+    <div class="game-stage" id="gameStage">
+      <div class="game-bar">
+        <div class="gb-left">
+          <span class="gb-tag">侦探小屋</span>
+          <h3 class="gb-title" id="gameTitle">Q1 · 找按钮的 background-color</h3>
+        </div>
+        <div class="gb-progress">
+          <span id="gbCounter">1 / 5</span>
+          <div class="gb-dots" id="gbDots">
+            <span class="gb-dot current"></span>
+            <span class="gb-dot"></span>
+            <span class="gb-dot"></span>
+            <span class="gb-dot"></span>
+            <span class="gb-dot"></span>
+          </div>
+        </div>
+      </div>
+
+      <div class="game-stage-body">
+        <div id="gameQuestion">
+          <!-- Question content injected by JS -->
+        </div>
+
+        <div class="game-feedback" id="gameFeedback">
+          <span class="gf-tag" id="gfTag">提示</span>
+          <span id="gfText"></span>
+        </div>
+
+        <div class="game-controls">
+          <span class="gc-meta" id="gcMeta">看 Styles 面板，挑一个答案</span>
+          <button class="game-btn" id="gameNext" disabled>下一题 <span class="arr">→</span></button>
+        </div>
+      </div>
+
+      <div class="game-end" id="gameEnd">
+        <div class="ge-emoji">★ ★ ★</div>
+        <h3>你刚学会了一种<br><span class="em">侦探</span>手艺</h3>
+        <p>从今往后看到任何网页 —— 不再只是"看"，而是 <strong>F12 → 点元素 → 看 Styles</strong>。看竞品按钮颜色用了什么、间距设了多少、字号是几号 —— 这些都不再需要问开发，自己就能查。</p>
+        <div class="ge-stats">
+          <div class="ge-stat">
+            <div class="ge-num" id="geScore">5</div>
+            <div class="ge-cap">道题答对</div>
+          </div>
+          <div class="ge-stat">
+            <div class="ge-num" id="geMistakes">0</div>
+            <div class="ge-cap">次试错</div>
+          </div>
+        </div>
+        <p>下一篇 <strong>H2 · Console 报错怎么读</strong> —— 红色的"报错墙"看上去吓人，其实只有一行是关键。</p>
+        <button class="game-btn ghost" id="gameRestart">重玩一次 ↺</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Section 4: Box model -->
+<section id="box">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>04</strong> / 盒模型</div>
+        <h2 class="section-title">一个盒子<br><span class="em">四层套娃</span></h2>
+      </div>
+      <p class="section-sub">
+        DevTools 最下面那张<strong>套娃图</strong>叫盒模型 —— 任何一个 HTML 元素都长这样：从外到里 <span class="em">margin → border → padding → content</span>。颜色是 Chrome 固定的，记住对应关系，以后看到立刻知道哪是哪。
+      </p>
+    </div>
+
+    <div class="hint-strip">
+      <span class="hint-tag">互动</span>下面是放大版的盒模型。<strong>拖动右边的 padding 滑块</strong> —— 你会看到绿色的那一层在变厚 / 变薄，按钮被"撑大或缩小"。这就是 padding 在做的事：<strong>从内容往外推</strong>。
+    </div>
+
+    <div class="box-stage" id="boxStage">
+      <div class="bs-head">
+        <div>
+          <div class="bs-tag">BOX MODEL · 实时调</div>
+          <h4>拖滑块 → 看四层怎么变</h4>
+        </div>
+        <div class="bs-meta">总宽度 = margin + border + padding + content</div>
+      </div>
+
+      <div class="box-stage-body">
+        <div class="bs-vis">
+          <div class="box-large" id="boxLarge">
+            <div class="bl-margin">margin <span style="float:right;color:rgba(74,42,0,0.7)" id="blmm">24</span></div>
+            <div class="bl-border">border <span style="float:right;color:rgba(74,53,0,0.7)" id="blbb">2</span></div>
+            <div class="bl-padding">padding <span style="float:right;color:rgba(31,58,19,0.7)" id="blpp">16</span></div>
+            <div class="bl-content" id="blContent">120 × 100</div>
+          </div>
+        </div>
+
+        <div class="bs-controls">
+          <h5>四层数值</h5>
+          <div class="bs-cap">slide to live-preview</div>
+
+          <div class="bs-row margin">
+            <span class="bs-sw"></span>
+            <span class="bs-key">margin</span>
+            <input type="range" min="0" max="60" value="24" id="rangeMargin">
+            <span class="bs-val"><span id="valMargin">24</span>px</span>
+          </div>
+          <div class="bs-row border">
+            <span class="bs-sw"></span>
+            <span class="bs-key">border</span>
+            <input type="range" min="0" max="20" value="2" id="rangeBorder">
+            <span class="bs-val"><span id="valBorder">2</span>px</span>
+          </div>
+          <div class="bs-row padding">
+            <span class="bs-sw"></span>
+            <span class="bs-key">padding</span>
+            <input type="range" min="0" max="60" value="16" id="rangePadding">
+            <span class="bs-val"><span id="valPadding">16</span>px</span>
+          </div>
+          <div class="bs-row content">
+            <span class="bs-sw"></span>
+            <span class="bs-key">content</span>
+            <span class="bs-val" style="margin-left:auto"><span id="valContent">120</span>×100</span>
+          </div>
+
+          <div class="bs-summary">
+            <strong>总宽度</strong> = <span class="bs-formula">margin × 2 + border × 2 + padding × 2 + content</span><br>
+            = <span id="formula">24 × 2 + 2 × 2 + 16 × 2 + 120</span><br>
+            = <strong><span id="totalWidth">204</span>px</strong>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="hint-strip" style="margin-top:24px;">
+      <span class="hint-tag">设计师常踩坑</span>"<strong>这两个块为什么挨这么近？</strong>" —— 一定要分清是<strong>外间距 margin</strong> 还是<strong>内间距 padding</strong>。同样是"间隔 16px"，写成 margin 是<strong>跟外面别的元素的距离</strong>，写成 padding 是<strong>自己内部内容到边的距离</strong>，效果完全不同。
+    </div>
+  </div>
+</section>
+
+<!-- Section 5: Five DevTools skills -->
+<section id="skills">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>05</strong> / 5 个手艺</div>
+        <h2 class="section-title">设计师最该<br>学会的<span class="em">5 招</span></h2>
+      </div>
+      <p class="section-sub">
+        会读三块还不够。<span class="em">这 5 招</span>是日常你打开任何网页都会用到的 —— 从最基础的"右键检查"到"在 Elements 里直接改 CSS 看效果"，每一招都能让你跟开发的对话变得更有效。配快捷键 + 截图。
+      </p>
+    </div>
+
+    <div class="skill-grid">
+
+      <!-- Skill 1: Right-click inspect -->
+      <div class="skill-card">
+        <div class="sk-num"><strong>01</strong> · 入门第一招</div>
+        <h4>右键 → 检查</h4>
+        <div class="sk-en">right-click · inspect</div>
+        <p>看到任何感兴趣的元素 —— 按钮、文字、图标、间距 —— <strong>右键 → 检查（Inspect）</strong>。DevTools 自动打开，DOM 树自动跳到那一行，Styles 面板自动列出它的样式。这一招你一辈子用到底。</p>
+        <div class="sk-shortcuts">
+          <span class="sks-platform">Mac</span>
+          <span class="sk-shortcut"><span class="sks-key">⌘</span><span class="sks-plus">+</span><span class="sks-key">⌥</span><span class="sks-plus">+</span><span class="sks-key">I</span></span>
+          <span class="sks-platform">Win</span>
+          <span class="sk-shortcut"><span class="sks-key">F12</span></span>
+          <span class="sk-shortcut"><span class="sks-key">Ctrl</span><span class="sks-plus">+</span><span class="sks-key">Shift</span><span class="sks-plus">+</span><span class="sks-key">I</span></span>
+        </div>
+        <div class="sk-mock">
+          <div class="skm-tag">— 右键菜单</div>
+          <div style="color:var(--dt-text);">▸ 复制</div>
+          <div style="color:var(--dt-text);">▸ 粘贴</div>
+          <div style="color:var(--dt-text);">▸ 翻译</div>
+          <div style="color:#ce9178; background:rgba(94,158,255,0.16); padding:2px 6px; margin:4px -4px; border-radius:2px;">▸ <strong>检查</strong> · Inspect</div>
+        </div>
+      </div>
+
+      <!-- Skill 2: Live edit CSS -->
+      <div class="skill-card">
+        <div class="sk-num"><strong>02</strong> · 改完立刻看</div>
+        <h4>直接改 CSS<br>当场看效果</h4>
+        <div class="sk-en">live-edit · in browser</div>
+        <p>在 Styles 面板里 —— <strong>任何样式都能直接点进去改</strong>。改完按 Enter，浏览器立刻显示新效果。颜色不喜欢？改一下试试。padding 不够大？拖一拖。这是设计师跟开发对话的<strong>最强语言</strong>。</p>
+        <div class="hint-strip" style="margin:8px 0 12px; padding:8px 12px; font-size:12px;">
+          <span class="hint-tag">注意</span>这里的修改<strong>只在你的浏览器里临时生效</strong>，刷新页面就没了。要永久生效，要让开发改源代码 —— 但你已经知道"改成什么样最好看"了，沟通就赢了一半。
+        </div>
+        <div class="sk-mock">
+          <div class="skm-tag">— Styles 面板，点进去改</div>
+          <div class="skm-line">.button {</div>
+          <div class="skm-line" style="padding-left:14px"><span class="skm-key">background</span>:<span class="skm-val skm-edit"> #ff4d2e</span>;</div>
+          <div class="skm-line" style="padding-left:14px"><span class="skm-key">padding</span>:<span class="skm-num skm-edit"> 12px 20px</span>;</div>
+          <div class="skm-line">}</div>
+        </div>
+      </div>
+
+      <!-- Skill 3: Computed panel -->
+      <div class="skill-card">
+        <div class="sk-num"><strong>03</strong> · 看真值</div>
+        <h4>Computed 面板<br>看最终的样式</h4>
+        <div class="sk-en">computed · final values</div>
+        <p>Styles 面板列的是<strong>"写了什么"</strong>。但同一个元素往往被好几条规则同时影响 —— 哪条赢了？最终生效的字号、间距、颜色到底是多少？切到 <strong>Computed 面板</strong>，浏览器算好了直接告诉你。设计师对真实数值有疑问，先看这。</p>
+        <div class="sk-computed">
+          <div class="skc-head">— Computed · 最终值</div>
+          <table>
+            <tr><td>font-size</td><td>16px <span class="skc-trace">← style.css:24</span></td></tr>
+            <tr><td>line-height</td><td>24px <span class="skc-trace">← inherited</span></td></tr>
+            <tr><td>color</td><td>rgb(26, 26, 34)</td></tr>
+            <tr><td>padding</td><td>12px 20px</td></tr>
+            <tr><td>background-color</td><td>rgb(255, 77, 46)</td></tr>
+          </table>
+        </div>
+      </div>
+
+      <!-- Skill 4: Element selector arrow -->
+      <div class="skill-card">
+        <div class="sk-num"><strong>04</strong> · 反过来选</div>
+        <h4>用箭头按钮<br>从页面找 DOM</h4>
+        <div class="sk-en">⌖ pick element</div>
+        <p>左上角那个<strong>箭头图标</strong>（⌖）是"页面 → DOM"的反向通道。点亮它 → 鼠标移到页面任何位置 → 浏览器自动框出来 → 一点击 → DOM 树跳到对应位置。<strong>不用一层层展开找</strong>，直接精准定位。</p>
+        <div class="sk-shortcuts">
+          <span class="sks-platform">Mac</span>
+          <span class="sk-shortcut"><span class="sks-key">⌘</span><span class="sks-plus">+</span><span class="sks-key">⇧</span><span class="sks-plus">+</span><span class="sks-key">C</span></span>
+          <span class="sks-platform">Win</span>
+          <span class="sk-shortcut"><span class="sks-key">Ctrl</span><span class="sks-plus">+</span><span class="sks-key">Shift</span><span class="sks-plus">+</span><span class="sks-key">C</span></span>
+        </div>
+        <div class="sk-arrow-mock">
+          <div class="skam-icon">⌖</div>
+          <div>
+            <div style="color:white">点亮 → 鼠标移到页面</div>
+            <div style="color:var(--dt-mute); font-size:10px; margin-top:2px">→ 浏览器自动框出元素</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Skill 5: Device toolbar -->
+      <div class="skill-card lg">
+        <div class="sk-num"><strong>05</strong> · 切尺寸 / 切主题</div>
+        <h4>移动端 + 深色模式 <span style="font-weight:500; color:var(--ink-mute); font-size:0.7em">· 一键切换</span></h4>
+        <div class="sk-en">device toolbar · responsive · dark mode</div>
+        <p>设计稿里的"移动端版本""深色模式版本"在浏览器里也是<strong>一键切换</strong>看效果。点 DevTools 左上角的"手机+电脑"图标 → 选 iPhone / iPad / 自定义尺寸。再到 Rendering 面板里，找 <code>prefers-color-scheme</code>，切到 dark —— 整页立刻进入深色模式。</p>
+        <div class="sk-shortcuts">
+          <span class="sks-platform">Mac</span>
+          <span class="sk-shortcut"><span class="sks-key">⌘</span><span class="sks-plus">+</span><span class="sks-key">⇧</span><span class="sks-plus">+</span><span class="sks-key">M</span></span>
+          <span class="sks-platform">Win</span>
+          <span class="sk-shortcut"><span class="sks-key">Ctrl</span><span class="sks-plus">+</span><span class="sks-key">Shift</span><span class="sks-plus">+</span><span class="sks-key">M</span></span>
+        </div>
+        <div class="sk-device">
+          <span class="skd-pill is-on">▭ Device</span>
+          <span class="skd-pill">iPhone 14 Pro</span>
+          <span class="skd-pill">iPad Air</span>
+          <span class="skd-pill">Responsive</span>
+          <span class="skd-size">390 × 844 · 100%</span>
+        </div>
+        <div class="hint-strip" style="margin-top:14px; padding:10px 14px; font-size:12.5px;">
+          <span class="hint-tag">设计师常用</span>把网页切到 iPhone 尺寸 → 走查移动端排版有没有挤、字会不会换行 —— 不用真的拿手机测。这一招对响应式 review 提速 10 倍。
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- Section 6: Cheatsheet -->
+<section id="cheat">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>06</strong> / 速查卡</div>
+        <h2 class="section-title">三张卡片<br><span class="em">塞进口袋</span></h2>
+      </div>
+      <p class="section-sub">
+        所有的精华浓缩成三张卡。下次打开 DevTools 不知道从哪看起 —— 看这三张就够了。
+      </p>
+    </div>
+
+    <div class="cheat-grid">
+      <div class="cheat-card panels">
+        <div class="cc-num">PART 01 · 三块</div>
+        <h4>Elements 三件套</h4>
+        <div class="cc-sub">3 zones to read</div>
+        <dl>
+          <dt>左 · DOM 树</dt>
+          <dd>HTML 嵌套结构 —— 跟 Figma <strong>图层面板</strong>是一回事。每一行对应页面上一块视觉。</dd>
+          <dt>右 · Styles</dt>
+          <dd>选中元素的<strong>所有 CSS</strong>。能直接点进去改、立刻看效果。</dd>
+          <dt>下 · 盒模型</dt>
+          <dd>四层套娃图：<strong>margin / border / padding / content</strong>。看间距和尺寸全在这。</dd>
+        </dl>
+      </div>
+
+      <div class="cheat-card box">
+        <div class="cc-num">PART 02 · 颜色</div>
+        <h4>盒模型四色</h4>
+        <div class="cc-sub">box model palette</div>
+        <dl>
+          <dt><span class="cc-sw margin"></span>橙 · MARGIN</dt>
+          <dd>外间距 —— <strong>跟别人保持距离</strong>。会撑大占地面积。</dd>
+          <dt><span class="cc-sw border"></span>黄 · BORDER</dt>
+          <dd>边框线 —— 实际画在屏幕上的那条线。</dd>
+          <dt><span class="cc-sw padding"></span>绿 · PADDING</dt>
+          <dd>内间距 —— <strong>自己内部内容到边的距离</strong>。背景色会延伸到这里。</dd>
+          <dt><span class="cc-sw content"></span>蓝 · CONTENT</dt>
+          <dd>内容本身。文字、图片、子元素就装在这里面。</dd>
+        </dl>
+      </div>
+
+      <div class="cheat-card steps">
+        <div class="cc-num">PART 03 · 流程</div>
+        <h4>看任何网页 3 步法</h4>
+        <div class="cc-sub">3 steps · any page</div>
+        <dl>
+          <dt>STEP 1 · 打开</dt>
+          <dd>右键你感兴趣的元素 → <strong>检查</strong>（或按 <code>F12</code> / <code>⌘+⌥+I</code>）。</dd>
+          <dt>STEP 2 · 选中</dt>
+          <dd>点 ⌖ 箭头 → 鼠标移到元素上 → 一键定位 DOM 那一行。</dd>
+          <dt>STEP 3 · 读样式</dt>
+          <dd>右边 <strong>Styles</strong> 看写法 / <strong>Computed</strong> 看真值 / 下面盒模型看间距。</dd>
+        </dl>
+      </div>
+    </div>
+
+    <a href="h2-console-error-figma.html" class="next-post">
+      <div>
+        <div class="np-tag">下一篇 · NEXT · H2 · 浏览器调试</div>
+        <h4>红色不是天塌了，<br>是浏览器在<span class="em">指路</span></h4>
+        <p>Elements 是看"页面长啥样"。但 AI 给你写完代码跑起来报错 —— 是另一个面板：<strong>Console</strong>。30 行红字看上去吓人，其实只有一两行是真错。下一站教你只看那一两行。</p>
+      </div>
+      <span class="np-cta">继续阅读 <span class="arr">→</span></span>
+    </a>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div class="byline">
+      <img class="avatar" src="author.jpg" alt="范米花儿">
+      <div class="byline-meta">
+        <div class="byline-label"><span class="dot"></span>作者 · WRITTEN BY</div>
+        <h3 class="byline-name">嗨，我是 <span class="em">范米花儿</span></h3>
+        <p class="byline-tag">一份给设计师的代码入门 ——<br>不需要会写，知道大概怎么回事，跟前端 / AI 沟通就顺多了。</p>
+        <div class="byline-contact">
+          <span class="contact-label">微信</span>
+          <span class="contact-id">vanvan_0422</span>
+          <span class="contact-hint">想看什么主题，加我聊</span>
+        </div>
+      </div>
+    </div>
+    <div class="footer-meta">
+      做于 <span class="mono">2026</span> · 用 <span class="heart">●</span> 写给 <span class="mono">DESIGNERS &amp; DEVELOPERS</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+// ========= §01 Anatomy: clicking steps highlights matching zone =========
+(function () {
+  const dt = document.getElementById('anatomyDt');
+  if (!dt) return;
+  const steps = document.querySelectorAll('.anatomy-step');
+
+  function setActive(zone) {
+    dt.dataset.zone = zone;
+    steps.forEach(s => s.classList.toggle('is-active', s.dataset.zone === zone));
+  }
+
+  steps.forEach(step => {
+    step.addEventListener('click', () => setActive(step.dataset.zone));
+    step.addEventListener('mouseenter', () => setActive(step.dataset.zone));
+  });
+
+  // Default
+  setTimeout(() => setActive('dom'), 400);
+})();
+
+// ========= §02 DOM tree: click row → highlight preview element =========
+(function () {
+  const stage = document.getElementById('domStage');
+  if (!stage) return;
+  const tree = stage.querySelector('#domTree');
+  const rows = tree.querySelectorAll('[data-pick]');
+  const previews = stage.querySelectorAll('[data-target]');
+  const selectedLabel = document.getElementById('dsSelected');
+
+  const labels = {
+    card: '.login-card',
+    h4:   'h4.title',
+    p:    'p.sub',
+    btn:  'button.dp-btn'
+  };
+
+  function select(key) {
+    rows.forEach(r => r.classList.toggle('is-selected', r.dataset.pick === key));
+    previews.forEach(p => p.classList.toggle('is-selected', p.dataset.target === key));
+    if (selectedLabel) selectedLabel.textContent = labels[key] || '—';
+  }
+
+  // bidirectional click
+  rows.forEach(r => r.addEventListener('click', () => select(r.dataset.pick)));
+  previews.forEach(p => {
+    p.addEventListener('click', e => {
+      e.stopPropagation();
+      select(p.dataset.target);
+    });
+  });
+
+  // default
+  select('card');
+})();
+
+// ========= §03 Game · Reverse Style Detective =========
+(function () {
+  const stage = document.getElementById('gameStage');
+  if (!stage) return;
+
+  // Common login card preview HTML
+  // We expose hover state via a wrapper class
+  function previewHTML(state) {
+    const hoverClass = state === 'hover' ? 'is-hover' : '';
+    return `
+<div class="game-preview">
+  <span class="gp-tag">— 浏览器渲染</span>
+  <div class="login-card" id="gp-card">
+    <h2 class="lc-title" id="gp-title">登 录</h2>
+    <p class="lc-sub" id="gp-sub">输入邮箱开始</p>
+    <input class="lc-input" id="gp-input" type="email" placeholder="you@example.com" disabled>
+    <button class="lc-btn ${hoverClass}" id="gp-btn">登 录</button>
+  </div>
+  <div class="gp-inspector" id="gp-inspector"></div>
+</div>`;
+  }
+
+  // DevTools mini panel — DOM tree + Styles (and optional box model)
+  // showHover: whether the :hover toggle is on
+  // showBox: whether to render the box model panel (Q3)
+  function devtoolsHTML(opts) {
+    const showHover = !!opts.showHover;
+    const showBox = !!opts.showBox;
+
+    return `
+<div class="game-dt">
+  <div class="dt-tabs">
+    <span class="dt-tab active">Elements</span>
+    <span class="dt-tab">Console</span>
+    <span class="dt-tab">Sources</span>
+  </div>
+  <div class="dt-toolbar">
+    <span class="dt-icon-btn">⌖</span>
+    <input class="dt-filter" placeholder="Filter" disabled>
+    <span class="dt-pill">.login-card</span>
+  </div>
+  <div class="gdt-pane">
+    <div class="gdt-tree">
+      <div class="el-line has-children"><span class="el-toggle"></span><span class="el-bracket">&lt;</span><span class="el-tag">div</span><span class="el-attr"> class</span><span class="el-eq">=</span><span class="el-str">"login-card"</span><span class="el-bracket">&gt;</span></div>
+      <div class="el-children">
+        <div class="el-line no-children" style="padding-left:18px"><span class="el-toggle"></span><span class="el-bracket">&lt;</span><span class="el-tag">h2</span><span class="el-attr"> class</span><span class="el-eq">=</span><span class="el-str">"lc-title"</span><span class="el-bracket">&gt;</span><span class="el-text">登 录</span><span class="el-bracket">&lt;/</span><span class="el-tag">h2</span><span class="el-bracket">&gt;</span></div>
+        <div class="el-line no-children" style="padding-left:18px"><span class="el-toggle"></span><span class="el-bracket">&lt;</span><span class="el-tag">p</span><span class="el-attr"> class</span><span class="el-eq">=</span><span class="el-str">"lc-sub"</span><span class="el-bracket">&gt;</span><span class="el-text">输入邮箱开始</span><span class="el-bracket">&lt;/</span><span class="el-tag">p</span><span class="el-bracket">&gt;</span></div>
+        <div class="el-line no-children" style="padding-left:18px"><span class="el-toggle"></span><span class="el-bracket">&lt;</span><span class="el-tag">input</span><span class="el-attr"> class</span><span class="el-eq">=</span><span class="el-str">"lc-input"</span><span class="el-bracket">&gt;</span></div>
+        <div class="el-line no-children is-selected" style="padding-left:18px"><span class="el-toggle"></span><span class="el-bracket">&lt;</span><span class="el-tag">button</span><span class="el-attr"> class</span><span class="el-eq">=</span><span class="el-str">"lc-btn"</span><span class="el-bracket">&gt;</span><span class="el-text">登 录</span><span class="el-bracket">&lt;/</span><span class="el-tag">button</span><span class="el-bracket">&gt;</span></div>
+      </div>
+      <div class="el-line no-children"><span class="el-toggle"></span><span class="el-bracket">&lt;/</span><span class="el-tag">div</span><span class="el-bracket">&gt;</span></div>
+    </div>
+    <div class="gdt-styles" id="gdtStyles">
+      <div class="el-styles-head">
+        <span class="esh-tab active">Styles</span>
+        <span class="esh-tab">Computed</span>
+        <span class="esh-tab-state ${showHover ? 'is-on' : ''}" id="hoverToggle">:hov</span>
+      </div>
+
+      <div class="gdt-state-bar ${showHover ? 'is-on' : ''}">
+        <span class="gsb-toggle ${showHover ? 'is-on' : ''}" id="hoverPill">:hover</span>
+        <span class="gsb-pseudo">${showHover ? '✓ ON · 模拟悬停' : 'OFF · 静态状态'}</span>
+      </div>
+
+      <div class="el-rule">
+        <div class="el-selector">.lc-title <span class="el-source">style.css:14</span></div>
+        <div class="el-rule-body">
+          <div class="el-prop"><span class="el-prop-key">font-family</span><span class="el-prop-end">:</span><span class="el-prop-val"> 'Noto Serif SC', serif</span><span class="el-prop-end">;</span></div>
+          <div class="el-prop"><span class="el-prop-key">font-size</span><span class="el-prop-end">:</span><span class="el-prop-val num"> 24px</span><span class="el-prop-end">;</span></div>
+          <div class="el-prop"><span class="el-prop-key">font-weight</span><span class="el-prop-end">:</span><span class="el-prop-val num"> 700</span><span class="el-prop-end">;</span></div>
+          <div class="el-prop"><span class="el-prop-key">color</span><span class="el-prop-end">:</span><span class="el-prop-val color"><span class="el-color-chip" style="background:#1a1a22"></span>#1a1a22</span><span class="el-prop-end">;</span></div>
+        </div>
+      </div>
+
+      <div class="el-rule">
+        <div class="el-selector">.lc-sub <span class="el-source">style.css:24</span></div>
+        <div class="el-rule-body">
+          <div class="el-prop"><span class="el-prop-key">font-size</span><span class="el-prop-end">:</span><span class="el-prop-val num"> 12px</span><span class="el-prop-end">;</span></div>
+          <div class="el-prop"><span class="el-prop-key">color</span><span class="el-prop-end">:</span><span class="el-prop-val color"><span class="el-color-chip" style="background:#8a8a92"></span>#8a8a92</span><span class="el-prop-end">;</span></div>
+        </div>
+      </div>
+
+      <div class="el-rule">
+        <div class="el-selector">.lc-input <span class="el-source">style.css:30</span></div>
+        <div class="el-rule-body">
+          <div class="el-prop"><span class="el-prop-key">padding</span><span class="el-prop-end">:</span><span class="el-prop-val num"> 10px 12px</span><span class="el-prop-end">;</span></div>
+          <div class="el-prop"><span class="el-prop-key">border</span><span class="el-prop-end">:</span><span class="el-prop-val"> 1px solid #d5cdba</span><span class="el-prop-end">;</span></div>
+          <div class="el-prop"><span class="el-prop-key">border-radius</span><span class="el-prop-end">:</span><span class="el-prop-val num"> 6px</span><span class="el-prop-end">;</span></div>
+          <div class="el-prop"><span class="el-prop-key">background</span><span class="el-prop-end">:</span><span class="el-prop-val color"><span class="el-color-chip" style="background:#faf7f0"></span>#faf7f0</span><span class="el-prop-end">;</span></div>
+        </div>
+      </div>
+
+      <div class="el-rule">
+        <div class="el-selector">.lc-btn <span class="el-source">style.css:42</span></div>
+        <div class="el-rule-body">
+          <div class="el-prop"><span class="el-prop-key">padding</span><span class="el-prop-end">:</span><span class="el-prop-val num"> 12px 20px</span><span class="el-prop-end">;</span></div>
+          <div class="el-prop"><span class="el-prop-key">background</span><span class="el-prop-end">:</span><span class="el-prop-val color"><span class="el-color-chip" style="background:#ff4d2e"></span>#ff4d2e</span><span class="el-prop-end">;</span></div>
+          <div class="el-prop"><span class="el-prop-key">color</span><span class="el-prop-end">:</span><span class="el-prop-val color"><span class="el-color-chip" style="background:#ffffff"></span>#ffffff</span><span class="el-prop-end">;</span></div>
+          <div class="el-prop"><span class="el-prop-key">border-radius</span><span class="el-prop-end">:</span><span class="el-prop-val num"> 6px</span><span class="el-prop-end">;</span></div>
+          <div class="el-prop"><span class="el-prop-key">font-size</span><span class="el-prop-end">:</span><span class="el-prop-val num"> 13px</span><span class="el-prop-end">;</span></div>
+        </div>
+      </div>
+
+      ${showHover ? `
+      <div class="el-rule is-pseudo">
+        <div class="el-selector">.lc-btn:hover <span class="el-source">style.css:54</span></div>
+        <div class="el-rule-body">
+          <div class="el-prop"><span class="el-prop-key">background</span><span class="el-prop-end">:</span><span class="el-prop-val color"><span class="el-color-chip" style="background:#d63a1f"></span>#d63a1f</span><span class="el-prop-end">;</span></div>
+        </div>
+      </div>
+      ` : ''}
+    </div>
+  </div>
+
+  ${showBox ? `
+  <div class="gdt-box show">
+    <div class="gb-title">— Box Model · .lc-btn</div>
+    <div class="gbox-mini">
+      <div class="gbm-margin">m · 0</div>
+      <div class="gbm-border">b · 0</div>
+      <div class="gbm-padding">p · 12 / 20</div>
+      <div class="gbm-content">content</div>
+    </div>
+  </div>
+  ` : ''}
+</div>`;
+  }
+
+  const QUESTIONS = [
+    {
+      title: 'Q1 · 找按钮的 background-color',
+      context: '看上半屏的登录卡片 —— 那个橙色的"登 录"按钮。在右边 DevTools 的 Styles 面板里，找到 <code>.lc-btn</code> 这个 class 的规则，它的 <strong>background-color</strong> 是什么颜色？',
+      preview: 'static',
+      showHover: false,
+      showBox: false,
+      choices: [
+        { id: 'a', text: '#ff4d2e（橙色）', correct: true },
+        { id: 'b', text: '#1a1a22（黑色）' },
+        { id: 'c', text: '#faf7f0（米白）' },
+        { id: 'd', text: '#d5cdba（线灰）' }
+      ],
+      good: '<strong>对！</strong> 在 Styles 面板里 <code>.lc-btn</code> 这一条规则里，<code>background</code> 后面就写着 <code>#ff4d2e</code> —— 边上还配着一个橙色的小色块，浏览器自动帮你预览了。<strong>这就是查任何网页颜色的基本招</strong>。',
+      bad: '看 Styles 面板里 <code>.lc-btn</code> 那条规则。<strong>background</strong> 这一行 —— 它有个小色块，色块旁边的颜色码就是答案。'
+    },
+    {
+      title: 'Q2 · 找标题的 font-size',
+      context: '"登 录"两个字看上去比正文大不少。它的 <strong>font-size</strong>（字号）是多少？提示：标题元素的 class 叫 <code>.lc-title</code>。',
+      preview: 'static',
+      showHover: false,
+      showBox: false,
+      choices: [
+        { id: 'a', text: '12px' },
+        { id: 'b', text: '16px' },
+        { id: 'c', text: '24px', correct: true },
+        { id: 'd', text: '32px' }
+      ],
+      good: '<strong>正中。</strong> <code>.lc-title</code> 规则里 <code>font-size: 24px</code> —— 这就是它的字号。<strong>设计稿里你写"24px 标题"，浏览器里 font-size 就是 24px</strong>。一一对应。',
+      bad: '再看看。在 <code>.lc-title</code> 规则里找 <strong>font-size</strong> 那一行 —— 它后面跟的那个数字带 px 单位的，就是答案。'
+    },
+    {
+      title: 'Q3 · 用盒模型读 padding',
+      context: '按钮看上去四周都有点空隙 —— 那是 <strong>padding</strong>（内间距）。这次<strong>顺便看下面的盒模型图</strong>：四层套娃里，<span style="background:rgba(182,207,148,0.4); padding:0 4px; border-radius:2px;">绿色那一层</span>就是 padding。请问这个按钮的 padding 是多少？',
+      preview: 'static',
+      showHover: false,
+      showBox: true,
+      choices: [
+        { id: 'a', text: '12px 20px', correct: true },
+        { id: 'b', text: '20px 12px' },
+        { id: 'c', text: '12px（四边一样）' },
+        { id: 'd', text: '0px（按钮没有 padding）' }
+      ],
+      good: '<strong>厉害。</strong> <code>padding: 12px 20px</code> —— 第一个数字是<strong>上下</strong>（12px），第二个是<strong>左右</strong>（20px）。下面的盒模型图也写着 <code>p · 12 / 20</code>。<strong>读盒模型时记住顺序：上下先、左右后</strong>。',
+      bad: '再看看。<code>.lc-btn</code> 规则里有 <code>padding: 12px 20px</code> —— 注意 padding 写两个数字时<strong>第一个是上下、第二个是左右</strong>。下面盒模型绿色那一层也提示了。'
+    },
+    {
+      title: 'Q4 · 找输入框的 border-radius',
+      context: '输入框（邮箱输入框）边角不是直角，是<strong>圆的</strong>。这个圆角的程度由 <strong>border-radius</strong> 决定。它的 class 是 <code>.lc-input</code>。圆角值是多少？',
+      preview: 'static',
+      showHover: false,
+      showBox: false,
+      choices: [
+        { id: 'a', text: '0px（其实是直角）' },
+        { id: 'b', text: '4px' },
+        { id: 'c', text: '6px', correct: true },
+        { id: 'd', text: '12px' }
+      ],
+      good: '<strong>对。</strong> <code>.lc-input</code> 规则里 <code>border-radius: 6px</code>。<strong>border-radius 的值越大，圆角越圆</strong> —— 0 是直角、6 是轻微圆角、12 已经很圆了、999 就完全是胶囊形。设计师讨论"圆角多少"，单位都是这个。',
+      bad: '看 <code>.lc-input</code> 这条规则里的 <strong>border-radius</strong> 那一行。'
+    },
+    {
+      title: 'Q5 · 按钮 hover 时的颜色',
+      context: '按钮鼠标悬停（hover）时会变成<strong>更深的橙红色</strong>。但 hover 是个动态状态 —— 默认 Styles 面板看不到，要在右上角点 <code>:hov</code> 切换钮，<strong>开启 :hover 模拟</strong>。开启后 Styles 里会多出一条 <code>.lc-btn:hover</code> 的规则。它的 background 是什么？<br><span style="font-size:12px; color:var(--ink-mute); margin-top:6px; display:inline-block;">提示：右上角那个紫色的 <code style="font-size:11px;">:hov</code> 按钮 —— 点一下试试。</span>',
+      preview: 'static',
+      showHover: false,  // user must toggle :hov to reveal the rule
+      showBox: false,
+      choices: [
+        { id: 'a', text: '#ff4d2e（跟默认一样）' },
+        { id: 'b', text: '#d63a1f（更深的橙红）', correct: true },
+        { id: 'c', text: '#faf7f0（米白）' },
+        { id: 'd', text: '#1a1a22（黑色）' }
+      ],
+      good: '<strong>满分！</strong> <code>.lc-btn:hover</code> 规则里 <code>background: #d63a1f</code> —— 比默认的 <code>#ff4d2e</code> 深一点。<strong>要看 hover / focus / active 这些动态状态的样式，必须先在 :hov 面板里手动开启</strong>。这是 DevTools 的隐藏招式，会用了你就比 80% 的设计师都能查样式了。',
+      bad: '再看看。开启 :hov 后，Styles 面板里会多一条<strong>紫色的 <code>.lc-btn:hover</code></strong> 规则 —— 它里面的 background 颜色就是答案。注意它跟默认的 <code>#ff4d2e</code> 不一样。'
+    }
+  ];
+
+  let qIndex = 0;
+  let mistakes = 0;
+  let solved = false;
+  let currentChoiceClicks = 0; // for showing different choices wrong
+
+  const titleEl = document.getElementById('gameTitle');
+  const counterEl = document.getElementById('gbCounter');
+  const dotsEl = document.getElementById('gbDots');
+  const questionEl = document.getElementById('gameQuestion');
+  const feedbackEl = document.getElementById('gameFeedback');
+  const gfTagEl = document.getElementById('gfTag');
+  const gfTextEl = document.getElementById('gfText');
+  const gcMetaEl = document.getElementById('gcMeta');
+  const nextBtn = document.getElementById('gameNext');
+  const endEl = document.getElementById('gameEnd');
+  const scoreEl = document.getElementById('geScore');
+  const mistakesEl = document.getElementById('geMistakes');
+  const restartBtn = document.getElementById('gameRestart');
+
+  function renderQuestion() {
+    const q = QUESTIONS[qIndex];
+    solved = false;
+    currentChoiceClicks = 0;
+
+    titleEl.textContent = q.title;
+    counterEl.textContent = (qIndex + 1) + ' / ' + QUESTIONS.length;
+
+    Array.from(dotsEl.children).forEach((d, i) => {
+      d.classList.remove('current', 'solved');
+      if (i < qIndex) d.classList.add('solved');
+      else if (i === qIndex) d.classList.add('current');
+    });
+
+    const choicesHTML = q.choices.map((c, i) => {
+      const letter = ['A', 'B', 'C', 'D'][i];
+      return `<button class="gc-choice" data-choice="${c.id}" data-correct="${!!c.correct}"><span class="gc-letter">${letter} ·</span>${c.text}</button>`;
+    }).join('');
+
+    questionEl.innerHTML = `
+<div class="game-q">
+  <div class="gq-num">题目 ${qIndex + 1} · 5</div>
+  <h3 class="gq-title">${q.title.replace(/^Q\d+ · /, '')}</h3>
+</div>
+<div class="game-context">
+  <span class="gc-tag">背景</span>${q.context}
+</div>
+<div class="game-arena">
+  ${previewHTML(q.preview)}
+  ${devtoolsHTML({ showHover: q.showHover, showBox: q.showBox })}
+</div>
+<div class="game-choices">
+  ${choicesHTML}
+</div>
+`;
+
+    feedbackEl.classList.remove('show', 'is-good', 'is-bad');
+    nextBtn.disabled = true;
+    gcMetaEl.textContent = '看 Styles 面板，挑一个答案';
+
+    if (qIndex === QUESTIONS.length - 1) {
+      nextBtn.innerHTML = '玩通了 <span class="arr">→</span>';
+    } else {
+      nextBtn.innerHTML = '下一题 <span class="arr">→</span>';
+    }
+
+    // Wire choice clicks
+    questionEl.querySelectorAll('.gc-choice').forEach(c => {
+      c.addEventListener('click', () => handleChoice(c, q));
+    });
+
+    // Wire :hov toggle (only Q5 starts ON, but earlier ones can still toggle for fun)
+    const hoverPill = questionEl.querySelector('#hoverPill');
+    const hoverToggle = questionEl.querySelector('#hoverToggle');
+    function toggleHover(force) {
+      const stylesEl = questionEl.querySelector('#gdtStyles');
+      if (!stylesEl) return;
+      const stateBar = stylesEl.querySelector('.gdt-state-bar');
+      const previewBtn = questionEl.querySelector('#gp-btn');
+      const isOn = force !== undefined ? force : !stateBar.classList.contains('is-on');
+      stateBar.classList.toggle('is-on', isOn);
+      hoverPill && hoverPill.classList.toggle('is-on', isOn);
+      hoverToggle && hoverToggle.classList.toggle('is-on', isOn);
+      stateBar.querySelector('.gsb-pseudo').textContent = isOn ? '✓ ON · 模拟悬停' : 'OFF · 静态状态';
+      previewBtn && previewBtn.classList.toggle('is-hover', isOn);
+
+      // Toggle the hover rule visibility
+      let pseudoRule = stylesEl.querySelector('.el-rule.is-pseudo');
+      if (isOn && !pseudoRule) {
+        const rule = document.createElement('div');
+        rule.className = 'el-rule is-pseudo';
+        rule.innerHTML = `
+          <div class="el-selector">.lc-btn:hover <span class="el-source">style.css:54</span></div>
+          <div class="el-rule-body">
+            <div class="el-prop"><span class="el-prop-key">background</span><span class="el-prop-end">:</span><span class="el-prop-val color"><span class="el-color-chip" style="background:#d63a1f"></span>#d63a1f</span><span class="el-prop-end">;</span></div>
+          </div>`;
+        stylesEl.appendChild(rule);
+      } else if (!isOn && pseudoRule) {
+        pseudoRule.remove();
+      }
+    }
+    hoverPill && hoverPill.addEventListener('click', () => toggleHover());
+    hoverToggle && hoverToggle.addEventListener('click', () => toggleHover());
+  }
+
+  function handleChoice(el, q) {
+    if (solved) return;
+    const isCorrect = el.dataset.correct === 'true';
+
+    if (isCorrect) {
+      solved = true;
+      el.classList.add('is-correct');
+      // Disable other choices
+      questionEl.querySelectorAll('.gc-choice').forEach(c => {
+        if (c !== el) c.classList.add('is-disabled');
+      });
+
+      feedbackEl.classList.remove('is-bad');
+      feedbackEl.classList.add('is-good', 'show');
+      gfTagEl.textContent = '答对';
+      gfTextEl.innerHTML = q.good;
+
+      nextBtn.disabled = false;
+      gcMetaEl.textContent = '查样式 · 这就是 DevTools 的看家本领';
+
+      Array.from(dotsEl.children)[qIndex].classList.remove('current');
+      Array.from(dotsEl.children)[qIndex].classList.add('solved');
+    } else {
+      mistakes++;
+      currentChoiceClicks++;
+      el.classList.add('is-wrong');
+      el.classList.add('is-disabled');
+
+      feedbackEl.classList.remove('is-good');
+      feedbackEl.classList.add('is-bad', 'show');
+      gfTagEl.textContent = '再看看';
+      gfTextEl.innerHTML = q.bad;
+    }
+  }
+
+  nextBtn.addEventListener('click', () => {
+    if (qIndex < QUESTIONS.length - 1) {
+      qIndex++;
+      renderQuestion();
+      stage.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    } else {
+      questionEl.style.display = 'none';
+      feedbackEl.style.display = 'none';
+      document.querySelector('.game-controls').style.display = 'none';
+      endEl.classList.add('show');
+      scoreEl.textContent = QUESTIONS.length;
+      mistakesEl.textContent = mistakes;
+    }
+  });
+
+  restartBtn.addEventListener('click', () => {
+    qIndex = 0;
+    mistakes = 0;
+    questionEl.style.display = '';
+    feedbackEl.style.display = '';
+    document.querySelector('.game-controls').style.display = '';
+    endEl.classList.remove('show');
+    renderQuestion();
+    stage.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
+
+  renderQuestion();
+})();
+
+// ========= §04 Box model: padding/margin/border sliders =========
+(function () {
+  const stage = document.getElementById('boxStage');
+  if (!stage) return;
+  const box = document.getElementById('boxLarge');
+  const rangeMargin = document.getElementById('rangeMargin');
+  const rangeBorder = document.getElementById('rangeBorder');
+  const rangePadding = document.getElementById('rangePadding');
+  const valMargin = document.getElementById('valMargin');
+  const valBorder = document.getElementById('valBorder');
+  const valPadding = document.getElementById('valPadding');
+  const valContent = document.getElementById('valContent');
+  const blmm = document.getElementById('blmm');
+  const blbb = document.getElementById('blbb');
+  const blpp = document.getElementById('blpp');
+  const blContent = document.getElementById('blContent');
+  const formula = document.getElementById('formula');
+  const totalWidth = document.getElementById('totalWidth');
+
+  function update() {
+    const m = parseInt(rangeMargin.value, 10);
+    const b = parseInt(rangeBorder.value, 10);
+    const p = parseInt(rangePadding.value, 10);
+    const c = 120;
+
+    valMargin.textContent = m;
+    valBorder.textContent = b;
+    valPadding.textContent = p;
+    valContent.textContent = c;
+
+    blmm.textContent = m;
+    blbb.textContent = b;
+    blpp.textContent = p;
+    blContent.textContent = c + ' × 100';
+
+    // Re-position inset values for the four layers based on slider proportions.
+    // We map: total area is 380×280. The boxes scale roughly proportionally.
+    // Rather than precisely computing pixels, we use rules of thumb.
+    const margin = box.querySelector('.bl-margin');
+    const border = box.querySelector('.bl-border');
+    const padding = box.querySelector('.bl-padding');
+    const content = box.querySelector('.bl-content');
+
+    const totalH = 280;
+    const totalW = 380;
+
+    // total of all layers (×2 because both sides)
+    const totalLayer = (m + b + p) * 2 + c;
+
+    // Scale factor for visualization (capped at 380px wide)
+    const scale = Math.min(1, 380 / Math.max(totalLayer, 200));
+
+    const mPx = m * scale;
+    const bPx = b * scale;
+    const pPx = p * scale;
+    const cPx = c * scale;
+
+    // border insets from the outer
+    border.style.top = mPx + 'px';
+    border.style.bottom = mPx + 'px';
+    border.style.left = mPx + 'px';
+    border.style.right = mPx + 'px';
+
+    padding.style.top = (mPx + bPx) + 'px';
+    padding.style.bottom = (mPx + bPx) + 'px';
+    padding.style.left = (mPx + bPx) + 'px';
+    padding.style.right = (mPx + bPx) + 'px';
+
+    content.style.top = (mPx + bPx + pPx) + 'px';
+    content.style.bottom = (mPx + bPx + pPx) + 'px';
+    content.style.left = (mPx + bPx + pPx) + 'px';
+    content.style.right = (mPx + bPx + pPx) + 'px';
+
+    // Formula
+    formula.textContent = m + ' × 2 + ' + b + ' × 2 + ' + p + ' × 2 + ' + c;
+    totalWidth.textContent = m * 2 + b * 2 + p * 2 + c;
+  }
+
+  rangeMargin.addEventListener('input', update);
+  rangeBorder.addEventListener('input', update);
+  rangePadding.addEventListener('input', update);
+  update();
+})();
+</script>
+
+
+<!-- 路线图弹窗 -->
+<div class="rm-modal" id="rm-modal" hidden>
+  <div class="rm-backdrop" data-rm-close></div>
+  <div class="rm-dialog" role="dialog" aria-label="完整路线图">
+    <button class="rm-close" data-rm-close aria-label="关闭">✕</button>
+    <div class="rm-header">
+      <div class="rm-tag">完整路线图 · ROADMAP</div>
+      <h3 class="rm-title">9 模块 <span class="rm-em">·</span> 28 篇</h3>
+      <p class="rm-sub">设计篇 5 模块 / 15 篇 + 工程篇 4 系列 / 13 篇</p>
+    </div>
+    <div class="rm-body">
+      <div class="rm-mod">
+        <div class="rm-mod-key">A · 单元素与组件</div>
+        <div class="rm-mod-list">
+          <a href="basics-figma.html" class="rm-cell"><span class="rm-cell-code">A0</span><span class="rm-cell-name">三件套 · HTML / CSS / JS</span><span class="rm-cell-tier">入门</span></a>
+          <a href="box-figma.html" class="rm-cell"><span class="rm-cell-code">A1</span><span class="rm-cell-name">盒子 · Auto Layout</span><span class="rm-cell-tier">基础</span></a>
+          <a href="components-figma.html" class="rm-cell"><span class="rm-cell-code">A2</span><span class="rm-cell-name">组件 · Variants &amp; Props</span><span class="rm-cell-tier">基础</span></a>
+          <a href="button-system-figma.html" class="rm-cell"><span class="rm-cell-code">A3</span><span class="rm-cell-name">Button System · 组件演化</span><span class="rm-cell-tier">进阶</span></a>
+        </div>
+      </div>
+      <div class="rm-mod">
+        <div class="rm-mod-key">B · 多组件协作</div>
+        <div class="rm-mod-list">
+          <a href="page-figma.html" class="rm-cell"><span class="rm-cell-code">B0</span><span class="rm-cell-name">拼页面 · 组件嵌套</span><span class="rm-cell-tier">入门</span></a>
+          <a href="data-flow-figma.html" class="rm-cell"><span class="rm-cell-code">B1</span><span class="rm-cell-name">数据流 · 概念</span><span class="rm-cell-tier">基础</span></a>
+          <a href="data-flow-cases-figma.html" class="rm-cell"><span class="rm-cell-code">B2</span><span class="rm-cell-name">数据流 · 实战 5 案例</span><span class="rm-cell-tier">进阶</span></a>
+        </div>
+      </div>
+      <div class="rm-mod">
+        <div class="rm-mod-key">C · 视觉系统</div>
+        <div class="rm-mod-list">
+          <a href="tokens-figma.html" class="rm-cell"><span class="rm-cell-code">C0</span><span class="rm-cell-name">Variables / Tokens 入门</span><span class="rm-cell-tier">入门</span></a>
+          <a href="colors-type-figma.html" class="rm-cell"><span class="rm-cell-code">C1</span><span class="rm-cell-name">Colors / Type / Spacing</span><span class="rm-cell-tier">基础</span></a>
+          <a href="theme-switch-figma.html" class="rm-cell"><span class="rm-cell-code">C2</span><span class="rm-cell-name">Theme 切换实战</span><span class="rm-cell-tier">进阶</span></a>
+        </div>
+      </div>
+      <div class="rm-mod">
+        <div class="rm-mod-key">D · 状态与交互</div>
+        <div class="rm-mod-list">
+          <a href="states-figma.html" class="rm-cell"><span class="rm-cell-code">D0</span><span class="rm-cell-name">视觉态 · 看得见的状态</span><span class="rm-cell-tier">入门</span></a>
+          <a href="interactive-figma.html" class="rm-cell"><span class="rm-cell-code">D1</span><span class="rm-cell-name">Interactive Component</span><span class="rm-cell-tier">基础</span></a>
+          <a href="transition-figma.html" class="rm-cell"><span class="rm-cell-code">D2</span><span class="rm-cell-name">动画 · Transition</span><span class="rm-cell-tier">进阶</span></a>
+        </div>
+      </div>
+      <div class="rm-mod">
+        <div class="rm-mod-key">E · 工程化</div>
+        <div class="rm-mod-list">
+          <a href="naming-figma.html" class="rm-cell"><span class="rm-cell-code">E0</span><span class="rm-cell-name">命名 / 图层规范</span><span class="rm-cell-tier">入门</span></a>
+          <a href="handoff-figma.html" class="rm-cell"><span class="rm-cell-code">E2</span><span class="rm-cell-name">Handoff &amp; 设计系统</span><span class="rm-cell-tier">进阶</span></a>
+        </div>
+      </div>
+      <div class="rm-mod">
+        <div class="rm-mod-key">F · 工程入门</div>
+        <div class="rm-mod-list">
+          <a href="f1-npm-figma.html" class="rm-cell"><span class="rm-cell-code">F1</span><span class="rm-cell-name">npm 是什么</span><span class="rm-cell-tier">入门</span></a>
+          <a href="f2-import-figma.html" class="rm-cell"><span class="rm-cell-code">F2</span><span class="rm-cell-name">import 与路径</span><span class="rm-cell-tier">入门</span></a>
+          <a href="f3-dev-build-figma.html" class="rm-cell"><span class="rm-cell-code">F3</span><span class="rm-cell-name">dev vs build</span><span class="rm-cell-tier">基础</span></a>
+          <a href="f4-hidden-files-figma.html" class="rm-cell"><span class="rm-cell-code">F4</span><span class="rm-cell-name">看不见的文件</span><span class="rm-cell-tier">基础</span></a>
+        </div>
+      </div>
+      <div class="rm-mod">
+        <div class="rm-mod-key">G · 版本控制</div>
+        <div class="rm-mod-list">
+          <a href="g1-commit-branch-figma.html" class="rm-cell"><span class="rm-cell-code">G1</span><span class="rm-cell-name">commit / branch</span><span class="rm-cell-tier">入门</span></a>
+          <a href="g2-conflict-figma.html" class="rm-cell"><span class="rm-cell-code">G2</span><span class="rm-cell-name">冲突怎么解</span><span class="rm-cell-tier">基础</span></a>
+          <a href="g3-pr-review-figma.html" class="rm-cell"><span class="rm-cell-code">G3</span><span class="rm-cell-name">PR / Review</span><span class="rm-cell-tier">进阶</span></a>
+        </div>
+      </div>
+      <div class="rm-mod">
+        <div class="rm-mod-key">H · 浏览器调试</div>
+        <div class="rm-mod-list">
+          <a href="h1-devtools-elements-figma.html" class="rm-cell"><span class="rm-cell-code">H1</span><span class="rm-cell-name">DevTools Elements</span><span class="rm-cell-tier">入门</span></a>
+          <a href="h2-console-error-figma.html" class="rm-cell"><span class="rm-cell-code">H2</span><span class="rm-cell-name">Console 报错</span><span class="rm-cell-tier">基础</span></a>
+          <a href="h3-network-figma.html" class="rm-cell"><span class="rm-cell-code">H3</span><span class="rm-cell-name">Network 面板</span><span class="rm-cell-tier">进阶</span></a>
+        </div>
+      </div>
+      <div class="rm-mod">
+        <div class="rm-mod-key">J · 上线</div>
+        <div class="rm-mod-list">
+          <a href="j1-dns-figma.html" class="rm-cell"><span class="rm-cell-code">J1</span><span class="rm-cell-name">DNS / 域名</span><span class="rm-cell-tier">基础</span></a>
+          <a href="j2-vercel-figma.html" class="rm-cell"><span class="rm-cell-code">J2</span><span class="rm-cell-name">Vercel 部署</span><span class="rm-cell-tier">基础</span></a>
+          <a href="j3-cache-cdn-figma.html" class="rm-cell"><span class="rm-cell-code">J3</span><span class="rm-cell-name">缓存 / CDN</span><span class="rm-cell-tier">进阶</span></a>
+        </div>
+      </div>
+    </div>
+    <div class="rm-footer">
+      <span>未完待续 · 想看什么主题加我聊</span>
+      <span class="rm-wechat">微信 vanvan_0422</span>
+    </div>
+  </div>
+</div>
+<script>
+(function(){
+  var modal = document.getElementById('rm-modal');
+  if (!modal) return;
+  var openBtns = document.querySelectorAll('[data-rm-open]');
+  var closeBtns = modal.querySelectorAll('[data-rm-close]');
+  function open() { modal.hidden = false; document.body.style.overflow = 'hidden'; }
+  function close() { modal.hidden = true; document.body.style.overflow = ''; }
+  openBtns.forEach(function(b){ b.addEventListener('click', function(e){ e.preventDefault(); open(); }); });
+  closeBtns.forEach(function(b){ b.addEventListener('click', close); });
+  document.addEventListener('keydown', function(e){ if (e.key === 'Escape' && !modal.hidden) close(); });
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,2494 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Git 的 branch 不是 Figma 的那种 — commit / branch / merge 三件套</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Noto+Sans+SC:wght@300;400;500;700;900&family=Noto+Serif+SC:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f3eee5;
+    --bg-2: #ebe4d4;
+    --ink: #16161d;
+    --ink-soft: #4a4a55;
+    --ink-mute: #8a8a92;
+    --line: #d5cdba;
+    --line-soft: #e3dcca;
+    --accent: #ff4d2e;
+    --accent-soft: #ffe4dc;
+    --blue: #0a4cff;
+    --blue-soft: #dde6ff;
+    --green: #1f6b3a;
+    --green-soft: #d4ecdb;
+    --yellow: #ffcf3d;
+    --paper: #faf7f0;
+    --shadow: 0 1px 0 rgba(0,0,0,0.04), 0 8px 24px rgba(22,22,29,0.06);
+
+    /* G1 timeline-specific */
+    --main: #16161d;
+    --feat: #ff4d2e;
+    --feat-soft: #ffe4dc;
+    --hot:  #0a4cff;
+    --hot-soft: #dde6ff;
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'Geist', 'Noto Sans SC', system-ui, -apple-system, sans-serif;
+    font-size: 16px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    background-image: radial-gradient(circle at 1px 1px, rgba(22,22,29,0.05) 1px, transparent 0);
+    background-size: 24px 24px;
+  }
+
+  /* Typography */
+  .display-cn { font-family: 'Noto Serif SC', serif; font-weight: 900; letter-spacing: -0.01em; }
+  .mono { font-family: 'JetBrains Mono', monospace; }
+  .label { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-mute); }
+
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 0 32px; }
+
+  /* Top bar */
+  .topbar {
+    border-bottom: 1px dashed var(--line);
+    padding: 16px 0;
+    background: var(--bg);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    backdrop-filter: blur(8px);
+    background: rgba(243, 238, 229, 0.85);
+  }
+  .topbar-inner { display: flex; justify-content: space-between; align-items: center; gap: 24px; }
+  .brand { font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 600; }
+  .brand .dot { display: inline-block; width: 8px; height: 8px; background: var(--accent); border-radius: 50%; margin-right: 8px; vertical-align: middle; animation: pulse 2s ease-in-out infinite; }
+  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+  .nav-links { display: flex; gap: 20px; font-size: 13px; }
+  .nav-links a { color: var(--ink-soft); text-decoration: none; transition: color 0.2s; cursor: pointer; }
+  .nav-links a:hover { color: var(--accent); }
+
+  a.brand { text-decoration: none; color: inherit; transition: color 0.2s; cursor: pointer; }
+  a.brand:hover { color: var(--accent); }
+
+  /* Hero */
+  .hero { padding: 100px 0 80px; position: relative; overflow: hidden; }
+  .hero-meta { display: flex; gap: 24px; margin-bottom: 32px; align-items: center; flex-wrap: wrap; }
+  .hero-meta .pill { padding: 6px 12px; border: 1px solid var(--ink); border-radius: 100px; font-size: 11px; font-family: 'JetBrains Mono', monospace; letter-spacing: 0.05em; }
+  .hero-meta .pill.fill { background: var(--ink); color: var(--bg); }
+  .hero h1 {
+    font-family: 'Noto Serif SC', serif;
+    font-weight: 900;
+    font-size: clamp(48px, 7vw, 92px);
+    line-height: 0.95;
+    letter-spacing: -0.03em;
+    margin: 0 0 24px;
+  }
+  .hero h1 .em {
+    font-family: 'Noto Serif SC', serif;
+    font-weight: 500;
+    color: var(--accent);
+  }
+  .hero p.lede {
+    font-size: 20px;
+    line-height: 1.55;
+    max-width: 640px;
+    color: var(--ink-soft);
+    margin: 0 0 40px;
+  }
+  .hero p.lede .em { color: var(--accent); font-weight: 600; }
+  .hero-grid { display: grid; grid-template-columns: 1.4fr 1fr; gap: 48px; align-items: end; }
+  @media (max-width: 880px) { .hero-grid { grid-template-columns: 1fr; } }
+  .hero-side { border-left: 1px dashed var(--line); padding-left: 24px; font-size: 13px; color: var(--ink-soft); }
+  .hero-side .row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px dashed var(--line); }
+  .hero-side .row:last-child { border-bottom: none; }
+  .hero-side .row .k { color: var(--ink-mute); font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.05em; text-transform: uppercase; }
+  .hero-side .row .v { font-weight: 500; }
+
+  /* Section */
+  section { padding: 80px 0; border-top: 1px solid var(--line); position: relative; }
+  .section-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 56px; flex-wrap: wrap; gap: 16px; }
+  .section-num { font-family: 'JetBrains Mono', monospace; font-size: 13px; color: var(--ink-mute); letter-spacing: 0.1em; }
+  .section-num strong { color: var(--accent); }
+  .section-title {
+    font-family: 'Noto Serif SC', serif;
+    font-weight: 900;
+    font-size: clamp(32px, 4.5vw, 52px);
+    line-height: 1.05;
+    letter-spacing: -0.02em;
+    margin: 0;
+    max-width: 18ch;
+  }
+  .section-title .em { font-family: 'Noto Serif SC', serif; font-weight: 500; color: var(--accent); }
+  .section-sub { color: var(--ink-soft); font-size: 17px; max-width: 38ch; line-height: 1.55; margin: 0; }
+  .em { font-family: 'Noto Serif SC', serif; font-weight: 500; color: var(--accent); }
+
+  /* Hint strip */
+  .hint-strip {
+    margin-top: 8px;
+    padding: 14px 18px;
+    background: var(--accent-soft);
+    border-left: 3px solid var(--accent);
+    border-radius: 4px;
+    font-size: 13px;
+    color: var(--ink);
+    line-height: 1.55;
+  }
+  .hint-strip .hint-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--accent);
+    letter-spacing: 0.12em;
+    margin-right: 10px;
+    text-transform: uppercase;
+  }
+  .hint-strip code {
+    font-family: 'JetBrains Mono', monospace;
+    background: rgba(255,255,255,0.5);
+    padding: 1px 6px;
+    border-radius: 3px;
+    font-size: 12px;
+    color: var(--ink);
+  }
+
+  /* ============== §01 — Commit timeline ============== */
+  .commit-stage {
+    margin-top: 24px;
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 32px 28px 24px;
+    overflow: hidden;
+  }
+  .commit-canvas {
+    background: var(--bg);
+    border: 1px dashed var(--line);
+    border-radius: 6px;
+    padding: 28px 16px 32px;
+    position: relative;
+    min-height: 220px;
+  }
+  .commit-canvas svg {
+    width: 100%;
+    height: 200px;
+    display: block;
+    overflow: visible;
+  }
+  .commit-canvas .cdot {
+    cursor: pointer;
+    transition: r 0.2s ease, transform 0.2s ease;
+    transform-box: fill-box;
+    transform-origin: center;
+  }
+  .commit-canvas .cdot:hover { transform: scale(1.3); }
+  .commit-canvas .cdot.is-active { transform: scale(1.4); }
+  .commit-canvas .ctext {
+    font-family: 'JetBrains Mono', monospace;
+    pointer-events: none;
+  }
+  .commit-canvas .clabel-bg {
+    fill: var(--paper);
+    stroke: var(--line);
+    stroke-width: 1;
+  }
+
+  .commit-detail {
+    margin-top: 18px;
+    background: white;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 18px 22px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    min-height: 160px;
+  }
+  @media (max-width: 720px) { .commit-detail { grid-template-columns: 1fr; gap: 16px; } }
+  .commit-detail .cd-key {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--ink-mute);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+  .commit-detail .cd-msg {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 18px;
+    font-weight: 700;
+    line-height: 1.3;
+    margin: 0 0 14px;
+    letter-spacing: -0.01em;
+  }
+  .commit-detail .cd-row {
+    display: flex;
+    gap: 14px;
+    padding: 6px 0;
+    font-size: 13px;
+    border-bottom: 1px dashed var(--line);
+  }
+  .commit-detail .cd-row:last-child { border-bottom: none; }
+  .commit-detail .cd-row .cd-k {
+    flex: 0 0 64px;
+    color: var(--ink-mute);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    padding-top: 2px;
+  }
+  .commit-detail .cd-row .cd-v {
+    flex: 1;
+    color: var(--ink);
+    font-size: 13px;
+    line-height: 1.5;
+  }
+  .commit-detail .cd-hash {
+    font-family: 'JetBrains Mono', monospace;
+    background: var(--bg-2);
+    padding: 1px 8px;
+    border-radius: 3px;
+    color: var(--ink);
+    font-size: 12px;
+  }
+  .commit-detail .cd-files {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+  }
+  .commit-detail .cd-files li {
+    padding: 3px 0;
+    color: var(--ink-soft);
+  }
+  .commit-detail .cd-files li::before {
+    content: '+ ';
+    color: var(--green);
+    font-weight: 700;
+    margin-right: 4px;
+  }
+  .commit-detail .cd-files li.mod::before {
+    content: '~ ';
+    color: var(--yellow);
+  }
+
+  .commit-figma-note {
+    margin-top: 22px;
+    padding: 18px 22px;
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    gap: 18px;
+    align-items: center;
+  }
+  @media (max-width: 720px) {
+    .commit-figma-note { grid-template-columns: 1fr; }
+    .commit-figma-note .cn-arr { display: none; }
+  }
+  .commit-figma-note .cn-cell .cn-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    color: var(--ink-mute);
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+  .commit-figma-note .cn-cell.figma .cn-tag { color: var(--blue); }
+  .commit-figma-note .cn-cell.git .cn-tag { color: var(--accent); }
+  .commit-figma-note .cn-cell .cn-title {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 16px;
+    font-weight: 700;
+    line-height: 1.3;
+    margin: 0 0 6px;
+  }
+  .commit-figma-note .cn-cell .cn-desc {
+    font-size: 13px;
+    color: var(--ink-soft);
+    margin: 0;
+    line-height: 1.5;
+  }
+  .commit-figma-note .cn-arr {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 22px;
+    color: var(--ink-mute);
+    font-weight: 300;
+  }
+
+  /* ============== §02 — Branch parallel timeline ============== */
+  .branch-stage {
+    margin-top: 24px;
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 32px 28px 24px;
+    overflow: hidden;
+  }
+  .branch-canvas {
+    background: var(--bg);
+    border: 1px dashed var(--line);
+    border-radius: 6px;
+    padding: 26px 16px;
+    position: relative;
+    min-height: 280px;
+  }
+  .branch-canvas svg { width: 100%; height: 260px; display: block; overflow: visible; }
+
+  .branch-callouts {
+    margin-top: 18px;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 14px;
+  }
+  @media (max-width: 720px) { .branch-callouts { grid-template-columns: 1fr; } }
+  .branch-callouts .bcl {
+    background: white;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 14px 16px;
+  }
+  .branch-callouts .bcl-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+  .branch-callouts .bcl.main .bcl-tag { color: var(--ink); }
+  .branch-callouts .bcl.feat .bcl-tag { color: var(--feat); }
+  .branch-callouts .bcl.hot .bcl-tag { color: var(--hot); }
+  .branch-callouts .bcl-title {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 15px;
+    font-weight: 700;
+    margin: 0 0 4px;
+    line-height: 1.3;
+  }
+  .branch-callouts .bcl-desc { font-size: 12px; color: var(--ink-soft); margin: 0; line-height: 1.5; }
+
+  /* Figma vs Git branch contrast */
+  .vs-stage {
+    margin-top: 28px;
+    background: var(--ink);
+    border-radius: 8px;
+    padding: 28px 28px 22px;
+    color: white;
+    overflow: hidden;
+    position: relative;
+  }
+  .vs-stage::before {
+    content: 'vs';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-family: 'Noto Serif SC', serif;
+    font-size: 88px;
+    font-weight: 900;
+    color: var(--accent);
+    opacity: 0.18;
+    line-height: 1;
+    pointer-events: none;
+  }
+  @media (max-width: 720px) { .vs-stage::before { display: none; } }
+  .vs-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 32px;
+    position: relative;
+    z-index: 1;
+  }
+  @media (max-width: 720px) { .vs-grid { grid-template-columns: 1fr; gap: 18px; } }
+  .vs-cell .vs-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+  .vs-cell.figma .vs-tag { color: #8ec5ff; }
+  .vs-cell.git .vs-tag { color: #ff8a6e; }
+  .vs-cell .vs-title {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 22px;
+    font-weight: 700;
+    margin: 0 0 14px;
+    color: white;
+    line-height: 1.25;
+    letter-spacing: -0.01em;
+  }
+  .vs-cell .vs-desc {
+    font-size: 14px;
+    color: rgba(255,255,255,0.78);
+    line-height: 1.6;
+    margin: 0 0 14px;
+  }
+  .vs-cell .vs-desc strong { color: white; font-weight: 600; }
+  .vs-cell ul { margin: 0; padding: 0; list-style: none; }
+  .vs-cell li {
+    padding: 6px 0;
+    border-top: 1px dashed rgba(255,255,255,0.12);
+    font-size: 13px;
+    color: rgba(255,255,255,0.7);
+    display: flex;
+    gap: 10px;
+  }
+  .vs-cell li::before {
+    content: '→';
+    color: rgba(255,255,255,0.45);
+    flex-shrink: 0;
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .vs-cell.figma li::before { color: #8ec5ff; }
+  .vs-cell.git li::before { color: #ff8a6e; }
+
+  /* ============== §03 — Sandbox timeline game ============== */
+  .sandbox-stage {
+    margin-top: 24px;
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  .sandbox-head {
+    background: var(--ink);
+    color: white;
+    padding: 16px 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 14px;
+  }
+  .sandbox-head .sh-title {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 15px;
+    font-weight: 700;
+    color: white;
+    margin: 0;
+  }
+  .sandbox-head .sh-meta {
+    display: flex;
+    gap: 16px;
+    align-items: center;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: rgba(255,255,255,0.7);
+    letter-spacing: 0.04em;
+  }
+  .sandbox-head .sh-meta .sh-tag {
+    color: var(--accent);
+    margin-right: 4px;
+  }
+  .sandbox-head .sh-meta strong { color: white; font-weight: 600; }
+
+  .sandbox-grid {
+    display: grid;
+    grid-template-columns: 240px 1fr;
+    gap: 0;
+  }
+  @media (max-width: 880px) { .sandbox-grid { grid-template-columns: 1fr; } }
+
+  .sandbox-actions {
+    background: var(--paper);
+    padding: 22px 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    border-right: 1px solid var(--line);
+  }
+  @media (max-width: 880px) { .sandbox-actions { border-right: none; border-bottom: 1px solid var(--line); } }
+
+  .sandbox-actions .sa-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--ink-mute);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+  .sandbox-actions button {
+    width: 100%;
+    text-align: left;
+    background: white;
+    border: 1.5px solid var(--line);
+    border-radius: 6px;
+    padding: 12px 14px;
+    cursor: pointer;
+    transition: all 0.18s;
+    font-family: inherit;
+    color: var(--ink);
+  }
+  .sandbox-actions button:hover {
+    border-color: var(--ink);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(22,22,29,0.08);
+  }
+  .sandbox-actions button[data-act="commit"]:hover { border-color: var(--main); background: var(--bg-2); }
+  .sandbox-actions button[data-act="branch"]:hover { border-color: var(--feat); background: var(--feat-soft); }
+  .sandbox-actions button[data-act="switch"]:hover { border-color: var(--blue); background: var(--blue-soft); }
+  .sandbox-actions button[data-act="merge"]:hover { border-color: var(--green); background: var(--green-soft); }
+
+  .sandbox-actions button:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+  }
+  .sandbox-actions button .sa-cmd {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--ink-mute);
+    margin-bottom: 4px;
+    letter-spacing: 0.04em;
+  }
+  .sandbox-actions button .sa-name {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 15px;
+    font-weight: 700;
+    margin: 0;
+    line-height: 1.25;
+    color: var(--ink);
+  }
+  .sandbox-actions button .sa-desc {
+    font-size: 12px;
+    color: var(--ink-soft);
+    margin-top: 4px;
+    line-height: 1.45;
+  }
+  .sandbox-actions .sa-divide {
+    height: 1px;
+    background: var(--line);
+    margin: 4px 0;
+  }
+  .sandbox-actions .sa-reset {
+    background: transparent;
+    border: 1px dashed var(--line);
+    color: var(--ink-mute);
+    text-align: center;
+    padding: 10px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.04em;
+  }
+  .sandbox-actions .sa-reset:hover {
+    background: transparent;
+    border-color: var(--accent);
+    color: var(--accent);
+    transform: none;
+    box-shadow: none;
+  }
+  .sandbox-actions .sa-help {
+    margin-top: 4px;
+    padding: 10px 12px;
+    background: var(--bg-2);
+    border-radius: 4px;
+    font-size: 11px;
+    color: var(--ink-soft);
+    line-height: 1.5;
+  }
+  .sandbox-actions .sa-help strong { color: var(--ink); font-weight: 600; }
+
+  .sandbox-canvas-wrap {
+    background: var(--bg);
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+  }
+  .sandbox-canvas {
+    background: var(--bg);
+    padding: 26px 22px 16px;
+    position: relative;
+    flex: 1;
+    overflow-x: auto;
+  }
+  .sandbox-canvas svg {
+    width: 100%;
+    height: 240px;
+    display: block;
+    overflow: visible;
+    min-width: 540px;
+  }
+  .sandbox-canvas .sx-empty {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 240px;
+    color: var(--ink-mute);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    letter-spacing: 0.06em;
+  }
+
+  .sandbox-canvas svg .sx-line {
+    transition: stroke-dashoffset 0.7s ease-out, opacity 0.4s;
+  }
+  .sandbox-canvas svg .sx-node {
+    transform-box: fill-box;
+    transform-origin: center;
+  }
+  .sandbox-canvas svg .sx-node.is-pop {
+    animation: nodePop 0.55s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  @keyframes nodePop {
+    0%   { transform: scale(0); opacity: 0; }
+    60%  { transform: scale(1.4); opacity: 1; }
+    100% { transform: scale(1); opacity: 1; }
+  }
+  .sandbox-canvas svg .sx-merge-burst {
+    transform-box: fill-box;
+    transform-origin: center;
+    animation: mergePop 0.7s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  @keyframes mergePop {
+    0%   { transform: scale(0); opacity: 0; }
+    50%  { transform: scale(1.3); opacity: 1; }
+    100% { transform: scale(1); opacity: 1; }
+  }
+  .sandbox-canvas svg .sx-label-bg {
+    fill: var(--paper);
+    stroke: var(--line);
+    stroke-width: 1;
+  }
+  .sandbox-canvas svg .sx-head-marker {
+    transform-box: fill-box;
+    transform-origin: center;
+    animation: headBlink 1.4s ease-in-out infinite;
+  }
+  @keyframes headBlink {
+    0%, 100% { opacity: 1; }
+    50%      { opacity: 0.35; }
+  }
+
+  .sandbox-narration {
+    background: var(--paper);
+    border-top: 1px solid var(--line);
+    padding: 16px 22px;
+    min-height: 76px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .sandbox-narration .sn-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--accent);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+  .sandbox-narration .sn-text {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 16px;
+    font-weight: 500;
+    line-height: 1.5;
+    color: var(--ink);
+    margin: 0;
+    letter-spacing: -0.01em;
+  }
+  .sandbox-narration .sn-text strong { color: var(--accent); font-weight: 700; }
+  .sandbox-narration .sn-text code {
+    font-family: 'JetBrains Mono', monospace;
+    background: var(--bg-2);
+    padding: 1px 7px;
+    border-radius: 3px;
+    font-size: 14px;
+  }
+
+  .sandbox-status {
+    background: var(--ink);
+    color: #d8d8e0;
+    padding: 14px 22px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    letter-spacing: 0.04em;
+    line-height: 1.55;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 14px;
+  }
+  .sandbox-status .ss-cell .ss-k { color: rgba(255,255,255,0.45); margin-right: 6px; font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; }
+  .sandbox-status .ss-cell .ss-v { color: white; font-weight: 600; }
+  .sandbox-status .ss-cell.head .ss-v { color: var(--accent); }
+
+  /* Branch picker dropdown */
+  .branch-picker {
+    position: relative;
+  }
+  .branch-picker-menu {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    margin-top: 4px;
+    background: white;
+    border: 1px solid var(--line);
+    border-radius: 5px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.12);
+    z-index: 5;
+    display: none;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .branch-picker-menu.is-open { display: flex; }
+  .branch-picker-menu button {
+    border: none !important;
+    border-radius: 0 !important;
+    border-bottom: 1px solid var(--line) !important;
+    padding: 10px 12px !important;
+    margin: 0;
+    box-shadow: none !important;
+    transform: none !important;
+    background: white;
+  }
+  .branch-picker-menu button:last-child { border-bottom: none !important; }
+  .branch-picker-menu button:hover {
+    background: var(--accent-soft) !important;
+  }
+  .branch-picker-menu .bp-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .branch-picker-menu .bp-dot {
+    width: 10px; height: 10px; border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .branch-picker-menu .bp-name {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--ink);
+  }
+  .branch-picker-menu .bp-current {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    color: var(--ink-mute);
+    margin-left: auto;
+    letter-spacing: 0.08em;
+  }
+
+  /* ============== §04 — Commit message ============== */
+  .msg-stage {
+    margin-top: 24px;
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  .msg-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0;
+  }
+  @media (max-width: 880px) { .msg-grid { grid-template-columns: 1fr; } }
+  .msg-cell {
+    padding: 28px 28px 24px;
+  }
+  .msg-cell.good { background: var(--green-soft); border-right: 1px solid var(--line); }
+  .msg-cell.bad  { background: var(--accent-soft); }
+  @media (max-width: 880px) {
+    .msg-cell.good { border-right: none; border-bottom: 1px solid var(--line); }
+  }
+  .msg-cell .mc-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+  .msg-cell.good .mc-tag { color: var(--green); }
+  .msg-cell.bad .mc-tag { color: var(--accent); }
+  .msg-cell .mc-title {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 22px;
+    font-weight: 800;
+    margin: 0 0 16px;
+    line-height: 1.25;
+    letter-spacing: -0.01em;
+  }
+  .msg-cell .mc-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .msg-cell .mc-item {
+    background: white;
+    border: 1px solid var(--line);
+    border-radius: 5px;
+    padding: 10px 14px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    color: var(--ink);
+    display: flex;
+    gap: 12px;
+    align-items: baseline;
+    transition: all 0.2s;
+  }
+  .msg-cell.good .mc-item { border-left: 3px solid var(--green); }
+  .msg-cell.bad  .mc-item { border-left: 3px solid var(--accent); }
+  .msg-cell .mc-item:hover { transform: translateX(3px); }
+  .msg-cell .mc-mark {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 18px;
+    font-weight: 900;
+    flex-shrink: 0;
+    width: 18px;
+    text-align: center;
+  }
+  .msg-cell.good .mc-mark { color: var(--green); }
+  .msg-cell.bad  .mc-mark { color: var(--accent); }
+  .msg-cell .mc-text { flex: 1; }
+  .msg-cell .mc-note {
+    color: var(--ink-mute);
+    margin-left: 8px;
+    font-family: 'Geist', 'Noto Sans SC', sans-serif;
+    font-size: 11.5px;
+  }
+
+  .msg-rules {
+    background: var(--paper);
+    border-top: 1px solid var(--line);
+    padding: 22px 28px;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 18px;
+  }
+  @media (max-width: 720px) { .msg-rules { grid-template-columns: 1fr; gap: 14px; } }
+  .msg-rule .mr-num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--accent);
+    letter-spacing: 0.08em;
+    margin-bottom: 4px;
+  }
+  .msg-rule h5 {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 16px;
+    font-weight: 700;
+    margin: 0 0 6px;
+    line-height: 1.3;
+  }
+  .msg-rule p {
+    margin: 0;
+    font-size: 13px;
+    color: var(--ink-soft);
+    line-height: 1.55;
+  }
+  .msg-rule p code {
+    font-family: 'JetBrains Mono', monospace;
+    background: var(--bg-2);
+    padding: 1px 6px;
+    border-radius: 3px;
+    font-size: 12px;
+    color: var(--ink);
+  }
+
+  /* ============== §05 — 5 commands ============== */
+  .cmd-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+    margin-top: 24px;
+  }
+  @media (max-width: 720px) { .cmd-grid { grid-template-columns: 1fr; } }
+  .cmd-card {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 22px 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    transition: all 0.2s;
+    cursor: pointer;
+  }
+  .cmd-card:hover {
+    border-color: var(--accent);
+    transform: translateY(-2px);
+    box-shadow: 0 10px 24px rgba(22,22,29,0.06);
+  }
+  .cmd-card.is-wide { grid-column: span 2; }
+  @media (max-width: 720px) { .cmd-card.is-wide { grid-column: auto; } }
+  .cmd-card .cc-num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--accent);
+    letter-spacing: 0.1em;
+    margin: 0;
+  }
+  .cmd-card .cc-title {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 18px;
+    font-weight: 700;
+    line-height: 1.3;
+    margin: 0;
+    letter-spacing: -0.01em;
+  }
+  .cmd-card .cc-cmd {
+    background: var(--ink);
+    color: #ffb39a;
+    padding: 8px 12px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    border-radius: 4px;
+    margin: 0;
+    overflow-x: auto;
+  }
+  .cmd-card .cc-cmd .ccom { color: #6e6e7a; }
+  .cmd-card .cc-cmd .cflag { color: #ffd166; }
+  .cmd-card .cc-cmd .cstr { color: #a8e6a3; }
+  .cmd-card .cc-when {
+    margin: 0;
+    font-size: 13px;
+    color: var(--ink-soft);
+    line-height: 1.6;
+  }
+  .cmd-card .cc-when strong { color: var(--ink); font-weight: 600; }
+  .cmd-card .cc-out {
+    background: white;
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    padding: 10px 12px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11.5px;
+    line-height: 1.55;
+    color: var(--ink-soft);
+  }
+  .cmd-card .cc-out .out-tag {
+    font-size: 9.5px;
+    color: var(--ink-mute);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+    display: block;
+  }
+  .cmd-card .cc-out strong { color: var(--ink); }
+  .cmd-card .cc-out .ok { color: var(--green); }
+  .cmd-card .cc-out .warn { color: #b48010; }
+
+  /* ============== §06 — Cheatsheet ============== */
+  .cheat-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    margin-top: 32px;
+  }
+  @media (max-width: 880px) { .cheat-grid { grid-template-columns: 1fr; } }
+  .cheat-card {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 24px;
+    position: relative;
+  }
+  .cheat-card.minds   { border-top: 4px solid var(--blue); }
+  .cheat-card.cmds    { border-top: 4px solid var(--accent); }
+  .cheat-card.tmpl    { border-top: 4px solid var(--green); }
+  .cheat-card .cc-num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--ink-mute);
+    letter-spacing: 0.1em;
+    margin-bottom: 4px;
+    text-transform: uppercase;
+  }
+  .cheat-card h4 {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 22px;
+    margin: 0 0 6px;
+    font-weight: 800;
+    letter-spacing: -0.01em;
+  }
+  .cheat-card .cc-sub {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--ink-soft);
+    margin-bottom: 16px;
+    letter-spacing: 0.05em;
+  }
+  .cheat-card dl { margin: 0; padding: 0; font-size: 13px; }
+  .cheat-card dl dt {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--ink-mute);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-top: 14px;
+  }
+  .cheat-card dl dt:first-child { margin-top: 0; }
+  .cheat-card dl dd {
+    margin: 4px 0 0;
+    color: var(--ink-soft);
+    font-size: 13px;
+    line-height: 1.55;
+  }
+  .cheat-card dl dd code {
+    font-family: 'JetBrains Mono', monospace;
+    background: var(--bg-2);
+    padding: 1px 6px;
+    border-radius: 3px;
+    font-size: 12px;
+    color: var(--ink);
+  }
+  .cheat-card dl dd strong { color: var(--ink); font-weight: 600; }
+
+  /* Cheat — figma-vs-git table */
+  .cheat-card.minds .vs-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    padding: 8px 0;
+    border-top: 1px dashed var(--line);
+    font-size: 12.5px;
+  }
+  .cheat-card.minds .vs-row:first-of-type { border-top: none; }
+  .cheat-card.minds .vs-row .vk {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--blue);
+  }
+  .cheat-card.minds .vs-row .vv {
+    color: var(--ink);
+    line-height: 1.45;
+  }
+  .cheat-card.minds .vs-row .vv strong { color: var(--accent); font-weight: 600; }
+
+  /* Cheat — commit message template */
+  .cheat-card.tmpl .tpl-block {
+    background: var(--ink);
+    color: #ffb39a;
+    padding: 12px 14px;
+    border-radius: 4px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    line-height: 1.7;
+    margin: 8px 0 12px;
+  }
+  .cheat-card.tmpl .tpl-block .tplf { color: #ffd166; }
+  .cheat-card.tmpl .tpl-block .tplv { color: #a8e6a3; }
+  .cheat-card.tmpl .tpl-block .tplc { color: #6e6e7a; }
+
+  /* ============= Unified next-post block ============= */
+  .next-post {
+    margin-top: 48px;
+    padding: 32px 36px;
+    background: var(--ink);
+    color: var(--bg);
+    border-radius: 8px;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 32px;
+    align-items: center;
+    text-decoration: none;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    position: relative;
+    overflow: hidden;
+  }
+  .next-post::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at 100% 0%, rgba(255,77,46,0.12), transparent 55%);
+    pointer-events: none;
+  }
+  .next-post:hover { transform: translateY(-2px); box-shadow: 0 14px 36px rgba(22,22,29,0.22); }
+  @media (max-width: 720px) { .next-post { grid-template-columns: 1fr; padding: 24px; gap: 20px; } }
+  .next-post .np-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--accent);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+    display: inline-block;
+  }
+  .next-post h4 {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 26px;
+    margin: 0 0 10px;
+    font-weight: 700;
+    color: white;
+    line-height: 1.25;
+    letter-spacing: -0.01em;
+  }
+  .next-post h4 .em {
+    font-family: 'Noto Serif SC', serif;
+    font-weight: 500;
+    color: var(--accent);
+  }
+  .next-post p {
+    margin: 0;
+    color: rgba(255,255,255,0.72);
+    font-size: 14px;
+    line-height: 1.65;
+    max-width: 560px;
+  }
+  .next-post p strong { color: white; font-weight: 600; }
+  .next-post .np-cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 24px;
+    background: var(--accent);
+    color: white;
+    border-radius: 4px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    white-space: nowrap;
+    transition: background 0.18s, color 0.18s, transform 0.18s;
+    position: relative;
+    z-index: 1;
+  }
+  .next-post:hover .np-cta { background: white; color: var(--ink); transform: translateX(2px); }
+  .next-post .np-cta .arr { font-family: 'Noto Serif SC', serif; font-size: 18px; font-weight: 500; }
+
+  /* ============= Footer ============= */
+  footer {
+    border-top: 1px solid var(--line);
+    padding: 56px 0 64px;
+    background: var(--bg);
+  }
+  .byline {
+    display: flex;
+    gap: 28px;
+    align-items: center;
+    padding-bottom: 32px;
+    border-bottom: 1px dashed var(--line);
+    margin-bottom: 24px;
+    position: relative;
+  }
+  .byline::before {
+    content: '';
+    position: absolute;
+    top: -56px; left: 0;
+    width: 32px; height: 1px;
+    background: var(--accent);
+  }
+  .byline .avatar {
+    width: 96px; height: 96px;
+    border-radius: 50%;
+    object-fit: cover;
+    flex-shrink: 0;
+    border: 3px solid var(--paper);
+    box-shadow: 0 0 0 1px var(--line), 0 6px 20px rgba(22,22,29,0.10);
+    background: var(--paper);
+  }
+  .byline-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--ink-mute);
+    letter-spacing: 0.18em;
+    margin-bottom: 8px;
+  }
+  .byline-label .dot {
+    display: inline-block;
+    width: 6px; height: 6px;
+    background: var(--accent);
+    border-radius: 50%;
+    margin-right: 6px;
+    vertical-align: 1px;
+  }
+  .byline-name {
+    font-family: 'Noto Serif SC', serif;
+    font-size: clamp(28px, 4vw, 40px);
+    font-weight: 700;
+    line-height: 1.05;
+    letter-spacing: -0.01em;
+    margin: 0 0 8px;
+  }
+  .byline-name .em {
+    font-family: 'Noto Serif SC', serif;
+    font-weight: 500;
+    color: var(--accent);
+  }
+  .byline-tag {
+    font-size: 14px;
+    color: var(--ink-soft);
+    line-height: 1.55;
+    margin: 0;
+    max-width: 52ch;
+  }
+  .byline-contact { margin-top: 14px; padding-top: 14px; border-top: 1px dashed var(--line); display: flex; align-items: center; gap: 10px; flex-wrap: wrap; font-size: 12px; }
+  .byline-contact .contact-label { font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-mute); padding: 2px 8px; border: 1px solid var(--line); border-radius: 3px; }
+  .byline-contact .contact-id { font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 600; color: var(--ink); background: var(--accent-soft); padding: 3px 10px; border-radius: 4px; letter-spacing: 0.02em; }
+  .byline-contact .contact-hint { font-size: 12px; color: var(--ink-soft); }
+  .footer-meta {
+    text-align: center;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--ink-mute);
+    letter-spacing: 0.05em;
+  }
+  .footer-meta .heart { color: var(--accent); }
+  .footer-meta .mono { color: var(--ink-soft); font-weight: 500; }
+  @media (max-width: 600px) {
+    .byline { flex-direction: column; text-align: center; align-items: center; gap: 16px; }
+    .byline-tag { margin-left: auto; margin-right: auto; }
+  }
+
+  /* Subtle entry animation */
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+  section { animation: fadeIn 0.6s ease-out backwards; }
+
+  /* === Roadmap Modal === */
+  .rm-modal { position: fixed; inset: 0; z-index: 1000; display: flex; align-items: center; justify-content: center; padding: 30px 16px; }
+  .rm-modal[hidden] { display: none; }
+  .rm-backdrop { position: absolute; inset: 0; background: rgba(22,22,29,0.55); backdrop-filter: blur(4px); animation: rm-fade 0.2s; }
+  @keyframes rm-fade { from { opacity: 0; } to { opacity: 1; } }
+  .rm-dialog { position: relative; background: var(--bg); border-radius: 12px; max-width: 720px; width: 100%; max-height: calc(100vh - 60px); overflow-y: auto; padding: 32px 36px 24px; box-shadow: 0 30px 80px rgba(0,0,0,0.3); animation: rm-pop 0.25s cubic-bezier(0.4,0,0.2,1); }
+  @keyframes rm-pop { from { transform: scale(0.96) translateY(8px); opacity: 0; } to { transform: scale(1) translateY(0); opacity: 1; } }
+  .rm-close { position: absolute; top: 14px; right: 16px; background: transparent; border: none; cursor: pointer; font-size: 20px; color: var(--ink-mute); width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: all 0.15s; line-height: 1; }
+  .rm-close:hover { background: var(--bg-2); color: var(--ink); }
+  .rm-header { margin-bottom: 22px; padding-bottom: 18px; border-bottom: 1px dashed var(--line); }
+  .rm-tag { font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.1em; color: var(--accent); text-transform: uppercase; margin-bottom: 8px; }
+  .rm-title { font-family: 'Noto Serif SC', serif; font-size: 28px; margin: 0 0 6px; font-weight: 900; letter-spacing: -0.02em; line-height: 1.1; }
+  .rm-title .rm-em { font-family: 'Noto Serif SC', serif; color: var(--accent); font-weight: 500; }
+  .rm-sub { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--ink-mute); margin: 0; }
+  .rm-body { display: flex; flex-direction: column; gap: 18px; }
+  .rm-mod-key { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ink); font-weight: 700; margin-bottom: 8px; letter-spacing: 0.04em; text-transform: uppercase; }
+  .rm-mod-list { display: flex; flex-direction: column; gap: 6px; }
+  .rm-cell { display: grid; grid-template-columns: 36px 1fr auto; gap: 12px; align-items: center; padding: 9px 13px; border-radius: 5px; background: var(--paper); border: 1px solid var(--line); text-decoration: none; color: inherit; transition: all 0.15s; }
+  .rm-cell:hover { border-color: var(--accent); background: var(--accent-soft); transform: translateX(3px); }
+  .rm-cell-code { font-family: 'Noto Serif SC', serif; font-weight: 500; color: var(--accent); font-size: 15px; }
+  .rm-cell-name { font-size: 13px; color: var(--ink); }
+  .rm-cell-tier { font-family: 'JetBrains Mono', monospace; font-size: 9px; letter-spacing: 0.08em; color: var(--ink-mute); text-transform: uppercase; border: 1px solid var(--line); padding: 2px 7px; border-radius: 3px; }
+  .rm-footer { margin-top: 22px; padding-top: 16px; border-top: 1px dashed var(--line); display: flex; justify-content: space-between; align-items: center; font-size: 12px; color: var(--ink-soft); flex-wrap: wrap; gap: 8px; }
+  .rm-wechat { font-family: 'JetBrains Mono', monospace; background: var(--accent-soft); color: var(--ink); padding: 3px 10px; border-radius: 3px; font-weight: 600; letter-spacing: 0.02em; }
+  .nav-links a[data-rm-open] { cursor: pointer; }
+</style>
+</head>
+<body>
+
+<!-- Top bar -->
+<div class="topbar">
+  <div class="wrap topbar-inner">
+    <a href="index.html" class="brand"><span class="dot"></span>G1 · 版本控制 / commit · branch · merge</a>
+    <nav class="nav-links">
+      <a href="index.html#roadmap" data-rm-open>路线图</a>
+      <a href="index.html#manifesto">关于</a>
+    </nav>
+  </div>
+</div>
+
+<!-- Hero -->
+<header class="hero">
+  <div class="wrap">
+    <div class="hero-meta">
+      <span class="pill fill">实验互动 · INTERACTIVE</span>
+      <span class="pill">2026 · 设计 × 代码</span>
+      <span class="pill">G1 · 版本控制 · 入门</span>
+      <span class="label">阅读 + 玩 ≈ 14 分钟</span>
+    </div>
+    <div class="hero-grid">
+      <div>
+        <h1>
+          <span class="display-cn">Git 的 branch</span><br>
+          <span class="display-cn">不是 Figma 的</span><span class="em">那种</span><span class="display-cn">。</span>
+        </h1>
+        <p class="lede">
+          你在 Figma 里点过 <span class="em">branch</span> —— 那是"另存一份再合回来"。<br>
+          git 的 branch <span class="em">完全不是</span>同一回事 —— 它是<span class="em">一条平行的时间线</span>。<br>
+          这一篇把三件事一次拆开：<strong>commit / branch / merge</strong>，读完你看版本树不再发懵。
+        </p>
+      </div>
+      <div class="hero-side">
+        <div class="row"><span class="k">本页讲什么</span><span class="v">commit · branch · merge</span></div>
+        <div class="row"><span class="k">含互动</span><span class="v">时间线沙盘 + commit 详情</span></div>
+        <div class="row"><span class="k">面向</span><span class="v">看不懂版本树的设计师</span></div>
+        <div class="row"><span class="k">系列里第几篇</span><span class="v">G 系列第 1 篇</span></div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- §01 Commit timeline -->
+<section id="commit">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>01</strong> / 快照</div>
+        <h2 class="section-title">commit<br>是<span class="em">每一次保存</span>的快照</h2>
+      </div>
+      <p class="section-sub">
+        每次 <code>git commit</code>，git 给你<strong>当前所有文件拍一张照</strong>，存起来 ——
+        附带一段你写的"说明文字"。一条线穿起来，就是项目的历史。
+      </p>
+    </div>
+
+    <div class="hint-strip">
+      <span class="hint-tag">互动</span>下面这条时间线上每一个圆点都是一次 commit。<strong>把鼠标放上去看完整信息</strong> —— hash、时间、改了哪些文件。
+    </div>
+
+    <div class="commit-stage">
+      <div class="commit-canvas">
+        <svg viewBox="0 0 920 200" preserveAspectRatio="xMidYMid meet" id="commitSvg">
+          <!-- baseline -->
+          <line x1="40" y1="100" x2="880" y2="100" stroke="#16161d" stroke-width="2" />
+          <text x="40" y="80" font-family="JetBrains Mono" font-size="11" fill="#16161d" font-weight="600">main</text>
+          <text x="880" y="80" font-family="JetBrains Mono" font-size="10" fill="#8a8a92" text-anchor="end">HEAD →</text>
+
+          <!-- commits (5 dots) — data via JS -->
+          <g id="commitDots"></g>
+
+          <!-- arrow at the end -->
+          <polygon points="880,95 892,100 880,105" fill="#16161d" />
+
+          <!-- baseline tick at start -->
+          <text x="40" y="138" font-family="JetBrains Mono" font-size="10" fill="#8a8a92">project init</text>
+        </svg>
+      </div>
+
+      <div class="commit-detail" id="commitDetail">
+        <div>
+          <div class="cd-key">COMMIT MESSAGE · 快照说明</div>
+          <h4 class="cd-msg" id="cdMsg">把鼠标放到圆点上看详情</h4>
+          <div class="cd-row">
+            <span class="cd-k">Hash</span>
+            <span class="cd-v"><span class="cd-hash" id="cdHash">—</span></span>
+          </div>
+          <div class="cd-row">
+            <span class="cd-k">Author</span>
+            <span class="cd-v" id="cdAuthor">—</span>
+          </div>
+          <div class="cd-row">
+            <span class="cd-k">Time</span>
+            <span class="cd-v" id="cdTime">—</span>
+          </div>
+        </div>
+        <div>
+          <div class="cd-key">CHANGED FILES · 改了哪些文件</div>
+          <ul class="cd-files" id="cdFiles">
+            <li style="opacity:0.5;list-style:none;padding-left:0;">—</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="commit-figma-note">
+        <div class="cn-cell figma">
+          <div class="cn-tag">FIGMA · 类比</div>
+          <div class="cn-title">点 "Add to history" 主动留版本</div>
+          <p class="cn-desc">在 Figma 里你可以点"添加到版本历史"留一个有名字的快照。</p>
+        </div>
+        <div class="cn-arr">≈</div>
+        <div class="cn-cell git">
+          <div class="cn-tag">GIT · 但有个关键差别</div>
+          <div class="cn-title">必须主动 commit，git 不替你保存</div>
+          <p class="cn-desc">Figma 会自动保存历史，git <strong>不会</strong> —— 你不 commit，就什么都没存。</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="hint-strip" style="margin-top:24px;">
+      <span class="hint-tag">关键</span>commit 不是"备份" —— 它是<strong>有名字、有作者、有时间、有改动清单</strong>的一次正式留痕。
+      所以好的 commit message 很重要 —— §04 专门讲。
+    </div>
+  </div>
+</section>
+
+<!-- §02 Branch as parallel timeline -->
+<section id="branch">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>02</strong> / 分叉</div>
+        <h2 class="section-title">branch<br>是一条<span class="em">平行</span>的时间线</h2>
+      </div>
+      <p class="section-sub">
+        从主线某一个 commit 上"<strong>分叉</strong>"出去，独立往前走 —— 互不影响。
+        这不是"备份"，也不是"另存一份" —— 是<strong>真的多了一条时间线</strong>。
+      </p>
+    </div>
+
+    <div class="hint-strip">
+      <span class="hint-tag">视觉</span>下面这张图：黑色是 <code>main</code> 主干，橙色是新功能分支 <code>feature/login</code>，蓝色是紧急修 bug 分支 <code>hotfix/btn</code>。<strong>三条线同时往前走，互不干扰</strong>。
+    </div>
+
+    <div class="branch-stage">
+      <div class="branch-canvas">
+        <svg viewBox="0 0 920 260" preserveAspectRatio="xMidYMid meet">
+          <!-- main line -->
+          <line x1="40" y1="130" x2="880" y2="130" stroke="#16161d" stroke-width="2.5" />
+          <text x="40" y="115" font-family="JetBrains Mono" font-size="11" fill="#16161d" font-weight="700">main</text>
+          <polygon points="880,125 892,130 880,135" fill="#16161d" />
+
+          <!-- main commits -->
+          <circle cx="100" cy="130" r="7" fill="#16161d" />
+          <text x="100" y="155" font-family="JetBrains Mono" font-size="10" fill="#4a4a55" text-anchor="middle">c1</text>
+          <circle cx="180" cy="130" r="7" fill="#16161d" />
+          <text x="180" y="155" font-family="JetBrains Mono" font-size="10" fill="#4a4a55" text-anchor="middle">c2</text>
+          <circle cx="260" cy="130" r="7" fill="#16161d" />
+          <text x="260" y="155" font-family="JetBrains Mono" font-size="10" fill="#4a4a55" text-anchor="middle">c3</text>
+          <circle cx="600" cy="130" r="7" fill="#16161d" />
+          <text x="600" y="155" font-family="JetBrains Mono" font-size="10" fill="#4a4a55" text-anchor="middle">c8</text>
+
+          <!-- feature/login branch (orange, top) -->
+          <path d="M 260 130 Q 290 130 320 60 L 700 60" stroke="#ff4d2e" stroke-width="2.5" fill="none" />
+          <circle cx="380" cy="60" r="7" fill="#ff4d2e" />
+          <text x="380" y="48" font-family="JetBrains Mono" font-size="10" fill="#ff4d2e" text-anchor="middle">c4</text>
+          <circle cx="460" cy="60" r="7" fill="#ff4d2e" />
+          <text x="460" y="48" font-family="JetBrains Mono" font-size="10" fill="#ff4d2e" text-anchor="middle">c5</text>
+          <circle cx="540" cy="60" r="7" fill="#ff4d2e" />
+          <text x="540" y="48" font-family="JetBrains Mono" font-size="10" fill="#ff4d2e" text-anchor="middle">c7</text>
+          <text x="710" y="65" font-family="JetBrains Mono" font-size="11" fill="#ff4d2e" font-weight="700">feature/login</text>
+          <text x="710" y="80" font-family="JetBrains Mono" font-size="9" fill="#8a8a92">还没合回</text>
+
+          <!-- hotfix/btn branch (blue, bottom) -->
+          <path d="M 260 130 Q 290 130 320 200 L 540 200 Q 570 200 600 130" stroke="#0a4cff" stroke-width="2.5" fill="none" />
+          <circle cx="400" cy="200" r="7" fill="#0a4cff" />
+          <text x="400" y="222" font-family="JetBrains Mono" font-size="10" fill="#0a4cff" text-anchor="middle">c6</text>
+          <text x="490" y="222" font-family="JetBrains Mono" font-size="10" fill="#0a4cff" text-anchor="middle">hotfix/btn</text>
+          <text x="490" y="236" font-family="JetBrains Mono" font-size="9" fill="#8a8a92">已合回 main → c8</text>
+
+          <!-- merge node = c8 (highlighted) -->
+          <circle cx="600" cy="130" r="9" fill="#0a4cff" stroke="#16161d" stroke-width="1.5" />
+
+          <!-- annotations -->
+          <text x="260" y="100" font-family="JetBrains Mono" font-size="10" fill="#8a8a92" text-anchor="middle">两条分支</text>
+          <text x="260" y="113" font-family="JetBrains Mono" font-size="10" fill="#8a8a92" text-anchor="middle">从 c3 分出去</text>
+        </svg>
+      </div>
+
+      <div class="branch-callouts">
+        <div class="bcl main">
+          <div class="bcl-tag">MAIN · 主干</div>
+          <h5 class="bcl-title">永远是"能上线的"</h5>
+          <p class="bcl-desc">主线只接受合并过来的稳定代码，不直接改。</p>
+        </div>
+        <div class="bcl feat">
+          <div class="bcl-tag">FEATURE/LOGIN · 新功能</div>
+          <h5 class="bcl-title">还在做，没合回</h5>
+          <p class="bcl-desc">分支上的 c4 / c5 / c7 完全不影响 main。</p>
+        </div>
+        <div class="bcl hot">
+          <div class="bcl-tag">HOTFIX/BTN · 修 bug</div>
+          <h5 class="bcl-title">改完合回，分支就完成使命</h5>
+          <p class="bcl-desc">在 c8 处合并回 main —— 这就是 merge。</p>
+        </div>
+      </div>
+
+      <div class="vs-stage">
+        <div class="vs-grid">
+          <div class="vs-cell figma">
+            <div class="vs-tag">FIGMA · BRANCH</div>
+            <h4 class="vs-title">是"另存为一份草稿"</h4>
+            <p class="vs-desc">本质上是把<strong>整个文件复制了一份</strong>，让你在副本里改、不影响主文件。改完了再"合回主文件"。</p>
+            <ul>
+              <li>每个 branch 是一份独立的<strong>文件副本</strong></li>
+              <li>主要解决"多人改同一个文件"</li>
+              <li>合并 = 把整份草稿覆盖回去</li>
+            </ul>
+          </div>
+          <div class="vs-cell git">
+            <div class="vs-tag">GIT · BRANCH</div>
+            <h4 class="vs-title">是"分叉一条时间线"</h4>
+            <p class="vs-desc">不复制文件，只是<strong>新加一个指针</strong>，标记"从这个 commit 开始往这边走"。所有 commit 共享同一个仓库。</p>
+            <ul>
+              <li>每个 branch 是一个<strong>commit 指针</strong></li>
+              <li>解决的是"<strong>同一个项目并行做几件事</strong>"</li>
+              <li>合并 = 把两条时间线的改动汇成一条</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="hint-strip" style="margin-top:24px;">
+      <span class="hint-tag">记住</span>"在 git 的 branch 里改了"<strong>不等于</strong>"在 main 里改了"。你的改动<strong>关在自己分支里</strong>，必须 merge 回 main，main 才会变。
+    </div>
+  </div>
+</section>
+
+<!-- §03 Sandbox -->
+<section id="sandbox">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>03</strong> / 沙盘</div>
+        <h2 class="section-title">自己<br><span class="em">动手</span>跑一遍</h2>
+      </div>
+      <p class="section-sub">
+        这是这一篇的灵魂。下面是一个空的时间线 —— 左边四个按钮，依次点：
+        <strong>commit 几次 → 创建分支 → 在分支上 commit → 合回 main</strong>。
+        每点一次都伴随动画 + 旁白。
+      </p>
+    </div>
+
+    <div class="hint-strip">
+      <span class="hint-tag">推荐路径</span>
+      <code>commit</code> × 2 → <code>create branch</code> → <code>commit</code> × 2 → <code>switch</code> 回 main → <code>merge</code>。
+      点错了用底下的"重置"重来。
+    </div>
+
+    <div class="sandbox-stage">
+      <div class="sandbox-head">
+        <div>
+          <h3 class="sh-title">git 时间线沙盘 · 演示完整工作流</h3>
+        </div>
+        <div class="sh-meta">
+          <span><span class="sh-tag">REPO</span><strong>my-design-project</strong></span>
+        </div>
+      </div>
+
+      <div class="sandbox-grid">
+        <div class="sandbox-actions">
+          <span class="sa-label">操作 ›</span>
+
+          <button data-act="commit">
+            <div class="sa-cmd">git commit -m "..."</div>
+            <div class="sa-name">commit</div>
+            <div class="sa-desc">在当前分支留一个新快照。</div>
+          </button>
+
+          <button data-act="branch">
+            <div class="sa-cmd">git checkout -b feature/...</div>
+            <div class="sa-name">create branch</div>
+            <div class="sa-desc">从当前 commit 分一条新线。</div>
+          </button>
+
+          <div class="branch-picker">
+            <button data-act="switch" id="switchBtn">
+              <div class="sa-cmd">git checkout ...</div>
+              <div class="sa-name">switch branch</div>
+              <div class="sa-desc">跳到另一条分支上去工作。</div>
+            </button>
+            <div class="branch-picker-menu" id="switchMenu"></div>
+          </div>
+
+          <button data-act="merge">
+            <div class="sa-cmd">git merge ...</div>
+            <div class="sa-name">merge</div>
+            <div class="sa-desc">把别的分支合到当前 main。</div>
+          </button>
+
+          <div class="sa-divide"></div>
+
+          <button class="sa-reset" data-act="reset">↺ 重置时间线</button>
+
+          <div class="sa-help">
+            <strong>HEAD</strong> 是 git 的"光标" —— 你下一次 commit 会落在它指的那条分支上。
+          </div>
+        </div>
+
+        <div class="sandbox-canvas-wrap">
+          <div class="sandbox-canvas" id="sandboxCanvas">
+            <svg id="sandboxSvg" viewBox="0 0 720 240" preserveAspectRatio="xMidYMid meet">
+              <!-- nothing initially; everything rendered by JS -->
+            </svg>
+          </div>
+          <div class="sandbox-narration" id="sandboxNarration">
+            <div class="sn-tag">› 旁白</div>
+            <p class="sn-text">点左边的按钮开始 —— 先点几下 <code>commit</code>，看时间线长出来。</p>
+          </div>
+          <div class="sandbox-status" id="sandboxStatus">
+            <div class="ss-cell head"><span class="ss-k">HEAD →</span><span class="ss-v" id="ssHead">main</span></div>
+            <div class="ss-cell"><span class="ss-k">commits</span><span class="ss-v" id="ssCommits">0</span></div>
+            <div class="ss-cell"><span class="ss-k">branches</span><span class="ss-v" id="ssBranches">main</span></div>
+            <div class="ss-cell"><span class="ss-k">last cmd</span><span class="ss-v" id="ssLast">—</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="hint-strip" style="margin-top:24px;">
+      <span class="hint-tag">现实</span>真正的 git GUI（GitHub Desktop / SourceTree / VSCode 的 git lens）画出来的版本树<strong>就是这个样子</strong>。
+      你能看懂这个沙盘，就能看懂线上仓库的版本树。
+    </div>
+  </div>
+</section>
+
+<!-- §04 Commit message -->
+<section id="message">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>04</strong> / 留言</div>
+        <h2 class="section-title">commit message<br><span class="em">怎么写</span>不被嫌弃</h2>
+      </div>
+      <p class="section-sub">
+        设计师以为这是"随便写写"的字段，工程师每次 commit 都看得见 ——
+        写得清楚的 message，是<strong>项目 5 年后还能读懂</strong>的关键。
+      </p>
+    </div>
+
+    <div class="hint-strip">
+      <span class="hint-tag">看对照</span>左边是好的 commit message，右边是反例。<strong>把鼠标放上去对比</strong>。
+    </div>
+
+    <div class="msg-stage">
+      <div class="msg-grid">
+        <div class="msg-cell good">
+          <div class="mc-tag">好的 · GOOD MESSAGES</div>
+          <h3 class="mc-title">短而清楚 · 一眼能懂</h3>
+          <ul class="mc-list">
+            <li class="mc-item">
+              <span class="mc-mark">✓</span>
+              <span class="mc-text">fix: 修复登录按钮在 iPhone SE 上溢出</span>
+            </li>
+            <li class="mc-item">
+              <span class="mc-mark">✓</span>
+              <span class="mc-text">add: 新增订单详情页 skeleton 状态</span>
+            </li>
+            <li class="mc-item">
+              <span class="mc-mark">✓</span>
+              <span class="mc-text">update: 把主品牌色从 #ff5e1a 调到 #ff4d2e</span>
+            </li>
+            <li class="mc-item">
+              <span class="mc-mark">✓</span>
+              <span class="mc-text">refactor: 抽离 Card 组件的 hover 状态逻辑</span>
+            </li>
+            <li class="mc-item">
+              <span class="mc-mark">✓</span>
+              <span class="mc-text">docs: 补 README 里的本地启动步骤</span>
+            </li>
+          </ul>
+        </div>
+
+        <div class="msg-cell bad">
+          <div class="mc-tag">坏的 · BAD MESSAGES</div>
+          <h3 class="mc-title">三个月后看不懂</h3>
+          <ul class="mc-list">
+            <li class="mc-item">
+              <span class="mc-mark">✕</span>
+              <span class="mc-text">改了一下 <span class="mc-note">改了哪？</span></span>
+            </li>
+            <li class="mc-item">
+              <span class="mc-mark">✕</span>
+              <span class="mc-text">更新文件 <span class="mc-note">哪个文件？</span></span>
+            </li>
+            <li class="mc-item">
+              <span class="mc-mark">✕</span>
+              <span class="mc-text">1234 <span class="mc-note">？？？</span></span>
+            </li>
+            <li class="mc-item">
+              <span class="mc-mark">✕</span>
+              <span class="mc-text">按 PM 要求改 <span class="mc-note">改了什么？</span></span>
+            </li>
+            <li class="mc-item">
+              <span class="mc-mark">✕</span>
+              <span class="mc-text">. <span class="mc-note">真的有人这样写</span></span>
+            </li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="msg-rules">
+        <div class="msg-rule">
+          <div class="mr-num">RULE · 01</div>
+          <h5>动词开头</h5>
+          <p><code>fix</code> / <code>add</code> / <code>update</code> / <code>refactor</code> / <code>remove</code> / <code>docs</code> —— 一眼看出做了哪种改动。</p>
+        </div>
+        <div class="msg-rule">
+          <div class="mr-num">RULE · 02</div>
+          <h5>讲"做了什么"</h5>
+          <p>不是"为什么做"。<strong>why 在 PR 描述里写</strong>，commit 只讲事实：动了哪个组件、哪个文件、改成了什么。</p>
+        </div>
+        <div class="msg-rule">
+          <div class="mr-num">RULE · 03</div>
+          <h5>一句话能讲完</h5>
+          <p>50 字以内最舒服。讲不完？那这一次 commit 可能<strong>装了太多事</strong> —— 拆成两次。</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="hint-strip" style="margin-top:24px;">
+      <span class="hint-tag">小贴士</span>很多团队用 <code>type: 描述</code> 这种格式（叫 conventional commits）—— 不是必须的，但写起来思路清晰、git log 也好读。
+    </div>
+  </div>
+</section>
+
+<!-- §05 5 commands -->
+<section id="commands">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>05</strong> / 上手</div>
+        <h2 class="section-title">设计师最该掌握的<br><span class="em">5 个 git 命令</span></h2>
+      </div>
+      <p class="section-sub">
+        不是要你成为 git 专家。<strong>这 5 个命令</strong>能覆盖 80% 的设计师日常 ——
+        知道什么场景用哪个，遇到事不慌。
+      </p>
+    </div>
+
+    <div class="cmd-grid">
+      <div class="cmd-card">
+        <div class="cc-num">CMD · 01</div>
+        <h4 class="cc-title">看现在啥情况</h4>
+        <pre class="cc-cmd">git status</pre>
+        <p class="cc-when"><strong>什么时候用：</strong>不知道当前在哪个分支、改了哪些文件、还没 commit 的有多少 —— 这一条全告诉你。<strong>开干前先打这一条，永远不会错</strong>。</p>
+        <div class="cc-out">
+          <span class="out-tag">输出长这样</span>
+          <strong>On branch</strong> feature/login<br>
+          Changes not staged for commit:<br>
+          &nbsp;&nbsp;<span class="warn">modified:</span> Button.tsx<br>
+          &nbsp;&nbsp;<span class="warn">modified:</span> styles.css
+        </div>
+      </div>
+
+      <div class="cmd-card">
+        <div class="cc-num">CMD · 02</div>
+        <h4 class="cc-title">保存这次的改动</h4>
+        <pre class="cc-cmd">git add .
+git commit -m <span class="cstr">"fix: 修复按钮溢出"</span></pre>
+        <p class="cc-when"><strong>什么时候用：</strong>改完一件事 —— 比如"按钮颜色调好了" —— 用这两条把它存为一次 commit。<strong>add 是把改动放进暂存区，commit 是真正留快照</strong>。</p>
+        <div class="cc-out">
+          <span class="out-tag">输出长这样</span>
+          <span class="ok">[feature/login a3f8b21]</span> fix: 修复按钮溢出<br>
+          &nbsp;1 file changed, 4 insertions(+), 2 deletions(-)
+        </div>
+      </div>
+
+      <div class="cmd-card">
+        <div class="cc-num">CMD · 03</div>
+        <h4 class="cc-title">推到远程</h4>
+        <pre class="cc-cmd">git push</pre>
+        <p class="cc-when"><strong>什么时候用：</strong>commit 之后只是<strong>存在你电脑上</strong>。push 一下才会同步到 GitHub / GitLab，同事才能看到。<strong>commit 是本地、push 是上传</strong>。</p>
+        <div class="cc-out">
+          <span class="out-tag">输出长这样</span>
+          To github.com:team/project.git<br>
+          &nbsp;&nbsp;<span class="ok">a1b2c3d..a3f8b21</span>&nbsp;&nbsp;feature/login -&gt; feature/login
+        </div>
+      </div>
+
+      <div class="cmd-card">
+        <div class="cc-num">CMD · 04</div>
+        <h4 class="cc-title">同步别人改的</h4>
+        <pre class="cc-cmd">git pull</pre>
+        <p class="cc-when"><strong>什么时候用：</strong>每天开干之前。把同事昨天 push 的改动拉到你的本地 ——
+        这样你后面动的就是<strong>最新版本</strong>，少很多冲突。</p>
+        <div class="cc-out">
+          <span class="out-tag">输出长这样</span>
+          Updating <span class="ok">a3f8b21..7c1d9e2</span><br>
+          Fast-forward<br>
+          &nbsp;&nbsp;Header.tsx | 8 +++++++-<br>
+          &nbsp;&nbsp;1 file changed, 7 insertions(+)
+        </div>
+      </div>
+
+      <div class="cmd-card is-wide">
+        <div class="cc-num">CMD · 05</div>
+        <h4 class="cc-title">开一条新分支</h4>
+        <pre class="cc-cmd">git checkout -b feature/<span class="cstr">login-redesign</span>   <span class="ccom"># 创建并切到新分支</span></pre>
+        <p class="cc-when"><strong>什么时候用：</strong>开始做一个新功能 / 试一个新方案前。<strong>永远不要直接改 main</strong> —— 先开一条分支，在分支上随便折腾，做完了再合回 main。
+        <code>-b</code> 的意思是 "branch"（创建一条新分支），分支名一般叫 <code>feature/做的事</code> 或 <code>fix/修的 bug</code>。</p>
+        <div class="cc-out">
+          <span class="out-tag">输出长这样</span>
+          <span class="ok">Switched to a new branch</span> 'feature/login-redesign'
+        </div>
+      </div>
+    </div>
+
+    <div class="hint-strip" style="margin-top:24px;">
+      <span class="hint-tag">够用</span>记住这 5 条 ——<strong> status / add+commit / push / pull / checkout -b</strong> ——
+      你已经能跟工程师正常协作了。其他命令（rebase、cherry-pick、reset）等你真的撞上再学。
+    </div>
+  </div>
+</section>
+
+<!-- §06 Cheatsheet -->
+<section id="cheat">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>06</strong> / 速查</div>
+        <h2 class="section-title">三张<br><span class="em">速查卡</span></h2>
+      </div>
+      <p class="section-sub">
+        到这就结束了。下次开会被工程师同事问 commit / branch / merge，先想这三张卡。打印贴显示器边上更好。
+      </p>
+    </div>
+
+    <div class="cheat-grid">
+      <div class="cheat-card minds">
+        <div class="cc-num">CARD 01 · 心智</div>
+        <h4>Figma vs Git</h4>
+        <div class="cc-sub">同一个词，意思不一样</div>
+        <div class="vs-row">
+          <div class="vk">version<br>历史</div>
+          <div class="vv">Figma 自动存。<br>git 必须 <strong>commit</strong>。</div>
+        </div>
+        <div class="vs-row">
+          <div class="vk">branch<br>分支</div>
+          <div class="vv">Figma 是"另存草稿"。<br>git 是 <strong>分叉的时间线</strong>。</div>
+        </div>
+        <div class="vs-row">
+          <div class="vk">merge<br>合并</div>
+          <div class="vv">Figma 是"草稿覆盖回去"。<br>git 是 <strong>两条时间线汇合</strong>。</div>
+        </div>
+        <div class="vs-row">
+          <div class="vk">conflict<br>冲突</div>
+          <div class="vv">Figma 直接覆盖。<br>git 让你 <strong>逐行选</strong>（→ 见 G2）。</div>
+        </div>
+      </div>
+
+      <div class="cheat-card cmds">
+        <div class="cc-num">CARD 02 · 命令</div>
+        <h4>5 条够用</h4>
+        <div class="cc-sub">日常协作完全够</div>
+        <dl>
+          <dt>看现状</dt>
+          <dd><code>git status</code> —— 不知道怎么办的时候先打这条。</dd>
+          <dt>存快照</dt>
+          <dd><code>git add .</code> + <code>git commit -m "..."</code> —— 改完一件事就跑一次。</dd>
+          <dt>上传 / 下载</dt>
+          <dd><code>git push</code> 推到远程 · <code>git pull</code> 拉同事的改动。</dd>
+          <dt>开分支</dt>
+          <dd><code>git checkout -b feature/xxx</code> —— 永远不要直接改 main。</dd>
+        </dl>
+      </div>
+
+      <div class="cheat-card tmpl">
+        <div class="cc-num">CARD 03 · 模板</div>
+        <h4>commit 模板</h4>
+        <div class="cc-sub">抄走能用</div>
+        <div class="tpl-block">
+<span class="tplf">type</span>: <span class="tplv">短描述</span>
+<span class="tplc">  ↑              ↑</span>
+<span class="tplc">动词开头        一句话</span>
+        </div>
+        <dl>
+          <dt>常用 type</dt>
+          <dd><code>fix</code> 修 bug · <code>add</code> 加新东西 · <code>update</code> 改已有的 · <code>refactor</code> 重构（行为不变） · <code>docs</code> 改文档 · <code>style</code> 改样式</dd>
+          <dt>例子</dt>
+          <dd><code>fix: 登录按钮 iOS 溢出</code><br><code>add: 订单详情 skeleton</code></dd>
+        </dl>
+      </div>
+    </div>
+
+    <a href="g2-conflict-figma.html" class="next-post">
+      <div>
+        <div class="np-tag">下一篇 · NEXT · G2 · 版本控制</div>
+        <h4>冲突不是 bug，<span class="em">是</span> git 在问你</h4>
+        <p>commit / branch / merge 跑通了，下一关 —— <strong>合并的时候撞车了</strong>。两个人改了同一行，git 不替你做主。这一篇拆解冲突标记，配 3 轮救火游戏。</p>
+      </div>
+      <span class="np-cta">继续阅读 <span class="arr">→</span></span>
+    </a>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div class="byline">
+      <img class="avatar" src="author.jpg" alt="范米花儿">
+      <div class="byline-meta">
+        <div class="byline-label"><span class="dot"></span>作者 · WRITTEN BY</div>
+        <h3 class="byline-name">嗨，我是 <span class="em">范米花儿</span></h3>
+        <p class="byline-tag">一份给设计师的代码入门 ——<br>不需要会写，知道大概怎么回事，跟前端 / AI 沟通就顺多了。</p>
+        <div class="byline-contact">
+          <span class="contact-label">微信</span>
+          <span class="contact-id">vanvan_0422</span>
+          <span class="contact-hint">想看什么主题，加我聊</span>
+        </div>
+      </div>
+    </div>
+    <div class="footer-meta">
+      做于 <span class="mono">2026</span> · 用 <span class="heart">●</span> 写给 <span class="mono">DESIGNERS &amp; DEVELOPERS</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+// ========= §01 Commit timeline (hover for detail) =========
+(function () {
+  const svg = document.getElementById('commitSvg');
+  const dotsG = document.getElementById('commitDots');
+  if (!svg || !dotsG) return;
+
+  const commits = [
+    {
+      x: 140, hash: 'a1b2c3d',
+      msg: '初始化项目结构',
+      author: '范米花儿',
+      time: '2026-04-08 · 10:14',
+      files: [
+        { name: 'index.html', mod: false },
+        { name: 'styles/main.css', mod: false },
+        { name: 'README.md', mod: false }
+      ]
+    },
+    {
+      x: 290, hash: 'd4e5f67',
+      msg: 'add: 头部导航 + logo 雏形',
+      author: '范米花儿',
+      time: '2026-04-09 · 16:42',
+      files: [
+        { name: 'components/Header.tsx', mod: false },
+        { name: 'assets/logo.svg', mod: false },
+        { name: 'styles/main.css', mod: true }
+      ]
+    },
+    {
+      x: 440, hash: '8a9b0c1',
+      msg: 'fix: 移动端头部 logo 错位',
+      author: '工程师同事',
+      time: '2026-04-11 · 09:03',
+      files: [
+        { name: 'components/Header.tsx', mod: true },
+        { name: 'styles/main.css', mod: true }
+      ]
+    },
+    {
+      x: 590, hash: '2d3e4f5',
+      msg: 'update: 主品牌色 #ff5e1a → #ff4d2e',
+      author: '范米花儿',
+      time: '2026-04-12 · 14:28',
+      files: [
+        { name: 'tokens/colors.json', mod: true },
+        { name: 'styles/main.css', mod: true }
+      ]
+    },
+    {
+      x: 740, hash: '6789abc',
+      msg: 'add: 订单详情页 skeleton 状态',
+      author: '范米花儿',
+      time: '2026-04-15 · 11:50',
+      files: [
+        { name: 'pages/OrderDetail.tsx', mod: false },
+        { name: 'components/Skeleton.tsx', mod: false },
+        { name: 'pages/OrderDetail.module.css', mod: false }
+      ]
+    }
+  ];
+
+  const cdMsg = document.getElementById('cdMsg');
+  const cdHash = document.getElementById('cdHash');
+  const cdAuthor = document.getElementById('cdAuthor');
+  const cdTime = document.getElementById('cdTime');
+  const cdFiles = document.getElementById('cdFiles');
+
+  // Render commit dots + hash labels
+  let html = '';
+  commits.forEach((c, i) => {
+    const cx = c.x;
+    html += `<g class="commit-node" data-i="${i}">`;
+    html += `<circle class="cdot" cx="${cx}" cy="100" r="8" fill="#16161d" stroke="#f3eee5" stroke-width="2"></circle>`;
+    html += `<text x="${cx}" y="138" text-anchor="middle" font-family="JetBrains Mono" font-size="10" fill="#4a4a55">${c.hash.slice(0, 7)}</text>`;
+    html += `</g>`;
+  });
+  dotsG.innerHTML = html;
+
+  function setActive(i) {
+    const c = commits[i];
+    cdMsg.textContent = c.msg;
+    cdHash.textContent = c.hash;
+    cdAuthor.textContent = c.author;
+    cdTime.textContent = c.time;
+    cdFiles.innerHTML = c.files.map(f =>
+      `<li class="${f.mod ? 'mod' : ''}">${f.name}</li>`
+    ).join('');
+
+    dotsG.querySelectorAll('.cdot').forEach((d, idx) => {
+      d.classList.toggle('is-active', idx === i);
+      d.setAttribute('fill', idx === i ? '#ff4d2e' : '#16161d');
+    });
+  }
+
+  dotsG.querySelectorAll('.commit-node').forEach((g, i) => {
+    g.addEventListener('mouseenter', () => setActive(i));
+    g.addEventListener('click', () => setActive(i));
+  });
+
+  // default to last commit
+  setActive(commits.length - 1);
+})();
+
+// ========= §03 Sandbox timeline (the soul) =========
+(function () {
+  const svg = document.getElementById('sandboxSvg');
+  const canvas = document.getElementById('sandboxCanvas');
+  const narration = document.getElementById('sandboxNarration');
+  const ssHead = document.getElementById('ssHead');
+  const ssCommits = document.getElementById('ssCommits');
+  const ssBranches = document.getElementById('ssBranches');
+  const ssLast = document.getElementById('ssLast');
+  const buttons = document.querySelectorAll('.sandbox-actions button[data-act]');
+  const switchBtn = document.getElementById('switchBtn');
+  const switchMenu = document.getElementById('switchMenu');
+  if (!svg || !canvas) return;
+
+  // ----- Model -----
+  // Each commit: { id, parents: [ids], lane: 0..n, msg, branchHint }
+  // Each branch: { name, color, lane, headCommitId }
+  // HEAD: branch name (currently)
+  // Layout: x = commitsCount * STEP + START; y based on lane
+  let commits = [];
+  let branches = []; // [{ name, color, lane, headId }]
+  let head = 'main';
+  let nextId = 1;
+  let nextFeatureIndex = 0;
+  let nextLane = 0;
+
+  const PALETTE = ['#ff4d2e', '#0a4cff', '#1f6b3a', '#ffcf3d', '#9c4dff'];
+  const LANE_Y = [120, 56, 188, 224, 88]; // y-coords for lane 0..n
+  const STEP_X = 80;
+  const START_X = 60;
+
+  // committed messages for the auto-narrator
+  const COMMIT_MSGS_MAIN = ['初始化项目', 'fix: 主页底部 spacing', 'docs: 更新 README', 'update: 调一下 token', 'add: 加 footer'];
+  const COMMIT_MSGS_FEATURE = ['add: 登录页雏形', 'add: 表单校验', 'fix: 输入框焦点态', 'update: 调按钮配色', 'add: 错误提示文案'];
+  const FEATURE_NAMES = ['feature/login', 'feature/header', 'feature/onboard', 'feature/profile'];
+
+  function init() {
+    commits = [];
+    branches = [{ name: 'main', color: '#16161d', lane: 0, headId: null }];
+    head = 'main';
+    nextId = 1;
+    nextFeatureIndex = 0;
+    nextLane = 1;
+    rebuildSwitchMenu();
+    render();
+    narrate('init', '<strong>开始</strong>。当前在 <code>main</code> 分支，时间线还是空的。先点 <code>commit</code> 试试。');
+    updateStatus('—');
+  }
+
+  function getBranch(name) { return branches.find(b => b.name === name); }
+  function currentBranch() { return getBranch(head); }
+  function commitX(i) { return START_X + i * STEP_X; }
+  function laneY(lane) { return LANE_Y[lane] || (60 + lane * 40); }
+
+  // ----- Actions -----
+  function actCommit() {
+    const branch = currentBranch();
+    const parentId = branch.headId;
+    const isMainBranch = (branch.name === 'main');
+    const list = isMainBranch ? COMMIT_MSGS_MAIN : COMMIT_MSGS_FEATURE;
+    // Pick a message
+    const branchCommits = commits.filter(c => c.lane === branch.lane);
+    const msg = list[branchCommits.length % list.length];
+
+    const commit = {
+      id: nextId++,
+      parents: parentId !== null ? [parentId] : [],
+      lane: branch.lane,
+      msg: msg,
+      branch: branch.name,
+      isMerge: false
+    };
+    commits.push(commit);
+    branch.headId = commit.id;
+
+    render(commit.id);
+    narrate('commit',
+      `留下了一个新 <strong>commit</strong>（编号 c${commit.id}） —— <code>"${msg}"</code>。 ` +
+      `它落在 <code>${branch.name}</code> 上，<strong>${branch.name}</strong> 的指针往前走了一格。`
+    );
+    updateStatus(`git commit -m "${msg}"`);
+  }
+
+  function actBranch() {
+    if (commits.length === 0) {
+      narrate('warn', '现在时间线还是空的 —— 至少先 <code>commit</code> 一次，才能从某个 commit 上分叉。');
+      return;
+    }
+    if (nextFeatureIndex >= FEATURE_NAMES.length) {
+      narrate('warn', '已经开了 4 条分支了，这个沙盘够用啦 —— 点"重置"再来一遍？');
+      return;
+    }
+    const branch = currentBranch();
+    const fromId = branch.headId;
+    const newName = FEATURE_NAMES[nextFeatureIndex++];
+    const color = PALETTE[(nextLane - 1) % PALETTE.length];
+    const lane = nextLane++;
+
+    branches.push({ name: newName, color: color, lane: lane, headId: fromId });
+    head = newName;
+    rebuildSwitchMenu();
+    render();
+    narrate('branch',
+      `从 <code>c${fromId}</code> 分叉出新分支 <strong style="color:${color}">${newName}</strong>。 ` +
+      `<code>HEAD</code> 现在指向 <code>${newName}</code> —— 你接下来 commit 都会落在这条线上，<strong>main 不受影响</strong>。`
+    );
+    updateStatus(`git checkout -b ${newName}`);
+  }
+
+  function actSwitch(targetName) {
+    if (!targetName) {
+      // Open menu
+      switchMenu.classList.toggle('is-open');
+      return;
+    }
+    if (targetName === head) {
+      narrate('warn', `你已经在 <code>${targetName}</code> 上了，不用切。`);
+      switchMenu.classList.remove('is-open');
+      return;
+    }
+    head = targetName;
+    rebuildSwitchMenu();
+    render();
+    const b = getBranch(targetName);
+    narrate('switch',
+      `切到 <strong style="color:${b.color}">${targetName}</strong>。 ` +
+      `工作区文件回到这条分支的最后一个 commit 状态 —— 注意，<strong>main 上你刚才看到的修改不会出现</strong>，因为你不在 main 了。`
+    );
+    updateStatus(`git checkout ${targetName}`);
+    switchMenu.classList.remove('is-open');
+  }
+
+  function actMerge() {
+    const cur = currentBranch();
+    // Find a non-current branch with commits ahead of current branch
+    const candidates = branches.filter(b => b.name !== head && b.headId !== null);
+    if (candidates.length === 0) {
+      narrate('warn', '现在没有别的分支可以合 —— 先创建一条分支，在上面 commit 几次，再回来 merge。');
+      return;
+    }
+    // Prefer feature branches (non-main)
+    let from = candidates.find(b => b.name !== 'main') || candidates[0];
+
+    // Check if its head was already merged
+    const fromCommit = commits.find(c => c.id === from.headId);
+    if (!fromCommit) {
+      narrate('warn', `分支 <code>${from.name}</code> 上还没有 commit，没东西可以合。`);
+      return;
+    }
+
+    // Create a merge commit on current branch's lane
+    const mergeCommit = {
+      id: nextId++,
+      parents: [cur.headId, from.headId].filter(x => x !== null),
+      lane: cur.lane,
+      msg: `merge ${from.name} into ${cur.name}`,
+      branch: cur.name,
+      isMerge: true,
+      mergeFromLane: from.lane,
+      mergeFromColor: from.color
+    };
+    commits.push(mergeCommit);
+    cur.headId = mergeCommit.id;
+
+    render(mergeCommit.id);
+    narrate('merge',
+      `<strong>merge!</strong> 把 <code style="color:${from.color}">${from.name}</code> 合回 <code>${cur.name}</code>。 ` +
+      `两条时间线在 <code>c${mergeCommit.id}</code> 处<strong>汇合</strong>了 —— main 现在包含了 ${from.name} 上所有的改动。`
+    );
+    updateStatus(`git merge ${from.name}`);
+  }
+
+  function actReset() {
+    init();
+  }
+
+  // ----- Switch menu -----
+  function rebuildSwitchMenu() {
+    switchMenu.innerHTML = '';
+    branches.forEach(b => {
+      const btn = document.createElement('button');
+      btn.dataset.target = b.name;
+      btn.innerHTML = `<div class="bp-row">
+        <span class="bp-dot" style="background:${b.color}"></span>
+        <span class="bp-name">${b.name}</span>
+        ${b.name === head ? '<span class="bp-current">CURRENT</span>' : ''}
+      </div>`;
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        actSwitch(b.name);
+      });
+      switchMenu.appendChild(btn);
+    });
+  }
+
+  // ----- Rendering -----
+  function render(popId) {
+    // Compute positions: each commit gets x based on its position index in the global commit array
+    const positions = {};
+    commits.forEach((c, i) => {
+      positions[c.id] = { x: commitX(i), y: laneY(c.lane) };
+    });
+
+    // Build SVG
+    let svgInner = '';
+
+    // 1. Draw branch baselines (faint horizontal lines for each lane that has commits)
+    const lanes = [...new Set(commits.map(c => c.lane))];
+    if (commits.length === 0) {
+      // baseline: just show empty main
+      svgInner += `<line x1="40" y1="120" x2="700" y2="120" stroke="#16161d" stroke-width="2" stroke-dasharray="4 6" opacity="0.4"></line>`;
+      svgInner += `<text x="40" y="108" font-family="JetBrains Mono" font-size="11" fill="#16161d" font-weight="700">main</text>`;
+    }
+
+    // 2. Draw edges (commit-to-parent lines)
+    commits.forEach(c => {
+      c.parents.forEach(pid => {
+        const parent = commits.find(p => p.id === pid);
+        if (!parent) return;
+        const p1 = positions[pid];
+        const p2 = positions[c.id];
+        const branchColor = (branches.find(b => b.lane === c.lane) || {}).color || '#16161d';
+        if (parent.lane === c.lane) {
+          // straight line
+          svgInner += `<line class="sx-line" x1="${p1.x}" y1="${p1.y}" x2="${p2.x}" y2="${p2.y}" stroke="${branchColor}" stroke-width="2.5"></line>`;
+        } else {
+          // curved (branching out or merging in)
+          // For merge commits the "from" parent comes from a different lane
+          const isMergeIn = c.isMerge && parent.lane !== c.lane;
+          const color = isMergeIn ? (c.mergeFromColor || branchColor) : branchColor;
+          const midX = (p1.x + p2.x) / 2;
+          // Draw curve: from parent (different lane) into this commit
+          if (parent.lane !== c.lane) {
+            // parent is on a different lane, this commit is on c.lane
+            // Curve goes from parent's position, up/down to c.lane
+            svgInner += `<path class="sx-line" d="M ${p1.x} ${p1.y} L ${midX - 20} ${p1.y} Q ${midX} ${p1.y}, ${midX + 20} ${(p1.y + p2.y) / 2} T ${p2.x} ${p2.y}" stroke="${color}" stroke-width="2.5" fill="none"></path>`;
+          }
+        }
+      });
+    });
+
+    // For branches with no commits yet (just created from a commit), draw a short stub from parent commit out to the new lane
+    branches.forEach(b => {
+      if (b.headId === null) return;
+      const headCommit = commits.find(c => c.id === b.headId);
+      if (!headCommit) return;
+      // If branch lane != head commit lane, that means branch was created but no new commit
+      if (b.lane !== headCommit.lane) {
+        const p = positions[headCommit.id];
+        const stubX = p.x + 50;
+        const stubY = laneY(b.lane);
+        const labelLeft = stubX + 8;
+        svgInner += `<path class="sx-line" d="M ${p.x} ${p.y} Q ${p.x + 25} ${p.y}, ${p.x + 25} ${(p.y + stubY) / 2} T ${stubX} ${stubY}" stroke="${b.color}" stroke-width="2.5" stroke-dasharray="4 5" fill="none" opacity="0.7"></path>`;
+        // If this branch is currently HEAD, draw a HEAD pill before the branch name
+        if (b.name === head) {
+          svgInner += `<g class="sx-head-marker">`;
+          svgInner += `<rect x="${labelLeft}" y="${stubY - 7}" width="32" height="16" rx="3" fill="#ff4d2e"></rect>`;
+          svgInner += `<text x="${labelLeft + 16}" y="${stubY + 4}" font-family="JetBrains Mono" font-size="9" fill="white" font-weight="700" text-anchor="middle">HEAD</text>`;
+          svgInner += `</g>`;
+          svgInner += `<text x="${labelLeft + 40}" y="${stubY + 4}" font-family="JetBrains Mono" font-size="10" fill="${b.color}" font-weight="700">${b.name}</text>`;
+          svgInner += `<text x="${labelLeft + 40}" y="${stubY + 18}" font-family="JetBrains Mono" font-size="9" fill="#8a8a92">还没 commit</text>`;
+        } else {
+          svgInner += `<text x="${labelLeft}" y="${stubY + 4}" font-family="JetBrains Mono" font-size="10" fill="${b.color}" font-weight="700">${b.name}</text>`;
+          svgInner += `<text x="${labelLeft}" y="${stubY + 18}" font-family="JetBrains Mono" font-size="9" fill="#8a8a92">还没 commit</text>`;
+        }
+      }
+    });
+
+    // 3. Draw commit nodes
+    commits.forEach(c => {
+      const p = positions[c.id];
+      const branchColor = (branches.find(b => b.lane === c.lane) || {}).color || '#16161d';
+      const isPop = (c.id === popId);
+      const popClass = isPop ? 'sx-node is-pop' : 'sx-node';
+      if (c.isMerge) {
+        // Merge node: larger, with double-color outline
+        svgInner += `<circle class="${popClass}" cx="${p.x}" cy="${p.y}" r="9" fill="${branchColor}" stroke="${c.mergeFromColor || '#16161d'}" stroke-width="3"></circle>`;
+        if (isPop) {
+          svgInner += `<circle class="sx-merge-burst" cx="${p.x}" cy="${p.y}" r="18" fill="none" stroke="${branchColor}" stroke-width="2" opacity="0.5"></circle>`;
+        }
+      } else {
+        svgInner += `<circle class="${popClass}" cx="${p.x}" cy="${p.y}" r="7" fill="${branchColor}" stroke="#f3eee5" stroke-width="2"></circle>`;
+      }
+      // Commit id label
+      svgInner += `<text x="${p.x}" y="${p.y + 22}" text-anchor="middle" font-family="JetBrains Mono" font-size="10" fill="#4a4a55">c${c.id}</text>`;
+    });
+
+    // 4. Draw branch labels at the head commit + HEAD marker
+    branches.forEach(b => {
+      if (b.headId === null) return;
+      const headCommit = commits.find(c => c.id === b.headId);
+      if (!headCommit) return;
+      // Only label if the branch's last commit is on the branch's own lane
+      if (b.lane !== headCommit.lane) return; // already labeled in stubs above
+      const p = positions[b.headId];
+      const labelX = p.x + 18;
+      const labelY = p.y - 14;
+      const text = b.name;
+      const textWidth = text.length * 6.4 + 16;
+      svgInner += `<g>`;
+      svgInner += `<rect class="sx-label-bg" x="${labelX}" y="${labelY - 11}" width="${textWidth}" height="18" rx="3"></rect>`;
+      svgInner += `<text x="${labelX + 8}" y="${labelY + 2}" font-family="JetBrains Mono" font-size="10" fill="${b.color}" font-weight="700">${text}</text>`;
+      svgInner += `</g>`;
+      // HEAD marker
+      if (b.name === head) {
+        svgInner += `<g class="sx-head-marker">`;
+        svgInner += `<rect x="${labelX - 30}" y="${labelY - 11}" width="28" height="18" rx="3" fill="#ff4d2e"></rect>`;
+        svgInner += `<text x="${labelX - 16}" y="${labelY + 2}" font-family="JetBrains Mono" font-size="9" fill="white" font-weight="700" text-anchor="middle">HEAD</text>`;
+        svgInner += `</g>`;
+      }
+    });
+
+    // 5. Make sure the SVG can grow horizontally if there are many commits
+    const minWidth = Math.max(720, START_X + commits.length * STEP_X + 200);
+    svg.setAttribute('viewBox', `0 0 ${minWidth} 240`);
+    svg.style.minWidth = minWidth + 'px';
+    svg.innerHTML = svgInner;
+
+    // Auto-scroll to right when adding a commit
+    if (popId !== undefined) {
+      requestAnimationFrame(() => {
+        canvas.scrollLeft = canvas.scrollWidth;
+      });
+    }
+  }
+
+  // ----- Narration -----
+  const NARRATION_TAGS = {
+    init: '› 旁白',
+    commit: '› commit',
+    branch: '› create branch',
+    switch: '› switch branch',
+    merge: '› merge',
+    warn: '!  注意'
+  };
+
+  function narrate(type, text) {
+    const tag = NARRATION_TAGS[type] || '› 旁白';
+    const color = (type === 'warn') ? '#b48010' : '#ff4d2e';
+    narration.innerHTML = `
+      <div class="sn-tag" style="color:${color}">${tag}</div>
+      <p class="sn-text">${text}</p>
+    `;
+  }
+
+  function updateStatus(lastCmd) {
+    ssHead.textContent = head;
+    ssCommits.textContent = commits.length;
+    ssBranches.textContent = branches.map(b => b.name).join(' · ');
+    ssLast.textContent = lastCmd;
+  }
+
+  // ----- Wire up -----
+  buttons.forEach(b => {
+    b.addEventListener('click', (e) => {
+      const act = b.dataset.act;
+      if (act === 'commit') actCommit();
+      else if (act === 'branch') actBranch();
+      else if (act === 'switch') {
+        e.stopPropagation();
+        actSwitch();
+      }
+      else if (act === 'merge') actMerge();
+      else if (act === 'reset') actReset();
+    });
+  });
+
+  // Close switch menu on outside click
+  document.addEventListener('click', (e) => {
+    if (!switchMenu.contains(e.target) && e.target !== switchBtn && !switchBtn.contains(e.target)) {
+      switchMenu.classList.remove('is-open');
+    }
+  });
+
+  // Init
+  init();
+})();
+</script>
+
+
+<!-- 路线图弹窗 -->
+<div class="rm-modal" id="rm-modal" hidden>
+  <div class="rm-backdrop" data-rm-close></div>
+  <div class="rm-dialog" role="dialog" aria-label="完整路线图">
+    <button class="rm-close" data-rm-close aria-label="关闭">✕</button>
+    <div class="rm-header">
+      <div class="rm-tag">完整路线图 · ROADMAP</div>
+      <h3 class="rm-title">9 模块 <span class="rm-em">·</span> 28 篇</h3>
+      <p class="rm-sub">设计篇 5 模块 / 15 篇 + 工程篇 4 系列 / 13 篇</p>
+    </div>
+    <div class="rm-body">
+      <div class="rm-mod">
+        <div class="rm-mod-key">A · 单元素与组件</div>
+        <div class="rm-mod-list">
+          <a href="basics-figma.html" class="rm-cell"><span class="rm-cell-code">A0</span><span class="rm-cell-name">三件套 · HTML / CSS / JS</span><span class="rm-cell-tier">入门</span></a>
+          <a href="box-figma.html" class="rm-cell"><span class="rm-cell-code">A1</span><span class="rm-cell-name">盒子 · Auto Layout</span><span class="rm-cell-tier">基础</span></a>
+          <a href="components-figma.html" class="rm-cell"><span class="rm-cell-code">A2</span><span class="rm-cell-name">组件 · Variants &amp; Props</span><span class="rm-cell-tier">基础</span></a>
+          <a href="button-system-figma.html" class="rm-cell"><span class="rm-cell-code">A3</span><span class="rm-cell-name">Button System · 组件演化</span><span class="rm-cell-tier">进阶</span></a>
+        </div>
+      </div>
+      <div class="rm-mod">
+        <div class="rm-mod-key">B · 多组件协作</div>
+        <div class="rm-mod-list">
+          <a href="page-figma.html" class="rm-cell"><span class="rm-cell-code">B0</span><span class="rm-cell-name">拼页面 · 组件嵌套</span><span class="rm-cell-tier">入门</span></a>
+          <a href="data-flow-figma.html" class="rm-cell"><span class="rm-cell-code">B1</span><span class="rm-cell-name">数据流 · 概念</span><span class="rm-cell-tier">基础</span></a>
+          <a href="data-flow-cases-figma.html" class="rm-cell"><span class="rm-cell-code">B2</span><span class="rm-cell-name">数据流 · 实战 5 案例</span><span class="rm-cell-tier">进阶</span></a>
+        </div>
+      </div>
+      <div class="rm-mod">
+        <div class="rm-mod-key">C · 视觉系统</div>
+        <div class="rm-mod-list">
+          <a href="tokens-figma.html" class="rm-cell"><span class="rm-cell-code">C0</span><span class="rm-cell-name">Variables / Tokens 入门</span><span class="rm-cell-tier">入门</span></a>
+          <a href="colors-type-figma.html" class="rm-cell"><span class="rm-cell-code">C1</span><span class="rm-cell-name">Colors / Type / Spacing</span><span class="rm-cell-tier">基础</span></a>
+          <a href="theme-switch-figma.html" class="rm-cell"><span class="rm-cell-code">C2</span><span class="rm-cell-name">Theme 切换实战</span><span class="rm-cell-tier">进阶</span></a>
+        </div>
+      </div>
+      <div class="rm-mod">
+        <div class="rm-mod-key">D · 状态与交互</div>
+        <div class="rm-mod-list">
+          <a href="states-figma.html" class="rm-cell"><span class="rm-cell-code">D0</span><span class="rm-cell-name">视觉态 · 看得见的状态</span><span class="rm-cell-tier">入门</span></a>
+          <a href="interactive-figma.html" class="rm-cell"><span class="rm-cell-code">D1</span><span class="rm-cell-name">Interactive Component</span><span class="rm-cell-tier">基础</span></a>
+          <a href="transition-figma.html" class="rm-cell"><span class="rm-cell-code">D2</span><span class="rm-cell-name">动画 · Transition</span><span class="rm-cell-tier">进阶</span></a>
+        </div>
+      </div>
+      <div class="rm-mod">
+        <div class="rm-mod-key">E · 工程化</div>
+        <div class="rm-mod-list">
+          <a href="naming-figma.html" class="rm-cell"><span class="rm-cell-code">E0</span><span class="rm-cell-name">命名 / 图层规范</span><span class="rm-cell-tier">入门</span></a>
+          <a href="handoff-figma.html" class="rm-cell"><span class="rm-cell-code">E2</span><span class="rm-cell-name">Handoff &amp; 设计系统</span><span class="rm-cell-tier">进阶</span></a>
+        </div>
+      </div>
+      <div class="rm-mod">
+        <div class="rm-mod-key">F · 工程入门</div>
+        <div class="rm-mod-list">
+          <a href="f1-npm-figma.html" class="rm-cell"><span class="rm-cell-code">F1</span><span class="rm-cell-name">npm 是什么</span><span class="rm-cell-tier">入门</span></a>
+          <a href="f2-import-figma.html" class="rm-cell"><span class="rm-cell-code">F2</span><span class="rm-cell-name">import 与路径</span><span class="rm-cell-tier">入门</span></a>
+          <a href="f3-dev-build-figma.html" class="rm-cell"><span class="rm-cell-code">F3</span><span class="rm-cell-name">dev vs build</span><span class="rm-cell-tier">基础</span></a>
+          <a href="f4-hidden-files-figma.html" class="rm-cell"><span class="rm-cell-code">F4</span><span class="rm-cell-name">看不见的文件</span><span class="rm-cell-tier">基础</span></a>
+        </div>
+      </div>
+      <div class="rm-mod">
+        <div class="rm-mod-key">G · 版本控制</div>
+        <div class="rm-mod-list">
+          <a href="g1-commit-branch-figma.html" class="rm-cell"><span class="rm-cell-code">G1</span><span class="rm-cell-name">commit / branch</span><span class="rm-cell-tier">入门</span></a>
+          <a href="g2-conflict-figma.html" class="rm-cell"><span class="rm-cell-code">G2</span><span class="rm-cell-name">冲突怎么解</span><span class="rm-cell-tier">基础</span></a>
+          <a href="g3-pr-review-figma.html" class="rm-cell"><span class="rm-cell-code">G3</span><span class="rm-cell-name">PR / Review</span><span class="rm-cell-tier">进阶</span></a>
+        </div>
+      </div>
+      <div class="rm-mod">
+        <div class="rm-mod-key">H · 浏览器调试</div>
+        <div class="rm-mod-list">
+          <a href="h1-devtools-elements-figma.html" class="rm-cell"><span class="rm-cell-code">H1</span><span class="rm-cell-name">DevTools Elements</span><span class="rm-cell-tier">入门</span></a>
+          <a href="h2-console-error-figma.html" class="rm-cell"><span class="rm-cell-code">H2</span><span class="rm-cell-name">Console 报错</span><span class="rm-cell-tier">基础</span></a>
+          <a href="h3-network-figma.html" class="rm-cell"><span class="rm-cell-code">H3</span><span class="rm-cell-name">Network 面板</span><span class="rm-cell-tier">进阶</span></a>
+        </div>
+      </div>
+      <div class="rm-mod">
+        <div class="rm-mod-key">J · 上线</div>
+        <div class="rm-mod-list">
+          <a href="j1-dns-figma.html" class="rm-cell"><span class="rm-cell-code">J1</span><span class="rm-cell-name">DNS / 域名</span><span class="rm-cell-tier">基础</span></a>
+          <a href="j2-vercel-figma.html" class="rm-cell"><span class="rm-cell-code">J2</span><span class="rm-cell-name">Vercel 部署</span><span class="rm-cell-tier">基础</span></a>
+          <a href="j3-cache-cdn-figma.html" class="rm-cell"><span class="rm-cell-code">J3</span><span class="rm-cell-name">缓存 / CDN</span><span class="rm-cell-tier">进阶</span></a>
+        </div>
+      </div>
+    </div>
+    <div class="rm-footer">
+      <span>未完待续 · 想看什么主题加我聊</span>
+      <span class="rm-wechat">微信 vanvan_0422</span>
+    </div>
+  </div>
+</div>
+<script>
+(function(){
+  var modal = document.getElementById('rm-modal');
+  if (!modal) return;
+  var openBtns = document.querySelectorAll('[data-rm-open]');
+  var closeBtns = modal.querySelectorAll('[data-rm-close]');
+  function open() { modal.hidden = false; document.body.style.overflow = 'hidden'; }
+  function close() { modal.hidden = true; document.body.style.overflow = ''; }
+  openBtns.forEach(function(b){ b.addEventListener('click', function(e){ e.preventDefault(); open(); }); });
+  closeBtns.forEach(function(b){ b.addEventListener('click', close); });
+  document.addEventListener('keydown', function(e){ if (e.key === 'Escape' && !modal.hidden) close(); });
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,3002 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PR / Code Review 怎么读 — PR 是给代码看一眼</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,300..900&family=Geist:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Noto+Sans+SC:wght@300;400;500;700;900&family=Noto+Serif+SC:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f3eee5;
+    --bg-2: #ebe4d4;
+    --ink: #16161d;
+    --ink-soft: #4a4a55;
+    --ink-mute: #8a8a92;
+    --line: #d5cdba;
+    --line-soft: #e3dcca;
+    --accent: #ff4d2e;
+    --accent-soft: #ffe4dc;
+    --blue: #0a4cff;
+    --blue-soft: #dde6ff;
+    --green: #1f6b3a;
+    --green-soft: #d4ecdb;
+    --yellow: #ffcf3d;
+    --yellow-soft: #fff1c2;
+    --paper: #faf7f0;
+    --shadow: 0 1px 0 rgba(0,0,0,0.04), 0 8px 24px rgba(22,22,29,0.06);
+
+    /* PR-specific */
+    --add: #1f6b3a;
+    --add-bg: #e6f3ea;
+    --add-line: #c7e3cf;
+    --del: #c33;
+    --del-bg: #fbe4e4;
+    --del-line: #e9c2c2;
+    --ctx: #6a6a72;
+    --status-open: #1f6b3a;
+    --status-changes: #b48010;
+    --status-approved: #1f6b3a;
+    --status-merged: #6f42c1;
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'Geist', 'Noto Sans SC', system-ui, -apple-system, sans-serif;
+    font-size: 16px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    background-image: radial-gradient(circle at 1px 1px, rgba(22,22,29,0.05) 1px, transparent 0);
+    background-size: 24px 24px;
+  }
+
+  /* Typography */
+  .display-cn { font-family: 'Noto Serif SC', serif; font-weight: 900; letter-spacing: -0.01em; }
+  .mono { font-family: 'JetBrains Mono', monospace; }
+  .label { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-mute); }
+
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 0 32px; }
+
+  /* Top bar */
+  .topbar {
+    border-bottom: 1px dashed var(--line);
+    padding: 16px 0;
+    background: var(--bg);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    backdrop-filter: blur(8px);
+    background: rgba(243, 238, 229, 0.85);
+  }
+  .topbar-inner { display: flex; justify-content: space-between; align-items: center; gap: 24px; }
+  .brand { font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 600; }
+  .brand .dot { display: inline-block; width: 8px; height: 8px; background: var(--accent); border-radius: 50%; margin-right: 8px; vertical-align: middle; animation: pulse 2s ease-in-out infinite; }
+  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+  .nav-links { display: flex; gap: 20px; font-size: 13px; }
+  .nav-links a { color: var(--ink-soft); text-decoration: none; transition: color 0.2s; cursor: pointer; }
+  .nav-links a:hover { color: var(--accent); }
+
+  a.brand { text-decoration: none; color: inherit; transition: color 0.2s; cursor: pointer; }
+  a.brand:hover { color: var(--accent); }
+
+  /* Hero */
+  .hero { padding: 100px 0 80px; position: relative; overflow: hidden; }
+  .hero-meta { display: flex; gap: 24px; margin-bottom: 32px; align-items: center; flex-wrap: wrap; }
+  .hero-meta .pill { padding: 6px 12px; border: 1px solid var(--ink); border-radius: 100px; font-size: 11px; font-family: 'JetBrains Mono', monospace; letter-spacing: 0.05em; }
+  .hero-meta .pill.fill { background: var(--ink); color: var(--bg); }
+  .hero h1 {
+    font-family: 'Noto Serif SC', serif;
+    font-weight: 900;
+    font-size: clamp(48px, 7vw, 92px);
+    line-height: 0.95;
+    letter-spacing: -0.03em;
+    margin: 0 0 24px;
+  }
+  .hero h1 .em {
+    font-family: 'Noto Serif SC', serif;
+    font-weight: 500;
+    color: var(--accent);
+  }
+  .hero p.lede {
+    font-size: 20px;
+    line-height: 1.55;
+    max-width: 640px;
+    color: var(--ink-soft);
+    margin: 0 0 40px;
+  }
+  .hero p.lede .em { color: var(--accent); font-weight: 600; }
+  .hero-grid { display: grid; grid-template-columns: 1.4fr 1fr; gap: 48px; align-items: end; }
+  @media (max-width: 880px) { .hero-grid { grid-template-columns: 1fr; } }
+  .hero-side { border-left: 1px dashed var(--line); padding-left: 24px; font-size: 13px; color: var(--ink-soft); }
+  .hero-side .row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px dashed var(--line); }
+  .hero-side .row:last-child { border-bottom: none; }
+  .hero-side .row .k { color: var(--ink-mute); font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.05em; text-transform: uppercase; }
+  .hero-side .row .v { font-weight: 500; }
+
+  /* Section */
+  section { padding: 80px 0; border-top: 1px solid var(--line); position: relative; }
+  .section-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 56px; flex-wrap: wrap; gap: 16px; }
+  .section-num { font-family: 'JetBrains Mono', monospace; font-size: 13px; color: var(--ink-mute); letter-spacing: 0.1em; }
+  .section-num strong { color: var(--accent); }
+  .section-title {
+    font-family: 'Noto Serif SC', serif;
+    font-weight: 900;
+    font-size: clamp(32px, 4.5vw, 52px);
+    line-height: 1.05;
+    letter-spacing: -0.02em;
+    margin: 0;
+    max-width: 18ch;
+  }
+  .section-title .em { font-family: 'Noto Serif SC', serif; font-weight: 500; color: var(--accent); }
+  .section-sub { color: var(--ink-soft); font-size: 17px; max-width: 38ch; line-height: 1.55; margin: 0; }
+  .em { font-family: 'Noto Serif SC', serif; font-weight: 500; color: var(--accent); }
+
+  /* Hint strip */
+  .hint-strip {
+    margin-top: 8px;
+    padding: 14px 18px;
+    background: var(--accent-soft);
+    border-left: 3px solid var(--accent);
+    border-radius: 4px;
+    font-size: 13px;
+    color: var(--ink);
+    line-height: 1.55;
+  }
+  .hint-strip .hint-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--accent);
+    letter-spacing: 0.12em;
+    margin-right: 10px;
+    text-transform: uppercase;
+  }
+  .hint-strip code {
+    font-family: 'JetBrains Mono', monospace;
+    background: rgba(255,255,255,0.55);
+    padding: 1px 6px;
+    border-radius: 3px;
+    font-size: 12px;
+    color: var(--ink);
+  }
+
+  /* ============== §01 — PR anatomy ============== */
+  .anat-stage {
+    margin-top: 24px;
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: var(--shadow);
+  }
+  .anat-pr {
+    padding: 22px 26px 0;
+    border-bottom: 1px dashed var(--line);
+  }
+  .anat-pr-meta {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    margin-bottom: 10px;
+    flex-wrap: wrap;
+  }
+  .anat-pr-num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    color: var(--ink-mute);
+  }
+  .anat-pr-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 12px;
+    border-radius: 100px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    background: var(--add-bg);
+    color: var(--status-open);
+    border: 1px solid var(--add-line);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+  .anat-pr-status .sd {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--status-open);
+    animation: pulse 2s ease-in-out infinite;
+  }
+  .anat-pr h3 {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 26px;
+    line-height: 1.25;
+    font-weight: 700;
+    margin: 0 0 10px;
+    letter-spacing: -0.01em;
+  }
+  .anat-pr-author {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 13px;
+    color: var(--ink-soft);
+    padding-bottom: 18px;
+  }
+  .anat-pr-author .avatar-sm {
+    width: 28px; height: 28px; border-radius: 50%;
+    background: linear-gradient(135deg, #ffb39a, #ff4d2e);
+    color: white;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    font-weight: 700;
+  }
+  .anat-pr-author strong { color: var(--ink); }
+  .anat-pr-author code {
+    font-family: 'JetBrains Mono', monospace;
+    background: var(--bg-2);
+    padding: 1px 8px;
+    border-radius: 3px;
+    font-size: 12px;
+  }
+
+  .anat-tabs {
+    display: flex;
+    gap: 0;
+    padding: 0 26px;
+    background: var(--paper);
+    border-bottom: 1px solid var(--line);
+  }
+  .anat-tab {
+    padding: 12px 16px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--ink-soft);
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transition: all 0.15s;
+    letter-spacing: 0.04em;
+  }
+  .anat-tab:hover { color: var(--ink); }
+  .anat-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+  .anat-tab .pill-count {
+    display: inline-block;
+    margin-left: 6px;
+    padding: 1px 8px;
+    background: var(--bg-2);
+    border-radius: 100px;
+    font-size: 10px;
+    color: var(--ink-soft);
+  }
+  .anat-tab.active .pill-count { background: var(--accent); color: white; }
+
+  .anat-body {
+    padding: 24px 26px 28px;
+    display: grid;
+    grid-template-columns: 1.05fr 0.95fr;
+    gap: 24px;
+  }
+  @media (max-width: 880px) { .anat-body { grid-template-columns: 1fr; } }
+  .anat-card {
+    background: var(--bg);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 16px 18px;
+    transition: all 0.18s;
+    cursor: pointer;
+  }
+  .anat-card:hover { border-color: var(--accent); transform: translateY(-1px); box-shadow: 0 8px 20px rgba(22,22,29,0.06); }
+  .anat-card.is-active { border-color: var(--accent); background: var(--accent-soft); }
+  .anat-card .ac-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--ink-mute);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+  .anat-card.is-active .ac-label { color: var(--accent); }
+  .anat-card h4 {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 17px;
+    margin: 0 0 6px;
+    font-weight: 700;
+    line-height: 1.3;
+    letter-spacing: -0.01em;
+  }
+  .anat-card p {
+    font-size: 13px;
+    color: var(--ink-soft);
+    line-height: 1.55;
+    margin: 0;
+  }
+  .anat-card p code {
+    font-family: 'JetBrains Mono', monospace;
+    background: var(--bg-2);
+    padding: 1px 6px;
+    border-radius: 3px;
+    font-size: 12px;
+    color: var(--ink);
+  }
+
+  .anat-detail {
+    background: var(--ink);
+    color: #d8d8e0;
+    border-radius: 6px;
+    padding: 22px 22px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    line-height: 1.7;
+    transition: opacity 0.25s;
+    min-height: 280px;
+  }
+  .anat-detail .ad-hd {
+    font-size: 11px;
+    color: var(--accent);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+    padding-bottom: 10px;
+    border-bottom: 1px dashed #2a2a36;
+  }
+  .anat-detail .ad-row {
+    padding: 6px 0;
+    color: #d8d8e0;
+  }
+  .anat-detail .ad-mute { color: #6e6e7a; }
+  .anat-detail .ad-add { color: #a8e6a3; }
+  .anat-detail .ad-del { color: #ff8e8e; }
+  .anat-detail .ad-warn { color: #ffd166; }
+  .anat-detail .ad-acc { color: #ffb39a; }
+
+  .anat-status-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+    margin-top: 24px;
+    padding: 0 26px 26px;
+  }
+  @media (max-width: 880px) { .anat-status-grid { grid-template-columns: repeat(2, 1fr); } }
+  .anat-status-cell {
+    background: var(--bg);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 14px;
+  }
+  .anat-status-cell .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 3px 10px;
+    border-radius: 100px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+  .anat-status-cell .badge .sd {
+    width: 7px; height: 7px; border-radius: 50%;
+  }
+  .anat-status-cell.open .badge { background: var(--add-bg); color: var(--status-open); border: 1px solid var(--add-line); }
+  .anat-status-cell.open .badge .sd { background: var(--status-open); }
+  .anat-status-cell.changes .badge { background: var(--yellow-soft); color: var(--status-changes); border: 1px solid #e8d59a; }
+  .anat-status-cell.changes .badge .sd { background: var(--status-changes); }
+  .anat-status-cell.approved .badge { background: var(--add-bg); color: var(--status-approved); border: 1px solid var(--add-line); }
+  .anat-status-cell.approved .badge .sd { background: var(--status-approved); }
+  .anat-status-cell.merged .badge { background: #ede4f8; color: var(--status-merged); border: 1px solid #d6c5ed; }
+  .anat-status-cell.merged .badge .sd { background: var(--status-merged); }
+  .anat-status-cell .sn {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 14px;
+    font-weight: 700;
+    margin: 0 0 4px;
+    line-height: 1.3;
+  }
+  .anat-status-cell .sd-text {
+    font-size: 12px;
+    color: var(--ink-soft);
+    line-height: 1.45;
+    margin: 0;
+  }
+
+  /* ============== §02 — Diff reading ============== */
+  .diff-stage {
+    margin-top: 24px;
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  .diff-rules {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0;
+    border-bottom: 1px solid var(--line);
+  }
+  @media (max-width: 720px) { .diff-rules { grid-template-columns: 1fr; } }
+  .diff-rule {
+    padding: 18px 22px;
+    text-align: center;
+    border-right: 1px dashed var(--line);
+  }
+  .diff-rule:last-child { border-right: none; }
+  @media (max-width: 720px) {
+    .diff-rule { border-right: none; border-bottom: 1px dashed var(--line); }
+    .diff-rule:last-child { border-bottom: none; }
+  }
+  .diff-rule .dr-bar {
+    display: inline-block;
+    padding: 6px 14px;
+    border-radius: 4px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    font-weight: 600;
+    margin-bottom: 8px;
+  }
+  .diff-rule.add .dr-bar { background: var(--add-bg); color: var(--add); border: 1px solid var(--add-line); }
+  .diff-rule.del .dr-bar { background: var(--del-bg); color: var(--del); border: 1px solid var(--del-line); }
+  .diff-rule.ctx .dr-bar { background: var(--bg-2); color: var(--ctx); border: 1px solid var(--line); }
+  .diff-rule h5 {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 16px;
+    margin: 0 0 4px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+  }
+  .diff-rule p {
+    margin: 0;
+    font-size: 12.5px;
+    color: var(--ink-soft);
+    line-height: 1.55;
+  }
+
+  .diff-game {
+    padding: 22px 26px 24px;
+  }
+  .diff-game .dg-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 14px;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .diff-game .dg-fname {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    color: var(--ink-soft);
+    background: var(--bg-2);
+    padding: 5px 12px;
+    border-radius: 4px;
+    border: 1px solid var(--line);
+  }
+  .diff-game .dg-fname strong { color: var(--ink); font-weight: 600; }
+  .diff-game .dg-task {
+    font-size: 13px;
+    color: var(--ink-soft);
+  }
+  .diff-game .dg-task strong { color: var(--accent); font-weight: 600; }
+
+  .diff-code {
+    background: var(--ink);
+    color: #d8d8e0;
+    border-radius: 6px;
+    padding: 16px 0;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    line-height: 1.85;
+    overflow-x: auto;
+  }
+  .diff-line {
+    display: grid;
+    grid-template-columns: 36px 28px 18px 1fr;
+    gap: 0;
+    padding: 0;
+    transition: background 0.15s;
+    cursor: pointer;
+    user-select: none;
+  }
+  .diff-line:hover { background: rgba(255,255,255,0.04); }
+  .diff-line .dl-num-old,
+  .diff-line .dl-num-new {
+    text-align: right;
+    padding-right: 8px;
+    color: #555560;
+    font-size: 11px;
+    user-select: none;
+  }
+  .diff-line .dl-prefix {
+    text-align: center;
+    color: #6e6e7a;
+    font-weight: 600;
+    user-select: none;
+  }
+  .diff-line .dl-text {
+    padding-right: 16px;
+    white-space: pre;
+  }
+  .diff-line.add { background: rgba(31, 107, 58, 0.18); }
+  .diff-line.add .dl-prefix { color: #a8e6a3; }
+  .diff-line.add .dl-text { color: #d8e9d3; }
+  .diff-line.add .dl-num-new { color: #a8e6a3; }
+  .diff-line.del { background: rgba(204, 51, 51, 0.18); }
+  .diff-line.del .dl-prefix { color: #ff8e8e; }
+  .diff-line.del .dl-text { color: #f0c9c9; }
+  .diff-line.del .dl-num-old { color: #ff8e8e; }
+  .diff-line.hunk { background: rgba(110, 110, 122, 0.12); padding: 4px 0; cursor: default; }
+  .diff-line.hunk .dl-text { color: #8e8ea2; }
+
+  .diff-line.is-marked {
+    box-shadow: inset 0 0 0 2px var(--accent);
+  }
+  .diff-line .dl-pin {
+    display: none;
+    margin-left: 6px;
+    padding: 0 6px;
+    background: var(--accent);
+    color: white;
+    font-size: 10px;
+    border-radius: 3px;
+    line-height: 16px;
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .diff-line.is-marked .dl-pin { display: inline-block; }
+
+  .diff-game .dg-controls {
+    display: flex;
+    gap: 10px;
+    margin-top: 14px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+  .diff-game .dg-btn {
+    padding: 8px 14px;
+    border-radius: 4px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    cursor: pointer;
+    border: 1px solid var(--ink);
+    background: var(--ink);
+    color: white;
+    transition: all 0.18s;
+    letter-spacing: 0.04em;
+  }
+  .diff-game .dg-btn:hover { background: var(--accent); border-color: var(--accent); }
+  .diff-game .dg-btn.ghost { background: transparent; color: var(--ink); }
+  .diff-game .dg-btn.ghost:hover { background: var(--ink); color: white; }
+  .diff-game .dg-toggle {
+    display: inline-flex;
+    align-items: center;
+    background: var(--bg-2);
+    border-radius: 4px;
+    border: 1px solid var(--line);
+    overflow: hidden;
+  }
+  .diff-game .dg-toggle button {
+    padding: 6px 12px;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--ink-soft);
+    letter-spacing: 0.04em;
+    transition: all 0.15s;
+  }
+  .diff-game .dg-toggle button.active { background: var(--ink); color: white; }
+  .diff-game .dg-counter {
+    margin-left: auto;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--ink-soft);
+  }
+  .diff-game .dg-counter strong { color: var(--accent); }
+  .diff-game .dg-feedback {
+    margin-top: 12px;
+    padding: 12px 16px;
+    border-radius: 4px;
+    font-size: 13px;
+    line-height: 1.5;
+    background: var(--bg-2);
+    border-left: 3px solid var(--ink-mute);
+    min-height: 22px;
+  }
+  .diff-game .dg-feedback.good { background: var(--add-bg); border-left-color: var(--add); color: var(--ink); }
+  .diff-game .dg-feedback.bad  { background: var(--del-bg); border-left-color: var(--del); color: var(--ink); }
+  .diff-game .dg-feedback strong { color: var(--ink); font-weight: 600; }
+
+  /* ============== §03 — Game (PR mock) ============== */
+  .pr-stage {
+    margin-top: 24px;
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: var(--shadow);
+  }
+  .pr-bar {
+    background: var(--ink);
+    color: white;
+    padding: 14px 22px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 14px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+  }
+  .pr-bar .pb-rounds {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+  .pr-bar .pb-label {
+    font-size: 10px;
+    color: rgba(255,255,255,0.5);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-right: 6px;
+  }
+  .pr-bar .pb-rounds button {
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.16);
+    color: rgba(255,255,255,0.7);
+    padding: 6px 14px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    border-radius: 3px;
+    cursor: pointer;
+    transition: all 0.15s;
+    letter-spacing: 0.04em;
+  }
+  .pr-bar .pb-rounds button:hover { background: rgba(255,255,255,0.16); color: white; }
+  .pr-bar .pb-rounds button.active { background: var(--accent); border-color: var(--accent); color: white; }
+  .pr-bar .pb-rounds button.done::after { content: ' ✓'; color: var(--green-soft); }
+  .pr-bar .pb-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    border-radius: 100px;
+    font-size: 10px;
+    background: rgba(31, 107, 58, 0.25);
+    color: #b8e6c4;
+    letter-spacing: 0.04em;
+  }
+  .pr-bar .pb-status .sd {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: #a8e6a3;
+    animation: pulse 2s ease-in-out infinite;
+  }
+
+  .pr-head {
+    padding: 22px 28px 16px;
+    border-bottom: 1px dashed var(--line);
+    background: var(--bg);
+  }
+  .pr-head .ph-num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--ink-mute);
+    margin-bottom: 6px;
+  }
+  .pr-head h3 {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 22px;
+    margin: 0 0 12px;
+    line-height: 1.3;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+  }
+  .pr-head h3 .pr-prefix {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    color: var(--accent);
+    background: var(--accent-soft);
+    padding: 2px 8px;
+    border-radius: 3px;
+    font-weight: 500;
+    margin-right: 8px;
+    vertical-align: 3px;
+  }
+  .pr-head .ph-meta {
+    display: flex;
+    gap: 14px;
+    align-items: center;
+    flex-wrap: wrap;
+    font-size: 13px;
+    color: var(--ink-soft);
+  }
+  .pr-head .ph-author {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .pr-head .avatar-sm {
+    width: 24px; height: 24px; border-radius: 50%;
+    background: linear-gradient(135deg, #8ec5ff, #0a4cff);
+    color: white;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    font-weight: 700;
+  }
+  .pr-head .avatar-sm.ai {
+    background: linear-gradient(135deg, #c9b6ff, #6f42c1);
+  }
+  .pr-head code {
+    font-family: 'JetBrains Mono', monospace;
+    background: var(--bg-2);
+    padding: 1px 6px;
+    border-radius: 3px;
+    font-size: 12px;
+    color: var(--ink);
+  }
+  .pr-head .ph-task {
+    margin: 12px 0 0;
+    padding: 10px 14px;
+    background: var(--accent-soft);
+    border-left: 3px solid var(--accent);
+    border-radius: 0 4px 4px 0;
+    font-size: 13px;
+  }
+  .pr-head .ph-task .ph-task-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--accent);
+    letter-spacing: 0.12em;
+    margin-right: 10px;
+    text-transform: uppercase;
+  }
+  .pr-head .ph-task strong { color: var(--ink); font-weight: 600; }
+
+  .pr-grid {
+    display: grid;
+    grid-template-columns: 1fr 280px;
+    gap: 0;
+  }
+  @media (max-width: 880px) { .pr-grid { grid-template-columns: 1fr; } }
+
+  .pr-files {
+    background: var(--paper);
+    padding: 18px 22px 22px;
+    overflow-x: auto;
+  }
+  .pr-file {
+    background: var(--bg);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    margin-bottom: 12px;
+    overflow: hidden;
+  }
+  .pr-file-head {
+    background: var(--paper);
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--line);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    user-select: none;
+    transition: background 0.15s;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .pr-file-head:hover { background: var(--bg-2); }
+  .pr-file-head .pf-name {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12.5px;
+    color: var(--ink);
+    font-weight: 500;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .pr-file-head .pf-name .pf-arr {
+    font-size: 10px;
+    color: var(--ink-mute);
+    transition: transform 0.2s;
+  }
+  .pr-file.collapsed .pf-arr { transform: rotate(-90deg); }
+  .pr-file.collapsed .pr-file-body { display: none; }
+  .pr-file-head .pf-stats {
+    display: flex;
+    gap: 8px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    align-items: center;
+  }
+  .pr-file-head .pf-add { color: var(--add); }
+  .pr-file-head .pf-del { color: var(--del); }
+
+  .pr-file-body {
+    background: var(--ink);
+    color: #d8d8e0;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12.5px;
+    line-height: 1.85;
+  }
+  .pr-file-body .diff-line { cursor: default; }
+  .pr-file-body .diff-line:hover { background: rgba(255,255,255,0.04); }
+  .pr-file-body .diff-line.add:hover { background: rgba(31, 107, 58, 0.28); }
+  .pr-file-body .diff-line.del:hover { background: rgba(204, 51, 51, 0.28); }
+  .pr-file-body .diff-line.has-comment-btn { cursor: pointer; }
+  .pr-file-body .dl-comment-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 16px;
+    height: 16px;
+    background: var(--accent);
+    color: white;
+    border-radius: 3px;
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 1;
+    margin-left: 4px;
+    opacity: 0;
+    transition: opacity 0.15s;
+    cursor: pointer;
+    user-select: none;
+    flex-shrink: 0;
+  }
+  .pr-file-body .diff-line.has-comment-btn:hover .dl-comment-btn { opacity: 1; }
+  .pr-file-body .diff-line.is-clue {
+    box-shadow: inset 4px 0 0 var(--accent);
+  }
+  .pr-file-body .diff-line .dl-text { white-space: pre; }
+  .pr-file-body .ckey { color: #ff8a6e; }
+  .pr-file-body .cstr { color: #a8e6a3; }
+  .pr-file-body .ccom { color: #6e6e7a; }
+  .pr-file-body .cnum { color: #8ec5ff; }
+  .pr-file-body .ctag { color: #ff8a6e; }
+  .pr-file-body .cattr { color: #ffd166; }
+  .pr-file-body .cfun { color: #c9b6ff; }
+
+  .pr-comment-thread {
+    background: var(--bg-2);
+    margin: 8px 22px 8px 50px;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 12px 14px;
+    font-family: 'Geist', 'Noto Sans SC', sans-serif;
+    font-size: 13px;
+    line-height: 1.55;
+    color: var(--ink);
+    animation: fadeIn 0.3s ease-out;
+  }
+  .pr-comment-thread .pct-author {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 6px;
+    font-size: 12px;
+  }
+  .pr-comment-thread .pct-avatar {
+    width: 22px; height: 22px; border-radius: 50%;
+    background: linear-gradient(135deg, #ffb39a, #ff4d2e);
+    color: white;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    font-weight: 700;
+  }
+  .pr-comment-thread .pct-name { font-weight: 600; }
+  .pr-comment-thread .pct-time { color: var(--ink-mute); font-family: 'JetBrains Mono', monospace; font-size: 11px; }
+  .pr-comment-thread .pct-body { margin: 0; }
+  .pr-comment-thread .pct-options {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-top: 8px;
+  }
+  .pr-comment-thread .pct-options button {
+    text-align: left;
+    background: white;
+    border: 1.5px solid var(--line);
+    border-radius: 4px;
+    padding: 8px 12px;
+    font-family: inherit;
+    font-size: 12.5px;
+    color: var(--ink);
+    cursor: pointer;
+    transition: all 0.15s;
+    line-height: 1.5;
+  }
+  .pr-comment-thread .pct-options button:hover {
+    border-color: var(--accent);
+    background: var(--accent-soft);
+  }
+  .pr-comment-thread .pct-options button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+  .pr-comment-thread .pct-options button.picked-good {
+    border-color: var(--add);
+    background: var(--add-bg);
+  }
+  .pr-comment-thread .pct-options button.picked-bad {
+    border-color: var(--del);
+    background: var(--del-bg);
+  }
+
+  .pr-side {
+    background: var(--paper);
+    padding: 18px 22px;
+    border-left: 1px solid var(--line);
+  }
+  @media (max-width: 880px) { .pr-side { border-left: none; border-top: 1px solid var(--line); } }
+  .pr-side .ps-section {
+    margin-bottom: 22px;
+    padding-bottom: 18px;
+    border-bottom: 1px dashed var(--line);
+  }
+  .pr-side .ps-section:last-child { border-bottom: none; padding-bottom: 0; margin-bottom: 0; }
+  .pr-side .ps-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--ink-mute);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+  .pr-side .ps-reviewers {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .pr-side .ps-rev {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+  }
+  .pr-side .ps-rev .ps-av {
+    width: 26px; height: 26px; border-radius: 50%;
+    color: white;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+  .pr-side .ps-rev .ps-av.you {
+    background: linear-gradient(135deg, #ffb39a, #ff4d2e);
+  }
+  .pr-side .ps-rev .ps-av.eng {
+    background: linear-gradient(135deg, #c9b6ff, #6f42c1);
+  }
+  .pr-side .ps-rev .ps-name { font-weight: 500; }
+  .pr-side .ps-rev .ps-st {
+    margin-left: auto;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    padding: 2px 8px;
+    border-radius: 3px;
+    letter-spacing: 0.04em;
+  }
+  .pr-side .ps-rev .ps-st.pending { background: var(--bg-2); color: var(--ink-mute); }
+  .pr-side .ps-rev .ps-st.approved { background: var(--add-bg); color: var(--add); }
+  .pr-side .ps-rev .ps-st.changes { background: var(--yellow-soft); color: var(--status-changes); }
+  .pr-side .ps-rev .ps-st.commented { background: var(--blue-soft); color: var(--blue); }
+
+  .pr-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .pr-actions button {
+    text-align: left;
+    background: white;
+    border: 1.5px solid var(--line);
+    border-radius: 5px;
+    padding: 11px 13px;
+    cursor: pointer;
+    font-family: inherit;
+    color: var(--ink);
+    transition: all 0.18s;
+  }
+  .pr-actions button:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(22,22,29,0.08);
+  }
+  .pr-actions button .pa-name {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 14px;
+    font-weight: 700;
+    line-height: 1.3;
+    margin-bottom: 3px;
+  }
+  .pr-actions button .pa-desc {
+    font-size: 11.5px;
+    color: var(--ink-soft);
+    line-height: 1.4;
+  }
+  .pr-actions button[data-act="approve"]:hover { border-color: var(--add); background: var(--add-bg); }
+  .pr-actions button[data-act="changes"]:hover { border-color: var(--status-changes); background: var(--yellow-soft); }
+  .pr-actions button[data-act="comment"]:hover { border-color: var(--blue); background: var(--blue-soft); }
+  .pr-actions button:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: none; }
+
+  .pr-prompt {
+    background: var(--bg);
+    padding: 16px 28px;
+    border-bottom: 1px dashed var(--line);
+  }
+  .pr-prompt .pp-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--accent);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+  .pr-prompt .pp-task {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 17px;
+    font-weight: 700;
+    margin: 0 0 4px;
+    line-height: 1.4;
+  }
+  .pr-prompt .pp-hint {
+    font-size: 13px;
+    color: var(--ink-soft);
+    margin: 0;
+    line-height: 1.55;
+  }
+  .pr-prompt .pp-hint code {
+    font-family: 'JetBrains Mono', monospace;
+    background: var(--bg-2);
+    padding: 1px 6px;
+    border-radius: 3px;
+    font-size: 12px;
+  }
+
+  .pr-feedback {
+    padding: 0 26px 22px;
+  }
+  .pr-feedback .pfb-card {
+    background: var(--bg);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 16px 20px;
+    margin-top: 18px;
+    border-left: 4px solid var(--accent);
+    animation: fadeIn 0.4s ease-out;
+  }
+  .pr-feedback .pfb-card.good { border-left-color: var(--add); }
+  .pr-feedback .pfb-card.warn { border-left-color: var(--status-changes); }
+  .pr-feedback .pfb-card.bad { border-left-color: var(--del); }
+  .pr-feedback .pfb-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+    color: var(--accent);
+  }
+  .pfb-card.good .pfb-tag { color: var(--add); }
+  .pfb-card.warn .pfb-tag { color: var(--status-changes); }
+  .pfb-card.bad .pfb-tag { color: var(--del); }
+  .pr-feedback .pfb-title {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 16px;
+    margin: 0 0 6px;
+    font-weight: 700;
+    line-height: 1.4;
+  }
+  .pr-feedback .pfb-desc {
+    font-size: 13.5px;
+    color: var(--ink-soft);
+    margin: 0;
+    line-height: 1.6;
+  }
+  .pr-feedback .pfb-desc strong { color: var(--ink); font-weight: 600; }
+  .pr-feedback .pfb-desc code {
+    font-family: 'JetBrains Mono', monospace;
+    background: var(--bg-2);
+    padding: 1px 6px;
+    border-radius: 3px;
+    font-size: 12px;
+  }
+
+  .pr-foot {
+    padding: 14px 28px;
+    background: var(--bg);
+    border-top: 1px dashed var(--line);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .pr-foot .pf-progress {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--ink-soft);
+  }
+  .pr-foot .pf-progress strong { color: var(--accent); }
+  .pr-foot button {
+    background: var(--ink);
+    color: white;
+    border: none;
+    padding: 9px 18px;
+    border-radius: 4px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    cursor: pointer;
+    transition: background 0.18s;
+    letter-spacing: 0.04em;
+  }
+  .pr-foot button:hover { background: var(--accent); }
+  .pr-foot button:disabled { background: var(--ink-mute); cursor: not-allowed; }
+  .pr-foot button.ghost {
+    background: transparent;
+    color: var(--ink-mute);
+    padding: 9px 12px;
+  }
+  .pr-foot button.ghost:hover { color: var(--accent); background: transparent; }
+
+  .pr-final {
+    margin: 24px 26px;
+    padding: 22px 26px;
+    background: var(--accent-soft);
+    border: 1px solid var(--accent);
+    border-radius: 8px;
+    display: none;
+  }
+  .pr-final.show { display: block; animation: fadeIn 0.5s ease-out; }
+  .pr-final .pf-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--accent);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+  .pr-final h4 {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 22px;
+    margin: 0 0 8px;
+    font-weight: 800;
+    line-height: 1.25;
+    letter-spacing: -0.01em;
+  }
+  .pr-final .pf-style {
+    display: inline-block;
+    background: var(--ink);
+    color: white;
+    padding: 4px 12px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    border-radius: 3px;
+    margin: 6px 0 12px;
+    letter-spacing: 0.04em;
+  }
+  .pr-final p {
+    font-size: 13.5px;
+    color: var(--ink-soft);
+    margin: 0;
+    line-height: 1.6;
+    max-width: 64ch;
+  }
+  .pr-final p strong { color: var(--ink); font-weight: 600; }
+
+  /* ============== §04 — Polite phrasing ============== */
+  .polite-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 18px;
+    margin-top: 24px;
+  }
+  @media (max-width: 880px) { .polite-grid { grid-template-columns: 1fr; } }
+  .polite-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0;
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    overflow: hidden;
+    grid-column: 1 / -1;
+  }
+  @media (max-width: 720px) { .polite-row { grid-template-columns: 1fr; } }
+  .polite-side {
+    padding: 18px 22px;
+  }
+  .polite-side.bad {
+    background: var(--del-bg);
+    border-right: 1px dashed var(--del-line);
+  }
+  .polite-side.good {
+    background: var(--add-bg);
+  }
+  @media (max-width: 720px) {
+    .polite-side.bad { border-right: none; border-bottom: 1px dashed var(--del-line); }
+  }
+  .polite-side .ps-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .polite-side.bad .ps-tag { color: var(--del); }
+  .polite-side.good .ps-tag { color: var(--add); }
+  .polite-side .ps-tag .ps-mark {
+    width: 16px; height: 16px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: 700;
+  }
+  .polite-side.bad .ps-mark { background: var(--del); color: white; }
+  .polite-side.good .ps-mark { background: var(--add); color: white; }
+  .polite-side .ps-quote {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 16px;
+    line-height: 1.5;
+    margin: 0 0 8px;
+    color: var(--ink);
+    font-weight: 500;
+  }
+  .polite-side .ps-note {
+    font-size: 12px;
+    color: var(--ink-soft);
+    margin: 0;
+    line-height: 1.55;
+  }
+
+  .phrase-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    margin-top: 32px;
+  }
+  @media (max-width: 880px) { .phrase-grid { grid-template-columns: 1fr; } }
+  .phrase-card {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 22px;
+  }
+  .phrase-card .pc-num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--accent);
+    letter-spacing: 0.08em;
+    margin-bottom: 8px;
+  }
+  .phrase-card h4 {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 22px;
+    margin: 0 0 6px;
+    font-weight: 800;
+    letter-spacing: -0.01em;
+    line-height: 1.25;
+  }
+  .phrase-card .pc-tpl {
+    background: var(--ink);
+    color: #ffb39a;
+    padding: 6px 12px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    border-radius: 4px;
+    margin: 10px 0 14px;
+    display: inline-block;
+  }
+  .phrase-card p {
+    margin: 0 0 8px;
+    font-size: 13px;
+    color: var(--ink-soft);
+    line-height: 1.55;
+  }
+  .phrase-card .pc-eg {
+    margin: 0;
+    padding: 10px 14px;
+    background: var(--bg-2);
+    border-left: 3px solid var(--ink-soft);
+    font-family: 'Noto Serif SC', serif;
+    font-size: 14px;
+    line-height: 1.45;
+    color: var(--ink);
+    border-radius: 0 4px 4px 0;
+  }
+
+  /* ============== §05 — Designer angles ============== */
+  .ang-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 18px;
+    margin-top: 24px;
+  }
+  @media (max-width: 880px) { .ang-grid { grid-template-columns: 1fr; } }
+  .ang-card {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 20px 22px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    transition: all 0.2s;
+  }
+  .ang-card:hover { border-color: var(--accent); transform: translateY(-2px); box-shadow: 0 8px 24px rgba(22,22,29,0.06); }
+  .ang-card .ag-num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--accent);
+    letter-spacing: 0.08em;
+  }
+  .ang-card h4 {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 19px;
+    margin: 0;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    line-height: 1.3;
+  }
+  .ang-card h4 .ag-icon {
+    color: var(--accent);
+    font-weight: 500;
+    margin-right: 6px;
+  }
+  .ang-card p {
+    margin: 0;
+    font-size: 13.5px;
+    color: var(--ink-soft);
+    line-height: 1.6;
+  }
+  .ang-card .ag-comment {
+    background: var(--bg);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 12px 14px;
+    font-family: 'Geist', 'Noto Sans SC', sans-serif;
+    font-size: 13px;
+    line-height: 1.55;
+    color: var(--ink);
+  }
+  .ang-card .ag-comment .agc-author {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 11px;
+    color: var(--ink-mute);
+    margin-bottom: 4px;
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .ang-card .ag-comment .agc-avatar {
+    width: 18px; height: 18px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #ffb39a, #ff4d2e);
+    color: white;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 9px;
+    font-weight: 700;
+  }
+  .ang-card .ag-comment p {
+    margin: 0;
+    color: var(--ink);
+    font-size: 13px;
+  }
+  .ang-card .ag-comment p code {
+    font-family: 'JetBrains Mono', monospace;
+    background: var(--bg-2);
+    padding: 1px 6px;
+    border-radius: 3px;
+    font-size: 11.5px;
+  }
+
+  /* ============== §06 — Cheatsheet ============== */
+  .cheat-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+    margin-top: 32px;
+  }
+  @media (max-width: 880px) { .cheat-grid { grid-template-columns: 1fr; } }
+  .cheat-card {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 24px;
+    position: relative;
+  }
+  .cheat-card.status { border-top: 4px solid var(--add); }
+  .cheat-card.diff { border-top: 4px solid var(--accent); }
+  .cheat-card.angles { border-top: 4px solid var(--blue); }
+  .cheat-card.phrases { border-top: 4px solid var(--status-merged); }
+  .cheat-card .cc-num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--ink-mute);
+    letter-spacing: 0.1em;
+    margin-bottom: 4px;
+    text-transform: uppercase;
+  }
+  .cheat-card h4 {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 22px;
+    margin: 0 0 6px;
+    font-weight: 800;
+    letter-spacing: -0.01em;
+  }
+  .cheat-card .cc-sub {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--ink-soft);
+    margin-bottom: 16px;
+    letter-spacing: 0.05em;
+  }
+  .cheat-card dl { margin: 0; padding: 0; font-size: 13px; }
+  .cheat-card dl dt {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--ink-mute);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-top: 14px;
+  }
+  .cheat-card dl dt:first-child { margin-top: 0; }
+  .cheat-card dl dd {
+    margin: 4px 0 0;
+    color: var(--ink-soft);
+    font-size: 13px;
+    line-height: 1.55;
+  }
+  .cheat-card dl dd code {
+    font-family: 'JetBrains Mono', monospace;
+    background: var(--bg-2);
+    padding: 1px 6px;
+    border-radius: 3px;
+    font-size: 12px;
+    color: var(--ink);
+  }
+  .cheat-card dl dd strong { color: var(--ink); font-weight: 600; }
+  .cheat-card .cc-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 2px 8px;
+    border-radius: 100px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    margin-right: 4px;
+    letter-spacing: 0.04em;
+  }
+  .cheat-card .cc-badge .sd { width: 6px; height: 6px; border-radius: 50%; }
+  .cheat-card .cc-badge.open { background: var(--add-bg); color: var(--status-open); }
+  .cheat-card .cc-badge.open .sd { background: var(--status-open); }
+  .cheat-card .cc-badge.changes { background: var(--yellow-soft); color: var(--status-changes); }
+  .cheat-card .cc-badge.changes .sd { background: var(--status-changes); }
+  .cheat-card .cc-badge.approved { background: var(--add-bg); color: var(--add); }
+  .cheat-card .cc-badge.approved .sd { background: var(--add); }
+  .cheat-card .cc-badge.merged { background: #ede4f8; color: var(--status-merged); }
+  .cheat-card .cc-badge.merged .sd { background: var(--status-merged); }
+
+  /* ============= Unified next-post block ============= */
+  .next-post {
+    margin-top: 48px;
+    padding: 32px 36px;
+    background: var(--ink);
+    color: var(--bg);
+    border-radius: 8px;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 32px;
+    align-items: center;
+    text-decoration: none;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    position: relative;
+    overflow: hidden;
+  }
+  .next-post::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at 100% 0%, rgba(255,77,46,0.12), transparent 55%);
+    pointer-events: none;
+  }
+  .next-post:hover { transform: translateY(-2px); box-shadow: 0 14px 36px rgba(22,22,29,0.22); }
+  @media (max-width: 720px) { .next-post { grid-template-columns: 1fr; padding: 24px; gap: 20px; } }
+  .next-post .np-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--accent);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+    display: inline-block;
+  }
+  .next-post h4 {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 26px;
+    margin: 0 0 10px;
+    font-weight: 700;
+    color: white;
+    line-height: 1.25;
+    letter-spacing: -0.01em;
+  }
+  .next-post h4 .em {
+    font-family: 'Noto Serif SC', serif;
+    font-weight: 500;
+    color: var(--accent);
+  }
+  .next-post p {
+    margin: 0;
+    color: rgba(255,255,255,0.72);
+    font-size: 14px;
+    line-height: 1.65;
+    max-width: 560px;
+  }
+  .next-post p strong { color: white; font-weight: 600; }
+  .next-post .np-cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 24px;
+    background: var(--accent);
+    color: white;
+    border-radius: 4px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    white-space: nowrap;
+    transition: background 0.18s, color 0.18s, transform 0.18s;
+    position: relative;
+    z-index: 1;
+  }
+  .next-post:hover .np-cta { background: white; color: var(--ink); transform: translateX(2px); }
+  .next-post .np-cta .arr { font-family: 'Noto Serif SC', serif; font-size: 18px; font-weight: 500; }
+
+  /* ============= Footer ============= */
+  footer {
+    border-top: 1px solid var(--line);
+    padding: 56px 0 64px;
+    background: var(--bg);
+  }
+  .byline {
+    display: flex;
+    gap: 28px;
+    align-items: center;
+    padding-bottom: 32px;
+    border-bottom: 1px dashed var(--line);
+    margin-bottom: 24px;
+    position: relative;
+  }
+  .byline::before {
+    content: '';
+    position: absolute;
+    top: -56px; left: 0;
+    width: 32px; height: 1px;
+    background: var(--accent);
+  }
+  .byline .avatar {
+    width: 96px; height: 96px;
+    border-radius: 50%;
+    object-fit: cover;
+    flex-shrink: 0;
+    border: 3px solid var(--paper);
+    box-shadow: 0 0 0 1px var(--line), 0 6px 20px rgba(22,22,29,0.10);
+    background: var(--paper);
+  }
+  .byline-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--ink-mute);
+    letter-spacing: 0.18em;
+    margin-bottom: 8px;
+  }
+  .byline-label .dot {
+    display: inline-block;
+    width: 6px; height: 6px;
+    background: var(--accent);
+    border-radius: 50%;
+    margin-right: 6px;
+    vertical-align: 1px;
+  }
+  .byline-name {
+    font-family: 'Noto Serif SC', serif;
+    font-size: clamp(28px, 4vw, 40px);
+    font-weight: 700;
+    line-height: 1.05;
+    letter-spacing: -0.01em;
+    margin: 0 0 8px;
+  }
+  .byline-name .em {
+    font-family: 'Noto Serif SC', serif;
+    font-weight: 500;
+    color: var(--accent);
+  }
+  .byline-tag {
+    font-size: 14px;
+    color: var(--ink-soft);
+    line-height: 1.55;
+    margin: 0;
+    max-width: 52ch;
+  }
+  .byline-contact { margin-top: 14px; padding-top: 14px; border-top: 1px dashed var(--line); display: flex; align-items: center; gap: 10px; flex-wrap: wrap; font-size: 12px; }
+  .byline-contact .contact-label { font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-mute); padding: 2px 8px; border: 1px solid var(--line); border-radius: 3px; }
+  .byline-contact .contact-id { font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 600; color: var(--ink); background: var(--accent-soft); padding: 3px 10px; border-radius: 4px; letter-spacing: 0.02em; }
+  .byline-contact .contact-hint { font-size: 12px; color: var(--ink-soft); }
+  .footer-meta {
+    text-align: center;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--ink-mute);
+    letter-spacing: 0.05em;
+  }
+  .footer-meta .heart { color: var(--accent); }
+  .footer-meta .mono { color: var(--ink-soft); font-weight: 500; }
+  @media (max-width: 600px) {
+    .byline { flex-direction: column; text-align: center; align-items: center; gap: 16px; }
+    .byline-tag { margin-left: auto; margin-right: auto; }
+  }
+
+  /* Subtle entry animation */
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+  section { animation: fadeIn 0.6s ease-out backwards; }
+
+  /* === Roadmap Modal === */
+  .rm-modal { position: fixed; inset: 0; z-index: 1000; display: flex; align-items: center; justify-content: center; padding: 30px 16px; }
+  .rm-modal[hidden] { display: none; }
+  .rm-backdrop { position: absolute; inset: 0; background: rgba(22,22,29,0.55); backdrop-filter: blur(4px); animation: rm-fade 0.2s; }
+  @keyframes rm-fade { from { opacity: 0; } to { opacity: 1; } }
+  .rm-dialog { position: relative; background: var(--bg); border-radius: 12px; max-width: 720px; width: 100%; max-height: calc(100vh - 60px); overflow-y: auto; padding: 32px 36px 24px; box-shadow: 0 30px 80px rgba(0,0,0,0.3); animation: rm-pop 0.25s cubic-bezier(0.4,0,0.2,1); }
+  @keyframes rm-pop { from { transform: scale(0.96) translateY(8px); opacity: 0; } to { transform: scale(1) translateY(0); opacity: 1; } }
+  .rm-close { position: absolute; top: 14px; right: 16px; background: transparent; border: none; cursor: pointer; font-size: 20px; color: var(--ink-mute); width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: all 0.15s; line-height: 1; }
+  .rm-close:hover { background: var(--bg-2); color: var(--ink); }
+  .rm-header { margin-bottom: 22px; padding-bottom: 18px; border-bottom: 1px dashed var(--line); }
+  .rm-tag { font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.1em; color: var(--accent); text-transform: uppercase; margin-bottom: 8px; }
+  .rm-title { font-family: 'Noto Serif SC', serif; font-size: 28px; margin: 0 0 6px; font-weight: 900; letter-spacing: -0.02em; line-height: 1.1; }
+  .rm-title .rm-em { font-family: 'Noto Serif SC', serif; color: var(--accent); font-weight: 500; }
+  .rm-sub { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--ink-mute); margin: 0; }
+  .rm-body { display: flex; flex-direction: column; gap: 18px; }
+  .rm-mod-key { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ink); font-weight: 700; margin-bottom: 8px; letter-spacing: 0.04em; text-transform: uppercase; }
+  .rm-mod-list { display: flex; flex-direction: column; gap: 6px; }
+  .rm-cell { display: grid; grid-template-columns: 36px 1fr auto; gap: 12px; align-items: center; padding: 9px 13px; border-radius: 5px; background: var(--paper); border: 1px solid var(--line); text-decoration: none; color: inherit; transition: all 0.15s; }
+  .rm-cell:hover { border-color: var(--accent); background: var(--accent-soft); transform: translateX(3px); }
+  .rm-cell-code { font-family: 'Noto Serif SC', serif; font-weight: 500; color: var(--accent); font-size: 15px; }
+  .rm-cell-name { font-size: 13px; color: var(--ink); }
+  .rm-cell-tier { font-family: 'JetBrains Mono', monospace; font-size: 9px; letter-spacing: 0.08em; color: var(--ink-mute); text-transform: uppercase; border: 1px solid var(--line); padding: 2px 7px; border-radius: 3px; }
+  .rm-footer { margin-top: 22px; padding-top: 16px; border-top: 1px dashed var(--line); display: flex; justify-content: space-between; align-items: center; font-size: 12px; color: var(--ink-soft); flex-wrap: wrap; gap: 8px; }
+  .rm-wechat { font-family: 'JetBrains Mono', monospace; background: var(--accent-soft); color: var(--ink); padding: 3px 10px; border-radius: 3px; font-weight: 600; letter-spacing: 0.02em; }
+  .nav-links a[data-rm-open] { cursor: pointer; }
+</style>
+</head>
+<body>
+
+<!-- Top bar -->
+<div class="topbar">
+  <div class="wrap topbar-inner">
+    <a href="index.html" class="brand"><span class="dot"></span>G3 · 版本控制 / Code Review</a>
+    <nav class="nav-links">
+      <a href="index.html#roadmap" data-rm-open>路线图</a>
+      <a href="index.html#manifesto">关于</a>
+    </nav>
+  </div>
+</div>
+
+<!-- Hero -->
+<header class="hero">
+  <div class="wrap">
+    <div class="hero-meta">
+      <span class="pill fill">实验互动 · INTERACTIVE</span>
+      <span class="pill">2026 · 设计 × 代码</span>
+      <span class="pill">G3 · 版本控制 · 完结</span>
+      <span class="label">阅读 + 玩 ≈ 14 分钟</span>
+    </div>
+    <div class="hero-grid">
+      <div>
+        <h1>
+          <span class="display-cn">PR 是给代码</span><br>
+          <span class="em">看一眼</span><span class="display-cn">。</span>
+        </h1>
+        <p class="lede">
+          AI 写完代码 → 你（或同事）要把它合到主线 → 必须先经过 <span class="em">PR + Code Review</span>。<br>
+          说穿了就是一句话：<strong>"嗨同事，帮我看看这一摞改动行不行。"</strong><br>
+          这一篇拆开 PR 的样子、教你读 diff、让你自己审一个 PR。
+        </p>
+      </div>
+      <div class="hero-side">
+        <div class="row"><span class="k">本页讲什么</span><span class="v">PR · diff · review</span></div>
+        <div class="row"><span class="k">含互动</span><span class="v">PR 解剖 + diff 训练 + 4 关审 PR 游戏</span></div>
+        <div class="row"><span class="k">面向</span><span class="v">被 "approve" 唬住的设计师</span></div>
+        <div class="row"><span class="k">前置知识</span><span class="v">G1 / G2 · 知道分支与冲突</span></div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- §01 PR anatomy -->
+<section id="anatomy">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>01</strong> / 解剖</div>
+        <h2 class="section-title">一个 PR<br>长<span class="em">什么</span>样</h2>
+      </div>
+      <p class="section-sub">
+        PR = <strong>Pull Request</strong>，"申请合并"。本质是一个网页，把<strong>这条分支改了什么</strong>展示给同事看，让同事点同意。
+        别看英文唬人，结构就 5 个部分。
+      </p>
+    </div>
+
+    <div class="hint-strip">
+      <span class="hint-tag">点点看</span>下面是一个真 PR 的复刻。<strong>左边卡片点一下</strong>，右边的"小窗"会告诉你那一块是干嘛的。
+    </div>
+
+    <div class="anat-stage">
+      <!-- PR top: title + status + author -->
+      <div class="anat-pr">
+        <div class="anat-pr-meta">
+          <span class="anat-pr-num">#247</span>
+          <span class="anat-pr-status"><span class="sd"></span>open</span>
+        </div>
+        <h3>fix: Login button hover state · 修登录按钮的 hover 颜色</h3>
+        <div class="anat-pr-author">
+          <span class="avatar-sm">YOU</span>
+          <span><strong>你</strong>想把分支 <code>fix/login-btn</code> 合进 <code>main</code> · 改了 <strong>3 个文件</strong> · <strong>+12 −5</strong></span>
+        </div>
+      </div>
+
+      <!-- Tabs (visual only) -->
+      <div class="anat-tabs">
+        <button class="anat-tab active" data-tab="conv">Conversation <span class="pill-count">2</span></button>
+        <button class="anat-tab" data-tab="commits">Commits <span class="pill-count">3</span></button>
+        <button class="anat-tab" data-tab="files">Files changed <span class="pill-count">3</span></button>
+      </div>
+
+      <!-- Body -->
+      <div class="anat-body">
+        <div>
+          <div class="anat-card is-active" data-key="title">
+            <div class="ac-label">Part 01 · 标题 + 描述</div>
+            <h4>说清楚改了什么 / 为什么</h4>
+            <p>第一行就告诉同事："这是个 <code>fix</code>，修登录按钮。" 描述里再写一两句"为啥要修"。<strong>标题写得越好，review 越快</strong>。</p>
+          </div>
+
+          <div class="anat-card" data-key="files">
+            <div class="ac-label">Part 02 · 文件改动清单</div>
+            <h4>这次动了哪几个文件</h4>
+            <p>右上那个 <code>3 files changed</code> —— 鼠标点进去，能看到具体哪几个文件被改了、每个文件加了几行删了几行。</p>
+          </div>
+
+          <div class="anat-card" data-key="diff">
+            <div class="ac-label">Part 03 · diff 视图</div>
+            <h4>红绿对比 · 每一行的改动</h4>
+            <p><strong>红色 = 删掉的</strong>，<strong>绿色 = 新加的</strong>。diff 是 PR 的核心 —— §02 会专门讲怎么读。</p>
+          </div>
+
+          <div class="anat-card" data-key="reviewers">
+            <div class="ac-label">Part 04 · reviewer 区</div>
+            <h4>谁要审、审完是什么状态</h4>
+            <p>右边一栏列着"被点名审 PR 的人"。每人审完会留一个标记 —— <code>approved</code> / <code>changes requested</code> / <code>commented</code>。</p>
+          </div>
+
+          <div class="anat-card" data-key="status">
+            <div class="ac-label">Part 05 · 状态徽章</div>
+            <h4>这个 PR 现在什么状态</h4>
+            <p>顶上那个绿色小药丸：<code>open</code> 表示"还在审，没合"。下面有 4 种状态的全集。</p>
+          </div>
+        </div>
+
+        <div class="anat-detail" id="anatDetail">
+          <div class="ad-hd">PART 01 · 标题 + 描述</div>
+<pre><span class="ad-acc">fix: Login button hover state</span>
+<span class="ad-mute">↑ 这一行就是标题。前缀 fix: 表示</span>
+<span class="ad-mute">  "这是个修 bug"。其他常见前缀：</span>
+<span class="ad-mute">  feat:</span>  <span class="ad-mute">新功能</span>
+<span class="ad-mute">  chore:</span> <span class="ad-mute">杂活、不影响行为</span>
+<span class="ad-mute">  docs:</span>  <span class="ad-mute">改文档</span>
+
+<span class="ad-add">### 描述</span>
+<span class="ad-add">登录按钮 hover 时颜色和设计稿不一致：</span>
+<span class="ad-add">- 设计稿：#ff5e1a</span>
+<span class="ad-add">- 代码里：#ff8c5e（差了一个色号）</span>
+<span class="ad-add">- 这次把 token 改对。</span>
+
+<span class="ad-mute">// 描述里讲清"为什么"，</span>
+<span class="ad-mute">// reviewer 一看就知道你在干嘛。</span></pre>
+        </div>
+      </div>
+
+      <!-- Status grid -->
+      <div class="anat-status-grid">
+        <div class="anat-status-cell open">
+          <span class="badge"><span class="sd"></span>open</span>
+          <h5 class="sn">还在审</h5>
+          <p class="sd-text">PR 刚提交、有人审了但还没批准。<strong>大多数 PR 的常态</strong>。</p>
+        </div>
+        <div class="anat-status-cell changes">
+          <span class="badge"><span class="sd"></span>changes requested</span>
+          <h5 class="sn">改了再合</h5>
+          <p class="sd-text">reviewer 说"先改一下"。<strong>不是骂你</strong>，是常态 —— 改完再 push。</p>
+        </div>
+        <div class="anat-status-cell approved">
+          <span class="badge"><span class="sd"></span>approved</span>
+          <h5 class="sn">同意了</h5>
+          <p class="sd-text">至少一个 reviewer 点了"同意"。这时可以点 merge。</p>
+        </div>
+        <div class="anat-status-cell merged">
+          <span class="badge"><span class="sd"></span>merged</span>
+          <h5 class="sn">合进去了</h5>
+          <p class="sd-text">PR 完事了 —— 你的改动正式进 main。<strong>本次任务完成</strong>。</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="hint-strip" style="margin-top:24px;">
+      <span class="hint-tag">关键</span>PR 不是"考试"，是<strong>对话</strong>。多数 PR 都会经历 <code>open → changes → 你修改 → approved → merged</code> 的循环 ——
+      被打回来很正常，反复改两轮才合并是常态。
+    </div>
+  </div>
+</section>
+
+<!-- §02 Diff reading -->
+<section id="diff">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>02</strong> / 红与绿</div>
+        <h2 class="section-title">怎么读<br><span class="em">diff</span></h2>
+      </div>
+      <p class="section-sub">
+        diff 就是<strong>"两版代码的对比"</strong>。规则只有三条 ——
+        红、绿、白。看懂这三种行，diff 就读完一半了。
+      </p>
+    </div>
+
+    <div class="diff-stage">
+      <div class="diff-rules">
+        <div class="diff-rule add">
+          <div class="dr-bar"><strong>+</strong>&nbsp; 绿色行</div>
+          <h5>新增</h5>
+          <p>这一行是<strong>这个 PR 加的</strong>。</p>
+        </div>
+        <div class="diff-rule del">
+          <div class="dr-bar"><strong>−</strong>&nbsp; 红色行</div>
+          <h5>删除</h5>
+          <p>这一行是<strong>被删掉的</strong>。</p>
+        </div>
+        <div class="diff-rule ctx">
+          <div class="dr-bar">&nbsp;&nbsp;&nbsp;&nbsp;白色行</div>
+          <h5>上下文</h5>
+          <p>这一行<strong>没改</strong>，只是给你看周围。</p>
+        </div>
+      </div>
+
+      <div class="diff-game">
+        <div class="dg-head">
+          <span class="dg-fname"><strong>Button.tsx</strong> · 一段真实的小 diff</span>
+          <span class="dg-task"><strong>任务 ›</strong> 把<strong>所有被新增的行</strong>点亮。点错了能取消。</span>
+        </div>
+
+        <div class="diff-code" id="diffCode">
+          <div class="diff-line hunk"><span class="dl-num-old"></span><span class="dl-num-new"></span><span class="dl-prefix">@@</span><span class="dl-text"> -10,7 +10,8 @@ export function Button() {</span></div>
+          <div class="diff-line ctx" data-add="0"><span class="dl-num-old">10</span><span class="dl-num-new">10</span><span class="dl-prefix"> </span><span class="dl-text">  return (</span></div>
+          <div class="diff-line ctx" data-add="0"><span class="dl-num-old">11</span><span class="dl-num-new">11</span><span class="dl-prefix"> </span><span class="dl-text">    &lt;button</span></div>
+          <div class="diff-line del" data-add="0"><span class="dl-num-old">12</span><span class="dl-num-new"></span><span class="dl-prefix">−</span><span class="dl-text">      className="btn btn-primary"</span></div>
+          <div class="diff-line add" data-add="1"><span class="dl-num-old"></span><span class="dl-num-new">12</span><span class="dl-prefix">+</span><span class="dl-text">      className="btn btn-primary btn-lg"</span></div>
+          <div class="diff-line add" data-add="1"><span class="dl-num-old"></span><span class="dl-num-new">13</span><span class="dl-prefix">+</span><span class="dl-text">      aria-label="登录"</span></div>
+          <div class="diff-line ctx" data-add="0"><span class="dl-num-old">13</span><span class="dl-num-new">14</span><span class="dl-prefix"> </span><span class="dl-text">      onClick={handleLogin}</span></div>
+          <div class="diff-line del" data-add="0"><span class="dl-num-old">14</span><span class="dl-num-new"></span><span class="dl-prefix">−</span><span class="dl-text">      style={{ color: '#ff8c5e' }}</span></div>
+          <div class="diff-line add" data-add="1"><span class="dl-num-old"></span><span class="dl-num-new">15</span><span class="dl-prefix">+</span><span class="dl-text">      style={{ color: 'var(--accent)' }}</span></div>
+          <div class="diff-line ctx" data-add="0"><span class="dl-num-old">15</span><span class="dl-num-new">16</span><span class="dl-prefix"> </span><span class="dl-text">    &gt;</span></div>
+          <div class="diff-line ctx" data-add="0"><span class="dl-num-old">16</span><span class="dl-num-new">17</span><span class="dl-prefix"> </span><span class="dl-text">      登录</span></div>
+        </div>
+
+        <div class="dg-controls">
+          <button class="dg-btn" id="diffCheck">检查我的答案</button>
+          <button class="dg-btn ghost" id="diffReset">重来</button>
+          <span class="dg-counter">已点亮 <strong id="diffMarked">0</strong> 行 / 应有 <strong>3</strong> 行新增</span>
+        </div>
+        <div class="dg-feedback" id="diffFeedback">
+          <span class="mono" style="color: var(--ink-mute); font-size: 12px;">› 在上面的 diff 里，点击你认为是"新增"的行（绿色那种）。</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="hint-strip" style="margin-top:24px;">
+      <span class="hint-tag">小窍门</span>看 diff 时只看带 <code>+</code> 和 <code>−</code> 的行 —— 白色的可以略过。
+      读法：<strong>"原来是 [红色那段]，现在改成了 [绿色那段]"</strong>。
+    </div>
+
+    <div class="hint-strip" style="margin-top:14px; background: var(--bg-2); border-left-color: var(--ink-mute);">
+      <span class="hint-tag" style="color: var(--ink-soft);">补充</span>
+      最上面那行 <code>@@ -10,7 +10,8 @@</code> 叫 <strong>hunk header</strong>，意思是"从第 10 行起，原来 7 行、现在 8 行"。<strong>不用记</strong>，眼睛跳过去就行。
+    </div>
+  </div>
+</section>
+
+<!-- §03 PR Game (the soul) -->
+<section id="game">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>03</strong> / 现场</div>
+        <h2 class="section-title">来，<br>你<span class="em">审</span>一个 PR</h2>
+      </div>
+      <p class="section-sub">
+        AI（一个叫 <strong>claude-bot</strong> 的同事）刚提了个 PR：<strong>"fix: Login button hover state"</strong>。
+        你来当 reviewer。<strong>4 关</strong>，从读 diff 到 approve / 打回。
+      </p>
+    </div>
+
+    <div class="hint-strip">
+      <span class="hint-tag">玩法</span>每关给你一个任务 —— 看右下蓝条的提示，点对地方/选项。点错没事，旁边会告诉你为啥。
+    </div>
+
+    <div class="pr-stage" id="prStage">
+      <!-- Bar with rounds -->
+      <div class="pr-bar">
+        <div class="pb-rounds">
+          <span class="pb-label">关卡 ›</span>
+          <button data-round="1" class="active">关 1 · 找颜色</button>
+          <button data-round="2">关 2 · 加 comment</button>
+          <button data-round="3">关 3 · 该 approve 吗</button>
+          <button data-round="4">关 4 · 找问题</button>
+        </div>
+        <span class="pb-status"><span class="sd"></span>open · #247</span>
+      </div>
+
+      <!-- PR header -->
+      <div class="pr-head">
+        <div class="ph-num">PR #247 · feature → main</div>
+        <h3><span class="pr-prefix">fix:</span>Login button hover state</h3>
+        <div class="ph-meta">
+          <span class="ph-author"><span class="avatar-sm ai">AI</span><strong>claude-bot</strong> 想合 <code>fix/login-btn</code> → <code>main</code></span>
+          <span>· 3 files · <span style="color:var(--add);">+12</span> <span style="color:var(--del);">−5</span></span>
+        </div>
+        <div class="ph-task">
+          <span class="ph-task-tag">本关任务</span>
+          <span id="prTaskText"><strong>关 1 · 找颜色：</strong>这个 PR 把按钮颜色改成了什么？打开下面的文件，从 diff 里找出来。</span>
+        </div>
+      </div>
+
+      <div class="pr-grid">
+        <div class="pr-files" id="prFiles">
+          <!-- file 1 -->
+          <div class="pr-file" data-file="Button.tsx">
+            <div class="pr-file-head">
+              <span class="pf-name"><span class="pf-arr">▼</span>Button.tsx</span>
+              <span class="pf-stats">
+                <span class="pf-add">+5</span>
+                <span class="pf-del">−2</span>
+              </span>
+            </div>
+            <div class="pr-file-body">
+              <div class="diff-line hunk"><span class="dl-num-old"></span><span class="dl-num-new"></span><span class="dl-prefix">@@</span><span class="dl-text"> -8,9 +8,12 @@ export function Button() {</span></div>
+              <div class="diff-line ctx"><span class="dl-num-old">8</span><span class="dl-num-new">8</span><span class="dl-prefix"> </span><span class="dl-text">  <span class="ckey">const</span> handleClick = () =&gt; {</span></div>
+              <div class="diff-line ctx"><span class="dl-num-old">9</span><span class="dl-num-new">9</span><span class="dl-prefix"> </span><span class="dl-text">    onLogin();</span></div>
+              <div class="diff-line ctx"><span class="dl-num-old">10</span><span class="dl-num-new">10</span><span class="dl-prefix"> </span><span class="dl-text">  };</span></div>
+              <div class="diff-line ctx"><span class="dl-num-old">11</span><span class="dl-num-new">11</span><span class="dl-prefix"> </span><span class="dl-text">  <span class="ckey">return</span> (</span></div>
+              <div class="diff-line del has-comment-btn" data-line="12-old"><span class="dl-num-old">12</span><span class="dl-num-new"></span><span class="dl-prefix">−</span><span class="dl-text">    &lt;<span class="ctag">button</span> <span class="cattr">style</span>={{ color: <span class="cstr">'#ff8c5e'</span> }}&gt;<span class="dl-comment-btn">+</span></span></div>
+              <div class="diff-line add has-comment-btn is-clue" data-line="12-new" data-clue="color"><span class="dl-num-old"></span><span class="dl-num-new">12</span><span class="dl-prefix">+</span><span class="dl-text">    &lt;<span class="ctag">button</span> <span class="cattr">style</span>={{ color: <span class="cstr">'#ff5e1a'</span> }}&gt;<span class="dl-comment-btn">+</span></span></div>
+              <div class="diff-line add has-comment-btn" data-line="13-new" data-clue="margin"><span class="dl-num-old"></span><span class="dl-num-new">13</span><span class="dl-prefix">+</span><span class="dl-text">      <span class="cattr">className</span>=<span class="cstr">"login-btn"</span><span class="dl-comment-btn">+</span></span></div>
+              <div class="diff-line ctx"><span class="dl-num-old">13</span><span class="dl-num-new">14</span><span class="dl-prefix"> </span><span class="dl-text">      onClick={handleClick}&gt;</span></div>
+              <div class="diff-line ctx"><span class="dl-num-old">14</span><span class="dl-num-new">15</span><span class="dl-prefix"> </span><span class="dl-text">      登录</span></div>
+              <div class="diff-line ctx"><span class="dl-num-old">15</span><span class="dl-num-new">16</span><span class="dl-prefix"> </span><span class="dl-text">    &lt;/<span class="ctag">button</span>&gt;</span></div>
+              <div class="diff-line ctx"><span class="dl-num-old">16</span><span class="dl-num-new">17</span><span class="dl-prefix"> </span><span class="dl-text">  );</span></div>
+            </div>
+          </div>
+
+          <!-- file 2 -->
+          <div class="pr-file" data-file="login.css">
+            <div class="pr-file-head">
+              <span class="pf-name"><span class="pf-arr">▼</span>login.css</span>
+              <span class="pf-stats">
+                <span class="pf-add">+5</span>
+                <span class="pf-del">−2</span>
+              </span>
+            </div>
+            <div class="pr-file-body">
+              <div class="diff-line hunk"><span class="dl-num-old"></span><span class="dl-num-new"></span><span class="dl-prefix">@@</span><span class="dl-text"> -1,6 +1,9 @@ .login-btn</span></div>
+              <div class="diff-line ctx"><span class="dl-num-old">1</span><span class="dl-num-new">1</span><span class="dl-prefix"> </span><span class="dl-text">.login-btn {</span></div>
+              <div class="diff-line del has-comment-btn" data-line="2-old"><span class="dl-num-old">2</span><span class="dl-num-new"></span><span class="dl-prefix">−</span><span class="dl-text">  <span class="ckey">padding</span>: <span class="cnum">8px</span> <span class="cnum">12px</span>;<span class="dl-comment-btn">+</span></span></div>
+              <div class="diff-line add has-comment-btn is-clue" data-line="2-new" data-clue="margin"><span class="dl-num-old"></span><span class="dl-num-new">2</span><span class="dl-prefix">+</span><span class="dl-text">  <span class="ckey">padding</span>: <span class="cnum">10px</span> <span class="cnum">14px</span>;<span class="dl-comment-btn">+</span></span></div>
+              <div class="diff-line add has-comment-btn" data-line="3-new"><span class="dl-num-old"></span><span class="dl-num-new">3</span><span class="dl-prefix">+</span><span class="dl-text">  <span class="ckey">border-radius</span>: <span class="cnum">6px</span>;<span class="dl-comment-btn">+</span></span></div>
+              <div class="diff-line del has-comment-btn" data-line="3-old"><span class="dl-num-old">3</span><span class="dl-num-new"></span><span class="dl-prefix">−</span><span class="dl-text">  <span class="ckey">color</span>: <span class="cnum">#ff8c5e</span>;<span class="dl-comment-btn">+</span></span></div>
+              <div class="diff-line add has-comment-btn" data-line="4-new"><span class="dl-num-old"></span><span class="dl-num-new">4</span><span class="dl-prefix">+</span><span class="dl-text">  <span class="ckey">color</span>: <span class="cnum">#ff5e1a</span>;<span class="dl-comment-btn">+</span></span></div>
+              <div class="diff-line ctx"><span class="dl-num-old">4</span><span class="dl-num-new">5</span><span class="dl-prefix"> </span><span class="dl-text">  cursor: pointer;</span></div>
+              <div class="diff-line add has-comment-btn" data-line="6-new" data-clue="hover"><span class="dl-num-old"></span><span class="dl-num-new">6</span><span class="dl-prefix">+</span><span class="dl-text">  <span class="ccom">/* TODO: hover state */</span><span class="dl-comment-btn">+</span></span></div>
+              <div class="diff-line ctx"><span class="dl-num-old">5</span><span class="dl-num-new">7</span><span class="dl-prefix"> </span><span class="dl-text">}</span></div>
+            </div>
+          </div>
+
+          <!-- file 3 -->
+          <div class="pr-file collapsed" data-file="LoginPage.tsx">
+            <div class="pr-file-head">
+              <span class="pf-name"><span class="pf-arr">▼</span>LoginPage.tsx</span>
+              <span class="pf-stats">
+                <span class="pf-add">+2</span>
+                <span class="pf-del">−1</span>
+              </span>
+            </div>
+            <div class="pr-file-body">
+              <div class="diff-line hunk"><span class="dl-num-old"></span><span class="dl-num-new"></span><span class="dl-prefix">@@</span><span class="dl-text"> -22,5 +22,6 @@ LoginPage</span></div>
+              <div class="diff-line ctx"><span class="dl-num-old">22</span><span class="dl-num-new">22</span><span class="dl-prefix"> </span><span class="dl-text">    &lt;<span class="ctag">div</span>&gt;</span></div>
+              <div class="diff-line del has-comment-btn" data-line="23-old"><span class="dl-num-old">23</span><span class="dl-num-new"></span><span class="dl-prefix">−</span><span class="dl-text">      &lt;<span class="ctag">Button</span> <span class="cattr">label</span>=<span class="cstr">"Login"</span> /&gt;<span class="dl-comment-btn">+</span></span></div>
+              <div class="diff-line add has-comment-btn" data-line="23-new"><span class="dl-num-old"></span><span class="dl-num-new">23</span><span class="dl-prefix">+</span><span class="dl-text">      &lt;<span class="ctag">Button</span> <span class="cattr">label</span>=<span class="cstr">"登录"</span> /&gt;<span class="dl-comment-btn">+</span></span></div>
+              <div class="diff-line add has-comment-btn" data-line="24-new"><span class="dl-num-old"></span><span class="dl-num-new">24</span><span class="dl-prefix">+</span><span class="dl-text">      &lt;<span class="ctag">Button</span> <span class="cattr">label</span>=<span class="cstr">"注册"</span> /&gt;<span class="dl-comment-btn">+</span></span></div>
+              <div class="diff-line ctx"><span class="dl-num-old">24</span><span class="dl-num-new">25</span><span class="dl-prefix"> </span><span class="dl-text">    &lt;/<span class="ctag">div</span>&gt;</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="pr-side">
+          <div class="ps-section">
+            <div class="ps-label">Reviewers</div>
+            <div class="ps-reviewers">
+              <div class="ps-rev">
+                <span class="ps-av you">YOU</span>
+                <span class="ps-name">你</span>
+                <span class="ps-st pending" id="reviewerYou">pending</span>
+              </div>
+              <div class="ps-rev">
+                <span class="ps-av eng">XU</span>
+                <span class="ps-name">徐工程师</span>
+                <span class="ps-st approved">approved</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="ps-section">
+            <div class="ps-label">Your Review</div>
+            <div class="pr-actions" id="prActions">
+              <button data-act="approve">
+                <div class="pa-name" style="color:var(--add);">✓ Approve</div>
+                <div class="pa-desc">看着没问题，可以合。</div>
+              </button>
+              <button data-act="changes">
+                <div class="pa-name" style="color:var(--status-changes);">↩ Request changes</div>
+                <div class="pa-desc">先改一下再合。</div>
+              </button>
+              <button data-act="comment">
+                <div class="pa-name" style="color:var(--blue);">💬 Comment</div>
+                <div class="pa-desc">只留个评论，不表态。</div>
+              </button>
+            </div>
+          </div>
+
+          <div class="ps-section">
+            <div class="ps-label">Round Tip</div>
+            <p style="font-size:12.5px;color:var(--ink-soft);line-height:1.55;margin:0;" id="prSideHint">
+              点 diff 里红字找出"原来是什么颜色"，再看绿字找"现在改成什么颜色"。
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div class="pr-feedback" id="prFeedback"></div>
+
+      <div class="pr-final" id="prFinal">
+        <div class="pf-tag">Review 完成 · 4 关都过了</div>
+        <h4 id="prFinalTitle">你审了一个 PR。</h4>
+        <div class="pf-style" id="prFinalStyle">REVIEW 风格：友好型</div>
+        <p id="prFinalDesc">你提的问题都<strong>具体到行</strong>，但语气是建议而不是指责。<strong>这就是 review 该有的样子</strong> —— 不是审判，是协作。</p>
+      </div>
+
+      <div class="pr-foot">
+        <div class="pf-progress">完成 <strong id="prDone">0</strong> / 4 关</div>
+        <div>
+          <button class="ghost" id="prReset">↺ 重新来</button>
+          <button id="prNext" disabled>下一关 →</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="hint-strip" style="margin-top:24px;">
+      <span class="hint-tag">现实</span>真的 GitHub PR 界面就长这样 —— 文件可以折叠、每行能加 comment、右侧有 reviewer 区。这游戏只是把它做小了一点。
+    </div>
+  </div>
+</section>
+
+<!-- §04 Polite phrasing -->
+<section id="polite">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>04</strong> / 礼貌</div>
+        <h2 class="section-title">review 不是<br><span class="em">挑刺大赛</span></h2>
+      </div>
+      <p class="section-sub">
+        同样一个意思，<strong>怎么说，决定了对方愿不愿意改</strong>。
+        review comment 的核心是<em style="font-style:normal;color:var(--accent);font-weight:600;">提建议</em>，不是<em style="font-style:normal;color:var(--del);font-weight:600;">下判决</em>。
+      </p>
+    </div>
+
+    <div class="hint-strip">
+      <span class="hint-tag">原则</span>把"<strong>你写错了</strong>"翻译成"<strong>我看了一下，会不会 X 更好</strong>"。意思一样，对方愿意改的概率差三倍。
+    </div>
+
+    <div class="polite-grid">
+      <div class="polite-row">
+        <div class="polite-side bad">
+          <div class="ps-tag"><span class="ps-mark">✕</span>反例 · 直接判刑</div>
+          <p class="ps-quote">"这个间距错的，不对。"</p>
+          <p class="ps-note">没说哪里错、没说应该是多少，只留下一个对方不知道怎么改的尴尬感。</p>
+        </div>
+        <div class="polite-side good">
+          <div class="ps-tag"><span class="ps-mark">✓</span>正例 · 提建议</div>
+          <p class="ps-quote">"这里 padding 是 14，<br>设计稿里应该是 16，<br>能不能改一下？"</p>
+          <p class="ps-note"><strong>具体 + 有依据 + 软语气</strong>。三秒能改完。</p>
+        </div>
+      </div>
+
+      <div class="polite-row">
+        <div class="polite-side bad">
+          <div class="ps-tag"><span class="ps-mark">✕</span>反例</div>
+          <p class="ps-quote">"颜色不对啊。"</p>
+          <p class="ps-note">所谓"对"是按谁的标准？是 token 错？设计稿改了？信息量为零。</p>
+        </div>
+        <div class="polite-side good">
+          <div class="ps-tag"><span class="ps-mark">✓</span>正例</div>
+          <p class="ps-quote">"按钮用了 <code>#ff8c5e</code>，<br>但 token 是 <code>--accent: #ff5e1a</code>，<br>建议改成 token，免得以后不一致。"</p>
+          <p class="ps-note">指出问题 + 给出对的版本 + 解释为什么。</p>
+        </div>
+      </div>
+
+      <div class="polite-row">
+        <div class="polite-side bad">
+          <div class="ps-tag"><span class="ps-mark">✕</span>反例</div>
+          <p class="ps-quote">"hover 也没做？"</p>
+          <p class="ps-note">问号挂在脸上，对方接收到的是<strong>责备</strong>，不是问题。</p>
+        </div>
+        <div class="polite-side good">
+          <div class="ps-tag"><span class="ps-mark">✓</span>正例</div>
+          <p class="ps-quote">"我看了一下，<br>这个按钮没有 hover 状态 ——<br>设计稿里有，要不要顺手加上？"</p>
+          <p class="ps-note">"我看了一下"是软化语气，"要不要顺手加上"给对方留余地。</p>
+        </div>
+      </div>
+    </div>
+
+    <h3 style="font-family: 'Noto Serif SC', serif; font-size: 24px; margin: 48px 0 0; font-weight: 700; letter-spacing: -0.01em;">
+      三个万能<span class="em">句式</span>
+    </h3>
+    <p style="color:var(--ink-soft); font-size:14px; margin:8px 0 0; max-width: 60ch; line-height: 1.6;">
+      不知道怎么开口的时候，套这三个句式 —— 工程师同事用的也是它们。
+    </p>
+
+    <div class="phrase-grid">
+      <div class="phrase-card">
+        <div class="pc-num">PHRASE · 01</div>
+        <h4>能不能 X？</h4>
+        <div class="pc-tpl">能不能 [改成 / 加上 / 拆开]</div>
+        <p>提请求时最稳的句式 —— 把"指令"变成"问句"，对方更容易接住。</p>
+        <p class="pc-eg">"能不能把这个 padding 改成 16，跟设计稿对齐？"</p>
+      </div>
+
+      <div class="phrase-card">
+        <div class="pc-num">PHRASE · 02</div>
+        <h4>考虑 Y？</h4>
+        <div class="pc-tpl">考虑 [拆组件 / 加 a11y / 用 token]</div>
+        <p>建议结构性改动时用 —— "考虑"两个字，把"改"变成<strong>"想一下"</strong>。</p>
+        <p class="pc-eg">"考虑把这两个按钮包一层 .btn-group？现在挨太紧。"</p>
+      </div>
+
+      <div class="phrase-card">
+        <div class="pc-num">PHRASE · 03</div>
+        <h4>我看了 Z 觉得 W</h4>
+        <div class="pc-tpl">我看了 [设计稿 / token / 文档] 觉得</div>
+        <p>有依据时用 —— 不是"你错了"，是"<strong>我跟你信源对不上</strong>"。</p>
+        <p class="pc-eg">"我看了 Figma 里的最新稿，觉得这里应该是 #ff5e1a，是不是 token 没拉？"</p>
+      </div>
+    </div>
+
+    <div class="hint-strip" style="margin-top:24px;">
+      <span class="hint-tag">补充</span>
+      实在拿不准是不是问题 —— 加个 <strong>"nit:"</strong>（nitpick · 鸡蛋里挑骨头）前缀。意思是"<strong>不重要，可以忽略</strong>"。
+      如：<code>nit: 这里多了个空格</code>。这是工程师圈子的标准做法。
+    </div>
+  </div>
+</section>
+
+<!-- §05 Designer angles -->
+<section id="angles">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>05</strong> / 视角</div>
+        <h2 class="section-title">设计师能在<br>review 里<span class="em">贡献</span>什么</h2>
+      </div>
+      <p class="section-sub">
+        不会写代码 ≠ 不能 review。<strong>有些东西工程师反而看不见</strong> ——
+        颜色、间距、状态、文案、可访问性，这五件事是设计师的本职。
+      </p>
+    </div>
+
+    <div class="hint-strip">
+      <span class="hint-tag">心态</span>不要纠结"我不懂代码"。你审的不是代码 —— 你审的是<strong>用户最终会看见什么</strong>。
+      工程师懂代码，但不一定懂"这个橙色对不对"。
+    </div>
+
+    <div class="ang-grid">
+      <div class="ang-card">
+        <div class="ag-num">ANGLE · 01</div>
+        <h4><span class="ag-icon">●</span>视觉</h4>
+        <p>颜色对不对、字号对不对、字重对不对。这些不需要懂代码 —— 你<strong>看一眼就知道</strong>。和设计稿对一遍。</p>
+        <div class="ag-comment">
+          <div class="agc-author"><span class="agc-avatar">YOU</span>你 · 在 Button.tsx 第 12 行</div>
+          <p>这里写了 <code>#ff8c5e</code>，跟设计稿里的橙色 <code>#ff5e1a</code> 不一样 —— 是不是 token 没拉到最新？</p>
+        </div>
+      </div>
+
+      <div class="ang-card">
+        <div class="ag-num">ANGLE · 02</div>
+        <h4><span class="ag-icon">↔</span>间距</h4>
+        <p>按钮 padding 是不是 16、卡片之间的 gap 是不是 24。<strong>设计师的眼睛对间距特别敏感</strong> —— 工程师常常凑差不多的数。</p>
+        <div class="ag-comment">
+          <div class="agc-author"><span class="agc-avatar">YOU</span>你 · 在 login.css 第 2 行</div>
+          <p>padding 是 <code>10px 14px</code>，但<strong>我们的间距栅格是 4 / 8 / 12 / 16 / 24</strong> —— 改成 <code>12px 16px</code> 行不行？</p>
+        </div>
+      </div>
+
+      <div class="ang-card">
+        <div class="ag-num">ANGLE · 03</div>
+        <h4><span class="ag-icon">◐</span>状态</h4>
+        <p>hover / focus / disabled / loading —— 设计稿里画了，但代码里经常忘做。<strong>这是 review 里设计师 80% 的有效输出</strong>。</p>
+        <div class="ag-comment">
+          <div class="agc-author"><span class="agc-avatar">YOU</span>你 · 在 login.css 第 6 行</div>
+          <p>看见你写了 <code>/* TODO: hover state */</code> —— 设计稿里 hover 是颜色加深 10%，要不要顺手加上？这关合并前补一下吧。</p>
+        </div>
+      </div>
+
+      <div class="ang-card">
+        <div class="ag-num">ANGLE · 04</div>
+        <h4><span class="ag-icon">"</span>文案</h4>
+        <p>按钮上写的字、错误提示、空状态文案 —— 工程师常常自己编一个临时词。<strong>你过一遍能挡掉一堆奇奇怪怪的"系统出错请稍后重试"</strong>。</p>
+        <div class="ag-comment">
+          <div class="agc-author"><span class="agc-avatar">YOU</span>你 · 在 LoginPage.tsx 第 23 行</div>
+          <p>label 写的是 <code>"Login"</code>，我们的产品文案是中文 —— 改成 <code>"登录"</code> 比较一致。注册按钮同理。</p>
+        </div>
+      </div>
+
+      <div class="ang-card">
+        <div class="ag-num">ANGLE · 05</div>
+        <h4><span class="ag-icon">◯</span>可访问性</h4>
+        <p>aria-label 加了吗、对比度够吗、能用键盘 tab 到吗。<strong>这是设计师最容易"会聊"但工程师容易"忘做"的一块</strong>。</p>
+        <div class="ag-comment">
+          <div class="agc-author"><span class="agc-avatar">YOU</span>你 · 在 Button.tsx 第 12 行</div>
+          <p>这个按钮里只有 <code>onClick</code>，没有 <code>aria-label</code>。如果按钮里只有图标的话，屏幕阅读器读不出来 —— 加一个？</p>
+        </div>
+      </div>
+
+      <div class="ang-card">
+        <div class="ag-num">ANGLE · 06</div>
+        <h4><span class="ag-icon">∗</span>边界情况</h4>
+        <p>文字超长怎么办、加载时长按钮要不要禁用、网络断了显示啥。<strong>设计师做产品比工程师久</strong> —— 这种"边界"经常是你最先想到。</p>
+        <div class="ag-comment">
+          <div class="agc-author"><span class="agc-avatar">YOU</span>你 · 在 LoginPage.tsx</div>
+          <p>登录中要不要加个 loading 态？现在点击之后没反馈，用户会以为按钮坏了 —— 网络慢的时候特别明显。</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="hint-strip" style="margin-top:24px;">
+      <span class="hint-tag">底气</span>遇到代码逻辑看不懂的部分 ——<strong>那一段交给工程师 reviewer</strong>，不是你的责任。
+      你只对"最终用户能看见的样子"负责，这就够了。
+    </div>
+  </div>
+</section>
+
+<!-- §06 Cheatsheet -->
+<section id="cheat">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>06</strong> / 速查</div>
+        <h2 class="section-title">四张<br><span class="em">速查卡</span></h2>
+      </div>
+      <p class="section-sub">
+        到这就完结了。下次打开 GitHub 看见红绿一片别慌 —— 看一眼这四张卡。
+      </p>
+    </div>
+
+    <div class="cheat-grid">
+      <div class="cheat-card status">
+        <div class="cc-num">CARD 01 · 状态</div>
+        <h4>PR 4 个状态</h4>
+        <div class="cc-sub">看徽章颜色就能猜个八九不离十</div>
+        <dl>
+          <dt><span class="cc-badge open"><span class="sd"></span>open</span></dt>
+          <dd>还在审，<strong>大多数 PR 的常态</strong>。</dd>
+          <dt><span class="cc-badge changes"><span class="sd"></span>changes requested</span></dt>
+          <dd>有人说要先改一下。<strong>不是骂你</strong>，改完再 push 就行。</dd>
+          <dt><span class="cc-badge approved"><span class="sd"></span>approved</span></dt>
+          <dd>有人同意了，可以点 merge。</dd>
+          <dt><span class="cc-badge merged"><span class="sd"></span>merged</span></dt>
+          <dd>合进 main 了，<strong>本次任务完成</strong>。</dd>
+        </dl>
+      </div>
+
+      <div class="cheat-card diff">
+        <div class="cc-num">CARD 02 · diff</div>
+        <h4>红绿规则</h4>
+        <div class="cc-sub">三种行，记住前缀</div>
+        <dl>
+          <dt>绿色 · <code>+</code></dt>
+          <dd>这一行是<strong>新加的</strong>。</dd>
+          <dt>红色 · <code>−</code></dt>
+          <dd>这一行是<strong>被删的</strong>。</dd>
+          <dt>白色 · 空前缀</dt>
+          <dd>没改，<strong>给你看周围</strong>而已。</dd>
+          <dt>读法</dt>
+          <dd>"原来是 [红色]，现在改成 [绿色]"。</dd>
+        </dl>
+      </div>
+
+      <div class="cheat-card angles">
+        <div class="cc-num">CARD 03 · 角度</div>
+        <h4>设计师 review 5 角度</h4>
+        <div class="cc-sub">不会代码也能贡献</div>
+        <dl>
+          <dt>视觉</dt>
+          <dd>颜色 / 字号 / 字重对不对。</dd>
+          <dt>间距</dt>
+          <dd>padding / margin / gap 跟栅格对得上吗。</dd>
+          <dt>状态</dt>
+          <dd>hover / focus / disabled / loading 都做了吗。</dd>
+          <dt>文案</dt>
+          <dd>按钮上的字、错误提示、空状态。</dd>
+          <dt>可访问性</dt>
+          <dd>aria-label / 对比度 / 键盘可达。</dd>
+        </dl>
+      </div>
+
+      <div class="cheat-card phrases">
+        <div class="cc-num">CARD 04 · 句式</div>
+        <h4>comment 三句式</h4>
+        <div class="cc-sub">套就完事了</div>
+        <dl>
+          <dt>能不能 X？</dt>
+          <dd>"能不能把这里 padding 改成 16？"</dd>
+          <dt>考虑 Y？</dt>
+          <dd>"考虑把这两个按钮包一层 group？"</dd>
+          <dt>我看了 Z 觉得 W</dt>
+          <dd>"我看了 Figma 觉得颜色应该是 #ff5e1a。"</dd>
+          <dt>nit:</dt>
+          <dd>不重要的小毛病加这个前缀，告诉对方<strong>"不改也行"</strong>。</dd>
+        </dl>
+      </div>
+    </div>
+
+    <a href="h1-devtools-elements-figma.html" class="next-post">
+      <div>
+        <div class="np-tag">下一篇 · NEXT · H1 · 调试</div>
+        <h4>右键 inspect 是<br>设计师的 <span class="em">X 光</span></h4>
+        <p>会读 PR 之后，下一步是<strong>会看正在运行的网页</strong>。浏览器 DevTools 的 Elements 面板 —— 设计师不学是浪费 —— 能让你<strong>实时改颜色字号间距、当场就看见效果</strong>，不用等下个 PR。H 系列从这里开始。</p>
+      </div>
+      <span class="np-cta">继续阅读 <span class="arr">→</span></span>
+    </a>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div class="byline">
+      <img class="avatar" src="author.jpg" alt="范米花儿">
+      <div class="byline-meta">
+        <div class="byline-label"><span class="dot"></span>作者 · WRITTEN BY</div>
+        <h3 class="byline-name">嗨，我是 <span class="em">范米花儿</span></h3>
+        <p class="byline-tag">一份给设计师的代码入门 ——<br>不需要会写，知道大概怎么回事，跟前端 / AI 沟通就顺多了。</p>
+        <div class="byline-contact">
+          <span class="contact-label">微信</span>
+          <span class="contact-id">vanvan_0422</span>
+          <span class="contact-hint">想看什么主题，加我聊</span>
+        </div>
+      </div>
+    </div>
+    <div class="footer-meta">
+      做于 <span class="mono">2026</span> · 用 <span class="heart">●</span> 写给 <span class="mono">DESIGNERS &amp; DEVELOPERS</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+// ========= §01 PR Anatomy: card → detail =========
+(function () {
+  const cards = document.querySelectorAll('.anat-card');
+  const detail = document.getElementById('anatDetail');
+  if (!cards.length || !detail) return;
+
+  const details = {
+    title: {
+      hd: 'PART 01 · 标题 + 描述',
+      body:
+'<span class="ad-acc">fix: Login button hover state</span>\n' +
+'<span class="ad-mute">↑ 这一行就是标题。前缀 fix: 表示</span>\n' +
+'<span class="ad-mute">  "这是个修 bug"。其他常见前缀：</span>\n' +
+'<span class="ad-mute">  feat:  新功能</span>\n' +
+'<span class="ad-mute">  chore: 杂活、不影响行为</span>\n' +
+'<span class="ad-mute">  docs:  改文档</span>\n\n' +
+'<span class="ad-add">### 描述</span>\n' +
+'<span class="ad-add">登录按钮 hover 时颜色和设计稿不一致：</span>\n' +
+'<span class="ad-add">- 设计稿：#ff5e1a</span>\n' +
+'<span class="ad-add">- 代码里：#ff8c5e（差了一个色号）</span>\n' +
+'<span class="ad-add">- 这次把 token 改对。</span>\n\n' +
+'<span class="ad-mute">// 描述里讲清"为什么"，</span>\n' +
+'<span class="ad-mute">// reviewer 一看就知道你在干嘛。</span>'
+    },
+    files: {
+      hd: 'PART 02 · 文件改动清单',
+      body:
+'<span class="ad-acc">📁 3 files changed</span>\n\n' +
+'<span class="ad-add">+5 −2</span> <span class="ad-mute">  src/components/</span>Button.tsx\n' +
+'<span class="ad-add">+5 −2</span> <span class="ad-mute">  src/styles/</span>login.css\n' +
+'<span class="ad-add">+2 −1</span> <span class="ad-mute">  src/pages/</span>LoginPage.tsx\n\n' +
+'<span class="ad-add">总共 +12 −5</span>\n' +
+'<span class="ad-mute">// 这数字越小，PR 越好审 —— </span>\n' +
+'<span class="ad-mute">// 大于 +500 行的 PR 没人想接。</span>'
+    },
+    diff: {
+      hd: 'PART 03 · diff 视图',
+      body:
+'<span class="ad-mute">@@ -12,1 +12,1 @@</span>\n' +
+'<span class="ad-del">−    style={{ color: \'#ff8c5e\' }}</span>\n' +
+'<span class="ad-add">+    style={{ color: \'#ff5e1a\' }}</span>\n\n' +
+'<span class="ad-mute">// 红 = 删了，绿 = 加了。</span>\n' +
+'<span class="ad-mute">// 一眼能看出"颜色被改了"。</span>\n\n' +
+'<span class="ad-warn">这是 PR 的核心 ——</span>\n' +
+'<span class="ad-warn">§02 整个一节都在讲怎么读它。</span>'
+    },
+    reviewers: {
+      hd: 'PART 04 · reviewer 区',
+      body:
+'<span class="ad-acc">Reviewers</span>\n\n' +
+'<span class="ad-add">✓</span> 徐工程师  <span class="ad-add">approved</span>\n' +
+'<span class="ad-warn">⊙</span> 你         <span class="ad-warn">pending</span>\n' +
+'<span class="ad-mute">○</span> 林设计师  <span class="ad-mute">requested</span>\n\n' +
+'<span class="ad-mute">// 三种结果：</span>\n' +
+'<span class="ad-add">//   approved        → 同意</span>\n' +
+'<span class="ad-warn">//   changes requested → 改了再合</span>\n' +
+'<span class="ad-acc">//   commented        → 只评论不表态</span>'
+    },
+    status: {
+      hd: 'PART 05 · 状态徽章',
+      body:
+'<span class="ad-add">●</span> open               <span class="ad-mute">还在审</span>\n' +
+'<span class="ad-warn">●</span> changes requested  <span class="ad-mute">改了再合</span>\n' +
+'<span class="ad-add">●</span> approved           <span class="ad-mute">同意了，可合</span>\n' +
+'<span class="ad-acc">●</span> merged             <span class="ad-mute">已经合进 main</span>\n\n' +
+'<span class="ad-mute">// 一个 PR 的人生：</span>\n' +
+'<span class="ad-mute">//   open</span>\n' +
+'<span class="ad-mute">//     → changes (要改)</span>\n' +
+'<span class="ad-mute">//     → 你修改 push</span>\n' +
+'<span class="ad-mute">//     → approved</span>\n' +
+'<span class="ad-mute">//     → merged 🎉</span>'
+    }
+  };
+
+  function setActive(key) {
+    cards.forEach(c => c.classList.toggle('is-active', c.dataset.key === key));
+    const d = details[key];
+    if (!d) return;
+    detail.style.opacity = 0;
+    setTimeout(() => {
+      detail.innerHTML = `<div class="ad-hd">${d.hd}</div><pre>${d.body}</pre>`;
+      detail.style.opacity = 1;
+    }, 150);
+  }
+
+  cards.forEach(c => c.addEventListener('click', () => setActive(c.dataset.key)));
+  cards.forEach(c => c.addEventListener('mouseenter', () => setActive(c.dataset.key)));
+
+  // tabs are visual only
+  document.querySelectorAll('.anat-tab').forEach(t => {
+    t.addEventListener('click', () => {
+      document.querySelectorAll('.anat-tab').forEach(x => x.classList.remove('active'));
+      t.classList.add('active');
+    });
+  });
+})();
+
+// ========= §02 Diff reading game =========
+(function () {
+  const code = document.getElementById('diffCode');
+  const checkBtn = document.getElementById('diffCheck');
+  const resetBtn = document.getElementById('diffReset');
+  const counter = document.getElementById('diffMarked');
+  const fb = document.getElementById('diffFeedback');
+  if (!code || !checkBtn) return;
+
+  const lines = code.querySelectorAll('.diff-line[data-add]');
+
+  function updateCount() {
+    counter.textContent = code.querySelectorAll('.diff-line.is-marked').length;
+  }
+
+  lines.forEach(l => {
+    // append a pin element
+    const pin = document.createElement('span');
+    pin.className = 'dl-pin';
+    pin.textContent = '✓';
+    l.querySelector('.dl-text').appendChild(pin);
+
+    l.addEventListener('click', () => {
+      l.classList.toggle('is-marked');
+      updateCount();
+      // clear feedback when user makes new selection
+      fb.classList.remove('good', 'bad');
+      fb.innerHTML = '<span class="mono" style="color: var(--ink-mute); font-size: 12px;">› 点击你认为是"新增"的行 —— 再点一次取消。点完按"检查"。</span>';
+    });
+  });
+
+  checkBtn.addEventListener('click', () => {
+    let correctMarked = 0;
+    let wrongMarked = 0;
+    let missed = 0;
+
+    lines.forEach(l => {
+      const shouldBe = l.dataset.add === '1';
+      const isMarked = l.classList.contains('is-marked');
+
+      if (shouldBe && isMarked) correctMarked++;
+      else if (!shouldBe && isMarked) wrongMarked++;
+      else if (shouldBe && !isMarked) missed++;
+    });
+
+    if (correctMarked === 3 && wrongMarked === 0) {
+      fb.classList.remove('bad');
+      fb.classList.add('good');
+      fb.innerHTML = '<strong>对了！</strong> 这个 diff 加了 3 行（带 <code style="font-family:JetBrains Mono;background:rgba(255,255,255,0.4);padding:1px 4px;border-radius:3px;">+</code> 的绿色行）：第 12 行的 <code style="font-family:JetBrains Mono;">btn-lg</code>、第 13 行的 <code style="font-family:JetBrains Mono;">aria-label</code>、第 15 行的 <code style="font-family:JetBrains Mono;">var(--accent)</code>。读 diff 就这么简单。';
+    } else if (wrongMarked > 0) {
+      fb.classList.remove('good');
+      fb.classList.add('bad');
+      fb.innerHTML = `<strong>有 ${wrongMarked} 个点错了。</strong> 只有<strong>带 <code style="font-family:JetBrains Mono;background:rgba(255,255,255,0.4);padding:1px 4px;border-radius:3px;">+</code> 前缀的绿色行</strong>是新增。红色（−）是删除，白色是没改 —— 都不是新增。再来一遍试试。`;
+    } else if (missed > 0) {
+      fb.classList.remove('good');
+      fb.classList.add('bad');
+      fb.innerHTML = `<strong>少点了 ${missed} 行。</strong> 一共有 3 行新增 ——再扫一遍，找带 <code style="font-family:JetBrains Mono;background:rgba(255,255,255,0.4);padding:1px 4px;border-radius:3px;">+</code> 前缀、绿色背景的行。`;
+    }
+  });
+
+  resetBtn.addEventListener('click', () => {
+    lines.forEach(l => l.classList.remove('is-marked'));
+    updateCount();
+    fb.classList.remove('good', 'bad');
+    fb.innerHTML = '<span class="mono" style="color: var(--ink-mute); font-size: 12px;">› 在上面的 diff 里，点击你认为是"新增"的行（绿色那种）。</span>';
+  });
+})();
+
+// ========= §03 PR Game =========
+(function () {
+  const stage = document.getElementById('prStage');
+  if (!stage) return;
+
+  const roundButtons = stage.querySelectorAll('.pb-rounds button');
+  const taskTextEl = document.getElementById('prTaskText');
+  const sideHintEl = document.getElementById('prSideHint');
+  const feedbackBox = document.getElementById('prFeedback');
+  const doneCountEl = document.getElementById('prDone');
+  const nextBtn = document.getElementById('prNext');
+  const resetBtn = document.getElementById('prReset');
+  const finalEl = document.getElementById('prFinal');
+  const finalTitle = document.getElementById('prFinalTitle');
+  const finalStyle = document.getElementById('prFinalStyle');
+  const finalDesc = document.getElementById('prFinalDesc');
+  const reviewerYou = document.getElementById('reviewerYou');
+  const actionsBox = document.getElementById('prActions');
+
+  // Set up file collapse / expand
+  document.querySelectorAll('.pr-file-head').forEach(h => {
+    h.addEventListener('click', () => {
+      h.parentElement.classList.toggle('collapsed');
+    });
+  });
+
+  // Round configurations
+  const ROUNDS = {
+    1: {
+      task: '<strong>关 1 · 找颜色：</strong>这个 PR 把按钮颜色改成了什么？在 <code>Button.tsx</code> 里找出新颜色，点那一行的 <strong>+</strong> 来回答。',
+      hint: '点 diff 里红字找出"原来是什么颜色"，再看绿字找"现在改成什么颜色"。颜色那行里的 #ff5e1a 才是新值。',
+      type: 'click-clue',
+      target: 'color',
+      good: { tag: 'OK · 找到了', title: '颜色改成了 #ff5e1a。', desc: '这就是设计稿里的橙色 —— 你点的那一行，红字是 <code>#ff8c5e</code>（旧），绿字是 <code>#ff5e1a</code>（新）。<strong>读 diff 就这么读 ——红到绿，左到右</strong>。' },
+      bad: { tag: '不对 · 找错地方', title: '这一行不是改颜色的。', desc: '颜色字段叫 <code>color</code>，找带 <code>color: #...</code> 的行 —— Button.tsx 的第 12 行。再点一下 + 试试。' }
+    },
+    2: {
+      task: '<strong>关 2 · 加 review comment：</strong>在 <code>login.css</code> 第 2 行（padding 那行）的<strong>绿字上点 +</strong>，给作者留个 comment 提建议。',
+      hint: '把鼠标移到 padding 那一行（第 2 行新值，<code>10px 14px</code>），右边会出现一个橙色 + 按钮 —— 点它就能加 comment。',
+      type: 'click-clue',
+      target: 'margin',
+      good: { tag: 'OK · 留对地方', title: '点中了 padding 那一行 —— 准备打字。', desc: '这就是真 PR 里加 comment 的方式：<strong>把鼠标放到一行上，点 +，写评论</strong>。设计师审 PR 80% 时间就在做这件事 —— 一行一行点过去，留下意见。' },
+      bad: { tag: '不对 · 不是这一行', title: '这一行不涉及 padding。', desc: '本关要在 <code>login.css</code> 的第 2 行（绿字 <code>padding: 10px 14px</code>）上加 comment —— 那里不符合栅格。再点对地方试试。' },
+      followUp: {
+        prompt: '你点开了一个评论框 —— 选一条最合适的 review comment：',
+        options: [
+          { text: '这 padding 错的，你不会写吗？', tier: 'bad', why: '直接判刑式 —— 没建议、没依据，工程师只能尴尬。§04 讲过这种语气是反例。' },
+          { text: 'padding 是 10/14，但我们栅格是 4/8/12/16 —— 改成 12/16 行不行？', tier: 'good', why: '具体 + 有依据 + 软语气 —— 三秒能改完。教科书级 review comment。' },
+          { text: '这里建议改一下', tier: 'bad', why: '太空 —— 改什么、改成多少、为什么？工程师还得问回来一遍。' }
+        ]
+      }
+    },
+    3: {
+      task: '<strong>关 3 · 该不该 approve：</strong>右边 reviewer 区，从三个动作里挑一个。<strong>但先想一想</strong> —— 这个 PR 真的能合吗？',
+      hint: '看一遍 3 个文件 —— 颜色对了、padding 不对栅格、login.css 第 6 行有个 <code>TODO: hover state</code>（hover 没做）、Button 没有 aria-label。<strong>该 approve 吗？</strong>',
+      type: 'action',
+      good: { tag: 'OK · 想清楚了', title: '"先 request changes —— hover 还没做。"', desc: '设计稿里画了 hover 状态，但代码里写着 <code>TODO: hover state</code> —— 这种<strong>"待办"绝不能 approve</strong>。打回去让 claude-bot 补一下，是 reviewer 的本职。' },
+      bad: { tag: '想想 · 别急着批', title: '"hover 还没做就 approve 了？"', desc: 'login.css 里明摆着 <code>/* TODO: hover state */</code> —— 这是作者自己留的"待办"。<strong>有 TODO 的 PR 不该 approve</strong>。"comment" 也不够 —— 得明确 request changes 才会被堵住。' },
+      forceWrong: 'approve' // approving = bad
+    },
+    4: {
+      task: '<strong>关 4 · 找问题：</strong>除了 hover，这个 PR 至少还有<strong>一个明显问题</strong>。在 diff 里点中那一行的 +，加 comment。',
+      hint: 'login.css 第 2 行 padding 不在栅格上（10/14），LoginPage.tsx 第 23 行按钮文案... 选一处加 comment。最稳的是 login.css 的第 2 行。',
+      type: 'click-clue',
+      target: 'margin', // accept either margin (padding row) or other clue rows
+      acceptAny: ['margin', 'hover'],
+      good: { tag: 'OK · 找到了', title: '准确指出了 padding 的问题。', desc: '这就是设计师在 review 里的本职 ——<strong>对着设计稿的栅格 / 状态 / 文案 / a11y 一条一条核对</strong>。你已经会做这件事了。' },
+      bad: { tag: '不对 · 不是这一处', title: '这一行没什么问题。', desc: '这个 PR 里 padding 不对栅格、hover 没做 —— 在<strong>带这两类内容的绿字行</strong>上点 +。' }
+    }
+  };
+
+  let currentRound = 1;
+  let solved = new Set();
+  let style = { good: 0, bad: 0 }; // tally for final review style
+
+  // Track active comment thread (so we can remove it on round change)
+  let activeThread = null;
+
+  function clearThread() {
+    if (activeThread) {
+      activeThread.remove();
+      activeThread = null;
+    }
+    // un-mark any selected lines from previous round
+    document.querySelectorAll('.pr-file-body .diff-line').forEach(l => {
+      l.classList.remove('is-clicked');
+    });
+  }
+
+  function loadRound(r) {
+    currentRound = r;
+    clearThread();
+    feedbackBox.innerHTML = '';
+    nextBtn.disabled = true;
+    nextBtn.textContent = (r === 4) ? '完成 ✓' : '下一关 →';
+    finalEl.classList.remove('show');
+
+    const data = ROUNDS[r];
+    taskTextEl.innerHTML = data.task;
+    sideHintEl.innerHTML = data.hint;
+
+    roundButtons.forEach(b => b.classList.toggle('active', Number(b.dataset.round) === r));
+
+    // Reset reviewer status
+    reviewerYou.className = 'ps-st pending';
+    reviewerYou.textContent = 'pending';
+
+    // Re-enable action buttons
+    actionsBox.querySelectorAll('button').forEach(b => {
+      b.disabled = false;
+      b.style.outline = '';
+    });
+
+    // Make sure files are expanded for click-clue rounds
+    if (data.type === 'click-clue') {
+      document.querySelectorAll('.pr-file').forEach(f => f.classList.remove('collapsed'));
+    }
+  }
+
+  function showFeedback(tier, fb) {
+    const tierMap = { good: 'good', bad: 'bad', warn: 'warn' };
+    feedbackBox.innerHTML = `
+      <div class="pfb-card ${tierMap[tier] || 'warn'}">
+        <div class="pfb-tag">${fb.tag} · 工程师同事 / claude-bot 说</div>
+        <h4 class="pfb-title">${fb.title}</h4>
+        <p class="pfb-desc">${fb.desc}</p>
+      </div>`;
+    if (tier === 'good') {
+      style.good++;
+      solved.add(currentRound);
+      doneCountEl.textContent = solved.size;
+      roundButtons.forEach(b => {
+        if (solved.has(Number(b.dataset.round))) b.classList.add('done');
+      });
+      nextBtn.disabled = false;
+    } else {
+      style.bad++;
+    }
+  }
+
+  // Handle clicks on diff lines (the + comment buttons)
+  document.querySelectorAll('.pr-file-body .has-comment-btn').forEach(line => {
+    line.addEventListener('click', (e) => {
+      const data = ROUNDS[currentRound];
+      if (!data || data.type !== 'click-clue') return;
+      if (solved.has(currentRound)) return;
+
+      // Only trigger when click is on the comment button or on the line itself
+      const lineClue = line.dataset.clue || '';
+      const accept = data.acceptAny || [data.target];
+      const isCorrect = accept.includes(lineClue);
+
+      // Remove any existing thread
+      clearThread();
+
+      if (!isCorrect) {
+        showFeedback('bad', data.bad);
+        return;
+      }
+
+      // For round 2 we have a follow-up: pick a comment phrasing
+      if (data.followUp) {
+        // Insert a fake comment thread under the line
+        const thread = document.createElement('div');
+        thread.className = 'pr-comment-thread';
+        thread.innerHTML = `
+          <div class="pct-author">
+            <span class="pct-avatar">YOU</span>
+            <span class="pct-name">你</span>
+            <span class="pct-time">just now</span>
+          </div>
+          <p class="pct-body">${data.followUp.prompt}</p>
+          <div class="pct-options">
+            ${data.followUp.options.map((o, i) =>
+              `<button data-opt="${i}" data-tier="${o.tier}">${o.text}</button>`
+            ).join('')}
+          </div>
+        `;
+        line.insertAdjacentElement('afterend', thread);
+        activeThread = thread;
+
+        thread.querySelectorAll('button[data-opt]').forEach(b => {
+          b.addEventListener('click', () => {
+            const idx = Number(b.dataset.opt);
+            const opt = data.followUp.options[idx];
+            // Disable all
+            thread.querySelectorAll('button').forEach(x => x.disabled = true);
+            b.classList.add(opt.tier === 'good' ? 'picked-good' : 'picked-bad');
+
+            // Show why
+            const why = document.createElement('p');
+            why.style.cssText = 'margin-top: 10px; padding: 10px 12px; background: ' + (opt.tier === 'good' ? 'var(--add-bg)' : 'var(--del-bg)') + '; border-radius: 4px; font-size: 12.5px; color: var(--ink-soft); border-left: 3px solid ' + (opt.tier === 'good' ? 'var(--add)' : 'var(--del)') + ';';
+            why.innerHTML = `<strong style="color:${opt.tier === 'good' ? 'var(--add)' : 'var(--del)'};">${opt.tier === 'good' ? '✓ 好评论' : '✕ 不太行'}</strong> · ${opt.why}`;
+            thread.appendChild(why);
+
+            if (opt.tier === 'good') {
+              showFeedback('good', data.good);
+            } else {
+              style.bad++;
+              const fbBad = {
+                tag: '注意 · 语气错了',
+                title: '"comment 留对地方了，但句子不行。"',
+                desc: '位置选对，但选了一句不太友好的措辞。<strong>review 是协作不是审判</strong>。再点一次 + 试试别的句式。'
+              };
+              feedbackBox.innerHTML = `
+                <div class="pfb-card warn">
+                  <div class="pfb-tag">${fbBad.tag} · 工程师同事 / claude-bot 说</div>
+                  <h4 class="pfb-title">${fbBad.title}</h4>
+                  <p class="pfb-desc">${fbBad.desc}</p>
+                </div>`;
+            }
+          });
+        });
+        return;
+      }
+
+      // Otherwise: simple correct
+      showFeedback('good', data.good);
+    });
+  });
+
+  // Action button handlers (Approve / Request changes / Comment)
+  actionsBox.addEventListener('click', e => {
+    const b = e.target.closest('button[data-act]');
+    if (!b) return;
+    const data = ROUNDS[currentRound];
+
+    // For non-action rounds, this just visually updates the badge
+    if (data.type !== 'action') {
+      // Update reviewer status visually
+      const map = {
+        approve: { cls: 'approved', txt: 'approved' },
+        changes: { cls: 'changes', txt: 'changes requested' },
+        comment: { cls: 'commented', txt: 'commented' }
+      };
+      reviewerYou.className = 'ps-st ' + map[b.dataset.act].cls;
+      reviewerYou.textContent = map[b.dataset.act].txt;
+      return;
+    }
+
+    // For round 3 (the action round), check answer
+    const map = {
+      approve: { cls: 'approved', txt: 'approved' },
+      changes: { cls: 'changes', txt: 'changes requested' },
+      comment: { cls: 'commented', txt: 'commented' }
+    };
+    reviewerYou.className = 'ps-st ' + map[b.dataset.act].cls;
+    reviewerYou.textContent = map[b.dataset.act].txt;
+
+    if (b.dataset.act === 'changes') {
+      showFeedback('good', data.good);
+      actionsBox.querySelectorAll('button').forEach(x => x.disabled = true);
+      b.style.outline = '2px solid var(--add)';
+      b.style.outlineOffset = '2px';
+      b.disabled = false;
+    } else {
+      showFeedback('bad', data.bad);
+    }
+  });
+
+  // Round buttons
+  roundButtons.forEach(b => {
+    b.addEventListener('click', () => loadRound(Number(b.dataset.round)));
+  });
+
+  // Next button
+  nextBtn.addEventListener('click', () => {
+    if (currentRound < 4) {
+      loadRound(currentRound + 1);
+    } else {
+      // celebrate -- show final review style
+      const ratio = style.good / (style.good + style.bad || 1);
+      let styleLabel, styleDesc;
+      if (style.bad === 0) {
+        styleLabel = 'REVIEW 风格：丝滑型';
+        styleDesc = '一次没失误 —— 你已经是个<strong>顶级 reviewer</strong>。具体到行、语气友好、有依据 —— 工程师同事会很喜欢跟你协作。';
+      } else if (ratio >= 0.6) {
+        styleLabel = 'REVIEW 风格：友好型';
+        styleDesc = '你提的问题<strong>具体到行</strong>，但语气是建议而不是指责。<strong>这就是 review 该有的样子</strong> —— 不是审判，是协作。';
+      } else {
+        styleLabel = 'REVIEW 风格：成长型';
+        styleDesc = '你完成了任务，但路上磕磕绊绊。<strong>没关系</strong> —— 多审几个 PR 就有手感了。下次记住三件事：<strong>具体到行</strong>、<strong>有依据</strong>、<strong>软语气</strong>。';
+      }
+      finalTitle.textContent = '你审了一个 PR。';
+      finalStyle.textContent = styleLabel;
+      finalDesc.innerHTML = styleDesc;
+      finalEl.classList.add('show');
+      nextBtn.disabled = true;
+
+      feedbackBox.innerHTML = `
+        <div class="pfb-card good">
+          <div class="pfb-tag">完成 · 4 关都过了</div>
+          <h4 class="pfb-title">这个 PR 你已经审完了。</h4>
+          <p class="pfb-desc">下一步：claude-bot 看到 <code>changes requested</code>，会去补 hover、修 padding。补完会推新 commit，你再审一遍 ——<strong>多数 PR 都要来回两三轮</strong>。这就是日常。</p>
+        </div>`;
+    }
+  });
+
+  resetBtn.addEventListener('click', () => {
+    solved.clear();
+    style = { good: 0, bad: 0 };
+    doneCountEl.textContent = 0;
+    roundButtons.forEach(b => b.classList.remove('done'));
+    finalEl.classList.remove('show');
+    loadRound(1);
+  });
+
+  // init
+  loadRound(1);
+})();
+
+// ========= Roadmap modal =========
+(function(){
+  var modal = document.getElementById('rm-modal');
+  if (!modal) return;
+  var openBtns = document.querySelectorAll('[data-rm-open]');
+  var closeBtns = modal.querySelectorAll('[data-rm-close]');
+  function open() { modal.hidden = false; document.body.style.overflow = 'hidden'; }
+  function close() { modal.hidden = true; document.body.style.overflow = ''; }
+  openBtns.forEach(function(b){ b.addEventListener('click', function(e){ e.preventDefault(); open(); }); });
+  closeBtns.forEach(function(b){ b.addEventListener('click', close); });
+  document.addEventListener('keydown', function(e){ if (e.key === 'Escape' && !modal.hidden) close(); });
+})();
+</script>
+
+
+<!-- 路线图弹窗 -->
+<div class="rm-modal" id="rm-modal" hidden>
+  <div class="rm-backdrop" data-rm-close></div>
+  <div class="rm-dialog" role="dialog" aria-label="完整路线图">
+    <button class="rm-close" data-rm-close aria-label="关闭">✕</button>
+    <div class="rm-header">
+      <div class="rm-tag">完整路线图 · ROADMAP</div>
+      <h3 class="rm-title">9 模块 <span class="rm-em">·</span> 28 篇</h3>
+      <p class="rm-sub">设计篇 5 模块 / 15 篇 + 工程篇 4 系列 / 13 篇</p>
+    </div>
+    <div class="rm-body">
+      <div class="rm-mod">
+        <div class="rm-mod-key">A · 单元素与组件</div>
+        <div class="rm-mod-list">
+          <a href="basics-figma.html" class="rm-cell"><span class="rm-cell-code">A0</span><span class="rm-cell-name">三件套 · HTML / CSS / JS</span><span class="rm-cell-tier">入门</span></a>
+          <a href="box-figma.html" class="rm-cell"><span class="rm-cell-code">A1</span><span class="rm-cell-name">盒子 · Auto Layout</span><span class="rm-cell-tier">基础</span></a>
+          <a href="components-figma.html" class="rm-cell"><span class="rm-cell-code">A2</span><span class="rm-cell-name">组件 · Variants &amp; Props</span><span class="rm-cell-tier">基础</span></a>
+          <a href="button-system-figma.html" class="rm-cell"><span class="rm-cell-code">A3</span><span class="rm-cell-name">Button System · 组件演化</span><span class="rm-cell-tier">进阶</span></a>
+        </div>
+      </div>
+      <div class="rm-mod">
+        <div class="rm-mod-key">B · 多组件协作</div>
+        <div class="rm-mod-list">
+          <a href="page-figma.html" class="rm-cell"><span class="rm-cell-code">B0</span><span class="rm-cell-name">拼页面 · 组件嵌套</span><span class="rm-cell-tier">入门</span></a>
+          <a href="data-flow-figma.html" class="rm-cell"><span class="rm-cell-code">B1</span><span class="rm-cell-name">数据流 · 概念</span><span class="rm-cell-tier">基础</span></a>
+          <a href="data-flow-cases-figma.html" class="rm-cell"><span class="rm-cell-code">B2</span><span class="rm-cell-name">数据流 · 实战 5 案例</span><span class="rm-cell-tier">进阶</span></a>
+        </div>
+      </div>
+      <div class="rm-mod">
+        <div class="rm-mod-key">C · 视觉系统</div>
+        <div class="rm-mod-list">
+          <a href="tokens-figma.html" class="rm-cell"><span class="rm-cell-code">C0</span><span class="rm-cell-name">Variables / Tokens 入门</span><span class="rm-cell-tier">入门</span></a>
+          <a href="colors-type-figma.html" class="rm-cell"><span class="rm-cell-code">C1</span><span class="rm-cell-name">Colors / Type / Spacing</span><span class="rm-cell-tier">基础</span></a>
+          <a href="theme-switch-figma.html" class="rm-cell"><span class="rm-cell-code">C2</span><span class="rm-cell-name">Theme 切换实战</span><span class="rm-cell-tier">进阶</span></a>
+        </div>
+      </div>
+      <div class="rm-mod">
+        <div class="rm-mod-key">D · 状态与交互</div>
+        <div class="rm-mod-list">
+          <a href="states-figma.html" class="rm-cell"><span class="rm-cell-code">D0</span><span class="rm-cell-name">视觉态 · 看得见的状态</span><span class="rm-cell-tier">入门</span></a>
+          <a href="interactive-figma.html" class="rm-cell"><span class="rm-cell-code">D1</span><span class="rm-cell-name">Interactive Component</span><span class="rm-cell-tier">基础</span></a>
+          <a href="transition-figma.html" class="rm-cell"><span class="rm-cell-code">D2</span><span class="rm-cell-name">动画 · Transition</span><span class="rm-cell-tier">进阶</span></a>
+        </div>
+      </div>
+      <div class="rm-mod">
+        <div class="rm-mod-key">E · 工程化</div>
+        <div class="rm-mod-list">
+          <a href="naming-figma.html" class="rm-cell"><span class="rm-cell-code">E0</span><span class="rm-cell-name">命名 / 图层规范</span><span class="rm-cell-tier">入门</span></a>
+          <a href="handoff-figma.html" class="rm-cell"><span class="rm-cell-code">E2</span><span class="rm-cell-name">Handoff &amp; 设计系统</span><span class="rm-cell-tier">进阶</span></a>
+        </div>
+      </div>
+      <div class="rm-mod">
+        <div class="rm-mod-key">F · 工程入门</div>
+        <div class="rm-mod-list">
+          <a href="f1-npm-figma.html" class="rm-cell"><span class="rm-cell-code">F1</span><span class="rm-cell-name">npm 是什么</span><span class="rm-cell-tier">入门</span></a>
+          <a href="f2-import-figma.html" class="rm-cell"><span class="rm-cell-code">F2</span><span class="rm-cell-name">import 与路径</span><span class="rm-cell-tier">入门</span></a>
+          <a href="f3-dev-build-figma.html" class="rm-cell"><span class="rm-cell-code">F3</span><span class="rm-cell-name">dev vs build</span><span class="rm-cell-tier">基础</span></a>
+          <a href="f4-hidden-files-figma.html" class="rm-cell"><span class="rm-cell-code">F4</span><span class="rm-cell-name">看不见的文件</span><span class="rm-cell-tier">基础</span></a>
+        </div>
+      </div>
+      <div class="rm-mod">
+        <div class="rm-mod-key">G · 版本控制</div>
+        <div class="rm-mod-list">
+          <a href="g1-commit-branch-figma.html" class="rm-cell"><span class="rm-cell-code">G1</span><span class="rm-cell-name">commit / branch</span><span class="rm-cell-tier">入门</span></a>
+          <a href="g2-conflict-figma.html" class="rm-cell"><span class="rm-cell-code">G2</span><span class="rm-cell-name">冲突怎么解</span><span class="rm-cell-tier">基础</span></a>
+          <a href="g3-pr-review-figma.html" class="rm-cell"><span class="rm-cell-code">G3</span><span class="rm-cell-name">PR / Review</span><span class="rm-cell-tier">进阶</span></a>
+        </div>
+      </div>
+      <div class="rm-mod">
+        <div class="rm-mod-key">H · 浏览器调试</div>
+        <div class="rm-mod-list">
+          <a href="h1-devtools-elements-figma.html" class="rm-cell"><span class="rm-cell-code">H1</span><span class="rm-cell-name">DevTools Elements</span><span class="rm-cell-tier">入门</span></a>
+          <a href="h2-console-error-figma.html" class="rm-cell"><span class="rm-cell-code">H2</span><span class="rm-cell-name">Console 报错</span><span class="rm-cell-tier">基础</span></a>
+          <a href="h3-network-figma.html" class="rm-cell"><span class="rm-cell-code">H3</span><span class="rm-cell-name">Network 面板</span><span class="rm-cell-tier">进阶</span></a>
+        </div>
+      </div>
+      <div class="rm-mod">
+        <div class="rm-mod-key">J · 上线</div>
+        <div class="rm-mod-list">
+          <a href="j1-dns-figma.html" class="rm-cell"><span class="rm-cell-code">J1</span><span class="rm-cell-name">DNS / 域名</span><span class="rm-cell-tier">基础</span></a>
+          <a href="j2-vercel-figma.html" class="rm-cell"><span class="rm-cell-code">J2</span><span class="rm-cell-name">Vercel 部署</span><span class="rm-cell-tier">基础</span></a>
+          <a href="j3-cache-cdn-figma.html" class="rm-cell"><span class="rm-cell-code">J3</span><span class="rm-cell-name">缓存 / CDN</span><span class="rm-cell-tier">进阶</span></a>
+        </div>
+      </div>
+    </div>
+    <div class="rm-footer">
+      <span>未完待续 · 想看什么主题加我聊</span>
+      <span class="rm-wechat">微信 vanvan_0422</span>
+    </div>
+  </div>
+</div>
+</body>
+</html>

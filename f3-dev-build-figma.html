@@ -1,0 +1,2487 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>localhost:3000 不是真服务器 — F3 · 工程入门</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Noto+Sans+SC:wght@300;400;500;700;900&family=Noto+Serif+SC:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f3eee5;
+    --bg-2: #ebe4d4;
+    --ink: #16161d;
+    --ink-soft: #4a4a55;
+    --ink-mute: #8a8a92;
+    --line: #d5cdba;
+    --line-soft: #e3dcca;
+    --accent: #ff4d2e;
+    --accent-soft: #ffe4dc;
+    --blue: #0a4cff;
+    --blue-soft: #dde6ff;
+    --green: #1f6b3a;
+    --green-soft: #d4ecdb;
+    --yellow: #ffcf3d;
+    --paper: #faf7f0;
+    --shadow: 0 1px 0 rgba(0,0,0,0.04), 0 8px 24px rgba(22,22,29,0.06);
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'Geist', 'Noto Sans SC', system-ui, -apple-system, sans-serif;
+    font-size: 16px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    background-image: radial-gradient(circle at 1px 1px, rgba(22,22,29,0.05) 1px, transparent 0);
+    background-size: 24px 24px;
+  }
+
+  /* Typography */
+  .display-cn { font-family: 'Noto Serif SC', serif; font-weight: 900; letter-spacing: -0.01em; }
+  .mono { font-family: 'JetBrains Mono', monospace; }
+  .label { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-mute); }
+
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 0 32px; }
+
+  /* topbar */
+  .topbar {
+    border-bottom: 1px dashed var(--line);
+    padding: 16px 0;
+    background: rgba(243, 238, 229, 0.85);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    backdrop-filter: blur(8px);
+  }
+  .topbar-inner { display: flex; justify-content: space-between; align-items: center; gap: 24px; flex-wrap: wrap; }
+  .brand { font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 600; }
+  .brand .dot { display: inline-block; width: 8px; height: 8px; background: var(--accent); border-radius: 50%; margin-right: 8px; vertical-align: middle; animation: pulse 2s ease-in-out infinite; }
+  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+  .nav-links { display: flex; gap: 18px; font-size: 13px; flex-wrap: wrap; }
+  .nav-links a { color: var(--ink-soft); text-decoration: none; transition: color 0.2s; }
+  .nav-links a:hover { color: var(--accent); }
+  .nav-links a.current { color: var(--accent); font-weight: 600; }
+  a.brand { text-decoration: none; color: inherit; transition: color 0.2s; cursor: pointer; }
+  a.brand:hover { color: var(--accent); }
+
+  /* hero */
+  .hero { padding: 100px 0 80px; position: relative; overflow: hidden; }
+  .hero-meta { display: flex; gap: 24px; margin-bottom: 32px; align-items: center; flex-wrap: wrap; }
+  .hero-meta .pill { padding: 6px 12px; border: 1px solid var(--ink); border-radius: 100px; font-size: 11px; font-family: 'JetBrains Mono', monospace; letter-spacing: 0.05em; }
+  .hero-meta .pill.fill { background: var(--ink); color: var(--bg); }
+  .hero h1 {
+    font-family: 'Noto Serif SC', serif;
+    font-weight: 900;
+    font-size: clamp(48px, 7vw, 92px);
+    line-height: 0.95;
+    letter-spacing: -0.03em;
+    margin: 0 0 24px;
+  }
+  .hero h1 .em { font-family: 'Noto Serif SC', serif; font-weight: 500; color: var(--accent); }
+  .hero h1 .x { display: inline-block; transform: translateY(-0.05em); margin: 0 0.05em; color: var(--ink-mute); font-weight: 300; }
+  .hero p.lede { font-size: 20px; line-height: 1.5; max-width: 640px; color: var(--ink-soft); margin: 0 0 40px; }
+  .hero p.lede .em { font-family: 'Noto Serif SC', serif; color: var(--accent); font-weight: 500; }
+  .hero-grid { display: grid; grid-template-columns: 1.4fr 1fr; gap: 48px; align-items: end; }
+  @media (max-width: 880px) { .hero-grid { grid-template-columns: 1fr; } }
+  .hero-side { border-left: 1px dashed var(--line); padding-left: 24px; font-size: 13px; color: var(--ink-soft); }
+  .hero-side .row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px dashed var(--line); }
+  .hero-side .row:last-child { border-bottom: none; }
+  .hero-side .row .k { color: var(--ink-mute); font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.05em; text-transform: uppercase; }
+  .hero-side .row .v { font-weight: 500; }
+
+  /* section */
+  section { padding: 80px 0; border-top: 1px solid var(--line); position: relative; animation: fadeIn 0.6s ease-out backwards; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+  .section-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 48px; flex-wrap: wrap; gap: 16px; }
+  .section-num { font-family: 'JetBrains Mono', monospace; font-size: 13px; color: var(--ink-mute); letter-spacing: 0.1em; }
+  .section-num strong { color: var(--accent); }
+  .section-title {
+    font-family: 'Noto Serif SC', serif;
+    font-weight: 900;
+    font-size: clamp(32px, 4.5vw, 52px);
+    line-height: 1.05;
+    letter-spacing: -0.02em;
+    margin: 0;
+    max-width: 18ch;
+  }
+  .section-title .em { font-family: 'Noto Serif SC', serif; font-weight: 500; color: var(--accent); }
+  .section-sub { color: var(--ink-soft); font-size: 17px; max-width: 38ch; line-height: 1.55; margin: 0; }
+
+  .em { font-family: 'Noto Serif SC', serif; font-weight: 500; color: var(--accent); }
+
+  /* === §01 contrast cards (你跑的两份代码) === */
+  .contrast-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; margin-top: 24px; }
+  @media (max-width: 880px) { .contrast-grid { grid-template-columns: 1fr; } }
+  .contrast-card {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 24px 26px 26px;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+  .contrast-card.dev { border-color: var(--green); background: var(--green-soft); }
+  .contrast-card.build { border-color: var(--ink); background: var(--bg-2); }
+  .contrast-card .ctag {
+    position: absolute; top: -12px; left: 22px;
+    background: var(--bg); padding: 3px 10px;
+    font-family: 'JetBrains Mono', monospace; font-size: 11px;
+    letter-spacing: 0.1em;
+  }
+  .contrast-card.dev .ctag { color: var(--green); border: 1px solid var(--green); }
+  .contrast-card.build .ctag { color: var(--ink); border: 1px solid var(--ink); }
+  .contrast-card h3 { font-family: 'Noto Serif SC', serif; font-size: 22px; margin: 0; font-weight: 800; letter-spacing: -0.01em; }
+  .contrast-card .ctag-line { font-size: 13.5px; color: var(--ink-soft); line-height: 1.55; margin: 0; }
+  .contrast-card .ctag-line strong { color: var(--ink); font-weight: 600; }
+  .contrast-card .csize {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 30px;
+    font-weight: 700;
+    color: var(--ink);
+    letter-spacing: -0.02em;
+    line-height: 1.1;
+  }
+  .contrast-card.dev .csize { color: var(--green); }
+  .contrast-card.build .csize { color: var(--accent); }
+  .contrast-card .csize-sub {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--ink-mute);
+    letter-spacing: 0.05em;
+    margin-top: -10px;
+  }
+  .contrast-card .clist {
+    list-style: none; padding: 0; margin: 4px 0 0;
+    display: flex; flex-direction: column; gap: 6px;
+    font-size: 13px;
+  }
+  .contrast-card .clist li {
+    padding: 6px 10px;
+    background: rgba(255,255,255,0.55);
+    border-radius: 4px;
+    display: flex; align-items: center; gap: 8px;
+    color: var(--ink-soft);
+    line-height: 1.4;
+  }
+  .contrast-card .clist li::before {
+    content: '·';
+    color: var(--ink-mute);
+    font-weight: 700;
+  }
+  .contrast-card.dev .clist li::before { content: '✓'; color: var(--green); font-size: 11px; }
+  .contrast-card.build .clist li::before { content: '✕'; color: var(--accent); font-size: 11px; }
+  .contrast-card .clist li strong { color: var(--ink); font-weight: 600; }
+  .contrast-card .clist li code {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11.5px;
+    background: rgba(0,0,0,0.06);
+    padding: 0 5px;
+    border-radius: 2px;
+    color: var(--ink);
+  }
+
+  /* hint strip */
+  .hint-strip {
+    margin-top: 16px;
+    padding: 14px 18px;
+    background: var(--accent-soft);
+    border-left: 3px solid var(--accent);
+    border-radius: 4px;
+    font-size: 13px;
+    color: var(--ink);
+    line-height: 1.55;
+  }
+  .hint-strip .hint-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--accent);
+    letter-spacing: 0.12em;
+    margin-right: 10px;
+    text-transform: uppercase;
+  }
+
+  /* quote box */
+  .quote-box {
+    margin: 32px 0 0;
+    padding: 24px 28px;
+    background: var(--paper);
+    border-left: 3px solid var(--ink);
+    border-radius: 0 6px 6px 0;
+    font-family: 'Noto Serif SC', serif;
+    font-size: 18px;
+    line-height: 1.55;
+    color: var(--ink);
+    font-weight: 500;
+  }
+  .quote-box .quote-mark {
+    font-family: 'Noto Serif SC', serif;
+    color: var(--accent);
+    font-size: 28px;
+    line-height: 1;
+    margin-right: 8px;
+    font-weight: 500;
+  }
+  .quote-box .quote-attr {
+    display: block;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--ink-mute);
+    margin-top: 12px;
+    letter-spacing: 0.05em;
+    font-weight: 400;
+  }
+
+  /* === §02 HMR animation === */
+  .hmr-stage {
+    margin-top: 24px;
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 0;
+    overflow: hidden;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+  @media (max-width: 880px) { .hmr-stage { grid-template-columns: 1fr; } }
+
+  .hmr-editor {
+    background: var(--ink);
+    color: #d8d8e0;
+    padding: 28px 24px 22px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    line-height: 1.85;
+    position: relative;
+    min-height: 360px;
+  }
+  .hmr-editor::before {
+    content: '';
+    position: absolute;
+    top: 12px; left: 14px;
+    width: 8px; height: 8px; border-radius: 50%;
+    background: #ff5f56;
+    box-shadow: 14px 0 0 #ffbd2e, 28px 0 0 #27c93f;
+  }
+  .hmr-editor .hmr-fname {
+    position: absolute; top: 10px; right: 16px;
+    font-size: 10px; color: #6e6e7a; letter-spacing: 0.08em;
+  }
+  .hmr-editor pre { margin: 28px 0 0; }
+  .hmr-editor .ckey { color: #ff8a6e; }
+  .hmr-editor .cstr { color: #a8e6a3; }
+  .hmr-editor .ccomment { color: #6e6e7a; font-style: normal; }
+  .hmr-editor .cprop { color: #8ec5ff; }
+  .hmr-editor .cnum { color: #ffcf3d; }
+  .hmr-editor .hmr-color {
+    background: rgba(168,230,163,0.18);
+    border-radius: 3px;
+    padding: 0 4px;
+    cursor: pointer;
+    transition: background 0.18s;
+    border-bottom: 1px dashed transparent;
+  }
+  .hmr-editor .hmr-color:hover { background: rgba(168,230,163,0.32); border-bottom-color: rgba(168,230,163,0.5); }
+  .hmr-editor .hmr-color.is-flash {
+    animation: hmrFlash 0.5s ease-out;
+  }
+  @keyframes hmrFlash {
+    0%   { background: rgba(255,138,110,0.5); }
+    100% { background: rgba(168,230,163,0.18); }
+  }
+
+  .hmr-actions {
+    margin-top: 22px;
+    display: flex; gap: 8px; flex-wrap: wrap;
+  }
+  .hmr-pick {
+    padding: 5px 10px;
+    background: transparent;
+    border: 1px solid #6e6e7a;
+    border-radius: 4px;
+    color: #d8d8e0;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    cursor: pointer;
+    transition: all 0.15s;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .hmr-pick:hover { border-color: #d8d8e0; }
+  .hmr-pick .hmr-swatch {
+    display: inline-block;
+    width: 12px; height: 12px;
+    border-radius: 2px;
+    border: 1px solid rgba(255,255,255,0.2);
+  }
+  .hmr-save-hint {
+    margin-top: 16px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10.5px;
+    color: #6e6e7a;
+    letter-spacing: 0.05em;
+  }
+  .hmr-save-hint .key {
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 3px;
+    padding: 1px 6px;
+    color: #d8d8e0;
+  }
+
+  .hmr-browser {
+    background: var(--paper);
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    border-left: 1px solid var(--line);
+  }
+  @media (max-width: 880px) {
+    .hmr-browser { border-left: none; border-top: 1px solid var(--line); }
+  }
+  .hmr-browser-bar {
+    background: var(--bg-2);
+    padding: 10px 14px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    border-bottom: 1px solid var(--line);
+  }
+  .hmr-browser-bar .hmr-dots {
+    display: flex; gap: 6px;
+  }
+  .hmr-browser-bar .hmr-dots span {
+    width: 10px; height: 10px; border-radius: 50%; background: var(--ink-mute);
+    opacity: 0.45;
+  }
+  .hmr-browser-bar .hmr-url {
+    flex: 1;
+    background: white;
+    border: 1px solid var(--line);
+    border-radius: 100px;
+    padding: 5px 12px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11.5px;
+    color: var(--ink-soft);
+    display: flex; align-items: center; gap: 6px;
+  }
+  .hmr-browser-bar .hmr-url .lock {
+    color: var(--green);
+    font-size: 9px;
+  }
+  .hmr-browser-bar .hmr-status {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--green);
+    background: var(--green-soft);
+    padding: 3px 8px;
+    border-radius: 100px;
+    letter-spacing: 0.04em;
+    transition: all 0.2s;
+  }
+  .hmr-browser-bar .hmr-status.is-updating {
+    color: var(--accent);
+    background: var(--accent-soft);
+  }
+  .hmr-canvas {
+    flex: 1;
+    padding: 32px 28px 36px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    align-items: flex-start;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+    background:
+      linear-gradient(rgba(22,22,29,0.025) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(22,22,29,0.025) 1px, transparent 1px);
+    background-size: 16px 16px;
+  }
+  .hmr-card {
+    width: 100%;
+    max-width: 280px;
+    background: white;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 18px 20px;
+    box-shadow: 0 4px 14px rgba(22,22,29,0.05);
+  }
+  .hmr-card h4 {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 17px;
+    font-weight: 700;
+    margin: 0 0 6px;
+    letter-spacing: -0.01em;
+  }
+  .hmr-card p {
+    margin: 0 0 14px;
+    font-size: 12.5px;
+    color: var(--ink-soft);
+    line-height: 1.45;
+  }
+  .hmr-card .hmr-btn {
+    display: inline-block;
+    padding: 8px 14px;
+    background: var(--accent);
+    color: white;
+    border-radius: 5px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    font-weight: 500;
+    transition: background 0.2s ease;
+    border: none;
+    cursor: pointer;
+  }
+  .hmr-flash-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(255,255,255,0.0);
+    pointer-events: none;
+    transition: background 0.2s;
+  }
+  .hmr-flash-overlay.is-flash {
+    animation: hmrPageFlash 0.6s ease-out;
+  }
+  @keyframes hmrPageFlash {
+    0%   { background: rgba(255,255,255,0.55); }
+    100% { background: rgba(255,255,255,0); }
+  }
+  .hmr-toast {
+    position: absolute;
+    top: 14px; right: 14px;
+    background: var(--ink);
+    color: white;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10.5px;
+    padding: 6px 10px;
+    border-radius: 4px;
+    letter-spacing: 0.04em;
+    opacity: 0;
+    transform: translateY(-6px);
+    transition: opacity 0.2s, transform 0.2s;
+    pointer-events: none;
+  }
+  .hmr-toast.is-show { opacity: 1; transform: translateY(0); }
+  .hmr-toast .hmr-toast-dot {
+    display: inline-block; width: 6px; height: 6px;
+    border-radius: 50%; background: var(--green);
+    margin-right: 6px; vertical-align: middle;
+  }
+  .hmr-time {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10.5px;
+    color: var(--ink-mute);
+    letter-spacing: 0.04em;
+  }
+  .hmr-time strong { color: var(--accent); font-weight: 600; }
+
+  /* === §03 swap game (核心) === */
+  .swap-stage {
+    margin-top: 24px;
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 0;
+    overflow: hidden;
+  }
+
+  .swap-toggle-bar {
+    background: var(--bg-2);
+    padding: 22px 28px;
+    border-bottom: 1px solid var(--line);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+  }
+  .swap-toggle-track {
+    background: var(--ink);
+    border-radius: 100px;
+    padding: 5px;
+    display: flex;
+    position: relative;
+    width: 360px;
+    max-width: 100%;
+  }
+  .swap-toggle-thumb {
+    position: absolute;
+    top: 5px; left: 5px;
+    width: calc(50% - 5px);
+    height: calc(100% - 10px);
+    background: var(--accent);
+    border-radius: 100px;
+    transition: transform 0.32s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  .swap-toggle-track.is-build .swap-toggle-thumb {
+    transform: translateX(100%);
+    background: white;
+  }
+  .swap-toggle-btn {
+    flex: 1;
+    background: transparent;
+    border: none;
+    color: rgba(255,255,255,0.55);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    padding: 10px 14px;
+    cursor: pointer;
+    z-index: 1;
+    text-transform: uppercase;
+    transition: color 0.25s;
+    position: relative;
+  }
+  .swap-toggle-btn.is-active { color: white; }
+  .swap-toggle-track.is-build .swap-toggle-btn[data-mode="build"].is-active { color: var(--ink); }
+
+  .swap-grid {
+    display: grid;
+    grid-template-columns: 1.05fr 1fr;
+    gap: 0;
+    min-height: 540px;
+  }
+  @media (max-width: 880px) { .swap-grid { grid-template-columns: 1fr; } }
+
+  .swap-source {
+    background: var(--ink);
+    color: #d8d8e0;
+    padding: 28px 26px 22px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12.5px;
+    line-height: 1.85;
+    position: relative;
+    overflow-x: auto;
+    border-right: 1px solid #2a2a35;
+  }
+  @media (max-width: 880px) {
+    .swap-source { border-right: none; border-bottom: 1px solid var(--line); }
+  }
+  .swap-source::before {
+    content: '';
+    position: absolute;
+    top: 12px; left: 14px;
+    width: 8px; height: 8px; border-radius: 50%;
+    background: #ff5f56;
+    box-shadow: 14px 0 0 #ffbd2e, 28px 0 0 #27c93f;
+  }
+  .swap-source .swap-fname {
+    position: absolute; top: 10px; right: 16px;
+    font-size: 10px; color: #6e6e7a; letter-spacing: 0.08em;
+  }
+  .swap-source pre { margin: 30px 0 0; }
+  .swap-source .ckey { color: #ff8a6e; }
+  .swap-source .cstr { color: #a8e6a3; }
+  .swap-source .cprop { color: #8ec5ff; }
+  .swap-source .ccomment { color: #6e6e7a; }
+  .swap-source .cnum { color: #ffcf3d; }
+  .swap-source .ckwd { color: #d18bff; }
+
+  .swap-render {
+    background: var(--paper);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .swap-render-bar {
+    background: var(--bg-2);
+    padding: 9px 14px;
+    border-bottom: 1px solid var(--line);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10.5px;
+    color: var(--ink-mute);
+    letter-spacing: 0.04em;
+  }
+  .swap-render-bar .swap-mode-tag {
+    padding: 2px 8px;
+    border-radius: 100px;
+    font-weight: 600;
+    transition: all 0.2s;
+  }
+  .swap-render-bar .swap-mode-tag.dev { background: var(--green-soft); color: var(--green); }
+  .swap-render-bar .swap-mode-tag.build { background: var(--ink); color: white; }
+  .swap-render-page {
+    padding: 24px 22px 16px;
+    border-bottom: 1px solid var(--line);
+    background: white;
+  }
+  .swap-render-page h4 {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 18px;
+    margin: 0 0 6px;
+    font-weight: 700;
+  }
+  .swap-render-page p {
+    margin: 0 0 14px;
+    font-size: 12.5px;
+    color: var(--ink-soft);
+    line-height: 1.5;
+  }
+  .swap-render-btn {
+    display: inline-block;
+    padding: 7px 14px;
+    background: var(--accent);
+    color: white;
+    border-radius: 5px;
+    font-family: 'Geist','Noto Sans SC',sans-serif;
+    font-size: 12.5px;
+    font-weight: 500;
+    border: none;
+    cursor: pointer;
+  }
+  .swap-render-page .swap-cls-tag {
+    margin-top: 12px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--ink-mute);
+    letter-spacing: 0.03em;
+  }
+  .swap-render-page .swap-cls-tag .swap-cls-val {
+    background: var(--bg-2);
+    padding: 1px 6px;
+    border-radius: 2px;
+    color: var(--ink);
+    margin-left: 4px;
+    transition: all 0.3s;
+  }
+
+  .swap-console {
+    background: var(--ink);
+    color: #d8d8e0;
+    flex: 1;
+    padding: 12px 16px 14px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11.5px;
+    overflow-y: auto;
+    max-height: 200px;
+    min-height: 140px;
+  }
+  .swap-console-head {
+    display: flex; align-items: center; justify-content: space-between;
+    padding-bottom: 6px;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+    margin-bottom: 8px;
+    font-size: 10px;
+    color: #6e6e7a;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  .swap-console-head .swap-console-clear {
+    cursor: default;
+    color: #6e6e7a;
+  }
+  .swap-console-line {
+    padding: 3px 0;
+    line-height: 1.55;
+    border-bottom: 1px dashed rgba(255,255,255,0.04);
+    display: flex; gap: 10px;
+    align-items: flex-start;
+  }
+  .swap-console-line:last-child { border-bottom: none; }
+  .swap-console-line .swap-log-tag {
+    flex-shrink: 0;
+    font-size: 9px;
+    padding: 1px 5px;
+    border-radius: 2px;
+    margin-top: 1px;
+    letter-spacing: 0.05em;
+  }
+  .swap-console-line .swap-log-tag.log { background: rgba(110,160,255,0.18); color: #8ec5ff; }
+  .swap-console-line .swap-log-tag.warn { background: rgba(255,207,61,0.16); color: #ffcf3d; }
+  .swap-console-line .swap-log-tag.err { background: rgba(255,90,90,0.18); color: #ff8a8a; }
+  .swap-console-line .swap-log-msg {
+    color: #d8d8e0;
+    font-size: 11px;
+    flex: 1;
+    word-break: break-word;
+  }
+  .swap-console-line .swap-log-src {
+    flex-shrink: 0;
+    font-size: 10px;
+    color: #6e6e7a;
+  }
+  .swap-console-empty {
+    text-align: center;
+    color: #4a4a55;
+    padding: 24px 8px;
+    font-size: 11px;
+    line-height: 1.6;
+  }
+  .swap-console-empty strong { color: #6e6e7a; font-weight: 500; }
+
+  /* §03 5-property comparison list */
+  .swap-props {
+    border-top: 1px solid var(--line);
+    background: var(--bg-2);
+    padding: 22px 28px 26px;
+  }
+  .swap-props-head {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--ink-mute);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-bottom: 14px;
+  }
+  .swap-props-list {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 10px;
+  }
+  @media (max-width: 880px) { .swap-props-list { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 480px) { .swap-props-list { grid-template-columns: 1fr; } }
+
+  .swap-prop {
+    background: white;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 12px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    position: relative;
+    overflow: hidden;
+  }
+  .swap-prop-name {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--ink-mute);
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+  .swap-prop-val {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--ink);
+    transition: all 0.3s;
+    line-height: 1.2;
+    word-break: break-all;
+  }
+  .swap-prop[data-on="true"] .swap-prop-val {
+    color: var(--green);
+  }
+  .swap-prop[data-on="false"] .swap-prop-val {
+    color: var(--accent);
+  }
+  .swap-prop-pulse {
+    position: absolute;
+    inset: 0;
+    background: var(--accent);
+    opacity: 0;
+    pointer-events: none;
+  }
+  .swap-prop-pulse.is-pulse {
+    animation: swapPropPulse 0.45s ease-out;
+  }
+  @keyframes swapPropPulse {
+    0%   { opacity: 0.18; }
+    100% { opacity: 0; }
+  }
+
+  /* === §04 build pipeline === */
+  .build-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 18px;
+    margin-top: 24px;
+  }
+  @media (max-width: 880px) { .build-grid { grid-template-columns: 1fr; } }
+  .build-card {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 0;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+  .build-card .build-num {
+    padding: 12px 18px;
+    background: var(--ink);
+    color: white;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    display: flex; gap: 10px; align-items: center;
+  }
+  .build-card .build-num strong { color: var(--accent); }
+  .build-card .build-body {
+    padding: 22px 22px 24px;
+    flex: 1;
+    display: flex; flex-direction: column; gap: 14px;
+  }
+  .build-card h4 {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 19px;
+    margin: 0;
+    font-weight: 800;
+    letter-spacing: -0.01em;
+  }
+  .build-card h4 .em { font-family: 'Noto Serif SC', serif; color: var(--accent); font-weight: 500; }
+  .build-card .build-1liner {
+    color: var(--ink-soft);
+    font-size: 13.5px;
+    line-height: 1.55;
+    margin: 0;
+  }
+  .build-card .build-1liner strong { color: var(--ink); font-weight: 600; }
+  .build-card .build-1liner code {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    background: var(--bg-2);
+    padding: 1px 6px;
+    border-radius: 3px;
+    color: var(--ink);
+  }
+
+  .build-vis {
+    background: var(--bg);
+    border: 1px dashed var(--line);
+    border-radius: 6px;
+    padding: 22px 16px;
+    min-height: 130px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    font-family: 'JetBrains Mono', monospace;
+    overflow: hidden;
+  }
+
+  /* Step 1: TS → JS transpile */
+  .build-trans {
+    display: flex; align-items: center; gap: 14px;
+    font-size: 12px;
+  }
+  .build-trans .build-pill {
+    padding: 7px 12px;
+    background: white;
+    border: 1.5px solid var(--ink);
+    border-radius: 4px;
+    font-weight: 600;
+    color: var(--ink);
+    box-shadow: 2px 2px 0 var(--ink);
+  }
+  .build-trans .build-pill.ts {
+    background: var(--blue-soft);
+    border-color: var(--blue);
+    color: var(--blue);
+    animation: buildPulse 2.4s ease-in-out infinite;
+  }
+  .build-trans .build-pill.js {
+    background: var(--yellow);
+    animation: buildPulse 2.4s ease-in-out infinite 1.2s;
+  }
+  .build-trans .build-arr {
+    font-family: 'Noto Serif SC', serif;
+    color: var(--accent);
+    font-size: 22px;
+    font-weight: 700;
+  }
+  @keyframes buildPulse {
+    0%, 100% { transform: translateY(0); }
+    50%      { transform: translateY(-3px); }
+  }
+
+  /* Step 2: many files → chunks */
+  .build-bundle { display: flex; align-items: center; gap: 12px; }
+  .build-files {
+    display: grid;
+    grid-template-columns: repeat(3, 10px);
+    gap: 4px;
+  }
+  .build-files span {
+    width: 10px; height: 12px;
+    background: var(--ink-mute);
+    border-radius: 1px;
+    opacity: 0.85;
+    animation: bundleShake 1.6s ease-in-out infinite;
+  }
+  .build-files span:nth-child(1) { animation-delay: 0s; }
+  .build-files span:nth-child(2) { animation-delay: 0.1s; }
+  .build-files span:nth-child(3) { animation-delay: 0.2s; }
+  .build-files span:nth-child(4) { animation-delay: 0.3s; }
+  .build-files span:nth-child(5) { animation-delay: 0.4s; }
+  .build-files span:nth-child(6) { animation-delay: 0.5s; }
+  .build-files span:nth-child(7) { animation-delay: 0.6s; }
+  .build-files span:nth-child(8) { animation-delay: 0.7s; }
+  .build-files span:nth-child(9) { animation-delay: 0.8s; }
+  @keyframes bundleShake {
+    0%, 30%   { transform: scale(1); opacity: 0.85; }
+    50%, 70%  { transform: scale(0.7) translateX(2px); opacity: 0.55; }
+    90%, 100% { transform: scale(1); opacity: 0.85; }
+  }
+  .build-bundle .build-arr {
+    font-family: 'Noto Serif SC', serif;
+    color: var(--accent);
+    font-size: 22px;
+    font-weight: 700;
+  }
+  .build-chunks {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .build-chunks span {
+    width: 32px; height: 14px;
+    background: var(--accent);
+    border: 1px solid var(--ink);
+    border-radius: 2px;
+    box-shadow: 1px 1px 0 var(--ink);
+    position: relative;
+  }
+  .build-chunks span::after {
+    content: 'chunk';
+    position: absolute;
+    right: -4px; top: 50%;
+    transform: translateX(100%) translateY(-50%);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 8px;
+    color: var(--ink-mute);
+    margin-left: 4px;
+  }
+
+  /* Step 3: optimize squeeze */
+  .build-opt {
+    display: flex; align-items: center; gap: 12px;
+    font-size: 11px;
+    color: var(--ink-soft);
+  }
+  .build-bar {
+    height: 14px;
+    background: var(--ink-mute);
+    border-radius: 2px;
+    position: relative;
+  }
+  .build-bar.big {
+    width: 92px;
+    background: var(--ink);
+    animation: buildBig 2s ease-in-out infinite;
+  }
+  .build-bar.small {
+    width: 28px;
+    background: var(--accent);
+    animation: buildSmall 2s ease-in-out infinite;
+  }
+  .build-bar .build-bar-label {
+    position: absolute;
+    top: 100%; left: 0;
+    margin-top: 4px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    color: var(--ink-mute);
+    white-space: nowrap;
+  }
+  @keyframes buildBig {
+    0%, 50%, 100% { width: 92px; opacity: 1; }
+    75% { width: 60px; opacity: 0.7; }
+  }
+  @keyframes buildSmall {
+    0%, 50%, 100% { width: 28px; }
+    75% { width: 28px; transform: scale(1.05); }
+  }
+  .build-opt .build-arr {
+    font-family: 'Noto Serif SC', serif;
+    color: var(--accent);
+    font-size: 22px;
+    font-weight: 700;
+  }
+
+  .build-foot {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--ink-mute);
+    background: var(--bg-2);
+    padding: 8px 12px;
+    border-radius: 4px;
+    line-height: 1.5;
+  }
+  .build-foot strong { color: var(--ink); font-weight: 600; }
+
+  /* === §05 troubleshoot === */
+  .ts-stage {
+    margin-top: 24px;
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 28px 32px;
+  }
+  .ts-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 26px;
+  }
+  .ts-item {
+    display: grid;
+    grid-template-columns: 60px 1fr;
+    gap: 20px;
+    align-items: start;
+  }
+  @media (max-width: 600px) { .ts-item { grid-template-columns: 1fr; gap: 8px; } }
+  .ts-num {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 28px;
+    font-weight: 800;
+    color: var(--accent);
+    line-height: 1;
+    letter-spacing: -0.02em;
+  }
+  .ts-q {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 19px;
+    font-weight: 700;
+    color: var(--ink);
+    margin: 0 0 8px;
+    line-height: 1.4;
+  }
+  .ts-q .em { font-family: 'Noto Serif SC', serif; color: var(--accent); font-weight: 500; }
+  .ts-a {
+    color: var(--ink-soft);
+    font-size: 14px;
+    line-height: 1.65;
+    margin: 0 0 10px;
+  }
+  .ts-a strong { color: var(--ink); font-weight: 600; }
+  .ts-a code {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    background: var(--bg-2);
+    color: var(--ink);
+    padding: 1px 6px;
+    border-radius: 3px;
+  }
+  .ts-steps {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .ts-step {
+    display: grid;
+    grid-template-columns: 24px 1fr;
+    gap: 10px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--ink);
+    background: var(--accent-soft);
+    border-left: 3px solid var(--accent);
+    padding: 8px 12px;
+    border-radius: 0 4px 4px 0;
+    line-height: 1.55;
+  }
+  .ts-step .ts-step-num {
+    font-weight: 700;
+    color: var(--accent);
+    letter-spacing: 0.05em;
+  }
+  .ts-step strong { color: var(--ink); font-weight: 600; }
+  .ts-step code {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11.5px;
+    background: rgba(255,77,46,0.08);
+    padding: 0 4px;
+    border-radius: 2px;
+    color: var(--ink);
+  }
+
+  /* === §06 cheatsheet === */
+  .cheat-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 18px;
+    margin-top: 24px;
+  }
+  @media (max-width: 880px) { .cheat-grid { grid-template-columns: 1fr; } }
+  .cheat-block {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 24px 26px;
+  }
+  .cheat-block h3 {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 18px;
+    font-weight: 800;
+    margin: 0 0 14px;
+    letter-spacing: -0.01em;
+  }
+  .cheat-block h3 .em { font-family: 'Noto Serif SC', serif; color: var(--accent); font-weight: 500; }
+  .cheat-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+  .cheat-table th, .cheat-table td {
+    text-align: left;
+    padding: 9px 10px;
+    border-bottom: 1px dashed var(--line);
+    vertical-align: top;
+  }
+  .cheat-table tr:last-child td { border-bottom: none; }
+  .cheat-table th {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--ink-mute);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    font-weight: 500;
+  }
+  .cheat-table .term {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12.5px;
+    color: var(--ink);
+    font-weight: 600;
+    white-space: nowrap;
+  }
+  .cheat-table .desc { color: var(--ink-soft); line-height: 1.5; }
+  .cheat-table .desc strong { color: var(--ink); font-weight: 600; }
+  .cheat-table .when {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--accent);
+    white-space: nowrap;
+  }
+  .cheat-block .cheat-foot {
+    margin-top: 16px;
+    font-size: 12px;
+    color: var(--ink-mute);
+    border-top: 1px dashed var(--line);
+    padding-top: 12px;
+    line-height: 1.55;
+  }
+
+  /* checklist */
+  .check-block {
+    margin-top: 18px;
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 24px 28px 26px;
+  }
+  .check-block h3 {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 19px;
+    font-weight: 800;
+    margin: 0 0 16px;
+    letter-spacing: -0.01em;
+  }
+  .check-block h3 .em { font-family: 'Noto Serif SC', serif; color: var(--accent); font-weight: 500; }
+  .check-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .check-item {
+    display: grid;
+    grid-template-columns: 28px 1fr;
+    gap: 12px;
+    align-items: start;
+    padding: 12px 14px;
+    background: var(--bg);
+    border: 1px dashed var(--line);
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .check-item:hover { border-color: var(--accent); background: var(--accent-soft); }
+  .check-item.is-done { background: var(--green-soft); border-color: var(--green); border-style: solid; }
+  .check-box {
+    width: 22px; height: 22px;
+    border: 1.5px solid var(--ink-mute);
+    border-radius: 4px;
+    background: white;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    margin-top: 1px;
+    transition: all 0.18s;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    font-weight: 700;
+    color: transparent;
+  }
+  .check-item.is-done .check-box {
+    background: var(--green);
+    border-color: var(--green);
+    color: white;
+  }
+  .check-item.is-done .check-box::before { content: '✓'; }
+  .check-text {
+    font-size: 14px;
+    line-height: 1.55;
+    color: var(--ink);
+  }
+  .check-text .check-cmd {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12.5px;
+    background: var(--bg-2);
+    padding: 1px 7px;
+    border-radius: 3px;
+    color: var(--ink);
+  }
+  .check-text .check-sub {
+    display: block;
+    margin-top: 4px;
+    font-size: 12px;
+    color: var(--ink-mute);
+    line-height: 1.45;
+  }
+  .check-progress {
+    margin-top: 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--ink-mute);
+    letter-spacing: 0.05em;
+  }
+  .check-progress-bar {
+    flex: 1;
+    height: 6px;
+    background: var(--bg-2);
+    border-radius: 100px;
+    overflow: hidden;
+  }
+  .check-progress-bar > span {
+    display: block;
+    height: 100%;
+    background: var(--green);
+    width: 0%;
+    transition: width 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  .check-progress strong { color: var(--ink); font-weight: 600; }
+
+  /* ============= Unified next-post block ============= */
+  .next-post {
+    margin-top: 48px;
+    padding: 32px 36px;
+    background: var(--ink);
+    color: var(--bg);
+    border-radius: 8px;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 32px;
+    align-items: center;
+    text-decoration: none;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    position: relative;
+    overflow: hidden;
+  }
+  .next-post::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at 100% 0%, rgba(255,77,46,0.12), transparent 55%);
+    pointer-events: none;
+  }
+  .next-post:hover { transform: translateY(-2px); box-shadow: 0 14px 36px rgba(22,22,29,0.22); }
+  @media (max-width: 720px) { .next-post { grid-template-columns: 1fr; padding: 24px; gap: 20px; } }
+  .next-post .np-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--accent);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+    display: inline-block;
+  }
+  .next-post h4 {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 26px;
+    margin: 0 0 10px;
+    font-weight: 700;
+    color: white;
+    line-height: 1.25;
+    letter-spacing: -0.01em;
+  }
+  .next-post h4 .em {
+    font-family: 'Noto Serif SC', serif;
+    font-weight: 500;
+    color: var(--accent);
+  }
+  .next-post p {
+    margin: 0;
+    color: rgba(255,255,255,0.72);
+    font-size: 14px;
+    line-height: 1.65;
+    max-width: 560px;
+  }
+  .next-post p strong { color: white; font-weight: 600; }
+  .next-post .np-cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 24px;
+    background: var(--accent);
+    color: white;
+    border-radius: 4px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    white-space: nowrap;
+    transition: background 0.18s, color 0.18s, transform 0.18s;
+    position: relative;
+    z-index: 1;
+  }
+  .next-post:hover .np-cta { background: white; color: var(--ink); transform: translateX(2px); }
+  .next-post .np-cta .arr { font-family: 'Noto Serif SC', serif; font-size: 18px; font-weight: 500; }
+
+  /* footer */
+  footer {
+    border-top: 1px solid var(--line);
+    padding: 56px 0 64px;
+    background: var(--bg);
+  }
+  .byline-wrap { position: relative; }
+  .byline {
+    display: flex;
+    gap: 28px;
+    align-items: center;
+    padding-bottom: 32px;
+    border-bottom: 1px dashed var(--line);
+    margin-bottom: 24px;
+    position: relative;
+  }
+  .byline::before {
+    content: '';
+    position: absolute;
+    top: -56px; left: 0;
+    width: 32px; height: 1px;
+    background: var(--accent);
+  }
+  .byline .avatar {
+    width: 96px; height: 96px;
+    border-radius: 50%;
+    object-fit: cover;
+    flex-shrink: 0;
+    border: 3px solid var(--paper);
+    box-shadow: 0 0 0 1px var(--line), 0 6px 20px rgba(22,22,29,0.10);
+    background: var(--paper);
+  }
+  .byline-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--ink-mute);
+    letter-spacing: 0.18em;
+    margin-bottom: 8px;
+  }
+  .byline-label .dot {
+    display: inline-block;
+    width: 6px; height: 6px;
+    background: var(--accent);
+    border-radius: 50%;
+    margin-right: 6px;
+    vertical-align: 1px;
+  }
+  .byline-name {
+    font-family: 'Noto Serif SC', serif;
+    font-size: clamp(28px, 4vw, 40px);
+    font-weight: 700;
+    line-height: 1.05;
+    letter-spacing: -0.01em;
+    margin: 0 0 8px;
+  }
+  .byline-name .em {
+    font-family: 'Noto Serif SC', serif;
+    font-weight: 500;
+    color: var(--accent);
+  }
+  .byline-tag {
+    font-size: 14px;
+    color: var(--ink-soft);
+    line-height: 1.55;
+    margin: 0;
+    max-width: 52ch;
+  }
+  .byline-contact { margin-top: 14px; padding-top: 14px; border-top: 1px dashed var(--line); display: flex; align-items: center; gap: 10px; flex-wrap: wrap; font-size: 12px; }
+  .byline-contact .contact-label { font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-mute); padding: 2px 8px; border: 1px solid var(--line); border-radius: 3px; }
+  .byline-contact .contact-id { font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 600; color: var(--ink); background: var(--accent-soft); padding: 3px 10px; border-radius: 4px; letter-spacing: 0.02em; }
+  .byline-contact .contact-hint { font-size: 12px; color: var(--ink-soft); }
+  .footer-meta {
+    text-align: center;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--ink-mute);
+    letter-spacing: 0.05em;
+  }
+  .footer-meta .heart { color: var(--accent); }
+  .footer-meta .mono { color: var(--ink-soft); font-weight: 500; }
+  @media (max-width: 600px) {
+    .byline { flex-direction: column; text-align: center; align-items: center; gap: 16px; }
+    .byline-tag { margin-left: auto; margin-right: auto; }
+  }
+
+  /* === Roadmap Modal === */
+  .rm-modal { position: fixed; inset: 0; z-index: 1000; display: flex; align-items: center; justify-content: center; padding: 30px 16px; }
+  .rm-modal[hidden] { display: none; }
+  .rm-backdrop { position: absolute; inset: 0; background: rgba(22,22,29,0.55); backdrop-filter: blur(4px); animation: rm-fade 0.2s; }
+  @keyframes rm-fade { from { opacity: 0; } to { opacity: 1; } }
+  .rm-dialog { position: relative; background: var(--bg); border-radius: 12px; max-width: 720px; width: 100%; max-height: calc(100vh - 60px); overflow-y: auto; padding: 32px 36px 24px; box-shadow: 0 30px 80px rgba(0,0,0,0.3); animation: rm-pop 0.25s cubic-bezier(0.4,0,0.2,1); }
+  @keyframes rm-pop { from { transform: scale(0.96) translateY(8px); opacity: 0; } to { transform: scale(1) translateY(0); opacity: 1; } }
+  .rm-close { position: absolute; top: 14px; right: 16px; background: transparent; border: none; cursor: pointer; font-size: 20px; color: var(--ink-mute); width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: all 0.15s; line-height: 1; }
+  .rm-close:hover { background: var(--bg-2); color: var(--ink); }
+  .rm-header { margin-bottom: 22px; padding-bottom: 18px; border-bottom: 1px dashed var(--line); }
+  .rm-tag { font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.1em; color: var(--accent); text-transform: uppercase; margin-bottom: 8px; }
+  .rm-title { font-family: 'Noto Serif SC', serif; font-size: 28px; margin: 0 0 6px; font-weight: 900; letter-spacing: -0.02em; line-height: 1.1; }
+  .rm-title .rm-em { font-family: 'Noto Serif SC', serif; color: var(--accent); font-weight: 500; }
+  .rm-sub { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--ink-mute); margin: 0; }
+  .rm-body { display: flex; flex-direction: column; gap: 18px; }
+  .rm-mod-key { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ink); font-weight: 700; margin-bottom: 8px; letter-spacing: 0.04em; text-transform: uppercase; }
+  .rm-mod-list { display: flex; flex-direction: column; gap: 6px; }
+  .rm-cell { display: grid; grid-template-columns: 36px 1fr auto; gap: 12px; align-items: center; padding: 9px 13px; border-radius: 5px; background: var(--paper); border: 1px solid var(--line); text-decoration: none; color: inherit; transition: all 0.15s; }
+  .rm-cell:hover { border-color: var(--accent); background: var(--accent-soft); transform: translateX(3px); }
+  .rm-cell.rm-cell-current { border-color: var(--accent); background: var(--accent-soft); }
+  .rm-cell-code { font-family: 'Noto Serif SC', serif; font-weight: 500; color: var(--accent); font-size: 15px; }
+  .rm-cell-name { font-size: 13px; color: var(--ink); }
+  .rm-cell-tier { font-family: 'JetBrains Mono', monospace; font-size: 9px; letter-spacing: 0.08em; color: var(--ink-mute); text-transform: uppercase; border: 1px solid var(--line); padding: 2px 7px; border-radius: 3px; }
+  .rm-cell-tier.rm-tier-current { background: var(--accent); color: white; border-color: var(--accent); }
+  .rm-footer { margin-top: 22px; padding-top: 16px; border-top: 1px dashed var(--line); display: flex; justify-content: space-between; align-items: center; font-size: 12px; color: var(--ink-soft); flex-wrap: wrap; gap: 8px; }
+  .rm-wechat { font-family: 'JetBrains Mono', monospace; background: var(--accent-soft); color: var(--ink); padding: 3px 10px; border-radius: 3px; font-weight: 600; letter-spacing: 0.02em; }
+  .nav-links a[data-rm-open] { cursor: pointer; }
+</style>
+</head>
+<body>
+
+<!-- Top bar -->
+<div class="topbar">
+  <div class="wrap topbar-inner">
+    <a href="index.html" class="brand"><span class="dot"></span>F3 · DEV vs BUILD / 工程入门</a>
+    <nav class="nav-links">
+      <a href="index.html#roadmap" data-rm-open>路线图</a>
+      <a href="index.html#manifesto">关于</a>
+    </nav>
+  </div>
+</div>
+
+<!-- Hero -->
+<header class="hero">
+  <div class="wrap">
+    <div class="hero-meta">
+      <span class="pill fill">实验互动 · INTERACTIVE</span>
+      <span class="pill">2026 · 设计 × 代码</span>
+      <span class="pill">F3 · 入门 · 工程</span>
+      <span class="label">阅读时长 ≈ 14 分钟</span>
+    </div>
+    <div class="hero-grid">
+      <div>
+        <h1>
+          <span class="display-cn">localhost:3000</span><br>
+          <span class="display-cn">不是</span><span class="em">真服务器</span><span class="display-cn">。</span>
+        </h1>
+        <p class="lede">
+          你跑了 <span class="mono">npm run dev</span>，浏览器里看见漂亮的页面，<span class="em">以为这就是上线版本</span>。<br>
+          其实你看到的是一份"带辅助轮"的开发版 —— 部署后的样子完全是另一份代码。
+        </p>
+      </div>
+      <div class="hero-side">
+        <div class="row"><span class="k">本页讲什么</span><span class="v">dev 模式 vs build 模式</span></div>
+        <div class="row"><span class="k">含互动</span><span class="v">DEV / BUILD swap 游戏</span></div>
+        <div class="row"><span class="k">面向</span><span class="v">设计师 / AI 协作</span></div>
+        <div class="row"><span class="k">前置</span><span class="v">看过 F1（npm）</span></div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- §01 你跑的两份代码 -->
+<section id="contrast">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>01</strong> / 一份源码 · 两副面孔</div>
+        <h2 class="section-title">同一份代码<br>跑出<span class="em">两份产物</span>。</h2>
+      </div>
+      <p class="section-sub">
+        你硬盘里只有一份源码 —— 但<strong>跑出来的页面</strong>有两个版本。
+        一份给你写代码用，一份给真用户用。两边长得不一样、跑得不一样、大小也不一样。
+      </p>
+    </div>
+
+    <div class="hint-strip">
+      <span class="hint-tag">关键</span>左边是你每天看见的"工地"；右边是上线给用户的"成品"。从源码到产物中间，差着 <strong>build 这一步</strong>。
+    </div>
+
+    <div class="contrast-grid">
+      <div class="contrast-card dev">
+        <span class="ctag">DEV · 开发模式</span>
+        <h3>带辅助轮的"工地版"</h3>
+        <p class="ctag-line">你写代码时看见的版本 —— 啥都没压缩、啥都好读、出错时一目了然。</p>
+        <div class="csize">~ 500 KB</div>
+        <div class="csize-sub">单个 page bundle · 含 source map</div>
+        <ul class="clist">
+          <li><strong>文件原样</strong> · 不压缩、不混淆，方便排错</li>
+          <li><strong>带 console.log</strong> · 你写的所有日志都在</li>
+          <li><strong>报错带行号</strong> · 直接指到源文件第几行</li>
+          <li><strong>类名可读</strong> · <code>HomePage_button__abc12</code></li>
+          <li><strong>改一行就刷新</strong> · 热更新（HMR）</li>
+        </ul>
+      </div>
+
+      <div class="contrast-card build">
+        <span class="ctag">BUILD · 上线版</span>
+        <h3>压扁打包的"成品"</h3>
+        <p class="ctag-line">真正丢到服务器、给用户访问的版本 —— 体积小、跑得快、看不见过程。</p>
+        <div class="csize">~ 80 KB</div>
+        <div class="csize-sub">同一个页面 · gzip 压缩后 ~ 30 KB</div>
+        <ul class="clist">
+          <li><strong>压缩混淆</strong> · 变量名变 <code>a, b, c</code>，去掉换行</li>
+          <li><strong>console.log 全删</strong> · 用户控制台干净</li>
+          <li><strong>报错只剩位置 hash</strong> · 看不出是源文件哪行</li>
+          <li><strong>类名 hash 化</strong> · <code>.a3f</code> 这种 3 个字母</li>
+          <li><strong>改完要重新 build</strong> · 没法热更新</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="quote-box">
+      <span class="quote-mark">"</span>
+      你看见的 localhost:3000 不是<strong>那个网站</strong> ——
+      它只是<span class="em">同一份源码</span>，被打开了"开发模式"的开关。
+      用户最终看见的是另一份。
+      <span class="quote-attr">—— 这一篇就是讲这条链</span>
+    </div>
+  </div>
+</section>
+
+<!-- §02 dev 模式做了什么 -->
+<section id="hmr">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>02</strong> / dev 在做什么</div>
+        <h2 class="section-title">改一行<br>页面<span class="em">秒级刷新</span>。</h2>
+      </div>
+      <p class="section-sub">
+        <code>npm run dev</code> 启动了一台<strong>只在你电脑上跑</strong>的小服务器。
+        它一直盯着你的源码 —— 改一个字，对应那块 UI 立刻就变。这叫 <strong>HMR</strong>（Hot Module Replacement，热更新）。
+      </p>
+    </div>
+
+    <div class="hint-strip">
+      <span class="hint-tag">玩法</span>左边是代码，点任意一颗色块改主色 —— 右边浏览器会立刻跟着变。注意<strong>顶部 status</strong> 和右上角的 toast。
+    </div>
+
+    <div class="hmr-stage" id="hmrStage">
+      <div class="hmr-editor">
+        <span class="hmr-fname">app/page.tsx</span>
+<pre><span class="ccomment">// 你的源码</span>
+<span class="ckwd">export</span> <span class="ckwd">default</span> <span class="ckwd">function</span> <span class="cprop">HomePage</span>() {
+  <span class="ckwd">return</span> (
+    &lt;<span class="ckey">div</span>&gt;
+      &lt;<span class="ckey">h1</span>&gt;欢迎来到我的设计站&lt;/<span class="ckey">h1</span>&gt;
+      &lt;<span class="ckey">button</span> <span class="cprop">style</span>={{
+        <span class="cprop">background</span>: <span class="cstr">"<span class="hmr-color" data-color="#ff4d2e" id="hmrColor">#ff4d2e</span>"</span>,
+        <span class="cprop">color</span>: <span class="cstr">"white"</span>,
+        <span class="cprop">padding</span>: <span class="cstr">"8px 14px"</span>
+      }}&gt;
+        立刻预约
+      &lt;/<span class="ckey">button</span>&gt;
+    &lt;/<span class="ckey">div</span>&gt;
+  )
+}</pre>
+        <div class="hmr-actions">
+          <button class="hmr-pick" data-pick="#ff4d2e"><span class="hmr-swatch" style="background:#ff4d2e"></span>橙</button>
+          <button class="hmr-pick" data-pick="#0a4cff"><span class="hmr-swatch" style="background:#0a4cff"></span>蓝</button>
+          <button class="hmr-pick" data-pick="#1f6b3a"><span class="hmr-swatch" style="background:#1f6b3a"></span>绿</button>
+          <button class="hmr-pick" data-pick="#16161d"><span class="hmr-swatch" style="background:#16161d"></span>黑</button>
+        </div>
+        <div class="hmr-save-hint">
+          <span class="key">⌘ S</span> 保存触发 watcher → dev 服务器推一条新 chunk → 浏览器局部刷新（不重载整页）
+        </div>
+      </div>
+
+      <div class="hmr-browser">
+        <div class="hmr-browser-bar">
+          <div class="hmr-dots"><span></span><span></span><span></span></div>
+          <div class="hmr-url">
+            <span class="lock">●</span> localhost:3000
+          </div>
+          <div class="hmr-status" id="hmrStatus">● live</div>
+        </div>
+        <div class="hmr-canvas" id="hmrCanvas">
+          <div class="hmr-card">
+            <h4>欢迎来到我的设计站</h4>
+            <p>这里是你 hero 区的副标题，写啥都行。</p>
+            <button class="hmr-btn" id="hmrBtn">立刻预约</button>
+          </div>
+          <div class="hmr-time">上次刷新 <strong id="hmrTime">—</strong> ms 前 · HMR via WebSocket</div>
+          <div class="hmr-toast" id="hmrToast"><span class="hmr-toast-dot"></span>HMR · updated</div>
+          <div class="hmr-flash-overlay" id="hmrFlashOverlay"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="quote-box" style="margin-top:24px;">
+      <span class="quote-mark">"</span>
+      <strong>watch + 推送</strong> 这套机制就是 dev 服务器存在的理由 ——
+      它不是"网站"，是<span class="em">写代码时的镜子</span>，照一眼就有反馈。
+      <span class="quote-attr">—— 服务器关了，镜子就没了</span>
+    </div>
+  </div>
+</section>
+
+<!-- §03 swap game 核心 -->
+<section id="swap">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>03</strong> / 模式 swap 游戏</div>
+        <h2 class="section-title">同一段代码<br><span class="em">两副面孔</span>。</h2>
+      </div>
+      <p class="section-sub">
+        左边的源码<strong>一字没动</strong>。
+        切顶部那个开关 —— 右边的渲染、控制台、文件大小、CSS 类名，全都跟着换一套人格。
+        这就是 dev 和 build 的区别。
+      </p>
+    </div>
+
+    <div class="hint-strip">
+      <span class="hint-tag">玩法</span>点上面的大开关切换 <code>DEV</code> / <code>BUILD</code>。看右下方 5 个属性的橙色脉冲 —— 每一项都被 build 改了。
+    </div>
+
+    <div class="swap-stage" id="swapStage">
+      <!-- top toggle -->
+      <div class="swap-toggle-bar">
+        <div class="swap-toggle-track is-dev" id="swapTrack">
+          <div class="swap-toggle-thumb"></div>
+          <button class="swap-toggle-btn is-active" data-mode="dev">DEV MODE</button>
+          <button class="swap-toggle-btn" data-mode="build">BUILD MODE</button>
+        </div>
+      </div>
+
+      <div class="swap-grid">
+        <!-- left: source code (same in both modes) -->
+        <div class="swap-source">
+          <span class="swap-fname">app/HomePage.tsx · 源码不变</span>
+<pre><span class="ccomment">// 这段代码两边完全一样 —— 变的是产物</span>
+<span class="ckwd">import</span> { <span class="cprop">useState</span> } <span class="ckwd">from</span> <span class="cstr">'react'</span>;
+<span class="ckwd">import</span> <span class="cprop">styles</span> <span class="ckwd">from</span> <span class="cstr">'./HomePage.module.css'</span>;
+
+<span class="ckwd">export</span> <span class="ckwd">default</span> <span class="ckwd">function</span> <span class="cprop">HomePage</span>() {
+  <span class="ckwd">const</span> [<span class="cprop">count</span>, <span class="cprop">setCount</span>] = <span class="cprop">useState</span>(<span class="cnum">0</span>);
+
+  <span class="ccomment">// 你随手写的调试日志</span>
+  <span class="cprop">console</span>.<span class="cprop">log</span>(<span class="cstr">'HomePage 渲染了'</span>, count);
+
+  <span class="ckwd">if</span> (count &gt; <span class="cnum">10</span>) {
+    <span class="cprop">console</span>.<span class="cprop">warn</span>(<span class="cstr">'count 太大了'</span>);
+  }
+
+  <span class="ckwd">return</span> (
+    &lt;<span class="ckey">div</span> <span class="cprop">className</span>={<span class="cprop">styles</span>.<span class="cprop">button</span>}&gt;
+      &lt;<span class="ckey">button</span> <span class="cprop">onClick</span>={() =&gt; <span class="cprop">setCount</span>(count + <span class="cnum">1</span>)}&gt;
+        点击次数: {count}
+      &lt;/<span class="ckey">button</span>&gt;
+    &lt;/<span class="ckey">div</span>&gt;
+  );
+}</pre>
+        </div>
+
+        <!-- right: render + console -->
+        <div class="swap-render">
+          <div class="swap-render-bar">
+            <span>当前模式</span>
+            <span class="swap-mode-tag dev" id="swapModeTag">DEV</span>
+            <span style="margin-left:auto" id="swapBundleSize">bundle.js · 487 KB</span>
+          </div>
+          <div class="swap-render-page">
+            <h4>渲染出来的页面</h4>
+            <p>看 <strong>className 那行</strong> —— dev 给你人话，build 给你哈希。</p>
+            <button class="swap-render-btn" id="swapBtn">点击次数: <span id="swapCount">0</span></button>
+            <div class="swap-cls-tag">
+              className =
+              <span class="swap-cls-val" id="swapClsVal">HomePage_button__a8x2k</span>
+            </div>
+          </div>
+          <div class="swap-console" id="swapConsole">
+            <div class="swap-console-head">
+              <span>Console · DevTools</span>
+              <span class="swap-console-clear">⊘ clear</span>
+            </div>
+            <div id="swapConsoleBody"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 5-property comparison -->
+      <div class="swap-props">
+        <div class="swap-props-head">5 个属性 · 切换看对比</div>
+        <div class="swap-props-list">
+          <div class="swap-prop" data-prop="size" data-on="false">
+            <span class="swap-prop-name">文件大小</span>
+            <span class="swap-prop-val" id="propSize">487 KB</span>
+            <div class="swap-prop-pulse"></div>
+          </div>
+          <div class="swap-prop" data-prop="log" data-on="true">
+            <span class="swap-prop-name">console.log</span>
+            <span class="swap-prop-val" id="propLog">保留</span>
+            <div class="swap-prop-pulse"></div>
+          </div>
+          <div class="swap-prop" data-prop="map" data-on="true">
+            <span class="swap-prop-name">source map</span>
+            <span class="swap-prop-val" id="propMap">有</span>
+            <div class="swap-prop-pulse"></div>
+          </div>
+          <div class="swap-prop" data-prop="err" data-on="true">
+            <span class="swap-prop-name">错误信息</span>
+            <span class="swap-prop-val" id="propErr">源行号</span>
+            <div class="swap-prop-pulse"></div>
+          </div>
+          <div class="swap-prop" data-prop="cls" data-on="true">
+            <span class="swap-prop-name">CSS 类名</span>
+            <span class="swap-prop-val" id="propCls">可读</span>
+            <div class="swap-prop-pulse"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="quote-box" style="margin-top:32px;">
+      <span class="quote-mark">"</span>
+      源码<strong>没变</strong>。变的是<span class="em">编译时的开关</span>。
+      —— 这就是为什么部署后看起来"不一样" —— 你看的本来就是另一份产物。
+      <span class="quote-attr">—— 不是 bug，是流程</span>
+    </div>
+  </div>
+</section>
+
+<!-- §04 build 真正在做什么 -->
+<section id="build">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>04</strong> / build 三件事</div>
+        <h2 class="section-title">build 不是"打包"<br>是<span class="em">三件事</span>。</h2>
+      </div>
+      <p class="section-sub">
+        中文里"打包"两个字概括得太糙了。
+        <code>npm run build</code> 至少做三件不同性质的事 —— 各自能单独失败、各自影响结果。
+      </p>
+    </div>
+
+    <div class="build-grid">
+      <!-- step 1: transpile -->
+      <div class="build-card">
+        <div class="build-num"><strong>步骤 01</strong> · TRANSPILE / 转译</div>
+        <div class="build-body">
+          <h4>把<span class="em">写法</span>翻成浏览器能懂的</h4>
+          <p class="build-1liner">你写的 <code>.tsx</code>（TypeScript + JSX）<strong>浏览器根本看不懂</strong>。
+          build 第一步是把它翻成普通的 <code>.js</code>。Tailwind 类名也是这步处理。</p>
+          <div class="build-vis">
+            <div class="build-trans">
+              <span class="build-pill ts">.tsx</span>
+              <span class="build-arr">→</span>
+              <span class="build-pill js">.js</span>
+            </div>
+          </div>
+          <div class="build-foot">
+            <strong>失败常见：</strong>TS 类型错、import 路径错。dev 时也会报，但 build 更严格。
+          </div>
+        </div>
+      </div>
+
+      <!-- step 2: bundle -->
+      <div class="build-card">
+        <div class="build-num"><strong>步骤 02</strong> · BUNDLE / 打包</div>
+        <div class="build-body">
+          <h4>几百个文件<span class="em">合成几个 chunk</span></h4>
+          <p class="build-1liner">你的项目可能有 <strong>500 个 .js 文件</strong>，但浏览器一个一个下太慢。
+          build 把相关的合并到几个大块（chunk），按页面切。</p>
+          <div class="build-vis">
+            <div class="build-bundle">
+              <div class="build-files">
+                <span></span><span></span><span></span>
+                <span></span><span></span><span></span>
+                <span></span><span></span><span></span>
+              </div>
+              <span class="build-arr">→</span>
+              <div class="build-chunks">
+                <span></span>
+                <span></span>
+                <span></span>
+              </div>
+            </div>
+          </div>
+          <div class="build-foot">
+            <strong>结果：</strong>访问首页只下载首页要的那个 chunk，不浪费用户流量。
+          </div>
+        </div>
+      </div>
+
+      <!-- step 3: optimize -->
+      <div class="build-card">
+        <div class="build-num"><strong>步骤 03</strong> · OPTIMIZE / 压扁</div>
+        <div class="build-body">
+          <h4>把每个 chunk<span class="em">挤干水分</span></h4>
+          <p class="build-1liner">压缩（minify）+ 摇树（tree-shake，删没用到的代码）。
+          一个 <strong>500 KB 的 dev bundle</strong> 经常能挤到 <strong>80 KB</strong>。</p>
+          <div class="build-vis">
+            <div class="build-opt">
+              <div class="build-bar big"><span class="build-bar-label">dev · 487 KB</span></div>
+              <span class="build-arr">→</span>
+              <div class="build-bar small"><span class="build-bar-label">build · 84 KB</span></div>
+            </div>
+          </div>
+          <div class="build-foot">
+            <strong>顺手做的：</strong>删 console.log、删注释、变量名换字母。前面提过的"两副面孔"就是这步干的。
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="hint-strip" style="margin-top:24px;">
+      <span class="hint-tag">关键</span>
+      build 输出到 <code style="background:var(--bg-2);padding:1px 6px;border-radius:3px;">.next/</code> 或
+      <code style="background:var(--bg-2);padding:1px 6px;border-radius:3px;">dist/</code> 文件夹 —— <strong>这个文件夹才是丢服务器的东西</strong>。
+      源码文件夹（<code>app/</code>、<code>src/</code>）服务器根本不需要。
+    </div>
+  </div>
+</section>
+
+<!-- §05 部署后白屏 -->
+<section id="trouble">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>05</strong> / 部署后白屏</div>
+        <h2 class="section-title">3 个最常见的<br><span class="em">翻车现场</span>。</h2>
+      </div>
+      <p class="section-sub">
+        本地一切正常，部署后<strong>白屏 / 报错 / 样式没了</strong>。
+        90% 的情况是这 3 条。每条都附诊断步骤，照着 1, 2, 3 走。
+      </p>
+    </div>
+
+    <div class="ts-stage">
+      <ul class="ts-list">
+        <li class="ts-item">
+          <div class="ts-num">01</div>
+          <div>
+            <h3 class="ts-q">你只跑了 <span class="em">dev</span>，上传了源码</h3>
+            <p class="ts-a">
+              最常见的误会 —— 把 <code>app/</code> 或 <code>src/</code> 文件夹直接打了 zip 上传，以为这就是网站。
+              <strong>不是</strong>。服务器不会自己跑 <code>npm run dev</code>，它要的是 build 的产物。
+            </p>
+            <ul class="ts-steps">
+              <li class="ts-step">
+                <span class="ts-step-num">1</span>
+                <span>本地先跑 <code>npm run build</code>，等它真的跑完没报错。</span>
+              </li>
+              <li class="ts-step">
+                <span class="ts-step-num">2</span>
+                <span>找输出文件夹 —— Next 是 <code>.next/</code>，Vite 是 <code>dist/</code>，CRA 是 <code>build/</code>。</span>
+              </li>
+              <li class="ts-step">
+                <span class="ts-step-num">3</span>
+                <span>上传<strong>这个文件夹</strong>的内容（或用 Vercel/Netlify 这类自动 build 的平台，更省心）。</span>
+              </li>
+            </ul>
+          </div>
+        </li>
+
+        <li class="ts-item">
+          <div class="ts-num">02</div>
+          <div>
+            <h3 class="ts-q"><span class="em">.env</span> 没在线上，环境变量丢了</h3>
+            <p class="ts-a">
+              本地有个 <code>.env</code> 文件存着 API key、数据库连接。
+              <strong>它不在 git 里</strong>（<code>.gitignore</code> 默认忽略），也就是说线上服务器看不到它 —— 代码跑起来一查没值，直接挂。
+            </p>
+            <ul class="ts-steps">
+              <li class="ts-step">
+                <span class="ts-step-num">1</span>
+                <span>打开本地 <code>.env</code>，把每一行都记下来（key + 值）。</span>
+              </li>
+              <li class="ts-step">
+                <span class="ts-step-num">2</span>
+                <span>去部署平台（Vercel / Netlify / 你的服务器）后台，找 <strong>Environment Variables</strong> 设置面板。</span>
+              </li>
+              <li class="ts-step">
+                <span class="ts-step-num">3</span>
+                <span>一行一行加进去，<strong>名字大小写要一致</strong>，加完<strong>重新 deploy 一次</strong>才生效。</span>
+              </li>
+            </ul>
+          </div>
+        </li>
+
+        <li class="ts-item">
+          <div class="ts-num">03</div>
+          <div>
+            <h3 class="ts-q">代码里写死了 <span class="em">localhost:3000</span></h3>
+            <p class="ts-a">
+              联调时图省事写了 <code>fetch('http://localhost:3000/api/...')</code>。
+              本地跑没事 —— 本地确实有 localhost:3000。线上跑用户的浏览器去访问<strong>用户自己的 localhost</strong>，谁家会跑你的服务？
+            </p>
+            <ul class="ts-steps">
+              <li class="ts-step">
+                <span class="ts-step-num">1</span>
+                <span>全文搜 <code>localhost</code>、<code>127.0.0.1</code>、<code>:3000</code> —— 找出每一处。</span>
+              </li>
+              <li class="ts-step">
+                <span class="ts-step-num">2</span>
+                <span>能用相对路径就改成 <code>/api/...</code>（同站请求自动用当前域名）。</span>
+              </li>
+              <li class="ts-step">
+                <span class="ts-step-num">3</span>
+                <span>必须用绝对地址的，放进 <code>.env</code>，按 §02 的方法两边都配上 —— 本地填本地 URL，线上填线上 URL。</span>
+              </li>
+            </ul>
+          </div>
+        </li>
+      </ul>
+    </div>
+
+    <div class="quote-box" style="margin-top:24px;">
+      <span class="quote-mark">"</span>
+      诊断顺序固定：先看是不是<strong>没 build</strong>，再看<span class="em">环境变量</span>，最后查 <code>localhost</code> 残留。
+      照这三步走，半小时能把 80% 的白屏修掉。
+      <span class="quote-attr">—— 部署的 80/20 法则</span>
+    </div>
+  </div>
+</section>
+
+<!-- §06 cheatsheet -->
+<section id="cheat">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>06</strong> / 速查</div>
+        <h2 class="section-title">截图保存<br>这一<span class="em">页</span>。</h2>
+      </div>
+      <p class="section-sub">
+        4 个命令的真实含义 + 上线前自检 3 步。
+        贴桌面比每次问 AI 快。
+      </p>
+    </div>
+
+    <div class="cheat-grid">
+      <div class="cheat-block">
+        <h3><span class="em">·</span> 4 条命令真实含义</h3>
+        <table class="cheat-table">
+          <thead>
+            <tr><th>命令</th><th>做什么 / 什么时候用</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="term">npm run dev</td>
+              <td class="desc">
+                <strong>开开发服务器</strong>。本地 watch 源码 + HMR + 友好报错。
+                <span class="when">→ 写代码时</span>
+              </td>
+            </tr>
+            <tr>
+              <td class="term">npm run build</td>
+              <td class="desc">
+                <strong>生成上线产物</strong>。转译 + 打包 + 压缩，输出到 <code>.next/</code> 或 <code>dist/</code>。
+                <span class="when">→ 准备上线 / 测真实大小</span>
+              </td>
+            </tr>
+            <tr>
+              <td class="term">npm run start</td>
+              <td class="desc">
+                <strong>跑刚 build 出来的产物</strong>。在本地模拟一下"线上"的样子。<strong>必须先 build</strong>。
+                <span class="when">→ 上线前最后一次自测</span>
+              </td>
+            </tr>
+            <tr>
+              <td class="term">npm run preview</td>
+              <td class="desc">
+                Vite 项目里 <code>start</code> 的别名。作用一样。
+                <span class="when">→ 看你的 package.json 写哪个</span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+        <div class="cheat-foot">
+          <code>dev</code> 和 <code>start</code><strong>跑出来都是 localhost:3000</strong>，但跑的是不同东西 —— dev 是源码 + 辅助轮，start 是 build 产物的本地预览。
+        </div>
+      </div>
+
+      <div class="cheat-block">
+        <h3><span class="em">·</span> 3 个状态对照</h3>
+        <table class="cheat-table">
+          <thead>
+            <tr><th>状态</th><th>谁能看见</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="term">localhost:3000<br>（dev）</td>
+              <td class="desc"><strong>只有你</strong>。代码改一秒就刷新。出错信息 super 详细。<strong>关掉终端就消失</strong>。</td>
+            </tr>
+            <tr>
+              <td class="term">localhost:3000<br>（start）</td>
+              <td class="desc"><strong>只有你</strong>，但跑的是 build 产物。看到的体积、报错、行为 = 上线版本。</td>
+            </tr>
+            <tr>
+              <td class="term">https://<br>your-site.com</td>
+              <td class="desc"><strong>所有人</strong>。是 build 产物部署到服务器后的样子。CDN / SSL / 缓存全在这层。</td>
+            </tr>
+            <tr>
+              <td class="term">分享给同事</td>
+              <td class="desc">
+                想<strong>把 localhost 临时露出去</strong>？查一下 <code>ngrok</code> / <code>cloudflared tunnel</code>。<strong>不是日常做法</strong>，调试用。
+              </td>
+            </tr>
+          </tbody>
+        </table>
+        <div class="cheat-foot">
+          看到 <code>localhost</code> 字样就知道：东西<strong>没出你电脑</strong>。把它当成"内部工地"，不是网站本身。
+        </div>
+      </div>
+    </div>
+
+    <div class="check-block">
+      <h3><span class="em">·</span> 上线前自检 3 步（点一下打勾）</h3>
+      <ul class="check-list" id="checkList">
+        <li class="check-item" data-check="1">
+          <span class="check-box"></span>
+          <span class="check-text">
+            本地跑 <span class="check-cmd">npm run build</span> —— 全程没红字才算过
+            <span class="check-sub">报警告（warning）通常不致命，但红色 error 必须先修。</span>
+          </span>
+        </li>
+        <li class="check-item" data-check="2">
+          <span class="check-box"></span>
+          <span class="check-text">
+            再跑 <span class="check-cmd">npm run start</span> 在本地访问 —— 比 dev 更接近线上
+            <span class="check-sub">这一步能抓出"dev 时正常、build 后挂"的 90% 问题。</span>
+          </span>
+        </li>
+        <li class="check-item" data-check="3">
+          <span class="check-box"></span>
+          <span class="check-text">
+            全文搜过 <span class="check-cmd">localhost</span>、<span class="check-cmd">127.0.0.1</span> —— 没硬编码地址
+            <span class="check-sub">每一处都要么改相对路径，要么用环境变量。</span>
+          </span>
+        </li>
+      </ul>
+      <div class="check-progress">
+        <span>进度</span>
+        <div class="check-progress-bar"><span id="checkBar"></span></div>
+        <strong id="checkText">0 / 3</strong>
+      </div>
+    </div>
+
+    <a href="f4-hidden-files-figma.html" class="next-post">
+      <div>
+        <div class="np-tag">下一篇 · NEXT · F4 · 入门</div>
+        <h4>有些文件<span class="em"> · </span>不能上传</h4>
+        <p>知道了 dev / build 的区别，下一步：<strong>哪些文件该提交、哪些必须躲开</strong>。<code>.env</code>、<code>node_modules</code>、<code>.next</code>、<code>.DS_Store</code> —— 一份给设计师的 .gitignore 速查。</p>
+      </div>
+      <span class="np-cta">继续阅读 <span class="arr">→</span></span>
+    </a>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div class="byline-wrap">
+      <div class="byline">
+        <img class="avatar" src="author.jpg" alt="范米花儿">
+        <div class="byline-meta">
+          <div class="byline-label"><span class="dot"></span>作者 · WRITTEN BY</div>
+          <h3 class="byline-name">嗨，我是 <span class="em">范米花儿</span></h3>
+          <p class="byline-tag">一份给设计师的代码入门 ——<br>不需要会写，知道大概怎么回事，跟前端 / AI 沟通就顺多了。</p>
+          <div class="byline-contact">
+            <span class="contact-label">微信</span>
+            <span class="contact-id">vanvan_0422</span>
+            <span class="contact-hint">想看什么主题，加我聊</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="footer-meta">
+      做于 <span class="mono">2026</span> · 用 <span class="heart">●</span> 写给 <span class="mono">DESIGNERS &amp; DEVELOPERS</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+// ==========================================================
+//  §02 HMR animation — pick a color → flash editor + browser
+// ==========================================================
+(function () {
+  const stage = document.getElementById('hmrStage');
+  if (!stage) return;
+  const picks   = stage.querySelectorAll('.hmr-pick');
+  const colorEl = document.getElementById('hmrColor');
+  const btnEl   = document.getElementById('hmrBtn');
+  const status  = document.getElementById('hmrStatus');
+  const toast   = document.getElementById('hmrToast');
+  const flash   = document.getElementById('hmrFlashOverlay');
+  const timeEl  = document.getElementById('hmrTime');
+
+  let toastTimer = null;
+  let updateTimer = null;
+  let lastChange = Date.now();
+
+  function trigger(color) {
+    // 1) Flash code line
+    colorEl.textContent = color;
+    colorEl.classList.remove('is-flash');
+    void colorEl.offsetWidth;
+    colorEl.classList.add('is-flash');
+
+    // 2) Status pulse
+    status.textContent = '● updating';
+    status.classList.add('is-updating');
+    if (updateTimer) clearTimeout(updateTimer);
+    updateTimer = setTimeout(() => {
+      status.textContent = '● live';
+      status.classList.remove('is-updating');
+    }, 460);
+
+    // 3) Browser flash + button color change
+    flash.classList.remove('is-flash');
+    void flash.offsetWidth;
+    flash.classList.add('is-flash');
+    btnEl.style.background = color;
+
+    // 4) Toast
+    toast.classList.add('is-show');
+    if (toastTimer) clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => toast.classList.remove('is-show'), 1100);
+
+    // 5) Time stamp
+    const ms = Math.floor(Math.random() * 30 + 18);
+    timeEl.textContent = ms;
+    lastChange = Date.now();
+  }
+
+  picks.forEach(p => {
+    p.addEventListener('click', () => trigger(p.dataset.pick));
+  });
+
+  // Auto-tick: occasionally bump the time-since-change number
+  setInterval(() => {
+    const seconds = Math.floor((Date.now() - lastChange) / 1000);
+    if (seconds < 1) return;
+    timeEl.textContent = (seconds * 1000).toString();
+  }, 1000);
+})();
+
+// ==========================================================
+//  §03 Swap game — DEV / BUILD mode toggle
+// ==========================================================
+(function () {
+  const stage = document.getElementById('swapStage');
+  if (!stage) return;
+  const track = document.getElementById('swapTrack');
+  const btns  = stage.querySelectorAll('.swap-toggle-btn');
+  const tagEl = document.getElementById('swapModeTag');
+  const sizeBundle = document.getElementById('swapBundleSize');
+  const clsVal = document.getElementById('swapClsVal');
+  const consoleBody = document.getElementById('swapConsoleBody');
+  const swapBtn = document.getElementById('swapBtn');
+  const swapCountEl = document.getElementById('swapCount');
+
+  // 5 props
+  const propEls = stage.querySelectorAll('.swap-prop');
+  const propVals = {
+    size: document.getElementById('propSize'),
+    log:  document.getElementById('propLog'),
+    map:  document.getElementById('propMap'),
+    err:  document.getElementById('propErr'),
+    cls:  document.getElementById('propCls')
+  };
+
+  const states = {
+    dev: {
+      tag:  'DEV',
+      tagClass: 'dev',
+      bundle: 'bundle.js · 487 KB',
+      cls:   'HomePage_button__a8x2k',
+      size: { val: '487 KB', on: true },
+      log:  { val: '保留', on: true },
+      map:  { val: '有', on: true },
+      err:  { val: '源行号', on: true },
+      clsP: { val: '可读', on: true },
+      logs: [
+        { tag: 'log',  msg: 'HomePage 渲染了 0', src: 'HomePage.tsx:7' },
+        { tag: 'log',  msg: '[HMR] connected', src: 'webpack-internal:///' },
+        { tag: 'log',  msg: '[Fast Refresh] rebuilding', src: 'react-dom.dev.js' }
+      ]
+    },
+    build: {
+      tag:  'BUILD',
+      tagClass: 'build',
+      bundle: 'bundle.[hash].js · 84 KB',
+      cls:   'a3f',
+      size: { val: '84 KB', on: false },
+      log:  { val: '已删', on: false },
+      map:  { val: '没', on: false },
+      err:  { val: '只剩 hash', on: false },
+      clsP: { val: '哈希化', on: false },
+      logs: []
+    }
+  };
+
+  function pulse(el) {
+    const p = el.querySelector('.swap-prop-pulse');
+    if (!p) return;
+    p.classList.remove('is-pulse');
+    void p.offsetWidth;
+    p.classList.add('is-pulse');
+  }
+
+  function renderConsole(logs) {
+    consoleBody.innerHTML = '';
+    if (!logs.length) {
+      const empty = document.createElement('div');
+      empty.className = 'swap-console-empty';
+      empty.innerHTML = '<strong>(empty)</strong><br>build 时 console.log 全删了 —— 用户控制台是干净的。';
+      consoleBody.appendChild(empty);
+      return;
+    }
+    logs.forEach((entry, i) => {
+      const line = document.createElement('div');
+      line.className = 'swap-console-line';
+      line.style.opacity = '0';
+      line.style.transform = 'translateY(2px)';
+      line.innerHTML =
+        '<span class="swap-log-tag ' + entry.tag + '">' + entry.tag + '</span>' +
+        '<span class="swap-log-msg">' + entry.msg + '</span>' +
+        '<span class="swap-log-src">' + entry.src + '</span>';
+      consoleBody.appendChild(line);
+      setTimeout(() => {
+        line.style.transition = 'opacity 0.25s, transform 0.25s';
+        line.style.opacity = '1';
+        line.style.transform = 'translateY(0)';
+      }, 80 + i * 90);
+    });
+  }
+
+  function setMode(mode) {
+    btns.forEach(b => b.classList.toggle('is-active', b.dataset.mode === mode));
+    track.classList.toggle('is-build', mode === 'build');
+    track.classList.toggle('is-dev', mode === 'dev');
+
+    const s = states[mode];
+    tagEl.textContent = s.tag;
+    tagEl.className = 'swap-mode-tag ' + s.tagClass;
+    sizeBundle.textContent = s.bundle;
+    clsVal.textContent = s.cls;
+
+    propVals.size.textContent = s.size.val;
+    propVals.log.textContent  = s.log.val;
+    propVals.map.textContent  = s.map.val;
+    propVals.err.textContent  = s.err.val;
+    propVals.cls.textContent  = s.clsP.val;
+
+    propEls.forEach(p => {
+      const key = p.dataset.prop;
+      const map = { size: 'size', log: 'log', map: 'map', err: 'err', cls: 'clsP' };
+      const v = s[map[key]];
+      if (!v) return;
+      p.dataset.on = v.on ? 'true' : 'false';
+      pulse(p);
+    });
+
+    renderConsole(s.logs);
+  }
+
+  btns.forEach(b => {
+    b.addEventListener('click', () => setMode(b.dataset.mode));
+  });
+
+  // Click counter — simulates a click adding a console.log in DEV
+  let count = 0;
+  swapBtn.addEventListener('click', () => {
+    count++;
+    swapCountEl.textContent = count;
+    const isDev = !track.classList.contains('is-build');
+    if (isDev) {
+      // Append a fresh log line
+      const line = document.createElement('div');
+      line.className = 'swap-console-line';
+      line.style.opacity = '0';
+      line.style.transform = 'translateY(2px)';
+      line.innerHTML =
+        '<span class="swap-log-tag log">log</span>' +
+        '<span class="swap-log-msg">HomePage 渲染了 ' + count + '</span>' +
+        '<span class="swap-log-src">HomePage.tsx:7</span>';
+      // Remove "(empty)" placeholder if present
+      const empty = consoleBody.querySelector('.swap-console-empty');
+      if (empty) empty.remove();
+      consoleBody.appendChild(line);
+      requestAnimationFrame(() => {
+        line.style.transition = 'opacity 0.2s, transform 0.2s';
+        line.style.opacity = '1';
+        line.style.transform = 'translateY(0)';
+      });
+      // Also nudge warn at >10
+      if (count === 11) {
+        const w = document.createElement('div');
+        w.className = 'swap-console-line';
+        w.innerHTML =
+          '<span class="swap-log-tag warn">warn</span>' +
+          '<span class="swap-log-msg">count 太大了</span>' +
+          '<span class="swap-log-src">HomePage.tsx:11</span>';
+        consoleBody.appendChild(w);
+      }
+      consoleBody.parentElement.scrollTop = 9999;
+    }
+    // In build mode: clicking does nothing visible in console (intentional).
+  });
+
+  // Init
+  setMode('dev');
+})();
+
+// ==========================================================
+//  §06 Checklist — toggle done state + progress bar
+// ==========================================================
+(function () {
+  const list = document.getElementById('checkList');
+  if (!list) return;
+  const items = list.querySelectorAll('.check-item');
+  const bar = document.getElementById('checkBar');
+  const txt = document.getElementById('checkText');
+
+  function recompute() {
+    const done = list.querySelectorAll('.check-item.is-done').length;
+    const total = items.length;
+    txt.textContent = done + ' / ' + total;
+    bar.style.width = (done / total * 100) + '%';
+  }
+
+  items.forEach(it => {
+    it.addEventListener('click', () => {
+      it.classList.toggle('is-done');
+      recompute();
+    });
+  });
+
+  recompute();
+})();
+
+// ==========================================================
+//  Roadmap modal
+// ==========================================================
+(function(){
+  var modal = document.getElementById('rm-modal');
+  if (!modal) return;
+  var openBtns = document.querySelectorAll('[data-rm-open]');
+  var closeBtns = modal.querySelectorAll('[data-rm-close]');
+  function open() { modal.hidden = false; document.body.style.overflow = 'hidden'; }
+  function close() { modal.hidden = true; document.body.style.overflow = ''; }
+  openBtns.forEach(function(b){ b.addEventListener('click', function(e){ e.preventDefault(); open(); }); });
+  closeBtns.forEach(function(b){ b.addEventListener('click', close); });
+  document.addEventListener('keydown', function(e){ if (e.key === 'Escape' && !modal.hidden) close(); });
+})();
+</script>
+
+
+<!-- 路线图弹窗 -->
+<div class="rm-modal" id="rm-modal" hidden>
+  <div class="rm-backdrop" data-rm-close></div>
+  <div class="rm-dialog" role="dialog" aria-label="完整路线图">
+    <button class="rm-close" data-rm-close aria-label="关闭">✕</button>
+    <div class="rm-header">
+      <div class="rm-tag">完整路线图 · ROADMAP</div>
+      <h3 class="rm-title">9 模块 <span class="rm-em">·</span> 28 篇</h3>
+      <p class="rm-sub">设计篇 5 模块 / 15 篇 + 工程篇 4 系列 / 13 篇</p>
+    </div>
+    <div class="rm-body">
+      <div class="rm-mod">
+        <div class="rm-mod-key">A · 单元素与组件</div>
+        <div class="rm-mod-list">
+          <a href="basics-figma.html" class="rm-cell"><span class="rm-cell-code">A0</span><span class="rm-cell-name">三件套 · HTML / CSS / JS</span><span class="rm-cell-tier">入门</span></a>
+          <a href="box-figma.html" class="rm-cell"><span class="rm-cell-code">A1</span><span class="rm-cell-name">盒子 · Auto Layout</span><span class="rm-cell-tier">基础</span></a>
+          <a href="components-figma.html" class="rm-cell"><span class="rm-cell-code">A2</span><span class="rm-cell-name">组件 · Variants &amp; Props</span><span class="rm-cell-tier">基础</span></a>
+          <a href="button-system-figma.html" class="rm-cell"><span class="rm-cell-code">A3</span><span class="rm-cell-name">Button System · 组件演化</span><span class="rm-cell-tier">进阶</span></a>
+        </div>
+      </div>
+      <div class="rm-mod">
+        <div class="rm-mod-key">B · 多组件协作</div>
+        <div class="rm-mod-list">
+          <a href="page-figma.html" class="rm-cell"><span class="rm-cell-code">B0</span><span class="rm-cell-name">拼页面 · 组件嵌套</span><span class="rm-cell-tier">入门</span></a>
+          <a href="data-flow-figma.html" class="rm-cell"><span class="rm-cell-code">B1</span><span class="rm-cell-name">数据流 · 概念</span><span class="rm-cell-tier">基础</span></a>
+          <a href="data-flow-cases-figma.html" class="rm-cell"><span class="rm-cell-code">B2</span><span class="rm-cell-name">数据流 · 实战 5 案例</span><span class="rm-cell-tier">进阶</span></a>
+        </div>
+      </div>
+      <div class="rm-mod">
+        <div class="rm-mod-key">C · 视觉系统</div>
+        <div class="rm-mod-list">
+          <a href="tokens-figma.html" class="rm-cell"><span class="rm-cell-code">C0</span><span class="rm-cell-name">Variables / Tokens 入门</span><span class="rm-cell-tier">入门</span></a>
+          <a href="colors-type-figma.html" class="rm-cell"><span class="rm-cell-code">C1</span><span class="rm-cell-name">Colors / Type / Spacing</span><span class="rm-cell-tier">基础</span></a>
+          <a href="theme-switch-figma.html" class="rm-cell"><span class="rm-cell-code">C2</span><span class="rm-cell-name">Theme 切换实战</span><span class="rm-cell-tier">进阶</span></a>
+        </div>
+      </div>
+      <div class="rm-mod">
+        <div class="rm-mod-key">D · 状态与交互</div>
+        <div class="rm-mod-list">
+          <a href="states-figma.html" class="rm-cell"><span class="rm-cell-code">D0</span><span class="rm-cell-name">视觉态 · 看得见的状态</span><span class="rm-cell-tier">入门</span></a>
+          <a href="interactive-figma.html" class="rm-cell"><span class="rm-cell-code">D1</span><span class="rm-cell-name">Interactive Component</span><span class="rm-cell-tier">基础</span></a>
+          <a href="transition-figma.html" class="rm-cell"><span class="rm-cell-code">D2</span><span class="rm-cell-name">动画 · Transition</span><span class="rm-cell-tier">进阶</span></a>
+        </div>
+      </div>
+      <div class="rm-mod">
+        <div class="rm-mod-key">E · 工程化</div>
+        <div class="rm-mod-list">
+          <a href="naming-figma.html" class="rm-cell"><span class="rm-cell-code">E0</span><span class="rm-cell-name">命名 / 图层规范</span><span class="rm-cell-tier">入门</span></a>
+          <a href="handoff-figma.html" class="rm-cell"><span class="rm-cell-code">E2</span><span class="rm-cell-name">Handoff &amp; 设计系统</span><span class="rm-cell-tier">进阶</span></a>
+        </div>
+      </div>
+      <div class="rm-mod">
+        <div class="rm-mod-key">F · 工程入门</div>
+        <div class="rm-mod-list">
+          <a href="f1-npm-figma.html" class="rm-cell"><span class="rm-cell-code">F1</span><span class="rm-cell-name">npm 是什么</span><span class="rm-cell-tier">入门</span></a>
+          <a href="f2-import-figma.html" class="rm-cell"><span class="rm-cell-code">F2</span><span class="rm-cell-name">import 与路径</span><span class="rm-cell-tier">入门</span></a>
+          <a href="f3-dev-build-figma.html" class="rm-cell"><span class="rm-cell-code">F3</span><span class="rm-cell-name">dev vs build</span><span class="rm-cell-tier">基础</span></a>
+          <a href="f4-hidden-files-figma.html" class="rm-cell"><span class="rm-cell-code">F4</span><span class="rm-cell-name">看不见的文件</span><span class="rm-cell-tier">基础</span></a>
+        </div>
+      </div>
+      <div class="rm-mod">
+        <div class="rm-mod-key">G · 版本控制</div>
+        <div class="rm-mod-list">
+          <a href="g1-commit-branch-figma.html" class="rm-cell"><span class="rm-cell-code">G1</span><span class="rm-cell-name">commit / branch</span><span class="rm-cell-tier">入门</span></a>
+          <a href="g2-conflict-figma.html" class="rm-cell"><span class="rm-cell-code">G2</span><span class="rm-cell-name">冲突怎么解</span><span class="rm-cell-tier">基础</span></a>
+          <a href="g3-pr-review-figma.html" class="rm-cell"><span class="rm-cell-code">G3</span><span class="rm-cell-name">PR / Review</span><span class="rm-cell-tier">进阶</span></a>
+        </div>
+      </div>
+      <div class="rm-mod">
+        <div class="rm-mod-key">H · 浏览器调试</div>
+        <div class="rm-mod-list">
+          <a href="h1-devtools-elements-figma.html" class="rm-cell"><span class="rm-cell-code">H1</span><span class="rm-cell-name">DevTools Elements</span><span class="rm-cell-tier">入门</span></a>
+          <a href="h2-console-error-figma.html" class="rm-cell"><span class="rm-cell-code">H2</span><span class="rm-cell-name">Console 报错</span><span class="rm-cell-tier">基础</span></a>
+          <a href="h3-network-figma.html" class="rm-cell"><span class="rm-cell-code">H3</span><span class="rm-cell-name">Network 面板</span><span class="rm-cell-tier">进阶</span></a>
+        </div>
+      </div>
+      <div class="rm-mod">
+        <div class="rm-mod-key">J · 上线</div>
+        <div class="rm-mod-list">
+          <a href="j1-dns-figma.html" class="rm-cell"><span class="rm-cell-code">J1</span><span class="rm-cell-name">DNS / 域名</span><span class="rm-cell-tier">基础</span></a>
+          <a href="j2-vercel-figma.html" class="rm-cell"><span class="rm-cell-code">J2</span><span class="rm-cell-name">Vercel 部署</span><span class="rm-cell-tier">基础</span></a>
+          <a href="j3-cache-cdn-figma.html" class="rm-cell"><span class="rm-cell-code">J3</span><span class="rm-cell-name">缓存 / CDN</span><span class="rm-cell-tier">进阶</span></a>
+        </div>
+      </div>
+    </div>
+    <div class="rm-footer">
+      <span>未完待续 · 想看什么主题加我聊</span>
+      <span class="rm-wechat">微信 vanvan_0422</span>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

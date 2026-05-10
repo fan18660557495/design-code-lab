@@ -152,425 +152,645 @@
   .manifesto strong { color: var(--ink); font-weight: 600; }
   .manifesto .em { font-family: 'Noto Serif SC', serif; color: var(--accent); }
 
-  /* ===== Roadmap matrix ===== */
-  .matrix-legend {
-    display: flex;
-    gap: 16px;
-    flex-wrap: wrap;
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 11px;
-    color: var(--ink-mute);
-    letter-spacing: 0.05em;
-    margin-bottom: 28px;
-    align-items: center;
-  }
-  .matrix-legend .dot {
-    display: inline-block;
-    width: 8px; height: 8px;
-    border-radius: 50%;
-    margin-right: 6px;
-    vertical-align: middle;
-  }
-  .matrix-legend .dot.live { background: var(--green); }
-  .matrix-legend .dot.soon { background: var(--accent); }
-  .matrix-legend .dot.todo { background: var(--ink-mute); opacity: 0.5; }
-
-  .matrix {
-    display: grid;
-    grid-template-columns: 140px repeat(3, 1fr);
-    gap: 0;
-    border: 1px solid var(--line);
-    border-radius: 8px;
-    background: var(--paper);
-    overflow: hidden;
-  }
-  @media (max-width: 880px) {
-    .matrix { grid-template-columns: 1fr; }
-    .matrix .col-head { display: none; }
-    .matrix .row-head { background: var(--bg-2); padding: 18px 20px !important; border-right: none !important; }
-  }
-  .matrix > * {
-    padding: 16px 18px;
-    border-bottom: 1px solid var(--line-soft);
-    border-right: 1px solid var(--line-soft);
-    min-height: 96px;
+  /* ====================================================== */
+  /* ===== Journey map (旅程路径图)                     ===== */
+  /* ====================================================== */
+  .journey-wrap {
     position: relative;
+    background: var(--paper);
+    border: 1.5px solid var(--ink);
+    border-radius: 12px;
+    padding: 28px 28px 36px;
+    margin-top: 16px;
+    overflow: hidden;
+    /* graph-paper inside the canvas */
+    background-image:
+      linear-gradient(rgba(22,22,29,0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(22,22,29,0.04) 1px, transparent 1px);
+    background-size: 24px 24px;
+    background-position: -1px -1px;
   }
-  .matrix > *:nth-child(4n) { border-right: none; }
-  .matrix .col-head, .matrix .row-head {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 11px;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    color: var(--ink-mute);
-    background: var(--bg-2);
-    min-height: auto;
-    padding: 14px 18px;
+  .journey-wrap::before {
+    /* corner ticks like a lab notebook page */
+    content: '';
+    position: absolute;
+    top: 10px; left: 10px;
+    width: 22px; height: 22px;
+    border-top: 1.5px solid var(--ink);
+    border-left: 1.5px solid var(--ink);
+    pointer-events: none;
+  }
+  .journey-wrap::after {
+    content: '';
+    position: absolute;
+    bottom: 10px; right: 10px;
+    width: 22px; height: 22px;
+    border-bottom: 1.5px solid var(--ink);
+    border-right: 1.5px solid var(--ink);
+    pointer-events: none;
+  }
+
+  /* Top labels: notebook + figure caption */
+  .journey-meta {
     display: flex;
-    align-items: center;
-  }
-  .matrix .col-head .tier-num {
-    color: var(--accent);
-    font-weight: 600;
-    margin-right: 8px;
-  }
-  .matrix .col-head .tier-cn {
-    color: var(--ink);
-    font-family: 'Noto Serif SC', serif;
-    font-weight: 700;
-    font-size: 13px;
-    margin-right: 8px;
-    letter-spacing: 0;
-    text-transform: none;
-  }
-  .matrix .row-head {
-    flex-direction: column;
+    justify-content: space-between;
     align-items: flex-start;
-    justify-content: center;
-    gap: 4px;
-  }
-  .matrix .row-head .mod-letter {
-    font-family: 'Fraunces', serif;
-    font-style: italic;
-    font-size: 28px;
-    line-height: 1;
-    color: var(--accent);
-    font-weight: 400;
-  }
-  .matrix .row-head .mod-name {
-    font-family: 'Noto Serif SC', serif;
-    font-weight: 700;
-    font-size: 13px;
-    color: var(--ink);
-    text-transform: none;
-    letter-spacing: 0;
-  }
-  .matrix .corner {
-    background: var(--bg-2);
-    color: var(--ink-mute);
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 10px;
-    letter-spacing: 0.08em;
-    align-items: flex-end;
-    justify-content: flex-end;
-    display: flex;
-    min-height: auto;
-    padding: 10px 14px;
-  }
-
-  .cell {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-    text-decoration: none;
-    color: inherit;
-    transition: background 0.2s;
-  }
-  .cell .cell-code {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 10px;
-    letter-spacing: 0.08em;
-    color: var(--ink-mute);
-  }
-  .cell .cell-title {
-    font-family: 'Noto Serif SC', serif;
-    font-weight: 700;
-    font-size: 14px;
-    line-height: 1.35;
-    color: var(--ink);
-    letter-spacing: -0.01em;
-  }
-  .cell .cell-title .x { color: var(--ink-mute); font-weight: 300; font-family: 'Fraunces', serif; font-style: italic; margin: 0 0.05em; }
-  .cell .cell-status {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 10px;
-    letter-spacing: 0.06em;
-    margin-top: auto;
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-  }
-  .cell .cell-status .dot {
-    width: 6px; height: 6px;
-    border-radius: 50%;
-    display: inline-block;
-  }
-
-  .cell.live { background: rgba(31, 107, 58, 0.04); }
-  .cell.live:hover { background: var(--green-soft); }
-  .cell.live .cell-status { color: var(--green); font-weight: 600; }
-  .cell.live .cell-status .dot { background: var(--green); }
-  .cell.live::before {
-    content: '';
-    position: absolute;
-    top: 0; left: 0;
-    width: 3px; height: 100%;
-    background: var(--green);
-  }
-
-  .cell.soon { background: rgba(255, 77, 46, 0.03); }
-  .cell.soon .cell-status { color: var(--accent); font-weight: 600; }
-  .cell.soon .cell-status .dot { background: var(--accent); animation: pulse 2s ease-in-out infinite; }
-  .cell.soon::before {
-    content: '';
-    position: absolute;
-    top: 0; left: 0;
-    width: 3px; height: 100%;
-    background: var(--accent);
-    opacity: 0.6;
-  }
-
-  .cell.todo { opacity: 0.55; }
-  .cell.todo .cell-title { color: var(--ink-soft); font-weight: 500; }
-  .cell.todo .cell-status { color: var(--ink-mute); }
-  .cell.todo .cell-status .dot { background: var(--ink-mute); opacity: 0.5; }
-
-  .cell.intro {
-    background: transparent;
-  }
-  .cell.intro .cell-title { font-size: 13px; font-weight: 500; color: var(--ink-soft); }
-
-  /* ===== Lineup cards ===== */
-  .lineup-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 24px;
-  }
-  @media (max-width: 1080px) { .lineup-grid { grid-template-columns: repeat(2, 1fr); } }
-  @media (max-width: 720px) { .lineup-grid { grid-template-columns: 1fr; } }
-
-  .lineup-card {
-    background: var(--paper);
-    border: 1px solid var(--line);
-    border-radius: 8px;
-    padding: 32px 28px 24px;
-    text-decoration: none;
-    color: inherit;
-    display: flex;
-    flex-direction: column;
-    position: relative;
-    transition: all 0.25s ease;
-    overflow: hidden;
-    min-height: 360px;
-  }
-  .lineup-card::before {
-    content: '';
-    position: absolute;
-    top: 0; left: 0; right: 0;
-    height: 3px;
-    background: var(--accent);
-    transform: scaleX(0);
-    transform-origin: left;
-    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  }
-  .lineup-card:hover::before { transform: scaleX(1); }
-  .lineup-card:hover {
-    transform: translateY(-2px);
-    box-shadow: var(--shadow);
-    border-color: var(--ink);
-  }
-  .lineup-card .num {
-    font-family: 'Fraunces', serif;
-    font-style: italic;
-    font-weight: 300;
-    font-size: 56px;
-    line-height: 1;
-    color: var(--accent);
-    letter-spacing: -0.02em;
-  }
-  .lineup-card .en {
-    font-family: 'Fraunces', serif;
-    font-style: italic;
-    font-weight: 400;
-    font-size: 13px;
-    color: var(--ink-mute);
-    margin: 14px 0 4px;
-  }
-  .lineup-card h3 {
-    font-family: 'Noto Serif SC', serif;
-    font-weight: 900;
-    font-size: 24px;
-    line-height: 1.18;
-    letter-spacing: -0.02em;
-    margin: 4px 0 14px;
-  }
-  .lineup-card h3 .x { color: var(--ink-mute); font-weight: 300; margin: 0 0.06em; font-family: 'Fraunces', serif; font-style: italic; }
-  .lineup-card .desc {
-    color: var(--ink-soft);
-    font-size: 13.5px;
-    line-height: 1.55;
-    margin: 0 0 20px;
-    flex: 1;
-  }
-  .lineup-card .desc strong { color: var(--ink); font-weight: 600; }
-  .lineup-card .meta {
-    display: flex;
-    gap: 12px;
     flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 14px;
+    padding: 0 4px;
+  }
+  .nb-card {
+    background: var(--bg);
+    border: 1.5px solid var(--ink);
+    border-radius: 4px;
+    padding: 8px 12px 6px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    line-height: 1.45;
+    color: var(--ink);
+    transform: rotate(-1deg);
+  }
+  .nb-card .nb-h {
+    color: var(--accent);
+    font-weight: 700;
+  }
+  .nb-card .nb-s {
+    color: var(--ink-mute);
+    font-size: 10px;
+  }
+  .fig-cap {
+    text-align: right;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--ink-soft);
+    letter-spacing: 0.06em;
+    line-height: 1.5;
+    transform: rotate(0.6deg);
+  }
+  .fig-cap .compass {
+    display: inline-block;
+    width: 22px; height: 22px;
+    border: 1.5px solid var(--ink);
+    border-radius: 50%;
+    position: relative;
+    vertical-align: middle;
+    margin-right: 8px;
+    background: var(--paper);
+  }
+  .fig-cap .compass::before {
+    content: 'N';
+    position: absolute;
+    top: -1px; left: 50%; transform: translateX(-50%);
+    font-size: 7px; font-weight: 700;
+    color: var(--accent);
+    line-height: 1;
+  }
+  .fig-cap .compass::after {
+    content: '';
+    position: absolute;
+    top: 3px; left: 50%;
+    width: 1.5px; height: 8px;
+    background: var(--accent);
+    transform: translateX(-50%);
+  }
+  .fig-cap .v {
+    color: var(--accent);
+    font-weight: 700;
+  }
+  .fig-cap small {
+    display: block;
+    color: var(--ink-mute);
+    font-size: 10px;
+    margin-top: 2px;
+  }
+
+  /* Stage layout: SVG on left, sticky panel on right */
+  .journey-stage {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 220px;
+    gap: 24px;
+    align-items: start;
+  }
+  @media (max-width: 980px) {
+    .journey-stage { grid-template-columns: 1fr; }
+  }
+
+  .journey-svg-host {
+    position: relative;
+    width: 100%;
+    height: min(85vh, 1100px);
+    overflow: hidden;
+    border: 1.5px solid var(--ink-soft);
+    border-radius: 10px;
+    background:
+      linear-gradient(var(--paper), var(--paper)),
+      repeating-linear-gradient(0deg, transparent 0, transparent 19px, rgba(22,22,29,0.04) 19px, rgba(22,22,29,0.04) 20px),
+      repeating-linear-gradient(90deg, transparent 0, transparent 19px, rgba(22,22,29,0.04) 19px, rgba(22,22,29,0.04) 20px);
+    background-blend-mode: multiply;
+    cursor: grab;
+    touch-action: none;
+  }
+  .journey-svg-host.is-dragging { cursor: grabbing; }
+  .journey-svg {
+    width: 100%;
+    height: 100%;
+    display: block;
+    overflow: visible;
+    transform-origin: 0 0;
+    transition: transform 0.06s linear;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+  .journey-svg-host.is-dragging .journey-svg { transition: none; }
+
+  /* === Zoom controls overlay === */
+  .zoom-ctrl {
+    position: absolute;
+    bottom: 14px;
+    right: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    background: var(--paper);
+    border: 1px solid var(--ink-soft);
+    border-radius: 8px;
+    padding: 4px;
+    box-shadow: 0 6px 18px rgba(22,22,29,0.08);
+    z-index: 10;
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .zoom-btn {
+    width: 30px; height: 30px;
+    background: transparent;
+    border: none;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--ink);
+    cursor: pointer;
+    border-radius: 4px;
+    transition: all 0.15s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+  }
+  .zoom-btn:hover {
+    background: var(--accent-soft);
+    color: var(--accent);
+  }
+  .zoom-btn:active { transform: scale(0.94); }
+  .zoom-btn.zoom-fit {
+    font-size: 14px;
+  }
+  .zoom-level {
+    font-size: 9.5px;
+    text-align: center;
+    color: var(--ink-mute);
+    padding: 2px 0;
+    border-top: 1px dashed var(--line);
+    border-bottom: 1px dashed var(--line);
+    letter-spacing: 0.04em;
+    user-select: none;
+  }
+
+  /* Hint label at corner */
+  .zoom-hint {
+    position: absolute;
+    bottom: 14px;
+    left: 14px;
     font-family: 'JetBrains Mono', monospace;
     font-size: 10.5px;
     color: var(--ink-mute);
     letter-spacing: 0.04em;
-    padding-top: 14px;
-    border-top: 1px dashed var(--line);
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 6px 10px;
+    pointer-events: none;
+    z-index: 10;
+    opacity: 0.85;
   }
-  .lineup-card .meta .game-tag {
-    color: var(--accent);
-    font-weight: 600;
-  }
-  .lineup-card .badges {
-    position: absolute;
-    top: 20px; right: 20px;
-    display: flex;
-    gap: 6px;
-    flex-direction: column;
-    align-items: flex-end;
-  }
-  .lineup-card .badge {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 9.5px;
-    letter-spacing: 0.08em;
-    padding: 3px 8px;
-    border-radius: 100px;
-    border: 1px solid;
-  }
-  .lineup-card .badge.live {
-    background: var(--green-soft);
-    color: var(--green);
-    border-color: var(--green);
-  }
-  .lineup-card .badge.tier {
+  .zoom-hint .k {
+    color: var(--ink);
+    font-weight: 700;
     background: var(--accent-soft);
-    color: var(--accent);
-    border-color: var(--accent);
-  }
-  .lineup-card .module-tag {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 10px;
-    letter-spacing: 0.08em;
-    color: var(--ink-mute);
-    margin-bottom: 8px;
-    text-transform: uppercase;
-  }
-  .lineup-card .module-tag .key {
-    color: var(--accent);
-    font-weight: 600;
+    padding: 1px 5px;
+    border-radius: 3px;
+    margin: 0 2px;
   }
 
-  /* ===== Coming-soon cards ===== */
-  .coming-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 24px;
+  @media (max-width: 720px) {
+    .journey-svg-host { height: 75vh; }
+    .zoom-hint { font-size: 9.5px; padding: 4px 7px; }
+    .zoom-btn { width: 28px; height: 28px; }
   }
-  @media (max-width: 1080px) { .coming-grid { grid-template-columns: repeat(2, 1fr); } }
-  @media (max-width: 720px) { .coming-grid { grid-template-columns: 1fr; } }
 
-  .coming-card {
-    border: 1.5px dashed var(--line);
-    border-radius: 8px;
-    padding: 28px 24px 22px;
-    background: rgba(255,255,255,0.25);
-    position: relative;
-    display: flex;
-    flex-direction: column;
-    min-height: 220px;
-    transition: all 0.25s ease;
+  /* SVG nodes/paths styling controlled here */
+  .j-path {
+    fill: none;
+    stroke: var(--ink-mute);
+    stroke-width: 1.6;
+    stroke-dasharray: 6 6;
+    opacity: 0.55;
+    transition: stroke 0.3s ease, opacity 0.3s ease, stroke-dasharray 0.3s ease;
   }
-  .coming-card:hover {
-    border-color: var(--accent);
-    background: rgba(255,228,220,0.25);
+  .j-path.read {
+    stroke: var(--accent);
+    stroke-dasharray: none;
+    opacity: 1;
   }
-  .coming-card.next {
-    border-style: solid;
-    border-color: var(--accent);
-    background: rgba(255,228,220,0.35);
+
+  /* Cluster (module) capsule */
+  .j-cluster-bg {
+    fill: var(--bg);
+    stroke: var(--line);
+    stroke-width: 1.5;
+    stroke-dasharray: 4 4;
   }
-  .coming-card .module-tag {
+  .j-cluster-banner {
+    fill: var(--paper);
+    stroke: var(--ink);
+    stroke-width: 1.5;
+  }
+  .j-cluster-banner-text {
+    font-family: 'Noto Serif SC', serif;
+    font-weight: 700;
+    font-size: 13px;
+    fill: var(--ink);
+  }
+  .j-cluster-banner-key {
+    fill: var(--accent);
+    font-weight: 900;
+  }
+
+  /* Article node — outer group holds position via transform attribute,
+     inner group handles hover lift so we don't clobber SVG transform. */
+  .j-node {
+    cursor: pointer;
+  }
+  .j-node-inner {
+    transition: transform 0.18s cubic-bezier(0.4, 0, 0.2, 1);
+    transform-box: fill-box;
+    transform-origin: center;
+  }
+  .j-node-circle {
+    fill: var(--paper);
+    stroke: var(--ink);
+    stroke-width: 1.6;
+    transition: fill 0.2s ease, stroke 0.2s ease, filter 0.25s ease;
+  }
+  .j-node-text {
     font-family: 'JetBrains Mono', monospace;
-    font-size: 10px;
-    letter-spacing: 0.08em;
-    color: var(--ink-mute);
-    margin-bottom: 10px;
-    text-transform: uppercase;
+    font-weight: 700;
+    font-size: 12px;
+    fill: var(--ink);
+    text-anchor: middle;
+    dominant-baseline: central;
+    pointer-events: none;
+    transition: fill 0.2s ease;
   }
-  .coming-card .module-tag .key {
-    color: var(--accent);
-    font-weight: 600;
+  .j-node:hover .j-node-inner {
+    transform: translateY(-3px) scale(1.08);
   }
-  .coming-card h4 {
+  .j-node:hover .j-node-circle {
+    fill: var(--accent);
+    stroke: var(--accent);
+    filter: drop-shadow(0 4px 10px rgba(255,77,46,0.35));
+  }
+  .j-node:hover .j-node-text {
+    fill: #fff;
+  }
+
+  /* Read state */
+  .j-node.read .j-node-circle {
+    stroke: var(--accent);
+    stroke-width: 2;
+  }
+  .j-node.read .j-node-text {
+    fill: var(--accent);
+  }
+  .j-node-check {
+    fill: var(--accent);
+    stroke: var(--paper);
+    stroke-width: 1.5;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+  }
+  .j-node.read .j-node-check { opacity: 1; }
+  .j-node-check-tick {
+    fill: none;
+    stroke: #fff;
+    stroke-width: 1.6;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+  }
+  .j-node.read .j-node-check-tick { opacity: 1; }
+
+  /* START / END big nodes */
+  .j-anchor {
+    fill: var(--ink);
+    stroke: var(--ink);
+    stroke-width: 1.5;
+  }
+  .j-anchor-end {
+    fill: var(--accent);
+    stroke: var(--accent);
+  }
+  .j-anchor-text {
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 700;
+    font-size: 11px;
+    fill: var(--paper);
+    text-anchor: middle;
+    dominant-baseline: central;
+    letter-spacing: 0.05em;
+  }
+  .j-anchor-cn {
     font-family: 'Noto Serif SC', serif;
     font-weight: 900;
-    font-size: 22px;
-    line-height: 1.2;
-    margin: 0 0 12px;
-    letter-spacing: -0.02em;
+    font-size: 14px;
+    fill: var(--paper);
+    text-anchor: middle;
+    dominant-baseline: central;
   }
-  .coming-card h4 .x { color: var(--ink-mute); font-weight: 300; margin: 0 0.06em; font-family: 'Fraunces', serif; font-style: italic; }
-  .coming-card h4 .em { font-family: 'Noto Serif SC', serif; font-weight: 500; color: var(--accent); }
-  .coming-card .blurb {
-    color: var(--ink-soft);
+
+  /* Branch labels: 设计篇 / 工程篇 */
+  .j-branch-label-bg {
+    fill: var(--bg);
+    stroke: var(--ink);
+    stroke-width: 1.5;
+  }
+  .j-branch-label {
+    font-family: 'Noto Serif SC', serif;
+    font-weight: 900;
+    font-size: 15px;
+    fill: var(--ink);
+    text-anchor: middle;
+    dominant-baseline: central;
+    letter-spacing: 0.04em;
+  }
+  .j-branch-label .j-arrow {
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 700;
+    fill: var(--accent);
+  }
+
+  /* Hand-drawn annotation labels (浮动小标签) */
+  .j-anno-text {
+    font-family: 'Noto Serif SC', serif;
+    font-weight: 700;
+    font-size: 12px;
+    fill: var(--accent);
+  }
+  .j-anno-line {
+    fill: none;
+    stroke: var(--accent);
+    stroke-width: 1.4;
+    stroke-dasharray: 3 3;
+    stroke-linecap: round;
+  }
+  .j-anno-en {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    fill: var(--ink-soft);
+    letter-spacing: 0.06em;
+  }
+
+  /* Filter dim states */
+  .journey-svg.filter-read .j-node:not(.read) { opacity: 0.18; pointer-events: none; }
+  .journey-svg.filter-read .j-node:not(.read) .j-node-circle { filter: none; }
+  .journey-svg.filter-unread .j-node.read { opacity: 0.18; pointer-events: none; }
+
+  /* Tooltip (HTML overlay) */
+  .j-tooltip {
+    position: absolute;
+    z-index: 50;
+    pointer-events: none;
+    background: var(--ink);
+    color: var(--paper);
+    padding: 10px 14px;
+    border-radius: 6px;
+    font-size: 12.5px;
+    line-height: 1.4;
+    min-width: 200px;
+    max-width: 260px;
+    box-shadow: 0 12px 24px rgba(0,0,0,0.18);
+    opacity: 0;
+    transform: translate(-50%, calc(-100% - 14px)) scale(0.96);
+    transition: opacity 0.15s ease, transform 0.15s ease;
+    will-change: transform, opacity;
+  }
+  .j-tooltip.on {
+    opacity: 1;
+    transform: translate(-50%, calc(-100% - 14px)) scale(1);
+  }
+  .j-tooltip::after {
+    content: '';
+    position: absolute;
+    bottom: -6px;
+    left: 50%;
+    transform: translateX(-50%) rotate(45deg);
+    width: 10px; height: 10px;
+    background: var(--ink);
+  }
+  .j-tooltip-code {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10.5px;
+    color: var(--accent);
+    letter-spacing: 0.08em;
+    margin-bottom: 4px;
+    font-weight: 600;
+  }
+  .j-tooltip-title {
+    font-family: 'Noto Serif SC', serif;
+    font-weight: 700;
     font-size: 13.5px;
-    line-height: 1.55;
-    margin: 0 0 18px;
-    flex: 1;
+    color: var(--paper);
+    margin-bottom: 4px;
+    letter-spacing: -0.005em;
   }
-  .coming-card .status-row {
+  .j-tooltip-meta {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    margin-top: 8px;
+    padding-top: 7px;
+    border-top: 1px dashed rgba(255,255,255,0.18);
     font-family: 'JetBrains Mono', monospace;
     font-size: 10.5px;
-    color: var(--ink-mute);
-    letter-spacing: 0.05em;
-    padding-top: 14px;
-    border-top: 1px dashed var(--line);
+    letter-spacing: 0.04em;
+    color: rgba(250,247,240,0.65);
   }
-  .coming-card .status-row .stat {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-  }
-  .coming-card .status-row .stat .dot {
-    width: 6px; height: 6px; border-radius: 50%;
-    display: inline-block;
-    background: var(--ink-mute);
-    opacity: 0.5;
-  }
-  .coming-card.next .status-row .stat .dot {
-    background: var(--accent);
-    opacity: 1;
-    animation: pulse 2s ease-in-out infinite;
-  }
-  .coming-card.next .status-row .stat {
+  .j-tooltip-tier {
     color: var(--accent);
     font-weight: 600;
   }
-  .coming-card .corner-note {
-    position: absolute;
-    top: 16px; right: 16px;
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 9.5px;
-    letter-spacing: 0.08em;
-    color: var(--ink-mute);
-    padding: 3px 8px;
-    border-radius: 100px;
-    border: 1px solid var(--line);
-    background: var(--bg);
-  }
-  .coming-card.next .corner-note {
-    color: var(--accent);
-    border-color: var(--accent);
-    background: var(--bg);
+  .j-tooltip-go {
+    color: var(--paper);
   }
 
-  /* ===== Finale banner ===== */
+  /* Right side panel */
+  .journey-panel {
+    position: sticky;
+    top: 90px;
+    background: var(--bg);
+    border: 1.5px solid var(--ink);
+    border-radius: 8px;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  @media (max-width: 980px) {
+    .journey-panel {
+      position: static;
+      flex-direction: row;
+      flex-wrap: wrap;
+      align-items: stretch;
+      justify-content: space-between;
+      gap: 14px;
+      margin-top: 18px;
+    }
+  }
+  .jp-block {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .jp-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    color: var(--ink-mute);
+    text-transform: uppercase;
+  }
+  .jp-progress-num {
+    font-family: 'Noto Serif SC', serif;
+    font-weight: 900;
+    font-size: 32px;
+    line-height: 1;
+    letter-spacing: -0.02em;
+  }
+  .jp-progress-num .jp-cur { color: var(--accent); }
+  .jp-progress-num .jp-tot { color: var(--ink-mute); font-weight: 500; font-size: 22px; }
+  .jp-bar {
+    display: flex;
+    gap: 2px;
+    margin-top: 6px;
+    flex-wrap: wrap;
+  }
+  .jp-tick {
+    width: 10px;
+    height: 5px;
+    background: var(--line);
+    border-radius: 1px;
+    transition: background 0.2s ease;
+  }
+  .jp-tick.on {
+    background: var(--accent);
+  }
+
+  .jp-filters {
+    display: flex;
+    gap: 4px;
+    flex-direction: column;
+  }
+  @media (max-width: 980px) {
+    .jp-filters { flex-direction: row; flex: 1 1 100%; }
+  }
+  .jp-filter {
+    flex: 1;
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    padding: 7px 10px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.06em;
+    color: var(--ink-soft);
+    text-align: left;
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+  .jp-filter:hover { border-color: var(--ink); color: var(--ink); }
+  .jp-filter.active {
+    background: var(--ink);
+    border-color: var(--ink);
+    color: var(--paper);
+  }
+  .jp-filter .jp-fnum {
+    color: var(--ink-mute);
+    font-weight: 500;
+    margin-left: 4px;
+  }
+  .jp-filter.active .jp-fnum { color: var(--accent); }
+
+  .jp-reset {
+    background: transparent;
+    border: 1px dashed var(--line);
+    border-radius: 4px;
+    padding: 6px 10px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10.5px;
+    letter-spacing: 0.05em;
+    color: var(--ink-mute);
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+  .jp-reset:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+    border-style: solid;
+  }
+
+  .jp-legend {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10.5px;
+    color: var(--ink-soft);
+    line-height: 1.4;
+  }
+  .jp-legend .ld {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .jp-legend .ld-dot {
+    width: 14px; height: 14px;
+    border-radius: 50%;
+    background: var(--paper);
+    border: 1.6px solid var(--ink);
+    display: inline-block;
+    flex-shrink: 0;
+  }
+  .jp-legend .ld-dot.read {
+    border-color: var(--accent);
+    border-width: 2px;
+  }
+  .jp-legend .ld-dot.read::after {
+    content: '✓';
+    color: var(--accent);
+    font-size: 8px;
+    display: block;
+    text-align: center;
+    line-height: 10px;
+    font-weight: 700;
+  }
+
+  /* ===== Finale (slim) ===== */
   .finale-banner {
     position: relative;
     background: linear-gradient(135deg, var(--green-soft) 0%, var(--paper) 60%, var(--accent-soft) 100%);
     border: 1px solid var(--green);
     border-radius: 12px;
-    padding: 64px 56px 48px;
+    padding: 56px 56px 44px;
     overflow: hidden;
   }
   .finale-banner::after {
@@ -591,7 +811,6 @@
   .finale-tr { top: 16px; right: 16px; border-left: none; border-bottom: none; }
   .finale-bl { bottom: 16px; left: 16px; border-right: none; border-top: none; }
   .finale-br { bottom: 16px; right: 16px; border-left: none; border-top: none; }
-
   .finale-badge {
     display: inline-flex;
     align-items: center;
@@ -604,7 +823,7 @@
     font-size: 11px;
     letter-spacing: 0.12em;
     font-weight: 600;
-    margin-bottom: 24px;
+    margin-bottom: 22px;
     position: relative;
     z-index: 2;
   }
@@ -619,14 +838,13 @@
     font-size: 10px;
     font-weight: 900;
   }
-
   .finale-title {
     font-family: 'Noto Serif SC', serif;
     font-weight: 900;
-    font-size: clamp(36px, 5vw, 56px);
+    font-size: clamp(32px, 4.5vw, 48px);
     line-height: 1.05;
     letter-spacing: -0.03em;
-    margin: 0 0 20px;
+    margin: 0 0 18px;
     color: var(--ink);
     position: relative;
     z-index: 2;
@@ -647,13 +865,12 @@
     0%, 100% { transform: rotate(0deg) scale(1); }
     50% { transform: rotate(15deg) scale(1.15); }
   }
-
   .finale-blurb {
-    font-size: 17px;
+    font-size: 16.5px;
     line-height: 1.6;
     color: var(--ink-soft);
-    max-width: 56ch;
-    margin: 0 0 36px;
+    max-width: 60ch;
+    margin: 0 0 22px;
     position: relative;
     z-index: 2;
   }
@@ -661,95 +878,19 @@
     color: var(--ink);
     font-weight: 600;
   }
-
-  .finale-stats {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 16px;
-    padding: 24px 0;
-    border-top: 1px dashed var(--green);
-    border-bottom: 1px dashed var(--green);
-    margin-bottom: 28px;
-    position: relative;
-    z-index: 2;
-  }
-  @media (max-width: 720px) { .finale-stats { grid-template-columns: repeat(2, 1fr); } }
-  .finale-stat {
-    text-align: left;
-  }
-  .finale-stat-num {
-    font-family: 'Fraunces', serif;
-    font-style: italic;
-    font-weight: 300;
-    font-size: 56px;
-    line-height: 1;
-    color: var(--green);
-    letter-spacing: -0.03em;
-  }
-  .finale-stat-pct {
-    font-size: 28px;
-    color: var(--green);
-    margin-left: 2px;
-  }
-  .finale-stat-label {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 11px;
-    letter-spacing: 0.08em;
-    color: var(--ink-mute);
-    text-transform: uppercase;
-    margin-top: 8px;
-  }
-
-  .finale-modules {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 12px;
-    margin-bottom: 32px;
-    position: relative;
-    z-index: 2;
-  }
-  .finale-mod {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    background: var(--paper);
-    border: 1px solid var(--line);
-    border-radius: 100px;
-    padding: 8px 16px 8px 8px;
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 11.5px;
-    color: var(--ink-soft);
-    letter-spacing: 0.02em;
-  }
-  .finale-mod-key {
-    font-family: 'Fraunces', serif;
-    font-style: italic;
-    font-weight: 500;
-    color: var(--accent);
-    background: var(--accent-soft);
-    border-radius: 50%;
-    width: 22px; height: 22px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 13px;
-    line-height: 1;
-  }
-
   .finale-footnote {
     font-family: 'Noto Serif SC', serif;
     font-size: 14px;
     color: var(--ink-mute);
     margin: 0;
-    padding-top: 8px;
+    padding-top: 14px;
+    border-top: 1px dashed var(--green);
     position: relative;
     z-index: 2;
-    font-style: italic;
   }
   .finale-footnote strong {
     color: var(--ink);
     font-weight: 600;
-    font-style: normal;
   }
   .finale-footnote .em {
     color: var(--accent);
@@ -762,9 +903,8 @@
     animation: confetti-spin 3s ease-in-out infinite;
     animation-delay: 0.5s;
   }
-
   @media (max-width: 720px) {
-    .finale-banner { padding: 48px 28px 36px; }
+    .finale-banner { padding: 44px 26px 34px; }
   }
 
   /* Footer */
@@ -794,13 +934,14 @@
   .byline-contact { margin-top: 14px; padding-top: 14px; border-top: 1px dashed var(--line); display: flex; align-items: center; gap: 10px; flex-wrap: wrap; font-size: 12px; }
   .byline-contact .contact-label { font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-mute); padding: 2px 8px; border: 1px solid var(--line); border-radius: 3px; }
   .byline-contact .contact-id { font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 600; color: var(--ink); background: var(--accent-soft); padding: 3px 10px; border-radius: 4px; letter-spacing: 0.02em; }
-  .byline-contact .contact-hint { font-size: 12px; color: var(--ink-soft); font-style: italic; }
+  .byline-contact .contact-hint { font-size: 12px; color: var(--ink-soft); }
+
   /* === Roadmap Modal === */
   .rm-modal { position: fixed; inset: 0; z-index: 1000; display: flex; align-items: center; justify-content: center; padding: 30px 16px; }
   .rm-modal[hidden] { display: none; }
   .rm-backdrop { position: absolute; inset: 0; background: rgba(22,22,29,0.55); backdrop-filter: blur(4px); animation: rm-fade 0.2s; }
   @keyframes rm-fade { from { opacity: 0; } to { opacity: 1; } }
-  .rm-dialog { position: relative; background: var(--bg); border-radius: 12px; max-width: 720px; width: 100%; max-height: calc(100vh - 60px); overflow-y: auto; padding: 32px 36px 24px; box-shadow: 0 30px 80px rgba(0,0,0,0.3); animation: rm-pop 0.25s cubic-bezier(0.4,0,0.2,1); }
+  .rm-dialog { position: relative; background: var(--bg); border-radius: 12px; max-width: 760px; width: 100%; max-height: calc(100vh - 60px); overflow-y: auto; padding: 32px 36px 24px; box-shadow: 0 30px 80px rgba(0,0,0,0.3); animation: rm-pop 0.25s cubic-bezier(0.4,0,0.2,1); }
   @keyframes rm-pop { from { transform: scale(0.96) translateY(8px); opacity: 0; } to { transform: scale(1) translateY(0); opacity: 1; } }
   .rm-close { position: absolute; top: 14px; right: 16px; background: transparent; border: none; cursor: pointer; font-size: 20px; color: var(--ink-mute); width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: all 0.15s; line-height: 1; }
   .rm-close:hover { background: var(--bg-2); color: var(--ink); }
@@ -809,14 +950,15 @@
   .rm-title { font-family: 'Noto Serif SC', serif; font-size: 28px; margin: 0 0 6px; font-weight: 900; letter-spacing: -0.02em; line-height: 1.1; }
   .rm-title .rm-em { font-family: 'Noto Serif SC', serif; color: var(--accent); font-weight: 500; }
   .rm-sub { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--ink-mute); margin: 0; }
-  .rm-body { display: flex; flex-direction: column; gap: 18px; }
+  .rm-body { display: grid; grid-template-columns: 1fr 1fr; gap: 22px 28px; }
+  @media (max-width: 720px) { .rm-body { grid-template-columns: 1fr; } }
   .rm-mod-key { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ink); font-weight: 700; margin-bottom: 8px; letter-spacing: 0.04em; text-transform: uppercase; }
-  .rm-mod-list { display: flex; flex-direction: column; gap: 6px; }
-  .rm-cell { display: grid; grid-template-columns: 36px 1fr auto; gap: 12px; align-items: center; padding: 9px 13px; border-radius: 5px; background: var(--paper); border: 1px solid var(--line); text-decoration: none; color: inherit; transition: all 0.15s; }
+  .rm-mod-list { display: flex; flex-direction: column; gap: 5px; }
+  .rm-cell { display: grid; grid-template-columns: 30px 1fr auto; gap: 10px; align-items: center; padding: 8px 12px; border-radius: 5px; background: var(--paper); border: 1px solid var(--line); text-decoration: none; color: inherit; transition: all 0.15s; }
   .rm-cell:hover { border-color: var(--accent); background: var(--accent-soft); transform: translateX(3px); }
-  .rm-cell-code { font-family: 'Fraunces', serif; font-style: italic; font-weight: 500; color: var(--accent); font-size: 15px; }
-  .rm-cell-name { font-size: 13px; color: var(--ink); }
-  .rm-cell-tier { font-family: 'JetBrains Mono', monospace; font-size: 9px; letter-spacing: 0.08em; color: var(--ink-mute); text-transform: uppercase; border: 1px solid var(--line); padding: 2px 7px; border-radius: 3px; }
+  .rm-cell-code { font-family: 'JetBrains Mono', monospace; font-weight: 700; color: var(--accent); font-size: 12px; letter-spacing: 0.04em; }
+  .rm-cell-name { font-size: 12.5px; color: var(--ink); }
+  .rm-cell-tier { font-family: 'JetBrains Mono', monospace; font-size: 9px; letter-spacing: 0.08em; color: var(--ink-mute); text-transform: uppercase; border: 1px solid var(--line); padding: 2px 6px; border-radius: 3px; }
   .rm-footer { margin-top: 22px; padding-top: 16px; border-top: 1px dashed var(--line); display: flex; justify-content: space-between; align-items: center; font-size: 12px; color: var(--ink-soft); flex-wrap: wrap; gap: 8px; }
   .rm-wechat { font-family: 'JetBrains Mono', monospace; background: var(--accent-soft); color: var(--ink); padding: 3px 10px; border-radius: 3px; font-weight: 600; letter-spacing: 0.02em; }
   .nav-links a[data-rm-open] { cursor: pointer; }
@@ -839,7 +981,7 @@
     <div class="hero-meta">
       <span class="pill fill">合集 · COLLECTION</span>
       <span class="pill">2026 · 实验室</span>
-      <span class="pill">5 模块 × 3 层</span>
+      <span class="pill">9 模块 · 28 篇</span>
       <span class="label">设计师 × 前端</span>
     </div>
     <div class="hero-grid">
@@ -851,15 +993,15 @@
           <span class="display-cn">实验室</span>
         </h1>
         <p class="lede">
-          给设计师的代码侧基础。<br>
-          按 <span class="em">5 模块 × 3 层难度</span> 组织，每篇讲一件事，配一个能玩的小游戏。<br>
-          不深，但管用 —— 让你跟前端说同一种语言。
+          完整路线图 <span class="em">·</span> 28 篇 <span class="em">·</span> 9 模块。<br>
+          下面这张图就是全部 —— 从「你在这里」一路爬到「撒花」，<br>
+          点节点进文章，<span class="em">已读会自动标记</span>。
         </p>
       </div>
       <div class="hero-side">
-        <div class="row"><span class="k">已发布</span><span class="v">15 篇 · 未完待续</span></div>
+        <div class="row"><span class="k">主线</span><span class="v">28 篇 · 全部上线</span></div>
         <div class="row"><span class="k">主理人</span><span class="v">范米花儿</span></div>
-        <div class="row"><span class="k">模块数</span><span class="v">5 × 3 矩阵</span></div>
+        <div class="row"><span class="k">分支</span><span class="v">设计篇 / 工程篇</span></div>
         <div class="row"><span class="k">状态</span><span class="v">未完待续 →</span></div>
       </div>
     </div>
@@ -898,7 +1040,7 @@
         <span class="em">能说得出口、听得懂、知道怎么改</span> ——
         让设计和代码之间的<strong>鸿沟</strong>，小一点。
       </p>
-      <p style="margin-top:24px;font-size:14px;color:var(--ink-mute);font-style:italic;">
+      <p style="margin-top:24px;font-size:14px;color:var(--ink-mute);">
         本质上，这是一个<strong style="color:var(--ink);">桥梁</strong>，或者说一份<strong style="color:var(--ink);">翻译</strong>。
       </p>
     </div>
@@ -909,274 +1051,528 @@
   <div class="wrap">
     <div class="section-head">
       <div>
-        <div class="section-num"><strong>01</strong> / 完整路线图</div>
-        <h2 class="section-title">5 模块 <span class="em">×</span><br>3 层难度。</h2>
+        <div class="section-num"><strong>01</strong> / 完整地图</div>
+        <h2 class="section-title">一张图<br>看完 <span class="em">全部</span>。</h2>
       </div>
       <p class="section-sub">
-        横轴是难度（入门 → 基础 → 进阶），纵轴是 5 个模块（单元素 / 多组件协作 / 视觉系统 / 状态交互 / 工程化）。整张表就是合集的规划。
+        从底部「你在这里」出发，分两路 —— 左边设计篇 5 模块 15 篇，右边工程篇 4 系列 13 篇。
+        一路向上经过 9 个聚落，顶上汇合到「撒花」。
+        <strong>hover 看简介，点击进文章，已读自动标记。</strong>
       </p>
     </div>
 
-    <div class="matrix-legend">
-      <span><span class="dot live"></span>已发布 · 15 篇</span>
-      <span style="color:var(--accent);font-weight:600;">未完待续 · 还会继续更新 →</span>
-    </div>
+    <div class="journey-wrap" id="journey">
+      <div class="journey-meta">
+        <div class="nb-card">
+          <div class="nb-h">LAB NOTEBOOK</div>
+          <div>VOL. 01 / 2026</div>
+          <div class="nb-s">— Design × Code —</div>
+        </div>
+        <div class="fig-cap">
+          <span class="compass" aria-hidden="true"></span>
+          <span class="v">FIG. 01</span> · 完整路线图
+          <small>v 1.0 · 28 nodes · 9 clusters</small>
+        </div>
+      </div>
 
-    <div class="matrix">
-      <!-- Header row -->
-      <div class="corner">模块 \ 难度</div>
-      <div class="col-head"><span class="tier-num">L1</span><span class="tier-cn">入门</span><span>设计师视角</span></div>
-      <div class="col-head"><span class="tier-num">L2</span><span class="tier-cn">基础</span><span>Figma↔代码 对照</span></div>
-      <div class="col-head"><span class="tier-num">L3</span><span class="tier-cn">进阶</span><span>真实案例</span></div>
+      <div class="journey-stage">
+        <div class="journey-svg-host" id="j-host">
 
-      <!-- Row A: 单元素与组件 -->
-      <div class="row-head">
-        <div class="mod-letter">A</div>
-        <div class="mod-name">单元素与组件</div>
-      </div>
-      <a class="cell live" href="basics-figma.html">
-        <div class="cell-code">A0</div>
-        <div class="cell-title">三件套 <span class="x">·</span> HTML / CSS / JS</div>
-        <div class="cell-status"><span class="dot"></span>已发布</div>
-      </a>
-      <div class="cell live" style="padding-top:14px;padding-bottom:14px;">
-        <a href="box-figma.html" style="display:block;text-decoration:none;color:inherit;padding-bottom:10px;border-bottom:1px dashed var(--line-soft);margin-bottom:8px;">
-          <div class="cell-code">A1</div>
-          <div class="cell-title">盒子 <span class="x">·</span> Auto Layout（含响应）</div>
-        </a>
-        <a href="components-figma.html" style="display:block;text-decoration:none;color:inherit;">
-          <div class="cell-code">A2</div>
-          <div class="cell-title">组件 <span class="x">·</span> Variants &amp; Props</div>
-        </a>
-        <div class="cell-status" style="margin-top:8px;"><span class="dot"></span>两篇已发布</div>
-      </div>
-      <a class="cell live" href="button-system-figma.html">
-        <div class="cell-code">A3</div>
-        <div class="cell-title">Button System <span class="x">·</span> 组件演化</div>
-        <div class="cell-status"><span class="dot"></span>已发布</div>
-      </a>
+          <!-- Zoom hint label (bottom-left) -->
+          <div class="zoom-hint">
+            <span class="k">滚轮</span>缩放 · <span class="k">拖拽</span>平移 · <span class="k">点节点</span>进入文章
+          </div>
 
-      <!-- Row B: 多组件协作 -->
-      <div class="row-head">
-        <div class="mod-letter">B</div>
-        <div class="mod-name">多组件协作</div>
-      </div>
-      <a class="cell live" href="page-figma.html">
-        <div class="cell-code">B0</div>
-        <div class="cell-title">拼页面 <span class="x">·</span> 组件嵌套</div>
-        <div class="cell-status"><span class="dot"></span>已发布</div>
-      </a>
-      <a class="cell live" href="data-flow-figma.html">
-        <div class="cell-code">B1</div>
-        <div class="cell-title">数据流 <span class="x">·</span> 概念</div>
-        <div class="cell-status"><span class="dot"></span>已发布</div>
-      </a>
-      <a class="cell live" href="data-flow-cases-figma.html">
-        <div class="cell-code">B2</div>
-        <div class="cell-title">数据流 <span class="x">·</span> 实战 5 案例</div>
-        <div class="cell-status"><span class="dot"></span>已发布</div>
-      </a>
+          <!-- Zoom controls (bottom-right) -->
+          <div class="zoom-ctrl">
+            <button class="zoom-btn" id="zoom-in" aria-label="放大" title="放大 (+)">+</button>
+            <div class="zoom-level" id="zoom-level">100%</div>
+            <button class="zoom-btn" id="zoom-out" aria-label="缩小" title="缩小 (-)">−</button>
+            <button class="zoom-btn zoom-fit" id="zoom-fit" aria-label="适应" title="复位 (0)">⌖</button>
+          </div>
 
-      <!-- Row C: 视觉系统 -->
-      <div class="row-head">
-        <div class="mod-letter">C</div>
-        <div class="mod-name">视觉系统</div>
-      </div>
-      <a class="cell live" href="tokens-figma.html">
-        <div class="cell-code">C0</div>
-        <div class="cell-title">Variables / Tokens 是什么</div>
-        <div class="cell-status"><span class="dot"></span>已发布</div>
-      </a>
-      <a class="cell live" href="colors-type-figma.html">
-        <div class="cell-code">C1</div>
-        <div class="cell-title">Colors × Modes / Type / Spacing</div>
-        <div class="cell-status"><span class="dot"></span>已发布</div>
-      </a>
-      <a class="cell live" href="theme-switch-figma.html">
-        <div class="cell-code">C2</div>
-        <div class="cell-title">Theme 切换 <span class="x">·</span> 实战</div>
-        <div class="cell-status"><span class="dot"></span>已发布</div>
-      </a>
+          <!--
+            Journey SVG.
+            ViewBox: 1200 × 1900.
+            Layout (top -> bottom):
+              y = 180   START (你在这里) circle
+              y = 400   branch labels
+              y = 680   A · F   (第 1 行)
+              y = 930   B · G
+              y = 1180  C · H
+              y = 1430  D · J   (工程篇到此)
+              y = 1680  E       (设计篇独有)
+              y = 1840  END (撒花) circle
+            Design column anchored around x = 360
+            Engineering column anchored around x = 840
+          -->
+          <svg class="journey-svg" id="journey-svg"
+               viewBox="0 0 1200 1900"
+               preserveAspectRatio="xMidYMid meet"
+               role="img"
+               aria-label="完整旅程路径图：从你在这里出发，左侧设计篇 5 模块、右侧工程篇 4 系列，顶部撒花。">
 
-      <!-- Row D: 状态与交互 -->
-      <div class="row-head">
-        <div class="mod-letter">D</div>
-        <div class="mod-name">状态与交互</div>
-      </div>
-      <a class="cell live" href="states-figma.html">
-        <div class="cell-code">D0</div>
-        <div class="cell-title">视觉态入门 <span class="x">·</span> 看得见的状态</div>
-        <div class="cell-status"><span class="dot"></span>已发布</div>
-      </a>
-      <a class="cell live" href="interactive-figma.html">
-        <div class="cell-code">D1</div>
-        <div class="cell-title">Interactive Component（hover/focus）</div>
-        <div class="cell-status"><span class="dot"></span>已发布</div>
-      </a>
-      <a class="cell live" href="transition-figma.html">
-        <div class="cell-code">D2</div>
-        <div class="cell-title">动画 <span class="x">·</span> Transition</div>
-        <div class="cell-status"><span class="dot"></span>已发布</div>
-      </a>
+            <!-- ===== background paths (drawn first, behind everything) ===== -->
+            <g id="paths">
+              <!-- main trunk: START up-and-fork -->
+              <path class="j-path" id="p-start-design"
+                    d="M 600 200 C 600 260, 360 280, 360 400"></path>
+              <path class="j-path" id="p-start-eng"
+                    d="M 600 200 C 600 260, 840 280, 840 400"></path>
 
-      <!-- Row E: 工程化 -->
-      <div class="row-head" style="border-bottom: none;">
-        <div class="mod-letter">E</div>
-        <div class="mod-name">工程化</div>
+              <!-- design left column: A -> B -> C -> D -> E -->
+              <path class="j-path" id="p-A-B"
+                    d="M 360 680 C 320 770, 400 820, 360 930"></path>
+              <path class="j-path" id="p-B-C"
+                    d="M 360 930 C 410 1020, 320 1070, 360 1180"></path>
+              <path class="j-path" id="p-C-D"
+                    d="M 360 1180 C 320 1270, 400 1320, 360 1430"></path>
+              <path class="j-path" id="p-D-E"
+                    d="M 360 1430 C 410 1520, 320 1570, 360 1680"></path>
+
+              <!-- engineering right column: F -> G -> H -> J (aligned with A B C D) -->
+              <path class="j-path" id="p-F-G"
+                    d="M 840 680 C 880 770, 800 820, 840 930"></path>
+              <path class="j-path" id="p-G-H"
+                    d="M 840 930 C 800 1020, 880 1070, 840 1180"></path>
+              <path class="j-path" id="p-H-J"
+                    d="M 840 1180 C 880 1270, 800 1320, 840 1430"></path>
+
+              <!-- branch label connectors to first cluster -->
+              <path class="j-path" id="p-branch-A"
+                    d="M 360 400 C 360 470, 360 560, 360 680"></path>
+              <path class="j-path" id="p-branch-F"
+                    d="M 840 400 C 840 470, 840 560, 840 680"></path>
+
+              <!-- bottom merge: E and J converge down to END (撒花) -->
+              <path class="j-path" id="p-E-end"
+                    d="M 360 1680 C 360 1740, 480 1770, 600 1810"></path>
+              <path class="j-path" id="p-J-end"
+                    d="M 840 1430 C 840 1560, 720 1700, 600 1810"></path>
+            </g>
+
+            <!-- ===== top END (撒花) ===== -->
+            <g id="end">
+              <circle class="j-anchor j-anchor-end" cx="600" cy="1840" r="44"></circle>
+              <text class="j-anchor-cn" x="600" y="1826">撒 花</text>
+              <text class="j-anchor-text" x="600" y="1848">FINISH ✨</text>
+            </g>
+
+            <!-- ===== branch labels at y=1500 ===== -->
+            <g id="branch-design">
+              <rect class="j-branch-label-bg" x="270" y="426" width="180" height="52" rx="6"></rect>
+              <text class="j-branch-label" x="360" y="407">设 计 篇</text>
+              <text class="j-branch-label" x="360" y="387" style="font-size:11px;font-family:'JetBrains Mono',monospace;font-weight:600;letter-spacing:.06em;fill:var(--ink-mute);">15 篇 · A → E <tspan class="j-arrow">→</tspan></text>
+            </g>
+            <g id="branch-eng">
+              <rect class="j-branch-label-bg" x="750" y="426" width="180" height="52" rx="6"></rect>
+              <text class="j-branch-label" x="840" y="407">工 程 篇</text>
+              <text class="j-branch-label" x="840" y="387" style="font-size:11px;font-family:'JetBrains Mono',monospace;font-weight:600;letter-spacing:.06em;fill:var(--ink-mute);">13 篇 · F → J <tspan class="j-arrow">→</tspan></text>
+            </g>
+
+            <!-- ===== START anchor ===== -->
+            <g id="start">
+              <circle class="j-anchor" cx="600" cy="180" r="48"></circle>
+              <text class="j-anchor-cn" x="600" y="165">你在这里</text>
+              <text class="j-anchor-text" x="600" y="188">START · 00</text>
+            </g>
+
+            <!-- ============================================
+                 CLUSTER GROUPS
+                 each cluster: dashed capsule + banner + nodes
+                 =========================================== -->
+
+            <!-- A · 单元素与组件 (4 nodes, design column) -->
+            <g class="j-cluster" data-mod="A" transform="translate(360 680)">
+              <rect class="j-cluster-bg" x="-200" y="-44" width="400" height="88" rx="48"></rect>
+              <!-- banner pill -->
+              <g transform="translate(-200 -68) rotate(-1.5)">
+                <rect class="j-cluster-banner" x="0" y="0" width="220" height="26" rx="13"></rect>
+                <text class="j-cluster-banner-text" x="14" y="17"><tspan class="j-cluster-banner-key">A</tspan> · 单元素与组件</text>
+              </g>
+              <!-- nodes: A0 A1 A2 A3 spaced ~84px -->
+              <g class="j-node" data-code="A0" data-href="basics-figma.html" data-title="三件套 · HTML / CSS / JS" data-tier="入门" transform="translate(-126 0)">
+                <g class="j-node-inner">
+                  <circle class="j-node-circle" r="22"></circle>
+                  <text class="j-node-text">A0</text>
+                  <circle class="j-node-check" cx="16" cy="14" r="6"></circle>
+                  <path class="j-node-check-tick" d="M 13 14 L 15.5 16.5 L 19 13"></path>
+                </g>
+              </g>
+              <g class="j-node" data-code="A1" data-href="box-figma.html" data-title="盒子 · Auto Layout" data-tier="基础" data-recommend="1" transform="translate(-42 0)">
+                <g class="j-node-inner">
+                  <circle class="j-node-circle" r="22"></circle>
+                  <text class="j-node-text">A1</text>
+                  <circle class="j-node-check" cx="16" cy="14" r="6"></circle>
+                  <path class="j-node-check-tick" d="M 13 14 L 15.5 16.5 L 19 13"></path>
+                </g>
+              </g>
+              <g class="j-node" data-code="A2" data-href="components-figma.html" data-title="组件 · Variants & Props" data-tier="基础" transform="translate(42 0)">
+                <g class="j-node-inner">
+                  <circle class="j-node-circle" r="22"></circle>
+                  <text class="j-node-text">A2</text>
+                  <circle class="j-node-check" cx="16" cy="14" r="6"></circle>
+                  <path class="j-node-check-tick" d="M 13 14 L 15.5 16.5 L 19 13"></path>
+                </g>
+              </g>
+              <g class="j-node" data-code="A3" data-href="button-system-figma.html" data-title="Button System · 组件演化" data-tier="进阶" transform="translate(126 0)">
+                <g class="j-node-inner">
+                  <circle class="j-node-circle" r="22"></circle>
+                  <text class="j-node-text">A3</text>
+                  <circle class="j-node-check" cx="16" cy="14" r="6"></circle>
+                  <path class="j-node-check-tick" d="M 13 14 L 15.5 16.5 L 19 13"></path>
+                </g>
+              </g>
+            </g>
+
+            <!-- B · 多组件协作 (3 nodes) -->
+            <g class="j-cluster" data-mod="B" transform="translate(360 930)">
+              <rect class="j-cluster-bg" x="-160" y="-44" width="320" height="88" rx="48"></rect>
+              <g transform="translate(-160 -68) rotate(1.2)">
+                <rect class="j-cluster-banner" x="0" y="0" width="206" height="26" rx="13"></rect>
+                <text class="j-cluster-banner-text" x="14" y="17"><tspan class="j-cluster-banner-key">B</tspan> · 多组件协作</text>
+              </g>
+              <g class="j-node" data-code="B0" data-href="page-figma.html" data-title="拼页面 · 组件嵌套" data-tier="入门" transform="translate(-84 0)">
+                <g class="j-node-inner">
+                  <circle class="j-node-circle" r="22"></circle>
+                  <text class="j-node-text">B0</text>
+                  <circle class="j-node-check" cx="16" cy="14" r="6"></circle>
+                  <path class="j-node-check-tick" d="M 13 14 L 15.5 16.5 L 19 13"></path>
+                </g>
+              </g>
+              <g class="j-node" data-code="B1" data-href="data-flow-figma.html" data-title="数据流 · 概念" data-tier="基础" data-recommend="1" transform="translate(0 0)">
+                <g class="j-node-inner">
+                  <circle class="j-node-circle" r="22"></circle>
+                  <text class="j-node-text">B1</text>
+                  <circle class="j-node-check" cx="16" cy="14" r="6"></circle>
+                  <path class="j-node-check-tick" d="M 13 14 L 15.5 16.5 L 19 13"></path>
+                </g>
+              </g>
+              <g class="j-node" data-code="B2" data-href="data-flow-cases-figma.html" data-title="数据流 · 实战 5 案例" data-tier="进阶" transform="translate(84 0)">
+                <g class="j-node-inner">
+                  <circle class="j-node-circle" r="22"></circle>
+                  <text class="j-node-text">B2</text>
+                  <circle class="j-node-check" cx="16" cy="14" r="6"></circle>
+                  <path class="j-node-check-tick" d="M 13 14 L 15.5 16.5 L 19 13"></path>
+                </g>
+              </g>
+            </g>
+
+            <!-- C · 视觉系统 (3 nodes) -->
+            <g class="j-cluster" data-mod="C" transform="translate(360 1180)">
+              <rect class="j-cluster-bg" x="-160" y="-44" width="320" height="88" rx="48"></rect>
+              <g transform="translate(-160 -68) rotate(-1)">
+                <rect class="j-cluster-banner" x="0" y="0" width="180" height="26" rx="13"></rect>
+                <text class="j-cluster-banner-text" x="14" y="17"><tspan class="j-cluster-banner-key">C</tspan> · 视觉系统</text>
+              </g>
+              <g class="j-node" data-code="C0" data-href="tokens-figma.html" data-title="Variables / Tokens 入门" data-tier="入门" transform="translate(-84 0)">
+                <g class="j-node-inner">
+                  <circle class="j-node-circle" r="22"></circle>
+                  <text class="j-node-text">C0</text>
+                  <circle class="j-node-check" cx="16" cy="14" r="6"></circle>
+                  <path class="j-node-check-tick" d="M 13 14 L 15.5 16.5 L 19 13"></path>
+                </g>
+              </g>
+              <g class="j-node" data-code="C1" data-href="colors-type-figma.html" data-title="Colors / Type / Spacing" data-tier="基础" transform="translate(0 0)">
+                <g class="j-node-inner">
+                  <circle class="j-node-circle" r="22"></circle>
+                  <text class="j-node-text">C1</text>
+                  <circle class="j-node-check" cx="16" cy="14" r="6"></circle>
+                  <path class="j-node-check-tick" d="M 13 14 L 15.5 16.5 L 19 13"></path>
+                </g>
+              </g>
+              <g class="j-node" data-code="C2" data-href="theme-switch-figma.html" data-title="Theme 切换实战" data-tier="进阶" transform="translate(84 0)">
+                <g class="j-node-inner">
+                  <circle class="j-node-circle" r="22"></circle>
+                  <text class="j-node-text">C2</text>
+                  <circle class="j-node-check" cx="16" cy="14" r="6"></circle>
+                  <path class="j-node-check-tick" d="M 13 14 L 15.5 16.5 L 19 13"></path>
+                </g>
+              </g>
+            </g>
+
+            <!-- D · 状态与交互 (3 nodes) -->
+            <g class="j-cluster" data-mod="D" transform="translate(360 1430)">
+              <rect class="j-cluster-bg" x="-160" y="-44" width="320" height="88" rx="48"></rect>
+              <g transform="translate(-160 -68) rotate(1.5)">
+                <rect class="j-cluster-banner" x="0" y="0" width="200" height="26" rx="13"></rect>
+                <text class="j-cluster-banner-text" x="14" y="17"><tspan class="j-cluster-banner-key">D</tspan> · 状态与交互</text>
+              </g>
+              <g class="j-node" data-code="D0" data-href="states-figma.html" data-title="视觉态 · 看得见的状态" data-tier="入门" transform="translate(-84 0)">
+                <g class="j-node-inner">
+                  <circle class="j-node-circle" r="22"></circle>
+                  <text class="j-node-text">D0</text>
+                  <circle class="j-node-check" cx="16" cy="14" r="6"></circle>
+                  <path class="j-node-check-tick" d="M 13 14 L 15.5 16.5 L 19 13"></path>
+                </g>
+              </g>
+              <g class="j-node" data-code="D1" data-href="interactive-figma.html" data-title="Interactive Component" data-tier="基础" transform="translate(0 0)">
+                <g class="j-node-inner">
+                  <circle class="j-node-circle" r="22"></circle>
+                  <text class="j-node-text">D1</text>
+                  <circle class="j-node-check" cx="16" cy="14" r="6"></circle>
+                  <path class="j-node-check-tick" d="M 13 14 L 15.5 16.5 L 19 13"></path>
+                </g>
+              </g>
+              <g class="j-node" data-code="D2" data-href="transition-figma.html" data-title="动画 · Transition" data-tier="进阶" transform="translate(84 0)">
+                <g class="j-node-inner">
+                  <circle class="j-node-circle" r="22"></circle>
+                  <text class="j-node-text">D2</text>
+                  <circle class="j-node-check" cx="16" cy="14" r="6"></circle>
+                  <path class="j-node-check-tick" d="M 13 14 L 15.5 16.5 L 19 13"></path>
+                </g>
+              </g>
+            </g>
+
+            <!-- E · 工程化 (2 nodes) -->
+            <g class="j-cluster" data-mod="E" transform="translate(360 1680)">
+              <rect class="j-cluster-bg" x="-130" y="-44" width="260" height="88" rx="48"></rect>
+              <g transform="translate(-130 -68) rotate(-1.2)">
+                <rect class="j-cluster-banner" x="0" y="0" width="160" height="26" rx="13"></rect>
+                <text class="j-cluster-banner-text" x="14" y="17"><tspan class="j-cluster-banner-key">E</tspan> · 工程化</text>
+              </g>
+              <g class="j-node" data-code="E0" data-href="naming-figma.html" data-title="命名 / 图层规范" data-tier="入门" transform="translate(-42 0)">
+                <g class="j-node-inner">
+                  <circle class="j-node-circle" r="22"></circle>
+                  <text class="j-node-text">E0</text>
+                  <circle class="j-node-check" cx="16" cy="14" r="6"></circle>
+                  <path class="j-node-check-tick" d="M 13 14 L 15.5 16.5 L 19 13"></path>
+                </g>
+              </g>
+              <g class="j-node" data-code="E2" data-href="handoff-figma.html" data-title="Handoff & 设计系统" data-tier="进阶" transform="translate(42 0)">
+                <g class="j-node-inner">
+                  <circle class="j-node-circle" r="22"></circle>
+                  <text class="j-node-text">E2</text>
+                  <circle class="j-node-check" cx="16" cy="14" r="6"></circle>
+                  <path class="j-node-check-tick" d="M 13 14 L 15.5 16.5 L 19 13"></path>
+                </g>
+              </g>
+            </g>
+
+            <!-- F · 工程入门 (4 nodes, eng column) -->
+            <g class="j-cluster" data-mod="F" transform="translate(840 680)">
+              <rect class="j-cluster-bg" x="-200" y="-44" width="400" height="88" rx="48"></rect>
+              <g transform="translate(-200 -68) rotate(1)">
+                <rect class="j-cluster-banner" x="0" y="0" width="216" height="26" rx="13"></rect>
+                <text class="j-cluster-banner-text" x="14" y="17"><tspan class="j-cluster-banner-key">F</tspan> · 工程入门 · 跑不起来</text>
+              </g>
+              <g class="j-node" data-code="F1" data-href="f1-npm-figma.html" data-title="npm 是什么" data-tier="工程" transform="translate(-126 0)">
+                <g class="j-node-inner">
+                  <circle class="j-node-circle" r="22"></circle>
+                  <text class="j-node-text">F1</text>
+                  <circle class="j-node-check" cx="16" cy="14" r="6"></circle>
+                  <path class="j-node-check-tick" d="M 13 14 L 15.5 16.5 L 19 13"></path>
+                </g>
+              </g>
+              <g class="j-node" data-code="F2" data-href="f2-import-figma.html" data-title="import 与路径" data-tier="工程" transform="translate(-42 0)">
+                <g class="j-node-inner">
+                  <circle class="j-node-circle" r="22"></circle>
+                  <text class="j-node-text">F2</text>
+                  <circle class="j-node-check" cx="16" cy="14" r="6"></circle>
+                  <path class="j-node-check-tick" d="M 13 14 L 15.5 16.5 L 19 13"></path>
+                </g>
+              </g>
+              <g class="j-node" data-code="F3" data-href="f3-dev-build-figma.html" data-title="dev vs build" data-tier="工程" transform="translate(42 0)">
+                <g class="j-node-inner">
+                  <circle class="j-node-circle" r="22"></circle>
+                  <text class="j-node-text">F3</text>
+                  <circle class="j-node-check" cx="16" cy="14" r="6"></circle>
+                  <path class="j-node-check-tick" d="M 13 14 L 15.5 16.5 L 19 13"></path>
+                </g>
+              </g>
+              <g class="j-node" data-code="F4" data-href="f4-hidden-files-figma.html" data-title="看不见的文件" data-tier="工程" transform="translate(126 0)">
+                <g class="j-node-inner">
+                  <circle class="j-node-circle" r="22"></circle>
+                  <text class="j-node-text">F4</text>
+                  <circle class="j-node-check" cx="16" cy="14" r="6"></circle>
+                  <path class="j-node-check-tick" d="M 13 14 L 15.5 16.5 L 19 13"></path>
+                </g>
+              </g>
+            </g>
+
+            <!-- G · 版本控制 (3 nodes) -->
+            <g class="j-cluster" data-mod="G" transform="translate(840 930)">
+              <rect class="j-cluster-bg" x="-160" y="-44" width="320" height="88" rx="48"></rect>
+              <g transform="translate(-160 -68) rotate(-1.4)">
+                <rect class="j-cluster-banner" x="0" y="0" width="226" height="26" rx="13"></rect>
+                <text class="j-cluster-banner-text" x="14" y="17"><tspan class="j-cluster-banner-key">G</tspan> · 版本控制 · AI 写完之后</text>
+              </g>
+              <g class="j-node" data-code="G1" data-href="g1-commit-branch-figma.html" data-title="commit / branch" data-tier="工程" transform="translate(-84 0)">
+                <g class="j-node-inner">
+                  <circle class="j-node-circle" r="22"></circle>
+                  <text class="j-node-text">G1</text>
+                  <circle class="j-node-check" cx="16" cy="14" r="6"></circle>
+                  <path class="j-node-check-tick" d="M 13 14 L 15.5 16.5 L 19 13"></path>
+                </g>
+              </g>
+              <g class="j-node" data-code="G2" data-href="g2-conflict-figma.html" data-title="冲突怎么解" data-tier="工程" transform="translate(0 0)">
+                <g class="j-node-inner">
+                  <circle class="j-node-circle" r="22"></circle>
+                  <text class="j-node-text">G2</text>
+                  <circle class="j-node-check" cx="16" cy="14" r="6"></circle>
+                  <path class="j-node-check-tick" d="M 13 14 L 15.5 16.5 L 19 13"></path>
+                </g>
+              </g>
+              <g class="j-node" data-code="G3" data-href="g3-pr-review-figma.html" data-title="PR / Review" data-tier="工程" transform="translate(84 0)">
+                <g class="j-node-inner">
+                  <circle class="j-node-circle" r="22"></circle>
+                  <text class="j-node-text">G3</text>
+                  <circle class="j-node-check" cx="16" cy="14" r="6"></circle>
+                  <path class="j-node-check-tick" d="M 13 14 L 15.5 16.5 L 19 13"></path>
+                </g>
+              </g>
+            </g>
+
+            <!-- H · 浏览器调试 (3 nodes) -->
+            <g class="j-cluster" data-mod="H" transform="translate(840 1180)">
+              <rect class="j-cluster-bg" x="-160" y="-44" width="320" height="88" rx="48"></rect>
+              <g transform="translate(-160 -68) rotate(1.4)">
+                <rect class="j-cluster-banner" x="0" y="0" width="240" height="26" rx="13"></rect>
+                <text class="j-cluster-banner-text" x="14" y="17"><tspan class="j-cluster-banner-key">H</tspan> · 浏览器调试 · 不长那样</text>
+              </g>
+              <g class="j-node" data-code="H1" data-href="h1-devtools-elements-figma.html" data-title="DevTools Elements" data-tier="工程" transform="translate(-84 0)">
+                <g class="j-node-inner">
+                  <circle class="j-node-circle" r="22"></circle>
+                  <text class="j-node-text">H1</text>
+                  <circle class="j-node-check" cx="16" cy="14" r="6"></circle>
+                  <path class="j-node-check-tick" d="M 13 14 L 15.5 16.5 L 19 13"></path>
+                </g>
+              </g>
+              <g class="j-node" data-code="H2" data-href="h2-console-error-figma.html" data-title="Console 报错" data-tier="工程" transform="translate(0 0)">
+                <g class="j-node-inner">
+                  <circle class="j-node-circle" r="22"></circle>
+                  <text class="j-node-text">H2</text>
+                  <circle class="j-node-check" cx="16" cy="14" r="6"></circle>
+                  <path class="j-node-check-tick" d="M 13 14 L 15.5 16.5 L 19 13"></path>
+                </g>
+              </g>
+              <g class="j-node" data-code="H3" data-href="h3-network-figma.html" data-title="Network 面板" data-tier="工程" transform="translate(84 0)">
+                <g class="j-node-inner">
+                  <circle class="j-node-circle" r="22"></circle>
+                  <text class="j-node-text">H3</text>
+                  <circle class="j-node-check" cx="16" cy="14" r="6"></circle>
+                  <path class="j-node-check-tick" d="M 13 14 L 15.5 16.5 L 19 13"></path>
+                </g>
+              </g>
+            </g>
+
+            <!-- J · 上线 (3 nodes) -->
+            <g class="j-cluster" data-mod="J" transform="translate(840 1430)">
+              <rect class="j-cluster-bg" x="-160" y="-44" width="320" height="88" rx="48"></rect>
+              <g transform="translate(-160 -68) rotate(-1)">
+                <rect class="j-cluster-banner" x="0" y="0" width="200" height="26" rx="13"></rect>
+                <text class="j-cluster-banner-text" x="14" y="17"><tspan class="j-cluster-banner-key">J</tspan> · 上线 · 让别人看到</text>
+              </g>
+              <g class="j-node" data-code="J1" data-href="j1-dns-figma.html" data-title="DNS / 域名" data-tier="工程" transform="translate(-84 0)">
+                <g class="j-node-inner">
+                  <circle class="j-node-circle" r="22"></circle>
+                  <text class="j-node-text">J1</text>
+                  <circle class="j-node-check" cx="16" cy="14" r="6"></circle>
+                  <path class="j-node-check-tick" d="M 13 14 L 15.5 16.5 L 19 13"></path>
+                </g>
+              </g>
+              <g class="j-node" data-code="J2" data-href="j2-vercel-figma.html" data-title="Vercel 部署" data-tier="工程" transform="translate(0 0)">
+                <g class="j-node-inner">
+                  <circle class="j-node-circle" r="22"></circle>
+                  <text class="j-node-text">J2</text>
+                  <circle class="j-node-check" cx="16" cy="14" r="6"></circle>
+                  <path class="j-node-check-tick" d="M 13 14 L 15.5 16.5 L 19 13"></path>
+                </g>
+              </g>
+              <g class="j-node" data-code="J3" data-href="j3-cache-cdn-figma.html" data-title="缓存 / CDN" data-tier="工程" transform="translate(84 0)">
+                <g class="j-node-inner">
+                  <circle class="j-node-circle" r="22"></circle>
+                  <text class="j-node-text">J3</text>
+                  <circle class="j-node-check" cx="16" cy="14" r="6"></circle>
+                  <path class="j-node-check-tick" d="M 13 14 L 15.5 16.5 L 19 13"></path>
+                </g>
+              </g>
+            </g>
+
+            <!-- ===== Hand-drawn annotations ===== -->
+            <!-- 推荐起点 → A1 -->
+            <g id="anno-recommend">
+              <text class="j-anno-text" x="80" y="1244" transform="rotate(-3 80 1244)">★ 推荐起点</text>
+              <text class="j-anno-en" x="80" y="1262" transform="rotate(-3 80 1262)">SUGGESTED</text>
+              <path class="j-anno-line" d="M 188 1248 C 230 1248, 260 1230, 304 1222"></path>
+              <!-- arrowhead -->
+              <path d="M 304 1222 L 296 1216 M 304 1222 L 298 1228" stroke="var(--accent)" stroke-width="1.4" fill="none" stroke-linecap="round"></path>
+            </g>
+
+            <!-- START 标 -->
+            <g id="anno-start">
+              <text class="j-anno-text" x="780" y="1736" transform="rotate(2 780 1736)">↘ 你在这里</text>
+              <text class="j-anno-en" x="780" y="1754" transform="rotate(2 780 1754)">YOU ARE HERE</text>
+              <path class="j-anno-line" d="M 770 1722 C 730 1716, 690 1718, 654 1720"></path>
+              <path d="M 654 1720 L 662 1714 M 654 1720 L 662 1726" stroke="var(--accent)" stroke-width="1.4" fill="none" stroke-linecap="round"></path>
+            </g>
+
+            <!-- END 标 -->
+            <g id="anno-end">
+              <text class="j-anno-text" x="900" y="60" transform="rotate(-2 900 60)">→ 上线撒花！</text>
+              <text class="j-anno-en" x="900" y="78" transform="rotate(-2 900 78)">SHIPPED</text>
+              <path class="j-anno-line" d="M 880 56 C 800 50, 720 50, 650 58"></path>
+              <path d="M 650 58 L 660 53 M 650 58 L 658 64" stroke="var(--accent)" stroke-width="1.4" fill="none" stroke-linecap="round"></path>
+            </g>
+
+            <!-- Module count side notes (subtle) -->
+            <text x="100" y="500" class="j-anno-en" transform="rotate(-90 100 500)" style="fill:var(--ink-mute);">DESIGN ⟶  A · B · C · D · E</text>
+            <text x="1100" y="500" class="j-anno-en" transform="rotate(90 1100 500)" style="fill:var(--ink-mute);">ENGINEERING ⟶  F · G · H · J</text>
+
+            <!-- bottom faint figure scale -->
+            <g transform="translate(50 1840)">
+              <line x1="0" y1="0" x2="80" y2="0" stroke="var(--ink-mute)" stroke-width="1"></line>
+              <line x1="0" y1="-4" x2="0" y2="4" stroke="var(--ink-mute)" stroke-width="1"></line>
+              <line x1="80" y1="-4" x2="80" y2="4" stroke="var(--ink-mute)" stroke-width="1"></line>
+              <text x="40" y="20" text-anchor="middle" class="j-anno-en" style="fill:var(--ink-mute);">~ 1 NODE</text>
+            </g>
+            <text x="1150" y="1856" text-anchor="end" class="j-anno-en" style="fill:var(--ink-mute);">DCL · MAP v1.0 · 2026 · ƒ</text>
+          </svg>
+
+          <!-- HTML tooltip (overlay) -->
+          <div class="j-tooltip" id="j-tip" role="tooltip" aria-hidden="true">
+            <div class="j-tooltip-code" id="j-tip-code">A0</div>
+            <div class="j-tooltip-title" id="j-tip-title">三件套 · HTML / CSS / JS</div>
+            <div class="j-tooltip-meta">
+              <span class="j-tooltip-tier" id="j-tip-tier">入门</span>
+              <span class="j-tooltip-go">继续阅读 →</span>
+            </div>
+          </div>
+        </div>
+
+        <aside class="journey-panel" aria-label="进度与筛选">
+          <div class="jp-block">
+            <div class="jp-label">PROGRESS</div>
+            <div class="jp-progress-num">
+              <span class="jp-cur" id="jp-cur">0</span><span class="jp-tot"> / 28</span>
+            </div>
+            <div class="jp-bar" id="jp-bar"><!-- 28 ticks injected by JS --></div>
+          </div>
+
+          <div class="jp-block jp-filters" role="group" aria-label="过滤">
+            <button class="jp-filter active" data-filter="all">[ ALL ]<span class="jp-fnum" id="jp-n-all">28</span></button>
+            <button class="jp-filter" data-filter="read">[ 已读 ]<span class="jp-fnum" id="jp-n-read">0</span></button>
+            <button class="jp-filter" data-filter="unread">[ 未读 ]<span class="jp-fnum" id="jp-n-unread">28</span></button>
+          </div>
+
+          <div class="jp-block">
+            <button class="jp-reset" id="jp-reset">↺ 清空已读记录</button>
+          </div>
+
+          <div class="jp-block">
+            <div class="jp-label">LEGEND</div>
+            <div class="jp-legend">
+              <div class="ld"><span class="ld-dot"></span><span>未读节点</span></div>
+              <div class="ld"><span class="ld-dot read"></span><span>已读节点</span></div>
+              <div class="ld" style="margin-top:4px;color:var(--ink-mute);font-size:10px;">点击进文章 · hover 看简介</div>
+            </div>
+          </div>
+        </aside>
       </div>
-      <a class="cell live" href="naming-figma.html" style="border-bottom: none;">
-        <div class="cell-code">E0</div>
-        <div class="cell-title">命名 / 图层规范</div>
-        <div class="cell-status"><span class="dot"></span>已发布</div>
-      </a>
-      <div class="cell intro" style="border-bottom: none; opacity: 0.5;">
-        <div class="cell-code">—</div>
-        <div class="cell-title" style="font-style: italic; color: var(--ink-mute);">无（直接进进阶）</div>
-        <div class="cell-status" style="color: var(--ink-mute);"><span class="dot" style="background:var(--ink-mute);opacity:0.3;"></span>跳过</div>
-      </div>
-      <a class="cell live" href="handoff-figma.html" style="border-bottom: none; border-right: none;">
-        <div class="cell-code">E2</div>
-        <div class="cell-title">Handoff <span class="x">·</span> 设计系统</div>
-        <div class="cell-status"><span class="dot"></span>已发布</div>
-      </a>
     </div>
   </div>
 </section>
 
-<section id="published">
-  <div class="wrap">
-    <div class="section-head">
-      <div>
-        <div class="section-num"><strong>02</strong> / 推荐入口</div>
-        <h2 class="section-title">从这 <span class="em">3 篇</span><br>开始就行。</h2>
-      </div>
-      <p class="section-sub">
-        15 篇里挑 3 篇当起点 —— 单个盒子、单个组件、组件之间怎么对话。
-        这三件事最常踩坑，懂了 AI 才能真的还原你的稿子。<br>
-        其他都在上面路线图矩阵里，按需挑。
-      </p>
-    </div>
-
-    <div class="lineup-grid">
-      <a class="lineup-card" href="box-figma.html">
-        <div class="badges">
-          <span class="badge live">已发布</span>
-          <span class="badge tier">基础</span>
-        </div>
-        <div class="num">01</div>
-        <div class="module-tag"><span class="key">A1</span> · 模块 A · 单元素</div>
-        <div class="en">Box × Auto Layout · Responsive</div>
-        <h3>盒子 <span class="x">×</span> 自动布局</h3>
-        <p class="desc">每个元素都是一个盒子。<strong>content / padding / border / margin</strong> 四件套，对应 Figma Auto Layout 几乎一一对应。含响应式 —— Hug / Fill / Fixed 就是窗口变了谁让步。</p>
-        <div class="meta">
-          <span class="game-tag">游戏 · 拖滑块 + 闯关 6 关</span>
-          <span>≈ 12 分钟</span>
-        </div>
-      </a>
-
-      <a class="lineup-card" href="components-figma.html">
-        <div class="badges">
-          <span class="badge live">已发布</span>
-          <span class="badge tier">基础</span>
-        </div>
-        <div class="num">02</div>
-        <div class="module-tag"><span class="key">A2</span> · 模块 A · 单元素</div>
-        <div class="en">Components · One Button, Many Faces</div>
-        <h3>组件 <span class="x">×</span> Variants &amp; Props</h3>
-        <p class="desc">为什么我做了 <strong>18 个 Variants</strong>，前端说"这只要 4 个 prop"？因为 Variant 不是组件，是组件的某个轴。整页只玩一个按钮 —— 三联动面板贯穿全篇。</p>
-        <div class="meta">
-          <span class="game-tag">游戏 · Figma↔代码 实时联动</span>
-          <span>≈ 12 分钟</span>
-        </div>
-      </a>
-
-      <a class="lineup-card" href="data-flow-figma.html">
-        <div class="badges">
-          <span class="badge live">已发布</span>
-          <span class="badge tier">基础</span>
-        </div>
-        <div class="num">04</div>
-        <div class="module-tag"><span class="key">B1</span> · 模块 B · 多组件</div>
-        <div class="en">Component Tree · Who Tells Whom What</div>
-        <h3>数据流 <span class="x">·</span> 概念</h3>
-        <p class="desc"><strong>建立词汇表。</strong>做完一个组件，下一关是组件们之间怎么对话。父怎么传给子、状态归谁管、主题怎么覆盖 —— 8 节讲清 Props / State / Context / Slot 等核心概念。</p>
-        <div class="meta">
-          <span class="game-tag">游戏 · 一棵活的组件树</span>
-          <span>≈ 12 分钟</span>
-        </div>
-      </a>
-    </div>
-  </div>
-</section>
-
-<section id="ongoing">
-  <div class="wrap">
-    <div class="section-head">
-      <div>
-        <div class="section-num"><strong>03</strong> / 未完待续</div>
-        <h2 class="section-title">还会<br><span class="em">继续更新</span>。</h2>
-      </div>
-      <p class="section-sub">
-        5 模块 × 3 层 主线 15 篇都上线了 —— 但不是终点。<br>
-        有新主题就加进路线图。想看什么，<strong>下面留有联系方式</strong>。
-      </p>
-    </div>
-
-    <div class="finale-banner">
-      <div class="finale-corner finale-tl"></div>
-      <div class="finale-corner finale-tr"></div>
-      <div class="finale-corner finale-bl"></div>
-      <div class="finale-corner finale-br"></div>
-
-      <div class="finale-badge">
-        <span class="finale-check">→</span>
-        <span class="finale-badge-text">TO BE CONTINUED</span>
-      </div>
-
-      <h3 class="finale-title">
-        未完 <span class="em">待续</span> <span class="confetti">…</span>
-      </h3>
-
-      <p class="finale-blurb">
-        2026 立项以来，<strong>5 模块 × 3 层难度</strong> 主线 15 篇都已上线。
-        但代码侧还有更多想讲的 —— 微动效、国际化、性能、AI 协作 ……
-        会作为<strong>外传</strong>陆续加进路线图。
-      </p>
-
-      <div class="finale-stats">
-        <div class="finale-stat">
-          <div class="finale-stat-num">15</div>
-          <div class="finale-stat-label">篇 主线</div>
-        </div>
-        <div class="finale-stat">
-          <div class="finale-stat-num">5</div>
-          <div class="finale-stat-label">个模块</div>
-        </div>
-        <div class="finale-stat">
-          <div class="finale-stat-num">50<span class="finale-stat-pct">+</span></div>
-          <div class="finale-stat-label">个小游戏</div>
-        </div>
-        <div class="finale-stat">
-          <div class="finale-stat-num">∞</div>
-          <div class="finale-stat-label">扩展中</div>
-        </div>
-      </div>
-
-      <div class="finale-modules">
-        <span class="finale-mod"><span class="finale-mod-key">A</span>单元素与组件 · 4 篇</span>
-        <span class="finale-mod"><span class="finale-mod-key">B</span>多组件协作 · 3 篇</span>
-        <span class="finale-mod"><span class="finale-mod-key">C</span>视觉系统 · 3 篇</span>
-        <span class="finale-mod"><span class="finale-mod-key">D</span>状态与交互 · 3 篇</span>
-        <span class="finale-mod"><span class="finale-mod-key">E</span>工程化 · 2 篇</span>
-      </div>
-
-      <p class="finale-footnote">
-        看到这里？<strong>想看什么主题，告诉我</strong> —— 把它加进路线图。
-        <span class="em">·</span> 联系方式在底部 <span class="confetti">↓</span>
-      </p>
-    </div>
-  </div>
-</section>
 
 <footer>
   <div class="wrap">
@@ -1200,15 +1596,15 @@
 </footer>
 
 
-<!-- 路线图弹窗 -->
+<!-- 路线图弹窗 (9 模块) -->
 <div class="rm-modal" id="rm-modal" hidden>
   <div class="rm-backdrop" data-rm-close></div>
   <div class="rm-dialog" role="dialog" aria-label="完整路线图">
     <button class="rm-close" data-rm-close aria-label="关闭">✕</button>
     <div class="rm-header">
       <div class="rm-tag">完整路线图 · ROADMAP</div>
-      <h3 class="rm-title">5 模块 <span class="rm-em">×</span> 3 层难度</h3>
-      <p class="rm-sub">15 篇 · 未完待续 →</p>
+      <h3 class="rm-title">9 模块 <span class="rm-em">·</span> 28 篇</h3>
+      <p class="rm-sub">设计篇 15 · 工程篇 13 · 全部上线</p>
     </div>
     <div class="rm-body">
       <div class="rm-mod">
@@ -1251,6 +1647,39 @@
           <a href="handoff-figma.html" class="rm-cell"><span class="rm-cell-code">E2</span><span class="rm-cell-name">Handoff &amp; 设计系统</span><span class="rm-cell-tier">进阶</span></a>
         </div>
       </div>
+      <div class="rm-mod">
+        <div class="rm-mod-key">F · 工程入门 · 跑不起来</div>
+        <div class="rm-mod-list">
+          <a href="f1-npm-figma.html" class="rm-cell"><span class="rm-cell-code">F1</span><span class="rm-cell-name">npm 是什么</span><span class="rm-cell-tier">工程</span></a>
+          <a href="f2-import-figma.html" class="rm-cell"><span class="rm-cell-code">F2</span><span class="rm-cell-name">import 与路径</span><span class="rm-cell-tier">工程</span></a>
+          <a href="f3-dev-build-figma.html" class="rm-cell"><span class="rm-cell-code">F3</span><span class="rm-cell-name">dev vs build</span><span class="rm-cell-tier">工程</span></a>
+          <a href="f4-hidden-files-figma.html" class="rm-cell"><span class="rm-cell-code">F4</span><span class="rm-cell-name">看不见的文件</span><span class="rm-cell-tier">工程</span></a>
+        </div>
+      </div>
+      <div class="rm-mod">
+        <div class="rm-mod-key">G · 版本控制 · AI 写完之后</div>
+        <div class="rm-mod-list">
+          <a href="g1-commit-branch-figma.html" class="rm-cell"><span class="rm-cell-code">G1</span><span class="rm-cell-name">commit / branch</span><span class="rm-cell-tier">工程</span></a>
+          <a href="g2-conflict-figma.html" class="rm-cell"><span class="rm-cell-code">G2</span><span class="rm-cell-name">冲突怎么解</span><span class="rm-cell-tier">工程</span></a>
+          <a href="g3-pr-review-figma.html" class="rm-cell"><span class="rm-cell-code">G3</span><span class="rm-cell-name">PR / Review</span><span class="rm-cell-tier">工程</span></a>
+        </div>
+      </div>
+      <div class="rm-mod">
+        <div class="rm-mod-key">H · 浏览器调试 · 不长那样</div>
+        <div class="rm-mod-list">
+          <a href="h1-devtools-elements-figma.html" class="rm-cell"><span class="rm-cell-code">H1</span><span class="rm-cell-name">DevTools Elements</span><span class="rm-cell-tier">工程</span></a>
+          <a href="h2-console-error-figma.html" class="rm-cell"><span class="rm-cell-code">H2</span><span class="rm-cell-name">Console 报错</span><span class="rm-cell-tier">工程</span></a>
+          <a href="h3-network-figma.html" class="rm-cell"><span class="rm-cell-code">H3</span><span class="rm-cell-name">Network 面板</span><span class="rm-cell-tier">工程</span></a>
+        </div>
+      </div>
+      <div class="rm-mod">
+        <div class="rm-mod-key">J · 上线 · 让别人看到</div>
+        <div class="rm-mod-list">
+          <a href="j1-dns-figma.html" class="rm-cell"><span class="rm-cell-code">J1</span><span class="rm-cell-name">DNS / 域名</span><span class="rm-cell-tier">工程</span></a>
+          <a href="j2-vercel-figma.html" class="rm-cell"><span class="rm-cell-code">J2</span><span class="rm-cell-name">Vercel 部署</span><span class="rm-cell-tier">工程</span></a>
+          <a href="j3-cache-cdn-figma.html" class="rm-cell"><span class="rm-cell-code">J3</span><span class="rm-cell-name">缓存 / CDN</span><span class="rm-cell-tier">工程</span></a>
+        </div>
+      </div>
     </div>
     <div class="rm-footer">
       <span>未完待续 · 想看什么主题加我聊</span>
@@ -1258,7 +1687,11 @@
     </div>
   </div>
 </div>
+
 <script>
+/* ========================================================
+   Roadmap modal
+   ======================================================== */
 (function(){
   var modal = document.getElementById('rm-modal');
   if (!modal) return;
@@ -1269,6 +1702,342 @@
   openBtns.forEach(function(b){ b.addEventListener('click', function(e){ e.preventDefault(); open(); }); });
   closeBtns.forEach(function(b){ b.addEventListener('click', close); });
   document.addEventListener('keydown', function(e){ if (e.key === 'Escape' && !modal.hidden) close(); });
+})();
+
+/* ========================================================
+   Journey map: progress, filter, tooltip, click-through
+   ======================================================== */
+(function(){
+  var STORAGE_KEY = 'dcl-read-articles';
+  var TOTAL = 28;
+
+  var svg = document.getElementById('journey-svg');
+  var host = document.getElementById('j-host');
+  var tip = document.getElementById('j-tip');
+  var tipCode = document.getElementById('j-tip-code');
+  var tipTitle = document.getElementById('j-tip-title');
+  var tipTier = document.getElementById('j-tip-tier');
+  if (!svg || !host || !tip) return;
+
+  var nodes = Array.prototype.slice.call(svg.querySelectorAll('.j-node'));
+
+  /* relationships: which path turns "read" when which clusters fully visited */
+  // simpler: each path becomes "read" when at least one node in the *next* cluster up the chain has been read
+  // path id -> cluster code that triggers it
+  var pathTrigger = {
+    'p-start-design': 'A',
+    'p-start-eng':    'F',
+    'p-branch-A':     'A',
+    'p-branch-F':     'F',
+    'p-A-B':          'B',
+    'p-B-C':          'C',
+    'p-C-D':          'D',
+    'p-D-E':          'E',
+    'p-F-G':          'G',
+    'p-G-H':          'H',
+    'p-H-J':          'J',
+    'p-E-end':        'E',
+    'p-J-end':        'J'
+  };
+
+  /* ---------- read-state storage ---------- */
+  function loadRead() {
+    try {
+      var raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return [];
+      var arr = JSON.parse(raw);
+      return Array.isArray(arr) ? arr : [];
+    } catch (e) { return []; }
+  }
+  function saveRead(arr) {
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(arr)); } catch (e) {}
+  }
+  function markRead(code) {
+    var arr = loadRead();
+    if (arr.indexOf(code) === -1) {
+      arr.push(code);
+      saveRead(arr);
+    }
+  }
+
+  /* ---------- render state to DOM ---------- */
+  function render() {
+    var read = loadRead();
+    var readSet = {};
+    read.forEach(function(c){ readSet[c] = true; });
+
+    /* nodes */
+    nodes.forEach(function(n){
+      var code = n.getAttribute('data-code');
+      if (readSet[code]) n.classList.add('read');
+      else n.classList.remove('read');
+    });
+
+    /* paths: read if at least one node downstream/upstream ish */
+    // for a path triggered by cluster X, mark read if any node with code starting with X is read
+    Object.keys(pathTrigger).forEach(function(pid){
+      var trigger = pathTrigger[pid];
+      var hit = false;
+      for (var k in readSet) { if (readSet[k] && k.charAt(0) === trigger) { hit = true; break; } }
+      var p = document.getElementById(pid);
+      if (p) p.classList.toggle('read', hit);
+    });
+
+    /* progress numbers */
+    var n = read.length;
+    var cur = document.getElementById('jp-cur'); if (cur) cur.textContent = String(n);
+    var nAll = document.getElementById('jp-n-all'); if (nAll) nAll.textContent = String(TOTAL);
+    var nRd = document.getElementById('jp-n-read'); if (nRd) nRd.textContent = String(n);
+    var nUn = document.getElementById('jp-n-unread'); if (nUn) nUn.textContent = String(TOTAL - n);
+
+    /* progress bar ticks */
+    renderBar(n);
+  }
+
+  function renderBar(n) {
+    var bar = document.getElementById('jp-bar');
+    if (!bar) return;
+    if (bar.childElementCount !== TOTAL) {
+      bar.innerHTML = '';
+      for (var i = 0; i < TOTAL; i++) {
+        var t = document.createElement('span');
+        t.className = 'jp-tick';
+        bar.appendChild(t);
+      }
+    }
+    var ticks = bar.children;
+    for (var j = 0; j < ticks.length; j++) {
+      ticks[j].classList.toggle('on', j < n);
+    }
+  }
+
+  /* ---------- filters ---------- */
+  var filterBtns = Array.prototype.slice.call(document.querySelectorAll('.jp-filter'));
+  function setFilter(mode) {
+    svg.classList.remove('filter-all', 'filter-read', 'filter-unread');
+    if (mode === 'read') svg.classList.add('filter-read');
+    else if (mode === 'unread') svg.classList.add('filter-unread');
+    filterBtns.forEach(function(b){ b.classList.toggle('active', b.getAttribute('data-filter') === mode); });
+  }
+  filterBtns.forEach(function(b){
+    b.addEventListener('click', function(){
+      setFilter(b.getAttribute('data-filter'));
+    });
+  });
+
+  /* ---------- reset ---------- */
+  var resetBtn = document.getElementById('jp-reset');
+  if (resetBtn) {
+    resetBtn.addEventListener('click', function(){
+      if (confirm('清空所有已读记录？')) {
+        saveRead([]);
+        render();
+      }
+    });
+  }
+
+  /* ---------- node interactions ---------- */
+  function showTip(node) {
+    var code = node.getAttribute('data-code');
+    var title = node.getAttribute('data-title') || '';
+    var tier = node.getAttribute('data-tier') || '';
+    tipCode.textContent = code;
+    tipTitle.textContent = title;
+    tipTier.textContent = tier;
+
+    /* compute position relative to host */
+    var rect = node.getBoundingClientRect();
+    var hostRect = host.getBoundingClientRect();
+    var x = rect.left + rect.width / 2 - hostRect.left;
+    var y = rect.top - hostRect.top;
+    tip.style.left = x + 'px';
+    tip.style.top = y + 'px';
+    tip.classList.add('on');
+    tip.setAttribute('aria-hidden', 'false');
+  }
+  function hideTip() {
+    tip.classList.remove('on');
+    tip.setAttribute('aria-hidden', 'true');
+  }
+
+  nodes.forEach(function(n){
+    var href = n.getAttribute('data-href');
+    var code = n.getAttribute('data-code');
+
+    n.addEventListener('mouseenter', function(){ showTip(n); });
+    n.addEventListener('mouseleave', hideTip);
+    n.addEventListener('focus', function(){ showTip(n); });
+    n.addEventListener('blur', hideTip);
+
+    n.addEventListener('click', function(e){
+      e.preventDefault();
+      if (code) markRead(code);
+      // tiny delay so storage flushes (and also gives a hint of reaction)
+      if (href) {
+        setTimeout(function(){ window.location.href = href; }, 30);
+      }
+    });
+
+    /* keyboard */
+    n.setAttribute('tabindex', '0');
+    n.setAttribute('role', 'link');
+    n.setAttribute('aria-label', code + ' ' + (n.getAttribute('data-title') || ''));
+    n.addEventListener('keydown', function(e){
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        if (code) markRead(code);
+        if (href) window.location.href = href;
+      }
+    });
+  });
+
+  /* hide tooltip on scroll/resize to avoid stranded label */
+  window.addEventListener('scroll', hideTip, { passive: true });
+  window.addEventListener('resize', hideTip);
+
+  /* initial render */
+  render();
+})();
+
+/* ========================================================
+   Journey map: zoom & pan (wheel / drag / buttons)
+   ======================================================== */
+(function(){
+  var host = document.getElementById('j-host');
+  var svg  = document.getElementById('journey-svg');
+  var levelEl = document.getElementById('zoom-level');
+  if (!host || !svg) return;
+
+  var zoom = 1;
+  var panX = 0;
+  var panY = 0;
+  var MIN_ZOOM = 0.4;
+  var MAX_ZOOM = 3.5;
+
+  function apply() {
+    svg.style.transform = 'translate(' + panX + 'px,' + panY + 'px) scale(' + zoom + ')';
+    if (levelEl) levelEl.textContent = Math.round(zoom * 100) + '%';
+  }
+  function reset() {
+    zoom = 1; panX = 0; panY = 0;
+    apply();
+  }
+
+  /* ---------- wheel zoom (zoom toward cursor) ---------- */
+  host.addEventListener('wheel', function(e){
+    e.preventDefault();
+    var rect = host.getBoundingClientRect();
+    var mx = e.clientX - rect.left;
+    var my = e.clientY - rect.top;
+    var delta = -e.deltaY * 0.0015;
+    var newZoom = Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, zoom + delta * zoom));
+    if (newZoom === zoom) return;
+    /* keep cursor anchor stable */
+    panX = mx - (mx - panX) * (newZoom / zoom);
+    panY = my - (my - panY) * (newZoom / zoom);
+    zoom = newZoom;
+    apply();
+  }, { passive: false });
+
+  /* ---------- drag pan ---------- */
+  var isDragging = false;
+  var startX = 0, startY = 0;
+  var pStartX = 0, pStartY = 0;
+
+  host.addEventListener('pointerdown', function(e){
+    /* don't pan if user is interacting with a node or a control */
+    if (e.target.closest('.j-node')) return;
+    if (e.target.closest('.zoom-ctrl')) return;
+    if (e.target.closest('.zoom-hint')) return;
+    isDragging = true;
+    host.classList.add('is-dragging');
+    startX = e.clientX; startY = e.clientY;
+    pStartX = panX; pStartY = panY;
+    host.setPointerCapture && host.setPointerCapture(e.pointerId);
+    e.preventDefault();
+  });
+  host.addEventListener('pointermove', function(e){
+    if (!isDragging) return;
+    panX = pStartX + (e.clientX - startX);
+    panY = pStartY + (e.clientY - startY);
+    apply();
+  });
+  function endDrag(e){
+    if (!isDragging) return;
+    isDragging = false;
+    host.classList.remove('is-dragging');
+    if (host.releasePointerCapture && e && e.pointerId != null) {
+      try { host.releasePointerCapture(e.pointerId); } catch(_) {}
+    }
+  }
+  host.addEventListener('pointerup', endDrag);
+  host.addEventListener('pointercancel', endDrag);
+  host.addEventListener('pointerleave', function(){ /* keep dragging if outside */ });
+
+  /* ---------- buttons ---------- */
+  var btnIn = document.getElementById('zoom-in');
+  var btnOut = document.getElementById('zoom-out');
+  var btnFit = document.getElementById('zoom-fit');
+  function zoomBy(factor) {
+    var newZoom = Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, zoom * factor));
+    /* keep center stable */
+    var cx = host.clientWidth / 2;
+    var cy = host.clientHeight / 2;
+    panX = cx - (cx - panX) * (newZoom / zoom);
+    panY = cy - (cy - panY) * (newZoom / zoom);
+    zoom = newZoom;
+    apply();
+  }
+  btnIn  && btnIn.addEventListener('click',  function(){ zoomBy(1.25); });
+  btnOut && btnOut.addEventListener('click', function(){ zoomBy(1/1.25); });
+  btnFit && btnFit.addEventListener('click', reset);
+
+  /* ---------- keyboard ---------- */
+  document.addEventListener('keydown', function(e){
+    if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA')) return;
+    if (e.key === '+' || e.key === '=') { zoomBy(1.25); }
+    else if (e.key === '-' || e.key === '_') { zoomBy(1/1.25); }
+    else if (e.key === '0') { reset(); }
+  });
+
+  /* ---------- pinch zoom on touch (two fingers) ---------- */
+  var pointers = new Map();
+  var pinchStartDist = 0;
+  var pinchStartZoom = 1;
+  host.addEventListener('pointerdown', function(e){
+    if (e.pointerType === 'touch') {
+      pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+      if (pointers.size === 2) {
+        var pts = Array.from(pointers.values());
+        pinchStartDist = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y);
+        pinchStartZoom = zoom;
+      }
+    }
+  });
+  host.addEventListener('pointermove', function(e){
+    if (e.pointerType === 'touch' && pointers.has(e.pointerId)) {
+      pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+      if (pointers.size === 2) {
+        var pts = Array.from(pointers.values());
+        var dist = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y);
+        if (pinchStartDist > 0) {
+          var newZoom = Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, pinchStartZoom * dist / pinchStartDist));
+          var cx = (pts[0].x + pts[1].x) / 2 - host.getBoundingClientRect().left;
+          var cy = (pts[0].y + pts[1].y) / 2 - host.getBoundingClientRect().top;
+          panX = cx - (cx - panX) * (newZoom / zoom);
+          panY = cy - (cy - panY) * (newZoom / zoom);
+          zoom = newZoom;
+          apply();
+        }
+      }
+    }
+  });
+  function clearTouch(e){ if (e.pointerType === 'touch') pointers.delete(e.pointerId); }
+  host.addEventListener('pointerup', clearTouch);
+  host.addEventListener('pointercancel', clearTouch);
+
+  /* initial */
+  apply();
 })();
 </script>
 </body>

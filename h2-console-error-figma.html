@@ -1,0 +1,2680 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Console 报错怎么读 — 红色不是天塌了，是浏览器在指路</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,300..900&family=Geist:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Noto+Sans+SC:wght@300;400;500;700;900&family=Noto+Serif+SC:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f3eee5;
+    --bg-2: #ebe4d4;
+    --ink: #16161d;
+    --ink-soft: #4a4a55;
+    --ink-mute: #8a8a92;
+    --line: #d5cdba;
+    --line-soft: #e3dcca;
+    --accent: #ff4d2e;
+    --accent-soft: #ffe4dc;
+    --blue: #0a4cff;
+    --blue-soft: #dde6ff;
+    --green: #1f6b3a;
+    --green-soft: #d4ecdb;
+    --yellow: #ffcf3d;
+    --yellow-soft: #fff4cc;
+    --paper: #faf7f0;
+    --shadow: 0 1px 0 rgba(0,0,0,0.04), 0 8px 24px rgba(22,22,29,0.06);
+
+    /* DevTools console palette — close to real Chrome dark devtools */
+    --dt-bg: #1f1f1f;
+    --dt-bg-2: #2a2a2a;
+    --dt-bg-row-err: #3a1a1a;
+    --dt-bg-row-warn: #3a3018;
+    --dt-line: #3c3c3c;
+    --dt-text: #d4d4d4;
+    --dt-mute: #888;
+    --dt-mute-2: #6a6a6a;
+    --dt-red: #ff5050;
+    --dt-red-soft: #5a2020;
+    --dt-yellow: #ffcc66;
+    --dt-blue: #5cb6ff;
+    --dt-link: #5e9eff;
+    --dt-purple: #c586c0;
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'Geist', 'Noto Sans SC', system-ui, -apple-system, sans-serif;
+    font-size: 16px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    background-image:
+      radial-gradient(circle at 1px 1px, rgba(22,22,29,0.05) 1px, transparent 0);
+    background-size: 24px 24px;
+  }
+
+  /* Typography */
+  .display-cn { font-family: 'Noto Serif SC', 'Fraunces', serif; font-weight: 900; letter-spacing: -0.01em; }
+  .mono { font-family: 'JetBrains Mono', monospace; }
+  .label { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-mute); }
+  .em { font-family: 'Noto Serif SC', serif; font-weight: 500; color: var(--accent); }
+
+  /* Layout */
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 0 32px; }
+
+  /* Top bar */
+  .topbar {
+    border-bottom: 1px dashed var(--line);
+    padding: 16px 0;
+    background: var(--bg);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    backdrop-filter: blur(8px);
+    background: rgba(243, 238, 229, 0.85);
+  }
+  .topbar-inner { display: flex; justify-content: space-between; align-items: center; gap: 24px; }
+  .brand { font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 600; }
+  .brand .dot { display: inline-block; width: 8px; height: 8px; background: var(--accent); border-radius: 50%; margin-right: 8px; vertical-align: middle; animation: pulse 2s ease-in-out infinite; }
+  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+  .nav-links { display: flex; gap: 20px; font-size: 13px; }
+  .nav-links a { color: var(--ink-soft); text-decoration: none; transition: color 0.2s; cursor: pointer; }
+  .nav-links a:hover { color: var(--accent); }
+  .nav-links a.current { color: var(--accent); font-weight: 600; }
+  a.brand { text-decoration: none; color: inherit; transition: color 0.2s; cursor: pointer; }
+  a.brand:hover { color: var(--accent); }
+
+  /* Hero */
+  .hero { padding: 100px 0 80px; position: relative; overflow: hidden; }
+  .hero-meta { display: flex; gap: 24px; margin-bottom: 32px; align-items: center; flex-wrap: wrap; }
+  .hero-meta .pill { padding: 6px 12px; border: 1px solid var(--ink); border-radius: 100px; font-size: 11px; font-family: 'JetBrains Mono', monospace; letter-spacing: 0.05em; }
+  .hero-meta .pill.fill { background: var(--ink); color: var(--bg); }
+  .hero h1 {
+    font-family: 'Noto Serif SC', 'Fraunces', serif;
+    font-weight: 900;
+    font-size: clamp(48px, 7vw, 92px);
+    line-height: 0.98;
+    letter-spacing: -0.03em;
+    margin: 0 0 24px;
+  }
+  .hero h1 .em { font-family: 'Noto Serif SC', serif; font-weight: 500; color: var(--accent); }
+  .hero p.lede {
+    font-size: 20px;
+    line-height: 1.5;
+    max-width: 640px;
+    color: var(--ink-soft);
+    margin: 0 0 40px;
+  }
+  .hero p.lede .em { font-family: 'Noto Serif SC', serif; color: var(--accent); }
+  .hero-grid {
+    display: grid;
+    grid-template-columns: 1.4fr 1fr;
+    gap: 48px;
+    align-items: end;
+  }
+  @media (max-width: 880px) { .hero-grid { grid-template-columns: 1fr; } }
+  .hero-side {
+    border-left: 1px dashed var(--line);
+    padding-left: 24px;
+    font-size: 13px;
+    color: var(--ink-soft);
+  }
+  .hero-side .row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px dashed var(--line); gap: 12px; }
+  .hero-side .row:last-child { border-bottom: none; }
+  .hero-side .row .k { color: var(--ink-mute); font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.05em; text-transform: uppercase; }
+  .hero-side .row .v { font-weight: 500; text-align: right; }
+
+  /* Section */
+  section { padding: 80px 0; border-top: 1px solid var(--line); position: relative; }
+  .section-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 56px; flex-wrap: wrap; gap: 16px; }
+  .section-num { font-family: 'JetBrains Mono', monospace; font-size: 13px; color: var(--ink-mute); letter-spacing: 0.1em; }
+  .section-num strong { color: var(--accent); }
+  .section-title {
+    font-family: 'Noto Serif SC', serif;
+    font-weight: 900;
+    font-size: clamp(32px, 4.5vw, 52px);
+    line-height: 1.05;
+    letter-spacing: -0.02em;
+    margin: 0;
+    max-width: 22ch;
+  }
+  .section-title .em { font-family: 'Noto Serif SC', serif; font-weight: 500; color: var(--accent); }
+  .section-sub { color: var(--ink-soft); font-size: 17px; max-width: 38ch; line-height: 1.55; margin: 0; }
+  .section-sub .em { font-family: 'Noto Serif SC', serif; color: var(--accent); }
+
+  /* Helper hint strip */
+  .hint-strip {
+    margin-top: 8px;
+    padding: 14px 18px;
+    background: var(--accent-soft);
+    border-left: 3px solid var(--accent);
+    border-radius: 4px;
+    font-size: 13px;
+    color: var(--ink);
+    line-height: 1.55;
+  }
+  .hint-strip .hint-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--accent);
+    letter-spacing: 0.12em;
+    margin-right: 10px;
+    text-transform: uppercase;
+  }
+
+  /* ==================================================
+     DevTools Console Mock
+     用 HTML 复刻 Chrome DevTools 的 console 样式
+     ================================================== */
+  .devtools {
+    background: var(--dt-bg);
+    border-radius: 6px;
+    overflow: hidden;
+    border: 1px solid #0a0a0a;
+    box-shadow: 0 12px 40px rgba(0,0,0,0.18);
+    font-family: 'Menlo', 'Consolas', 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--dt-text);
+    line-height: 1.5;
+  }
+  .dt-tabs {
+    display: flex;
+    background: #2c2c2c;
+    border-bottom: 1px solid #111;
+    padding: 0 8px;
+    gap: 0;
+    align-items: stretch;
+  }
+  .dt-tab {
+    padding: 8px 12px;
+    font-size: 11px;
+    color: #999;
+    border-right: 1px solid #111;
+    user-select: none;
+  }
+  .dt-tab.active {
+    color: #fff;
+    background: var(--dt-bg);
+    border-bottom: 2px solid var(--dt-blue);
+    margin-bottom: -1px;
+    position: relative;
+  }
+  .dt-tab.active::after {
+    content: '●';
+    color: #ff5050;
+    margin-left: 6px;
+    font-size: 10px;
+  }
+  .dt-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 6px 12px;
+    background: var(--dt-bg);
+    border-bottom: 1px solid var(--dt-line);
+    font-size: 11px;
+    color: var(--dt-mute);
+    user-select: none;
+  }
+  .dt-toolbar .dt-clear { color: var(--dt-mute); cursor: default; }
+  .dt-toolbar .dt-filter {
+    background: #131313;
+    border: 1px solid var(--dt-line);
+    color: var(--dt-mute);
+    padding: 3px 8px;
+    border-radius: 3px;
+    font-size: 11px;
+    flex: 1;
+    max-width: 220px;
+  }
+  .dt-toolbar .dt-pill {
+    padding: 2px 8px;
+    border: 1px solid var(--dt-line);
+    border-radius: 100px;
+    font-size: 10px;
+    color: var(--dt-mute);
+  }
+  .dt-toolbar .dt-pill.err { color: #ff8080; border-color: #5a2020; background: #2a1414; }
+  .dt-toolbar .dt-pill.warn { color: var(--dt-yellow); border-color: #5a4818; }
+
+  .dt-body {
+    padding: 4px 0;
+    max-height: 520px;
+    overflow-y: auto;
+    background: var(--dt-bg);
+  }
+  .dt-body::-webkit-scrollbar { width: 12px; }
+  .dt-body::-webkit-scrollbar-track { background: var(--dt-bg); }
+  .dt-body::-webkit-scrollbar-thumb { background: #3a3a3a; border-radius: 6px; }
+
+  /* Console row */
+  .dt-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 6px;
+    padding: 2px 12px;
+    border-bottom: 1px solid #2a2a2a;
+    font-size: 12px;
+    line-height: 1.55;
+  }
+  .dt-row:last-child { border-bottom: none; }
+  .dt-row.is-err { background: var(--dt-bg-row-err); color: #ffb0b0; }
+  .dt-row.is-warn { background: var(--dt-bg-row-warn); color: #ffd987; }
+  .dt-row.is-info { color: var(--dt-text); }
+  .dt-row.is-mute { color: var(--dt-mute); }
+
+  .dt-arrow {
+    flex-shrink: 0;
+    color: var(--dt-mute);
+    font-size: 10px;
+    width: 12px;
+    text-align: center;
+    user-select: none;
+    cursor: default;
+    margin-top: 2px;
+  }
+  .dt-row.is-err .dt-arrow { color: var(--dt-red); }
+  .dt-row.is-warn .dt-arrow { color: var(--dt-yellow); }
+  .dt-row.expanded .dt-arrow::before { content: '▾'; }
+  .dt-row .dt-arrow::before { content: '▸'; }
+
+  .dt-icon {
+    flex-shrink: 0;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    margin-top: 4px;
+    font-size: 9px;
+    line-height: 12px;
+    text-align: center;
+    color: white;
+    font-weight: 700;
+  }
+  .dt-icon.err { background: var(--dt-red); }
+  .dt-icon.err::before { content: '!'; }
+  .dt-icon.warn { background: var(--dt-yellow); color: #000; }
+  .dt-icon.warn::before { content: '!'; }
+  .dt-icon.info { background: #5a5a5a; }
+  .dt-icon.info::before { content: 'i'; font-style: italic; }
+
+  .dt-msg {
+    flex: 1;
+    min-width: 0;
+    word-break: break-word;
+    white-space: pre-wrap;
+  }
+  .dt-msg .dt-err-type { color: #ff8080; font-weight: 600; }
+  .dt-msg .dt-err-text { color: #ffb0b0; }
+  .dt-row.is-warn .dt-msg { color: #ffd987; }
+
+  .dt-src {
+    flex-shrink: 0;
+    color: var(--dt-link);
+    font-size: 11px;
+    margin-left: 12px;
+    text-decoration: underline;
+    text-decoration-color: rgba(94, 158, 255, 0.4);
+    text-underline-offset: 2px;
+    cursor: default;
+  }
+  .dt-row.is-err .dt-src { color: #ff8c8c; text-decoration-color: rgba(255, 100, 100, 0.4); }
+
+  /* Stack trace lines */
+  .dt-stack {
+    margin: 4px 0 4px 32px;
+    padding: 6px 10px;
+    border-left: 2px solid #3a1a1a;
+    font-size: 11.5px;
+    color: #c08080;
+    line-height: 1.7;
+  }
+  .dt-stack .dt-stack-line {
+    display: flex;
+    gap: 8px;
+    align-items: baseline;
+  }
+  .dt-stack .dt-at { color: var(--dt-mute-2); font-size: 10.5px; flex-shrink: 0; }
+  .dt-stack .dt-fn { color: #d8a0a0; }
+  .dt-stack .dt-loc { color: var(--dt-link); margin-left: auto; font-size: 10.5px; }
+  .dt-stack .dt-stack-line.is-mute { color: var(--dt-mute-2); }
+  .dt-stack .dt-stack-line.is-mute .dt-fn { color: var(--dt-mute-2); }
+  .dt-stack .dt-stack-line.is-mute .dt-loc { color: #4a6a8a; }
+  .dt-stack .dt-stack-line.is-mute .dt-at { color: #4a4a4a; }
+
+  /* ==================================================
+     §01 Anatomy — colored highlight overlays
+     ================================================== */
+  .anatomy-stage {
+    margin-top: 24px;
+    display: grid;
+    grid-template-columns: 1.35fr 1fr;
+    gap: 28px;
+    align-items: start;
+  }
+  @media (max-width: 980px) { .anatomy-stage { grid-template-columns: 1fr; } }
+
+  .anatomy-legend {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 24px;
+    position: sticky;
+    top: 88px;
+  }
+  .anatomy-legend h3 {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 18px;
+    font-weight: 700;
+    margin: 0 0 6px;
+  }
+  .anatomy-legend > p {
+    font-size: 13px;
+    color: var(--ink-soft);
+    margin: 0 0 18px;
+    line-height: 1.55;
+  }
+  .anatomy-step {
+    display: flex;
+    gap: 12px;
+    padding: 12px 0;
+    border-top: 1px dashed var(--line);
+    cursor: pointer;
+    transition: background 0.15s;
+    margin: 0 -8px;
+    padding-left: 8px;
+    padding-right: 8px;
+    border-radius: 4px;
+  }
+  .anatomy-step:first-of-type { border-top: none; }
+  .anatomy-step:hover { background: var(--bg-2); }
+  .anatomy-step.is-active { background: var(--accent-soft); }
+  .anatomy-step .as-num {
+    flex-shrink: 0;
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    background: var(--ink);
+    color: var(--paper);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .anatomy-step[data-anatomy="red"] .as-num { background: #d63a1f; }
+  .anatomy-step[data-anatomy="yellow"] .as-num { background: #d4a017; color: var(--ink); }
+  .anatomy-step[data-anatomy="grey"] .as-num { background: #888; }
+  .anatomy-step .as-body { flex: 1; min-width: 0; }
+  .anatomy-step .as-title {
+    font-family: 'Noto Serif SC', serif;
+    font-weight: 700;
+    font-size: 14px;
+    margin: 0 0 4px;
+    color: var(--ink);
+  }
+  .anatomy-step .as-desc {
+    font-size: 12.5px;
+    color: var(--ink-soft);
+    line-height: 1.5;
+    margin: 0;
+  }
+  .anatomy-step .as-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9.5px;
+    letter-spacing: 0.08em;
+    color: var(--ink-mute);
+    text-transform: uppercase;
+    margin-bottom: 2px;
+  }
+
+  /* DevTools rows when in anatomy mode get colored backgrounds */
+  .devtools.anatomy .dt-row,
+  .devtools.anatomy .dt-stack-line { transition: background 0.25s, color 0.25s, opacity 0.25s; opacity: 0.45; }
+  .devtools.anatomy[data-show="red"] .dt-row[data-anatomy="red"],
+  .devtools.anatomy[data-show="yellow"] .dt-stack-line[data-anatomy="yellow"],
+  .devtools.anatomy[data-show="grey"] .dt-stack-line[data-anatomy="grey"] { opacity: 1; }
+  .devtools.anatomy[data-show="all"] .dt-row,
+  .devtools.anatomy[data-show="all"] .dt-stack-line { opacity: 1; }
+
+  .devtools.anatomy .dt-row[data-anatomy="red"] {
+    background: linear-gradient(90deg, rgba(255,80,80,0.18) 0%, rgba(255,80,80,0.06) 100%);
+    box-shadow: inset 3px 0 0 var(--dt-red);
+  }
+  .devtools.anatomy .dt-stack-line[data-anatomy="yellow"] {
+    background: rgba(255,204,102,0.16);
+    box-shadow: inset 3px 0 0 #d4a017;
+    border-radius: 2px;
+    padding: 2px 6px;
+    margin-left: -8px;
+    color: #ffd987;
+  }
+  .devtools.anatomy .dt-stack-line[data-anatomy="grey"] {
+    color: var(--dt-mute-2);
+  }
+
+  .anatomy-summary {
+    margin-top: 32px;
+    padding: 22px 26px;
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0;
+  }
+  @media (max-width: 720px) { .anatomy-summary { grid-template-columns: 1fr; } }
+  .anatomy-summary .as-cell {
+    padding: 0 22px;
+    border-right: 1px dashed var(--line);
+    text-align: center;
+  }
+  .anatomy-summary .as-cell:last-child { border-right: none; }
+  @media (max-width: 720px) {
+    .anatomy-summary .as-cell { border-right: none; border-bottom: 1px dashed var(--line); padding: 14px 0; }
+    .anatomy-summary .as-cell:last-child { border-bottom: none; }
+  }
+  .anatomy-summary .as-big {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 32px;
+    font-weight: 900;
+    line-height: 1;
+    margin-bottom: 6px;
+  }
+  .anatomy-summary .as-cell.red .as-big { color: #d63a1f; }
+  .anatomy-summary .as-cell.yellow .as-big { color: #d4a017; }
+  .anatomy-summary .as-cell.grey .as-big { color: var(--ink-mute); }
+  .anatomy-summary .as-cell .as-cap {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--ink-mute);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 2px;
+  }
+  .anatomy-summary .as-cell .as-line {
+    font-size: 13px;
+    color: var(--ink-soft);
+  }
+
+  /* ==================================================
+     §02 Three error types — accordion-style cards
+     ================================================== */
+  .err-types {
+    margin-top: 24px;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 18px;
+  }
+  .err-type-card {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  .err-type-head {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: start;
+    gap: 16px;
+    padding: 24px 28px 16px;
+  }
+  .err-type-head .et-name {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 22px;
+    font-weight: 600;
+    color: #d63a1f;
+    margin: 0 0 4px;
+    letter-spacing: -0.01em;
+  }
+  .err-type-head .et-cn {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--ink);
+    margin: 0 0 8px;
+  }
+  .err-type-head .et-mean {
+    font-size: 14px;
+    color: var(--ink-soft);
+    line-height: 1.55;
+    max-width: 56ch;
+    margin: 0;
+  }
+  .err-type-head .et-mean strong { color: var(--ink); font-weight: 600; }
+  .err-type-head .et-freq {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    color: var(--accent);
+    text-transform: uppercase;
+    background: var(--accent-soft);
+    padding: 4px 10px;
+    border-radius: 100px;
+    white-space: nowrap;
+  }
+
+  .err-type-body {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0;
+    border-top: 1px dashed var(--line);
+    background: var(--bg);
+  }
+  @media (max-width: 880px) { .err-type-body { grid-template-columns: 1fr; } }
+  .err-type-body .et-pane {
+    padding: 18px 24px;
+  }
+  .err-type-body .et-pane:first-child {
+    border-right: 1px dashed var(--line);
+    background: var(--bg);
+  }
+  @media (max-width: 880px) {
+    .err-type-body .et-pane:first-child { border-right: none; border-bottom: 1px dashed var(--line); }
+  }
+  .err-type-body .et-pane-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    color: var(--ink-mute);
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+
+  .code-mini {
+    background: var(--ink);
+    color: #d8d8e0;
+    padding: 16px 18px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12.5px;
+    line-height: 1.75;
+    border-radius: 5px;
+    overflow-x: auto;
+  }
+  .code-mini pre { margin: 0; }
+  .code-mini .ctag { color: #ff8a6e; }
+  .code-mini .cattr { color: #ffd166; }
+  .code-mini .cstr { color: #a8e6a3; }
+  .code-mini .ckey { color: #ff8a6e; }
+  .code-mini .cnum { color: #8ec5ff; }
+  .code-mini .cfun { color: #8ec5ff; }
+  .code-mini .ccom { color: #6e6e7a; }
+  .code-mini .cvar { color: #c9b6ff; }
+  .code-mini .cbad {
+    background: rgba(255, 80, 80, 0.18);
+    box-shadow: inset 3px 0 0 #ff5050;
+    padding: 0 4px;
+    margin: 0 -4px;
+    border-radius: 2px;
+  }
+
+  .err-fix {
+    margin-top: 14px;
+    padding: 10px 14px;
+    background: var(--green-soft);
+    border-left: 3px solid var(--green);
+    border-radius: 4px;
+    font-size: 13px;
+    color: var(--ink);
+    line-height: 1.5;
+  }
+  .err-fix .ef-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--green);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-right: 8px;
+  }
+  .err-fix code {
+    font-family: 'JetBrains Mono', monospace;
+    background: rgba(31, 107, 58, 0.12);
+    padding: 1px 6px;
+    border-radius: 3px;
+    font-size: 12px;
+  }
+
+  /* Mini console output for §02 */
+  .mini-console {
+    background: var(--dt-bg);
+    border-radius: 5px;
+    padding: 10px 12px;
+    font-family: 'Menlo', 'JetBrains Mono', monospace;
+    font-size: 11.5px;
+    line-height: 1.55;
+    color: #ffb0b0;
+    overflow-x: auto;
+    border: 1px solid #0a0a0a;
+  }
+  .mini-console .mc-ico {
+    color: #ff5050;
+    font-weight: 700;
+    margin-right: 6px;
+  }
+  .mini-console .mc-type { color: #ff8080; font-weight: 600; }
+  .mini-console .mc-loc { color: var(--dt-link); display: block; margin-left: 18px; margin-top: 2px; font-size: 10.5px; }
+  .mini-console .mc-mute { color: var(--dt-mute-2); }
+
+  /* ==================================================
+     §03 Game · 报错急救站
+     ================================================== */
+  .game-stage {
+    margin-top: 16px;
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  .game-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 22px;
+    background: var(--ink);
+    color: white;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+  .game-bar .gb-left { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+  .game-bar .gb-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    padding: 3px 9px;
+    border-radius: 3px;
+    background: var(--accent);
+    color: white;
+  }
+  .game-bar .gb-title {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 17px;
+    font-weight: 700;
+    margin: 0;
+  }
+  .game-bar .gb-progress {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: rgba(255,255,255,0.6);
+  }
+  .game-bar .gb-dots { display: flex; gap: 4px; }
+  .game-bar .gb-dot {
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.18);
+    border: 1px solid rgba(255,255,255,0.25);
+    transition: all 0.2s;
+  }
+  .game-bar .gb-dot.solved { background: #4ec77c; border-color: #4ec77c; }
+  .game-bar .gb-dot.current { background: var(--accent); border-color: var(--accent); transform: scale(1.2); box-shadow: 0 0 0 3px rgba(255,77,46,0.25); }
+
+  .game-stage-body { padding: 24px 26px 28px; }
+  .game-q {
+    margin-bottom: 18px;
+  }
+  .game-q .gq-num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    color: var(--accent);
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+  .game-q .gq-title {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 22px;
+    font-weight: 800;
+    margin: 0 0 8px;
+    line-height: 1.3;
+  }
+  .game-q .gq-prompt {
+    font-size: 14px;
+    color: var(--ink-soft);
+    line-height: 1.55;
+    margin: 0;
+    max-width: 60ch;
+  }
+  .game-q .gq-prompt strong { color: var(--ink); font-weight: 600; }
+  .game-q .gq-prompt code {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12.5px;
+    background: var(--bg-2);
+    padding: 1px 6px;
+    border-radius: 3px;
+  }
+
+  .game-context {
+    margin: 14px 0 18px;
+    padding: 12px 16px;
+    background: var(--bg-2);
+    border-left: 3px solid var(--ink);
+    border-radius: 4px;
+    font-size: 13px;
+    color: var(--ink-soft);
+    line-height: 1.5;
+  }
+  .game-context .gc-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--ink);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-right: 8px;
+    font-weight: 700;
+  }
+
+  /* Console rows in game mode are clickable */
+  .game-console .dt-row,
+  .game-console .dt-stack-line {
+    cursor: pointer;
+    transition: all 0.18s;
+    user-select: none;
+  }
+  .game-console .dt-row:hover { background: rgba(94, 158, 255, 0.10); box-shadow: inset 0 0 0 1px rgba(94, 158, 255, 0.4); }
+  .game-console .dt-stack-line:hover { background: rgba(94, 158, 255, 0.10); box-shadow: inset 0 0 0 1px rgba(94, 158, 255, 0.4); }
+
+  .game-console .dt-row.is-correct,
+  .game-console .dt-stack-line.is-correct {
+    background: rgba(78, 199, 124, 0.22) !important;
+    box-shadow: inset 3px 0 0 #4ec77c, 0 0 0 1px rgba(78, 199, 124, 0.5);
+    color: #b6f0c8 !important;
+  }
+  .game-console .dt-row.is-wrong-flash {
+    animation: shakeWrong 0.42s ease-out;
+  }
+  .game-console .dt-stack-line.is-wrong-flash {
+    animation: shakeWrong 0.42s ease-out;
+  }
+  @keyframes shakeWrong {
+    0%, 100% { transform: translateX(0); }
+    20% { transform: translateX(-6px); background: rgba(255, 80, 80, 0.25); }
+    40% { transform: translateX(6px); background: rgba(255, 80, 80, 0.25); }
+    60% { transform: translateX(-4px); }
+    80% { transform: translateX(4px); }
+  }
+
+  .game-feedback {
+    margin-top: 18px;
+    padding: 16px 20px;
+    border-radius: 6px;
+    font-size: 14px;
+    line-height: 1.55;
+    display: none;
+  }
+  .game-feedback.show { display: block; animation: slideIn 0.28s ease-out; }
+  @keyframes slideIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+  .game-feedback.is-good {
+    background: var(--green-soft);
+    border-left: 3px solid var(--green);
+    color: var(--ink);
+  }
+  .game-feedback.is-bad {
+    background: var(--accent-soft);
+    border-left: 3px solid var(--accent);
+    color: var(--ink);
+  }
+  .game-feedback .gf-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-right: 10px;
+    padding: 2px 8px;
+    border-radius: 3px;
+  }
+  .game-feedback.is-good .gf-tag { background: var(--green); color: white; }
+  .game-feedback.is-bad .gf-tag { background: var(--accent); color: white; }
+  .game-feedback strong { color: var(--ink); font-weight: 600; }
+  .game-feedback code {
+    font-family: 'JetBrains Mono', monospace;
+    background: rgba(0,0,0,0.06);
+    padding: 1px 6px;
+    border-radius: 3px;
+    font-size: 12.5px;
+  }
+
+  .game-controls {
+    margin-top: 22px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    padding-top: 18px;
+    border-top: 1px dashed var(--line);
+  }
+  .game-controls .gc-meta {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--ink-mute);
+    letter-spacing: 0.05em;
+  }
+  .game-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 18px;
+    background: var(--ink);
+    color: white;
+    border: none;
+    border-radius: 4px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 0.05em;
+    cursor: pointer;
+    transition: all 0.18s;
+  }
+  .game-btn:hover:not(:disabled) { background: var(--accent); transform: translateX(2px); }
+  .game-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+  .game-btn.ghost {
+    background: transparent;
+    border: 1px solid var(--line);
+    color: var(--ink-soft);
+  }
+  .game-btn.ghost:hover { background: var(--bg-2); color: var(--ink); transform: none; }
+  .game-btn .arr { font-family: 'Fraunces', serif; font-size: 14px; font-weight: 500; }
+
+  /* End screen */
+  .game-end {
+    text-align: center;
+    padding: 40px 20px;
+    display: none;
+  }
+  .game-end.show { display: block; animation: fadeIn 0.4s ease-out; }
+  .game-end .ge-emoji {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 36px;
+    color: var(--accent);
+    margin-bottom: 8px;
+    letter-spacing: 0.4em;
+  }
+  .game-end h3 {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 32px;
+    font-weight: 900;
+    margin: 0 0 16px;
+    line-height: 1.15;
+    letter-spacing: -0.02em;
+  }
+  .game-end h3 .em { color: var(--accent); font-weight: 500; }
+  .game-end p {
+    font-size: 15px;
+    color: var(--ink-soft);
+    line-height: 1.6;
+    max-width: 50ch;
+    margin: 0 auto 14px;
+  }
+  .game-end p strong { color: var(--ink); font-weight: 600; }
+  .game-end .ge-stats {
+    display: flex;
+    justify-content: center;
+    gap: 28px;
+    margin: 26px 0 22px;
+    flex-wrap: wrap;
+  }
+  .game-end .ge-stat {
+    text-align: center;
+  }
+  .game-end .ge-stat .ge-num {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 36px;
+    font-weight: 900;
+    color: var(--accent);
+    line-height: 1;
+  }
+  .game-end .ge-stat .ge-cap {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    color: var(--ink-mute);
+    text-transform: uppercase;
+    margin-top: 6px;
+  }
+
+  /* ==================================================
+     §04 console.log
+     ================================================== */
+  .log-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 22px;
+    margin-top: 24px;
+  }
+  @media (max-width: 880px) { .log-grid { grid-template-columns: 1fr; } }
+  .log-card {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  .log-card .lc-head {
+    padding: 14px 20px 6px;
+    border-bottom: 1px dashed var(--line);
+  }
+  .log-card .lc-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.05em;
+    color: var(--accent);
+    margin-bottom: 4px;
+  }
+  .log-card .lc-title {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 17px;
+    font-weight: 700;
+    margin: 0 0 4px;
+  }
+  .log-card .lc-desc {
+    font-size: 13px;
+    color: var(--ink-soft);
+    line-height: 1.5;
+    margin: 0 0 14px;
+  }
+  .log-card .lc-body { padding: 14px 18px 18px; }
+  .log-card .lc-body .code-mini { margin-bottom: 12px; }
+  .log-output {
+    background: var(--dt-bg);
+    border-radius: 5px;
+    padding: 10px 14px;
+    font-family: 'Menlo', 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--dt-text);
+    border: 1px solid #0a0a0a;
+    line-height: 1.6;
+  }
+  .log-output .lo-tag { color: var(--dt-mute); font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 4px; }
+  .log-output .lo-key { color: #9cdcfe; }
+  .log-output .lo-str { color: #ce9178; }
+  .log-output .lo-num { color: #b5cea8; }
+  .log-output .lo-bool { color: #569cd6; }
+  .log-output .lo-undef { color: var(--dt-mute); font-style: italic; }
+  .log-output .lo-error { color: #ff8080; }
+
+  .log-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 11.5px;
+    background: var(--dt-bg);
+    color: var(--dt-text);
+  }
+  .log-table th, .log-table td {
+    padding: 5px 10px;
+    border: 1px solid #2c2c2c;
+    text-align: left;
+  }
+  .log-table th { background: #2a2a2a; color: var(--dt-mute); font-weight: 500; font-size: 10.5px; letter-spacing: 0.05em; text-transform: uppercase; }
+  .log-table td .lo-num { color: #b5cea8; }
+  .log-table td .lo-str { color: #ce9178; }
+
+  .ai-prompt-box {
+    margin-top: 32px;
+    background: var(--ink);
+    color: white;
+    border-radius: 8px;
+    padding: 26px 30px;
+    position: relative;
+    overflow: hidden;
+  }
+  .ai-prompt-box::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at 0% 100%, rgba(255,77,46,0.16), transparent 55%);
+    pointer-events: none;
+  }
+  .ai-prompt-box .ap-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--accent);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+  .ai-prompt-box h4 {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 22px;
+    margin: 0 0 8px;
+    color: white;
+    font-weight: 700;
+  }
+  .ai-prompt-box p {
+    margin: 0 0 18px;
+    color: rgba(255,255,255,0.72);
+    font-size: 14px;
+    line-height: 1.6;
+    max-width: 64ch;
+  }
+  .ai-prompt-box .ap-quote {
+    background: rgba(255,255,255,0.06);
+    border-left: 3px solid var(--accent);
+    padding: 14px 18px;
+    border-radius: 0 4px 4px 0;
+    color: rgba(255,255,255,0.92);
+    font-family: 'Noto Serif SC', serif;
+    font-size: 15px;
+    line-height: 1.65;
+    position: relative;
+    z-index: 1;
+  }
+  .ai-prompt-box .ap-quote .ap-mark {
+    color: var(--accent);
+    font-family: 'Fraunces', serif;
+    font-size: 22px;
+    margin-right: 6px;
+    line-height: 1;
+  }
+  .ai-prompt-box .ap-quote code {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    background: rgba(255,255,255,0.08);
+    padding: 1px 7px;
+    border-radius: 3px;
+    color: #ffd987;
+  }
+
+  /* ==================================================
+     §05 Three reds — severity model
+     ================================================== */
+  .severity-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 18px;
+    margin-top: 24px;
+  }
+  @media (max-width: 880px) { .severity-grid { grid-template-columns: 1fr; } }
+  .severity-card {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 22px 24px 24px;
+    position: relative;
+    overflow: hidden;
+  }
+  .severity-card .sv-icon {
+    width: 48px; height: 48px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 24px;
+    font-weight: 700;
+    color: white;
+    margin-bottom: 16px;
+  }
+  .severity-card.red { border-color: rgba(214, 58, 31, 0.5); }
+  .severity-card.red .sv-icon { background: #d63a1f; }
+  .severity-card.red .sv-icon::before { content: '!'; }
+  .severity-card.yellow .sv-icon { background: #d4a017; color: var(--ink); }
+  .severity-card.yellow .sv-icon::before { content: '!'; }
+  .severity-card.grey .sv-icon { background: #888; }
+  .severity-card.grey .sv-icon::before { content: 'i'; font-style: italic; }
+  .severity-card .sv-name {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 22px;
+    font-weight: 800;
+    margin: 0 0 4px;
+    letter-spacing: -0.01em;
+  }
+  .severity-card .sv-en {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--ink-mute);
+    letter-spacing: 0.05em;
+    margin-bottom: 14px;
+  }
+  .severity-card .sv-mean {
+    font-size: 14px;
+    color: var(--ink-soft);
+    line-height: 1.6;
+    margin: 0 0 14px;
+  }
+  .severity-card .sv-mean strong { color: var(--ink); font-weight: 600; }
+  .severity-card .sv-action {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--ink);
+    background: var(--bg-2);
+    padding: 8px 12px;
+    border-radius: 4px;
+    line-height: 1.55;
+    border-left: 3px solid var(--ink);
+  }
+  .severity-card.red .sv-action { border-left-color: #d63a1f; background: var(--accent-soft); }
+  .severity-card.yellow .sv-action { border-left-color: #d4a017; background: var(--yellow-soft); }
+  .severity-card.grey .sv-action { border-left-color: #888; }
+
+  .severity-mock {
+    margin-top: 28px;
+  }
+
+  /* ==================================================
+     §06 Cheatsheet
+     ================================================== */
+  .cheat-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    margin-top: 24px;
+  }
+  @media (max-width: 880px) { .cheat-grid { grid-template-columns: 1fr; } }
+  .cheat-card {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 24px;
+    position: relative;
+  }
+  .cheat-card.types { border-top: 4px solid #d63a1f; }
+  .cheat-card.read { border-top: 4px solid #d4a017; }
+  .cheat-card.ai { border-top: 4px solid var(--blue); }
+  .cheat-card .cc-num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--ink-mute);
+    letter-spacing: 0.1em;
+    margin-bottom: 4px;
+    text-transform: uppercase;
+  }
+  .cheat-card h4 {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 22px;
+    margin: 0 0 6px;
+    font-weight: 800;
+    letter-spacing: -0.01em;
+  }
+  .cheat-card .cc-sub {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--ink-soft);
+    margin-bottom: 16px;
+    letter-spacing: 0.05em;
+  }
+  .cheat-card dl { margin: 0; padding: 0; font-size: 13px; }
+  .cheat-card dl dt {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--ink-mute);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-top: 14px;
+  }
+  .cheat-card dl dt:first-of-type { margin-top: 0; }
+  .cheat-card dl dd {
+    margin: 4px 0 0;
+    color: var(--ink-soft);
+    font-size: 13px;
+    line-height: 1.55;
+  }
+  .cheat-card dl dd strong { color: var(--ink); font-weight: 600; }
+  .cheat-card dl dd code {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11.5px;
+    background: var(--bg-2);
+    padding: 1px 6px;
+    border-radius: 3px;
+    color: var(--ink);
+  }
+
+  /* ==================================================
+     Next post + footer (shared)
+     ================================================== */
+  .next-post {
+    margin-top: 48px;
+    padding: 32px 36px;
+    background: var(--ink);
+    color: var(--bg);
+    border-radius: 8px;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 32px;
+    align-items: center;
+    text-decoration: none;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    position: relative;
+    overflow: hidden;
+  }
+  .next-post::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at 100% 0%, rgba(255,77,46,0.12), transparent 55%);
+    pointer-events: none;
+  }
+  .next-post:hover { transform: translateY(-2px); box-shadow: 0 14px 36px rgba(22,22,29,0.22); }
+  @media (max-width: 720px) { .next-post { grid-template-columns: 1fr; padding: 24px; gap: 20px; } }
+  .next-post .np-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--accent);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+    display: inline-block;
+  }
+  .next-post h4 {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 26px;
+    margin: 0 0 10px;
+    font-weight: 700;
+    color: white;
+    line-height: 1.25;
+    letter-spacing: -0.01em;
+  }
+  .next-post h4 .em {
+    font-family: 'Noto Serif SC', serif;
+    font-weight: 500;
+    color: var(--accent);
+  }
+  .next-post p {
+    margin: 0;
+    color: rgba(255,255,255,0.72);
+    font-size: 14px;
+    line-height: 1.65;
+    max-width: 560px;
+  }
+  .next-post p strong { color: white; font-weight: 600; }
+  .next-post .np-cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 24px;
+    background: var(--accent);
+    color: white;
+    border-radius: 4px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    white-space: nowrap;
+    transition: background 0.18s, color 0.18s, transform 0.18s;
+    position: relative;
+    z-index: 1;
+  }
+  .next-post:hover .np-cta { background: white; color: var(--ink); transform: translateX(2px); }
+  .next-post .np-cta .arr { font-family: 'Fraunces', serif; font-size: 18px; font-weight: 500; }
+
+  footer {
+    border-top: 1px solid var(--line);
+    padding: 56px 0 64px;
+    background: var(--bg);
+  }
+  .byline {
+    display: flex;
+    gap: 28px;
+    align-items: center;
+    padding-bottom: 32px;
+    border-bottom: 1px dashed var(--line);
+    margin-bottom: 24px;
+    position: relative;
+  }
+  .byline::before {
+    content: '';
+    position: absolute;
+    top: -56px; left: 0;
+    width: 32px; height: 1px;
+    background: var(--accent);
+  }
+  .byline .avatar {
+    width: 96px; height: 96px;
+    border-radius: 50%;
+    object-fit: cover;
+    flex-shrink: 0;
+    border: 3px solid var(--paper);
+    box-shadow: 0 0 0 1px var(--line), 0 6px 20px rgba(22,22,29,0.10);
+    background: var(--paper);
+  }
+  .byline-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--ink-mute);
+    letter-spacing: 0.18em;
+    margin-bottom: 8px;
+  }
+  .byline-label .dot {
+    display: inline-block;
+    width: 6px; height: 6px;
+    background: var(--accent);
+    border-radius: 50%;
+    margin-right: 6px;
+    vertical-align: 1px;
+  }
+  .byline-name {
+    font-family: 'Noto Serif SC', 'Fraunces', serif;
+    font-size: clamp(28px, 4vw, 40px);
+    font-weight: 700;
+    line-height: 1.05;
+    letter-spacing: -0.01em;
+    margin: 0 0 8px;
+  }
+  .byline-name .em {
+    font-family: 'Noto Serif SC', serif;
+    font-weight: 500;
+    color: var(--accent);
+  }
+  .byline-tag {
+    font-size: 14px;
+    color: var(--ink-soft);
+    line-height: 1.55;
+    margin: 0;
+    max-width: 52ch;
+  }
+  .byline-contact {
+    margin-top: 14px;
+    padding-top: 14px;
+    border-top: 1px dashed var(--line);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    font-size: 12px;
+  }
+  .byline-contact .contact-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--ink-mute);
+    padding: 2px 8px;
+    border: 1px solid var(--line);
+    border-radius: 3px;
+  }
+  .byline-contact .contact-id {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--ink);
+    background: var(--accent-soft);
+    padding: 3px 10px;
+    border-radius: 4px;
+    letter-spacing: 0.02em;
+  }
+  .byline-contact .contact-hint { font-size: 12px; color: var(--ink-soft); }
+  .footer-meta {
+    text-align: center;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--ink-mute);
+    letter-spacing: 0.05em;
+  }
+  .footer-meta .heart { color: var(--accent); }
+  .footer-meta .mono { color: var(--ink-soft); font-weight: 500; }
+  @media (max-width: 600px) {
+    .byline { flex-direction: column; text-align: center; align-items: center; gap: 16px; }
+    .byline-tag { margin-left: auto; margin-right: auto; }
+  }
+
+  /* Subtle entry animation */
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+  section { animation: fadeIn 0.6s ease-out backwards; }
+
+  /* === Roadmap Modal === */
+  .rm-modal { position: fixed; inset: 0; z-index: 1000; display: flex; align-items: center; justify-content: center; padding: 30px 16px; }
+  .rm-modal[hidden] { display: none; }
+  .rm-backdrop { position: absolute; inset: 0; background: rgba(22,22,29,0.55); backdrop-filter: blur(4px); animation: rm-fade 0.2s; }
+  @keyframes rm-fade { from { opacity: 0; } to { opacity: 1; } }
+  .rm-dialog { position: relative; background: var(--bg); border-radius: 12px; max-width: 720px; width: 100%; max-height: calc(100vh - 60px); overflow-y: auto; padding: 32px 36px 24px; box-shadow: 0 30px 80px rgba(0,0,0,0.3); animation: rm-pop 0.25s cubic-bezier(0.4,0,0.2,1); }
+  @keyframes rm-pop { from { transform: scale(0.96) translateY(8px); opacity: 0; } to { transform: scale(1) translateY(0); opacity: 1; } }
+  .rm-close { position: absolute; top: 14px; right: 16px; background: transparent; border: none; cursor: pointer; font-size: 20px; color: var(--ink-mute); width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: all 0.15s; line-height: 1; }
+  .rm-close:hover { background: var(--bg-2); color: var(--ink); }
+  .rm-header { margin-bottom: 22px; padding-bottom: 18px; border-bottom: 1px dashed var(--line); }
+  .rm-tag { font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.1em; color: var(--accent); text-transform: uppercase; margin-bottom: 8px; }
+  .rm-title { font-family: 'Noto Serif SC', serif; font-size: 28px; margin: 0 0 6px; font-weight: 900; letter-spacing: -0.02em; line-height: 1.1; }
+  .rm-title .rm-em { font-family: 'Noto Serif SC', serif; color: var(--accent); font-weight: 500; }
+  .rm-sub { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--ink-mute); margin: 0; }
+  .rm-body { display: flex; flex-direction: column; gap: 18px; }
+  .rm-mod-key { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ink); font-weight: 700; margin-bottom: 8px; letter-spacing: 0.04em; text-transform: uppercase; }
+  .rm-mod-list { display: flex; flex-direction: column; gap: 6px; }
+  .rm-cell { display: grid; grid-template-columns: 36px 1fr auto; gap: 12px; align-items: center; padding: 9px 13px; border-radius: 5px; background: var(--paper); border: 1px solid var(--line); text-decoration: none; color: inherit; transition: all 0.15s; }
+  .rm-cell:hover { border-color: var(--accent); background: var(--accent-soft); transform: translateX(3px); }
+  .rm-cell-code { font-family: 'Fraunces', serif; font-style: italic; font-weight: 500; color: var(--accent); font-size: 15px; }
+  .rm-cell-name { font-size: 13px; color: var(--ink); }
+  .rm-cell-tier { font-family: 'JetBrains Mono', monospace; font-size: 9px; letter-spacing: 0.08em; color: var(--ink-mute); text-transform: uppercase; border: 1px solid var(--line); padding: 2px 7px; border-radius: 3px; }
+  .rm-footer { margin-top: 22px; padding-top: 16px; border-top: 1px dashed var(--line); display: flex; justify-content: space-between; align-items: center; font-size: 12px; color: var(--ink-soft); flex-wrap: wrap; gap: 8px; }
+  .rm-wechat { font-family: 'JetBrains Mono', monospace; background: var(--accent-soft); color: var(--ink); padding: 3px 10px; border-radius: 3px; font-weight: 600; letter-spacing: 0.02em; }
+  .nav-links a[data-rm-open] { cursor: pointer; }
+</style>
+</head>
+<body>
+
+<!-- Top bar -->
+<div class="topbar">
+  <div class="wrap topbar-inner">
+    <a href="index.html" class="brand"><span class="dot"></span>H2 · CONSOLE 报错怎么读</a>
+    <nav class="nav-links">
+      <a href="index.html#roadmap" data-rm-open>路线图</a>
+      <a href="index.html#manifesto">关于</a>
+    </nav>
+  </div>
+</div>
+
+<!-- Hero -->
+<header class="hero">
+  <div class="wrap">
+    <div class="hero-meta">
+      <span class="pill fill">实验互动 · INTERACTIVE</span>
+      <span class="pill">2026 · 设计 × 代码</span>
+      <span class="pill">H2 · 浏览器调试</span>
+      <span class="label">阅读时长 ≈ 12 分钟</span>
+    </div>
+    <div class="hero-grid">
+      <div>
+        <h1>
+          <span class="display-cn">红色不是天塌了，</span><br>
+          <span class="display-cn">是浏览器在</span><span class="em">指路</span><span class="display-cn">。</span>
+        </h1>
+        <p class="lede">
+          AI 给你写完代码，<code class="mono" style="font-size:15px;background:var(--bg-2);padding:1px 6px;border-radius:3px;">npm run dev</code> 跑起来 —— 页面白屏，F12 一开 console 一片红字。<br>
+          你心里第一反应：「完蛋，我搞坏了」。<br>
+          其实 30 行红字里 <span class="em">真错就那一两行</span>，剩下 28 行是浏览器在唠叨"我都翻过哪些库"。
+          <br>这一篇教你只看真正重要的那一行。
+        </p>
+      </div>
+      <div class="hero-side">
+        <div class="row"><span class="k">本页讲什么</span><span class="v">读懂 console 报错</span></div>
+        <div class="row"><span class="k">含互动</span><span class="v">急救站 5 道题</span></div>
+        <div class="row"><span class="k">面向</span><span class="v">设计师 · AI 写代码</span></div>
+        <div class="row"><span class="k">前置知识</span><span class="v">无 · 会按 F12 即可</span></div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- Section 1: Anatomy -->
+<section id="anatomy">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>01</strong> / 拆解</div>
+        <h2 class="section-title">30 行红字，<br><span class="em">3 种颜色</span>就够看</h2>
+      </div>
+      <p class="section-sub">
+        先看一段真实的 React 报错。它看上去像一面墙，其实只分三块：<span class="em">真错</span>、<span class="em">指向你的那行</span>、<span class="em">噪音</span>。点右边步骤试试。
+      </p>
+    </div>
+
+    <div class="hint-strip">
+      <span class="hint-tag">互动</span>点右侧三个步骤 → 左侧 console 会按颜色高亮"哪些是要看的、哪些是噪音"。第 4 个按钮显示全部。
+    </div>
+
+    <div class="anatomy-stage">
+      <!-- Left: DevTools console mock -->
+      <div class="devtools anatomy" id="anatomyDt" data-show="all">
+        <div class="dt-tabs">
+          <span class="dt-tab">Elements</span>
+          <span class="dt-tab active">Console</span>
+          <span class="dt-tab">Sources</span>
+          <span class="dt-tab">Network</span>
+        </div>
+        <div class="dt-toolbar">
+          <span class="dt-clear">⊘</span>
+          <input class="dt-filter" placeholder="Filter" disabled>
+          <span class="dt-pill err">● 1 error</span>
+          <span class="dt-pill warn">▲ 0 warnings</span>
+        </div>
+        <div class="dt-body">
+
+          <div class="dt-row is-err expanded" data-anatomy="red">
+            <span class="dt-arrow"></span>
+            <span class="dt-icon err"></span>
+            <span class="dt-msg"><span class="dt-err-type">Uncaught TypeError:</span> <span class="dt-err-text">Cannot read properties of undefined (reading 'map')</span></span>
+            <span class="dt-src">UserList.jsx:14</span>
+          </div>
+
+          <div class="dt-stack">
+            <div class="dt-stack-line" data-anatomy="yellow">
+              <span class="dt-at">at</span>
+              <span class="dt-fn">UserList</span>
+              <span class="dt-loc">UserList.jsx:14:23</span>
+            </div>
+            <div class="dt-stack-line is-mute" data-anatomy="grey">
+              <span class="dt-at">at</span>
+              <span class="dt-fn">renderWithHooks</span>
+              <span class="dt-loc">react-dom.development.js:14985:18</span>
+            </div>
+            <div class="dt-stack-line is-mute" data-anatomy="grey">
+              <span class="dt-at">at</span>
+              <span class="dt-fn">mountIndeterminateComponent</span>
+              <span class="dt-loc">react-dom.development.js:17811:13</span>
+            </div>
+            <div class="dt-stack-line is-mute" data-anatomy="grey">
+              <span class="dt-at">at</span>
+              <span class="dt-fn">beginWork</span>
+              <span class="dt-loc">react-dom.development.js:19049:16</span>
+            </div>
+            <div class="dt-stack-line is-mute" data-anatomy="grey">
+              <span class="dt-at">at</span>
+              <span class="dt-fn">HTMLUnknownElement.callCallback2</span>
+              <span class="dt-loc">react-dom.development.js:3945:14</span>
+            </div>
+            <div class="dt-stack-line is-mute" data-anatomy="grey">
+              <span class="dt-at">at</span>
+              <span class="dt-fn">Object.invokeGuardedCallbackDev</span>
+              <span class="dt-loc">react-dom.development.js:3994:16</span>
+            </div>
+            <div class="dt-stack-line is-mute" data-anatomy="grey">
+              <span class="dt-at">at</span>
+              <span class="dt-fn">invokeGuardedCallback</span>
+              <span class="dt-loc">react-dom.development.js:4056:31</span>
+            </div>
+            <div class="dt-stack-line is-mute" data-anatomy="grey">
+              <span class="dt-at">at</span>
+              <span class="dt-fn">beginWork$1</span>
+              <span class="dt-loc">react-dom.development.js:23964:7</span>
+            </div>
+            <div class="dt-stack-line is-mute" data-anatomy="grey">
+              <span class="dt-at">at</span>
+              <span class="dt-fn">performUnitOfWork</span>
+              <span class="dt-loc">react-dom.development.js:22776:12</span>
+            </div>
+            <div class="dt-stack-line is-mute" data-anatomy="grey">
+              <span class="dt-at">at</span>
+              <span class="dt-fn">workLoopSync</span>
+              <span class="dt-loc">react-dom.development.js:22707:5</span>
+            </div>
+            <div class="dt-stack-line is-mute" data-anatomy="grey">
+              <span class="dt-at">at</span>
+              <span class="dt-fn">renderRootSync</span>
+              <span class="dt-loc">react-dom.development.js:22670:7</span>
+            </div>
+            <div class="dt-stack-line is-mute" data-anatomy="grey">
+              <span class="dt-at">at</span>
+              <span class="dt-fn">performSyncWorkOnRoot</span>
+              <span class="dt-loc">react-dom.development.js:22293:18</span>
+            </div>
+            <div class="dt-stack-line is-mute" data-anatomy="grey">
+              <span class="dt-at">at</span>
+              <span class="dt-fn">flushSyncCallbacks</span>
+              <span class="dt-loc">react-dom.development.js:11305:22</span>
+            </div>
+            <div class="dt-stack-line is-mute" data-anatomy="grey">
+              <span class="dt-at">at</span>
+              <span class="dt-fn">commitRootImpl</span>
+              <span class="dt-loc">react-dom.development.js:26474:13</span>
+            </div>
+          </div>
+
+          <div class="dt-row is-mute">
+            <span class="dt-arrow"></span>
+            <span class="dt-icon info"></span>
+            <span class="dt-msg">The above error occurred in the &lt;UserList&gt; component. React will try to recreate this component tree by rerendering the next sibling.</span>
+            <span class="dt-src">react-dom.development.js:18687</span>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Right: legend / steps -->
+      <div class="anatomy-legend">
+        <h3>读这一页的顺序</h3>
+        <p>从上往下，三步就够。每步只看一种颜色。</p>
+
+        <div class="anatomy-step is-active" data-anatomy="red">
+          <div class="as-num">1</div>
+          <div class="as-body">
+            <div class="as-tag">RED · 真错</div>
+            <div class="as-title">什么错 · 为什么错</div>
+            <p class="as-desc">第一行红字。<strong>错误类型</strong>（TypeError）+ <strong>错误信息</strong>（一句人话解释怎么挂的）。这是整页最重要的两个词。</p>
+          </div>
+        </div>
+
+        <div class="anatomy-step" data-anatomy="yellow">
+          <div class="as-num">2</div>
+          <div class="as-body">
+            <div class="as-tag">YELLOW · 哪一行</div>
+            <div class="as-title">stack trace 第一行</div>
+            <p class="as-desc">紧跟着的第一行 stack —— <strong>就是它指向你的代码</strong>。文件名 + 行号，比如 <code style="font-family:'JetBrains Mono',monospace;font-size:11.5px;background:var(--bg-2);padding:1px 5px;border-radius:3px;">UserList.jsx:14</code>。打开它，去那一行。</p>
+          </div>
+        </div>
+
+        <div class="anatomy-step" data-anatomy="grey">
+          <div class="as-num">3</div>
+          <div class="as-body">
+            <div class="as-tag">GREY · 噪音</div>
+            <div class="as-title">React / Node / 库的内部</div>
+            <p class="as-desc">剩下 90% 都是浏览器在记账："我从这里调到那里再调到那里…"。<strong>不用看</strong>。这些是 React 内部，你改不了也不需要改。</p>
+          </div>
+        </div>
+
+        <div class="anatomy-step" data-anatomy="all">
+          <div class="as-num">∞</div>
+          <div class="as-body">
+            <div class="as-tag">ALL · 看全貌</div>
+            <div class="as-title">恢复全部 · 重看一遍</div>
+            <p class="as-desc">看完三种之后，再看一眼整段。你会发现"30 行红字"突然不吓人了。</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="anatomy-summary">
+      <div class="as-cell red">
+        <div class="as-cap">RED · 看 1 行</div>
+        <div class="as-big">什么错</div>
+        <div class="as-line">TypeError · ReferenceError · SyntaxError</div>
+      </div>
+      <div class="as-cell yellow">
+        <div class="as-cap">YELLOW · 看 1 行</div>
+        <div class="as-big">在哪</div>
+        <div class="as-line">stack 第一行 · 文件名 + 行号</div>
+      </div>
+      <div class="as-cell grey">
+        <div class="as-cap">GREY · 看 0 行</div>
+        <div class="as-big">不用管</div>
+        <div class="as-line">React / Vue / Node / 库内部</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Section 2: Three error types -->
+<section id="types">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>02</strong> / 三种错</div>
+        <h2 class="section-title">设计师会撞上的<br><span class="em">就这三种</span></h2>
+      </div>
+      <p class="section-sub">
+        所有报错都会以 <code class="mono" style="font-size:13px;background:var(--bg-2);padding:1px 6px;border-radius:3px;">XxxError</code> 开头。学会认这三种 —— 90% 的红字都是它们其中之一。每种配真实代码 + 报错截图 + 一句话修法。
+      </p>
+    </div>
+
+    <div class="err-types">
+
+      <!-- TypeError -->
+      <div class="err-type-card">
+        <div class="err-type-head">
+          <div>
+            <div class="et-name">TypeError</div>
+            <div class="et-cn">类型搞错了</div>
+            <p class="et-mean">最常见的一种。<strong>你以为变量是某种东西，但它其实是 <code style="font-family:'JetBrains Mono',monospace;font-size:12.5px;background:var(--bg-2);padding:1px 6px;border-radius:3px;">undefined</code> / <code style="font-family:'JetBrains Mono',monospace;font-size:12.5px;background:var(--bg-2);padding:1px 6px;border-radius:3px;">null</code></strong>。比如你想 <code style="font-family:'JetBrains Mono',monospace;font-size:12.5px;background:var(--bg-2);padding:1px 6px;border-radius:3px;">user.name</code>，但 user 还没拿到，是空的。</p>
+          </div>
+          <span class="et-freq">遇见率 · 高</span>
+        </div>
+        <div class="err-type-body">
+          <div class="et-pane">
+            <div class="et-pane-tag">— 一段会出错的代码</div>
+            <div class="code-mini">
+<pre><span class="ckey">const</span> <span class="cvar">user</span> = <span class="cvar">data</span>.<span class="cvar">currentUser</span>;  <span class="ccom">// 没拿到 → undefined</span>
+
+<span class="ccom">// 想读 user.name —— 但 user 是 undefined</span>
+<span class="cbad"><span class="cfun">console</span>.<span class="cfun">log</span>(<span class="cvar">user</span>.<span class="cvar">name</span>);</span></pre>
+            </div>
+            <div class="err-fix"><span class="ef-tag">怎么修</span>先判断一下："如果 user 存在再读 .name"。代码里写 <code>user?.name</code>，这个问号叫"可选链"。</div>
+          </div>
+          <div class="et-pane">
+            <div class="et-pane-tag">— 浏览器会这么喊</div>
+            <div class="mini-console">
+<span class="mc-ico">●</span><span class="mc-type">Uncaught TypeError:</span> Cannot read properties of undefined (reading <span style="color:#ce9178">'name'</span>)
+<span class="mc-loc">at App.jsx:8:21</span>
+<span class="mc-loc mc-mute">at renderWithHooks (react-dom.development.js:14985)</span>
+<span class="mc-loc mc-mute">...还有 12 行 React 内部</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ReferenceError -->
+      <div class="err-type-card">
+        <div class="err-type-head">
+          <div>
+            <div class="et-name">ReferenceError</div>
+            <div class="et-cn">用了不存在的东西</div>
+            <p class="et-mean">你提到的那个变量 / 函数，<strong>JavaScript 从来没听说过</strong>。99% 的情况：<strong>拼写错</strong> 或 <strong>忘了 import</strong>。</p>
+          </div>
+          <span class="et-freq">遇见率 · 中</span>
+        </div>
+        <div class="err-type-body">
+          <div class="et-pane">
+            <div class="et-pane-tag">— 一段会出错的代码</div>
+            <div class="code-mini">
+<pre><span class="ccom">// 写好了 userList</span>
+<span class="ckey">const</span> <span class="cvar">userList</span> = [<span class="cstr">'a'</span>, <span class="cstr">'b'</span>];
+
+<span class="ccom">// 但下面拼成了 userLst（少了一个 i）</span>
+<span class="cfun">console</span>.<span class="cfun">log</span>(<span class="cbad"><span class="cvar">userLst</span></span>);</pre>
+            </div>
+            <div class="err-fix"><span class="ef-tag">怎么修</span>对照一下变量名。看到 "X is not defined" → 直接搜 X，看看是不是写错了字母 / 大小写。</div>
+          </div>
+          <div class="et-pane">
+            <div class="et-pane-tag">— 浏览器会这么喊</div>
+            <div class="mini-console">
+<span class="mc-ico">●</span><span class="mc-type">Uncaught ReferenceError:</span> userLst is not defined
+<span class="mc-loc">at App.jsx:6:13</span>
+<span class="mc-loc mc-mute">at HTMLButtonElement.&lt;anonymous&gt; (...)</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SyntaxError -->
+      <div class="err-type-card">
+        <div class="err-type-head">
+          <div>
+            <div class="et-name">SyntaxError</div>
+            <div class="et-cn">句子写飞了</div>
+            <p class="et-mean">代码本身的语法不对 —— <strong>少了括号、少了引号、多了逗号</strong>。这种错通常更狠：<strong>整个文件一行都跑不了</strong>，整个页面直接白屏。</p>
+          </div>
+          <span class="et-freq">遇见率 · 中低</span>
+        </div>
+        <div class="err-type-body">
+          <div class="et-pane">
+            <div class="et-pane-tag">— 一段会出错的代码</div>
+            <div class="code-mini">
+<pre><span class="ckey">const</span> <span class="cvar">user</span> = {
+  <span class="cattr">name</span>: <span class="cstr">'Alice'</span>,
+  <span class="cattr">age</span>: <span class="cnum">30</span>
+<span class="cbad">  <span class="ccom">// 少了闭合的 }</span></span>
+
+<span class="cfun">console</span>.<span class="cfun">log</span>(<span class="cvar">user</span>);</pre>
+            </div>
+            <div class="err-fix"><span class="ef-tag">怎么修</span>看错误指向的那一行 —— SyntaxError 通常报得有点偏（指到文件末尾），但你只要在那附近找 <code>{</code> <code>}</code> <code>(</code> <code>)</code> <code>"</code> <code>'</code> 是不是配对就好。VSCode 会自动配对，AI 也会。</div>
+          </div>
+          <div class="et-pane">
+            <div class="et-pane-tag">— 浏览器会这么喊</div>
+            <div class="mini-console">
+<span class="mc-ico">●</span><span class="mc-type">Uncaught SyntaxError:</span> Unexpected end of input
+<span class="mc-loc">at App.jsx:12</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="hint-strip" style="margin-top:32px;">
+      <span class="hint-tag">套路</span>看到 <code style="font-family:'JetBrains Mono',monospace;font-size:12px;background:rgba(255,77,46,0.12);padding:1px 6px;border-radius:3px;">XxxError</code> → 先认是哪一种 → 后面那句 "is not defined" / "Cannot read..." / "Unexpected..." 就是它在告诉你<strong>具体哪不对</strong>。三种连起来读，像看天气预报一样自然。
+    </div>
+  </div>
+</section>
+
+<!-- Section 3: Game · 报错急救站 -->
+<section id="game">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>03</strong> / 急救站</div>
+        <h2 class="section-title">点出 5 段报错里的<br><span class="em">关键那一行</span></h2>
+      </div>
+      <p class="section-sub">
+        这一段是这一篇的灵魂。<span class="em">5 道题</span>，每道给你一段真的 console，你的任务是 —— <strong>在一堆红字里点出"哪一行最关键"</strong>。点对了它会变绿，点错了会摇一下。难度逐渐升高。
+      </p>
+    </div>
+
+    <div class="hint-strip">
+      <span class="hint-tag">玩法</span>每道题都给你一小段背景（"我刚做了什么"）+ 浏览器吐出来的 console。鼠标移到某一行 → 点击 → 看反馈。每题只允许点一次"对的那行"。
+    </div>
+
+    <div class="game-stage" id="gameStage">
+      <div class="game-bar">
+        <div class="gb-left">
+          <span class="gb-tag">急救站</span>
+          <h3 class="gb-title" id="gameTitle">Q1 · 经典 undefined</h3>
+        </div>
+        <div class="gb-progress">
+          <span id="gbCounter">1 / 5</span>
+          <div class="gb-dots" id="gbDots">
+            <span class="gb-dot current"></span>
+            <span class="gb-dot"></span>
+            <span class="gb-dot"></span>
+            <span class="gb-dot"></span>
+            <span class="gb-dot"></span>
+          </div>
+        </div>
+      </div>
+
+      <div class="game-stage-body">
+        <div id="gameQuestion">
+          <!-- Question content injected by JS -->
+        </div>
+
+        <div class="game-feedback" id="gameFeedback">
+          <span class="gf-tag" id="gfTag">提示</span>
+          <span id="gfText"></span>
+        </div>
+
+        <div class="game-controls">
+          <span class="gc-meta" id="gcMeta">点击你认为最关键的那一行</span>
+          <button class="game-btn" id="gameNext" disabled>下一题 <span class="arr">→</span></button>
+        </div>
+      </div>
+
+      <!-- End screen -->
+      <div class="game-end" id="gameEnd">
+        <div class="ge-emoji">★ ★ ★</div>
+        <h3>你刚学会了<br>别人调试 <span class="em">3 年</span>才会的能力</h3>
+        <p>从今往后，你打开 console 看到红字 —— 不会再下意识关掉。<strong>你会先扫一眼第一行红字、再看下面 stack 的第一行</strong>，剩下的全部跳过。</p>
+        <div class="ge-stats">
+          <div class="ge-stat">
+            <div class="ge-num" id="geScore">5</div>
+            <div class="ge-cap">道题答对</div>
+          </div>
+          <div class="ge-stat">
+            <div class="ge-num" id="geMistakes">0</div>
+            <div class="ge-cap">次试错</div>
+          </div>
+        </div>
+        <p>下一篇 <strong>H3 · Network 面板</strong> —— 数据从哪来、为什么没出现，全都能查。</p>
+        <button class="game-btn ghost" id="gameRestart">重玩一次 ↺</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Section 4: console.log -->
+<section id="logging">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>04</strong> / 主动问</div>
+        <h2 class="section-title"><code class="mono" style="font-family:'JetBrains Mono',monospace;font-size:0.85em;color:var(--ink);background:var(--bg-2);padding:0 8px;border-radius:6px;letter-spacing:-0.02em;">console.log</code><br>是<span class="em">设计师的朋友</span></h2>
+      </div>
+      <p class="section-sub">
+        前面三节都在讲"代码自己喊出来的报错"。但还有一招更主动 —— <strong>让代码"说话"</strong>。任何变量后面加一句 <code class="mono" style="font-size:13px;background:var(--bg-2);padding:1px 6px;border-radius:3px;">console.log(变量)</code>，它就会把当时的值打到 console 里。设计师也能用。
+      </p>
+    </div>
+
+    <div class="hint-strip">
+      <span class="hint-tag">关键</span>不是只有工程师才能加 log。你跟 AI 说"在 X 行加 console.log 看 user 是什么"，它就会加。debug 一大半就是<strong>主动问</strong>，不是"等错出来"。
+    </div>
+
+    <div class="log-grid">
+
+      <div class="log-card">
+        <div class="lc-head">
+          <div class="lc-tag">console.log()</div>
+          <h4 class="lc-title">基本款 · 看一个变量</h4>
+          <p class="lc-desc">最基础的一个。括号里塞什么，console 就吐什么。</p>
+        </div>
+        <div class="lc-body">
+          <div class="code-mini">
+<pre><span class="ckey">const</span> <span class="cvar">user</span> = <span class="cfun">getUser</span>();
+<span class="cfun">console</span>.<span class="cfun">log</span>(<span class="cvar">user</span>);  <span class="ccom">// ← 加这一句</span></pre>
+          </div>
+          <div class="log-output">
+            <div class="lo-tag">— Console 输出</div>
+            <span style="color:var(--dt-text);">▸ {</span><span class="lo-key">name</span>: <span class="lo-str">"Alice"</span>, <span class="lo-key">age</span>: <span class="lo-num">30</span>, <span class="lo-key">role</span>: <span class="lo-str">"designer"</span><span style="color:var(--dt-text);">}</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="log-card">
+        <div class="lc-head">
+          <div class="lc-tag">console.table()</div>
+          <h4 class="lc-title">数组款 · 看一组数据</h4>
+          <p class="lc-desc">变量是个数组（list） / 一堆对象的时候用它，会自动排成表格。</p>
+        </div>
+        <div class="lc-body">
+          <div class="code-mini">
+<pre><span class="ckey">const</span> <span class="cvar">users</span> = <span class="cfun">getUsers</span>();
+<span class="cfun">console</span>.<span class="cfun">table</span>(<span class="cvar">users</span>);  <span class="ccom">// ← 排成表格</span></pre>
+          </div>
+          <table class="log-table">
+            <thead><tr><th>(index)</th><th>name</th><th>age</th></tr></thead>
+            <tbody>
+              <tr><td>0</td><td><span class="lo-str">"Alice"</span></td><td><span class="lo-num">30</span></td></tr>
+              <tr><td>1</td><td><span class="lo-str">"Bob"</span></td><td><span class="lo-num">25</span></td></tr>
+              <tr><td>2</td><td><span class="lo-str">"Cara"</span></td><td><span class="lo-num">28</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="log-card">
+        <div class="lc-head">
+          <div class="lc-tag">console.error()</div>
+          <h4 class="lc-title">高亮款 · 让自己的 log 标红</h4>
+          <p class="lc-desc">想让自己加的 log 在一片白字里特别显眼？用 error，浏览器会给它打上红色 ❌ 图标 —— 跟真报错一样。</p>
+        </div>
+        <div class="lc-body">
+          <div class="code-mini">
+<pre><span class="ckey">if</span> (!<span class="cvar">user</span>) {
+  <span class="cfun">console</span>.<span class="cfun">error</span>(<span class="cstr">'user 没拿到！'</span>);
+}</pre>
+          </div>
+          <div class="log-output">
+            <div class="lo-tag">— Console 输出（红框）</div>
+            <span class="lo-error">● user 没拿到！</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="log-card">
+        <div class="lc-head">
+          <div class="lc-tag">console.log() with label</div>
+          <h4 class="lc-title">加标签款 · 一次看多个</h4>
+          <p class="lc-desc">想看好几个变量？前面加个字符串当标签，找起来就清楚多了。</p>
+        </div>
+        <div class="lc-body">
+          <div class="code-mini">
+<pre><span class="cfun">console</span>.<span class="cfun">log</span>(<span class="cstr">'[user]'</span>, <span class="cvar">user</span>);
+<span class="cfun">console</span>.<span class="cfun">log</span>(<span class="cstr">'[loading?]'</span>, <span class="cvar">isLoading</span>);
+<span class="cfun">console</span>.<span class="cfun">log</span>(<span class="cstr">'[response]'</span>, <span class="cvar">response</span>);</pre>
+          </div>
+          <div class="log-output">
+            <div class="lo-tag">— Console 输出</div>
+            <span style="color:var(--dt-text);">[user] {<span class="lo-key">name</span>: <span class="lo-str">"Alice"</span>}</span><br>
+            <span style="color:var(--dt-text);">[loading?] <span class="lo-bool">false</span></span><br>
+            <span style="color:var(--dt-text);">[response] <span class="lo-undef">undefined</span> ← 看，问题在这</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="ai-prompt-box">
+      <div class="ap-tag">↳ 让 AI 帮你加 LOG · COPY-PASTE</div>
+      <h4>不会写也没关系，<br>你会"指挥 AI 加 log"就够了</h4>
+      <p>AI 写完代码 → 你跑起来不对 → 不要立刻让它"修一下"。先让它<strong>加 log</strong>，搞清楚到底哪一步出问题。这是个万能 prompt：</p>
+      <div class="ap-quote">
+        <span class="ap-mark">"</span>这段代码跑起来 <code>user.name</code> 报 <code>undefined</code>。<br>
+        请在 <code>UserList.jsx</code> 第 14 行 <strong>之前</strong> 加一句 <code>console.log('[user]', user)</code>，<br>
+        我跑一遍把 console 的输出贴回来给你，再决定怎么改。<span class="ap-mark">"</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Section 5: Severity model -->
+<section id="severity">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>05</strong> / 红有三种</div>
+        <h2 class="section-title">看到红色，<br>先看<span class="em">图标</span></h2>
+      </div>
+      <p class="section-sub">
+        Console 里"看上去是红色 / 警告"的东西其实分三层。<strong>真红</strong> 才是必须修的；<strong>黄色</strong> 是提醒；<strong>灰色 info</strong> 是浏览器自己唠叨。看图标比看颜色准。
+      </p>
+    </div>
+
+    <div class="severity-grid">
+      <div class="severity-card red">
+        <div class="sv-icon"></div>
+        <div class="sv-name">真红 · Error</div>
+        <div class="sv-en">red ● — code is broken</div>
+        <p class="sv-mean"><strong>代码挂了</strong>。当前这个功能完全跑不动 —— 按钮点了没反应、组件渲染失败、页面白屏。</p>
+        <div class="sv-action">必须修 · 先看错误类型 + 第一行 stack</div>
+      </div>
+
+      <div class="severity-card yellow">
+        <div class="sv-icon"></div>
+        <div class="sv-name">警告黄 · Warning</div>
+        <div class="sv-en">yellow ▲ — heads up</div>
+        <p class="sv-mean"><strong>能跑但有隐患</strong>。比如"你这个 prop 传错类型了"、"key 重复了"、"React 18 这种写法即将废弃"。</p>
+        <div class="sv-action">可以晚点处理 · 不影响当前演示</div>
+      </div>
+
+      <div class="severity-card grey">
+        <div class="sv-icon"></div>
+        <div class="sv-name">Info 灰 · Info</div>
+        <div class="sv-en">grey ⓘ — fyi</div>
+        <p class="sv-mean"><strong>浏览器自己唠嗑</strong>。"cookie 已过期"、"加载完成"、"开发模式开启"、"hot reload 触发"。</p>
+        <div class="sv-action">90% 可以无视 · 偶尔看看就行</div>
+      </div>
+    </div>
+
+    <div class="severity-mock">
+      <div class="hint-strip" style="margin-bottom:14px;">
+        <span class="hint-tag">看实物</span>下面是一个真实 console 长啥样 —— 三种行混在一起。注意每行最左边的<strong>圆形图标</strong>，那才是判断"严重程度"的唯一可靠信号。
+      </div>
+      <div class="devtools">
+        <div class="dt-tabs">
+          <span class="dt-tab">Elements</span>
+          <span class="dt-tab active">Console</span>
+          <span class="dt-tab">Sources</span>
+          <span class="dt-tab">Network</span>
+        </div>
+        <div class="dt-toolbar">
+          <span class="dt-clear">⊘</span>
+          <input class="dt-filter" placeholder="Filter" disabled>
+          <span class="dt-pill err">● 1 error</span>
+          <span class="dt-pill warn">▲ 2 warnings</span>
+        </div>
+        <div class="dt-body">
+          <div class="dt-row is-mute">
+            <span class="dt-arrow"></span>
+            <span class="dt-icon info"></span>
+            <span class="dt-msg">[vite] connected.</span>
+            <span class="dt-src">client.ts:18</span>
+          </div>
+          <div class="dt-row is-mute">
+            <span class="dt-arrow"></span>
+            <span class="dt-icon info"></span>
+            <span class="dt-msg">Download the React DevTools for a better development experience: https://reactjs.org/link/react-devtools</span>
+            <span class="dt-src">react-dom.development.js:24762</span>
+          </div>
+          <div class="dt-row is-warn">
+            <span class="dt-arrow"></span>
+            <span class="dt-icon warn"></span>
+            <span class="dt-msg">Warning: Each child in a list should have a unique "key" prop.</span>
+            <span class="dt-src">UserList.jsx:18</span>
+          </div>
+          <div class="dt-row is-warn">
+            <span class="dt-arrow"></span>
+            <span class="dt-icon warn"></span>
+            <span class="dt-msg">Warning: Failed prop type: The prop `user` is marked as required in `UserCard`.</span>
+            <span class="dt-src">UserCard.jsx:5</span>
+          </div>
+          <div class="dt-row is-err">
+            <span class="dt-arrow"></span>
+            <span class="dt-icon err"></span>
+            <span class="dt-msg"><span class="dt-err-type">Uncaught TypeError:</span> <span class="dt-err-text">Cannot read properties of undefined (reading 'map')</span></span>
+            <span class="dt-src">UserList.jsx:14</span>
+          </div>
+          <div class="dt-row is-mute">
+            <span class="dt-arrow"></span>
+            <span class="dt-icon info"></span>
+            <span class="dt-msg">[HMR] hot module reloaded · UserList.jsx</span>
+            <span class="dt-src">client.ts:42</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Section 6: Cheatsheet -->
+<section id="cheat">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>06</strong> / 速查卡</div>
+        <h2 class="section-title">三张卡片<br><span class="em">塞进口袋</span></h2>
+      </div>
+      <p class="section-sub">
+        所有的精华浓缩成三张卡。打开 console 看到红字 —— 按这个顺序读，几乎不会卡。
+      </p>
+    </div>
+
+    <div class="cheat-grid">
+      <div class="cheat-card types">
+        <div class="cc-num">PART 01 · 类型</div>
+        <h4>认 3 种 Error</h4>
+        <div class="cc-sub">XxxError 开头</div>
+        <dl>
+          <dt>TypeError</dt>
+          <dd>变量是 <code>undefined</code> / <code>null</code>，但你当成对象在用。</dd>
+          <dt>ReferenceError</dt>
+          <dd>变量根本不存在 —— <strong>拼错了 / 忘 import</strong>。</dd>
+          <dt>SyntaxError</dt>
+          <dd>语法不对 —— <strong>少括号 / 引号 / 逗号</strong>。整文件挂。</dd>
+        </dl>
+      </div>
+
+      <div class="cheat-card read">
+        <div class="cc-num">PART 02 · 顺序</div>
+        <h4>三件套阅读法</h4>
+        <div class="cc-sub">read in 3 steps</div>
+        <dl>
+          <dt>STEP 1</dt>
+          <dd>第一行红字 — <strong>错误类型 + 错误信息</strong>。</dd>
+          <dt>STEP 2</dt>
+          <dd>下面 stack 第一行 — <strong>文件名 + 行号</strong>。指向你的代码。</dd>
+          <dt>STEP 3</dt>
+          <dd>剩下全部 <strong>跳过</strong>。那是 React / 浏览器内部，不归你管。</dd>
+        </dl>
+      </div>
+
+      <div class="cheat-card ai">
+        <div class="cc-num">PART 03 · AI</div>
+        <h4>看不懂就问 AI</h4>
+        <div class="cc-sub">copy-paste prompt</div>
+        <dl>
+          <dt>第一招 · 全贴</dt>
+          <dd>把整段红字 + "我刚做了什么" 一起喂给 AI。</dd>
+          <dt>第二招 · 加 log</dt>
+          <dd>"在 X 行前加 <code>console.log</code> 看 Y 是什么"。</dd>
+          <dt>第三招 · 不要直接修</dt>
+          <dd>先让 AI 解释错在哪、为什么。<strong>看懂再改</strong>。</dd>
+        </dl>
+      </div>
+    </div>
+
+    <a href="h3-network-figma.html" class="next-post">
+      <div>
+        <div class="np-tag">下一篇 · NEXT · H3 · 浏览器调试</div>
+        <h4>Network <span class="em">×</span> 数据从哪来</h4>
+        <p>Console 看的是<strong>代码自己喊的错</strong>。但还有一类问题它不喊 —— "我请求的数据为什么没回来"。下一站打开 Network 面板，把每一次请求都摊在桌面上看。</p>
+      </div>
+      <span class="np-cta">继续阅读 <span class="arr">→</span></span>
+    </a>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div class="byline">
+      <img class="avatar" src="author.jpg" alt="范米花儿">
+      <div class="byline-meta">
+        <div class="byline-label"><span class="dot"></span>作者 · WRITTEN BY</div>
+        <h3 class="byline-name">嗨，我是 <span class="em">范米花儿</span></h3>
+        <p class="byline-tag">一份给设计师的代码入门 ——<br>不需要会写，知道大概怎么回事，跟前端 / AI 沟通就顺多了。</p>
+        <div class="byline-contact">
+          <span class="contact-label">微信</span>
+          <span class="contact-id">vanvan_0422</span>
+          <span class="contact-hint">想看什么主题，加我聊</span>
+        </div>
+      </div>
+    </div>
+    <div class="footer-meta">
+      做于 <span class="mono">2026</span> · 用 <span class="heart">●</span> 写给 <span class="mono">DESIGNERS &amp; DEVELOPERS</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+// ========= §01 Anatomy: clicking steps highlights matching console parts =========
+(function () {
+  const dt = document.getElementById('anatomyDt');
+  if (!dt) return;
+  const steps = document.querySelectorAll('.anatomy-step');
+
+  function setActive(mode) {
+    dt.dataset.show = mode;
+    steps.forEach(s => s.classList.toggle('is-active', s.dataset.anatomy === mode));
+  }
+
+  steps.forEach(step => {
+    step.addEventListener('click', () => setActive(step.dataset.anatomy));
+    step.addEventListener('mouseenter', () => setActive(step.dataset.anatomy));
+  });
+
+  // Default state — start with "red"
+  setTimeout(() => setActive('red'), 400);
+})();
+
+// ========= §03 Game: 报错急救站 =========
+(function () {
+  const stage = document.getElementById('gameStage');
+  if (!stage) return;
+
+  const QUESTIONS = [
+    {
+      title: 'Q1 · 经典 undefined',
+      context: '你刚跑了 <code>npm run dev</code>，页面白屏。F12 一开 console 一片红。下面 5 行里，<strong>哪一行最关键</strong> —— 也就是你看一眼就大概知道"哪不对"的那一行？',
+      console: 'q1',
+      correct: 'red-line',
+      good: '<strong>对！</strong> 第一行的 <code>TypeError: Cannot read properties of undefined</code> 就是<strong>真错</strong>。这一行告诉你两件事：<strong>错误类型</strong>（TypeError）+ <strong>具体怎么挂的</strong>（想读 undefined 的属性）。',
+      bad: '再看看。stack trace 那些行也很重要，但<strong>最关键的是错误信息那一行</strong> —— 它告诉你"为什么挂"。先认它，再去看 stack。'
+    },
+    {
+      title: 'Q2 · 找出"你的代码"在哪',
+      context: '错误已经认出来了 —— 是个 TypeError。下面是它的 stack trace（10 行调用链）。<strong>哪一行指向"你的代码"</strong>？（提示：你的项目里写的是 <code>UserList.jsx</code>。其他像 <code>react-dom.development.js</code> 都是库内部。）',
+      console: 'q2',
+      correct: 'q2-mine',
+      good: '<strong>正中。</strong> 看到 <code>UserList.jsx:14</code> —— <strong>这是你写的文件</strong>，文件名 + 行号。打开这个文件第 14 行，错就在那。其他那些 <code>react-dom.development.js</code> 全部跳过。',
+      bad: '不对哦。stack 里只要看到<strong>非 node_modules / 非 react-dom 的文件名</strong> —— 那才是你的代码。<code>react-dom</code> / <code>scheduler</code> 这些是 React 内部，跳过。'
+    },
+    {
+      title: 'Q3 · 拼写错',
+      context: 'AI 给你写了一段代码，跑起来报错。你大概知道是 ReferenceError —— 这意味着<strong>"用了一个根本不存在的东西"</strong>。下面这段错里，<strong>哪一行直接告诉你"是什么不存在"</strong>？',
+      console: 'q3',
+      correct: 'red-line',
+      good: '<strong>对。</strong> <code>userList is not defined</code> —— 这就是它在告诉你：<strong>userList 这个名字它没听说过</strong>。99% 的情况是你（或 AI）拼写错了 —— 比如本来叫 <code>userLst</code>、<code>UserList</code>（大小写）、<code>users</code>。直接全文搜一下就找到了。',
+      bad: '再看看。"is not defined" 那一行才是 ReferenceError 的灵魂 —— 它直接告诉你<strong>哪个名字不存在</strong>。找到这个名字 → 全文搜一下 → 看你是不是写错了。'
+    },
+    {
+      title: 'Q4 · 异步 stack（async/await）',
+      context: '你写了一个"按下按钮 → 请求接口 → 显示结果"的流程，按下去崩了。报错来自 async 函数，stack 长得像鬼故事 —— 一堆 <code>at async ...</code> / <code>at Promise ...</code>。<strong>真错还是只有一行</strong>，找出它。',
+      console: 'q4',
+      correct: 'red-line',
+      good: '<strong>厉害。</strong> 不管 stack 多复杂，<strong>第一行的 Error 总是真错</strong> —— <code>Failed to fetch</code> 在告诉你：网络请求没成功。是后端挂了 / URL 写错了 / CORS 拦了。stack 里那些 <code>async</code> / <code>Promise</code> / <code>then</code> 是 JS 异步机制的内部实现，不用看。',
+      bad: '别被 async 的 stack 吓到。无论多复杂，<strong>第一行红字永远是真错</strong>。这次 <code>Failed to fetch</code> 才是关键 —— 一句话告诉你"请求挂了"。剩下的 <code>Promise.then</code> / <code>async</code> 是 JS 内部，跳过。'
+    },
+    {
+      title: 'Q5 · 网络错误（不在 console 里？）',
+      context: '页面看上去一切正常 —— console 里只有一行小小的红字。但其实有个数据没拿到。这一次<strong>真正的细节</strong>不在 console，在 Network 面板里。但 console 至少给了你一个线索 —— 找出那行最有用的红字。',
+      console: 'q5',
+      correct: 'red-line',
+      good: '<strong>对。</strong> <code>GET https://api.example.com/users 404 (Not Found)</code> —— 这一行包含了所有线索：<strong>请求方法</strong>（GET）+ <strong>地址</strong>（URL）+ <strong>状态码</strong>（404）。404 = "服务器说没这个东西"。下一步打开 Network 面板看请求详情 —— 那是 H3 的内容。',
+      bad: '换个思路。这次的关键不是"代码哪里挂"，而是"哪个网络请求失败了"。带 <strong>HTTP 状态码</strong>（404 / 500 / 401）的那一行 —— 才是你要找的。它告诉你哪个 URL 出了什么问题。'
+    }
+  ];
+
+  // Question console renderers — return HTML
+  function consoleHTML(qid) {
+    if (qid === 'q1') {
+      return `
+<div class="devtools game-console">
+  <div class="dt-tabs">
+    <span class="dt-tab">Elements</span>
+    <span class="dt-tab active">Console</span>
+    <span class="dt-tab">Sources</span>
+    <span class="dt-tab">Network</span>
+  </div>
+  <div class="dt-toolbar">
+    <span class="dt-clear">⊘</span>
+    <input class="dt-filter" placeholder="Filter" disabled>
+    <span class="dt-pill err">● 1 error</span>
+  </div>
+  <div class="dt-body">
+    <div class="dt-row is-mute">
+      <span class="dt-arrow"></span>
+      <span class="dt-icon info"></span>
+      <span class="dt-msg">[vite] connected.</span>
+      <span class="dt-src">client.ts:18</span>
+    </div>
+    <div class="dt-row is-err" data-pick="red-line">
+      <span class="dt-arrow"></span>
+      <span class="dt-icon err"></span>
+      <span class="dt-msg"><span class="dt-err-type">Uncaught TypeError:</span> <span class="dt-err-text">Cannot read properties of undefined (reading 'map')</span></span>
+      <span class="dt-src">UserList.jsx:14</span>
+    </div>
+    <div class="dt-stack">
+      <div class="dt-stack-line" data-pick="stack-1"><span class="dt-at">at</span><span class="dt-fn">UserList</span><span class="dt-loc">UserList.jsx:14:23</span></div>
+      <div class="dt-stack-line is-mute" data-pick="stack-2"><span class="dt-at">at</span><span class="dt-fn">renderWithHooks</span><span class="dt-loc">react-dom.development.js:14985</span></div>
+      <div class="dt-stack-line is-mute" data-pick="stack-3"><span class="dt-at">at</span><span class="dt-fn">beginWork</span><span class="dt-loc">react-dom.development.js:19049</span></div>
+    </div>
+    <div class="dt-row is-mute" data-pick="info-1">
+      <span class="dt-arrow"></span>
+      <span class="dt-icon info"></span>
+      <span class="dt-msg">[HMR] hot module reloaded · UserList.jsx</span>
+      <span class="dt-src">client.ts:42</span>
+    </div>
+  </div>
+</div>`;
+    }
+    if (qid === 'q2') {
+      return `
+<div class="devtools game-console">
+  <div class="dt-tabs">
+    <span class="dt-tab">Elements</span>
+    <span class="dt-tab active">Console</span>
+    <span class="dt-tab">Sources</span>
+    <span class="dt-tab">Network</span>
+  </div>
+  <div class="dt-toolbar">
+    <span class="dt-clear">⊘</span>
+    <input class="dt-filter" placeholder="Filter" disabled>
+    <span class="dt-pill err">● 1 error</span>
+  </div>
+  <div class="dt-body">
+    <div class="dt-row is-err">
+      <span class="dt-arrow"></span>
+      <span class="dt-icon err"></span>
+      <span class="dt-msg"><span class="dt-err-type">Uncaught TypeError:</span> <span class="dt-err-text">Cannot read properties of undefined (reading 'map')</span></span>
+      <span class="dt-src">UserList.jsx:14</span>
+    </div>
+    <div class="dt-stack">
+      <div class="dt-stack-line" data-pick="q2-mine"><span class="dt-at">at</span><span class="dt-fn">UserList</span><span class="dt-loc">UserList.jsx:14:23</span></div>
+      <div class="dt-stack-line is-mute" data-pick="q2-react-1"><span class="dt-at">at</span><span class="dt-fn">renderWithHooks</span><span class="dt-loc">react-dom.development.js:14985:18</span></div>
+      <div class="dt-stack-line is-mute" data-pick="q2-react-2"><span class="dt-at">at</span><span class="dt-fn">mountIndeterminateComponent</span><span class="dt-loc">react-dom.development.js:17811:13</span></div>
+      <div class="dt-stack-line is-mute" data-pick="q2-react-3"><span class="dt-at">at</span><span class="dt-fn">beginWork</span><span class="dt-loc">react-dom.development.js:19049:16</span></div>
+      <div class="dt-stack-line is-mute" data-pick="q2-react-4"><span class="dt-at">at</span><span class="dt-fn">callCallback</span><span class="dt-loc">react-dom.development.js:3945:14</span></div>
+      <div class="dt-stack-line is-mute" data-pick="q2-react-5"><span class="dt-at">at</span><span class="dt-fn">workLoopSync</span><span class="dt-loc">react-dom.development.js:22707:5</span></div>
+      <div class="dt-stack-line is-mute" data-pick="q2-react-6"><span class="dt-at">at</span><span class="dt-fn">renderRootSync</span><span class="dt-loc">react-dom.development.js:22670:7</span></div>
+      <div class="dt-stack-line is-mute" data-pick="q2-react-7"><span class="dt-at">at</span><span class="dt-fn">performSyncWorkOnRoot</span><span class="dt-loc">react-dom.development.js:22293:18</span></div>
+      <div class="dt-stack-line is-mute" data-pick="q2-react-8"><span class="dt-at">at</span><span class="dt-fn">flushSyncCallbacks</span><span class="dt-loc">react-dom.development.js:11305:22</span></div>
+      <div class="dt-stack-line is-mute" data-pick="q2-react-9"><span class="dt-at">at</span><span class="dt-fn">commitRootImpl</span><span class="dt-loc">scheduler.development.js:18687:13</span></div>
+    </div>
+  </div>
+</div>`;
+    }
+    if (qid === 'q3') {
+      return `
+<div class="devtools game-console">
+  <div class="dt-tabs">
+    <span class="dt-tab">Elements</span>
+    <span class="dt-tab active">Console</span>
+    <span class="dt-tab">Sources</span>
+    <span class="dt-tab">Network</span>
+  </div>
+  <div class="dt-toolbar">
+    <span class="dt-clear">⊘</span>
+    <input class="dt-filter" placeholder="Filter" disabled>
+    <span class="dt-pill err">● 1 error</span>
+  </div>
+  <div class="dt-body">
+    <div class="dt-row is-mute" data-pick="q3-info">
+      <span class="dt-arrow"></span>
+      <span class="dt-icon info"></span>
+      <span class="dt-msg">[vite] hmr update · App.jsx</span>
+      <span class="dt-src">client.ts:42</span>
+    </div>
+    <div class="dt-row is-err" data-pick="red-line">
+      <span class="dt-arrow"></span>
+      <span class="dt-icon err"></span>
+      <span class="dt-msg"><span class="dt-err-type">Uncaught ReferenceError:</span> <span class="dt-err-text">userList is not defined</span></span>
+      <span class="dt-src">App.jsx:8</span>
+    </div>
+    <div class="dt-stack">
+      <div class="dt-stack-line" data-pick="q3-stack-1"><span class="dt-at">at</span><span class="dt-fn">handleClick</span><span class="dt-loc">App.jsx:8:13</span></div>
+      <div class="dt-stack-line is-mute" data-pick="q3-stack-2"><span class="dt-at">at</span><span class="dt-fn">HTMLButtonElement.executeDispatch</span><span class="dt-loc">react-dom.development.js:9041</span></div>
+      <div class="dt-stack-line is-mute" data-pick="q3-stack-3"><span class="dt-at">at</span><span class="dt-fn">processDispatchQueue</span><span class="dt-loc">react-dom.development.js:9089</span></div>
+    </div>
+  </div>
+</div>`;
+    }
+    if (qid === 'q4') {
+      return `
+<div class="devtools game-console">
+  <div class="dt-tabs">
+    <span class="dt-tab">Elements</span>
+    <span class="dt-tab active">Console</span>
+    <span class="dt-tab">Sources</span>
+    <span class="dt-tab">Network</span>
+  </div>
+  <div class="dt-toolbar">
+    <span class="dt-clear">⊘</span>
+    <input class="dt-filter" placeholder="Filter" disabled>
+    <span class="dt-pill err">● 1 error</span>
+  </div>
+  <div class="dt-body">
+    <div class="dt-row is-mute" data-pick="q4-info-1">
+      <span class="dt-arrow"></span>
+      <span class="dt-icon info"></span>
+      <span class="dt-msg">[fetch] starting GET /api/users</span>
+      <span class="dt-src">api.ts:12</span>
+    </div>
+    <div class="dt-row is-err" data-pick="red-line">
+      <span class="dt-arrow"></span>
+      <span class="dt-icon err"></span>
+      <span class="dt-msg"><span class="dt-err-type">Uncaught (in promise) TypeError:</span> <span class="dt-err-text">Failed to fetch</span></span>
+      <span class="dt-src">api.ts:14</span>
+    </div>
+    <div class="dt-stack">
+      <div class="dt-stack-line" data-pick="q4-stack-1"><span class="dt-at">at</span><span class="dt-fn">fetchUsers</span><span class="dt-loc">api.ts:14:9</span></div>
+      <div class="dt-stack-line is-mute" data-pick="q4-stack-2"><span class="dt-at">at</span><span class="dt-fn">async handleSubmit</span><span class="dt-loc">UserForm.jsx:22:18</span></div>
+      <div class="dt-stack-line is-mute" data-pick="q4-stack-3"><span class="dt-at">at</span><span class="dt-fn">async Promise.all</span><span class="dt-loc">(index)</span></div>
+      <div class="dt-stack-line is-mute" data-pick="q4-stack-4"><span class="dt-at">at</span><span class="dt-fn">Promise.then.callback</span><span class="dt-loc">runtime.js:65</span></div>
+      <div class="dt-stack-line is-mute" data-pick="q4-stack-5"><span class="dt-at">at</span><span class="dt-fn">_invoke</span><span class="dt-loc">runtime.js:155</span></div>
+      <div class="dt-stack-line is-mute" data-pick="q4-stack-6"><span class="dt-at">at</span><span class="dt-fn">asyncGeneratorStep</span><span class="dt-loc">asyncToGenerator.js:3</span></div>
+    </div>
+  </div>
+</div>`;
+    }
+    if (qid === 'q5') {
+      return `
+<div class="devtools game-console">
+  <div class="dt-tabs">
+    <span class="dt-tab">Elements</span>
+    <span class="dt-tab active">Console</span>
+    <span class="dt-tab">Sources</span>
+    <span class="dt-tab">Network</span>
+  </div>
+  <div class="dt-toolbar">
+    <span class="dt-clear">⊘</span>
+    <input class="dt-filter" placeholder="Filter" disabled>
+    <span class="dt-pill err">● 1 error</span>
+    <span class="dt-pill warn">▲ 1 warning</span>
+  </div>
+  <div class="dt-body">
+    <div class="dt-row is-mute" data-pick="q5-info-1">
+      <span class="dt-arrow"></span>
+      <span class="dt-icon info"></span>
+      <span class="dt-msg">[vite] connected.</span>
+      <span class="dt-src">client.ts:18</span>
+    </div>
+    <div class="dt-row is-warn" data-pick="q5-warn">
+      <span class="dt-arrow"></span>
+      <span class="dt-icon warn"></span>
+      <span class="dt-msg">Warning: Each child in a list should have a unique "key" prop.</span>
+      <span class="dt-src">UserList.jsx:18</span>
+    </div>
+    <div class="dt-row is-err" data-pick="red-line">
+      <span class="dt-arrow"></span>
+      <span class="dt-icon err"></span>
+      <span class="dt-msg"><span class="dt-err-type">GET https://api.example.com/users</span> <span class="dt-err-text">404 (Not Found)</span></span>
+      <span class="dt-src">api.ts:14</span>
+    </div>
+    <div class="dt-row is-mute" data-pick="q5-info-2">
+      <span class="dt-arrow"></span>
+      <span class="dt-icon info"></span>
+      <span class="dt-msg">[fetch] response received in 142ms</span>
+      <span class="dt-src">api.ts:18</span>
+    </div>
+  </div>
+</div>`;
+    }
+    return '';
+  }
+
+  let qIndex = 0;
+  let mistakes = 0;
+  let solved = false;
+
+  const titleEl = document.getElementById('gameTitle');
+  const counterEl = document.getElementById('gbCounter');
+  const dotsEl = document.getElementById('gbDots');
+  const questionEl = document.getElementById('gameQuestion');
+  const feedbackEl = document.getElementById('gameFeedback');
+  const gfTagEl = document.getElementById('gfTag');
+  const gfTextEl = document.getElementById('gfText');
+  const gcMetaEl = document.getElementById('gcMeta');
+  const nextBtn = document.getElementById('gameNext');
+  const endEl = document.getElementById('gameEnd');
+  const scoreEl = document.getElementById('geScore');
+  const mistakesEl = document.getElementById('geMistakes');
+  const restartBtn = document.getElementById('gameRestart');
+
+  function renderQuestion() {
+    const q = QUESTIONS[qIndex];
+    solved = false;
+
+    titleEl.textContent = q.title;
+    counterEl.textContent = (qIndex + 1) + ' / ' + QUESTIONS.length;
+
+    // Update dots
+    Array.from(dotsEl.children).forEach((d, i) => {
+      d.classList.remove('current', 'solved');
+      if (i < qIndex) d.classList.add('solved');
+      else if (i === qIndex) d.classList.add('current');
+    });
+
+    // Render question body
+    questionEl.innerHTML = `
+<div class="game-q">
+  <div class="gq-num">题目 ${qIndex + 1} · 5</div>
+  <h3 class="gq-title">${q.title.replace(/^Q\d+ · /, '')}</h3>
+</div>
+<div class="game-context">
+  <span class="gc-tag">背景</span>${q.context}
+</div>
+${consoleHTML(q.console)}
+`;
+
+    feedbackEl.classList.remove('show', 'is-good', 'is-bad');
+    nextBtn.disabled = true;
+    gcMetaEl.textContent = '点击你认为最关键的那一行';
+
+    if (qIndex === QUESTIONS.length - 1) {
+      nextBtn.innerHTML = '玩通了 <span class="arr">→</span>';
+    } else {
+      nextBtn.innerHTML = '下一题 <span class="arr">→</span>';
+    }
+
+    // Bind clicks on every clickable row
+    const picks = questionEl.querySelectorAll('[data-pick]');
+    picks.forEach(p => {
+      p.addEventListener('click', () => handlePick(p, q));
+    });
+  }
+
+  function handlePick(el, q) {
+    if (solved) return;
+    const pick = el.dataset.pick;
+
+    if (pick === q.correct) {
+      solved = true;
+      el.classList.add('is-correct');
+      // Disable everything
+      questionEl.querySelectorAll('[data-pick]').forEach(p => {
+        if (p !== el) p.style.pointerEvents = 'none';
+      });
+
+      feedbackEl.classList.remove('is-bad');
+      feedbackEl.classList.add('is-good', 'show');
+      gfTagEl.textContent = '答对';
+      gfTextEl.innerHTML = q.good;
+
+      nextBtn.disabled = false;
+      gcMetaEl.textContent = '点对了 · 这就是真错的位置';
+
+      // Mark progress dot solved
+      Array.from(dotsEl.children)[qIndex].classList.remove('current');
+      Array.from(dotsEl.children)[qIndex].classList.add('solved');
+    } else {
+      mistakes++;
+      el.classList.remove('is-wrong-flash');
+      // Force reflow to restart animation
+      void el.offsetWidth;
+      el.classList.add('is-wrong-flash');
+
+      feedbackEl.classList.remove('is-good');
+      feedbackEl.classList.add('is-bad', 'show');
+      gfTagEl.textContent = '再看看';
+      gfTextEl.innerHTML = q.bad;
+    }
+  }
+
+  nextBtn.addEventListener('click', () => {
+    if (qIndex < QUESTIONS.length - 1) {
+      qIndex++;
+      renderQuestion();
+      // Scroll game into view smoothly
+      stage.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    } else {
+      // Show end screen
+      questionEl.style.display = 'none';
+      feedbackEl.style.display = 'none';
+      document.querySelector('.game-controls').style.display = 'none';
+      endEl.classList.add('show');
+      scoreEl.textContent = QUESTIONS.length;
+      mistakesEl.textContent = mistakes;
+    }
+  });
+
+  restartBtn.addEventListener('click', () => {
+    qIndex = 0;
+    mistakes = 0;
+    questionEl.style.display = '';
+    feedbackEl.style.display = '';
+    document.querySelector('.game-controls').style.display = '';
+    endEl.classList.remove('show');
+    renderQuestion();
+    stage.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
+
+  // Init
+  renderQuestion();
+})();
+</script>
+
+
+<!-- 路线图弹窗 -->
+<div class="rm-modal" id="rm-modal" hidden>
+  <div class="rm-backdrop" data-rm-close></div>
+  <div class="rm-dialog" role="dialog" aria-label="完整路线图">
+    <button class="rm-close" data-rm-close aria-label="关闭">✕</button>
+    <div class="rm-header">
+      <div class="rm-tag">完整路线图 · ROADMAP</div>
+      <h3 class="rm-title">9 模块 <span class="rm-em">·</span> 28 篇</h3>
+      <p class="rm-sub">设计篇 5 模块 / 15 篇 + 工程篇 4 系列 / 13 篇</p>
+    </div>
+    <div class="rm-body">
+      <div class="rm-mod">
+        <div class="rm-mod-key">A · 单元素与组件</div>
+        <div class="rm-mod-list">
+          <a href="basics-figma.html" class="rm-cell"><span class="rm-cell-code">A0</span><span class="rm-cell-name">三件套 · HTML / CSS / JS</span><span class="rm-cell-tier">入门</span></a>
+          <a href="box-figma.html" class="rm-cell"><span class="rm-cell-code">A1</span><span class="rm-cell-name">盒子 · Auto Layout</span><span class="rm-cell-tier">基础</span></a>
+          <a href="components-figma.html" class="rm-cell"><span class="rm-cell-code">A2</span><span class="rm-cell-name">组件 · Variants &amp; Props</span><span class="rm-cell-tier">基础</span></a>
+          <a href="button-system-figma.html" class="rm-cell"><span class="rm-cell-code">A3</span><span class="rm-cell-name">Button System · 组件演化</span><span class="rm-cell-tier">进阶</span></a>
+        </div>
+      </div>
+      <div class="rm-mod">
+        <div class="rm-mod-key">B · 多组件协作</div>
+        <div class="rm-mod-list">
+          <a href="page-figma.html" class="rm-cell"><span class="rm-cell-code">B0</span><span class="rm-cell-name">拼页面 · 组件嵌套</span><span class="rm-cell-tier">入门</span></a>
+          <a href="data-flow-figma.html" class="rm-cell"><span class="rm-cell-code">B1</span><span class="rm-cell-name">数据流 · 概念</span><span class="rm-cell-tier">基础</span></a>
+          <a href="data-flow-cases-figma.html" class="rm-cell"><span class="rm-cell-code">B2</span><span class="rm-cell-name">数据流 · 实战 5 案例</span><span class="rm-cell-tier">进阶</span></a>
+        </div>
+      </div>
+      <div class="rm-mod">
+        <div class="rm-mod-key">C · 视觉系统</div>
+        <div class="rm-mod-list">
+          <a href="tokens-figma.html" class="rm-cell"><span class="rm-cell-code">C0</span><span class="rm-cell-name">Variables / Tokens 入门</span><span class="rm-cell-tier">入门</span></a>
+          <a href="colors-type-figma.html" class="rm-cell"><span class="rm-cell-code">C1</span><span class="rm-cell-name">Colors / Type / Spacing</span><span class="rm-cell-tier">基础</span></a>
+          <a href="theme-switch-figma.html" class="rm-cell"><span class="rm-cell-code">C2</span><span class="rm-cell-name">Theme 切换实战</span><span class="rm-cell-tier">进阶</span></a>
+        </div>
+      </div>
+      <div class="rm-mod">
+        <div class="rm-mod-key">D · 状态与交互</div>
+        <div class="rm-mod-list">
+          <a href="states-figma.html" class="rm-cell"><span class="rm-cell-code">D0</span><span class="rm-cell-name">视觉态 · 看得见的状态</span><span class="rm-cell-tier">入门</span></a>
+          <a href="interactive-figma.html" class="rm-cell"><span class="rm-cell-code">D1</span><span class="rm-cell-name">Interactive Component</span><span class="rm-cell-tier">基础</span></a>
+          <a href="transition-figma.html" class="rm-cell"><span class="rm-cell-code">D2</span><span class="rm-cell-name">动画 · Transition</span><span class="rm-cell-tier">进阶</span></a>
+        </div>
+      </div>
+      <div class="rm-mod">
+        <div class="rm-mod-key">E · 工程化</div>
+        <div class="rm-mod-list">
+          <a href="naming-figma.html" class="rm-cell"><span class="rm-cell-code">E0</span><span class="rm-cell-name">命名 / 图层规范</span><span class="rm-cell-tier">入门</span></a>
+          <a href="handoff-figma.html" class="rm-cell"><span class="rm-cell-code">E2</span><span class="rm-cell-name">Handoff &amp; 设计系统</span><span class="rm-cell-tier">进阶</span></a>
+        </div>
+      </div>
+      <div class="rm-mod">
+        <div class="rm-mod-key">F · 工程入门</div>
+        <div class="rm-mod-list">
+          <a href="f1-npm-figma.html" class="rm-cell"><span class="rm-cell-code">F1</span><span class="rm-cell-name">npm 是什么</span><span class="rm-cell-tier">入门</span></a>
+          <a href="f2-import-figma.html" class="rm-cell"><span class="rm-cell-code">F2</span><span class="rm-cell-name">import 与路径</span><span class="rm-cell-tier">入门</span></a>
+          <a href="f3-dev-build-figma.html" class="rm-cell"><span class="rm-cell-code">F3</span><span class="rm-cell-name">dev vs build</span><span class="rm-cell-tier">基础</span></a>
+          <a href="f4-hidden-files-figma.html" class="rm-cell"><span class="rm-cell-code">F4</span><span class="rm-cell-name">看不见的文件</span><span class="rm-cell-tier">基础</span></a>
+        </div>
+      </div>
+      <div class="rm-mod">
+        <div class="rm-mod-key">G · 版本控制</div>
+        <div class="rm-mod-list">
+          <a href="g1-commit-branch-figma.html" class="rm-cell"><span class="rm-cell-code">G1</span><span class="rm-cell-name">commit / branch</span><span class="rm-cell-tier">入门</span></a>
+          <a href="g2-conflict-figma.html" class="rm-cell"><span class="rm-cell-code">G2</span><span class="rm-cell-name">冲突怎么解</span><span class="rm-cell-tier">基础</span></a>
+          <a href="g3-pr-review-figma.html" class="rm-cell"><span class="rm-cell-code">G3</span><span class="rm-cell-name">PR / Review</span><span class="rm-cell-tier">进阶</span></a>
+        </div>
+      </div>
+      <div class="rm-mod">
+        <div class="rm-mod-key">H · 浏览器调试</div>
+        <div class="rm-mod-list">
+          <a href="h1-devtools-elements-figma.html" class="rm-cell"><span class="rm-cell-code">H1</span><span class="rm-cell-name">DevTools Elements</span><span class="rm-cell-tier">入门</span></a>
+          <a href="h2-console-error-figma.html" class="rm-cell"><span class="rm-cell-code">H2</span><span class="rm-cell-name">Console 报错</span><span class="rm-cell-tier">基础</span></a>
+          <a href="h3-network-figma.html" class="rm-cell"><span class="rm-cell-code">H3</span><span class="rm-cell-name">Network 面板</span><span class="rm-cell-tier">进阶</span></a>
+        </div>
+      </div>
+      <div class="rm-mod">
+        <div class="rm-mod-key">J · 上线</div>
+        <div class="rm-mod-list">
+          <a href="j1-dns-figma.html" class="rm-cell"><span class="rm-cell-code">J1</span><span class="rm-cell-name">DNS / 域名</span><span class="rm-cell-tier">基础</span></a>
+          <a href="j2-vercel-figma.html" class="rm-cell"><span class="rm-cell-code">J2</span><span class="rm-cell-name">Vercel 部署</span><span class="rm-cell-tier">基础</span></a>
+          <a href="j3-cache-cdn-figma.html" class="rm-cell"><span class="rm-cell-code">J3</span><span class="rm-cell-name">缓存 / CDN</span><span class="rm-cell-tier">进阶</span></a>
+        </div>
+      </div>
+    </div>
+    <div class="rm-footer">
+      <span>未完待续 · 想看什么主题加我聊</span>
+      <span class="rm-wechat">微信 vanvan_0422</span>
+    </div>
+  </div>
+</div>
+<script>
+(function(){
+  var modal = document.getElementById('rm-modal');
+  if (!modal) return;
+  var openBtns = document.querySelectorAll('[data-rm-open]');
+  var closeBtns = modal.querySelectorAll('[data-rm-close]');
+  function open() { modal.hidden = false; document.body.style.overflow = 'hidden'; }
+  function close() { modal.hidden = true; document.body.style.overflow = ''; }
+  openBtns.forEach(function(b){ b.addEventListener('click', function(e){ e.preventDefault(); open(); }); });
+  closeBtns.forEach(function(b){ b.addEventListener('click', close); });
+  document.addEventListener('keydown', function(e){ if (e.key === 'Escape' && !modal.hidden) close(); });
+})();
+</script>
+</body>
+</html>
