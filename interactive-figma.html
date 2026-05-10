@@ -91,7 +91,7 @@
     letter-spacing: -0.03em;
     margin: 0 0 24px;
   }
-  .hero h1 .em { font-family: 'Fraunces', serif; font-style: italic; font-weight: 500; color: var(--accent); }
+  .hero h1 .em { font-family: 'Noto Serif SC', serif; font-weight: 500; color: var(--accent); }
   .hero h1 .num { font-family: 'Fraunces', serif; font-style: italic; font-weight: 600; color: var(--accent); }
   .hero h1 .x { display: inline-block; transform: translateY(-0.05em); margin: 0 0.05em; color: var(--ink-mute); font-weight: 300; }
   .hero p.lede {
@@ -101,7 +101,7 @@
     color: var(--ink-soft);
     margin: 0 0 40px;
   }
-  .hero p.lede .em { font-family: 'Fraunces', serif; font-style: italic; color: var(--accent); font-weight: 500; }
+  .hero p.lede .em { font-family: 'Noto Serif SC', serif; color: var(--accent); font-weight: 500; }
   .hero p.lede code {
     font-family: 'JetBrains Mono', monospace;
     font-size: 0.85em;
@@ -175,7 +175,7 @@
     margin: 0;
     max-width: 18ch;
   }
-  .section-title .em { font-family: 'Fraunces', serif; font-style: italic; font-weight: 500; color: var(--accent); }
+  .section-title .em { font-family: 'Noto Serif SC', serif; font-weight: 500; color: var(--accent); }
   .section-sub { color: var(--ink-soft); font-size: 17px; max-width: 38ch; line-height: 1.55; margin: 0; }
 
   /* Problem comparison */
@@ -959,49 +959,81 @@
   .deliver-card p strong { color: var(--ink); }
   .deliver-card .mono { font-family: 'JetBrains Mono', monospace; background: var(--bg-2); padding: 1px 6px; border-radius: 3px; font-size: 12px; }
 
-  .next-card {
-    margin-top: 40px;
+  /* ============= Unified next-post block (used across the series) ============= */
+  .next-post {
+    margin-top: 48px;
+    padding: 32px 36px;
     background: var(--ink);
     color: var(--bg);
-    border-radius: 6px;
-    padding: 32px 36px;
+    border-radius: 8px;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 32px;
+    align-items: center;
+    text-decoration: none;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
     position: relative;
     overflow: hidden;
   }
-  .next-card .next-tag {
+  .next-post::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at 100% 0%, rgba(255,77,46,0.12), transparent 55%);
+    pointer-events: none;
+  }
+  .next-post:hover { transform: translateY(-2px); box-shadow: 0 14px 36px rgba(22,22,29,0.22); }
+  @media (max-width: 720px) { .next-post { grid-template-columns: 1fr; padding: 24px; gap: 20px; } }
+  .next-post .np-tag {
     font-family: 'JetBrains Mono', monospace;
     font-size: 11px;
     color: var(--accent);
     letter-spacing: 0.12em;
     text-transform: uppercase;
     margin-bottom: 12px;
+    display: inline-block;
   }
-  .next-card h4 {
+  .next-post h4 {
     font-family: 'Noto Serif SC', serif;
-    font-size: clamp(24px, 3vw, 32px);
-    line-height: 1.2;
-    margin: 0 0 16px;
+    font-size: 26px;
+    margin: 0 0 10px;
     font-weight: 700;
+    color: white;
+    line-height: 1.25;
+    letter-spacing: -0.01em;
   }
-  .next-card h4 .em { font-family: 'Fraunces', serif; font-style: italic; font-weight: 500; color: var(--accent); }
-  .next-card p {
+  .next-post h4 .em {
+    font-family: 'Noto Serif SC', serif;
+    font-weight: 500;
+    color: var(--accent);
+  }
+  .next-post p {
+    margin: 0;
     color: rgba(255,255,255,0.72);
-    margin: 0 0 18px;
-    font-size: 14.5px;
-    line-height: 1.7;
-    max-width: 60ch;
+    font-size: 14px;
+    line-height: 1.65;
+    max-width: 560px;
   }
-  .next-card .next-list {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 8px 18px;
+  .next-post p strong { color: white; font-weight: 600; }
+  .next-post .np-cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 24px;
+    background: var(--accent);
+    color: white;
+    border-radius: 4px;
     font-family: 'JetBrains Mono', monospace;
-    font-size: 12px;
-    color: rgba(255,255,255,0.7);
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    white-space: nowrap;
+    transition: background 0.18s, color 0.18s, transform 0.18s;
+    position: relative;
+    z-index: 1;
   }
-  @media (max-width: 600px) { .next-card .next-list { grid-template-columns: 1fr; } }
-  .next-card .nl-item { display: flex; align-items: center; gap: 8px; }
-  .next-card .nl-item::before { content: '→'; color: var(--accent); }
+  .next-post:hover .np-cta { background: white; color: var(--ink); transform: translateX(2px); }
+  .next-post .np-cta .arr { font-family: 'Fraunces', serif; font-style: italic; font-size: 18px; font-weight: 500; }
 
   /* Footer */
   footer {
@@ -1058,8 +1090,7 @@
     margin: 0 0 8px;
   }
   .byline-name .em {
-    font-family: 'Fraunces', serif;
-    font-style: italic;
+    font-family: 'Noto Serif SC', serif;
     font-weight: 500;
     color: var(--accent);
   }
@@ -1105,7 +1136,7 @@
   .rm-header { margin-bottom: 22px; padding-bottom: 18px; border-bottom: 1px dashed var(--line); }
   .rm-tag { font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.1em; color: var(--accent); text-transform: uppercase; margin-bottom: 8px; }
   .rm-title { font-family: 'Noto Serif SC', serif; font-size: 28px; margin: 0 0 6px; font-weight: 900; letter-spacing: -0.02em; line-height: 1.1; }
-  .rm-title .rm-em { font-family: 'Fraunces', serif; font-style: italic; color: var(--accent); font-weight: 500; }
+  .rm-title .rm-em { font-family: 'Noto Serif SC', serif; color: var(--accent); font-weight: 500; }
   .rm-sub { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--ink-mute); margin: 0; }
   .rm-body { display: flex; flex-direction: column; gap: 18px; }
   .rm-mod-key { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ink); font-weight: 700; margin-bottom: 8px; letter-spacing: 0.04em; text-transform: uppercase; }
@@ -1637,21 +1668,14 @@
       </div>
     </div>
 
-    <div class="next-card">
-      <div class="next-tag">下一篇 · D2 · 进阶</div>
-      <h4>动画 / <span class="em">Transition</span><br>—— 状态之间怎么"变过去"</h4>
-      <p>
-        这一篇我们写完了"状态 = 什么"。下一篇翻到"状态怎么<strong>过渡</strong>"——
-        从 default 到 hover，颜色不是瞬切的，是 200ms 慢慢变深的。
-        这个"慢慢变"的过程，CSS 里叫 <span class="mono" style="background:rgba(255,255,255,0.1);padding:1px 6px;border-radius:3px">transition</span>，Figma 里叫 Smart Animate。
-      </p>
-      <div class="next-list">
-        <div class="nl-item">transition 三要素：属性 / 时长 / 缓动</div>
-        <div class="nl-item">缓动函数 ↔ Figma Easing</div>
-        <div class="nl-item">什么动画该写，什么不该写</div>
-        <div class="nl-item">Smart Animate 怎么标注交付</div>
+    <a href="transition-figma.html" class="next-post">
+      <div>
+        <div class="np-tag">下一篇 · NEXT · D2 · 进阶</div>
+        <h4>动画 <span class="em">·</span> Transition</h4>
+        <p>这一篇写完了"状态 = 什么"。下一篇讲"状态怎么<strong>过渡</strong>"—— 从 default 到 hover，颜色不是瞬切的，是 200ms 慢慢变深的。CSS 里叫 transition，Figma 里叫 Smart Animate。</p>
       </div>
-    </div>
+      <span class="np-cta">继续阅读 <span class="arr">→</span></span>
+    </a>
   </div>
 </section>
 

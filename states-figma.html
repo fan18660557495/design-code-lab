@@ -90,7 +90,7 @@
     letter-spacing: -0.03em;
     margin: 0 0 24px;
   }
-  .hero h1 .em { font-family: 'Fraunces', serif; font-style: italic; font-weight: 500; color: var(--accent); }
+  .hero h1 .em { font-family: 'Noto Serif SC', serif; font-weight: 500; color: var(--accent); }
   .hero h1 .num { font-family: 'Fraunces', serif; font-style: italic; font-weight: 600; color: var(--accent); }
   .hero h1 .x { display: inline-block; transform: translateY(-0.05em); margin: 0 0.05em; color: var(--ink-mute); font-weight: 300; }
   .hero p.lede {
@@ -100,7 +100,7 @@
     color: var(--ink-soft);
     margin: 0 0 40px;
   }
-  .hero p.lede .em { font-family: 'Fraunces', serif; font-style: italic; color: var(--accent); font-weight: 500; }
+  .hero p.lede .em { font-family: 'Noto Serif SC', serif; color: var(--accent); font-weight: 500; }
   .hero-grid { display: grid; grid-template-columns: 1.4fr 1fr; gap: 48px; align-items: end; }
   @media (max-width: 880px) { .hero-grid { grid-template-columns: 1fr; } }
   .hero-side { border-left: 1px dashed var(--line); padding-left: 24px; font-size: 13px; color: var(--ink-soft); }
@@ -161,7 +161,7 @@
     margin: 0;
     max-width: 18ch;
   }
-  .section-title .em { font-family: 'Fraunces', serif; font-style: italic; font-weight: 500; color: var(--accent); }
+  .section-title .em { font-family: 'Noto Serif SC', serif; font-weight: 500; color: var(--accent); }
   .section-sub { color: var(--ink-soft); font-size: 17px; max-width: 38ch; line-height: 1.55; margin: 0; }
 
   /* §01 Problem comparison cards */
@@ -869,74 +869,81 @@
     letter-spacing: 0.02em;
   }
 
-  /* Next chapter teaser card */
-  .next-card {
+  /* ============= Unified next-post block (used across the series) ============= */
+  .next-post {
+    margin-top: 48px;
+    padding: 32px 36px;
     background: var(--ink);
     color: var(--bg);
-    border-radius: 6px;
-    padding: 28px;
+    border-radius: 8px;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 32px;
+    align-items: center;
+    text-decoration: none;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
     position: relative;
     overflow: hidden;
   }
-  .next-card::before {
-    content: 'D1';
+  .next-post::before {
+    content: '';
     position: absolute;
-    bottom: -36px; right: -16px;
-    font-family: 'Fraunces', serif;
-    font-style: italic;
-    font-size: 220px;
-    color: rgba(255,77,46,0.10);
-    line-height: 1;
+    inset: 0;
+    background: radial-gradient(circle at 100% 0%, rgba(255,77,46,0.12), transparent 55%);
     pointer-events: none;
   }
-  .next-card .next-tag {
+  .next-post:hover { transform: translateY(-2px); box-shadow: 0 14px 36px rgba(22,22,29,0.22); }
+  @media (max-width: 720px) { .next-post { grid-template-columns: 1fr; padding: 24px; gap: 20px; } }
+  .next-post .np-tag {
     font-family: 'JetBrains Mono', monospace;
-    font-size: 10px;
-    letter-spacing: 0.15em;
+    font-size: 11px;
     color: var(--accent);
+    letter-spacing: 0.12em;
     text-transform: uppercase;
-    margin-bottom: 14px;
+    margin-bottom: 12px;
+    display: inline-block;
   }
-  .next-card h4 {
+  .next-post h4 {
     font-family: 'Noto Serif SC', serif;
     font-size: 26px;
-    line-height: 1.15;
-    margin: 0 0 12px;
+    margin: 0 0 10px;
     font-weight: 700;
-    position: relative;
-    z-index: 1;
+    color: white;
+    line-height: 1.25;
+    letter-spacing: -0.01em;
   }
-  .next-card h4 .em { font-family: 'Fraunces', serif; font-style: italic; color: var(--accent); font-weight: 500; }
-  .next-card p {
-    margin: 0 0 18px;
-    color: rgba(255,255,255,0.7);
+  .next-post h4 .em {
+    font-family: 'Noto Serif SC', serif;
+    font-weight: 500;
+    color: var(--accent);
+  }
+  .next-post p {
+    margin: 0;
+    color: rgba(255,255,255,0.72);
     font-size: 14px;
-    line-height: 1.6;
-    position: relative;
-    z-index: 1;
+    line-height: 1.65;
+    max-width: 560px;
   }
-  .next-card .next-list {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-    position: relative;
-    z-index: 1;
-  }
-  .next-card .next-list .nl-item {
-    display: flex;
+  .next-post p strong { color: white; font-weight: 600; }
+  .next-post .np-cta {
+    display: inline-flex;
     align-items: center;
     gap: 10px;
+    padding: 14px 24px;
+    background: var(--accent);
+    color: white;
+    border-radius: 4px;
     font-family: 'JetBrains Mono', monospace;
-    font-size: 12px;
-    color: rgba(255,255,255,0.85);
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    white-space: nowrap;
+    transition: background 0.18s, color 0.18s, transform 0.18s;
+    position: relative;
+    z-index: 1;
   }
-  .next-card .next-list .nl-item::before {
-    content: '→';
-    color: var(--accent);
-    font-family: 'Fraunces', serif;
-    font-style: italic;
-    font-size: 16px;
-  }
+  .next-post:hover .np-cta { background: white; color: var(--ink); transform: translateX(2px); }
+  .next-post .np-cta .arr { font-family: 'Fraunces', serif; font-style: italic; font-size: 18px; font-weight: 500; }
 
   /* Footer */
   footer {
@@ -993,8 +1000,7 @@
     margin: 0 0 8px;
   }
   .byline-name .em {
-    font-family: 'Fraunces', serif;
-    font-style: italic;
+    font-family: 'Noto Serif SC', serif;
     font-weight: 500;
     color: var(--accent);
   }
@@ -1040,7 +1046,7 @@
   .rm-header { margin-bottom: 22px; padding-bottom: 18px; border-bottom: 1px dashed var(--line); }
   .rm-tag { font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.1em; color: var(--accent); text-transform: uppercase; margin-bottom: 8px; }
   .rm-title { font-family: 'Noto Serif SC', serif; font-size: 28px; margin: 0 0 6px; font-weight: 900; letter-spacing: -0.02em; line-height: 1.1; }
-  .rm-title .rm-em { font-family: 'Fraunces', serif; font-style: italic; color: var(--accent); font-weight: 500; }
+  .rm-title .rm-em { font-family: 'Noto Serif SC', serif; color: var(--accent); font-weight: 500; }
   .rm-sub { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--ink-mute); margin: 0; }
   .rm-body { display: flex; flex-direction: column; gap: 18px; }
   .rm-mod-key { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ink); font-weight: 700; margin-bottom: 8px; letter-spacing: 0.04em; text-transform: uppercase; }
@@ -1512,20 +1518,14 @@
         </div>
       </div>
 
-      <div class="next-card">
-        <div class="next-tag">下一篇 · D1 · 基础</div>
-        <h4>Interactive <span class="em">Component</span><br>怎么写代码？</h4>
-        <p>
-          这一篇我们用 Figma 视角看完了"5 种长相"。
-          下一篇翻到代码侧 —— hover / active / focus 在 CSS 里怎么写、:disabled 是什么意思、为什么 focus-visible 比 focus 好用。
-        </p>
-        <div class="next-list">
-          <div class="nl-item">:hover &nbsp;.btn 怎么变深</div>
-          <div class="nl-item">:active &nbsp;按下的反馈</div>
-          <div class="nl-item">:focus-visible &nbsp;只对键盘党亮</div>
-          <div class="nl-item">:disabled &nbsp;变灰 + 不可点</div>
+      <a href="interactive-figma.html" class="next-post">
+        <div>
+          <div class="np-tag">下一篇 · NEXT · D1 · 基础</div>
+          <h4>Interactive Component <span class="em">·</span> 怎么写代码？</h4>
+          <p>这一篇用 Figma 视角看完了"5 种长相"。下一篇翻到代码侧 —— <strong>:hover / :active / :focus-visible / :disabled</strong> 在 CSS 里怎么写、为什么 focus-visible 比 focus 好用。</p>
         </div>
-      </div>
+        <span class="np-cta">继续阅读 <span class="arr">→</span></span>
+      </a>
     </div>
   </div>
 </section>

@@ -81,7 +81,7 @@
     letter-spacing: -0.03em;
     margin: 0 0 24px;
   }
-  .hero h1 .em { font-family: 'Fraunces', serif; font-style: italic; font-weight: 500; color: var(--accent); }
+  .hero h1 .em { font-family: 'Noto Serif SC', serif; font-weight: 500; color: var(--accent); }
   .hero h1 .x { display: inline-block; transform: translateY(-0.05em); margin: 0 0.05em; color: var(--ink-mute); font-weight: 300; }
   .hero p.lede {
     font-size: 19px;
@@ -154,7 +154,7 @@
     margin: 0;
     max-width: 18ch;
   }
-  .section-title .em { font-family: 'Fraunces', serif; font-style: italic; font-weight: 500; color: var(--accent); }
+  .section-title .em { font-family: 'Noto Serif SC', serif; font-weight: 500; color: var(--accent); }
   .section-sub { color: var(--ink-soft); font-size: 17px; max-width: 38ch; line-height: 1.55; margin: 0; }
 
   /* §01 — Problem (BAD/GOOD comparison) */
@@ -678,8 +678,7 @@
   }
   .live-page .lp-h .em {
     color: var(--t-brand);
-    font-family: 'Fraunces', serif;
-    font-style: italic;
+    font-family: 'Noto Serif SC', serif;
     font-weight: 500;
     transition: color 0.3s;
   }
@@ -938,48 +937,81 @@
   }
   .naming-takeaway strong { color: var(--ink); }
 
-  /* outro — next */
-  .next-card {
-    margin-top: 40px;
-    padding: 28px 32px;
+  /* ============= Unified next-post block (used across the series) ============= */
+  .next-post {
+    margin-top: 48px;
+    padding: 32px 36px;
     background: var(--ink);
     color: var(--bg);
-    border-radius: 6px;
+    border-radius: 8px;
     display: grid;
     grid-template-columns: 1fr auto;
-    gap: 24px;
+    gap: 32px;
     align-items: center;
+    text-decoration: none;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    position: relative;
+    overflow: hidden;
   }
-  @media (max-width: 720px) { .next-card { grid-template-columns: 1fr; } }
-  .next-card .next-tag {
+  .next-post::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at 100% 0%, rgba(255,77,46,0.12), transparent 55%);
+    pointer-events: none;
+  }
+  .next-post:hover { transform: translateY(-2px); box-shadow: 0 14px 36px rgba(22,22,29,0.22); }
+  @media (max-width: 720px) { .next-post { grid-template-columns: 1fr; padding: 24px; gap: 20px; } }
+  .next-post .np-tag {
     font-family: 'JetBrains Mono', monospace;
     font-size: 11px;
+    color: var(--accent);
     letter-spacing: 0.12em;
-    color: var(--accent);
-    margin-bottom: 6px;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+    display: inline-block;
   }
-  .next-card h3 {
+  .next-post h4 {
     font-family: 'Noto Serif SC', serif;
-    font-size: 22px;
-    margin: 0 0 6px;
+    font-size: 26px;
+    margin: 0 0 10px;
     font-weight: 700;
-    line-height: 1.3;
+    color: white;
+    line-height: 1.25;
+    letter-spacing: -0.01em;
   }
-  .next-card h3 .em { font-family: 'Fraunces', serif; font-style: italic; font-weight: 500; color: var(--accent); }
-  .next-card p {
-    margin: 0;
-    color: rgba(255,255,255,0.65);
-    font-size: 13px;
-    line-height: 1.6;
-  }
-  .next-card .next-arrow {
-    font-family: 'Fraunces', serif;
-    font-style: italic;
-    font-size: 56px;
-    line-height: 1;
+  .next-post h4 .em {
+    font-family: 'Noto Serif SC', serif;
+    font-weight: 500;
     color: var(--accent);
-    opacity: 0.6;
   }
+  .next-post p {
+    margin: 0;
+    color: rgba(255,255,255,0.72);
+    font-size: 14px;
+    line-height: 1.65;
+    max-width: 560px;
+  }
+  .next-post p strong { color: white; font-weight: 600; }
+  .next-post .np-cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 24px;
+    background: var(--accent);
+    color: white;
+    border-radius: 4px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    white-space: nowrap;
+    transition: background 0.18s, color 0.18s, transform 0.18s;
+    position: relative;
+    z-index: 1;
+  }
+  .next-post:hover .np-cta { background: white; color: var(--ink); transform: translateX(2px); }
+  .next-post .np-cta .arr { font-family: 'Fraunces', serif; font-style: italic; font-size: 18px; font-weight: 500; }
 
   /* Footer */
   footer {
@@ -1036,8 +1068,7 @@
     margin: 0 0 8px;
   }
   .byline-name .em {
-    font-family: 'Fraunces', serif;
-    font-style: italic;
+    font-family: 'Noto Serif SC', serif;
     font-weight: 500;
     color: var(--accent);
   }
@@ -1082,7 +1113,7 @@
   .rm-header { margin-bottom: 22px; padding-bottom: 18px; border-bottom: 1px dashed var(--line); }
   .rm-tag { font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.1em; color: var(--accent); text-transform: uppercase; margin-bottom: 8px; }
   .rm-title { font-family: 'Noto Serif SC', serif; font-size: 28px; margin: 0 0 6px; font-weight: 900; letter-spacing: -0.02em; line-height: 1.1; }
-  .rm-title .rm-em { font-family: 'Fraunces', serif; font-style: italic; color: var(--accent); font-weight: 500; }
+  .rm-title .rm-em { font-family: 'Noto Serif SC', serif; color: var(--accent); font-weight: 500; }
   .rm-sub { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--ink-mute); margin: 0; }
   .rm-body { display: flex; flex-direction: column; gap: 18px; }
   .rm-mod-key { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ink); font-weight: 700; margin-bottom: 8px; letter-spacing: 0.04em; text-transform: uppercase; }
@@ -1731,15 +1762,14 @@
       因为颜色会变，用途不变。<span class="mono">brand-primary</span> 这个名字，明天换成蓝色也还合理；<span class="mono">orange-500</span> 换成蓝色就成笑话了。
     </p>
 
-    <!-- Next -->
-    <div class="next-card">
+    <a href="colors-type-figma.html" class="next-post">
       <div>
-        <div class="next-tag">下一篇 · C1 · 基础</div>
-        <h3>Colors / Type / Spacing —— <br>三件事的<span class="em">细节展开</span></h3>
-        <p>这一篇你建好了"token 是什么"的概念。下一篇我们一项一项过：色板怎么搭、字号阶梯怎么定、间距系统为什么是 4 的倍数。</p>
+        <div class="np-tag">下一篇 · NEXT · C1 · 基础</div>
+        <h4>Colors / Type / Spacing <span class="em">·</span> 三件事的细节</h4>
+        <p>这一篇你建好了"token 是什么"的概念。下一篇我们一项一项过：<strong>色板怎么搭、字号阶梯怎么定、间距系统为什么是 4 的倍数</strong>。</p>
       </div>
-      <div class="next-arrow">→</div>
-    </div>
+      <span class="np-cta">继续阅读 <span class="arr">→</span></span>
+    </a>
   </div>
 </section>
 

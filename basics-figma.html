@@ -83,7 +83,7 @@
     letter-spacing: -0.03em;
     margin: 0 0 24px;
   }
-  .hero h1 .em { font-family: 'Fraunces', serif; font-style: italic; font-weight: 500; color: var(--accent); }
+  .hero h1 .em { font-family: 'Noto Serif SC', serif; font-weight: 500; color: var(--accent); }
   .hero h1 .x { display: inline-block; transform: translateY(-0.05em); margin: 0 0.05em; color: var(--ink-mute); font-weight: 300; }
   .hero p.lede {
     font-size: 20px;
@@ -123,7 +123,7 @@
     margin: 0;
     max-width: 18ch;
   }
-  .section-title .em { font-family: 'Fraunces', serif; font-style: italic; font-weight: 500; color: var(--accent); }
+  .section-title .em { font-family: 'Noto Serif SC', serif; font-weight: 500; color: var(--accent); }
   .section-sub { color: var(--ink-soft); font-size: 17px; max-width: 38ch; line-height: 1.55; margin: 0; }
 
   /* Problem comparison */
@@ -741,53 +741,81 @@
   }
   .cheat-card dl dd strong { color: var(--ink); font-weight: 600; }
 
-  /* Outro card linking to A1 */
-  .outro {
-    margin-top: 32px;
-    padding: 28px 32px;
+  /* ============= Unified next-post block (used across the series) ============= */
+  .next-post {
+    margin-top: 48px;
+    padding: 32px 36px;
     background: var(--ink);
     color: var(--bg);
-    border-radius: 6px;
+    border-radius: 8px;
     display: grid;
     grid-template-columns: 1fr auto;
-    gap: 24px;
+    gap: 32px;
     align-items: center;
+    text-decoration: none;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    position: relative;
+    overflow: hidden;
   }
-  @media (max-width: 720px) { .outro { grid-template-columns: 1fr; } }
-  .outro .outro-tag {
+  .next-post::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at 100% 0%, rgba(255,77,46,0.12), transparent 55%);
+    pointer-events: none;
+  }
+  .next-post:hover { transform: translateY(-2px); box-shadow: 0 14px 36px rgba(22,22,29,0.22); }
+  @media (max-width: 720px) { .next-post { grid-template-columns: 1fr; padding: 24px; gap: 20px; } }
+  .next-post .np-tag {
     font-family: 'JetBrains Mono', monospace;
     font-size: 11px;
     color: var(--accent);
     letter-spacing: 0.12em;
     text-transform: uppercase;
-    margin-bottom: 6px;
+    margin-bottom: 12px;
+    display: inline-block;
   }
-  .outro h4 {
+  .next-post h4 {
     font-family: 'Noto Serif SC', serif;
-    font-size: 22px;
-    margin: 0 0 8px;
+    font-size: 26px;
+    margin: 0 0 10px;
     font-weight: 700;
     color: white;
+    line-height: 1.25;
+    letter-spacing: -0.01em;
   }
-  .outro p { margin: 0; color: rgba(255,255,255,0.72); font-size: 14px; line-height: 1.6; }
-  .outro .outro-cta {
+  .next-post h4 .em {
+    font-family: 'Noto Serif SC', serif;
+    font-weight: 500;
+    color: var(--accent);
+  }
+  .next-post p {
+    margin: 0;
+    color: rgba(255,255,255,0.72);
+    font-size: 14px;
+    line-height: 1.65;
+    max-width: 560px;
+  }
+  .next-post p strong { color: white; font-weight: 600; }
+  .next-post .np-cta {
     display: inline-flex;
     align-items: center;
     gap: 10px;
-    padding: 12px 22px;
+    padding: 14px 24px;
     background: var(--accent);
     color: white;
-    text-decoration: none;
     border-radius: 4px;
     font-family: 'JetBrains Mono', monospace;
     font-size: 13px;
     font-weight: 500;
     letter-spacing: 0.04em;
-    transition: all 0.18s;
     white-space: nowrap;
+    transition: background 0.18s, color 0.18s, transform 0.18s;
+    position: relative;
+    z-index: 1;
   }
-  .outro .outro-cta:hover { background: white; color: var(--ink); transform: translateX(2px); }
-  .outro .outro-cta .arr { font-family: 'Fraunces', serif; font-style: italic; font-size: 18px; }
+  .next-post:hover .np-cta { background: white; color: var(--ink); transform: translateX(2px); }
+  .next-post .np-cta .arr { font-family: 'Fraunces', serif; font-style: italic; font-size: 18px; font-weight: 500; }
 
   /* Footer */
   footer {
@@ -844,8 +872,7 @@
     margin: 0 0 8px;
   }
   .byline-name .em {
-    font-family: 'Fraunces', serif;
-    font-style: italic;
+    font-family: 'Noto Serif SC', serif;
     font-weight: 500;
     color: var(--accent);
   }
@@ -891,7 +918,7 @@
   .rm-header { margin-bottom: 22px; padding-bottom: 18px; border-bottom: 1px dashed var(--line); }
   .rm-tag { font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.1em; color: var(--accent); text-transform: uppercase; margin-bottom: 8px; }
   .rm-title { font-family: 'Noto Serif SC', serif; font-size: 28px; margin: 0 0 6px; font-weight: 900; letter-spacing: -0.02em; line-height: 1.1; }
-  .rm-title .rm-em { font-family: 'Fraunces', serif; font-style: italic; color: var(--accent); font-weight: 500; }
+  .rm-title .rm-em { font-family: 'Noto Serif SC', serif; color: var(--accent); font-weight: 500; }
   .rm-sub { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--ink-mute); margin: 0; }
   .rm-body { display: flex; flex-direction: column; gap: 18px; }
   .rm-mod-key { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ink); font-weight: 700; margin-bottom: 8px; letter-spacing: 0.04em; text-transform: uppercase; }
@@ -1326,16 +1353,14 @@ btn.<span class="cfun">addEventListener</span>(<span class="cstr">'click'</span>
       </div>
     </div>
 
-    <div class="outro">
+    <a href="box-figma.html" class="next-post">
       <div>
-        <div class="outro-tag">下一篇 · NEXT</div>
-        <h4>A1 · 盒子 × Auto Layout</h4>
+        <div class="np-tag">下一篇 · NEXT · A1 · 基础</div>
+        <h4>盒子 <span class="em">×</span> Auto Layout</h4>
         <p>三件套讲完了。下一站直接落到最常用的一件 —— CSS 盒子模型 + Figma Auto Layout，一次讲清单元素的布局。</p>
       </div>
-      <a class="outro-cta" href="box-figma.html">
-        继续阅读 <span class="arr">→</span>
-      </a>
-    </div>
+      <span class="np-cta">继续阅读 <span class="arr">→</span></span>
+    </a>
   </div>
 </section>
 
