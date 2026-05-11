@@ -1132,267 +1132,435 @@
   }
 
 
-  /* ============== §04 — Workflow Path ============== */
-  .workflow-lab {
-    background: #1f1f29;
-    color: var(--paper);
-    border-radius: 12px;
-    padding: 32px 36px 28px;
-    margin: 24px 0 36px;
+
+  /* ============== §04 — Scene Theater ============== */
+  .scene-stage { margin: 24px 0 36px; }
+  .scene-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 16px;
+  }
+
+  .scene-card {
+    background: var(--paper);
+    border: 1.5px solid var(--line);
+    border-radius: 10px;
+    padding: 22px 24px;
+    cursor: pointer;
     position: relative;
     overflow: hidden;
+    transition: all 0.2s ease;
+    text-align: left;
+    font-family: inherit;
+    color: inherit;
   }
-  .workflow-lab::before {
+  .scene-card::before {
     content: '';
     position: absolute;
     top: 0; left: 0; right: 0;
     height: 4px;
     background: var(--accent);
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.3s ease;
   }
-  .wf-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 22px;
-    gap: 18px;
-    flex-wrap: wrap;
+  .scene-card:hover::before { transform: scaleX(1); }
+  .scene-card:hover {
+    border-color: var(--ink);
+    transform: translateY(-3px);
+    box-shadow: 0 14px 32px rgba(22,22,29,0.10);
   }
-  .wf-tag {
+  .scene-card.is-seen::after {
+    content: '✓ 看过';
+    position: absolute;
+    top: 14px;
+    right: 16px;
     font-family: 'JetBrains Mono', monospace;
-    font-size: 11px;
-    letter-spacing: 0.18em;
-    color: var(--accent);
-    text-transform: uppercase;
-  }
-  .wf-controls {
-    display: flex;
-    gap: 8px;
-  }
-  .wf-btn {
-    background: transparent;
-    color: rgba(255,255,255,0.85);
-    border: 1px solid rgba(255,255,255,0.18);
-    padding: 8px 14px;
-    border-radius: 5px;
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 11px;
-    letter-spacing: 0.08em;
-    cursor: pointer;
-    text-transform: uppercase;
-    transition: all 0.15s ease;
-    line-height: 1.2;
-  }
-  .wf-btn:hover {
-    background: rgba(255,255,255,0.08);
-    border-color: rgba(255,255,255,0.32);
-  }
-  .wf-btn.playing {
-    background: var(--accent);
-    border-color: var(--accent);
-    color: var(--paper);
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    color: #4ade80;
+    background: rgba(74,222,128,0.12);
+    padding: 2px 8px;
+    border-radius: 100px;
   }
 
-  /* SVG 路径区 */
-  .wf-path-wrap {
-    background: rgba(255,255,255,0.04);
-    border-radius: 8px;
-    padding: 20px 18px 12px;
-    margin-bottom: 22px;
-  }
-  .wf-svg {
-    width: 100%;
-    height: auto;
-    max-height: 140px;
-  }
-  .wf-svg .wf-node {
-    cursor: pointer;
-    transition: transform 0.18s ease;
-  }
-  .wf-svg .wf-node circle {
-    transition: fill 0.25s ease, stroke 0.25s ease, r 0.25s ease;
-  }
-  .wf-svg .wf-node text {
-    pointer-events: none;
-  }
-  .wf-svg .wf-node:hover circle {
-    stroke: var(--accent);
-  }
-  /* 节点状态: pending (默认) / active (当前) / done (已过) */
-  .wf-svg .wf-node.is-done circle {
-    fill: rgba(255,77,46,0.15);
-    stroke: var(--accent);
-  }
-  .wf-svg .wf-node.is-done text { fill: var(--accent); }
-  .wf-svg .wf-node.is-active circle {
-    fill: var(--accent);
-    stroke: var(--accent);
-    filter: drop-shadow(0 0 12px rgba(255,77,46,0.6));
-  }
-  .wf-svg .wf-node.is-active text { fill: #fff; }
-  /* 文本路径节点的中文标签当 active 时变橙 */
-  .wf-svg text.is-active { fill: var(--accent) !important; }
-
-  /* 详情卡 */
-  .wf-detail {
-    min-height: 280px;
-  }
-  .wf-step-card {
-    animation: stepIn 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-  }
-  @keyframes stepIn {
-    from { opacity: 0; transform: translateY(12px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
-  .wf-step-head {
-    display: flex;
-    align-items: baseline;
-    gap: 18px;
-    margin-bottom: 8px;
-    flex-wrap: wrap;
-  }
-  .wf-step-num {
+  .sc-num {
     font-family: 'Fraunces', serif;
-    font-size: 60px;
+    font-size: 44px;
     font-weight: 900;
     color: var(--accent);
     line-height: 0.9;
+    margin-bottom: 10px;
   }
-  .wf-step-titles {
-    flex: 1;
-    min-width: 220px;
-  }
-  .wf-step-title {
+  .sc-quote {
     font-family: 'Noto Serif SC', serif;
-    font-size: 30px;
-    font-weight: 900;
-    color: var(--paper);
-    line-height: 1.2;
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--ink);
+    line-height: 1.4;
+    margin-bottom: 12px;
     letter-spacing: -0.01em;
   }
-  .wf-step-title-en {
-    font-family: 'Fraunces', serif;
-    font-size: 16px;
-    font-weight: 400;
-    color: rgba(255,255,255,0.5);
-    font-style: italic;
-    margin-top: 4px;
+  .sc-painpoint {
+    font-size: 13px;
+    color: var(--ink-soft);
+    line-height: 1.6;
+    margin-bottom: 18px;
   }
-  .wf-step-summary {
+  .sc-foot {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 14px;
+    border-top: 1px dashed var(--line);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--ink-mute);
+  }
+  .sc-foot .skill {
+    color: var(--accent);
+    font-weight: 700;
+  }
+  .sc-foot .cta {
+    color: var(--ink);
+    font-weight: 600;
+  }
+
+  /* 场景详情面板 */
+  .scene-detail {
+    background: var(--paper);
+    border: 1.5px solid var(--line);
+    border-radius: 10px;
+    padding: 28px 32px 32px;
+    margin: 24px 0 36px;
+    animation: sdIn 0.32s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  @keyframes sdIn {
+    from { opacity: 0; transform: translateY(12px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .scene-back {
+    background: transparent;
+    border: 1px solid var(--line);
+    color: var(--ink);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    letter-spacing: 0.06em;
+    padding: 7px 14px;
+    border-radius: 5px;
+    cursor: pointer;
+    margin-bottom: 22px;
+    transition: all 0.15s ease;
+  }
+  .scene-back:hover {
+    border-color: var(--ink);
+    background: var(--bg-2);
+  }
+  .sd-head {
+    margin-bottom: 28px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--line);
+  }
+  .sd-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    color: var(--accent);
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+  .sd-quote {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 38px;
+    font-weight: 900;
+    color: var(--ink);
+    line-height: 1.2;
+    letter-spacing: -0.02em;
+    margin-bottom: 10px;
+  }
+  .sd-painpoint {
     font-family: 'Noto Serif SC', serif;
     font-size: 16px;
-    color: rgba(255,255,255,0.78);
+    color: var(--ink-soft);
     line-height: 1.7;
-    margin: 12px 0 22px;
   }
-  .wf-step-summary strong { color: var(--paper); font-weight: 700; }
 
-  /* skill 卡片 (深底版) */
-  .wf-skill-card {
-    background: rgba(255,255,255,0.05);
-    border: 1.5px solid rgba(255,255,255,0.14);
-    border-radius: 8px;
-    padding: 20px 22px;
-    margin-bottom: 12px;
-    transition: border 0.2s ease;
+  /* 4 幕 */
+  .acts {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
   }
-  .wf-skill-card:hover { border-color: rgba(255,255,255,0.32); }
-  .wf-skill-card.is-aux {
-    background: rgba(255,255,255,0.025);
-    border-style: dashed;
-    border-color: rgba(255,255,255,0.12);
+  .act {
+    opacity: 0;
+    transform: translateY(12px);
+    transition: opacity 0.45s ease, transform 0.45s cubic-bezier(0.4, 0, 0.2, 1);
   }
-  .wf-skill-head {
+  .act.show {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  .act-label {
     display: flex;
     align-items: center;
     gap: 10px;
     margin-bottom: 10px;
-    flex-wrap: wrap;
-  }
-  .wf-skill-role {
     font-family: 'JetBrains Mono', monospace;
-    font-size: 10px;
+    font-size: 11px;
     letter-spacing: 0.14em;
+    color: var(--accent);
     text-transform: uppercase;
+    font-weight: 700;
+  }
+  .act-label .act-no {
     background: var(--accent);
     color: var(--paper);
-    padding: 3px 9px;
+    padding: 3px 8px;
     border-radius: 3px;
     font-weight: 700;
   }
-  .wf-skill-card.is-aux .wf-skill-role {
-    background: rgba(255,255,255,0.16);
-    color: rgba(255,255,255,0.7);
-  }
-  .wf-skill-code {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 14px;
-    font-weight: 700;
-    color: var(--accent);
-    letter-spacing: 0.02em;
-  }
-  .wf-skill-card.is-aux .wf-skill-code { color: rgba(255,255,255,0.65); }
-  .wf-skill-title {
-    font-family: 'Noto Serif SC', serif;
-    font-size: 19px;
-    font-weight: 700;
-    color: var(--paper);
-    margin-bottom: 4px;
-  }
-  .wf-skill-title-en {
-    font-family: 'Fraunces', serif;
-    font-size: 13px;
-    color: rgba(255,255,255,0.45);
-    margin-bottom: 12px;
-    font-style: italic;
-  }
-  .wf-bi {
-    background: rgba(0,0,0,0.32);
-    border-radius: 5px;
-    padding: 12px 14px;
-    margin-bottom: 12px;
-    font-size: 12.5px;
-    line-height: 1.7;
-  }
-  .wf-bi-row {
+
+  /* 幕 1: 你说 — 聊天气泡 */
+  .bubble-row {
     display: flex;
-    gap: 10px;
-    margin-bottom: 6px;
+    gap: 12px;
+    align-items: flex-start;
   }
-  .wf-bi-row:last-child { margin-bottom: 0; }
-  .wf-bi-lang {
+  .bubble-avatar {
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    background: var(--accent);
+    color: var(--paper);
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Noto Serif SC', serif;
+    font-weight: 900;
+    font-size: 16px;
+    flex-shrink: 0;
+  }
+  .bubble {
+    background: var(--bg-2);
+    border: 1px solid var(--line);
+    border-radius: 6px 14px 14px 14px;
+    padding: 14px 18px;
+    font-family: 'Noto Serif SC', serif;
+    font-size: 18px;
+    color: var(--ink);
+    line-height: 1.5;
+    font-weight: 500;
+    max-width: 600px;
+  }
+
+  /* 幕 2: AI 听到 — 深色扫描区 */
+  .ai-listen {
+    background: #1f1f29;
+    border-radius: 8px;
+    padding: 22px 24px;
+    color: #d8d8e0;
+  }
+  .ai-listen-head {
     font-family: 'JetBrains Mono', monospace;
-    font-size: 9.5px;
+    font-size: 12px;
+    color: #8a8a96;
+    margin-bottom: 14px;
+    letter-spacing: 0.08em;
+  }
+  .ai-listen-head .em { color: var(--accent); font-weight: 700; }
+  .desc-scan {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11.5px;
+    line-height: 1.5;
+  }
+  .desc-row {
+    padding: 6px 10px;
+    border-radius: 4px;
+    color: rgba(255,255,255,0.5);
+    transition: all 0.25s ease;
+    word-break: break-word;
+  }
+  .desc-row.is-hit {
+    background: var(--accent);
+    color: var(--paper);
+    font-weight: 700;
+    transform: translateX(6px);
+    box-shadow: 0 4px 16px rgba(255,77,46,0.4);
+  }
+  .desc-row .dr-code {
+    color: rgba(255,255,255,0.85);
+    font-weight: 700;
+    margin-right: 8px;
+  }
+  .desc-row.is-hit .dr-code { color: var(--paper); }
+  .ai-conclude {
+    margin-top: 14px;
+    padding-top: 14px;
+    border-top: 1px solid rgba(255,255,255,0.12);
+    font-family: 'Noto Sans SC', sans-serif;
+    font-size: 13.5px;
+    color: rgba(255,255,255,0.85);
+    line-height: 1.65;
+  }
+  .ai-conclude .em { color: var(--accent); font-weight: 700; }
+  .ai-conclude code {
+    font-family: 'JetBrains Mono', monospace;
+    background: rgba(255,77,46,0.18);
+    color: var(--accent);
+    padding: 1px 6px;
+    border-radius: 3px;
+    font-size: 12.5px;
+  }
+
+  /* 幕 3: Skill 在做 */
+  .skill-doing {
+    background: #fff;
+    border: 1.5px solid var(--line);
+    border-radius: 8px;
+    padding: 20px 24px;
+  }
+  .skill-doing-head {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--ink-mute);
+    margin-bottom: 14px;
+    letter-spacing: 0.08em;
+  }
+  .skill-doing-head strong { color: var(--accent); font-weight: 700; }
+  .steps {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .step-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 8px 0;
+    font-family: 'Noto Sans SC', sans-serif;
+    font-size: 14.5px;
+    color: var(--ink);
+    line-height: 1.5;
+  }
+  .step-tick {
+    width: 18px; height: 18px;
+    border-radius: 50%;
+    border: 1.5px solid var(--line);
+    flex-shrink: 0;
+    margin-top: 3px;
+    position: relative;
+    transition: all 0.3s ease;
+  }
+  .step-row.done .step-tick {
+    background: #4ade80;
+    border-color: #4ade80;
+  }
+  .step-row.done .step-tick::after {
+    content: '✓';
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    color: #fff;
+    font-size: 11px;
+    font-weight: 700;
+  }
+  .step-row code {
+    font-family: 'JetBrains Mono', monospace;
+    background: var(--accent-soft);
+    color: var(--accent);
+    padding: 1px 5px;
+    border-radius: 3px;
+    font-size: 12.5px;
+  }
+
+  /* 幕 4: 结果 */
+  .result {
+    background: var(--accent-soft);
+    border: 1.5px solid var(--accent);
+    border-radius: 8px;
+    padding: 20px 24px;
+  }
+  .result-head {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--accent);
+    margin-bottom: 14px;
+    letter-spacing: 0.12em;
+    font-weight: 700;
+    text-transform: uppercase;
+  }
+  .result-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .result-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    font-family: 'Noto Sans SC', sans-serif;
+    font-size: 14.5px;
+    color: var(--ink);
+    line-height: 1.55;
+  }
+  .result-item::before {
+    content: '✓';
     color: var(--accent);
     font-weight: 700;
-    letter-spacing: 0.1em;
     flex-shrink: 0;
-    padding-top: 3px;
-    min-width: 22px;
+    margin-top: 1px;
   }
-  .wf-bi-text.en {
-    font-family: 'JetBrains Mono', monospace;
-    color: rgba(255,255,255,0.78);
-  }
-  .wf-bi-text.cn {
-    font-family: 'Noto Sans SC', sans-serif;
-    color: rgba(255,255,255,0.88);
-  }
-  .wf-trigger {
-    font-family: 'Noto Sans SC', sans-serif;
-    font-size: 13px;
-    color: rgba(255,255,255,0.72);
-  }
-  .wf-trigger strong {
-    color: var(--accent);
-    font-weight: 600;
+  .result-foot {
+    margin-top: 16px;
+    padding-top: 14px;
+    border-top: 1px dashed rgba(255,77,46,0.32);
     font-family: 'Noto Serif SC', serif;
+    font-size: 14px;
+    color: var(--ink-soft);
+    line-height: 1.6;
+  }
+  .result-foot strong { color: var(--ink); font-weight: 700; }
+
+  /* 下一场景按钮 */
+  .scene-nav {
+    margin-top: 28px;
+    padding-top: 22px;
+    border-top: 1px solid var(--line);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 14px;
+    flex-wrap: wrap;
+  }
+  .scene-nav button {
+    background: var(--ink);
+    color: var(--paper);
+    border: none;
+    padding: 12px 22px;
+    border-radius: 6px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    letter-spacing: 0.08em;
+    cursor: pointer;
+    text-transform: uppercase;
+    font-weight: 700;
+    transition: all 0.15s ease;
+  }
+  .scene-nav button:hover {
+    background: var(--accent);
+    transform: translateY(-1px);
+  }
+  .scene-nav .nav-hint {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--ink-mute);
+    letter-spacing: 0.06em;
   }
 
   @media (max-width: 720px) {
-    .workflow-lab { padding: 22px 18px; }
-    .wf-step-num { font-size: 44px; }
-    .wf-step-title { font-size: 22px; }
-    .wf-svg { max-height: 100px; }
+    .scene-detail { padding: 22px 18px; }
+    .sd-quote { font-size: 26px; }
+    .bubble { font-size: 16px; }
   }
 </style>
 </head>
@@ -1697,19 +1865,17 @@ pptx/
     </div>
   </div>
 </section>
-<!-- §04 — AI 设计工作流 5 步路径图 -->
+<!-- §04 — 场景剧场 6 场景 × 4 幕 -->
 <section id="figma-example">
   <div class="wrap">
     <div class="section-head">
       <div>
-        <div class="section-num"><strong>04</strong> / 工作流</div>
-        <h2 class="section-title">设计师的<br><span class="em">AI 工作流</span></h2>
+        <div class="section-num"><strong>04</strong> / 场景</div>
+        <h2 class="section-title">设计师的<br><span class="em">6 个 AI 时刻</span></h2>
       </div>
       <p class="section-sub">
-        Figma 官方为 AI 工具写了 9 个 skill —— 它们不是一堆杂乱工具，
-        是按一个完整的 <strong>设计流程</strong> 串起来用的。
-        点下面 5 个节点 / 按 <strong>▶ 自动播放</strong>，
-        看每一步 AI 在干什么、触发哪些 skill。
+        看 6 个真实场景 —— <strong>你想干什么 → AI 听到了什么 → Skill 怎么做 → 实现你的需求</strong>。
+        点任意一张卡片，<strong>看完一出 4 幕戏</strong>。
       </p>
     </div>
 
@@ -1717,63 +1883,22 @@ pptx/
       <strong>注意：</strong>这些 skill <span class="em">不是</span>你手动调用的，
       是给 <strong>AI agent</strong> 用的 ——
       你跟 Claude 用自然语言说一句话，AI 根据 description <strong>自动找到该用的 skill</strong>。
-      下面演示从"我要做个登录页"到"代码上线"的完整链路。
+      下面 6 个场景全都来自设计师的真实痛点。
     </div>
 
-    <!-- 工作流路径图 -->
-    <div class="workflow-lab" id="workflow-lab">
-      <div class="wf-header">
-        <div class="wf-tag">🛠 互动 · AI DESIGN WORKFLOW</div>
-        <div class="wf-controls">
-          <button class="wf-btn" id="wf-play">▶ 自动播放</button>
-          <button class="wf-btn" id="wf-prev" aria-label="上一步">‹</button>
-          <button class="wf-btn" id="wf-next" aria-label="下一步">›</button>
-        </div>
+    <!-- 主屏：6 个场景卡片 -->
+    <div class="scene-stage" id="scene-stage">
+      <div class="scene-grid" id="scene-grid">
+        <!-- 场景卡片 JS 渲染 -->
       </div>
+    </div>
 
-      <!-- SVG 路径图 + 节点 -->
-      <div class="wf-path-wrap">
-        <svg class="wf-svg" viewBox="0 0 900 130" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
-          <!-- 路径连线 -->
-          <line x1="90" y1="40" x2="810" y2="40" stroke="rgba(216,211,200,0.6)" stroke-width="2" stroke-dasharray="4 4" />
-          <line id="wf-progress-line" x1="90" y1="40" x2="90" y2="40" stroke="#ff4d2e" stroke-width="3" stroke-linecap="round" />
-          <!-- 5 个节点 (从 left 到 right) -->
-          <g class="wf-node" data-step="1">
-            <circle cx="90" cy="40" r="22" fill="#f3eee5" stroke="#16161d" stroke-width="2.5" />
-            <text x="90" y="46" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="14" font-weight="700" fill="#16161d">1</text>
-          </g>
-          <g class="wf-node" data-step="2">
-            <circle cx="270" cy="40" r="22" fill="#f3eee5" stroke="#16161d" stroke-width="2.5" />
-            <text x="270" y="46" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="14" font-weight="700" fill="#16161d">2</text>
-          </g>
-          <g class="wf-node" data-step="3">
-            <circle cx="450" cy="40" r="22" fill="#f3eee5" stroke="#16161d" stroke-width="2.5" />
-            <text x="450" y="46" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="14" font-weight="700" fill="#16161d">3</text>
-          </g>
-          <g class="wf-node" data-step="4">
-            <circle cx="630" cy="40" r="22" fill="#f3eee5" stroke="#16161d" stroke-width="2.5" />
-            <text x="630" y="46" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="14" font-weight="700" fill="#16161d">4</text>
-          </g>
-          <g class="wf-node" data-step="5">
-            <circle cx="810" cy="40" r="22" fill="#f3eee5" stroke="#16161d" stroke-width="2.5" />
-            <text x="810" y="46" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="14" font-weight="700" fill="#16161d">5</text>
-          </g>
-          <!-- 标签 -->
-          <text x="90"  y="90"  text-anchor="middle" font-family="Noto Serif SC, serif" font-size="18" font-weight="700" fill="#16161d">起稿</text>
-          <text x="270" y="90"  text-anchor="middle" font-family="Noto Serif SC, serif" font-size="18" font-weight="700" fill="#16161d">应用</text>
-          <text x="450" y="90"  text-anchor="middle" font-family="Noto Serif SC, serif" font-size="18" font-weight="700" fill="#16161d">审查</text>
-          <text x="630" y="90"  text-anchor="middle" font-family="Noto Serif SC, serif" font-size="18" font-weight="700" fill="#16161d">映射</text>
-          <text x="810" y="90"  text-anchor="middle" font-family="Noto Serif SC, serif" font-size="18" font-weight="700" fill="#16161d">实现</text>
-          <text x="90"  y="112" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="10" letter-spacing="0.1em" fill="#6e6e7a">CREATE</text>
-          <text x="270" y="112" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="10" letter-spacing="0.1em" fill="#6e6e7a">APPLY</text>
-          <text x="450" y="112" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="10" letter-spacing="0.1em" fill="#6e6e7a">AUDIT</text>
-          <text x="630" y="112" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="10" letter-spacing="0.1em" fill="#6e6e7a">CONNECT</text>
-          <text x="810" y="112" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="10" letter-spacing="0.1em" fill="#6e6e7a">IMPLEMENT</text>
-        </svg>
+    <!-- 场景详情：默认隐藏，点卡片时显示 -->
+    <div class="scene-detail" id="scene-detail" hidden>
+      <button class="scene-back" id="scene-back">← 返回 6 个场景</button>
+      <div class="scene-detail-body" id="scene-detail-body">
+        <!-- JS 渲染 -->
       </div>
-
-      <!-- 当前步骤详情卡 (JS 渲染) -->
-      <div class="wf-detail" id="wf-detail"></div>
     </div>
 
     <div class="hint-strip" style="margin-top:32px;background:var(--accent-soft);border-color:var(--accent);">
@@ -2181,220 +2306,365 @@ pptx/
 
 
 
-// ========= §04 Workflow Stepper =========
+
+
+// ========= §04 Scene Theater =========
 (function () {
-  const lab = document.getElementById('workflow-lab');
-  if (!lab) return;
-  const svg = lab.querySelector('.wf-svg');
-  const nodes = lab.querySelectorAll('.wf-node');
-  const detail = document.getElementById('wf-detail');
-  const playBtn = document.getElementById('wf-play');
-  const prevBtn = document.getElementById('wf-prev');
-  const nextBtn = document.getElementById('wf-next');
-  const progressLine = document.getElementById('wf-progress-line');
+  const grid = document.getElementById('scene-grid');
+  const detail = document.getElementById('scene-detail');
+  const detailBody = document.getElementById('scene-detail-body');
+  const stage = document.getElementById('scene-stage');
+  const backBtn = document.getElementById('scene-back');
+  if (!grid || !detail) return;
 
-  // SVG 中文标签 (按 step 顺序)
-  const cnLabels = svg.querySelectorAll('text[y="90"]');
-
-  const STEPS = [
+  const SCENES = [
     {
-      n: 1,
-      title: '起稿',
-      titleEn: 'Create from Zero',
-      summary: '设计师有个想法 → AI 帮你从 <strong>0 画一份初稿</strong>。一般 30 秒到 2 分钟出第一版。',
-      main: {
-        code: '/figma-generate-design',
-        title: '文字生成设计稿',
-        titleEn: 'Text → Figma Design',
-        descEn: '"Generates a Figma design from a text prompt, respecting the existing design system..."',
-        descCn: '从文字描述直接在 Figma canvas 生成稿子；遵循已有设计系统。',
-        trigger: '"帮我画一个登录页"'
+      n: '01',
+      quote: '"我要从 0 画一个 SaaS 登录页"',
+      painpoint: '时间紧 · 想先出一版给大家看 · 不想再开 Sketch 拖元素',
+      skill: '/figma-generate-design',
+      act1: { user: '你说', text: '帮我画一个 SaaS 登录页' },
+      act2: {
+        scan: [
+          { code: 'generate-design', desc: '"Generates a Figma design from a text prompt..."', hit: true },
+          { code: 'apply-system',    desc: '"Scans Figma frames and adjusts..."', hit: false },
+          { code: 'rad-spacing',     desc: '"Audits padding / gap / margin..."', hit: false },
+          { code: 'implement',       desc: '"Translates Figma designs into code..."', hit: false }
+        ],
+        conclude: '命中 <span class="em">"画 + 页面"</span> 关键词 → 触发 <code>figma-generate-design</code>'
       },
-      aux: {
-        code: '/figma-generate-library',
-        title: '生成组件库',
-        descCn: '同步可触发 —— 根据 token 自动生成一整套基础组件（Button / Input / Card）。'
+      act3: {
+        skill: '/figma-generate-design',
+        steps: [
+          '读你项目的 <code>design tokens</code>（color / type / spacing）',
+          '在 canvas 创建 frame（默认 <code>1440×900</code>）',
+          '按 SaaS 登录页 layout 绘制（logo · 表单 · CTA · 辅助链接）',
+          '用 token 配色 / 字号 / 间距'
+        ]
+      },
+      act4: {
+        items: [
+          'Figma canvas 多了「登录页」frame',
+          '用了你品牌色 + 字号系统',
+          '间距遵循 4 / 8 / 16 节奏'
+        ],
+        next: '给同事看 → 改改细节 → 走下一步'
       }
     },
     {
-      n: 2,
-      title: '应用',
-      titleEn: 'Apply Design System',
-      summary: '初稿有了 → AI 用你的 <strong>设计系统</strong> 把颜色 / 间距 / 字号<strong>规整</strong>。',
-      main: {
-        code: '/apply-design-system',
-        title: '把设计系统应用到稿子',
-        titleEn: 'Apply Design System to Frame',
-        descEn: '"Scans Figma frames and adjusts colors / spacing / typography to match the design system..."',
-        descCn: '扫描 Figma frame，自动调整偏离设计系统的颜色 / 间距 / 字号。',
-        trigger: '"用我的设计系统改一下"'
+      n: '02',
+      quote: '"稿子间距乱七八糟，懒得手动对"',
+      painpoint: '50 个元素 · 手动对齐眼瞎 · 还可能漏',
+      skill: '/rad-spacing',
+      act1: { user: '你说', text: '看下这个 frame 的间距有没有问题' },
+      act2: {
+        scan: [
+          { code: 'rad-spacing',     desc: '"Audits padding / gap / margin values..."', hit: true },
+          { code: 'apply-system',    desc: '"Scans Figma frames and adjusts..."', hit: false },
+          { code: 'generate-design', desc: '"Generates a Figma design from a prompt..."', hit: false },
+          { code: 'implement',       desc: '"Translates Figma designs into code..."', hit: false }
+        ],
+        conclude: '命中 <span class="em">"间距 + 看下 / 检查"</span> → 触发 <code>rad-spacing</code>'
       },
-      aux: null
-    },
-    {
-      n: 3,
-      title: '审查',
-      titleEn: 'Audit Compliance',
-      summary: '样式应用完 → AI 检查 <strong>间距合规</strong> 和 <strong>无障碍标记</strong>。',
-      main: {
-        code: '/rad-spacing',
-        title: '间距规范检查',
-        titleEn: 'Spacing Compliance Audit',
-        descEn: '"Audits padding / gap / margin values; flags violations of the 4/8/12/16/24 rhythm..."',
-        descCn: '扫描所有元素的 padding / gap / margin，标出违反 4/8/12/16/24 节奏的位置。',
-        trigger: '"看下间距有没有问题"'
+      act3: {
+        skill: '/rad-spacing',
+        steps: [
+          '扫描 frame 内所有元素的 padding / gap / margin',
+          '对比 <code>4 / 8 / 12 / 16 / 24</code> 节奏规则',
+          '标出违反的位置（精确到元素）',
+          '输出报告（共 13 处违规）'
+        ]
       },
-      aux: {
-        code: '/create-voice',
-        title: '加 a11y 注释 (Uber 贡献)',
-        descCn: '同步可触发 —— 自动给组件加 ARIA / 语义化标签 / 对比度建议。'
+      act4: {
+        items: [
+          'violation report 一份',
+          '<code>padding-top: 11px</code> ⚠ 建议 8 或 12',
+          '<code>gap: 7px</code> ⚠ 建议 4 或 8',
+          '... 共 13 项'
+        ],
+        next: '点"接受全部"→ AI 自动修；或者自己挑着改'
       }
     },
     {
-      n: 4,
-      title: '映射',
-      titleEn: 'Connect to Code',
-      summary: '稿子审完 OK → AI 把 Figma 组件和代码组件 <strong>双向绑定</strong>。',
-      main: {
-        code: 'figma:code-connect-components',
-        title: '建立 设计 ↔ 代码 组件映射',
-        titleEn: 'Map Figma Components ↔ Code',
-        descEn: '"Connects Figma design components to code components using Code Connect..."',
-        descCn: '把 Figma 里的组件和代码仓库里的组件双向绑定，让 AI 知道两边对应。',
-        trigger: '"把 Figma 的 Button 跟代码里的关联一下"'
+      n: '03',
+      quote: '"我改了 Figma token，但代码还是老的"',
+      painpoint: 'Figma Variables 是一份 · 代码 CSS variables 是另一份 · 永远在漂移',
+      skill: '/sync-figma-token',
+      act1: { user: '你说', text: '检查一下 token 有没有漂移' },
+      act2: {
+        scan: [
+          { code: 'sync-figma-token', desc: '"Detects mismatches between Figma Variables and code CSS variables..."', hit: true },
+          { code: 'apply-system',     desc: '"Scans frames and adjusts to system..."', hit: false },
+          { code: 'rad-spacing',      desc: '"Audits padding / gap / margin..."', hit: false },
+          { code: 'create-rules',     desc: '"Generates custom design system rules..."', hit: false }
+        ],
+        conclude: '命中 <span class="em">"token + 漂移"</span> → 触发 <code>sync-figma-token</code>'
       },
-      aux: {
-        code: '/sync-figma-token',
-        title: '同步 token',
-        descCn: '同步可触发 —— 检测 Figma Variables 和代码 CSS variables 之间的不一致。'
+      act3: {
+        skill: '/sync-figma-token',
+        steps: [
+          '读 Figma Variables（color / spacing / typography）',
+          '读代码里的 <code>tokens.css</code> 或 <code>theme.ts</code>',
+          'diff 比对，找出不一致',
+          '输出对照表 + 一键同步选项'
+        ]
+      },
+      act4: {
+        items: [
+          '<code>color/brand-500</code>: Figma <strong>#FF5E1A</strong> / 代码 <strong>#FF6B30</strong> ✗',
+          '<code>space/4</code>: Figma <strong>8px</strong> / 代码 <strong>8px</strong> ✓',
+          '<code>radius/md</code>: Figma <strong>6px</strong> / 代码 <strong>8px</strong> ✗',
+          '... 共 3 项不一致'
+        ],
+        next: '点"一键以 Figma 为准同步" → 直接改代码；或选某几项手动改'
       }
     },
     {
-      n: 5,
-      title: '实现',
-      titleEn: 'Output Code',
-      summary: '映射完成 → AI 直接出 <strong>React / Vue / Tailwind 代码</strong>。可以进仓库。',
-      main: {
-        code: 'figma:implement-design',
-        title: '把设计稿翻译成代码',
-        titleEn: 'Translate Figma → Production Code',
-        descEn: '"Translates Figma designs into production-ready code with 1:1 visual fidelity..."',
-        descCn: '把 Figma 设计稿转成可直接上线的代码，保持视觉一致。',
-        trigger: '"把 Figma 实现出来 / 出 React 代码"'
+      n: '04',
+      quote: '"AI 给的代码不用我项目的 Button"',
+      painpoint: 'AI 不知道你 codebase 有什么 · 永远造新的 <code>&lt;button class="..."&gt;</code> · 一致性全无',
+      skill: 'figma:code-connect-components',
+      act1: { user: '你说', text: '把 Figma 的 Button 跟代码里的关联一下' },
+      act2: {
+        scan: [
+          { code: 'code-connect',     desc: '"Connects Figma design components to code components using Code Connect..."', hit: true },
+          { code: 'sync-token',       desc: '"Detects mismatches between Figma Variables..."', hit: false },
+          { code: 'implement',        desc: '"Translates Figma designs into code..."', hit: false },
+          { code: 'apply-system',     desc: '"Scans frames and adjusts to system..."', hit: false }
+        ],
+        conclude: '命中 <span class="em">"关联 + 代码"</span> → 触发 <code>figma:code-connect-components</code>'
       },
-      aux: {
-        code: 'figma:create-design-system-rules',
-        title: '生成项目设计系统规则',
-        descCn: '同步可触发 —— 把这次的实现规则沉淀成文档，下次复用。'
+      act3: {
+        skill: 'figma:code-connect-components',
+        steps: [
+          '在 Figma 选中 Button 组件 + 拿到所有 variants',
+          '扫 codebase 找你的 <code>Button.tsx</code> 实现',
+          '在 <code>Button.tsx</code> 旁边生成 <code>.figma.tsx</code> 映射文件',
+          '把 Figma <code>variant=primary/size=lg</code> 对应到 props'
+        ]
+      },
+      act4: {
+        items: [
+          'Code Connect 配置文件已生成',
+          '<code>Figma · variant=primary</code> ↔ <code>&lt;Button variant="primary"&gt;</code>',
+          'AI 以后出代码会<strong>直接用</strong>你的 Button',
+          '不再造 <code>&lt;button className="rounded..."&gt;</code>'
+        ],
+        next: '所有 figma:implement-design 出的代码都自动用你的组件'
+      }
+    },
+    {
+      n: '05',
+      quote: '"前端说这稿子结构乱，做不出来"',
+      painpoint: '稿子很美 · 但图层嵌套 / 命名都没规范 · 前端要重画一遍',
+      skill: 'figma:implement-design',
+      act1: { user: '你说', text: '把这个 Figma 实现出来，出 React 代码' },
+      act2: {
+        scan: [
+          { code: 'implement',        desc: '"Translates Figma designs into production-ready code..."', hit: true },
+          { code: 'code-connect',     desc: '"Connects Figma components to code..."', hit: false },
+          { code: 'generate-design',  desc: '"Generates a Figma design from a prompt..."', hit: false },
+          { code: 'apply-system',     desc: '"Scans frames and adjusts to system..."', hit: false }
+        ],
+        conclude: '命中 <span class="em">"实现 + React 代码"</span> → 触发 <code>figma:implement-design</code>'
+      },
+      act3: {
+        skill: 'figma:implement-design',
+        steps: [
+          '读 Figma frame 的 layer 树 + Auto Layout 设置',
+          '读你的 design system rules（<code>/figma-rules.md</code>）',
+          '读 Code Connect 映射（确保用你项目的 Button / Card / Input）',
+          '生成 React + Tailwind 代码（含 hover / focus / disabled）'
+        ]
+      },
+      act4: {
+        items: [
+          '一份 React 组件代码（约 50 行）',
+          '用了你的 <code>&lt;Button&gt;</code> <code>&lt;Card&gt;</code> <code>&lt;Input&gt;</code>',
+          '所有 state 写齐：default · hover · focus · disabled',
+          '响应式断点跟着 Tailwind 默认走'
+        ],
+        next: '复制粘贴进项目 → 接业务逻辑就能跑'
+      }
+    },
+    {
+      n: '06',
+      quote: '"老板让我整理整个设计系统"',
+      painpoint: '组件库 200+ · 没人知道哪些代码用了 / 哪些命名乱了 · 想哭',
+      skill: 'figma:create-design-system-rules',
+      act1: { user: '你说', text: '给我项目生成一份设计系统规则' },
+      act2: {
+        scan: [
+          { code: 'create-rules',     desc: '"Generates custom design system rules for the user\'s codebase..."', hit: true },
+          { code: 'apply-system',     desc: '"Scans frames and adjusts to system..."', hit: false },
+          { code: 'code-connect',     desc: '"Connects Figma components to code..."', hit: false },
+          { code: 'sync-token',       desc: '"Detects mismatches between Figma Variables..."', hit: false }
+        ],
+        conclude: '命中 <span class="em">"设计系统 + 生成规则"</span> → 触发 <code>figma:create-design-system-rules</code>'
+      },
+      act3: {
+        skill: 'figma:create-design-system-rules',
+        steps: [
+          '扫描 Figma library 所有组件 + variants',
+          '扫描代码所有组件实现',
+          '比对找 parity（Figma 有 / 代码没；代码有 / Figma 没）',
+          '抽取共同规范（间距 / 命名 / variant 命名）',
+          '输出 <code>design-rules.md</code>'
+        ]
+      },
+      act4: {
+        items: [
+          '<code>design-rules.md</code> 一份（约 120 行）',
+          '含组件命名规则 / 间距 token / 状态规范',
+          'AI 以后改稿都会遵循这份规则',
+          '新人 onboarding 文档直接用'
+        ],
+        next: '把它放到 repo 根目录 → AI / 团队都能读到'
       }
     }
   ];
 
-  let currentStep = 1;
-  let autoplayInterval = null;
+  const seen = new Set();
 
-  // Step X 节点 cx 坐标 (与 SVG 一致)
-  const NODE_X = [null, 90, 270, 450, 630, 810];
-
-  function renderStep(n) {
-    currentStep = n;
-
-    // 更新节点状态
-    nodes.forEach(node => {
-      const step = parseInt(node.dataset.step, 10);
-      node.classList.remove('is-active', 'is-done');
-      if (step < n) node.classList.add('is-done');
-      else if (step === n) node.classList.add('is-active');
+  // 渲染主屏
+  function renderGrid() {
+    grid.innerHTML = '';
+    SCENES.forEach((s, i) => {
+      const btn = document.createElement('button');
+      btn.className = 'scene-card' + (seen.has(i) ? ' is-seen' : '');
+      btn.innerHTML =
+        '<div class="sc-num">' + s.n + '</div>' +
+        '<div class="sc-quote">' + s.quote + '</div>' +
+        '<div class="sc-painpoint">' + s.painpoint + '</div>' +
+        '<div class="sc-foot">' +
+          '<span class="skill">' + s.skill + '</span>' +
+          '<span class="cta">看一出戏 →</span>' +
+        '</div>';
+      btn.addEventListener('click', () => openScene(i));
+      grid.appendChild(btn);
     });
+  }
 
-    // 更新中文标签高亮
-    cnLabels.forEach((label, i) => {
-      label.classList.toggle('is-active', i + 1 === n);
-    });
-
-    // 更新进度线
-    progressLine.setAttribute('x2', String(NODE_X[n]));
-
-    // 渲染详情卡
-    const step = STEPS[n - 1];
-    let html = '<div class="wf-step-card">' +
-      '<div class="wf-step-head">' +
-        '<div class="wf-step-num">0' + step.n + '</div>' +
-        '<div class="wf-step-titles">' +
-          '<div class="wf-step-title">' + step.title + ' · ' + step.titleEn.toUpperCase() + '</div>' +
-        '</div>' +
+  // 打开场景详情
+  function openScene(idx) {
+    const s = SCENES[idx];
+    // 渲染 detail
+    let html = '<div class="sd-head">' +
+      '<div class="sd-tag">场景 · ' + s.n + ' · SKILL: ' + s.skill + '</div>' +
+      '<div class="sd-quote">' + s.quote + '</div>' +
+      '<div class="sd-painpoint">' + s.painpoint + '</div>' +
       '</div>' +
-      '<div class="wf-step-summary">' + step.summary + '</div>' +
-      '<div class="wf-skill-card">' +
-        '<div class="wf-skill-head">' +
-          '<span class="wf-skill-role">主 Skill</span>' +
-          '<span class="wf-skill-code">' + step.main.code + '</span>' +
-        '</div>' +
-        '<div class="wf-skill-title">' + step.main.title + '</div>' +
-        '<div class="wf-skill-title-en">' + step.main.titleEn + '</div>' +
-        '<div class="wf-bi">' +
-          '<div class="wf-bi-row"><span class="wf-bi-lang">EN</span><span class="wf-bi-text en">' + step.main.descEn + '</span></div>' +
-          '<div class="wf-bi-row"><span class="wf-bi-lang">CN</span><span class="wf-bi-text cn">' + step.main.descCn + '</span></div>' +
-        '</div>' +
-        '<div class="wf-trigger">用户对 Claude 说 · <strong>' + step.main.trigger + '</strong></div>' +
-      '</div>';
-    if (step.aux) {
-      html += '<div class="wf-skill-card is-aux">' +
-        '<div class="wf-skill-head">' +
-          '<span class="wf-skill-role">辅助</span>' +
-          '<span class="wf-skill-code">' + step.aux.code + '</span>' +
-        '</div>' +
-        '<div class="wf-skill-title">' + step.aux.title + '</div>' +
-        '<div class="wf-trigger">' + step.aux.descCn + '</div>' +
-      '</div>';
-    }
+      '<div class="acts">';
+
+    // 幕 1
+    html += '<div class="act" data-act="1">' +
+      '<div class="act-label"><span class="act-no">幕 01</span>你说</div>' +
+      '<div class="bubble-row">' +
+        '<div class="bubble-avatar">你</div>' +
+        '<div class="bubble">' + s.act1.text + '</div>' +
+      '</div>' +
+    '</div>';
+
+    // 幕 2
+    let scanHtml = s.act2.scan.map(r =>
+      '<div class="desc-row' + (r.hit ? ' is-hit' : '') + '">' +
+        '<span class="dr-code">' + r.code + '</span>' + r.desc +
+      '</div>'
+    ).join('');
+    html += '<div class="act" data-act="2">' +
+      '<div class="act-label"><span class="act-no">幕 02</span>AI 听到 · 扫描 9 个 description</div>' +
+      '<div class="ai-listen">' +
+        '<div class="ai-listen-head">扫描 9 个 skill 的 description, 找匹配 ——</div>' +
+        '<div class="desc-scan">' + scanHtml + '</div>' +
+        '<div class="ai-conclude">' + s.act2.conclude + '</div>' +
+      '</div>' +
+    '</div>';
+
+    // 幕 3
+    let stepsHtml = s.act3.steps.map((step, j) =>
+      '<div class="step-row" data-step="' + j + '">' +
+        '<span class="step-tick"></span>' +
+        '<span>' + step + '</span>' +
+      '</div>'
+    ).join('');
+    html += '<div class="act" data-act="3">' +
+      '<div class="act-label"><span class="act-no">幕 03</span>Skill 在做 · ' + s.act3.skill + '</div>' +
+      '<div class="skill-doing">' +
+        '<div class="skill-doing-head">触发 <strong>' + s.act3.skill + '</strong> · 执行步骤：</div>' +
+        '<div class="steps">' + stepsHtml + '</div>' +
+      '</div>' +
+    '</div>';
+
+    // 幕 4
+    let resultHtml = s.act4.items.map(it => '<div class="result-item">' + it + '</div>').join('');
+    html += '<div class="act" data-act="4">' +
+      '<div class="act-label"><span class="act-no">幕 04</span>结果 · 你拿到什么</div>' +
+      '<div class="result">' +
+        '<div class="result-head">实际输出</div>' +
+        '<div class="result-list">' + resultHtml + '</div>' +
+        '<div class="result-foot"><strong>下一步：</strong>' + s.act4.next + '</div>' +
+      '</div>' +
+    '</div>';
+
     html += '</div>';
-    detail.innerHTML = html;
-  }
 
-  function play() {
-    if (autoplayInterval) return;
-    playBtn.textContent = '⏸ 暂停';
-    playBtn.classList.add('playing');
-    autoplayInterval = setInterval(() => {
-      const next = currentStep >= STEPS.length ? 1 : currentStep + 1;
-      renderStep(next);
-    }, 4500);
-  }
+    // 下一场景按钮
+    const nextIdx = (idx + 1) % SCENES.length;
+    html += '<div class="scene-nav">' +
+      '<span class="nav-hint">看完一出 → 还有 ' + (SCENES.length - 1) + ' 个场景</span>' +
+      '<button id="scene-next">下一个场景 · ' + SCENES[nextIdx].n + ' →</button>' +
+    '</div>';
 
-  function stop() {
-    if (autoplayInterval) {
-      clearInterval(autoplayInterval);
-      autoplayInterval = null;
-    }
-    playBtn.textContent = '▶ 自动播放';
-    playBtn.classList.remove('playing');
-  }
+    detailBody.innerHTML = html;
 
-  playBtn.addEventListener('click', () => {
-    if (autoplayInterval) stop();
-    else play();
-  });
+    // 切换 UI
+    stage.hidden = true;
+    detail.hidden = false;
+    detail.scrollIntoView({ behavior: 'smooth', block: 'start' });
 
-  prevBtn.addEventListener('click', () => {
-    stop();
-    renderStep(currentStep <= 1 ? STEPS.length : currentStep - 1);
-  });
-
-  nextBtn.addEventListener('click', () => {
-    stop();
-    renderStep(currentStep >= STEPS.length ? 1 : currentStep + 1);
-  });
-
-  nodes.forEach(node => {
-    node.addEventListener('click', () => {
-      stop();
-      renderStep(parseInt(node.dataset.step, 10));
+    // 逐幕揭示 + 步骤打勾动画
+    const acts = detail.querySelectorAll('.act');
+    acts.forEach((a, i) => {
+      setTimeout(() => {
+        a.classList.add('show');
+        // 幕 3 步骤逐个打勾
+        if (a.dataset.act === '3') {
+          const steps = a.querySelectorAll('.step-row');
+          steps.forEach((stRow, j) => {
+            setTimeout(() => stRow.classList.add('done'), 400 + j * 280);
+          });
+        }
+      }, 350 + i * 700);
     });
+
+    // 下一场景按钮
+    const nextBtn = document.getElementById('scene-next');
+    if (nextBtn) {
+      nextBtn.addEventListener('click', () => {
+        seen.add(idx);
+        renderGrid();
+        openScene(nextIdx);
+      });
+    }
+  }
+
+  // 返回主屏
+  backBtn.addEventListener('click', () => {
+    // 标记当前场景已看过
+    const tag = detailBody.querySelector('.sd-tag')?.textContent || '';
+    const m = tag.match(/(\d{2})/);
+    if (m) {
+      const idx = SCENES.findIndex(s => s.n === m[1]);
+      if (idx >= 0) seen.add(idx);
+    }
+    renderGrid();
+    detail.hidden = true;
+    stage.hidden = false;
+    stage.scrollIntoView({ behavior: 'smooth', block: 'start' });
   });
 
   // Init
-  renderStep(1);
+  renderGrid();
 })();
 
 </script>
