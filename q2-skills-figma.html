@@ -1,0 +1,2978 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Anthropic Skills 的内部结构 — 拆开看，里面装了什么</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300..900&family=Geist:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Noto+Sans+SC:wght@300;400;500;700;900&family=Noto+Serif+SC:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f3eee5;
+    --bg-2: #ebe4d4;
+    --ink: #16161d;
+    --ink-soft: #4a4a55;
+    --ink-mute: #8a8a92;
+    --line: #d5cdba;
+    --line-soft: #e3dcca;
+    --accent: #ff4d2e;
+    --accent-soft: #ffe4dc;
+    --blue: #0a4cff;
+    --blue-soft: #dde6ff;
+    --green: #1f6b3a;
+    --green-soft: #d4ecdb;
+    --yellow: #ffcf3d;
+    --yellow-soft: #fff2c4;
+    --paper: #faf7f0;
+    --warn: #b48010;
+    --shadow: 0 1px 0 rgba(0,0,0,0.04), 0 8px 24px rgba(22,22,29,0.06);
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'Geist', 'Noto Sans SC', system-ui, -apple-system, sans-serif;
+    font-size: 16px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    background-image:
+      radial-gradient(circle at 1px 1px, rgba(22,22,29,0.05) 1px, transparent 0);
+    background-size: 24px 24px;
+  }
+
+  /* Typography — NO italic anywhere */
+  .display-cn { font-family: 'Noto Serif SC', serif; font-weight: 900; letter-spacing: -0.01em; }
+  .mono { font-family: 'JetBrains Mono', monospace; }
+  .label { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-mute); }
+  em, i { font-style: normal; }
+
+  /* Layout */
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 0 32px; }
+
+  /* Top bar */
+  .topbar {
+    border-bottom: 1px dashed var(--line);
+    padding: 16px 0;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    backdrop-filter: blur(8px);
+    background: rgba(243, 238, 229, 0.85);
+  }
+  .topbar-inner { display: flex; justify-content: space-between; align-items: center; gap: 24px; }
+  .brand { font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 600; }
+  .brand .dot { display: inline-block; width: 8px; height: 8px; background: var(--accent); border-radius: 50%; margin-right: 8px; vertical-align: middle; animation: pulse 2s ease-in-out infinite; }
+  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+  .nav-links { display: flex; gap: 20px; font-size: 13px; }
+  .nav-links a { color: var(--ink-soft); text-decoration: none; transition: color 0.2s; }
+  .nav-links a:hover { color: var(--accent); }
+  .nav-links a.current { color: var(--accent); font-weight: 600; }
+  a.brand { text-decoration: none; color: inherit; transition: color 0.2s; cursor: pointer; }
+  a.brand:hover { color: var(--accent); }
+  .nav-links a[data-rm-open] { cursor: pointer; }
+
+  /* Hero */
+  .hero { padding: 100px 0 80px; position: relative; overflow: hidden; }
+  .hero-meta { display: flex; gap: 24px; margin-bottom: 32px; align-items: center; flex-wrap: wrap; }
+  .hero-meta .pill { padding: 6px 12px; border: 1px solid var(--ink); border-radius: 100px; font-size: 11px; font-family: 'JetBrains Mono', monospace; letter-spacing: 0.05em; }
+  .hero-meta .pill.fill { background: var(--ink); color: var(--bg); }
+  .hero h1 {
+    font-family: 'Noto Serif SC', serif;
+    font-weight: 900;
+    font-size: clamp(48px, 7vw, 92px);
+    line-height: 0.95;
+    letter-spacing: -0.03em;
+    margin: 0 0 24px;
+  }
+  .hero h1 .em { font-family: 'Noto Serif SC', serif; font-weight: 500; color: var(--accent); font-style: normal; }
+  .hero p.lede {
+    font-size: 20px;
+    line-height: 1.5;
+    max-width: 640px;
+    color: var(--ink-soft);
+    margin: 0 0 40px;
+  }
+  .hero-grid {
+    display: grid;
+    grid-template-columns: 1.4fr 1fr;
+    gap: 48px;
+    align-items: end;
+  }
+  @media (max-width: 880px) { .hero-grid { grid-template-columns: 1fr; } }
+  .hero-side {
+    border-left: 1px dashed var(--line);
+    padding-left: 24px;
+    font-size: 13px;
+    color: var(--ink-soft);
+  }
+  .hero-side .row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px dashed var(--line); }
+  .hero-side .row:last-child { border-bottom: none; }
+  .hero-side .row .k { color: var(--ink-mute); font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.05em; text-transform: uppercase; }
+  .hero-side .row .v { font-weight: 500; }
+
+  /* Generic .em (no italic) */
+  .em { font-family: 'Noto Serif SC', serif; font-weight: 500; color: var(--accent); font-style: normal; }
+
+  /* Section base */
+  section { padding: 80px 0; border-top: 1px solid var(--line); position: relative; }
+  .section-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 56px; flex-wrap: wrap; gap: 16px; }
+  .section-num { font-family: 'JetBrains Mono', monospace; font-size: 13px; color: var(--ink-mute); letter-spacing: 0.1em; }
+  .section-num strong { color: var(--accent); }
+  .section-title {
+    font-family: 'Noto Serif SC', serif;
+    font-weight: 900;
+    font-size: clamp(32px, 4.5vw, 52px);
+    line-height: 1.05;
+    letter-spacing: -0.02em;
+    margin: 0;
+    max-width: 18ch;
+  }
+  .section-title .em { font-family: 'Noto Serif SC', serif; font-weight: 500; color: var(--accent); font-style: normal; }
+  .section-sub { color: var(--ink-soft); font-size: 17px; max-width: 38ch; line-height: 1.55; margin: 0; }
+
+  /* Helper hint strip */
+  .hint-strip {
+    margin-top: 24px;
+    padding: 14px 18px;
+    background: var(--accent-soft);
+    border-left: 3px solid var(--accent);
+    border-radius: 4px;
+    font-size: 13.5px;
+    color: var(--ink);
+    line-height: 1.6;
+  }
+  .hint-strip .hint-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--accent);
+    letter-spacing: 0.12em;
+    margin-right: 10px;
+    text-transform: uppercase;
+  }
+  .hint-strip code { font-family: 'JetBrains Mono', monospace; background: rgba(255,255,255,0.55); padding: 1px 6px; border-radius: 3px; font-size: 12.5px; }
+  .hint-strip strong { font-weight: 600; }
+
+  /* ============== §01 — Folder explorer ============== */
+  .folder-stage {
+    margin-top: 24px;
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  .folder-grid {
+    display: grid;
+    grid-template-columns: 1fr 1.1fr;
+    gap: 0;
+    min-height: 460px;
+  }
+  @media (max-width: 880px) { .folder-grid { grid-template-columns: 1fr; } }
+
+  .folder-tree {
+    background: #1e1e25;
+    color: #d8d8e0;
+    padding: 24px 22px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    line-height: 1.95;
+    border-right: 1px solid var(--line);
+    position: relative;
+  }
+  .folder-tree .ft-head {
+    color: #6e6e7a;
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    margin-bottom: 14px;
+    text-transform: uppercase;
+    border-bottom: 1px dashed rgba(255,255,255,0.08);
+    padding-bottom: 10px;
+  }
+  .folder-tree .ft-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 8px;
+    margin: 0 -8px;
+    border-radius: 3px;
+    cursor: pointer;
+    transition: background 0.15s, transform 0.5s ease, opacity 0.5s ease;
+    user-select: none;
+  }
+  .folder-tree .ft-row:hover { background: rgba(255,255,255,0.06); }
+  .folder-tree .ft-row.is-active { background: rgba(255,77,46,0.18); color: #ffb39a; }
+  .folder-tree .ft-row.is-required { color: #ffb39a; }
+  .folder-tree .ft-row.is-required.is-active { background: rgba(255,77,46,0.28); color: #fff; }
+  .folder-tree .ft-icon {
+    width: 16px;
+    text-align: center;
+    color: #888;
+    flex-shrink: 0;
+  }
+  .folder-tree .ft-row.is-folder .ft-icon { color: #ffcf3d; }
+  .folder-tree .ft-row.is-required .ft-icon { color: #ff8a6e; }
+  .folder-tree .ft-name { flex: 1; }
+  .folder-tree .ft-tag {
+    font-size: 10px;
+    color: #6e6e7a;
+    letter-spacing: 0.05em;
+    padding: 1px 6px;
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 3px;
+  }
+  .folder-tree .ft-row.is-required .ft-tag {
+    color: #ff8a6e;
+    border-color: rgba(255,138,110,0.4);
+  }
+  .folder-tree .ft-indent-1 { padding-left: 28px; }
+  .folder-tree .ft-indent-2 { padding-left: 52px; }
+  .folder-tree .ft-row.fly-out {
+    transform: translateX(-20px);
+    opacity: 0;
+  }
+  .folder-tree .ft-row.fly-in {
+    animation: ftFly 0.55s ease-out;
+  }
+  @keyframes ftFly {
+    0%   { transform: translateX(-32px); opacity: 0; }
+    100% { transform: translateX(0); opacity: 1; }
+  }
+  .folder-tree .ft-toolbar {
+    margin-top: 20px;
+    padding-top: 14px;
+    border-top: 1px dashed rgba(255,255,255,0.1);
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+  .folder-tree .ft-toolbar button {
+    background: rgba(255,255,255,0.06);
+    color: #d8d8e0;
+    border: 1px solid rgba(255,255,255,0.12);
+    padding: 6px 12px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    border-radius: 3px;
+    cursor: pointer;
+    transition: all 0.18s;
+    letter-spacing: 0.04em;
+  }
+  .folder-tree .ft-toolbar button:hover { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .folder-tree .ft-toolbar .ft-hint {
+    font-size: 10px;
+    color: #6e6e7a;
+    margin-left: auto;
+    letter-spacing: 0.06em;
+  }
+
+  .folder-detail {
+    background: var(--paper);
+    padding: 24px 26px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+  .folder-detail .fd-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--accent);
+  }
+  .folder-detail .fd-name {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 24px;
+    font-weight: 700;
+    margin: 0;
+    line-height: 1.25;
+    letter-spacing: -0.01em;
+  }
+  .folder-detail .fd-name code {
+    font-family: 'JetBrains Mono', monospace;
+    background: var(--bg-2);
+    padding: 2px 8px;
+    font-size: 18px;
+    border-radius: 4px;
+    color: var(--ink);
+  }
+  .folder-detail .fd-meta {
+    display: flex;
+    gap: 14px;
+    flex-wrap: wrap;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--ink-mute);
+    letter-spacing: 0.04em;
+  }
+  .folder-detail .fd-meta .req {
+    color: var(--accent);
+    font-weight: 600;
+  }
+  .folder-detail .fd-meta .opt {
+    color: var(--ink-soft);
+  }
+  .folder-detail .fd-desc {
+    font-size: 14px;
+    color: var(--ink-soft);
+    line-height: 1.6;
+    margin: 0;
+  }
+  .folder-detail .fd-desc strong { color: var(--ink); font-weight: 600; }
+  .folder-detail .fd-mock {
+    background: var(--ink);
+    color: #d8d8e0;
+    padding: 16px 18px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12.5px;
+    border-radius: 6px;
+    line-height: 1.75;
+    overflow-x: auto;
+    margin: 0;
+    flex: 1;
+  }
+  .folder-detail .fd-mock .ccom { color: #6e6e7a; }
+  .folder-detail .fd-mock .ckey { color: #ff8a6e; }
+  .folder-detail .fd-mock .cstr { color: #a8e6a3; }
+  .folder-detail .fd-mock .cnum { color: #8ec5ff; }
+  .folder-detail .fd-mock .cmark { color: #ffcf3d; }
+  .folder-detail .fd-mock .ctag { color: #c9b6ff; }
+
+  /* ============== §02 — Anatomy ============== */
+  .anatomy-stage {
+    margin-top: 24px;
+    display: grid;
+    grid-template-columns: 1.05fr 1fr;
+    gap: 24px;
+  }
+  @media (max-width: 880px) { .anatomy-stage { grid-template-columns: 1fr; } }
+
+  .anatomy-code {
+    background: var(--ink);
+    color: #d8d8e0;
+    padding: 22px 24px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    line-height: 1.95;
+    border-radius: 8px;
+    position: relative;
+    overflow-x: auto;
+  }
+  .anatomy-code .ac-fname {
+    position: absolute; top: 12px; right: 16px;
+    font-size: 10px; color: #6e6e7a; letter-spacing: 0.08em;
+  }
+  .anatomy-code .ac-dot {
+    position: absolute;
+    top: 14px; left: 16px;
+    width: 8px; height: 8px; border-radius: 50%;
+    background: #ff5f56;
+    box-shadow: 14px 0 0 #ffbd2e, 28px 0 0 #27c93f;
+  }
+  .anatomy-code pre { margin: 0; padding-top: 22px; }
+  .anatomy-code .ccom { color: #6e6e7a; }
+  .anatomy-code .ckey { color: #ff8a6e; }
+  .anatomy-code .cstr { color: #a8e6a3; }
+  .anatomy-code .cnum { color: #8ec5ff; }
+  .anatomy-code .cmark { color: #ffcf3d; }
+  .anatomy-code .ctag { color: #c9b6ff; }
+  .anatomy-code .cline {
+    display: block;
+    padding: 0 8px;
+    margin: 0 -8px;
+    border-left: 3px solid transparent;
+    border-radius: 3px;
+    transition: background 0.2s ease, border-color 0.2s ease;
+    cursor: pointer;
+  }
+  .anatomy-code .cline:hover { background: rgba(255,255,255,0.04); }
+  .anatomy-code .cline.is-active {
+    background: rgba(255,138,110,0.14);
+    border-left-color: #ff8a6e;
+  }
+
+  .anatomy-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .anat-card {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 16px 18px;
+    cursor: pointer;
+    transition: all 0.18s ease;
+  }
+  .anat-card:hover { border-color: var(--accent); transform: translateX(2px); }
+  .anat-card.is-active {
+    border-color: var(--accent);
+    background: var(--accent-soft);
+    transform: translateX(4px);
+    box-shadow: 0 4px 14px rgba(255,77,46,0.12);
+  }
+  .anat-card .ak-num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--ink-mute);
+    letter-spacing: 0.1em;
+    margin-bottom: 4px;
+  }
+  .anat-card.is-active .ak-num { color: var(--accent); }
+  .anat-card .ak-title {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 16px;
+    font-weight: 700;
+    margin: 0 0 4px;
+    line-height: 1.3;
+  }
+  .anat-card .ak-title code {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    background: var(--bg-2);
+    padding: 1px 6px;
+    border-radius: 3px;
+    margin-right: 6px;
+  }
+  .anat-card.is-active .ak-title code { background: rgba(255,255,255,0.6); }
+  .anat-card .ak-desc {
+    font-size: 13px;
+    color: var(--ink-soft);
+    margin: 0;
+    line-height: 1.55;
+  }
+  .anat-card .ak-desc strong { color: var(--ink); font-weight: 600; }
+
+  /* ============== §03 — Pyramid ============== */
+  .pyramid-stage {
+    margin-top: 24px;
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 32px 32px 28px;
+  }
+  .pyramid-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 32px;
+    align-items: center;
+  }
+  @media (max-width: 880px) { .pyramid-grid { grid-template-columns: 1fr; gap: 24px; } }
+
+  .pyramid-svg {
+    width: 100%;
+    height: 380px;
+    display: block;
+  }
+  .pyramid-svg .py-tier {
+    transition: opacity 0.4s ease, filter 0.4s ease;
+  }
+  .pyramid-svg .py-tier.dimmed {
+    opacity: 0.28;
+    filter: saturate(0.4);
+  }
+  .pyramid-svg .py-tier.active polygon,
+  .pyramid-svg .py-tier.active rect {
+    filter: drop-shadow(0 4px 16px rgba(255,77,46,0.35));
+  }
+  .pyramid-svg .py-flow {
+    stroke: var(--accent);
+    stroke-width: 2;
+    stroke-dasharray: 6 5;
+    fill: none;
+    opacity: 0;
+    transition: opacity 0.4s ease;
+  }
+  .pyramid-svg .py-flow.active {
+    opacity: 0.85;
+    animation: pyDash 1.4s linear infinite;
+  }
+  @keyframes pyDash { to { stroke-dashoffset: -22; } }
+
+  .pyramid-side {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+  .pyramid-input {
+    background: var(--bg);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 16px 18px;
+  }
+  .pyramid-input label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--ink-mute);
+    margin-bottom: 8px;
+    display: block;
+  }
+  .pyramid-input .py-chips {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    margin-bottom: 12px;
+  }
+  .pyramid-input .py-chips button {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    color: var(--ink-soft);
+    padding: 6px 12px;
+    font-family: inherit;
+    font-size: 12px;
+    border-radius: 100px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .pyramid-input .py-chips button:hover { border-color: var(--accent); color: var(--accent); }
+  .pyramid-input .py-chips button.active {
+    background: var(--ink);
+    border-color: var(--ink);
+    color: white;
+  }
+  .pyramid-input .py-query {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    padding: 10px 12px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12.5px;
+    color: var(--ink);
+    min-height: 24px;
+    line-height: 1.45;
+  }
+  .pyramid-input .py-query .py-prompt { color: var(--accent); margin-right: 6px; }
+
+  .pyramid-trace {
+    background: var(--ink);
+    color: #d8d8e0;
+    border-radius: 6px;
+    padding: 16px 18px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    line-height: 1.85;
+    min-height: 180px;
+  }
+  .pyramid-trace .pt-row {
+    opacity: 0;
+    transform: translateX(-6px);
+    transition: opacity 0.3s ease, transform 0.3s ease;
+  }
+  .pyramid-trace .pt-row.show {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  .pyramid-trace .pt-tier {
+    color: #ff8a6e;
+    margin-right: 6px;
+    font-weight: 600;
+  }
+  .pyramid-trace .pt-tok {
+    color: #8ec5ff;
+    margin-left: 6px;
+  }
+  .pyramid-trace .pt-skill {
+    color: #a8e6a3;
+  }
+  .pyramid-trace .pt-meta {
+    color: #6e6e7a;
+    font-size: 10px;
+    margin-top: 10px;
+    padding-top: 8px;
+    border-top: 1px dashed rgba(255,255,255,0.1);
+    letter-spacing: 0.05em;
+  }
+
+  /* ============== §04 — Trigger Lab ============== */
+  .lab-stage {
+    margin-top: 24px;
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  .lab-head {
+    background: var(--ink);
+    color: white;
+    padding: 16px 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 14px;
+  }
+  .lab-rounds {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+  }
+  .lab-rounds .lr-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: rgba(255,255,255,0.5);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-right: 8px;
+  }
+  .lab-rounds button {
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.16);
+    color: rgba(255,255,255,0.7);
+    padding: 6px 12px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    border-radius: 3px;
+    cursor: pointer;
+    transition: all 0.15s;
+    letter-spacing: 0.04em;
+    min-width: 60px;
+  }
+  .lab-rounds button:hover { background: rgba(255,255,255,0.16); color: white; }
+  .lab-rounds button.active { background: var(--accent); border-color: var(--accent); color: white; }
+  .lab-rounds button.done {
+    background: rgba(31,107,58,0.6);
+    border-color: var(--green);
+    color: white;
+  }
+  .lab-rounds button.done::after {
+    content: '✓';
+    margin-left: 4px;
+  }
+  .lab-rounds button.failed {
+    background: rgba(255,77,46,0.35);
+    border-color: var(--accent);
+    color: white;
+  }
+  .lab-rounds button.failed::after {
+    content: '✕';
+    margin-left: 4px;
+  }
+  .lab-meta {
+    display: flex;
+    gap: 16px;
+    align-items: center;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: rgba(255,255,255,0.7);
+    letter-spacing: 0.04em;
+  }
+  .lab-meta .lm-tag { color: var(--accent); margin-right: 4px; }
+
+  .lab-prompt {
+    padding: 22px 26px 18px;
+    border-bottom: 1px dashed var(--line);
+    background: var(--bg);
+  }
+  .lab-prompt .lp-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--accent);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+  .lab-prompt .lp-title {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 22px;
+    font-weight: 700;
+    margin: 0 0 8px;
+    line-height: 1.3;
+    letter-spacing: -0.01em;
+  }
+  .lab-prompt .lp-desc {
+    font-size: 14px;
+    color: var(--ink-soft);
+    line-height: 1.55;
+    margin: 0;
+    max-width: 70ch;
+  }
+  .lab-prompt .lp-desc strong { color: var(--ink); font-weight: 600; }
+  .lab-prompt .lp-user {
+    margin-top: 14px;
+    padding: 12px 14px;
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-left: 3px solid var(--ink);
+    border-radius: 0 4px 4px 0;
+    font-size: 14.5px;
+    line-height: 1.5;
+    color: var(--ink);
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+  }
+  .lab-prompt .lp-user .lp-actor {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--ink-mute);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding-top: 3px;
+    white-space: nowrap;
+  }
+  .lab-prompt .lp-user .lp-expect {
+    margin-left: auto;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--ink-mute);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    align-self: center;
+    padding: 3px 8px;
+    border: 1px solid var(--line);
+    border-radius: 3px;
+    white-space: nowrap;
+  }
+  .lab-prompt .lp-user.expect-trigger .lp-expect { color: var(--green); border-color: var(--green); }
+  .lab-prompt .lp-user.expect-skip .lp-expect { color: var(--ink-mute); }
+
+  .lab-grid {
+    display: grid;
+    grid-template-columns: 1.15fr 1fr;
+    gap: 0;
+  }
+  @media (max-width: 880px) { .lab-grid { grid-template-columns: 1fr; } }
+
+  .lab-editor {
+    background: var(--ink);
+    color: #d8d8e0;
+    padding: 22px 24px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    line-height: 1.7;
+    position: relative;
+    border-bottom: 1px solid #2a2a32;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    min-height: 380px;
+  }
+  .lab-editor .le-fname {
+    position: absolute; top: 10px; right: 16px;
+    font-size: 10px; color: #6e6e7a; letter-spacing: 0.08em;
+  }
+  .lab-editor .le-frontmatter {
+    color: #6e6e7a;
+    line-height: 1.85;
+    border-bottom: 1px dashed rgba(255,255,255,0.08);
+    padding-bottom: 12px;
+  }
+  .lab-editor .le-frontmatter .ckey { color: #ffd166; }
+  .lab-editor .le-frontmatter .cstr { color: #a8e6a3; }
+  .lab-editor .le-frontmatter .cmark { color: #ff8a6e; font-weight: 600; }
+  .lab-editor .le-desc-label {
+    color: #ffd166;
+    font-size: 11px;
+  }
+  .lab-editor textarea {
+    width: 100%;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.12);
+    color: #ffe4dc;
+    padding: 12px 14px;
+    font-family: inherit;
+    font-size: 13px;
+    line-height: 1.55;
+    border-radius: 4px;
+    resize: vertical;
+    min-height: 130px;
+    transition: border-color 0.18s;
+    outline: none;
+  }
+  .lab-editor textarea:focus { border-color: var(--accent); background: rgba(255,77,46,0.06); }
+  .lab-editor .le-counter {
+    display: flex;
+    justify-content: space-between;
+    font-size: 10px;
+    color: #6e6e7a;
+    letter-spacing: 0.06em;
+  }
+  .lab-editor .le-counter .lc-warn { color: #ff8a6e; }
+  .lab-editor .le-counter .lc-good { color: #a8e6a3; }
+  .lab-editor .le-presets {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 6px;
+  }
+  .lab-editor .le-presets button {
+    background: transparent;
+    border: 1px solid rgba(255,255,255,0.14);
+    color: rgba(255,255,255,0.7);
+    padding: 4px 10px;
+    font-family: inherit;
+    font-size: 10.5px;
+    border-radius: 3px;
+    cursor: pointer;
+    letter-spacing: 0.04em;
+    transition: all 0.15s;
+  }
+  .lab-editor .le-presets button:hover {
+    border-color: var(--accent);
+    color: #fff;
+  }
+  .lab-editor .le-presets .lp-label {
+    color: rgba(255,255,255,0.4);
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    margin-right: 4px;
+    padding-top: 4px;
+  }
+
+  .lab-side {
+    background: var(--paper);
+    padding: 22px 24px;
+    border-left: 1px solid var(--line);
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+  @media (max-width: 880px) { .lab-side { border-left: none; border-top: 1px solid var(--line); } }
+  .lab-side .ls-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--ink-mute);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin: 0;
+  }
+  .lab-side .ls-test {
+    background: var(--ink);
+    color: white;
+    border: none;
+    padding: 14px 18px;
+    border-radius: 5px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.1s;
+    letter-spacing: 0.04em;
+    font-weight: 500;
+  }
+  .lab-side .ls-test:hover { background: var(--accent); transform: translateY(-1px); }
+  .lab-side .ls-test:active { transform: translateY(0); }
+  .lab-side .ls-test .ls-arr {
+    margin-left: 8px;
+    color: var(--accent);
+    font-weight: 600;
+  }
+  .lab-side .ls-test:hover .ls-arr { color: white; }
+
+  .lab-feedback {
+    background: var(--bg);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 16px 18px;
+    border-left: 4px solid var(--ink-mute);
+    min-height: 80px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    animation: lfSlide 0.4s ease-out;
+  }
+  @keyframes lfSlide {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .lab-feedback.good { border-left-color: var(--green); background: var(--green-soft); }
+  .lab-feedback.warn { border-left-color: var(--yellow); background: var(--yellow-soft); }
+  .lab-feedback.bad { border-left-color: var(--accent); background: var(--accent-soft); }
+  .lab-feedback.idle .lf-icon { color: var(--ink-mute); }
+  .lab-feedback.good .lf-icon { color: var(--green); }
+  .lab-feedback.warn .lf-icon { color: var(--warn); }
+  .lab-feedback.bad .lf-icon { color: var(--accent); }
+  .lab-feedback .lf-icon {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    font-weight: 600;
+  }
+  .lab-feedback .lf-title {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 16px;
+    font-weight: 700;
+    margin: 0;
+    line-height: 1.35;
+  }
+  .lab-feedback .lf-desc {
+    font-size: 13px;
+    color: var(--ink-soft);
+    margin: 0;
+    line-height: 1.55;
+  }
+  .lab-feedback .lf-desc strong { color: var(--ink); font-weight: 600; }
+  .lab-feedback .lf-debug {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--ink-mute);
+    background: rgba(255,255,255,0.5);
+    padding: 8px 10px;
+    border-radius: 3px;
+    margin-top: 6px;
+    line-height: 1.5;
+  }
+  .lab-feedback .lf-debug strong { color: var(--ink); font-weight: 600; }
+
+  .lab-foot {
+    padding: 16px 26px;
+    background: var(--bg);
+    border-top: 1px dashed var(--line);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+  .lab-foot .lf-progress {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--ink-soft);
+  }
+  .lab-foot .lf-progress strong { color: var(--accent); }
+  .lab-foot .lf-buttons {
+    display: flex;
+    gap: 8px;
+  }
+  .lab-foot button {
+    background: var(--ink);
+    color: white;
+    border: none;
+    padding: 9px 18px;
+    border-radius: 4px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    cursor: pointer;
+    transition: background 0.18s;
+    letter-spacing: 0.04em;
+  }
+  .lab-foot button:disabled { opacity: 0.4; cursor: not-allowed; }
+  .lab-foot button:hover:not(:disabled) { background: var(--accent); }
+  .lab-foot button.ghost {
+    background: transparent;
+    color: var(--ink-mute);
+    padding: 9px 12px;
+  }
+  .lab-foot button.ghost:hover { color: var(--accent); background: transparent; }
+
+  /* Win screen */
+  .lab-win {
+    margin-top: 24px;
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 32px 32px 28px;
+    display: none;
+  }
+  .lab-win.show { display: block; animation: lfSlide 0.5s ease-out; }
+  .lab-win .lw-head {
+    display: flex;
+    align-items: baseline;
+    gap: 14px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+  }
+  .lab-win .lw-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--accent);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+  .lab-win h3 {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 26px;
+    font-weight: 800;
+    margin: 0;
+    line-height: 1.2;
+    letter-spacing: -0.01em;
+  }
+  .lab-win h3 .em { color: var(--accent); font-weight: 500; }
+
+  .lw-recap {
+    background: var(--ink);
+    color: #d8d8e0;
+    padding: 18px 20px;
+    border-radius: 6px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    line-height: 1.85;
+    margin-bottom: 22px;
+    max-height: 220px;
+    overflow-y: auto;
+  }
+  .lw-recap .lw-row {
+    padding: 6px 0;
+    border-bottom: 1px dashed rgba(255,255,255,0.08);
+  }
+  .lw-recap .lw-row:last-child { border-bottom: none; }
+  .lw-recap .lw-r-head {
+    color: #ff8a6e;
+    font-weight: 600;
+    margin-bottom: 4px;
+  }
+  .lw-recap .lw-r-desc {
+    color: #d8d8e0;
+    font-size: 11.5px;
+    line-height: 1.6;
+    word-break: break-word;
+  }
+
+  .lw-rules {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin-bottom: 22px;
+  }
+  @media (max-width: 720px) { .lw-rules { grid-template-columns: 1fr; } }
+  .lw-rule {
+    background: var(--bg);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 16px 16px;
+  }
+  .lw-rule .lwr-num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--accent);
+    letter-spacing: 0.1em;
+    margin-bottom: 6px;
+  }
+  .lw-rule h4 {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 15px;
+    margin: 0 0 6px;
+    font-weight: 700;
+    line-height: 1.3;
+  }
+  .lw-rule p {
+    font-size: 12.5px;
+    color: var(--ink-soft);
+    line-height: 1.55;
+    margin: 0;
+  }
+  .lw-rule p code {
+    font-family: 'JetBrains Mono', monospace;
+    background: var(--bg-2);
+    padding: 1px 5px;
+    border-radius: 3px;
+    font-size: 11.5px;
+  }
+
+  .lw-template {
+    background: var(--accent-soft);
+    border: 1px solid var(--accent);
+    border-radius: 6px;
+    padding: 18px 20px;
+    position: relative;
+  }
+  .lw-template .lwt-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .lw-template .lwt-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--accent);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    font-weight: 600;
+  }
+  .lw-template .lwt-copy {
+    background: var(--ink);
+    color: white;
+    border: none;
+    padding: 6px 14px;
+    border-radius: 3px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    cursor: pointer;
+    transition: background 0.18s;
+    letter-spacing: 0.04em;
+  }
+  .lw-template .lwt-copy:hover { background: var(--accent); }
+  .lw-template .lwt-copy.copied { background: var(--green); }
+  .lw-template pre {
+    background: var(--paper);
+    border: 1px dashed var(--accent);
+    border-radius: 4px;
+    padding: 14px 16px;
+    margin: 0;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    line-height: 1.7;
+    overflow-x: auto;
+    color: var(--ink);
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+
+  /* ============== §05 — Skill cards ============== */
+  .skill-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 16px;
+    margin-top: 24px;
+  }
+  .skill-card {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 22px 22px 18px;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    transition: all 0.2s ease;
+    overflow: hidden;
+  }
+  .skill-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    background: var(--accent);
+    transform: scaleX(0.4);
+    transform-origin: left;
+    transition: transform 0.4s ease;
+  }
+  .skill-card:hover {
+    border-color: var(--accent);
+    transform: translateY(-2px);
+    box-shadow: 0 10px 28px rgba(22,22,29,0.08);
+  }
+  .skill-card:hover::before { transform: scaleX(1); }
+  .skill-card .sc-num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--accent);
+    letter-spacing: 0.12em;
+  }
+  .skill-card .sc-name {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 19px;
+    font-weight: 700;
+    margin: 0;
+    line-height: 1.25;
+    letter-spacing: -0.01em;
+  }
+  .skill-card .sc-name code {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    background: var(--bg-2);
+    padding: 2px 8px;
+    border-radius: 3px;
+    color: var(--ink);
+    margin-right: 4px;
+  }
+  .skill-card .sc-tag {
+    font-size: 13px;
+    color: var(--ink-soft);
+    line-height: 1.5;
+    margin: 0;
+  }
+  .skill-card .sc-tag strong { color: var(--ink); font-weight: 600; }
+
+  .skill-card .sc-desc {
+    background: var(--ink);
+    color: #d8d8e0;
+    padding: 12px 14px;
+    border-radius: 5px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11.5px;
+    line-height: 1.65;
+    position: relative;
+    margin: 0;
+  }
+  .skill-card .sc-desc .sd-label {
+    color: #6e6e7a;
+    font-size: 9.5px;
+    letter-spacing: 0.12em;
+    margin-bottom: 4px;
+    display: block;
+  }
+  .skill-card .sc-desc .sd-text { color: #ffe4dc; }
+  .skill-card .sc-desc .sd-copy {
+    position: absolute;
+    top: 10px; right: 10px;
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.16);
+    color: rgba(255,255,255,0.7);
+    padding: 3px 8px;
+    border-radius: 3px;
+    font-family: inherit;
+    font-size: 10px;
+    cursor: pointer;
+    transition: all 0.15s;
+    letter-spacing: 0.06em;
+  }
+  .skill-card .sc-desc .sd-copy:hover {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: white;
+  }
+  .skill-card .sc-desc .sd-copy.copied { background: var(--green); border-color: var(--green); color: white; }
+  .skill-card .sc-refs {
+    background: var(--bg);
+    border: 1px dashed var(--line);
+    border-radius: 4px;
+    padding: 10px 12px;
+    font-size: 11.5px;
+    color: var(--ink-soft);
+    line-height: 1.55;
+  }
+  .skill-card .sc-refs .sr-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9.5px;
+    color: var(--ink-mute);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+    display: block;
+  }
+  .skill-card .sc-refs strong { color: var(--ink); font-weight: 600; }
+
+  /* ============== §06 — Cheatsheet ============== */
+  .cheat-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    margin-top: 24px;
+  }
+  @media (max-width: 880px) { .cheat-grid { grid-template-columns: 1fr; } }
+  .cheat-card {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 22px 22px 24px;
+    border-top: 4px solid var(--accent);
+  }
+  .cheat-card.b { border-top-color: #c9b6ff; }
+  .cheat-card.c { border-top-color: var(--yellow); }
+  .cheat-card .cc-num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--ink-mute);
+    letter-spacing: 0.1em;
+    margin-bottom: 4px;
+  }
+  .cheat-card h4 {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 22px;
+    margin: 0 0 6px;
+    font-weight: 800;
+    letter-spacing: -0.01em;
+  }
+  .cheat-card .cc-sub {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--ink-soft);
+    margin-bottom: 14px;
+    letter-spacing: 0.05em;
+  }
+  .cheat-card pre.cheat-tree {
+    background: var(--ink);
+    color: #d8d8e0;
+    padding: 14px 14px;
+    border-radius: 5px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11.5px;
+    line-height: 1.85;
+    margin: 0 0 12px;
+    overflow-x: auto;
+  }
+  .cheat-card pre.cheat-tree .ccom { color: #6e6e7a; }
+  .cheat-card pre.cheat-tree .cmark { color: #ff8a6e; }
+  .cheat-card pre.cheat-tree .ckey { color: #ffcf3d; }
+  .cheat-card dl { margin: 0; padding: 0; font-size: 13px; }
+  .cheat-card dl dt {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--ink-mute);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-top: 12px;
+  }
+  .cheat-card dl dt:first-child { margin-top: 0; }
+  .cheat-card dl dd {
+    margin: 4px 0 0;
+    color: var(--ink-soft);
+    font-size: 13px;
+    line-height: 1.55;
+  }
+  .cheat-card dl dd strong { color: var(--ink); font-weight: 600; }
+  .cheat-card dl dd code { font-family: 'JetBrains Mono', monospace; background: var(--bg-2); padding: 1px 6px; border-radius: 3px; font-size: 12px; color: var(--ink); }
+
+  .cheat-flow {
+    background: var(--bg);
+    border: 1px dashed var(--line);
+    border-radius: 4px;
+    padding: 12px 14px;
+    margin-top: 4px;
+  }
+  .cheat-flow .cf-step {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 6px 0;
+    font-size: 12px;
+    color: var(--ink-soft);
+    line-height: 1.5;
+  }
+  .cheat-flow .cf-step .cf-tier {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--accent);
+    background: var(--accent-soft);
+    padding: 2px 6px;
+    border-radius: 3px;
+    letter-spacing: 0.04em;
+    flex-shrink: 0;
+    font-weight: 600;
+    margin-top: 1px;
+  }
+  .cheat-flow .cf-step strong { color: var(--ink); font-weight: 600; }
+
+  /* ============= Unified next-post block ============= */
+  .next-post {
+    margin-top: 48px;
+    padding: 32px 36px;
+    background: var(--ink);
+    color: var(--bg);
+    border-radius: 8px;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 32px;
+    align-items: center;
+    text-decoration: none;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    position: relative;
+    overflow: hidden;
+  }
+  .next-post::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at 100% 0%, rgba(255,77,46,0.12), transparent 55%);
+    pointer-events: none;
+  }
+  .next-post:hover { transform: translateY(-2px); box-shadow: 0 14px 36px rgba(22,22,29,0.22); }
+  @media (max-width: 720px) { .next-post { grid-template-columns: 1fr; padding: 24px; gap: 20px; } }
+  .next-post .np-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--accent);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .next-post .np-tag .np-status {
+    background: rgba(255,255,255,0.12);
+    color: rgba(255,255,255,0.7);
+    padding: 2px 8px;
+    border-radius: 3px;
+    font-size: 10px;
+    letter-spacing: 0.08em;
+  }
+  .next-post h4 {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 26px;
+    margin: 0 0 10px;
+    font-weight: 700;
+    color: white;
+    line-height: 1.25;
+    letter-spacing: -0.01em;
+  }
+  .next-post h4 .em {
+    font-family: 'Noto Serif SC', serif;
+    font-weight: 500;
+    color: var(--accent);
+    font-style: normal;
+  }
+  .next-post p {
+    margin: 0;
+    color: rgba(255,255,255,0.72);
+    font-size: 14px;
+    line-height: 1.65;
+    max-width: 560px;
+  }
+  .next-post p strong { color: white; font-weight: 600; }
+  .next-post .np-cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 24px;
+    background: var(--accent);
+    color: white;
+    border-radius: 4px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    white-space: nowrap;
+    transition: background 0.18s, color 0.18s, transform 0.18s;
+    position: relative;
+    z-index: 1;
+  }
+  .next-post:hover .np-cta { background: white; color: var(--ink); transform: translateX(2px); }
+  .next-post .np-cta .arr { font-family: 'Noto Serif SC', serif; font-size: 18px; font-weight: 500; }
+
+  /* Footer */
+  footer {
+    border-top: 1px solid var(--line);
+    padding: 56px 0 64px;
+    background: var(--bg);
+  }
+  .byline {
+    display: flex;
+    gap: 28px;
+    align-items: center;
+    padding-bottom: 32px;
+    border-bottom: 1px dashed var(--line);
+    margin-bottom: 24px;
+    position: relative;
+  }
+  .byline::before {
+    content: '';
+    position: absolute;
+    top: -56px; left: 0;
+    width: 32px; height: 1px;
+    background: var(--accent);
+  }
+  .byline .avatar {
+    width: 96px; height: 96px;
+    border-radius: 50%;
+    object-fit: cover;
+    flex-shrink: 0;
+    border: 3px solid var(--paper);
+    box-shadow: 0 0 0 1px var(--line), 0 6px 20px rgba(22,22,29,0.10);
+    background: var(--paper);
+  }
+  .byline-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--ink-mute);
+    letter-spacing: 0.18em;
+    margin-bottom: 8px;
+  }
+  .byline-label .dot {
+    display: inline-block;
+    width: 6px; height: 6px;
+    background: var(--accent);
+    border-radius: 50%;
+    margin-right: 6px;
+    vertical-align: 1px;
+  }
+  .byline-name {
+    font-family: 'Noto Serif SC', serif;
+    font-size: clamp(28px, 4vw, 40px);
+    font-weight: 700;
+    line-height: 1.05;
+    letter-spacing: -0.01em;
+    margin: 0 0 8px;
+  }
+  .byline-name .em {
+    font-family: 'Noto Serif SC', serif;
+    font-weight: 500;
+    color: var(--accent);
+    font-style: normal;
+  }
+  .byline-tag {
+    font-size: 14px;
+    color: var(--ink-soft);
+    line-height: 1.55;
+    margin: 0;
+    max-width: 52ch;
+  }
+  .footer-meta {
+    text-align: center;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--ink-mute);
+    letter-spacing: 0.05em;
+  }
+  .footer-meta .heart { color: var(--accent); }
+  .footer-meta .mono { color: var(--ink-soft); font-weight: 500; }
+  @media (max-width: 600px) {
+    .byline { flex-direction: column; text-align: center; align-items: center; gap: 16px; }
+    .byline-tag { margin-left: auto; margin-right: auto; }
+  }
+  .byline-contact { margin-top: 14px; padding-top: 14px; border-top: 1px dashed var(--line); display: flex; align-items: center; gap: 10px; flex-wrap: wrap; font-size: 12px; }
+  .byline-contact .contact-label { font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-mute); padding: 2px 8px; border: 1px solid var(--line); border-radius: 3px; }
+  .byline-contact .contact-id { font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 600; color: var(--ink); background: var(--accent-soft); padding: 3px 10px; border-radius: 4px; letter-spacing: 0.02em; }
+  .byline-contact .contact-hint { font-size: 12px; color: var(--ink-soft); }
+
+  /* Subtle entry animation */
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+  section { animation: fadeIn 0.6s ease-out backwards; }
+
+  /* === Roadmap Modal === */
+  .rm-modal { position: fixed; inset: 0; z-index: 1000; display: flex; align-items: center; justify-content: center; padding: 30px 16px; }
+  .rm-modal[hidden] { display: none; }
+  .rm-backdrop { position: absolute; inset: 0; background: rgba(22,22,29,0.55); backdrop-filter: blur(4px); animation: rm-fade 0.2s; }
+  @keyframes rm-fade { from { opacity: 0; } to { opacity: 1; } }
+  .rm-dialog { position: relative; background: var(--bg); border-radius: 12px; max-width: 720px; width: 100%; max-height: calc(100vh - 60px); overflow-y: auto; padding: 32px 36px 24px; box-shadow: 0 30px 80px rgba(0,0,0,0.3); animation: rm-pop 0.25s cubic-bezier(0.4,0,0.2,1); }
+  @keyframes rm-pop { from { transform: scale(0.96) translateY(8px); opacity: 0; } to { transform: scale(1) translateY(0); opacity: 1; } }
+  .rm-close { position: absolute; top: 14px; right: 16px; background: transparent; border: none; cursor: pointer; font-size: 20px; color: var(--ink-mute); width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: all 0.15s; line-height: 1; }
+  .rm-close:hover { background: var(--bg-2); color: var(--ink); }
+  .rm-header { margin-bottom: 22px; padding-bottom: 18px; border-bottom: 1px dashed var(--line); }
+  .rm-tag { font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.1em; color: var(--accent); text-transform: uppercase; margin-bottom: 8px; }
+  .rm-title { font-family: 'Noto Serif SC', serif; font-size: 28px; margin: 0 0 6px; font-weight: 900; letter-spacing: -0.02em; line-height: 1.1; }
+  .rm-title .rm-em { font-family: 'Noto Serif SC', serif; color: var(--accent); font-weight: 500; }
+  .rm-sub { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--ink-mute); margin: 0; }
+  .rm-body { display: flex; flex-direction: column; gap: 18px; }
+  .rm-mod-key { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ink); font-weight: 700; margin-bottom: 8px; letter-spacing: 0.04em; text-transform: uppercase; }
+  .rm-mod-list { display: flex; flex-direction: column; gap: 6px; }
+  .rm-cell { display: grid; grid-template-columns: 36px 1fr auto; gap: 12px; align-items: center; padding: 9px 13px; border-radius: 5px; background: var(--paper); border: 1px solid var(--line); text-decoration: none; color: inherit; transition: all 0.15s; }
+  .rm-cell:hover { border-color: var(--accent); background: var(--accent-soft); transform: translateX(3px); }
+  .rm-cell-code { font-family: 'Noto Serif SC', serif; font-weight: 500; color: var(--accent); font-size: 15px; }
+  .rm-cell-name { font-size: 13px; color: var(--ink); }
+  .rm-cell-tier { font-family: 'JetBrains Mono', monospace; font-size: 9px; letter-spacing: 0.08em; color: var(--ink-mute); text-transform: uppercase; border: 1px solid var(--line); padding: 2px 7px; border-radius: 3px; }
+  .rm-footer { margin-top: 22px; padding-top: 16px; border-top: 1px dashed var(--line); display: flex; justify-content: space-between; align-items: center; font-size: 12px; color: var(--ink-soft); flex-wrap: wrap; gap: 8px; }
+  .rm-wechat { font-family: 'JetBrains Mono', monospace; background: var(--accent-soft); color: var(--ink); padding: 3px 10px; border-radius: 3px; font-weight: 600; letter-spacing: 0.02em; }
+</style>
+</head>
+<body>
+
+<!-- Top bar -->
+<div class="topbar">
+  <div class="wrap topbar-inner">
+    <a href="index.html" class="brand"><span class="dot"></span>SKILLS · Anthropic Skills 拆开看</a>
+    <nav class="nav-links">
+      <a href="index.html#roadmap" data-rm-open>路线图</a>
+      <a href="index.html#manifesto">关于</a>
+    </nav>
+  </div>
+</div>
+
+<!-- Hero -->
+<header class="hero">
+  <div class="wrap">
+    <div class="hero-meta">
+      <span class="pill fill">Q2 · Design × AI</span>
+      <span class="pill">阅读 14 分钟</span>
+      <span class="pill">1 个互动实验室 · 5 关</span>
+      <span class="label">不写代码也能做</span>
+    </div>
+    <div class="hero-grid">
+      <div>
+        <h1>
+          <span class="display-cn">你天天用 Skills，</span><br>
+          <span class="display-cn">但</span><span class="em">没拆开看过</span><span class="display-cn">。</span>
+        </h1>
+        <p class="lede">
+          Skill 不是 OpenAI 那种神秘黑盒，<br>
+          就是一个文件夹 —— 里面一份 <code class="mono" style="font-size:18px;background:var(--accent-soft);padding:2px 6px;border-radius:3px;">SKILL.md</code> 写着"什么时候用我"，<br>
+          剩下都是 Claude 用到才打开的参考资料。
+        </p>
+      </div>
+      <div class="hero-side">
+        <div class="row"><span class="k">本页讲什么</span><span class="v">Skill 内部结构</span></div>
+        <div class="row"><span class="k">含互动</span><span class="v">1 个 5 关实验室</span></div>
+        <div class="row"><span class="k">面向</span><span class="v">用过 Claude · 没写过 skill</span></div>
+        <div class="row"><span class="k">前置知识</span><span class="v">会用文件夹即可</span></div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- §01 — Folder -->
+<section id="folder">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>01</strong> / 拆开</div>
+        <h2 class="section-title">Skills 就是<br>一个<span class="em">文件夹</span></h2>
+      </div>
+      <p class="section-sub">
+        你以为是某种 AI 黑魔法，其实就是个文件夹 —— 里面有一份 markdown 当入口，
+        其它都是可选的脚本和参考资料。<strong>点点看里面装了什么。</strong>
+      </p>
+    </div>
+
+    <div class="folder-stage">
+      <div class="folder-grid">
+        <div class="folder-tree" id="folderTree">
+          <div class="ft-head">~/skills/pptx</div>
+          <div class="ft-row is-folder" data-file="root">
+            <span class="ft-icon">▼</span>
+            <span class="ft-name">pptx/</span>
+            <span class="ft-tag">skill 根目录</span>
+          </div>
+          <div class="ft-row is-required ft-indent-1" data-file="skillmd">
+            <span class="ft-icon">●</span>
+            <span class="ft-name">SKILL.md</span>
+            <span class="ft-tag">必须</span>
+          </div>
+          <div class="ft-row is-folder ft-indent-1" data-file="scripts">
+            <span class="ft-icon">▾</span>
+            <span class="ft-name">scripts/</span>
+            <span class="ft-tag">可选</span>
+          </div>
+          <div class="ft-row ft-indent-2" data-file="ooxml">
+            <span class="ft-icon">▸</span>
+            <span class="ft-name">ooxml.py</span>
+            <span class="ft-tag">执行</span>
+          </div>
+          <div class="ft-row ft-indent-2" data-file="extract">
+            <span class="ft-icon">▸</span>
+            <span class="ft-name">extract_text.py</span>
+            <span class="ft-tag">执行</span>
+          </div>
+          <div class="ft-row is-folder ft-indent-1" data-file="references">
+            <span class="ft-icon">▾</span>
+            <span class="ft-name">references/</span>
+            <span class="ft-tag">可选</span>
+          </div>
+          <div class="ft-row ft-indent-2" data-file="pptxformat">
+            <span class="ft-icon">▸</span>
+            <span class="ft-name">pptx_format.md</span>
+            <span class="ft-tag">参考</span>
+          </div>
+          <div class="ft-row is-folder ft-indent-1" data-file="templates">
+            <span class="ft-icon">▾</span>
+            <span class="ft-name">templates/</span>
+            <span class="ft-tag">可选</span>
+          </div>
+          <div class="ft-row ft-indent-2" data-file="default">
+            <span class="ft-icon">▸</span>
+            <span class="ft-name">default.pptx</span>
+            <span class="ft-tag">模板</span>
+          </div>
+
+          <div class="ft-toolbar">
+            <button id="folderReplay">↺ 重新展开</button>
+            <button id="folderCollapse">⤢ 折叠/展开</button>
+            <span class="ft-hint">点任一文件 → 看内容</span>
+          </div>
+        </div>
+
+        <div class="folder-detail" id="folderDetail">
+          <div class="fd-tag">点开看看 · CLICK ON ANY FILE</div>
+          <h3 class="fd-name">默认状态</h3>
+          <div class="fd-meta"><span>左侧点一个文件 / 文件夹</span></div>
+          <p class="fd-desc">
+            <strong>只有 <code class="mono">SKILL.md</code> 是必须的</strong>。
+            其它三个文件夹（scripts / references / templates）都可选 —— 你想做什么 skill，就装什么进来。
+            Claude 启动时只读 SKILL.md 的最前几行；正文和这些附件，用到才打开。
+          </p>
+          <pre class="fd-mock"><span class="ccom"># 最小可用的 skill 长这样：</span>
+pptx/
+└── SKILL.md           <span class="ccom"># 50 行 markdown，搞定</span></pre>
+        </div>
+      </div>
+    </div>
+
+    <div class="hint-strip">
+      <span class="hint-tag">类比</span>
+      想象一本食谱书：<strong>SKILL.md</strong> 是封面 + 目录（必须）；
+      <strong>references/</strong> 是后面厚厚的术语表（查的时候才翻）；
+      <strong>scripts/</strong> 是配套的电动料理机（要的话拿来用）；
+      <strong>templates/</strong> 是空白食谱卡（按场景填）。
+      Claude 启动时只看封面 —— 用到了才往里翻。
+    </div>
+  </div>
+</section>
+
+<!-- §02 — Anatomy -->
+<section id="anatomy">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>02</strong> / 剖开</div>
+        <h2 class="section-title">SKILL.md 内部<br><span class="em">5 个秘密</span></h2>
+      </div>
+      <p class="section-sub">
+        点开 SKILL.md，第一眼你会看到一段奇怪的 <code class="mono">---</code> 包起来的 YAML，
+        然后是 markdown 正文。这 5 个位置每个都有讲究 —— 写错任何一个，Claude 就不用你的 skill。
+      </p>
+    </div>
+
+    <div class="anatomy-stage">
+      <div class="anatomy-code" id="anatomyCode">
+        <span class="ac-dot"></span>
+        <span class="ac-fname">SKILL.md</span>
+<pre><span class="cline" data-key="fm-open"><span class="cmark">---</span></span>
+<span class="cline" data-key="name"><span class="ckey">name</span>: <span class="cstr">pptx</span></span>
+<span class="cline" data-key="desc"><span class="ckey">description</span>: <span class="cstr">Use this skill any time a .pptx file is involved — creating decks, reading slides, extracting speaker notes...</span></span>
+<span class="cline" data-key="tools"><span class="ckey">allowed-tools</span>: [<span class="cstr">Read</span>, <span class="cstr">Write</span>, <span class="cstr">Bash</span>]</span>
+<span class="cline" data-key="fm-close"><span class="cmark">---</span></span>
+<span class="cline">&nbsp;</span>
+<span class="cline" data-key="body"><span class="ctag"># PowerPoint Skill</span></span>
+<span class="cline" data-key="body">&nbsp;</span>
+<span class="cline" data-key="body"><span class="ctag">## When to use</span></span>
+<span class="cline" data-key="body">用户提到 .pptx 文件、deck、slides、presentation 时用。</span>
+<span class="cline" data-key="body">&nbsp;</span>
+<span class="cline" data-key="body"><span class="ctag">## Steps</span></span>
+<span class="cline" data-key="body">1. 用 <span class="cstr">extract_text.py</span> 抽出文字。</span>
+<span class="cline" data-key="body">2. 拼底层结构 — 参考 <span class="cstr">@references/pptx_format.md</span></span>
+<span class="cline" data-key="ref">3. 不确定就读 <span class="cstr">@references/pptx_format.md</span></span></pre>
+      </div>
+
+      <div class="anatomy-list" id="anatomyList">
+        <div class="anat-card" data-key="fm-open">
+          <div class="ak-num">秘密 · 01</div>
+          <h4 class="ak-title"><code>---</code>YAML frontmatter</h4>
+          <p class="ak-desc">最上面三道横杠包起来的就是 <strong>frontmatter</strong>。Claude 启动时只看这一段，剩下的暂时不读。<strong>name + description 是必须的，其它全选填。</strong></p>
+        </div>
+
+        <div class="anat-card" data-key="desc">
+          <div class="ak-num">秘密 · 02</div>
+          <h4 class="ak-title"><code>description</code>就是触发器</h4>
+          <p class="ak-desc">这一行决定了 Claude 看到用户消息时<strong>会不会想到你这个 skill</strong>。写得糟 → 看不见 → 不触发。这是 skill 最容易写崩的地方 —— §04 会专门玩这个。</p>
+        </div>
+
+        <div class="anat-card" data-key="tools">
+          <div class="ak-num">秘密 · 03</div>
+          <h4 class="ak-title"><code>allowed-tools</code>是栅栏</h4>
+          <p class="ak-desc">限制这个 skill 启动后<strong>只能用哪些工具</strong>。比如一个 "只读" 的 skill 就不应该有 Write 权限。不写这行 = 默认全开。安全和能力边界，靠这一行画。</p>
+        </div>
+
+        <div class="anat-card" data-key="ref">
+          <div class="ak-num">秘密 · 04</div>
+          <h4 class="ak-title"><code>@references/xxx</code>按需加载</h4>
+          <p class="ak-desc">正文里写 <code>@references/pptx_format.md</code>，Claude 读到这一行<strong>才会去打开那个文件</strong>。所以 skill 的"知识库"可以塞得很大 —— 不用的时候不烧 token。</p>
+        </div>
+
+        <div class="anat-card" data-key="body">
+          <div class="ak-num">秘密 · 05</div>
+          <h4 class="ak-title">正文就是 markdown</h4>
+          <p class="ak-desc">没有 DSL，没有 JSON，没有 schema。<strong>就是你写 Notion 那种 markdown</strong>。标题分 When to use / Steps / Tips 几块，Claude 当文档读 —— 你能看懂的，它也能。</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="hint-strip">
+      <span class="hint-tag">最关键</span>
+      整份 SKILL.md 里，<strong>description 是杠杆最长的一行</strong>。
+      其它都可以慢慢补，只有 description 决定了"Claude 到底会不会想起来用你写的这个 skill"。
+      §04 一整个实验室都在玩这一行。
+    </div>
+  </div>
+</section>
+
+<!-- §03 — Progressive Disclosure -->
+<section id="pyramid">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>03</strong> / 加载</div>
+        <h2 class="section-title">三层金字塔<br><span class="em">用到才读</span></h2>
+      </div>
+      <p class="section-sub">
+        100 个 skill 同时挂在 Claude 上，context 会不会炸？答案是不会 ——
+        因为 skill 走的是 <strong>progressive disclosure（渐进披露）</strong>：先看一行简介，匹配上了才往里翻。
+      </p>
+    </div>
+
+    <div class="pyramid-stage">
+      <div class="pyramid-grid">
+        <div>
+          <svg class="pyramid-svg" id="pyramidSvg" viewBox="0 0 480 380" preserveAspectRatio="xMidYMid meet">
+            <!-- Tier 3 base -->
+            <g class="py-tier" data-tier="3">
+              <polygon points="40,330 440,330 380,250 100,250" fill="#dde6ff" stroke="#0a4cff" stroke-width="1.5"/>
+              <text x="240" y="295" text-anchor="middle" font-family="Noto Serif SC, serif" font-size="18" font-weight="700" fill="#0a4cff">TIER 3</text>
+              <text x="240" y="315" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="11" fill="#0a4cff">@references / scripts</text>
+            </g>
+            <!-- Tier 2 middle -->
+            <g class="py-tier" data-tier="2">
+              <polygon points="100,250 380,250 320,170 160,170" fill="#fff2c4" stroke="#b48010" stroke-width="1.5"/>
+              <text x="240" y="215" text-anchor="middle" font-family="Noto Serif SC, serif" font-size="18" font-weight="700" fill="#b48010">TIER 2</text>
+              <text x="240" y="235" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="11" fill="#b48010">SKILL.md 正文</text>
+            </g>
+            <!-- Tier 1 top -->
+            <g class="py-tier" data-tier="1">
+              <polygon points="160,170 320,170 280,90 200,90" fill="#ffe4dc" stroke="#ff4d2e" stroke-width="1.5"/>
+              <text x="240" y="135" text-anchor="middle" font-family="Noto Serif SC, serif" font-size="18" font-weight="700" fill="#ff4d2e">TIER 1</text>
+              <text x="240" y="155" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="10" fill="#ff4d2e">name + description</text>
+            </g>
+            <!-- Labels right side -->
+            <text x="445" y="125" text-anchor="end" font-family="JetBrains Mono, monospace" font-size="10" fill="#ff4d2e" font-weight="600">~100 tok / 启动加载</text>
+            <text x="445" y="205" text-anchor="end" font-family="JetBrains Mono, monospace" font-size="10" fill="#b48010" font-weight="600">命中后加载</text>
+            <text x="445" y="285" text-anchor="end" font-family="JetBrains Mono, monospace" font-size="10" fill="#0a4cff" font-weight="600">引用才读</text>
+            <!-- Flow arrows -->
+            <path class="py-flow" data-flow="1-2" d="M 240,170 L 240,160" />
+            <path class="py-flow" data-flow="2-3" d="M 240,250 L 240,240" />
+            <!-- top label -->
+            <text x="240" y="60" text-anchor="middle" font-family="Noto Serif SC, serif" font-size="13" font-weight="700" fill="#16161d">Progressive Disclosure</text>
+            <text x="240" y="76" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="9" fill="#8a8a92">从上往下：用到才往下挖</text>
+            <!-- pointer dot indicator -->
+            <circle id="pyDot" cx="240" cy="135" r="6" fill="#ff4d2e" opacity="0">
+              <animate attributeName="r" values="6;10;6" dur="1.4s" repeatCount="indefinite"/>
+            </circle>
+          </svg>
+        </div>
+
+        <div class="pyramid-side">
+          <div class="pyramid-input">
+            <label>选一个用户请求 ›</label>
+            <div class="py-chips" id="pyChips">
+              <button data-q="review-figma">review 这个 Figma 设计稿</button>
+              <button data-q="make-pptx">把会议纪要做成 PPT</button>
+              <button data-q="audit-design">审一下我这套组件</button>
+              <button data-q="lunch">今晚吃什么</button>
+            </div>
+            <div class="py-query" id="pyQuery">
+              <span class="py-prompt">› user:</span><span id="pyQueryText">点上面任一个，看 Claude 怎么往下挖</span>
+            </div>
+          </div>
+          <div class="pyramid-trace" id="pyramidTrace">
+            <div class="pt-row">› idle · 等用户输入</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="hint-strip">
+      <span class="hint-tag">类比</span>
+      <strong>Tier 1 = 菜单封面</strong>（一眼扫，决定要不要进店）·
+      <strong>Tier 2 = 菜单内页</strong>（进店了再翻菜的做法）·
+      <strong>Tier 3 = 后厨配方</strong>（点了某道菜厨师才去翻）。
+      整个机制最妙的地方：<strong>100 个 skill 挂着，启动只读 100 行</strong>。
+    </div>
+  </div>
+</section>
+
+<!-- §04 — Trigger Lab -->
+<section id="lab">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>04</strong> / 实验室</div>
+        <h2 class="section-title">触发器<br><span class="em">实验室</span></h2>
+      </div>
+      <p class="section-sub">
+        你扮演 skill 作者，写一份 <code class="mono">description</code> —— 想做一个"设计稿 reviewer"。
+        然后用 <strong>5 个真实用户请求</strong>测试它：该触发的有没有触发？不该触发的有没有误触？
+        <strong>5 关都过 = 你已经会写 description 了。</strong>
+      </p>
+    </div>
+
+    <div class="lab-stage">
+      <div class="lab-head">
+        <div class="lab-rounds" id="labRounds">
+          <span class="lr-label">第几关 ›</span>
+          <button data-round="1" class="active">1</button>
+          <button data-round="2">2</button>
+          <button data-round="3">3</button>
+          <button data-round="4">4</button>
+          <button data-round="5">5</button>
+        </div>
+        <div class="lab-meta">
+          <span><span class="lm-tag">SKILL</span>design-reviewer</span>
+        </div>
+      </div>
+
+      <div class="lab-prompt">
+        <div class="lp-tag">场景 · ROUND <span id="labRoundNum">1</span></div>
+        <h3 class="lp-title" id="labRoundTitle">用户说了一句话，你的 skill 会不会被想起来？</h3>
+        <p class="lp-desc" id="labRoundDesc">
+          你已经把 <code style="font-family:'JetBrains Mono',monospace;background:var(--bg-2);padding:1px 6px;border-radius:3px;">design-reviewer</code> 装进 Claude 了。
+          调整左边的 description，然后点 <strong>"测试触发"</strong> —— 看 Claude 会不会激活你的 skill。
+        </p>
+        <div class="lp-user expect-trigger" id="labUserMsg">
+          <span class="lp-actor">USER ›</span>
+          <span id="labUserText">帮我看下这个稿子有没有违反间距规范</span>
+          <span class="lp-expect" id="labExpect">期望：触发</span>
+        </div>
+      </div>
+
+      <div class="lab-grid">
+        <div class="lab-editor">
+          <span class="le-fname">~/skills/design-reviewer/SKILL.md</span>
+          <div class="le-frontmatter">
+            <span class="cmark">---</span><br>
+            <span class="ckey">name</span>: <span class="cstr">design-reviewer</span><br>
+            <span class="ckey">allowed-tools</span>: [<span class="cstr">Read</span>]<br>
+            <span class="cmark">---</span>
+          </div>
+          <span class="le-desc-label"><span class="ckey">description</span>:</span>
+          <textarea id="labDescription" spellcheck="false" placeholder="例如：Use this skill when the user asks to review or audit a design file...">Use this skill any time the user asks anything about design.</textarea>
+          <div class="le-counter">
+            <span id="labCounter">字符 50 · 触发词 0</span>
+            <span><span class="lc-warn">·</span> 提示：太宽 / 太窄都不行</span>
+          </div>
+          <div class="le-presets">
+            <span class="lp-label">PRESET ›</span>
+            <button data-preset="too-broad">太宽</button>
+            <button data-preset="too-narrow">太窄</button>
+            <button data-preset="just-right">恰好</button>
+            <button data-preset="clear">清空</button>
+          </div>
+        </div>
+
+        <div class="lab-side">
+          <span class="ls-label">测试这一关 ›</span>
+          <button class="ls-test" id="labTest">测试触发 <span class="ls-arr">↗</span></button>
+          <span class="ls-label">反馈 ›</span>
+          <div class="lab-feedback idle" id="labFeedback">
+            <span class="lf-icon">○ 等待测试</span>
+            <h5 class="lf-title">还没测呢</h5>
+            <p class="lf-desc">先看看左边的 description，改一改，然后点上面那个黑按钮。</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="lab-foot">
+        <div class="lf-progress">通过 <strong id="labDone">0</strong> / 5 关 · <span id="labCorrect">0</span> 对</div>
+        <div class="lf-buttons">
+          <button class="ghost" id="labReset">↺ 重玩</button>
+          <button id="labNext" disabled>下一关 →</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Win screen -->
+    <div class="lab-win" id="labWin">
+      <div class="lw-head">
+        <span class="lw-tag">通关 · CHEAT SHEET</span>
+        <h3>5 关跑完，<span class="em">3 条铁律</span>压在桌上</h3>
+      </div>
+
+      <div class="lw-recap" id="labRecap">
+        <!-- filled by JS -->
+      </div>
+
+      <div class="lw-rules">
+        <div class="lw-rule">
+          <div class="lwr-num">RULE · 01</div>
+          <h4>用动词开头</h4>
+          <p>第一个词必须是 <code>Use when</code> · <code>Triggers when</code> · <code>Apply when</code>。Claude 在扫 description 时是按"句子主干"判断的 —— 主干越清楚，命中越准。</p>
+        </div>
+        <div class="lw-rule">
+          <div class="lwr-num">RULE · 02</div>
+          <h4>列具体场景</h4>
+          <p>包含清单 + 排除清单。"做什么会触发 / 做什么不要触发"。具体到能列动词："review / audit / check"，而不是抽象的"design tasks"。</p>
+        </div>
+        <div class="lw-rule">
+          <div class="lwr-num">RULE · 03</div>
+          <h4>加触发例子</h4>
+          <p>直接在 description 里塞 3~5 个 sample queries：<code>"review my design"</code> · <code>"check this Figma file"</code>。这是让 Claude 的"语义鼻子"对得最准的办法。</p>
+        </div>
+      </div>
+
+      <div class="lw-template">
+        <div class="lwt-head">
+          <span class="lwt-tag">满分模板 · COPY ›</span>
+          <button class="lwt-copy" id="winCopy">复制</button>
+        </div>
+        <pre id="winTemplate">Use this skill when the user asks to review, audit, or check a design file or component library for spacing / naming / token consistency.
+
+Triggers include: "review my design", "check this Figma file", "audit my components", "find layout issues".
+
+DO NOT trigger for: modification requests ("change X"), new design creation ("design me a..."), or general questions about design principles.</pre>
+      </div>
+    </div>
+
+    <div class="hint-strip">
+      <span class="hint-tag">底层逻辑</span>
+      Claude 在每次对话开头，会拿用户消息<strong>逐个对照所有 skill 的 description</strong> ——
+      就像猎犬闻气味。description 是它的"鼻子"。鼻子糟，再好的 skill 也吃灰。
+      所以写 skill 的时间分配应该是：<strong>40% 在 description，60% 在剩下所有事</strong>。
+    </div>
+  </div>
+</section>
+
+<!-- §05 — Skills designers can write -->
+<section id="skills">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>05</strong> / 自己写</div>
+        <h2 class="section-title">设计师能写的<br><span class="em">5 个 skill</span></h2>
+      </div>
+      <p class="section-sub">
+        Skill 不用是程序员的特权。这 5 个 skill 全部用 markdown 就能写完 ——
+        最复杂的一个也就 100 行。<strong>hover 看 description 草稿，点 COPY 直接抄走</strong>。
+      </p>
+    </div>
+
+    <div class="skill-grid">
+      <div class="skill-card">
+        <div class="sc-num">SKILL · 01</div>
+        <h3 class="sc-name"><code>design-reviewer</code></h3>
+        <p class="sc-tag">自动检查间距 / 命名 / token —— 走完一遍 Figma frame，把违反规则的地方列出来。</p>
+        <div class="sc-desc">
+          <button class="sd-copy" data-target="d1">COPY</button>
+          <span class="sd-label">description ›</span>
+          <span class="sd-text" id="d1">Use this skill when the user asks to review, audit, or check a design file for spacing / naming / token consistency. Triggers: "review my design", "check this frame".</span>
+        </div>
+        <div class="sc-refs">
+          <span class="sr-tag">可以塞进 references/</span>
+          <strong>spacing 规则</strong>（8 的倍数）· <strong>命名规范</strong>（PascalCase）· <strong>已批准的 token 列表</strong>
+        </div>
+      </div>
+
+      <div class="skill-card">
+        <div class="sc-num">SKILL · 02</div>
+        <h3 class="sc-name"><code>token-extractor</code></h3>
+        <p class="sc-tag">从 Figma frame 抽出 color / spacing / radius，直接吐成 CSS variables 或 JSON token。</p>
+        <div class="sc-desc">
+          <button class="sd-copy" data-target="d2">COPY</button>
+          <span class="sd-label">description ›</span>
+          <span class="sd-text" id="d2">Use this skill when the user wants to extract design tokens (colors / spacing / typography) from a Figma frame and output as CSS variables or JSON. Triggers: "pull tokens from", "extract variables".</span>
+        </div>
+        <div class="sc-refs">
+          <span class="sr-tag">可以塞进 references/</span>
+          <strong>token 命名规则</strong>（color.primary.500）· <strong>输出格式样板</strong>（CSS / JSON / Tailwind）
+        </div>
+      </div>
+
+      <div class="skill-card">
+        <div class="sc-num">SKILL · 03</div>
+        <h3 class="sc-name"><code>state-completer</code></h3>
+        <p class="sc-tag">看到只画了 happy path 的稿子，自动补 loading / error / empty / disabled 四种状态。</p>
+        <div class="sc-desc">
+          <button class="sd-copy" data-target="d3">COPY</button>
+          <span class="sd-label">description ›</span>
+          <span class="sd-text" id="d3">Use this skill when a design shows only the success state and the user wants to add missing loading / error / empty / disabled states. Triggers: "add states", "missing edge cases", "what about empty".</span>
+        </div>
+        <div class="sc-refs">
+          <span class="sr-tag">可以塞进 references/</span>
+          <strong>四态清单</strong> · <strong>各态文案样板</strong>（"加载中…"  / "出错了，再试一次"）
+        </div>
+      </div>
+
+      <div class="skill-card">
+        <div class="sc-num">SKILL · 04</div>
+        <h3 class="sc-name"><code>layer-namer</code></h3>
+        <p class="sc-tag">把 <code style="font-family:'JetBrains Mono',monospace;font-size:11px;background:var(--bg-2);padding:0 4px;border-radius:2px;">Frame 12345 / Rectangle 7</code> 一键改成有语义的名字。</p>
+        <div class="sc-desc">
+          <button class="sd-copy" data-target="d4">COPY</button>
+          <span class="sd-label">description ›</span>
+          <span class="sd-text" id="d4">Use this skill when layer names are auto-generated (Frame 12345, Rectangle 7, Group 99) and need to be renamed semantically. Triggers: "rename layers", "clean up names", "fix layer naming".</span>
+        </div>
+        <div class="sc-refs">
+          <span class="sr-tag">可以塞进 references/</span>
+          <strong>命名规则</strong>（Button/Primary/Hover）· <strong>层级前缀表</strong>（Page · Section · Card · Element）
+        </div>
+      </div>
+
+      <div class="skill-card">
+        <div class="sc-num">SKILL · 05</div>
+        <h3 class="sc-name"><code>library-auditor</code></h3>
+        <p class="sc-tag">对照 Figma library 和代码里的组件，找出"代码用了但 Figma 没收录"或反过来的差异。</p>
+        <div class="sc-desc">
+          <button class="sd-copy" data-target="d5">COPY</button>
+          <span class="sd-label">description ›</span>
+          <span class="sd-text" id="d5">Use this skill when the user wants to audit component library parity between Figma and codebase. Triggers: "audit my components", "library parity", "what's missing from Figma".</span>
+        </div>
+        <div class="sc-refs">
+          <span class="sr-tag">可以塞进 references/</span>
+          <strong>Figma library 清单</strong>（导出 JSON）· <strong>代码组件清单</strong>（grep import）
+        </div>
+      </div>
+    </div>
+
+    <div class="hint-strip">
+      <span class="hint-tag">起手</span>
+      想做哪个就<strong>新建一个文件夹</strong>，里面放一份 SKILL.md，把上面那段 description 抄进去 ——
+      已经能跑了。先做最小版本，用顺手了再往 references/ 里塞东西。<strong>不要一开始就想做完美。</strong>
+    </div>
+  </div>
+</section>
+
+<!-- §06 — Cheatsheet -->
+<section id="cheat">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>06</strong> / 速查</div>
+        <h2 class="section-title">三张<br><span class="em">速查卡</span></h2>
+      </div>
+      <p class="section-sub">
+        全文压缩到三张卡。下次写 skill 之前先翻一遍 ——
+        印出来贴显示器边上也行。
+      </p>
+    </div>
+
+    <div class="cheat-grid">
+      <div class="cheat-card">
+        <div class="cc-num">CARD 01 · 结构</div>
+        <h4>文件夹长这样</h4>
+        <div class="cc-sub">只有第一项必须</div>
+<pre class="cheat-tree">my-skill/
+<span class="cmark">├── SKILL.md</span>          <span class="ccom"># 必须</span>
+├── scripts/          <span class="ccom"># 可选 · 执行脚本</span>
+│   └── do_thing.py
+├── references/       <span class="ccom"># 可选 · 长资料</span>
+│   └── rules.md
+└── templates/        <span class="ccom"># 可选 · 模板素材</span>
+    └── starter.txt</pre>
+        <dl>
+          <dt>记住</dt>
+          <dd>最小可用 skill = <strong>一个文件夹 + 一份 SKILL.md</strong>。其余都是后来加的。</dd>
+        </dl>
+      </div>
+
+      <div class="cheat-card b">
+        <div class="cc-num">CARD 02 · 公式</div>
+        <h4>SKILL.md 公式</h4>
+        <div class="cc-sub">YAML + markdown</div>
+<pre class="cheat-tree"><span class="cmark">---</span>
+<span class="ckey">name</span>: my-skill          <span class="ccom"># 必须</span>
+<span class="ckey">description</span>: ...        <span class="ccom"># 必须 + 关键</span>
+<span class="ckey">allowed-tools</span>: [...]    <span class="ccom"># 可选</span>
+<span class="cmark">---</span>
+
+<span class="ccom"># When to use</span>
+<span class="ccom"># Steps</span>
+<span class="ccom"># 参考 @references/xx.md</span></pre>
+        <dl>
+          <dt>description 公式</dt>
+          <dd><strong>动词开头</strong> + <strong>具体场景清单</strong> + <strong>3-5 个 sample queries</strong> + <strong>DO NOT 排除清单</strong>。</dd>
+        </dl>
+      </div>
+
+      <div class="cheat-card c">
+        <div class="cc-num">CARD 03 · 流程</div>
+        <h4>触发的全过程</h4>
+        <div class="cc-sub">用户问 → Claude 想 → skill 用</div>
+        <div class="cheat-flow">
+          <div class="cf-step"><span class="cf-tier">TIER 1</span><span><strong>用户说话</strong> · Claude 把消息和所有 skill 的 description 对一遍（只读这一段）。</span></div>
+          <div class="cf-step"><span class="cf-tier">TIER 2</span><span><strong>命中了</strong> · 打开匹配 skill 的 SKILL.md 正文，按 When / Steps 走。</span></div>
+          <div class="cf-step"><span class="cf-tier">TIER 3</span><span><strong>读到 @reference</strong> · 才真的打开那个文件 —— 不读不烧 token。</span></div>
+          <div class="cf-step"><span class="cf-tier">DONE</span><span><strong>跑完返回</strong> · 离开 skill，回到普通对话，下一轮重来。</span></div>
+        </div>
+        <dl style="margin-top:12px;">
+          <dt>记住</dt>
+          <dd>Tier 1 = 入门券，<strong>没这关后面都没机会</strong>。所以 description 是杠杆。</dd>
+        </dl>
+      </div>
+    </div>
+
+    <a href="#" class="next-post" id="nextPost">
+      <div>
+        <div class="np-tag">下一篇 · NEXT · Q3 · Design × AI <span class="np-status">陆续更新</span></div>
+        <h4>Agent 是<span class="em">一个团队</span>，不是一个人</h4>
+        <p>Skill 拆完了，下一站讲 <strong>Agent</strong> —— 比 skill 大一号的东西。Claude 会自己分工：一个调研、一个写、一个 review。你只下一个目标，剩下它内部协作。但 agent 的"性格"也是用 markdown 写的。</p>
+      </div>
+      <span class="np-cta">敬请期待 <span class="arr">→</span></span>
+    </a>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div class="byline">
+      <img class="avatar" src="author.jpg" alt="范米花儿">
+      <div class="byline-meta">
+        <div class="byline-label"><span class="dot"></span>作者 · WRITTEN BY</div>
+        <h3 class="byline-name">嗨，我是 <span class="em">范米花儿</span></h3>
+        <p class="byline-tag">一份给设计师的代码入门 ——<br>不需要会写，知道大概怎么回事，跟前端 / AI 沟通就顺多了。</p>
+        <div class="byline-contact">
+          <span class="contact-label">微信</span>
+          <span class="contact-id">vanvan_0422</span>
+          <span class="contact-hint">想看什么主题，加我聊</span>
+        </div>
+      </div>
+    </div>
+    <div class="footer-meta">
+      做于 <span class="mono">2026</span> · 用 <span class="heart">●</span> 写给 <span class="mono">DESIGNERS &amp; DEVELOPERS</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+// ========= §01 Folder explorer =========
+(function () {
+  const tree = document.getElementById('folderTree');
+  const detail = document.getElementById('folderDetail');
+  if (!tree || !detail) return;
+  const rows = tree.querySelectorAll('.ft-row[data-file]');
+  const replayBtn = document.getElementById('folderReplay');
+  const collapseBtn = document.getElementById('folderCollapse');
+
+  const files = {
+    root: {
+      tag: '根目录 · ROOT',
+      name: '<code>pptx/</code> 整个 skill 的根',
+      meta: '<span class="opt">类型 · 文件夹</span> · <span class="opt">必须包含 SKILL.md</span>',
+      desc: '一个 skill 就是一个文件夹，名字就是 skill 的 id。Claude 启动时会扫所有这种文件夹，但<strong>只读每个里面的 SKILL.md 最前几行</strong>，不会展开其它。',
+      mock: '<span class="ccom"># 文件夹名 = skill 的代号</span>\n<span class="ccom"># 启动时被 Claude 注册</span>\npptx/\n├── SKILL.md\n├── scripts/\n├── references/\n└── templates/'
+    },
+    skillmd: {
+      tag: '必须 · 入口',
+      name: '<code>SKILL.md</code> 唯一必须',
+      meta: '<span class="req">必须</span> · <span class="opt">markdown + YAML frontmatter</span>',
+      desc: '<strong>整个 skill 只有这一个文件必须存在</strong>。最上面是 YAML（name / description），下面是 markdown 正文。Claude 启动只看 YAML，匹配上了再打开正文。',
+      mock: '<span class="cmark">---</span>\n<span class="ckey">name</span>: <span class="cstr">pptx</span>\n<span class="ckey">description</span>: <span class="cstr">Use when ...</span>\n<span class="cmark">---</span>\n\n<span class="ctag"># PowerPoint Skill</span>\n## When to use\n## Steps'
+    },
+    scripts: {
+      tag: '可选 · 执行',
+      name: '<code>scripts/</code> 跑代码的地方',
+      meta: '<span class="opt">可选</span> · <span class="opt">Python · shell · 任何能跑的</span>',
+      desc: '如果 skill 需要做"<strong>Claude 自己干不了</strong>"的活（比如解析 .pptx 二进制），就写脚本放这里。SKILL.md 里告诉 Claude "需要时调用 scripts/xxx.py"。',
+      mock: 'scripts/\n├── ooxml.py        <span class="ccom"># 解析 pptx 内部 XML</span>\n├── extract_text.py <span class="ccom"># 抽出文字</span>\n└── make_slide.py   <span class="ccom"># 生成新 slide</span>'
+    },
+    ooxml: {
+      tag: '可选 · 脚本',
+      name: '<code>ooxml.py</code> 一个解析脚本',
+      meta: '<span class="opt">Python · ~80 行</span> · <span class="opt">SKILL.md 里通过 Bash 调用</span>',
+      desc: 'Claude 自己不太会拆 OOXML（pptx 的底层格式）—— 所以让它调用这个脚本。<strong>脚本输出文字 → Claude 拿到结果继续干活。</strong>',
+      mock: '<span class="ccom"># scripts/ooxml.py</span>\n<span class="ckey">import</span> zipfile\n<span class="ckey">def</span> <span class="ctag">extract</span>(path):\n    <span class="ckey">with</span> zipfile.ZipFile(path) <span class="ckey">as</span> z:\n        <span class="ckey">return</span> z.namelist()'
+    },
+    extract: {
+      tag: '可选 · 脚本',
+      name: '<code>extract_text.py</code>',
+      meta: '<span class="opt">Python · 跑一下抽出所有文字</span>',
+      desc: '专门负责"<strong>把 pptx 里所有可见文字抽出来</strong>"。Claude 在 SKILL.md 的 Steps 里被告知"第一步：run extract_text.py"。',
+      mock: '<span class="ccom"># 用法：</span>\n<span class="ccom"># bash$ python extract_text.py deck.pptx</span>\n<span class="ccom"># → 所有文字逐行打出来</span>'
+    },
+    references: {
+      tag: '可选 · 知识',
+      name: '<code>references/</code> 厚书',
+      meta: '<span class="opt">可选</span> · <span class="opt">markdown 文档 · 一般几百行</span>',
+      desc: '<strong>放查的东西</strong> —— 格式说明、规范清单、长例子。这是 progressive disclosure 最关键的一层：SKILL.md 里写 <code>@references/xx.md</code>，Claude <strong>用到才打开</strong>。',
+      mock: 'references/\n├── pptx_format.md   <span class="ccom"># 200 行讲 OOXML 结构</span>\n├── slide_layouts.md <span class="ccom"># 100 行讲布局类型</span>\n└── examples.md      <span class="ccom"># 300 行例子</span>'
+    },
+    pptxformat: {
+      tag: '可选 · 参考',
+      name: '<code>pptx_format.md</code>',
+      meta: '<span class="opt">长 markdown · 200 行讲 pptx 内部结构</span>',
+      desc: '<strong>SKILL.md 里不写这些细节</strong>，留在这里。Claude 在 SKILL.md 看到 <code>@references/pptx_format.md</code> 这一行，才会读这个文件 —— 用不到的话 token 不烧。',
+      mock: '<span class="ctag"># PPTX Format Reference</span>\n\n## 文件结构\n.pptx 实际是 zip ...\n\n## XML schema\n...'
+    },
+    templates: {
+      tag: '可选 · 素材',
+      name: '<code>templates/</code> 模板',
+      meta: '<span class="opt">可选</span> · <span class="opt">空白文件 · 样板</span>',
+      desc: '放<strong>填空式的素材</strong> —— 比如生成新 pptx 时，先复制一份 default.pptx 出来再改。Claude 会被告知"以这个为底"。',
+      mock: 'templates/\n├── default.pptx   <span class="ccom"># 16:9 / 白底 / 黑字</span>\n├── corporate.pptx <span class="ccom"># 公司皮</span>\n└── minimal.pptx   <span class="ccom"># 极简版</span>'
+    },
+    default: {
+      tag: '可选 · 模板',
+      name: '<code>default.pptx</code>',
+      meta: '<span class="opt">二进制 · 1 张空白 slide</span>',
+      desc: '<strong>每次生成新 pptx 时，Claude 先复制这份打底</strong>。不用从零拼 XML —— 只往里填新内容。这就是 templates/ 存在的全部理由。',
+      mock: '<span class="ccom"># 生成新 deck 的流程：</span>\n<span class="ccom"># 1. cp templates/default.pptx output.pptx</span>\n<span class="ccom"># 2. python scripts/add_slide.py output.pptx</span>\n<span class="ccom"># 3. 返回 output.pptx 给用户</span>'
+    }
+  };
+
+  function setActive(key) {
+    rows.forEach(r => r.classList.toggle('is-active', r.dataset.file === key));
+    const f = files[key];
+    if (!f) return;
+    detail.innerHTML =
+      '<div class="fd-tag">' + f.tag + '</div>' +
+      '<h3 class="fd-name">' + f.name + '</h3>' +
+      '<div class="fd-meta">' + f.meta + '</div>' +
+      '<p class="fd-desc">' + f.desc + '</p>' +
+      '<pre class="fd-mock">' + f.mock + '</pre>';
+  }
+
+  rows.forEach(r => {
+    r.addEventListener('click', () => setActive(r.dataset.file));
+  });
+
+  // Animated entry — "fly out" of folder
+  function playFlyIn() {
+    rows.forEach((r, i) => {
+      r.classList.remove('fly-in');
+      r.classList.add('fly-out');
+    });
+    setTimeout(() => {
+      rows.forEach((r, i) => {
+        setTimeout(() => {
+          r.classList.remove('fly-out');
+          r.classList.add('fly-in');
+        }, i * 70);
+      });
+    }, 50);
+    setTimeout(() => setActive('skillmd'), 800);
+  }
+
+  replayBtn && replayBtn.addEventListener('click', playFlyIn);
+  collapseBtn && collapseBtn.addEventListener('click', () => {
+    rows.forEach(r => {
+      if (r.classList.contains('ft-indent-2')) {
+        r.style.display = (r.style.display === 'none') ? '' : 'none';
+      }
+    });
+  });
+
+  // initial reveal once user scrolls near
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        playFlyIn();
+        io.disconnect();
+      }
+    });
+  }, { threshold: 0.25 });
+  io.observe(tree);
+})();
+
+// ========= §02 Anatomy — code ↔ card =========
+(function () {
+  const code = document.getElementById('anatomyCode');
+  const list = document.getElementById('anatomyList');
+  if (!code || !list) return;
+  const cards = list.querySelectorAll('.anat-card[data-key]');
+  const lines = code.querySelectorAll('.cline[data-key]');
+
+  function setActive(key) {
+    cards.forEach(c => c.classList.toggle('is-active', c.dataset.key === key));
+    lines.forEach(l => l.classList.toggle('is-active', l.dataset.key === key));
+  }
+
+  cards.forEach(c => {
+    c.addEventListener('mouseenter', () => setActive(c.dataset.key));
+    c.addEventListener('click', () => setActive(c.dataset.key));
+  });
+  lines.forEach(l => {
+    l.addEventListener('mouseenter', () => setActive(l.dataset.key));
+    l.addEventListener('click', () => setActive(l.dataset.key));
+  });
+
+  // default
+  setTimeout(() => setActive('desc'), 600);
+})();
+
+// ========= §03 Pyramid — progressive disclosure =========
+(function () {
+  const svg = document.getElementById('pyramidSvg');
+  const chips = document.getElementById('pyChips');
+  const queryText = document.getElementById('pyQueryText');
+  const trace = document.getElementById('pyramidTrace');
+  const dot = document.getElementById('pyDot');
+  if (!svg || !chips || !trace) return;
+
+  const tiers = svg.querySelectorAll('.py-tier');
+  const flows = svg.querySelectorAll('.py-flow');
+
+  const scenarios = {
+    'review-figma': {
+      text: 'review 这个 Figma 设计稿',
+      steps: [
+        { tier: 1, text: '<span class="pt-tier">[Tier 1]</span> 扫所有 skill 的 description<span class="pt-tok"> +100 tok</span>', delay: 0 },
+        { tier: 1, text: '› 命中 <span class="pt-skill">design-reviewer</span> · 关键词 "review" + "design"', delay: 500 },
+        { tier: 2, text: '<span class="pt-tier">[Tier 2]</span> 打开 design-reviewer/SKILL.md<span class="pt-tok"> +600 tok</span>', delay: 1100 },
+        { tier: 2, text: '› 按 Steps 走：1. 抽 frame 信息 2. 对照规则', delay: 1700 },
+        { tier: 3, text: '<span class="pt-tier">[Tier 3]</span> 读 <span class="pt-skill">@references/spacing_rules.md</span><span class="pt-tok"> +1200 tok</span>', delay: 2400 },
+        { tier: 0, text: '› 返回审稿结果给用户。<span class="pt-meta">总用：~1900 tok · 全 skill 启动只占 100</span>', delay: 3100 }
+      ]
+    },
+    'make-pptx': {
+      text: '把会议纪要做成 PPT',
+      steps: [
+        { tier: 1, text: '<span class="pt-tier">[Tier 1]</span> 扫所有 skill 的 description<span class="pt-tok"> +100 tok</span>', delay: 0 },
+        { tier: 1, text: '› 命中 <span class="pt-skill">pptx</span> · 关键词 "PPT" → ".pptx"', delay: 500 },
+        { tier: 2, text: '<span class="pt-tier">[Tier 2]</span> 打开 pptx/SKILL.md<span class="pt-tok"> +500 tok</span>', delay: 1100 },
+        { tier: 3, text: '<span class="pt-tier">[Tier 3]</span> 调 <span class="pt-skill">scripts/make_slide.py</span>', delay: 1700 },
+        { tier: 3, text: '› 复制 <span class="pt-skill">templates/default.pptx</span> 打底', delay: 2300 },
+        { tier: 0, text: '› 返回 output.pptx。<span class="pt-meta">design-reviewer 完全没被打开 —— 0 token 浪费</span>', delay: 3000 }
+      ]
+    },
+    'audit-design': {
+      text: '审一下我这套组件',
+      steps: [
+        { tier: 1, text: '<span class="pt-tier">[Tier 1]</span> 扫所有 skill 的 description<span class="pt-tok"> +100 tok</span>', delay: 0 },
+        { tier: 1, text: '› 命中 <span class="pt-skill">design-reviewer</span> · 关键词 "audit"', delay: 500 },
+        { tier: 1, text: '› 也命中 <span class="pt-skill">library-auditor</span> · "组件" + "审"', delay: 1000 },
+        { tier: 2, text: '<span class="pt-tier">[Tier 2]</span> 反问用户：审 spacing 规范，还是 library 完整性？', delay: 1600 },
+        { tier: 0, text: '› 等用户澄清后再决定打开哪个 Tier 2。<span class="pt-meta">两个 description 都对上 = 主动消歧</span>', delay: 2300 }
+      ]
+    },
+    lunch: {
+      text: '今晚吃什么',
+      steps: [
+        { tier: 1, text: '<span class="pt-tier">[Tier 1]</span> 扫所有 skill 的 description<span class="pt-tok"> +100 tok</span>', delay: 0 },
+        { tier: 0, text: '› 没有 skill 命中 · 普通对话回答', delay: 800 },
+        { tier: 0, text: '› 推荐：附近的兰州拉面？<span class="pt-meta">100 个 skill 挂着 ≠ 100 次浪费 —— 全程只读 100 tok</span>', delay: 1500 }
+      ]
+    }
+  };
+
+  function highlight(tier) {
+    tiers.forEach(t => {
+      const isActive = String(tier) === t.dataset.tier;
+      const isDimmed = tier && Number(t.dataset.tier) > tier;
+      t.classList.toggle('active', isActive);
+      t.classList.toggle('dimmed', !!isDimmed);
+    });
+    flows.forEach(f => {
+      const [from, to] = f.dataset.flow.split('-').map(Number);
+      f.classList.toggle('active', tier && to <= tier);
+    });
+    if (dot) {
+      dot.setAttribute('opacity', tier ? 1 : 0);
+      if (tier === 1) dot.setAttribute('cy', 135);
+      if (tier === 2) dot.setAttribute('cy', 215);
+      if (tier === 3) dot.setAttribute('cy', 295);
+    }
+  }
+
+  function playScenario(key) {
+    const s = scenarios[key];
+    if (!s) return;
+    queryText.textContent = s.text;
+    trace.innerHTML = '';
+    chips.querySelectorAll('button').forEach(b => b.classList.toggle('active', b.dataset.q === key));
+    highlight(0);
+
+    s.steps.forEach((step) => {
+      const row = document.createElement('div');
+      row.className = 'pt-row';
+      row.innerHTML = step.text;
+      trace.appendChild(row);
+      setTimeout(() => {
+        row.classList.add('show');
+        if (step.tier) highlight(step.tier);
+      }, step.delay);
+    });
+  }
+
+  chips.querySelectorAll('button').forEach(b => {
+    b.addEventListener('click', () => playScenario(b.dataset.q));
+  });
+
+  // auto-play first scenario when scrolled in
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        setTimeout(() => playScenario('review-figma'), 400);
+        io.disconnect();
+      }
+    });
+  }, { threshold: 0.3 });
+  io.observe(svg);
+})();
+
+// ========= §04 Trigger Lab — 5 rounds, real matching engine =========
+(function () {
+  const stage = document.getElementById('lab-stage') || document.querySelector('.lab-stage');
+  if (!stage) return;
+  const roundsBar = document.getElementById('labRounds');
+  const buttons = roundsBar.querySelectorAll('button[data-round]');
+  const roundNum = document.getElementById('labRoundNum');
+  const roundTitle = document.getElementById('labRoundTitle');
+  const roundDesc = document.getElementById('labRoundDesc');
+  const userMsg = document.getElementById('labUserMsg');
+  const userText = document.getElementById('labUserText');
+  const expectTag = document.getElementById('labExpect');
+  const descInput = document.getElementById('labDescription');
+  const counter = document.getElementById('labCounter');
+  const testBtn = document.getElementById('labTest');
+  const feedback = document.getElementById('labFeedback');
+  const doneEl = document.getElementById('labDone');
+  const correctEl = document.getElementById('labCorrect');
+  const resetBtn = document.getElementById('labReset');
+  const nextBtn = document.getElementById('labNext');
+  const presetButtons = stage.querySelectorAll('.le-presets button[data-preset]');
+  const winScreen = document.getElementById('labWin');
+  const recap = document.getElementById('labRecap');
+  const winCopy = document.getElementById('winCopy');
+  const winTemplate = document.getElementById('winTemplate');
+
+  // Rounds data
+  const rounds = [
+    {
+      n: 1,
+      title: '关 1 · 直球 review 请求',
+      desc: '用户问的是<strong>典型的 review 场景</strong> —— 检查间距规范。如果你的 description 写明白是干这个的，应该命中。',
+      user: '帮我看下这个稿子有没有违反间距规范',
+      expect: 'trigger'
+    },
+    {
+      n: 2,
+      title: '关 2 · 英文 review 请求',
+      desc: '<strong>同样是 review，但换成英文</strong>，而且指明 Figma 文件。好的 description 应该中英文都覆盖到。',
+      user: 'Hey Claude, review this Figma file for me?',
+      expect: 'trigger'
+    },
+    {
+      n: 3,
+      title: '关 3 · 设计相关但不是 review',
+      desc: '用户刚画完登录页 —— <strong>只是在炫耀，不是请 review</strong>。如果你的 description 太宽（"任何设计相关都触发"），这里就会误触发。',
+      user: '我刚画完登录页，挺满意的',
+      expect: 'skip'
+    },
+    {
+      n: 4,
+      title: '关 4 · 是修改请求，不是 review',
+      desc: '"把所有按钮改成圆角" —— 这是<strong>修改任务，不是审查任务</strong>。design-reviewer 不该被激活。description 太泛就会把修改也包进来。',
+      user: '把所有按钮改成圆角',
+      expect: 'skip'
+    },
+    {
+      n: 5,
+      title: '关 5 · 完全不相关',
+      desc: '<strong>完全脱离设计领域</strong>。如果你的 description 用了 "Use for any task" 之类的大词，连这个都会误触发 —— Anthropic 文档里反复提醒别这么写。',
+      user: '今晚吃什么',
+      expect: 'skip'
+    }
+  ];
+
+  const state = {
+    current: 0,
+    results: Array(rounds.length).fill(null), // { pass, descAtTest, result, msg }
+  };
+
+  // ========= MATCHING ENGINE =========
+  // Keyword dictionaries (mixed zh + en, since Claude reads both)
+  const REVIEW_KW = ['review', 'audit', 'check', '检查', '看下', '审查', '审计', '审核', '审稿', '审一下', '违反', '不规范', '规范', '间距', 'spacing', 'consistency', '一致', '哪里不对', '挑错'];
+  const MODIFY_KW = ['改成', '改为', '改一下', '修改', '换成', '换一下', '加个', '加上', '加一个', '删掉', '删除', 'change to', 'modify', 'update', 'rename', '增加', '替换'];
+  const DESIGN_KW = ['design', 'figma', 'frame', 'layer', 'spacing', 'token', '设计', '稿子', '设计稿', '组件', '按钮', '页面', '登录页', '组件库', 'library', 'component'];
+  const CREATE_KW = ['画完', '做完', '完成', '搞定', '设计了', '画了一个', '画了', '做了一个', 'finished', 'just designed', 'just made'];
+
+  function tally(str, words) {
+    if (!str) return 0;
+    const lower = str.toLowerCase();
+    let n = 0;
+    for (const w of words) {
+      if (lower.includes(w.toLowerCase())) n++;
+    }
+    return n;
+  }
+
+  // The simulated engine roughly models how Claude reasons:
+  //   1. What does the description SAY this skill is for? (covers review tasks? not? too broad? too narrow?)
+  //   2. What does the user actually want? (review intent? modify? create-boasting? unrelated?)
+  //   3. Trigger only when description's coverage and user intent both line up.
+  function evaluate(description, userQuery, expect) {
+    const q = {
+      reviewHits: tally(userQuery, REVIEW_KW),
+      modifyHits: tally(userQuery, MODIFY_KW),
+      designHits: tally(userQuery, DESIGN_KW),
+      createHits: tally(userQuery, CREATE_KW)
+    };
+    const d = description || '';
+    const dLower = d.toLowerCase();
+    const descIsEmpty = !d || d.trim().length < 15;
+
+    if (descIsEmpty) {
+      return {
+        triggered: false,
+        result: expect === 'skip' ? 'lucky_skip' : 'undertriggered',
+        debug: 'description 太短或空（' + (description || '').trim().length + ' 字符）'
+      };
+    }
+
+    const ds = {
+      reviewKW: tally(d, REVIEW_KW),
+      designKW: tally(d, DESIGN_KW),
+      hasSamples: /["'].+?["']/.test(d) || /triggers?\s*(?:include|:)/i.test(dLower),
+      hasDoNot: /(do\s*not\s+(?:trigger|use)|never\s+trigger|skip\s+for|except\s+(?:for|when))/i.test(dLower),
+      // 'too broad' = description literally says 'any/all/everything/anything'
+      isTooBroad: /(any\s*(?:task|design|thing|use|time)|use\s+for\s+(?:any|all|every)|apply\s+for\s+(?:any|all|every)|anything\s+(?:about|related)|everything\s+about)/i.test(dLower),
+      // 'too narrow' = description requires a single exact phrase
+      isTooNarrow: /(only\s+when\s+(?:exactly|the\s+user\s+types)|exactly\s+the\s+phrase|must\s+contain\s+the\s+exact)/i.test(dLower)
+    };
+
+    // Does description cover review-of-design tasks?
+    const descCoversReview = ds.reviewKW >= 1 && ds.designKW >= 1;
+
+    // Does user query LOOK LIKE a review intent?
+    const queryIsReviewIntent = (q.reviewHits >= 1 && q.designHits >= 0) || q.reviewHits >= 2;
+    const queryIsModify = q.modifyHits >= 1;
+    const queryIsCreateBoasting = q.createHits >= 1;
+    const queryIsDesignRelated = q.designHits >= 1;
+
+    let triggered = false;
+
+    if (ds.isTooBroad) {
+      // Too broad: fires on ANYTHING design-ish or any task → over-triggers
+      if (queryIsDesignRelated || /\bany\b/i.test(dLower)) {
+        triggered = true;
+      }
+    } else if (ds.isTooNarrow) {
+      // Too narrow: only fires when user types the exact phrase encoded in description
+      const exactNeedle = dLower.match(/exactly\s+the\s+phrase\s+["']([^"']+)["']/);
+      if (exactNeedle && userQuery.toLowerCase().includes(exactNeedle[1])) {
+        triggered = true;
+      }
+    } else {
+      // Normal description: trigger when description covers review AND user actually wants review,
+      // but NOT if user is asking to modify or just boasting about a finished design.
+      if (descCoversReview && queryIsReviewIntent && !queryIsModify && !queryIsCreateBoasting) {
+        triggered = true;
+      }
+    }
+
+    let result;
+    if (triggered && expect === 'trigger') result = 'triggered';
+    else if (triggered && expect === 'skip') result = 'overtriggered';
+    else if (!triggered && expect === 'skip') result = 'correctly_skipped';
+    else result = 'undertriggered';
+
+    const tags = [];
+    if (ds.isTooBroad) tags.push('太宽');
+    if (ds.isTooNarrow) tags.push('太窄');
+    if (ds.hasSamples) tags.push('有 samples');
+    if (ds.hasDoNot) tags.push('有 DO NOT');
+
+    return {
+      triggered,
+      result,
+      debug: 'desc[r:' + ds.reviewKW + ' d:' + ds.designKW + (tags.length ? ' · ' + tags.join('/') : '') +
+             '] · query[r:' + q.reviewHits + ' d:' + q.designHits + ' m:' + q.modifyHits + ' c:' + q.createHits + ']' +
+             ' · covers=' + descCoversReview + ' · reviewIntent=' + queryIsReviewIntent
+    };
+  }
+
+  // ========= Feedback messages =========
+  const msgs = {
+    triggered: {
+      cls: 'good',
+      icon: '✓ 命中 · TRIGGERED',
+      title: '稳了 — Claude 用了你的 skill',
+      desc: '你的 description 把"review + 设计文件"这两个意思讲清楚了。Claude 闻到了，激活 design-reviewer。<strong>这一关过</strong>。'
+    },
+    overtriggered: {
+      cls: 'bad',
+      icon: '⚠ 误触发 · OVER-TRIGGERED',
+      title: 'Description 太宽了 — Claude 把不该接的活也接了',
+      desc: '你的 description 像 <code>"任何 design 都触发"</code> 这种大词，Claude 会把<strong>修改请求、闲聊、新设计</strong>统统当成 review。这是 skill 翻车最常见的方式。<strong>把范围收窄。</strong>'
+    },
+    undertriggered: {
+      cls: 'warn',
+      icon: '· 没触发 · MISSED',
+      title: 'Description 没覆盖到 — Claude 完全没想到你',
+      desc: '用户的话其实是个 review 请求，但你的 description 没写到这种说法。<strong>多加几个 sample queries</strong> —— 比如 <code>"check spacing"</code>、<code>"违反规范"</code>，让 Claude 闻得到。'
+    },
+    correctly_skipped: {
+      cls: 'good',
+      icon: '✓ 正确跳过 · CORRECTLY SKIPPED',
+      title: '对的 — 这种请求本来就不该触发 review',
+      desc: '用户在做<strong>修改 / 创建 / 闲聊</strong>，跟 review 没关系。你的 description 边界画得准 —— Claude 没被骗，正确地<strong>不</strong>激活 skill。这也叫"通关"。'
+    },
+    lucky_skip: {
+      cls: 'warn',
+      icon: '· 蒙对了 · LUCKY',
+      title: '碰巧没触发 — 但你的 description 几乎是空的',
+      desc: '这一关是"不该触发"，但你的 description 太短 / 太空，Claude 本来就<strong>什么都不会触发</strong>。算 false positive 的"对"。写满它再试。'
+    }
+  };
+
+  function setRound(n) {
+    state.current = n - 1;
+    const r = rounds[n - 1];
+    roundNum.textContent = n;
+    roundTitle.textContent = r.title;
+    roundDesc.innerHTML = r.desc;
+    userText.textContent = r.user;
+    expectTag.textContent = r.expect === 'trigger' ? '期望：触发' : '期望：不触发';
+    userMsg.classList.toggle('expect-trigger', r.expect === 'trigger');
+    userMsg.classList.toggle('expect-skip', r.expect === 'skip');
+
+    buttons.forEach(b => {
+      const bn = Number(b.dataset.round);
+      b.classList.remove('active', 'done', 'failed');
+      if (bn === n) b.classList.add('active');
+      const res = state.results[bn - 1];
+      if (res) {
+        if (res.pass) b.classList.add('done');
+        else b.classList.add('failed');
+      }
+    });
+
+    // restore previous feedback if exists
+    const prev = state.results[n - 1];
+    if (prev) {
+      renderFeedback(prev.msgKey, prev.debug);
+      nextBtn.disabled = n >= rounds.length;
+    } else {
+      feedback.className = 'lab-feedback idle';
+      feedback.innerHTML =
+        '<span class="lf-icon">○ 等待测试</span>' +
+        '<h5 class="lf-title">还没测呢</h5>' +
+        '<p class="lf-desc">改完左边的 description，点上面"测试触发"。</p>';
+      nextBtn.disabled = true;
+    }
+
+    updateCounter();
+  }
+
+  function renderFeedback(msgKey, debug) {
+    const m = msgs[msgKey];
+    feedback.className = 'lab-feedback ' + m.cls;
+    feedback.innerHTML =
+      '<span class="lf-icon">' + m.icon + '</span>' +
+      '<h5 class="lf-title">' + m.title + '</h5>' +
+      '<p class="lf-desc">' + m.desc + '</p>' +
+      (debug ? '<div class="lf-debug"><strong>引擎：</strong>' + debug + '</div>' : '');
+  }
+
+  function updateCounter() {
+    const v = descInput.value || '';
+    const triggerKW = REVIEW_KW.filter(w => v.toLowerCase().includes(w.toLowerCase())).length;
+    counter.textContent = '字符 ' + v.length + ' · 触发词命中 ' + triggerKW;
+    counter.className = 'lc-' + (triggerKW >= 2 ? 'good' : 'warn');
+  }
+
+  function runTest() {
+    const desc = descInput.value;
+    const r = rounds[state.current];
+    const out = evaluate(desc, r.user, r.expect);
+    const pass = (out.result === 'triggered' || out.result === 'correctly_skipped');
+    state.results[state.current] = {
+      pass,
+      msgKey: out.result,
+      descAtTest: desc,
+      debug: out.debug
+    };
+    renderFeedback(out.result, out.debug);
+
+    // update round button styling
+    const btn = roundsBar.querySelector('button[data-round="' + (state.current + 1) + '"]');
+    btn.classList.remove('active', 'done', 'failed');
+    btn.classList.add('active');
+    btn.classList.add(pass ? 'done' : 'failed');
+
+    // tally
+    const done = state.results.filter(x => x !== null).length;
+    const correct = state.results.filter(x => x && x.pass).length;
+    doneEl.textContent = done;
+    correctEl.textContent = correct;
+    nextBtn.disabled = state.current >= rounds.length - 1;
+
+    // win if all 5 done
+    if (done === rounds.length) {
+      setTimeout(showWin, 500);
+    }
+  }
+
+  function showWin() {
+    // Render recap
+    let html = '';
+    state.results.forEach((r, i) => {
+      const round = rounds[i];
+      const status = r && r.pass ? '✓ 过' : '✕ 没过';
+      html += '<div class="lw-row">' +
+              '<div class="lw-r-head">关 ' + (i + 1) + ' · ' + status + ' · 用户说: "' + round.user + '"</div>' +
+              '<div class="lw-r-desc">你的 description: ' + (r ? escapeHtml(r.descAtTest || '') : '(未测)') + '</div>' +
+              '</div>';
+    });
+    recap.innerHTML = html;
+    winScreen.classList.add('show');
+    setTimeout(() => winScreen.scrollIntoView({ behavior: 'smooth', block: 'start' }), 80);
+  }
+
+  function escapeHtml(s) {
+    return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+
+  // Wire up
+  buttons.forEach(b => {
+    b.addEventListener('click', () => setRound(Number(b.dataset.round)));
+  });
+  testBtn.addEventListener('click', runTest);
+  descInput.addEventListener('input', updateCounter);
+
+  nextBtn.addEventListener('click', () => {
+    if (state.current < rounds.length - 1) {
+      setRound(state.current + 2);
+    }
+  });
+
+  resetBtn.addEventListener('click', () => {
+    state.results = Array(rounds.length).fill(null);
+    descInput.value = 'Use this skill any time the user asks anything about design.';
+    winScreen.classList.remove('show');
+    buttons.forEach(b => b.classList.remove('done', 'failed'));
+    doneEl.textContent = '0';
+    correctEl.textContent = '0';
+    setRound(1);
+  });
+
+  // Presets
+  const presets = {
+    'too-broad': 'Use this skill for any task related to design. Apply for everything about design or design files.',
+    'too-narrow': 'Use this skill only when the user types exactly the phrase "review my design for spacing".',
+    'just-right':
+      'Use this skill when the user asks to review, audit, or check a design file or component library for spacing / naming / token consistency.\n\nTriggers include: "review my design", "check this Figma file", "audit my components", "违反间距规范", "看下这个稿子".\n\nDO NOT trigger for: modification requests ("change X to Y"), new design creation, or general questions about design principles.',
+    'clear': ''
+  };
+  presetButtons.forEach(b => {
+    b.addEventListener('click', () => {
+      descInput.value = presets[b.dataset.preset] || '';
+      updateCounter();
+      descInput.focus();
+    });
+  });
+
+  // Win copy
+  winCopy.addEventListener('click', () => {
+    const text = winTemplate.textContent;
+    const ok = copyToClipboard(text);
+    winCopy.textContent = ok ? '已复制 ✓' : '复制失败';
+    winCopy.classList.add('copied');
+    setTimeout(() => {
+      winCopy.textContent = '复制';
+      winCopy.classList.remove('copied');
+    }, 1800);
+  });
+
+  function copyToClipboard(text) {
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text);
+        return true;
+      }
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      ta.style.position = 'fixed';
+      ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.select();
+      const ok = document.execCommand('copy');
+      document.body.removeChild(ta);
+      return ok;
+    } catch (e) { return false; }
+  }
+
+  // Init
+  setRound(1);
+})();
+
+// ========= §05 Skill card — copy description =========
+(function () {
+  document.querySelectorAll('.skill-card .sd-copy').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const target = document.getElementById(btn.dataset.target);
+      if (!target) return;
+      const text = target.textContent.trim();
+      try {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(text);
+        } else {
+          const ta = document.createElement('textarea');
+          ta.value = text;
+          ta.style.position = 'fixed';
+          ta.style.opacity = '0';
+          document.body.appendChild(ta);
+          ta.select();
+          document.execCommand('copy');
+          document.body.removeChild(ta);
+        }
+        btn.textContent = '已复制 ✓';
+        btn.classList.add('copied');
+        setTimeout(() => {
+          btn.textContent = 'COPY';
+          btn.classList.remove('copied');
+        }, 1600);
+      } catch (e) {}
+    });
+  });
+})();
+</script>
+
+<!-- 路线图弹窗 -->
+<div class="rm-modal" id="rm-modal" hidden>
+  <div class="rm-backdrop" data-rm-close></div>
+  <div class="rm-dialog" role="dialog" aria-label="完整路线图">
+    <button class="rm-close" data-rm-close aria-label="关闭">✕</button>
+    <div class="rm-header">
+      <div class="rm-tag">完整路线图 · ROADMAP</div>
+      <h3 class="rm-title">9 模块 <span class="rm-em">·</span> 28 篇</h3>
+      <p class="rm-sub">设计篇 5 模块 / 15 篇 + 工程篇 4 系列 / 13 篇</p>
+    </div>
+    <div class="rm-body">
+      <div class="rm-mod">
+        <div class="rm-mod-key">A · 单元素与组件</div>
+        <div class="rm-mod-list">
+          <a href="basics-figma.html" class="rm-cell"><span class="rm-cell-code">A0</span><span class="rm-cell-name">三件套 · HTML / CSS / JS</span><span class="rm-cell-tier">入门</span></a>
+          <a href="box-figma.html" class="rm-cell"><span class="rm-cell-code">A1</span><span class="rm-cell-name">盒子 · Auto Layout</span><span class="rm-cell-tier">基础</span></a>
+          <a href="components-figma.html" class="rm-cell"><span class="rm-cell-code">A2</span><span class="rm-cell-name">组件 · Variants &amp; Props</span><span class="rm-cell-tier">基础</span></a>
+          <a href="button-system-figma.html" class="rm-cell"><span class="rm-cell-code">A3</span><span class="rm-cell-name">Button System · 组件演化</span><span class="rm-cell-tier">进阶</span></a>
+        </div>
+      </div>
+      <div class="rm-mod">
+        <div class="rm-mod-key">B · 多组件协作</div>
+        <div class="rm-mod-list">
+          <a href="page-figma.html" class="rm-cell"><span class="rm-cell-code">B0</span><span class="rm-cell-name">拼页面 · 组件嵌套</span><span class="rm-cell-tier">入门</span></a>
+          <a href="data-flow-figma.html" class="rm-cell"><span class="rm-cell-code">B1</span><span class="rm-cell-name">数据流 · 概念</span><span class="rm-cell-tier">基础</span></a>
+          <a href="data-flow-cases-figma.html" class="rm-cell"><span class="rm-cell-code">B2</span><span class="rm-cell-name">数据流 · 实战 5 案例</span><span class="rm-cell-tier">进阶</span></a>
+        </div>
+      </div>
+      <div class="rm-mod">
+        <div class="rm-mod-key">C · 视觉系统</div>
+        <div class="rm-mod-list">
+          <a href="tokens-figma.html" class="rm-cell"><span class="rm-cell-code">C0</span><span class="rm-cell-name">Variables / Tokens 入门</span><span class="rm-cell-tier">入门</span></a>
+          <a href="colors-type-figma.html" class="rm-cell"><span class="rm-cell-code">C1</span><span class="rm-cell-name">Colors / Type / Spacing</span><span class="rm-cell-tier">基础</span></a>
+          <a href="theme-switch-figma.html" class="rm-cell"><span class="rm-cell-code">C2</span><span class="rm-cell-name">Theme 切换实战</span><span class="rm-cell-tier">进阶</span></a>
+        </div>
+      </div>
+      <div class="rm-mod">
+        <div class="rm-mod-key">D · 状态与交互</div>
+        <div class="rm-mod-list">
+          <a href="states-figma.html" class="rm-cell"><span class="rm-cell-code">D0</span><span class="rm-cell-name">视觉态 · 看得见的状态</span><span class="rm-cell-tier">入门</span></a>
+          <a href="interactive-figma.html" class="rm-cell"><span class="rm-cell-code">D1</span><span class="rm-cell-name">Interactive Component</span><span class="rm-cell-tier">基础</span></a>
+          <a href="transition-figma.html" class="rm-cell"><span class="rm-cell-code">D2</span><span class="rm-cell-name">动画 · Transition</span><span class="rm-cell-tier">进阶</span></a>
+        </div>
+      </div>
+      <div class="rm-mod">
+        <div class="rm-mod-key">E · 工程化</div>
+        <div class="rm-mod-list">
+          <a href="naming-figma.html" class="rm-cell"><span class="rm-cell-code">E0</span><span class="rm-cell-name">命名 / 图层规范</span><span class="rm-cell-tier">入门</span></a>
+          <a href="handoff-figma.html" class="rm-cell"><span class="rm-cell-code">E2</span><span class="rm-cell-name">Handoff &amp; 设计系统</span><span class="rm-cell-tier">进阶</span></a>
+        </div>
+      </div>
+      <div class="rm-mod">
+        <div class="rm-mod-key">F · 工程入门</div>
+        <div class="rm-mod-list">
+          <a href="f1-npm-figma.html" class="rm-cell"><span class="rm-cell-code">F1</span><span class="rm-cell-name">npm 是什么</span><span class="rm-cell-tier">入门</span></a>
+          <a href="f2-import-figma.html" class="rm-cell"><span class="rm-cell-code">F2</span><span class="rm-cell-name">import 与路径</span><span class="rm-cell-tier">入门</span></a>
+          <a href="f3-dev-build-figma.html" class="rm-cell"><span class="rm-cell-code">F3</span><span class="rm-cell-name">dev vs build</span><span class="rm-cell-tier">基础</span></a>
+          <a href="f4-hidden-files-figma.html" class="rm-cell"><span class="rm-cell-code">F4</span><span class="rm-cell-name">看不见的文件</span><span class="rm-cell-tier">基础</span></a>
+        </div>
+      </div>
+      <div class="rm-mod">
+        <div class="rm-mod-key">G · 版本控制</div>
+        <div class="rm-mod-list">
+          <a href="g1-commit-branch-figma.html" class="rm-cell"><span class="rm-cell-code">G1</span><span class="rm-cell-name">commit / branch</span><span class="rm-cell-tier">入门</span></a>
+          <a href="g2-conflict-figma.html" class="rm-cell"><span class="rm-cell-code">G2</span><span class="rm-cell-name">冲突怎么解</span><span class="rm-cell-tier">基础</span></a>
+          <a href="g3-pr-review-figma.html" class="rm-cell"><span class="rm-cell-code">G3</span><span class="rm-cell-name">PR / Review</span><span class="rm-cell-tier">进阶</span></a>
+        </div>
+      </div>
+      <div class="rm-mod">
+        <div class="rm-mod-key">H · 浏览器调试</div>
+        <div class="rm-mod-list">
+          <a href="h1-devtools-elements-figma.html" class="rm-cell"><span class="rm-cell-code">H1</span><span class="rm-cell-name">DevTools Elements</span><span class="rm-cell-tier">入门</span></a>
+          <a href="h2-console-error-figma.html" class="rm-cell"><span class="rm-cell-code">H2</span><span class="rm-cell-name">Console 报错</span><span class="rm-cell-tier">基础</span></a>
+          <a href="h3-network-figma.html" class="rm-cell"><span class="rm-cell-code">H3</span><span class="rm-cell-name">Network 面板</span><span class="rm-cell-tier">进阶</span></a>
+        </div>
+      </div>
+      <div class="rm-mod">
+        <div class="rm-mod-key">J · 上线</div>
+        <div class="rm-mod-list">
+          <a href="j1-dns-figma.html" class="rm-cell"><span class="rm-cell-code">J1</span><span class="rm-cell-name">DNS / 域名</span><span class="rm-cell-tier">基础</span></a>
+          <a href="j2-vercel-figma.html" class="rm-cell"><span class="rm-cell-code">J2</span><span class="rm-cell-name">Vercel 部署</span><span class="rm-cell-tier">基础</span></a>
+          <a href="j3-cache-cdn-figma.html" class="rm-cell"><span class="rm-cell-code">J3</span><span class="rm-cell-name">缓存 / CDN</span><span class="rm-cell-tier">进阶</span></a>
+        </div>
+      </div>
+    </div>
+    <div class="rm-footer">
+      <span>未完待续 · 想看什么主题加我聊</span>
+      <span class="rm-wechat">微信 vanvan_0422</span>
+    </div>
+  </div>
+</div>
+<script>
+(function(){
+  var modal = document.getElementById('rm-modal');
+  if (!modal) return;
+  var openBtns = document.querySelectorAll('[data-rm-open]');
+  var closeBtns = modal.querySelectorAll('[data-rm-close]');
+  function open() { modal.hidden = false; document.body.style.overflow = 'hidden'; }
+  function close() { modal.hidden = true; document.body.style.overflow = ''; }
+  openBtns.forEach(function(b){ b.addEventListener('click', function(e){ e.preventDefault(); open(); }); });
+  closeBtns.forEach(function(b){ b.addEventListener('click', close); });
+  document.addEventListener('keydown', function(e){ if (e.key === 'Escape' && !modal.hidden) close(); });
+})();
+</script>
+</body>
+</html>
