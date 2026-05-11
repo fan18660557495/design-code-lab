@@ -340,111 +340,6 @@
   .folder-detail .fd-mock .cmark { color: #ffcf3d; }
   .folder-detail .fd-mock .ctag { color: #c9b6ff; }
 
-  /* ============== §02 — Anatomy ============== */
-  .anatomy-stage {
-    margin-top: 24px;
-    display: grid;
-    grid-template-columns: 1.05fr 1fr;
-    gap: 24px;
-  }
-  @media (max-width: 880px) { .anatomy-stage { grid-template-columns: 1fr; } }
-
-  .anatomy-code {
-    background: var(--ink);
-    color: #d8d8e0;
-    padding: 22px 24px;
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 13px;
-    line-height: 1.95;
-    border-radius: 8px;
-    position: relative;
-    overflow-x: auto;
-  }
-  .anatomy-code .ac-fname {
-    position: absolute; top: 12px; right: 16px;
-    font-size: 10px; color: #6e6e7a; letter-spacing: 0.08em;
-  }
-  .anatomy-code .ac-dot {
-    position: absolute;
-    top: 14px; left: 16px;
-    width: 8px; height: 8px; border-radius: 50%;
-    background: #ff5f56;
-    box-shadow: 14px 0 0 #ffbd2e, 28px 0 0 #27c93f;
-  }
-  .anatomy-code pre { margin: 0; padding-top: 22px; }
-  .anatomy-code .ccom { color: #6e6e7a; }
-  .anatomy-code .ckey { color: #ff8a6e; }
-  .anatomy-code .cstr { color: #a8e6a3; }
-  .anatomy-code .cnum { color: #8ec5ff; }
-  .anatomy-code .cmark { color: #ffcf3d; }
-  .anatomy-code .ctag { color: #c9b6ff; }
-  .anatomy-code .cline {
-    display: block;
-    padding: 0 8px;
-    margin: 0 -8px;
-    border-left: 3px solid transparent;
-    border-radius: 3px;
-    transition: background 0.2s ease, border-color 0.2s ease;
-    cursor: pointer;
-  }
-  .anatomy-code .cline:hover { background: rgba(255,255,255,0.04); }
-  .anatomy-code .cline.is-active {
-    background: rgba(255,138,110,0.14);
-    border-left-color: #ff8a6e;
-  }
-
-  .anatomy-list {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-  }
-  .anat-card {
-    background: var(--paper);
-    border: 1px solid var(--line);
-    border-radius: 6px;
-    padding: 16px 18px;
-    cursor: pointer;
-    transition: all 0.18s ease;
-  }
-  .anat-card:hover { border-color: var(--accent); transform: translateX(2px); }
-  .anat-card.is-active {
-    border-color: var(--accent);
-    background: var(--accent-soft);
-    transform: translateX(4px);
-    box-shadow: 0 4px 14px rgba(255,77,46,0.12);
-  }
-  .anat-card .ak-num {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 10px;
-    color: var(--ink-mute);
-    letter-spacing: 0.1em;
-    margin-bottom: 4px;
-  }
-  .anat-card.is-active .ak-num { color: var(--accent); }
-  .anat-card .ak-title {
-    font-family: 'Noto Serif SC', serif;
-    font-size: 16px;
-    font-weight: 700;
-    margin: 0 0 4px;
-    line-height: 1.3;
-  }
-  .anat-card .ak-title code {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 13px;
-    background: var(--bg-2);
-    padding: 1px 6px;
-    border-radius: 3px;
-    margin-right: 6px;
-  }
-  .anat-card.is-active .ak-title code { background: rgba(255,255,255,0.6); }
-  .anat-card .ak-desc {
-    font-size: 13px;
-    color: var(--ink-soft);
-    margin: 0;
-    line-height: 1.55;
-  }
-  .anat-card .ak-desc strong { color: var(--ink); font-weight: 600; }
-
   /* ============== §03 — Pyramid ============== */
   .pyramid-stage {
     margin-top: 24px;
@@ -1133,434 +1028,530 @@
 
 
 
-  /* ============== §04 — Scene Theater ============== */
-  .scene-stage { margin: 24px 0 36px; }
-  .scene-grid {
+  /* ============== §01 — 没 MCP vs 装 MCP · SVG 对比 ============== */
+  .mcp-vs-stage {
+    margin-top: 24px;
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: 16px;
+    grid-template-columns: 1fr 1fr;
+    gap: 22px;
   }
-
-  .scene-card {
+  @media (max-width: 880px) { .mcp-vs-stage { grid-template-columns: 1fr; } }
+  .mcp-vs-card {
     background: var(--paper);
     border: 1.5px solid var(--line);
     border-radius: 10px;
-    padding: 22px 24px;
-    cursor: pointer;
+    padding: 26px 26px 22px;
     position: relative;
     overflow: hidden;
-    transition: all 0.2s ease;
-    text-align: left;
-    font-family: inherit;
-    color: inherit;
   }
-  .scene-card::before {
+  .mcp-vs-card.has-mcp {
+    border-color: var(--accent);
+  }
+  .mcp-vs-card.has-mcp::before {
     content: '';
     position: absolute;
     top: 0; left: 0; right: 0;
     height: 4px;
     background: var(--accent);
-    transform: scaleX(0);
-    transform-origin: left;
-    transition: transform 0.3s ease;
   }
-  .scene-card:hover::before { transform: scaleX(1); }
-  .scene-card:hover {
-    border-color: var(--ink);
-    transform: translateY(-3px);
-    box-shadow: 0 14px 32px rgba(22,22,29,0.10);
+  .mcp-vs-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    margin-bottom: 10px;
+    gap: 12px;
   }
-  .scene-card.is-seen::after {
-    content: '✓ 看过';
-    position: absolute;
-    top: 14px;
-    right: 16px;
+  .mcp-vs-tag {
     font-family: 'JetBrains Mono', monospace;
     font-size: 10px;
-    letter-spacing: 0.1em;
-    color: #4ade80;
-    background: rgba(74,222,128,0.12);
-    padding: 2px 8px;
-    border-radius: 100px;
+    letter-spacing: 0.14em;
+    color: var(--ink-mute);
+    text-transform: uppercase;
   }
-
-  .sc-num {
-    font-family: 'Fraunces', serif;
-    font-size: 44px;
-    font-weight: 900;
-    color: var(--accent);
-    line-height: 0.9;
-    margin-bottom: 10px;
-  }
-  .sc-quote {
+  .mcp-vs-card.has-mcp .mcp-vs-tag { color: var(--accent); }
+  .mcp-vs-title {
     font-family: 'Noto Serif SC', serif;
-    font-size: 18px;
-    font-weight: 700;
+    font-size: 22px;
+    font-weight: 800;
     color: var(--ink);
-    line-height: 1.4;
-    margin-bottom: 12px;
+    margin: 0 0 6px;
     letter-spacing: -0.01em;
   }
-  .sc-painpoint {
+  .mcp-vs-title .em {
+    font-family: 'Noto Serif SC', serif;
+    color: var(--accent);
+    font-weight: 500;
+    font-style: normal;
+  }
+  .mcp-vs-sub {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11.5px;
+    color: var(--ink-soft);
+    letter-spacing: 0.04em;
+    margin-bottom: 14px;
+  }
+  .mcp-vs-svg {
+    width: 100%;
+    height: 340px;
+    display: block;
+  }
+  .mcp-vs-foot {
+    margin-top: 8px;
+    padding-top: 14px;
+    border-top: 1px dashed var(--line);
     font-size: 13px;
     color: var(--ink-soft);
     line-height: 1.6;
-    margin-bottom: 18px;
+    text-align: center;
   }
-  .sc-foot {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding-top: 14px;
-    border-top: 1px dashed var(--line);
+  .mcp-vs-foot strong { color: var(--ink); font-weight: 700; }
+  .mcp-vs-card.has-mcp .mcp-vs-foot { border-top-color: var(--accent-soft); }
+
+  /* SVG inner: tentacles + tools */
+  .mcp-vs-svg .vs-tentacle {
+    fill: none;
+    stroke: var(--accent);
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-dasharray: 4 5;
+    animation: tentacleWave 3s ease-in-out infinite;
+  }
+  .mcp-vs-svg .vs-tentacle.t2 { animation-delay: 0.4s; }
+  .mcp-vs-svg .vs-tentacle.t3 { animation-delay: 0.8s; }
+  .mcp-vs-svg .vs-tentacle.t4 { animation-delay: 1.2s; }
+  .mcp-vs-svg .vs-tentacle.t5 { animation-delay: 1.6s; }
+  @keyframes tentacleWave {
+    0%, 100% { stroke-dashoffset: 0; opacity: 0.7; }
+    50%      { stroke-dashoffset: -18; opacity: 1; }
+  }
+  .mcp-vs-svg .vs-tool-box {
+    fill: var(--paper);
+    stroke: var(--accent);
+    stroke-width: 1.5;
+  }
+  .mcp-vs-svg .vs-tool-text {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10.5px;
+    font-weight: 700;
+    fill: var(--ink);
+  }
+  .mcp-vs-svg .vs-tool-emoji {
+    font-size: 18px;
+  }
+  .mcp-vs-svg .vs-core-empty {
+    fill: var(--ink);
+    stroke: var(--ink);
+  }
+  .mcp-vs-svg .vs-core-mcp {
+    fill: var(--accent);
+    stroke: var(--accent);
+  }
+  .mcp-vs-svg .vs-core-text {
+    font-family: 'Noto Serif SC', serif;
+    font-weight: 700;
+    fill: var(--paper);
+  }
+  .mcp-vs-svg .vs-input-dashed {
+    fill: none;
+    stroke: var(--ink-mute);
+    stroke-width: 1.5;
+    stroke-dasharray: 4 4;
+  }
+  .mcp-vs-svg .vs-input-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10.5px;
+    fill: var(--ink-mute);
+    letter-spacing: 0.04em;
+  }
+  .mcp-vs-svg .vs-pillar {
     font-family: 'JetBrains Mono', monospace;
     font-size: 11px;
-    color: var(--ink-mute);
-  }
-  .sc-foot .skill {
-    color: var(--accent);
-    font-weight: 700;
-  }
-  .sc-foot .cta {
-    color: var(--ink);
+    fill: var(--ink);
     font-weight: 600;
+    letter-spacing: 0.02em;
   }
 
-  /* 场景详情面板 */
-  .scene-detail {
+  /* ============== §02 — 协议 4 角色 + 动态数据包流 ============== */
+  .mcp-flow-stage {
+    margin: 30px 0 8px;
     background: var(--paper);
     border: 1.5px solid var(--line);
     border-radius: 10px;
-    padding: 28px 32px 32px;
-    margin: 24px 0 36px;
-    animation: sdIn 0.32s cubic-bezier(0.4, 0, 0.2, 1);
+    padding: 32px 28px 26px;
+    position: relative;
+    overflow: hidden;
   }
-  @keyframes sdIn {
-    from { opacity: 0; transform: translateY(12px); }
-    to   { opacity: 1; transform: translateY(0); }
+  .mcp-flow-stage::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 4px;
+    background: var(--accent);
   }
-  .scene-back {
-    background: transparent;
-    border: 1px solid var(--line);
-    color: var(--ink);
+  .protocol-flow {
+    width: 100%;
+    height: 200px;
+    display: block;
+  }
+  .protocol-flow .pf-path {
+    stroke: var(--line);
+    stroke-width: 2;
+    fill: none;
+    stroke-dasharray: 3 4;
+  }
+  .protocol-flow .pf-node-rect {
+    fill: var(--paper);
+    stroke: var(--ink);
+    stroke-width: 2;
+  }
+  .protocol-flow .pf-node-rect.is-accent {
+    fill: var(--ink);
+    stroke: var(--ink);
+  }
+  .protocol-flow .pf-node-label {
     font-family: 'JetBrains Mono', monospace;
-    font-size: 12px;
+    font-size: 10.5px;
+    font-weight: 700;
+    fill: var(--ink);
+    letter-spacing: 0.04em;
+  }
+  .protocol-flow .pf-node-label.on-dark {
+    fill: var(--paper);
+  }
+  .protocol-flow .pf-node-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    fill: var(--ink-mute);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+  .protocol-flow .pf-node-tag.is-accent {
+    fill: var(--accent);
+  }
+  .protocol-flow .pf-packet {
+    fill: var(--accent);
+    filter: drop-shadow(0 0 6px rgba(255,77,46,0.5));
+  }
+  .protocol-flow .pf-packet.is-resp {
+    fill: var(--ink);
+    filter: drop-shadow(0 0 6px rgba(22,22,29,0.35));
+  }
+  .protocol-flow .pf-arrow-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    fill: var(--ink-soft);
     letter-spacing: 0.06em;
-    padding: 7px 14px;
-    border-radius: 5px;
-    cursor: pointer;
-    margin-bottom: 22px;
-    transition: all 0.15s ease;
   }
-  .scene-back:hover {
-    border-color: var(--ink);
-    background: var(--bg-2);
+  .protocol-flow .pf-arrow-label.is-resp { fill: var(--ink-mute); }
+
+  /* 协议下方细节：4 节点说明 */
+  .pf-detail-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 14px;
+    margin-top: 22px;
+    padding-top: 22px;
+    border-top: 1px dashed var(--line);
   }
-  .sd-head {
-    margin-bottom: 28px;
-    padding-bottom: 20px;
-    border-bottom: 1px solid var(--line);
+  @media (max-width: 880px) { .pf-detail-row { grid-template-columns: 1fr 1fr; } }
+  .pf-detail-cell {
+    text-align: center;
   }
-  .sd-tag {
+  .pf-detail-cell .pf-d-tag {
     font-family: 'JetBrains Mono', monospace;
-    font-size: 11px;
+    font-size: 9.5px;
+    color: var(--ink-mute);
     letter-spacing: 0.12em;
-    color: var(--accent);
     text-transform: uppercase;
-    margin-bottom: 8px;
+    margin-bottom: 4px;
   }
-  .sd-quote {
+  .pf-detail-cell .pf-d-name {
     font-family: 'Noto Serif SC', serif;
-    font-size: 38px;
-    font-weight: 900;
+    font-size: 15px;
+    font-weight: 700;
     color: var(--ink);
-    line-height: 1.2;
-    letter-spacing: -0.02em;
-    margin-bottom: 10px;
+    margin-bottom: 4px;
   }
-  .sd-painpoint {
-    font-family: 'Noto Serif SC', serif;
-    font-size: 16px;
+  .pf-detail-cell .pf-d-sub {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10.5px;
     color: var(--ink-soft);
-    line-height: 1.7;
-  }
-
-  /* 4 幕 */
-  .acts {
-    display: flex;
-    flex-direction: column;
-    gap: 18px;
-  }
-  .act {
-    opacity: 0;
-    transform: translateY(12px);
-    transition: opacity 0.45s ease, transform 0.45s cubic-bezier(0.4, 0, 0.2, 1);
-  }
-  .act.show {
-    opacity: 1;
-    transform: translateY(0);
-  }
-  .act-label {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    margin-bottom: 10px;
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 11px;
-    letter-spacing: 0.14em;
-    color: var(--accent);
-    text-transform: uppercase;
-    font-weight: 700;
-  }
-  .act-label .act-no {
-    background: var(--accent);
-    color: var(--paper);
-    padding: 3px 8px;
-    border-radius: 3px;
-    font-weight: 700;
-  }
-
-  /* 幕 1: 你说 — 聊天气泡 */
-  .bubble-row {
-    display: flex;
-    gap: 12px;
-    align-items: flex-start;
-  }
-  .bubble-avatar {
-    width: 36px; height: 36px;
-    border-radius: 50%;
-    background: var(--accent);
-    color: var(--paper);
-    display: flex; align-items: center; justify-content: center;
-    font-family: 'Noto Serif SC', serif;
-    font-weight: 900;
-    font-size: 16px;
-    flex-shrink: 0;
-  }
-  .bubble {
-    background: var(--bg-2);
-    border: 1px solid var(--line);
-    border-radius: 6px 14px 14px 14px;
-    padding: 14px 18px;
-    font-family: 'Noto Serif SC', serif;
-    font-size: 18px;
-    color: var(--ink);
     line-height: 1.5;
-    font-weight: 500;
-    max-width: 600px;
   }
 
-  /* 幕 2: AI 听到 — 深色扫描区 */
-  .ai-listen {
-    background: #1f1f29;
-    border-radius: 8px;
-    padding: 22px 24px;
-    color: #d8d8e0;
+  /* ============== §03 — 远程 vs 本地 · SVG 对照 ============== */
+  .mcp-install-stage {
+    margin-top: 24px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 22px;
   }
-  .ai-listen-head {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 12px;
-    color: #8a8a96;
-    margin-bottom: 14px;
-    letter-spacing: 0.08em;
+  @media (max-width: 880px) { .mcp-install-stage { grid-template-columns: 1fr; } }
+  .mcp-install-card {
+    background: var(--paper);
+    border: 1.5px solid var(--line);
+    border-radius: 10px;
+    padding: 26px 26px 22px;
+    position: relative;
+    overflow: hidden;
   }
-  .ai-listen-head .em { color: var(--accent); font-weight: 700; }
-  .desc-scan {
+  .mcp-install-card.is-remote {
+    border-color: var(--accent);
+  }
+  .mcp-install-card.is-remote::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 4px;
+    background: var(--accent);
+  }
+  .mcp-install-head {
     display: flex;
-    flex-direction: column;
-    gap: 4px;
+    align-items: baseline;
+    justify-content: space-between;
+    margin-bottom: 8px;
+    gap: 12px;
+  }
+  .mcp-install-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.14em;
+    color: var(--ink-mute);
+    text-transform: uppercase;
+  }
+  .mcp-install-card.is-remote .mcp-install-tag {
+    color: var(--accent);
+  }
+  .mcp-install-title {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 22px;
+    font-weight: 800;
+    color: var(--ink);
+    margin: 0 0 6px;
+    letter-spacing: -0.01em;
+  }
+  .mcp-install-title .em {
+    font-family: 'Noto Serif SC', serif;
+    color: var(--accent);
+    font-weight: 500;
+    font-style: normal;
+  }
+  .mcp-install-sub {
     font-family: 'JetBrains Mono', monospace;
     font-size: 11.5px;
-    line-height: 1.5;
-  }
-  .desc-row {
-    padding: 6px 10px;
-    border-radius: 4px;
-    color: rgba(255,255,255,0.5);
-    transition: all 0.25s ease;
-    word-break: break-word;
-  }
-  .desc-row.is-hit {
-    background: var(--accent);
-    color: var(--paper);
-    font-weight: 700;
-    transform: translateX(6px);
-    box-shadow: 0 4px 16px rgba(255,77,46,0.4);
-  }
-  .desc-row .dr-code {
-    color: rgba(255,255,255,0.85);
-    font-weight: 700;
-    margin-right: 8px;
-  }
-  .desc-row.is-hit .dr-code { color: var(--paper); }
-  .ai-conclude {
-    margin-top: 14px;
-    padding-top: 14px;
-    border-top: 1px solid rgba(255,255,255,0.12);
-    font-family: 'Noto Sans SC', sans-serif;
-    font-size: 13.5px;
-    color: rgba(255,255,255,0.85);
-    line-height: 1.65;
-  }
-  .ai-conclude .em { color: var(--accent); font-weight: 700; }
-  .ai-conclude code {
-    font-family: 'JetBrains Mono', monospace;
-    background: rgba(255,77,46,0.18);
-    color: var(--accent);
-    padding: 1px 6px;
-    border-radius: 3px;
-    font-size: 12.5px;
-  }
-
-  /* 幕 3: Skill 在做 */
-  .skill-doing {
-    background: #fff;
-    border: 1.5px solid var(--line);
-    border-radius: 8px;
-    padding: 20px 24px;
-  }
-  .skill-doing-head {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 12px;
-    color: var(--ink-mute);
-    margin-bottom: 14px;
-    letter-spacing: 0.08em;
-  }
-  .skill-doing-head strong { color: var(--accent); font-weight: 700; }
-  .steps {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-  }
-  .step-row {
-    display: flex;
-    align-items: flex-start;
-    gap: 10px;
-    padding: 8px 0;
-    font-family: 'Noto Sans SC', sans-serif;
-    font-size: 14.5px;
-    color: var(--ink);
-    line-height: 1.5;
-  }
-  .step-tick {
-    width: 18px; height: 18px;
-    border-radius: 50%;
-    border: 1.5px solid var(--line);
-    flex-shrink: 0;
-    margin-top: 3px;
-    position: relative;
-    transition: all 0.3s ease;
-  }
-  .step-row.done .step-tick {
-    background: #4ade80;
-    border-color: #4ade80;
-  }
-  .step-row.done .step-tick::after {
-    content: '✓';
-    position: absolute;
-    top: 50%; left: 50%;
-    transform: translate(-50%, -50%);
-    color: #fff;
-    font-size: 11px;
-    font-weight: 700;
-  }
-  .step-row code {
-    font-family: 'JetBrains Mono', monospace;
-    background: var(--accent-soft);
-    color: var(--accent);
-    padding: 1px 5px;
-    border-radius: 3px;
-    font-size: 12.5px;
-  }
-
-  /* 幕 4: 结果 */
-  .result {
-    background: var(--accent-soft);
-    border: 1.5px solid var(--accent);
-    border-radius: 8px;
-    padding: 20px 24px;
-  }
-  .result-head {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 11px;
-    color: var(--accent);
-    margin-bottom: 14px;
-    letter-spacing: 0.12em;
-    font-weight: 700;
-    text-transform: uppercase;
-  }
-  .result-list {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-  }
-  .result-item {
-    display: flex;
-    align-items: flex-start;
-    gap: 10px;
-    font-family: 'Noto Sans SC', sans-serif;
-    font-size: 14.5px;
-    color: var(--ink);
-    line-height: 1.55;
-  }
-  .result-item::before {
-    content: '✓';
-    color: var(--accent);
-    font-weight: 700;
-    flex-shrink: 0;
-    margin-top: 1px;
-  }
-  .result-foot {
-    margin-top: 16px;
-    padding-top: 14px;
-    border-top: 1px dashed rgba(255,77,46,0.32);
-    font-family: 'Noto Serif SC', serif;
-    font-size: 14px;
     color: var(--ink-soft);
-    line-height: 1.6;
+    letter-spacing: 0.04em;
+    margin-bottom: 14px;
   }
-  .result-foot strong { color: var(--ink); font-weight: 700; }
-
-  /* 下一场景按钮 */
-  .scene-nav {
-    margin-top: 28px;
-    padding-top: 22px;
-    border-top: 1px solid var(--line);
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 14px;
-    flex-wrap: wrap;
+  .mcp-install-svg {
+    width: 100%;
+    height: 260px;
+    display: block;
   }
-  .scene-nav button {
-    background: var(--ink);
-    color: var(--paper);
-    border: none;
-    padding: 12px 22px;
-    border-radius: 6px;
+  .mcp-install-svg .mi-shape {
+    fill: var(--paper);
+    stroke: var(--ink);
+    stroke-width: 2;
+  }
+  .mcp-install-svg .mi-shape.is-accent {
+    stroke: var(--accent);
+  }
+  .mcp-install-svg .mi-line {
+    stroke: var(--ink);
+    stroke-width: 2;
+    fill: none;
+  }
+  .mcp-install-svg .mi-line.is-accent {
+    stroke: var(--accent);
+  }
+  .mcp-install-svg .mi-line.is-dashed {
+    stroke-dasharray: 4 4;
+    stroke: var(--ink-mute);
+  }
+  .mcp-install-svg .mi-pill {
+    fill: var(--accent-soft);
+    stroke: var(--accent);
+    stroke-width: 1.5;
+  }
+  .mcp-install-svg .mi-pill.is-mute {
+    fill: var(--bg-2);
+    stroke: var(--line);
+  }
+  .mcp-install-svg .mi-pill-text {
     font-family: 'JetBrains Mono', monospace;
-    font-size: 12px;
-    letter-spacing: 0.08em;
-    cursor: pointer;
-    text-transform: uppercase;
+    font-size: 10.5px;
     font-weight: 700;
-    transition: all 0.15s ease;
+    fill: var(--accent);
+    letter-spacing: 0.04em;
   }
-  .scene-nav button:hover {
-    background: var(--accent);
-    transform: translateY(-1px);
+  .mcp-install-svg .mi-pill-text.is-mute {
+    fill: var(--ink-soft);
   }
-  .scene-nav .nav-hint {
+  .mcp-install-svg .mi-label {
     font-family: 'JetBrains Mono', monospace;
     font-size: 11px;
-    color: var(--ink-mute);
+    fill: var(--ink);
+    font-weight: 600;
+    letter-spacing: 0.04em;
+  }
+  .mcp-install-svg .mi-sublabel {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9.5px;
+    fill: var(--ink-mute);
+    letter-spacing: 0.08em;
+  }
+  .mcp-install-svg .mi-ai-circle {
+    fill: var(--ink);
+    stroke: var(--ink);
+  }
+  .mcp-install-svg .mi-ai-text {
+    font-family: 'Noto Serif SC', serif;
+    font-weight: 700;
+    fill: var(--paper);
+    font-size: 13px;
+  }
+  .mcp-install-svg .mi-badge {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    font-weight: 700;
     letter-spacing: 0.06em;
   }
+  .mcp-install-svg .mi-badge.is-yes {
+    fill: var(--accent);
+  }
+  .mcp-install-svg .mi-badge.is-meh {
+    fill: var(--ink-mute);
+  }
+  .mcp-install-foot {
+    margin-top: 12px;
+    padding-top: 14px;
+    border-top: 1px dashed var(--line);
+  }
+  .mcp-install-foot .mi-foot-text {
+    font-size: 12.5px;
+    color: var(--ink-soft);
+    line-height: 1.6;
+    margin: 0 0 10px;
+  }
+  .mcp-install-foot .mi-foot-text strong { color: var(--ink); font-weight: 700; }
+  .mcp-install-foot pre.mi-pre {
+    margin: 0;
+    background: #1f1f29;
+    color: #c3e88d;
+    padding: 10px 14px;
+    border-radius: 5px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11.5px;
+    line-height: 1.55;
+    overflow-x: auto;
+  }
+  .mcp-install-card.is-remote .mcp-install-foot { border-top-color: var(--accent-soft); }
 
-  @media (max-width: 720px) {
-    .scene-detail { padding: 22px 18px; }
-    .sd-quote { font-size: 26px; }
-    .bubble { font-size: 16px; }
+  /* ============== §05 — Cheat 信息图 SVG ============== */
+  .cheat-mini-svg {
+    width: 100%;
+    height: 180px;
+    display: block;
+    margin: 6px 0 12px;
+  }
+  .cheat-mini-svg .cm-node-rect {
+    fill: var(--paper);
+    stroke: var(--ink);
+    stroke-width: 1.5;
+  }
+  .cheat-mini-svg .cm-node-rect.is-accent {
+    fill: var(--ink);
+    stroke: var(--ink);
+  }
+  .cheat-mini-svg .cm-node-text {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    font-weight: 700;
+    fill: var(--ink);
+  }
+  .cheat-mini-svg .cm-node-text.on-dark { fill: var(--paper); }
+  .cheat-mini-svg .cm-arrow {
+    stroke: var(--ink-mute);
+    stroke-width: 1.5;
+    fill: none;
+  }
+  .cheat-mini-svg .cm-packet {
+    fill: var(--accent);
+  }
+  .cheat-mini-svg .cm-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 8.5px;
+    fill: var(--ink-mute);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  /* 速查 02: 3 个必装 MCP icon 卡 */
+  .cheat-mcp-trio {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    margin: 6px 0 12px;
+  }
+  .cheat-mcp-icon {
+    background: var(--bg);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 12px 6px 10px;
+    text-align: center;
+  }
+  .cheat-mcp-icon svg {
+    width: 36px;
+    height: 36px;
+    display: block;
+    margin: 0 auto 6px;
+  }
+  .cheat-mcp-icon .cmi-name {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10.5px;
+    font-weight: 700;
+    color: var(--ink);
+    letter-spacing: 0.02em;
+  }
+  .cheat-mcp-icon .cmi-sub {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    color: var(--ink-mute);
+    letter-spacing: 0.06em;
+    margin-top: 2px;
+  }
+
+  /* 速查 03: 5 步流程图 SVG */
+  .cheat-flow-svg {
+    width: 100%;
+    height: 240px;
+    display: block;
+    margin: 6px 0 12px;
+  }
+  .cheat-flow-svg .cf-step-circle {
+    fill: var(--accent);
+    stroke: var(--accent);
+  }
+  .cheat-flow-svg .cf-step-num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    font-weight: 700;
+    fill: var(--paper);
+  }
+  .cheat-flow-svg .cf-step-text {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10.5px;
+    fill: var(--ink);
+    font-weight: 600;
+  }
+  .cheat-flow-svg .cf-step-text code {
+    font-weight: 700;
+  }
+  .cheat-flow-svg .cf-step-arrow {
+    stroke: var(--accent);
+    stroke-width: 1.5;
+    fill: none;
+    stroke-dasharray: 3 3;
   }
 
   /* ============== §04 — MCP Assembly Lab ============== */
@@ -1871,8 +1862,8 @@
   <div class="wrap">
     <div class="hero-meta">
       <span class="pill fill">Q1 · Design × AI</span>
-      <span class="pill">阅读 12 分钟</span>
-      <span class="pill">含 6 个场景剧场</span>
+      <span class="pill">阅读 10 分钟</span>
+      <span class="pill">5 张可视图 + 装配台</span>
       <span class="label">不写代码也能装上</span>
     </div>
     <div class="hero-grid">
@@ -1902,61 +1893,110 @@
     <div class="section-head">
       <div>
         <div class="section-num"><strong>01</strong> / 对比</div>
-        <h2 class="section-title">没 MCP · AI 只能<span class="em">用嘴说</span></h2>
+        <h2 class="section-title">没 MCP · AI 是<span class="em">聋哑外宾</span><br>装上 MCP · AI <span class="em">长出手</span></h2>
       </div>
       <p class="section-sub">
-        不装 MCP 的 AI 就像聋哑外宾 —— 你给它截图它能看，
-        但你的 Figma 文件、你网站的真实样子、你 GitHub 的 PR，AI 都<strong>摸不着</strong>。
+        左边：AI 只能用嘴说，外面世界全够不着。<br>
+        右边：装上 MCP，AI 伸出触手，接 N 种外部工具。
       </p>
     </div>
 
-    <div class="anatomy-stage">
-      <div class="anatomy-code">
-        <div class="ak-head">
-          <span class="dot-r"></span>
-          <span class="dot-y"></span>
-          <span class="dot-g"></span>
-          <span class="ak-file">没装 MCP · AI 的世界</span>
+    <div class="mcp-vs-stage">
+      <!-- 左：没装 MCP -->
+      <div class="mcp-vs-card">
+        <div class="mcp-vs-head">
+          <span class="mcp-vs-tag">no · mcp</span>
         </div>
-        <div class="ak-body" style="padding:20px 24px;">
-          <div style="font-family:'Noto Sans SC',sans-serif;font-size:15px;line-height:1.8;color:#d8d8e0;">
-            <div style="margin-bottom:10px;color:#82aaff;">你 · "帮我把这个 Figma 实现成代码"</div>
-            <div style="color:#ef4444;margin-bottom:6px;">→ AI 看不到你 Figma 文件</div>
-            <div style="color:#ef4444;margin-bottom:6px;">→ AI 不知道你网站长啥样</div>
-            <div style="color:#ef4444;margin-bottom:6px;">→ AI 不知道你 repo 里有哪些组件</div>
-            <div style="color:#ef4444;margin-bottom:14px;">→ AI 只能猜 / 让你截图喂它</div>
-            <div style="color:#c3e88d;">AI · "请把设计稿截图发我..."</div>
-          </div>
+        <div class="mcp-vs-title">没 MCP · <span class="em">AI 是聋哑外宾</span></div>
+        <div class="mcp-vs-sub">isolated · no hands · no tools</div>
+        <svg class="mcp-vs-svg" viewBox="0 0 340 340" preserveAspectRatio="xMidYMid meet">
+          <!-- 顶部：用户截图虚线箭头 -->
+          <text class="vs-input-label" x="170" y="36" text-anchor="middle">user input · 一张截图</text>
+          <path class="vs-input-dashed" d="M 170 50 L 170 116"/>
+          <polyline points="164,110 170,118 176,110" fill="none" stroke="#8a8a92" stroke-width="1.5" stroke-linecap="round"/>
+          <!-- 中心 AI 圆（深色填充） -->
+          <circle class="vs-core-empty" cx="170" cy="170" r="44"/>
+          <text class="vs-core-text" x="170" y="168" text-anchor="middle" font-size="18">AI</text>
+          <text x="170" y="184" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="9" fill="#faf7f0" opacity="0.6">no tools</text>
+          <!-- 周围空旷：4 个"够不着"的灰色虚影 -->
+          <g opacity="0.32">
+            <rect x="34" y="258" width="72" height="32" rx="5" fill="none" stroke="#8a8a92" stroke-width="1.5" stroke-dasharray="3 3"/>
+            <text x="70" y="278" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="10.5" fill="#8a8a92">Figma</text>
+            <text x="70" y="306" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="9" fill="#8a8a92" letter-spacing="0.1em">够不着</text>
+
+            <rect x="134" y="258" width="72" height="32" rx="5" fill="none" stroke="#8a8a92" stroke-width="1.5" stroke-dasharray="3 3"/>
+            <text x="170" y="278" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="10.5" fill="#8a8a92">Chrome</text>
+            <text x="170" y="306" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="9" fill="#8a8a92" letter-spacing="0.1em">够不着</text>
+
+            <rect x="234" y="258" width="72" height="32" rx="5" fill="none" stroke="#8a8a92" stroke-width="1.5" stroke-dasharray="3 3"/>
+            <text x="270" y="278" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="10.5" fill="#8a8a92">GitHub</text>
+            <text x="270" y="306" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="9" fill="#8a8a92" letter-spacing="0.1em">够不着</text>
+          </g>
+          <!-- 左右两侧标语 -->
+          <text class="vs-pillar" x="22" y="170" text-anchor="start">只能用嘴说</text>
+          <text class="vs-pillar" x="318" y="170" text-anchor="end" fill="#8a8a92">没有手</text>
+        </svg>
+        <div class="mcp-vs-foot">
+          <strong>你给截图 → AI 看 → 嘴上回答</strong><br>
+          Figma / Chrome / GitHub 全在外面 · 摸不着
         </div>
       </div>
 
-      <div class="anatomy-list">
-        <div class="anat-card" style="cursor:default;">
-          <div class="ak-tag">limit</div>
-          <h4>AI 是个<span class="em">外宾</span></h4>
-          <p>能听懂你说话、看你截图，但<strong>动不了手</strong> ——
-          你的本地文件、Figma 内部、浏览器现场，它全够不着。</p>
+      <!-- 右：装上 MCP -->
+      <div class="mcp-vs-card has-mcp">
+        <div class="mcp-vs-head">
+          <span class="mcp-vs-tag">with · mcp</span>
         </div>
-        <div class="anat-card" style="cursor:default;">
-          <div class="ak-tag">limit</div>
-          <h4>每次都要<span class="em">人肉传话</span></h4>
-          <p>"截个图给我看看" / "复制一下代码片段" / "查一下 commit 历史" ——
-          AI 干不了，全靠你来回搬运。</p>
-        </div>
-        <div class="anat-card" style="cursor:default;">
-          <div class="ak-tag">limit</div>
-          <h4>所以 AI 永远在<span class="em">瞎猜</span></h4>
-          <p>它生成的代码、给的建议，都基于"你刚才说了什么"，
-          不是你<strong>真实项目的状态</strong>。错得多正常。</p>
+        <div class="mcp-vs-title">装 MCP · <span class="em">AI 长出 N 只手</span></div>
+        <div class="mcp-vs-sub">tentacles → figma / chrome / playwright / github / fs</div>
+        <svg class="mcp-vs-svg" viewBox="0 0 340 340" preserveAspectRatio="xMidYMid meet">
+          <!-- 中心 AI 圆（橙色填充） -->
+          <circle class="vs-core-mcp" cx="170" cy="170" r="42"/>
+          <text class="vs-core-text" x="170" y="166" text-anchor="middle" font-size="16">AI</text>
+          <text x="170" y="182" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="9" fill="#faf7f0" opacity="0.85" letter-spacing="0.08em">+ MCP</text>
+
+          <!-- 5 个触手 + 工具 -->
+          <!-- 工具 1: Figma · 左上 -->
+          <path class="vs-tentacle t1" d="M 138 140 Q 95 110 60 70"/>
+          <rect class="vs-tool-box" x="6" y="46" width="98" height="34" rx="6"/>
+          <text x="22" y="68" class="vs-tool-emoji" font-size="16">🎨</text>
+          <text x="96" y="67" class="vs-tool-text" text-anchor="end">Figma</text>
+
+          <!-- 工具 2: Chrome · 右上 -->
+          <path class="vs-tentacle t2" d="M 202 140 Q 245 110 280 70"/>
+          <rect class="vs-tool-box" x="236" y="46" width="98" height="34" rx="6"/>
+          <text x="252" y="68" class="vs-tool-emoji" font-size="16">🌐</text>
+          <text x="326" y="67" class="vs-tool-text" text-anchor="end">Chrome</text>
+
+          <!-- 工具 3: Playwright · 右下 -->
+          <path class="vs-tentacle t3" d="M 206 192 Q 250 215 285 260"/>
+          <rect class="vs-tool-box" x="226" y="262" width="108" height="34" rx="6"/>
+          <text x="242" y="284" class="vs-tool-emoji" font-size="16">🎭</text>
+          <text x="326" y="283" class="vs-tool-text" text-anchor="end">Playwright</text>
+
+          <!-- 工具 4: Filesystem · 左下 -->
+          <path class="vs-tentacle t4" d="M 134 192 Q 90 215 55 260"/>
+          <rect class="vs-tool-box" x="6" y="262" width="108" height="34" rx="6"/>
+          <text x="22" y="284" class="vs-tool-emoji" font-size="16">📁</text>
+          <text x="106" y="283" class="vs-tool-text" text-anchor="end">Filesystem</text>
+
+          <!-- 工具 5: GitHub · 正下 -->
+          <path class="vs-tentacle t5" d="M 170 212 Q 170 272 170 308"/>
+          <rect class="vs-tool-box" x="120" y="308" width="100" height="26" rx="5"/>
+          <text x="134" y="326" class="vs-tool-emoji" font-size="14">🐙</text>
+          <text x="212" y="325" class="vs-tool-text" text-anchor="end">GitHub</text>
+        </svg>
+        <div class="mcp-vs-foot">
+          <strong>装一个 MCP server · 长一只手</strong><br>
+          AI 能动手 · 读写真实工具 · 不再靠你传话
         </div>
       </div>
     </div>
 
     <div class="hint-strip" style="margin-top:36px;">
       <span class="hint-tag">所以</span>
-      <strong>MCP 就是为了让 AI 长出"手"</strong>——
-      装一个 MCP server，AI 就能<strong>直接读 / 写</strong>对应的工具。
-      不再需要你做人肉传话。
+      <strong>MCP 就是 AI 的"手"</strong> —— 装一个 server，长一只手；
+      装 5 个 server，AI 同时摸到 Figma / Chrome / GitHub / 本地文件 / Playwright。
     </div>
   </div>
 </section>
@@ -1967,33 +2007,96 @@
     <div class="section-head">
       <div>
         <div class="section-num"><strong>02</strong> / 协议</div>
-        <h2 class="section-title">MCP 协议<br><span class="em">4 个角色</span></h2>
+        <h2 class="section-title">MCP 协议<br><span class="em">4 角色 · 数据包来回流</span></h2>
       </div>
       <p class="section-sub">
         MCP 不是某个软件，是 Anthropic 2024 年发布的<strong>通信协议</strong>。
-        理解它就 4 个角色：<strong>客户端 → 协议 → 服务端 → 外部工具</strong>。
+        看 <span class="em">request 橙色包 →</span> 怎么从 client 流到 tool，<span class="em">response 黑色包 ←</span> 怎么流回来。
       </p>
     </div>
 
-    <div class="fk-flow" style="margin:30px 0 8px;">
-      <div class="flow-node">
-        <div class="fn-label">step 1 · client</div>
-        <div class="fn-content">AI 工具<br><small style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--ink-mute);">Claude Code · Cursor · Claude Desktop</small></div>
-      </div>
-      <div class="flow-arrow">→</div>
-      <div class="flow-node">
-        <div class="fn-label">step 2 · protocol</div>
-        <div class="fn-content">MCP 协议<br><small style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--ink-mute);">JSON-RPC<br>over stdio / HTTP</small></div>
-      </div>
-      <div class="flow-arrow">→</div>
-      <div class="flow-node accent">
-        <div class="fn-label">step 3 · server</div>
-        <div class="fn-content">MCP Server<br><small style="font-family:'JetBrains Mono',monospace;font-size:11px;color:rgba(255,255,255,0.7);">Figma 写的<br>Chrome 写的<br>GitHub 写的</small></div>
-      </div>
-      <div class="flow-arrow">→</div>
-      <div class="flow-node">
-        <div class="fn-label">step 4 · tool</div>
-        <div class="fn-content">外部工具<br><small style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--ink-mute);">Figma · Chrome · GitHub · 文件系统</small></div>
+    <div class="mcp-flow-stage">
+      <svg class="protocol-flow" viewBox="0 0 800 200" preserveAspectRatio="xMidYMid meet">
+        <!-- 请求路径 (上方, 左到右) -->
+        <path id="flow-req-path" class="pf-path" d="M 130 78 H 670"/>
+        <!-- 响应路径 (下方, 右到左) -->
+        <path id="flow-resp-path" class="pf-path" d="M 670 122 H 130"/>
+
+        <!-- 4 个节点 (rect, viewBox 中心 100) -->
+        <!-- step 1 · client -->
+        <rect class="pf-node-rect" x="20" y="60" width="120" height="80" rx="8"/>
+        <text class="pf-node-tag" x="80" y="48" text-anchor="middle">step · 01</text>
+        <text class="pf-node-label" x="80" y="92" text-anchor="middle">AI 工具</text>
+        <text class="pf-node-label" x="80" y="108" text-anchor="middle" font-size="9.5" fill="#4a4a55">client</text>
+        <text x="80" y="124" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="9" fill="#8a8a92">Claude / Cursor</text>
+
+        <!-- step 2 · protocol -->
+        <rect class="pf-node-rect" x="226" y="60" width="120" height="80" rx="8"/>
+        <text class="pf-node-tag" x="286" y="48" text-anchor="middle">step · 02</text>
+        <text class="pf-node-label" x="286" y="92" text-anchor="middle">MCP 协议</text>
+        <text class="pf-node-label" x="286" y="108" text-anchor="middle" font-size="9.5" fill="#4a4a55">protocol</text>
+        <text x="286" y="124" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="9" fill="#8a8a92">JSON-RPC · stdio</text>
+
+        <!-- step 3 · server (accent, deep ink) -->
+        <rect class="pf-node-rect is-accent" x="432" y="60" width="120" height="80" rx="8"/>
+        <text class="pf-node-tag is-accent" x="492" y="48" text-anchor="middle">step · 03</text>
+        <text class="pf-node-label on-dark" x="492" y="92" text-anchor="middle">MCP Server</text>
+        <text class="pf-node-label on-dark" x="492" y="108" text-anchor="middle" font-size="9.5" opacity="0.7">server</text>
+        <text x="492" y="124" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="9" fill="#faf7f0" opacity="0.55">Figma · Chrome</text>
+
+        <!-- step 4 · external tool -->
+        <rect class="pf-node-rect" x="638" y="60" width="142" height="80" rx="8"/>
+        <text class="pf-node-tag" x="709" y="48" text-anchor="middle">step · 04</text>
+        <text class="pf-node-label" x="709" y="92" text-anchor="middle">外部工具</text>
+        <text class="pf-node-label" x="709" y="108" text-anchor="middle" font-size="9.5" fill="#4a4a55">tool</text>
+        <text x="709" y="124" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="9" fill="#8a8a92">Figma · GitHub · FS</text>
+
+        <!-- 流向标签 -->
+        <text class="pf-arrow-label" x="160" y="72" text-anchor="start">request →</text>
+        <text class="pf-arrow-label is-resp" x="640" y="138" text-anchor="end">← response</text>
+
+        <!-- 数据包：request (橙色, 左→右) -->
+        <circle class="pf-packet" r="7">
+          <animateMotion dur="3.2s" repeatCount="indefinite">
+            <mpath href="#flow-req-path"/>
+          </animateMotion>
+        </circle>
+        <circle class="pf-packet" r="5" opacity="0.6">
+          <animateMotion dur="3.2s" begin="-1.6s" repeatCount="indefinite">
+            <mpath href="#flow-req-path"/>
+          </animateMotion>
+        </circle>
+
+        <!-- 数据包：response (深色, 右→左) -->
+        <circle class="pf-packet is-resp" r="6">
+          <animateMotion dur="3.6s" begin="0.6s" repeatCount="indefinite">
+            <mpath href="#flow-resp-path"/>
+          </animateMotion>
+        </circle>
+      </svg>
+
+      <!-- 下方说明 -->
+      <div class="pf-detail-row">
+        <div class="pf-detail-cell">
+          <div class="pf-d-tag">client</div>
+          <div class="pf-d-name">AI 工具</div>
+          <div class="pf-d-sub">Claude Code<br>Cursor / Desktop</div>
+        </div>
+        <div class="pf-detail-cell">
+          <div class="pf-d-tag">protocol</div>
+          <div class="pf-d-name">MCP 协议</div>
+          <div class="pf-d-sub">JSON-RPC<br>stdio / HTTP</div>
+        </div>
+        <div class="pf-detail-cell">
+          <div class="pf-d-tag">server</div>
+          <div class="pf-d-name">MCP Server</div>
+          <div class="pf-d-sub">Figma / Chrome /<br>GitHub 等写的</div>
+        </div>
+        <div class="pf-detail-cell">
+          <div class="pf-d-tag">tool</div>
+          <div class="pf-d-name">外部工具</div>
+          <div class="pf-d-sub">真实在用的<br>Figma / 浏览器 / FS</div>
+        </div>
       </div>
     </div>
 
@@ -2012,37 +2115,117 @@
     <div class="section-head">
       <div>
         <div class="section-num"><strong>03</strong> / 装法</div>
-        <h2 class="section-title">远程 vs 本地<br><span class="em">两种装法</span></h2>
+        <h2 class="section-title">远程一朵云<br>本地一台 Mac · <span class="em">两种装法</span></h2>
       </div>
       <p class="section-sub">
-        每个 MCP server 都有两种部署模式 ——
-        <strong>远程</strong>（云端 / OAuth 一键 / 免费）vs <strong>本地</strong>（装 desktop app / 功能更全）。
-        设计师 95% 的场景选远程就行。
+        每个 MCP server 都有两种部署模式 —— 远程云端 OAuth 一键；本地装 desktop app + 手动配置。
+        设计师 95% 的场景直接选远程。
       </p>
     </div>
 
-    <div class="anatomy-stage">
-      <div class="anatomy-list" style="grid-template-columns:1fr 1fr;display:grid;gap:18px;">
-        <div class="anat-card" style="cursor:default;">
-          <div class="ak-tag" style="background:#4ade80;color:var(--paper);">推荐 · 远程</div>
-          <h4>远程 <span class="em">Server</span></h4>
-          <p><strong>接入：</strong>OAuth 一键 (5 分钟)<br>
-          <strong>价格：</strong>免费 · 所有 Figma 计划<br>
-          <strong>功能：</strong>读 + 写 + Code Connect<br>
-          <strong>适合：</strong>95% 设计师</p>
-          <pre style="margin-top:12px;background:#1f1f29;color:#c3e88d;padding:12px;border-radius:5px;font-family:'JetBrains Mono',monospace;font-size:12px;line-height:1.6;overflow-x:auto;"># Claude Code
+    <div class="mcp-install-stage">
+      <!-- 左：远程 -->
+      <div class="mcp-install-card is-remote">
+        <div class="mcp-install-head">
+          <span class="mcp-install-tag">推荐 · remote</span>
+        </div>
+        <div class="mcp-install-title">远程 <span class="em">Server · 云端</span></div>
+        <div class="mcp-install-sub">cloud · oauth · 5 min · free</div>
+        <svg class="mcp-install-svg" viewBox="0 0 300 260" preserveAspectRatio="xMidYMid meet">
+          <!-- 顶部：云图标 (SVG path) -->
+          <path class="mi-shape is-accent" d="M 90 70 Q 90 38 122 38 Q 144 22 170 36 Q 200 26 214 52 Q 240 56 240 80 Q 240 102 210 102 L 96 102 Q 70 102 70 84 Q 70 70 90 70 Z"/>
+          <text class="mi-label" x="155" y="76" text-anchor="middle">Remote MCP Server</text>
+          <text class="mi-sublabel" x="155" y="92" text-anchor="middle">云端 · cloud · always-on</text>
+
+          <!-- 中间：OAuth 一键 pill + 锁 -->
+          <path class="mi-line is-accent" d="M 155 102 L 155 132"/>
+          <rect class="mi-pill" x="78" y="132" width="154" height="32" rx="16"/>
+          <!-- 锁 icon -->
+          <g transform="translate(91, 142)">
+            <rect width="11" height="9" x="0" y="3" rx="1.5" fill="#ff4d2e"/>
+            <path d="M 2 3 Q 2 -1 5.5 -1 Q 9 -1 9 3" fill="none" stroke="#ff4d2e" stroke-width="1.5"/>
+          </g>
+          <text class="mi-pill-text" x="160" y="153" text-anchor="middle">OAuth 一键 · 5 min</text>
+
+          <!-- 下: 连到 AI -->
+          <path class="mi-line is-accent" d="M 155 164 L 155 200"/>
+          <circle class="mi-ai-circle" cx="155" cy="218" r="22"/>
+          <text class="mi-ai-text" x="155" y="222" text-anchor="middle">AI</text>
+
+          <!-- 推荐对勾 -->
+          <g transform="translate(248, 30)">
+            <circle r="14" fill="#ff4d2e" />
+            <polyline points="-6,0 -2,5 7,-5" fill="none" stroke="#faf7f0" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </g>
+          <text class="mi-badge is-yes" x="248" y="60" text-anchor="middle" font-size="9.5">推 荐</text>
+        </svg>
+        <div class="mcp-install-foot">
+          <p class="mi-foot-text">
+            <strong>免费 · 所有 Figma plan</strong> · 读 + 写 + Code Connect · 适合 95% 设计师
+          </p>
+          <pre class="mi-pre"># Claude Code
 $ claude plugin install figma
 
 # Cursor: 点 MCP Catalog 一键</pre>
         </div>
-        <div class="anat-card" style="cursor:default;">
-          <div class="ak-tag">高阶 · 本地</div>
-          <h4>本地 <span class="em">Server (Desktop)</span></h4>
-          <p><strong>接入：</strong>装 Figma Desktop app + 手动配置<br>
-          <strong>价格：</strong>Dev / Full seat 必须<br>
-          <strong>功能：</strong>全部 + 写 canvas (新 features)<br>
-          <strong>适合：</strong>每天 8 小时和 Figma 打交道</p>
-          <pre style="margin-top:12px;background:#1f1f29;color:#c3e88d;padding:12px;border-radius:5px;font-family:'JetBrains Mono',monospace;font-size:12px;line-height:1.6;overflow-x:auto;"># 1. 开 Figma Desktop
+      </div>
+
+      <!-- 右：本地 -->
+      <div class="mcp-install-card">
+        <div class="mcp-install-head">
+          <span class="mcp-install-tag">高阶 · local</span>
+        </div>
+        <div class="mcp-install-title">本地 <span style="font-family:'Noto Serif SC',serif;color:var(--ink-soft);font-weight:500;">Server (Desktop)</span></div>
+        <div class="mcp-install-sub">localhost:3845 · manual · all features</div>
+        <svg class="mcp-install-svg" viewBox="0 0 300 260" preserveAspectRatio="xMidYMid meet">
+          <!-- 顶部：Mac 图标 (rect + 圆角 + 底座) -->
+          <rect class="mi-shape" x="80" y="34" width="150" height="92" rx="8"/>
+          <!-- 屏幕内框 -->
+          <rect x="88" y="42" width="134" height="74" rx="3" fill="#1f1f29"/>
+          <text x="155" y="76" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="11" fill="#c3e88d">$ figma</text>
+          <text x="155" y="92" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="9" fill="#8a8a96">localhost:3845</text>
+          <!-- 底座 -->
+          <rect x="135" y="126" width="40" height="6" fill="#8a8a92"/>
+          <rect x="118" y="132" width="74" height="4" rx="2" fill="#8a8a92"/>
+          <text class="mi-label" x="155" y="148" text-anchor="middle">Local Server (Desktop)</text>
+
+          <!-- 中间：手动配置 pill + 齿轮 -->
+          <path class="mi-line is-dashed" d="M 155 152 L 155 178"/>
+          <rect class="mi-pill is-mute" x="68" y="178" width="174" height="30" rx="15"/>
+          <!-- 齿轮 icon -->
+          <g transform="translate(85, 193)">
+            <circle r="6" fill="none" stroke="#4a4a55" stroke-width="1.5"/>
+            <circle r="2.2" fill="#4a4a55"/>
+            <g stroke="#4a4a55" stroke-width="1.5" stroke-linecap="round">
+              <line x1="0" y1="-8.5" x2="0" y2="-6.5"/>
+              <line x1="0" y1="6.5" x2="0" y2="8.5"/>
+              <line x1="-8.5" y1="0" x2="-6.5" y2="0"/>
+              <line x1="6.5" y1="0" x2="8.5" y2="0"/>
+              <line x1="-6" y1="-6" x2="-4.5" y2="-4.5"/>
+              <line x1="4.5" y1="4.5" x2="6" y2="6"/>
+              <line x1="-6" y1="6" x2="-4.5" y2="4.5"/>
+              <line x1="4.5" y1="-4.5" x2="6" y2="-6"/>
+            </g>
+          </g>
+          <text class="mi-pill-text is-mute" x="165" y="198" text-anchor="middle">手动配置 · enable · port</text>
+
+          <!-- 下: 连到 AI -->
+          <path class="mi-line is-dashed" d="M 155 208 L 155 234"/>
+          <circle class="mi-ai-circle" cx="155" cy="242" r="14"/>
+          <text class="mi-ai-text" x="155" y="246" text-anchor="middle" font-size="11">AI</text>
+
+          <!-- 高阶徽章 -->
+          <g transform="translate(248, 30)">
+            <circle r="14" fill="#8a8a92"/>
+            <text text-anchor="middle" y="4" font-family="JetBrains Mono, monospace" font-size="13" font-weight="700" fill="#faf7f0">·</text>
+          </g>
+          <text class="mi-badge is-meh" x="248" y="60" text-anchor="middle" font-size="9.5">高 阶</text>
+        </svg>
+        <div class="mcp-install-foot">
+          <p class="mi-foot-text">
+            <strong>Dev / Full seat 必须</strong> · 写 canvas 新 features · 适合每天泡 Figma 的人
+          </p>
+          <pre class="mi-pre"># 1. 开 Figma Desktop
 # 2. Preferences → Enable MCP Server
 # 3. http://localhost:3845 暴露给 client</pre>
         </div>
@@ -2126,47 +2309,178 @@ $ claude plugin install figma
   </div>
 </section>
 
-<!-- §05 — 场景剧场 -->
-<section id="figma-example">
+<!-- §05 — Cheatsheet (visual infographics) -->
+<section id="cheat">
   <div class="wrap">
     <div class="section-head">
       <div>
-        <div class="section-num"><strong>05</strong> / 场景</div>
-        <h2 class="section-title">装上 MCP·<br><span class="em">AI 解锁 6 件事</span></h2>
+        <div class="section-num"><strong>05</strong> / 速查</div>
+        <h2 class="section-title">三张<br><span class="em">速查图</span></h2>
       </div>
-      <p class="section-sub">6 个真实场景 —— <strong>你想干什么 → 装哪个 MCP → AI 解锁什么能力 → 实现你的需求</strong>。点任意一张卡片，<strong>看完一出 4 幕戏</strong>。</p>
+      <p class="section-sub">
+        全文压缩到三张视觉图。
+        装 MCP 前翻一遍，立刻能动手。
+      </p>
     </div>
 
-    <div class="fk-intro">
-      <strong>注意：</strong>MCP <span class="em">不是</span>给你直接调用的 ——
-      是给 <strong>AI agent</strong> 用的。
-      你装好 MCP 之后，AI 在背后自动调用对应工具，
-      你跟 AI 用自然语言说话，<strong>AI 自己决定怎么用 MCP</strong>。
-      下面 6 个场景演示装上对应 MCP 后，AI 能做什么。
-    </div>
+    <div class="cheat-grid">
+      <!-- 速查 01 · MCP 协议迷你 SVG -->
+      <div class="cheat-card">
+        <div class="cc-num">cheat · 01</div>
+        <h4>MCP 协议 · <span class="em">4 角色</span></h4>
+        <div class="cc-sub">client → protocol → server → tool</div>
+        <svg class="cheat-mini-svg" viewBox="0 0 260 180" preserveAspectRatio="xMidYMid meet">
+          <!-- 4 个迷你节点 -->
+          <rect class="cm-node-rect" x="10" y="74" width="56" height="34" rx="5"/>
+          <text class="cm-label" x="38" y="64" text-anchor="middle">client</text>
+          <text class="cm-node-text" x="38" y="96" text-anchor="middle">AI 工具</text>
 
-    <!-- 主屏：6 个场景卡片 -->
-    <div class="scene-stage" id="scene-stage">
-      <div class="scene-grid" id="scene-grid">
-        <!-- 场景卡片 JS 渲染 -->
+          <rect class="cm-node-rect" x="78" y="74" width="56" height="34" rx="5"/>
+          <text class="cm-label" x="106" y="64" text-anchor="middle">protocol</text>
+          <text class="cm-node-text" x="106" y="96" text-anchor="middle" font-size="9">MCP</text>
+
+          <rect class="cm-node-rect is-accent" x="146" y="74" width="56" height="34" rx="5"/>
+          <text class="cm-label" x="174" y="64" text-anchor="middle" fill="#ff4d2e">server</text>
+          <text class="cm-node-text on-dark" x="174" y="96" text-anchor="middle" font-size="9">MCP Srv</text>
+
+          <rect class="cm-node-rect" x="214" y="74" width="40" height="34" rx="5"/>
+          <text class="cm-label" x="234" y="64" text-anchor="middle">tool</text>
+          <text class="cm-node-text" x="234" y="96" text-anchor="middle" font-size="9">真实</text>
+
+          <!-- arrows -->
+          <line class="cm-arrow" x1="66" y1="91" x2="78" y2="91"/>
+          <polyline points="73,87 78,91 73,95" fill="none" stroke="#8a8a92" stroke-width="1.5"/>
+          <line class="cm-arrow" x1="134" y1="91" x2="146" y2="91"/>
+          <polyline points="141,87 146,91 141,95" fill="none" stroke="#8a8a92" stroke-width="1.5"/>
+          <line class="cm-arrow" x1="202" y1="91" x2="214" y2="91"/>
+          <polyline points="209,87 214,91 209,95" fill="none" stroke="#8a8a92" stroke-width="1.5"/>
+
+          <!-- 流动包 (顺路径) -->
+          <path id="cm-mini-path" d="M 38 132 H 234" stroke="none" fill="none"/>
+          <circle class="cm-packet" r="4">
+            <animateMotion dur="3s" repeatCount="indefinite">
+              <mpath href="#cm-mini-path"/>
+            </animateMotion>
+          </circle>
+          <text class="cm-label" x="132" y="156" text-anchor="middle" font-size="9">JSON-RPC · stdio / HTTP</text>
+        </svg>
+        <dl>
+          <dt>关键</dt>
+          <dd><strong>client 只跟 protocol 说话</strong>。换 tool 不用改 client —— 像 USB 一样标准。</dd>
+        </dl>
+      </div>
+
+      <!-- 速查 02 · 3 个必装 MCP -->
+      <div class="cheat-card b">
+        <div class="cc-num">cheat · 02</div>
+        <h4>必装 <span class="em">3 个 MCP</span></h4>
+        <div class="cc-sub">figma · chrome · playwright</div>
+        <div class="cheat-mcp-trio">
+          <div class="cheat-mcp-icon">
+            <!-- Figma 三色圆 -->
+            <svg viewBox="0 0 40 40">
+              <circle cx="13" cy="10" r="6" fill="#f24e1e"/>
+              <circle cx="27" cy="10" r="6" fill="#ff7262"/>
+              <circle cx="20" cy="20" r="6" fill="#a259ff"/>
+              <circle cx="13" cy="30" r="6" fill="#1abcfe"/>
+              <circle cx="27" cy="30" r="6" fill="#0acf83"/>
+            </svg>
+            <div class="cmi-name">Figma</div>
+            <div class="cmi-sub">读设计稿</div>
+          </div>
+          <div class="cheat-mcp-icon">
+            <!-- Chrome 圆 -->
+            <svg viewBox="0 0 40 40">
+              <circle cx="20" cy="20" r="16" fill="none" stroke="#4a4a55" stroke-width="2"/>
+              <circle cx="20" cy="20" r="6" fill="#0a4cff"/>
+              <path d="M 20 4 L 33 26 M 20 4 L 7 26 M 7 26 L 33 26" stroke="#4a4a55" stroke-width="1.5" fill="none"/>
+            </svg>
+            <div class="cmi-name">Chrome</div>
+            <div class="cmi-sub">看真实页</div>
+          </div>
+          <div class="cheat-mcp-icon">
+            <!-- Playwright 戏剧面具 -->
+            <svg viewBox="0 0 40 40">
+              <ellipse cx="14" cy="20" rx="9" ry="11" fill="#1f6b3a" opacity="0.85"/>
+              <ellipse cx="26" cy="20" rx="9" ry="11" fill="#ff4d2e" opacity="0.85"/>
+              <circle cx="11" cy="18" r="1.5" fill="#faf7f0"/>
+              <circle cx="29" cy="18" r="1.5" fill="#faf7f0"/>
+              <path d="M 9 24 Q 14 28 18 24" fill="none" stroke="#faf7f0" stroke-width="1.5"/>
+              <path d="M 22 24 Q 26 28 31 24" fill="none" stroke="#faf7f0" stroke-width="1.5"/>
+            </svg>
+            <div class="cmi-name">Playwright</div>
+            <div class="cmi-sub">跑回归</div>
+          </div>
+        </div>
+        <dl>
+          <dt>01 · 第一个</dt>
+          <dd><strong>Figma MCP</strong> · 让 AI 看懂 Figma · 代码自动用你的设计系统</dd>
+          <dt>02 · 检查用</dt>
+          <dd><strong>Chrome MCP</strong> · 对比设计稿 / 生产环境必备</dd>
+          <dt>03 · 进阶</dt>
+          <dd><strong>Playwright MCP</strong> · CI 里挂一个 → 自动盯漂移</dd>
+        </dl>
+      </div>
+
+      <!-- 速查 03 · 5 步流程图 SVG -->
+      <div class="cheat-card c">
+        <div class="cc-num">cheat · 03</div>
+        <h4>装 <span class="em">Figma MCP</span> · 5 步</h4>
+        <div class="cc-sub">terminal → install → oauth → verify → use</div>
+        <svg class="cheat-flow-svg" viewBox="0 0 260 240" preserveAspectRatio="xMidYMid meet">
+          <!-- Step 1 -->
+          <circle class="cf-step-circle" cx="22" cy="22" r="14"/>
+          <text class="cf-step-num" x="22" y="26" text-anchor="middle">1</text>
+          <text class="cf-step-text" x="46" y="20">开 Claude Code 终端</text>
+          <text class="cf-step-text" x="46" y="33" fill="#8a8a92" font-size="9.5">terminal · ready</text>
+
+          <path class="cf-step-arrow" d="M 22 38 V 64"/>
+
+          <!-- Step 2 -->
+          <circle class="cf-step-circle" cx="22" cy="74" r="14"/>
+          <text class="cf-step-num" x="22" y="78" text-anchor="middle">2</text>
+          <text class="cf-step-text" x="46" y="72" font-family="JetBrains Mono, monospace" font-weight="700">$ claude plugin install figma</text>
+          <text class="cf-step-text" x="46" y="85" fill="#8a8a92" font-size="9.5">install · 30 s</text>
+
+          <path class="cf-step-arrow" d="M 22 90 V 116"/>
+
+          <!-- Step 3 -->
+          <circle class="cf-step-circle" cx="22" cy="126" r="14"/>
+          <text class="cf-step-num" x="22" y="130" text-anchor="middle">3</text>
+          <text class="cf-step-text" x="46" y="124">浏览器自动开 OAuth → Allow</text>
+          <text class="cf-step-text" x="46" y="137" fill="#8a8a92" font-size="9.5">login · 5 s</text>
+
+          <path class="cf-step-arrow" d="M 22 142 V 168"/>
+
+          <!-- Step 4 -->
+          <circle class="cf-step-circle" cx="22" cy="178" r="14"/>
+          <text class="cf-step-num" x="22" y="182" text-anchor="middle">4</text>
+          <text class="cf-step-text" x="46" y="176" font-family="JetBrains Mono, monospace" font-weight="700">/mcp · 验证连通</text>
+          <text class="cf-step-text" x="46" y="189" fill="#8a8a92" font-size="9.5">verify · figma 出现</text>
+
+          <path class="cf-step-arrow" d="M 22 194 V 218"/>
+
+          <!-- Step 5 (highlight) -->
+          <circle class="cf-step-circle" cx="22" cy="226" r="14" fill="#16161d" stroke="#16161d"/>
+          <text class="cf-step-num" x="22" y="230" text-anchor="middle">5</text>
+          <text class="cf-step-text" x="46" y="224">跟 Claude 说 "把 Figma 实现成代码"</text>
+          <text class="cf-step-text" x="46" y="237" fill="#ff4d2e" font-size="9.5" font-weight="700">→ AI 开始动手</text>
+        </svg>
+        <dl>
+          <dt>总耗时</dt>
+          <dd>不到 <strong>5 分钟</strong> · 浏览器扫码 OAuth 即可 · 不用改任何代码</dd>
+        </dl>
       </div>
     </div>
 
-    <!-- 场景详情：默认隐藏，点卡片时显示 -->
-    <div class="scene-detail" id="scene-detail" hidden>
-      <button class="scene-back" id="scene-back">← 返回 6 个场景</button>
-      <div class="scene-detail-body" id="scene-detail-body">
-        <!-- JS 渲染 -->
-      </div>
-    </div>
-
+    <!-- 资源链接 + 下一篇引导 -->
     <div class="hint-strip" style="margin-top:32px;background:var(--accent-soft);border-color:var(--accent);">
       <span class="hint-tag" style="background:var(--accent);color:var(--paper);">领悟</span>
       MCP 才是 <span class="em">Agentic</span> 的真正基石 —— 没 MCP 的 AI 只能"用嘴说"，装上 MCP 才能"动手"。
       下一篇我们讲 <strong>Agent</strong> —— AI 怎么用这些工具<strong>规划、执行、反思</strong>整个任务。
     </div>
 
-    <div class="hint-strip" style="margin-top:32px;">
+    <div class="hint-strip" style="margin-top:24px;">
       <span class="hint-tag">延伸</span>
       想看官方源码 / 文档：
     </div>
@@ -2192,104 +2506,6 @@ $ claude plugin install figma
         <div class="rc-title">Figma MCP Server 首发公告</div>
         <div class="rc-url">figma.com/blog/introducing-figma-mcp-server</div>
       </a>
-    </div>
-  </div>
-</section>
-<!-- §06 — Cheatsheet -->
-<section id="cheat">
-  <div class="wrap">
-    <div class="section-head">
-      <div>
-        <div class="section-num"><strong>06</strong> / 速查</div>
-        <h2 class="section-title">三张<br><span class="em">速查卡</span></h2>
-      </div>
-      <p class="section-sub">
-        全文压缩到三张卡。
-        装 MCP 前翻一遍，立刻能动手 ——
-        印出来贴显示器边上也行。
-      </p>
-    </div>
-
-    <div class="cheat-grid">
-      <div class="cheat-card">
-        <div class="chc-label">cheat · 01</div>
-        <h4>MCP 协议 · <span class="em">4 角色</span></h4>
-        <pre class="chc-tree">┌─────────────┐
-│ AI 工具      │  client
-│ Claude Code │  (你打交道的那个)
-│ Cursor      │
-└──────┬──────┘
-       │
-       ▼ JSON-RPC over stdio/HTTP
-       │
-┌──────┴──────┐
-│ MCP 协议     │  protocol
-└──────┬──────┘
-       │
-       ▼
-┌──────┴──────┐
-│ MCP Server  │  server
-│ Figma 写的   │  (工具方提供)
-│ Chrome 写的  │
-└──────┬──────┘
-       │
-       ▼
-┌──────┴──────┐
-│ 外部工具     │  external tool
-│ Figma /     │  (你真正在用的)
-│ Chrome /    │
-│ GitHub      │
-└─────────────┘</pre>
-      </div>
-
-      <div class="cheat-card">
-        <div class="chc-label">cheat · 02</div>
-        <h4>设计师必装的 <span class="em">3 个 MCP</span></h4>
-        <div class="chc-rules">
-          <div class="chc-rule">
-            <span class="chc-rule-tag">01 · 第一个</span>
-            <strong>Figma MCP</strong> · 让 AI 看懂 Figma 设计稿。
-            装完之后 AI 的代码会用你设计系统。
-          </div>
-          <div class="chc-rule">
-            <span class="chc-rule-tag">02 · 检查用</span>
-            <strong>Chrome DevTools MCP</strong> · 让 AI 看真实页面。
-            对比设计稿和生产环境必备。
-          </div>
-          <div class="chc-rule">
-            <span class="chc-rule-tag">03 · 进阶</span>
-            <strong>Playwright MCP</strong> · 让 AI 跑视觉回归。
-            CI 里挂一个 → 自动盯漂移。
-          </div>
-        </div>
-      </div>
-
-      <div class="cheat-card">
-        <div class="chc-label">cheat · 03</div>
-        <h4>装 <span class="em">Figma MCP</span> 流程图</h4>
-        <div class="chc-flow">
-          <div class="chc-flow-row">
-            <span class="chc-flow-step">1</span>
-            <span>开 Claude Code 终端</span>
-          </div>
-          <div class="chc-flow-row">
-            <span class="chc-flow-step">2</span>
-            <span><code>claude plugin install figma</code></span>
-          </div>
-          <div class="chc-flow-row">
-            <span class="chc-flow-step">3</span>
-            <span>浏览器自动开 OAuth 页 → Allow</span>
-          </div>
-          <div class="chc-flow-row">
-            <span class="chc-flow-step">4</span>
-            <span><code>/mcp</code> 验证连通</span>
-          </div>
-          <div class="chc-flow-row">
-            <span class="chc-flow-step">5</span>
-            <span>开始跟 Claude 说 "把 Figma 实现成代码"</span>
-          </div>
-        </div>
-      </div>
     </div>
   </div>
 </section>
@@ -2586,369 +2802,6 @@ $ claude plugin install figma
 
 
 
-// ========= §04 Scene Theater =========
-(function () {
-  const grid = document.getElementById('scene-grid');
-  const detail = document.getElementById('scene-detail');
-  const detailBody = document.getElementById('scene-detail-body');
-  const stage = document.getElementById('scene-stage');
-  const backBtn = document.getElementById('scene-back');
-  if (!grid || !detail) return;
-
-  const SCENES = [
-    {
-      n: '01',
-      quote: '"我想让 AI 看懂我的 Figma 设计稿"',
-      painpoint: '每次都要截图描述给 AI · 它还经常猜错颜色 / 间距 / 命名',
-      skill: 'Figma MCP',
-      act1: { user: '你说', text: '把这个 Figma 实现成 React 代码' },
-      act2: {
-        scan: [
-          { code: 'figma-mcp',     desc: '"Read Figma layer trees, Auto Layout, variants, Variables, Code Connect mappings..."', hit: true },
-          { code: 'chrome-mcp',    desc: '"Control Chrome browser, take screenshots, inspect DOM..."', hit: false },
-          { code: 'playwright',    desc: '"Run visual regression and multi-viewport screenshots..."', hit: false },
-          { code: 'github-mcp',    desc: '"Read GitHub issues / PRs / commits..."', hit: false }
-        ],
-        conclude: 'AI 通过 <span class="em">Figma MCP</span> 直接读 layer 树 + Auto Layout + tokens, 不再靠你截图描述'
-      },
-      act3: {
-        skill: 'Figma MCP',
-        steps: [
-          '调用 <code>get_design_context(node_id)</code>',
-          '拿到完整 layer 树 (frame 嵌套 / 组件实例 / variants)',
-          '拿到 Auto Layout 设置 (direction / padding / gap)',
-          '拿到 Variables 引用 (color / spacing tokens)',
-          '拿到 Code Connect 映射 (← 关键, 知道项目里有哪些组件)'
-        ]
-      },
-      act4: {
-        items: [
-          'AI 知道你这个卡片用了 <code>Card.tsx</code> 组件 (不是新造 div)',
-          'AI 知道颜色用 <code>color.brand.500</code> (不是 #FF5E1A)',
-          'AI 知道间距是 <code>space.4</code> (不是 16px)',
-          '生成的代码 <strong>直接对应你的设计系统</strong>'
-        ],
-        next: '装完 Figma MCP → 后续所有"把 Figma 实现成代码"都会用这个能力'
-      }
-    },
-    {
-      n: '02',
-      quote: '"我想让 AI 看到我网站长什么样"',
-      painpoint: '设计稿和实际页面有差异 · AI 不知道线上是什么样 · 每次靠你描述',
-      skill: 'Chrome DevTools MCP',
-      act1: { user: '你说', text: '对比一下设计稿和我们生产环境，找出差异' },
-      act2: {
-        scan: [
-          { code: 'chrome-mcp',    desc: '"Connect Chrome via DevTools Protocol; take screenshots, inspect DOM, check performance..."', hit: true },
-          { code: 'figma-mcp',     desc: '"Read Figma design context..."', hit: false },
-          { code: 'playwright',    desc: '"Visual regression for multi-viewport..."', hit: false },
-          { code: 'filesystem',    desc: '"Read / write local files..."', hit: false }
-        ],
-        conclude: 'AI 通过 <span class="em">Chrome MCP</span> 操控浏览器, 直接 "看到" 真实页面 + 同时读 Figma 比对'
-      },
-      act3: {
-        skill: 'Chrome DevTools MCP',
-        steps: [
-          '让 AI 启动 Chrome 实例 / 打开生产 URL',
-          '截屏当前页面 (传给 AI 看)',
-          '提取 DOM 树 / 计算样式',
-          '同时调 Figma MCP 拿设计稿',
-          'AI 对比两边: 字号 / 颜色 / 间距 / 间隔'
-        ]
-      },
-      act4: {
-        items: [
-          '一份 diff 报告: 设计稿 vs 生产',
-          'Hero 区: <code>padding-top</code> 设计稿 64 / 生产 56 ⚠',
-          'Button color: 设计稿 <code>#FF5E1A</code> / 生产 <code>#FF6B30</code> ⚠',
-          '... 共发现 8 处差异'
-        ],
-        next: '设计师拿这份报告 → 给前端 → 一处一处对'
-      }
-    },
-    {
-      n: '03',
-      quote: '"我想让 AI 自动跑视觉回归"',
-      painpoint: '每次改完手动截 5 个 viewport · 漏了 mobile · 漏了 dark mode',
-      skill: 'Playwright MCP',
-      act1: { user: '你说', text: '改完代码后, 在 5 个 viewport 跑视觉回归, 跟昨天的对比' },
-      act2: {
-        scan: [
-          { code: 'playwright',    desc: '"Run Playwright tests, multi-viewport screenshots, visual regression diff..."', hit: true },
-          { code: 'chrome-mcp',    desc: '"Single-browser DevTools control..."', hit: false },
-          { code: 'figma-mcp',     desc: '"Read Figma design context..."', hit: false },
-          { code: 'filesystem',    desc: '"Read / write local files..."', hit: false }
-        ],
-        conclude: 'AI 通过 <span class="em">Playwright MCP</span> 跑无头浏览器 + 自动截多个 viewport + pixel diff'
-      },
-      act3: {
-        skill: 'Playwright MCP',
-        steps: [
-          '启动 Playwright (Chromium / Firefox / Safari)',
-          '在 5 个 viewport 跑同一个页面 (mobile / tablet / desktop / wide / dark)',
-          '截屏每个 viewport',
-          '调用 <code>image-diff</code> 跟昨天的 baseline 比对',
-          '生成 visual regression 报告'
-        ]
-      },
-      act4: {
-        items: [
-          '一份 visual diff 报告 (5 张图 × pixel 差异)',
-          'iPhone 12: hero 文字 wrap 错误 ⚠',
-          'dark mode: 卡片背景对比度降到 3.2 (低于 WCAG AA) ⚠',
-          '另 3 个 viewport 通过 ✓'
-        ],
-        next: 'CI 里挂一个 Playwright MCP → 每个 PR 自动跑回归'
-      }
-    },
-    {
-      n: '04',
-      quote: '"我想让 AI 用项目里的 shadcn 组件"',
-      painpoint: 'AI 不知道你装了 shadcn · 永远造新 div · 生成代码风格各异',
-      skill: 'shadcn-ui MCP',
-      act1: { user: '你说', text: '帮我写一个 dialog 组件' },
-      act2: {
-        scan: [
-          { code: 'shadcn-mcp',    desc: '"Provides shadcn-ui component API + canonical usage examples..."', hit: true },
-          { code: 'figma-mcp',     desc: '"Read Figma design context..."', hit: false },
-          { code: 'github-mcp',    desc: '"Read GitHub repos..."', hit: false },
-          { code: 'filesystem',    desc: '"Read / write local files..."', hit: false }
-        ],
-        conclude: 'AI 通过 <span class="em">shadcn-ui MCP</span> 直接拿到组件 API + 官方用法, 不再造轮子'
-      },
-      act3: {
-        skill: 'shadcn-ui MCP',
-        steps: [
-          '查询 shadcn-ui MCP: "我想做 dialog"',
-          '拿到 <code>&lt;Dialog&gt;</code> / <code>&lt;DialogTrigger&gt;</code> / <code>&lt;DialogContent&gt;</code> 完整 API',
-          '拿到推荐用法 / 常见 props',
-          'AI 直接组装 (不再造 <code>&lt;div className="fixed inset-0..."&gt;</code>)'
-        ]
-      },
-      act4: {
-        items: [
-          '生成代码用 <code>import { Dialog } from "@/components/ui/dialog"</code>',
-          '所有 prop 都符合 shadcn 规范',
-          '不再到处复制粘贴 Radix UI 文档',
-          '前端拿到 → 直接合入 → 全项目风格统一'
-        ],
-        next: 'AI 写出的每个 UI 都用你项目里的 shadcn 组件'
-      }
-    },
-    {
-      n: '05',
-      quote: '"我想让 AI 帮我提 PR / 看 issue"',
-      painpoint: '手动复制代码到 GitHub · 写 PR description · 翻 issue 历史 · 累',
-      skill: 'GitHub MCP',
-      act1: { user: '你说', text: '把这次改动提个 PR, description 帮我写好' },
-      act2: {
-        scan: [
-          { code: 'github-mcp',    desc: '"Read / write GitHub repos, issues, PRs; create commits, request reviews..."', hit: true },
-          { code: 'filesystem',    desc: '"Read / write local files..."', hit: false },
-          { code: 'chrome-mcp',    desc: '"Browser control..."', hit: false },
-          { code: 'figma-mcp',     desc: '"Read Figma..."', hit: false }
-        ],
-        conclude: 'AI 通过 <span class="em">GitHub MCP</span> 直接操作 repo, 不再让你手动复制粘贴'
-      },
-      act3: {
-        skill: 'GitHub MCP',
-        steps: [
-          '读最近的 commit (这次改了什么)',
-          '读关联 issue (这次解决什么问题)',
-          '生成 PR title + description (含上下文)',
-          '调用 <code>create_pull_request</code> 提交',
-          '自动 request review 给相关同事'
-        ]
-      },
-      act4: {
-        items: [
-          'PR 已自动提交 #423',
-          'Title: <strong>fix(button): align disabled state with design tokens</strong>',
-          'Description: 3 段（背景 / 改动 / 测试）',
-          'Request review: @frontend-lead, @design-system-owner'
-        ],
-        next: '设计师不再问 "怎么提 PR" —— AI 自动搞定'
-      }
-    },
-    {
-      n: '06',
-      quote: '"我想让 AI 读本地字体 / SVG"',
-      painpoint: 'AI 不知道你本地有什么字体文件 / 图标资产 · 每次叫 AI 用都得手动喂',
-      skill: 'Filesystem MCP',
-      act1: { user: '你说', text: '我有一份新字体在 /assets/fonts, 帮我集成到项目里' },
-      act2: {
-        scan: [
-          { code: 'filesystem',    desc: '"Read / write local files; list directories..."', hit: true },
-          { code: 'github-mcp',    desc: '"GitHub operations..."', hit: false },
-          { code: 'figma-mcp',     desc: '"Read Figma..."', hit: false },
-          { code: 'chrome-mcp',    desc: '"Browser control..."', hit: false }
-        ],
-        conclude: 'AI 通过 <span class="em">Filesystem MCP</span> 直接列目录 / 读文件 / 知道你本地有什么'
-      },
-      act3: {
-        skill: 'Filesystem MCP',
-        steps: [
-          '调用 <code>list_directory(/assets/fonts)</code>',
-          '拿到 <code>Inter-Variable.woff2</code> + 3 个 weight variants',
-          '生成 <code>@font-face</code> CSS',
-          '加进 <code>app/globals.css</code>',
-          '更新 <code>tailwind.config.ts</code> 的 fontFamily'
-        ]
-      },
-      act4: {
-        items: [
-          'CSS 已加 (5 个 @font-face)',
-          'Tailwind config 已更新',
-          'AI 顺便生成了 4 个 utility class 让你直接用',
-          '<code>className="font-display-bold"</code> 直接生效'
-        ],
-        next: 'AI 真的 "看见" 了你电脑 → 集成本地资产再也不靠手动喂'
-      }
-    }
-  ];
-
-  const seen = new Set();
-
-  // 渲染主屏
-  function renderGrid() {
-    grid.innerHTML = '';
-    SCENES.forEach((s, i) => {
-      const btn = document.createElement('button');
-      btn.className = 'scene-card' + (seen.has(i) ? ' is-seen' : '');
-      btn.innerHTML =
-        '<div class="sc-num">' + s.n + '</div>' +
-        '<div class="sc-quote">' + s.quote + '</div>' +
-        '<div class="sc-painpoint">' + s.painpoint + '</div>' +
-        '<div class="sc-foot">' +
-          '<span class="skill">' + s.skill + '</span>' +
-          '<span class="cta">看一出戏 →</span>' +
-        '</div>';
-      btn.addEventListener('click', () => openScene(i));
-      grid.appendChild(btn);
-    });
-  }
-
-  // 打开场景详情
-  function openScene(idx) {
-    const s = SCENES[idx];
-    // 渲染 detail
-    let html = '<div class="sd-head">' +
-      '<div class="sd-tag">场景 · ' + s.n + ' · SKILL: ' + s.skill + '</div>' +
-      '<div class="sd-quote">' + s.quote + '</div>' +
-      '<div class="sd-painpoint">' + s.painpoint + '</div>' +
-      '</div>' +
-      '<div class="acts">';
-
-    // 幕 1
-    html += '<div class="act" data-act="1">' +
-      '<div class="act-label"><span class="act-no">幕 01</span>你说</div>' +
-      '<div class="bubble-row">' +
-        '<div class="bubble-avatar">你</div>' +
-        '<div class="bubble">' + s.act1.text + '</div>' +
-      '</div>' +
-    '</div>';
-
-    // 幕 2
-    let scanHtml = s.act2.scan.map(r =>
-      '<div class="desc-row' + (r.hit ? ' is-hit' : '') + '">' +
-        '<span class="dr-code">' + r.code + '</span>' + r.desc +
-      '</div>'
-    ).join('');
-    html += '<div class="act" data-act="2">' +
-      '<div class="act-label"><span class="act-no">幕 02</span>AI 听到 · 扫描 9 个 description</div>' +
-      '<div class="ai-listen">' +
-        '<div class="ai-listen-head">扫描 9 个 skill 的 description, 找匹配 ——</div>' +
-        '<div class="desc-scan">' + scanHtml + '</div>' +
-        '<div class="ai-conclude">' + s.act2.conclude + '</div>' +
-      '</div>' +
-    '</div>';
-
-    // 幕 3
-    let stepsHtml = s.act3.steps.map((step, j) =>
-      '<div class="step-row" data-step="' + j + '">' +
-        '<span class="step-tick"></span>' +
-        '<span>' + step + '</span>' +
-      '</div>'
-    ).join('');
-    html += '<div class="act" data-act="3">' +
-      '<div class="act-label"><span class="act-no">幕 03</span>Skill 在做 · ' + s.act3.skill + '</div>' +
-      '<div class="skill-doing">' +
-        '<div class="skill-doing-head">触发 <strong>' + s.act3.skill + '</strong> · 执行步骤：</div>' +
-        '<div class="steps">' + stepsHtml + '</div>' +
-      '</div>' +
-    '</div>';
-
-    // 幕 4
-    let resultHtml = s.act4.items.map(it => '<div class="result-item">' + it + '</div>').join('');
-    html += '<div class="act" data-act="4">' +
-      '<div class="act-label"><span class="act-no">幕 04</span>结果 · 你拿到什么</div>' +
-      '<div class="result">' +
-        '<div class="result-head">实际输出</div>' +
-        '<div class="result-list">' + resultHtml + '</div>' +
-        '<div class="result-foot"><strong>下一步：</strong>' + s.act4.next + '</div>' +
-      '</div>' +
-    '</div>';
-
-    html += '</div>';
-
-    // 下一场景按钮
-    const nextIdx = (idx + 1) % SCENES.length;
-    html += '<div class="scene-nav">' +
-      '<span class="nav-hint">看完一出 → 还有 ' + (SCENES.length - 1) + ' 个场景</span>' +
-      '<button id="scene-next">下一个场景 · ' + SCENES[nextIdx].n + ' →</button>' +
-    '</div>';
-
-    detailBody.innerHTML = html;
-
-    // 切换 UI
-    stage.hidden = true;
-    detail.hidden = false;
-    detail.scrollIntoView({ behavior: 'smooth', block: 'start' });
-
-    // 逐幕揭示 + 步骤打勾动画
-    const acts = detail.querySelectorAll('.act');
-    acts.forEach((a, i) => {
-      setTimeout(() => {
-        a.classList.add('show');
-        // 幕 3 步骤逐个打勾
-        if (a.dataset.act === '3') {
-          const steps = a.querySelectorAll('.step-row');
-          steps.forEach((stRow, j) => {
-            setTimeout(() => stRow.classList.add('done'), 400 + j * 280);
-          });
-        }
-      }, 350 + i * 700);
-    });
-
-    // 下一场景按钮
-    const nextBtn = document.getElementById('scene-next');
-    if (nextBtn) {
-      nextBtn.addEventListener('click', () => {
-        seen.add(idx);
-        renderGrid();
-        openScene(nextIdx);
-      });
-    }
-  }
-
-  // 返回主屏
-  backBtn.addEventListener('click', () => {
-    // 标记当前场景已看过
-    const tag = detailBody.querySelector('.sd-tag')?.textContent || '';
-    const m = tag.match(/(\d{2})/);
-    if (m) {
-      const idx = SCENES.findIndex(s => s.n === m[1]);
-      if (idx >= 0) seen.add(idx);
-    }
-    renderGrid();
-    detail.hidden = true;
-    stage.hidden = false;
-    stage.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  });
-
-  // Init
-  renderGrid();
-})();
 
 
 // ========= §04 MCP Assembly Lab =========

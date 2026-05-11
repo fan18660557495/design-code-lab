@@ -155,439 +155,490 @@
   .hint-strip code { font-family: 'JetBrains Mono', monospace; background: rgba(255,255,255,0.55); padding: 1px 6px; border-radius: 3px; font-size: 12.5px; }
   .hint-strip strong { font-weight: 600; }
 
-  /* ============== §01 — Folder explorer ============== */
-  .folder-stage {
+  /* ============== §01 — AI vs Agent · SVG 对比 ============== */
+  .vs-stage {
     margin-top: 24px;
-    background: var(--paper);
-    border: 1px solid var(--line);
-    border-radius: 8px;
-    overflow: hidden;
-  }
-  .folder-grid {
-    display: grid;
-    grid-template-columns: 1fr 1.1fr;
-    gap: 0;
-    min-height: 460px;
-  }
-  @media (max-width: 880px) { .folder-grid { grid-template-columns: 1fr; } }
-
-  .folder-tree {
-    background: #1e1e25;
-    color: #d8d8e0;
-    padding: 24px 22px;
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 13px;
-    line-height: 1.95;
-    border-right: 1px solid var(--line);
-    position: relative;
-  }
-  .folder-tree .ft-head {
-    color: #6e6e7a;
-    font-size: 10px;
-    letter-spacing: 0.12em;
-    margin-bottom: 14px;
-    text-transform: uppercase;
-    border-bottom: 1px dashed rgba(255,255,255,0.08);
-    padding-bottom: 10px;
-  }
-  .folder-tree .ft-row {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    padding: 4px 8px;
-    margin: 0 -8px;
-    border-radius: 3px;
-    cursor: pointer;
-    transition: background 0.15s, transform 0.5s ease, opacity 0.5s ease;
-    user-select: none;
-  }
-  .folder-tree .ft-row:hover { background: rgba(255,255,255,0.06); }
-  .folder-tree .ft-row.is-active { background: rgba(255,77,46,0.18); color: #ffb39a; }
-  .folder-tree .ft-row.is-required { color: #ffb39a; }
-  .folder-tree .ft-row.is-required.is-active { background: rgba(255,77,46,0.28); color: #fff; }
-  .folder-tree .ft-icon {
-    width: 16px;
-    text-align: center;
-    color: #888;
-    flex-shrink: 0;
-  }
-  .folder-tree .ft-row.is-folder .ft-icon { color: #ffcf3d; }
-  .folder-tree .ft-row.is-required .ft-icon { color: #ff8a6e; }
-  .folder-tree .ft-name { flex: 1; }
-  .folder-tree .ft-tag {
-    font-size: 10px;
-    color: #6e6e7a;
-    letter-spacing: 0.05em;
-    padding: 1px 6px;
-    border: 1px solid rgba(255,255,255,0.1);
-    border-radius: 3px;
-  }
-  .folder-tree .ft-row.is-required .ft-tag {
-    color: #ff8a6e;
-    border-color: rgba(255,138,110,0.4);
-  }
-  .folder-tree .ft-indent-1 { padding-left: 28px; }
-  .folder-tree .ft-indent-2 { padding-left: 52px; }
-  .folder-tree .ft-row.fly-out {
-    transform: translateX(-20px);
-    opacity: 0;
-  }
-  .folder-tree .ft-row.fly-in {
-    animation: ftFly 0.55s ease-out;
-  }
-  @keyframes ftFly {
-    0%   { transform: translateX(-32px); opacity: 0; }
-    100% { transform: translateX(0); opacity: 1; }
-  }
-  .folder-tree .ft-toolbar {
-    margin-top: 20px;
-    padding-top: 14px;
-    border-top: 1px dashed rgba(255,255,255,0.1);
-    display: flex;
-    gap: 8px;
-    align-items: center;
-    flex-wrap: wrap;
-  }
-  .folder-tree .ft-toolbar button {
-    background: rgba(255,255,255,0.06);
-    color: #d8d8e0;
-    border: 1px solid rgba(255,255,255,0.12);
-    padding: 6px 12px;
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 11px;
-    border-radius: 3px;
-    cursor: pointer;
-    transition: all 0.18s;
-    letter-spacing: 0.04em;
-  }
-  .folder-tree .ft-toolbar button:hover { background: var(--accent); border-color: var(--accent); color: #fff; }
-  .folder-tree .ft-toolbar .ft-hint {
-    font-size: 10px;
-    color: #6e6e7a;
-    margin-left: auto;
-    letter-spacing: 0.06em;
-  }
-
-  .folder-detail {
-    background: var(--paper);
-    padding: 24px 26px;
-    display: flex;
-    flex-direction: column;
-    gap: 14px;
-  }
-  .folder-detail .fd-tag {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 10px;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-    color: var(--accent);
-  }
-  .folder-detail .fd-name {
-    font-family: 'Noto Serif SC', serif;
-    font-size: 24px;
-    font-weight: 700;
-    margin: 0;
-    line-height: 1.25;
-    letter-spacing: -0.01em;
-  }
-  .folder-detail .fd-name code {
-    font-family: 'JetBrains Mono', monospace;
-    background: var(--bg-2);
-    padding: 2px 8px;
-    font-size: 18px;
-    border-radius: 4px;
-    color: var(--ink);
-  }
-  .folder-detail .fd-meta {
-    display: flex;
-    gap: 14px;
-    flex-wrap: wrap;
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 11px;
-    color: var(--ink-mute);
-    letter-spacing: 0.04em;
-  }
-  .folder-detail .fd-meta .req {
-    color: var(--accent);
-    font-weight: 600;
-  }
-  .folder-detail .fd-meta .opt {
-    color: var(--ink-soft);
-  }
-  .folder-detail .fd-desc {
-    font-size: 14px;
-    color: var(--ink-soft);
-    line-height: 1.6;
-    margin: 0;
-  }
-  .folder-detail .fd-desc strong { color: var(--ink); font-weight: 600; }
-  .folder-detail .fd-mock {
-    background: var(--ink);
-    color: #d8d8e0;
-    padding: 16px 18px;
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 12.5px;
-    border-radius: 6px;
-    line-height: 1.75;
-    overflow-x: auto;
-    margin: 0;
-    flex: 1;
-  }
-  .folder-detail .fd-mock .ccom { color: #6e6e7a; }
-  .folder-detail .fd-mock .ckey { color: #ff8a6e; }
-  .folder-detail .fd-mock .cstr { color: #a8e6a3; }
-  .folder-detail .fd-mock .cnum { color: #8ec5ff; }
-  .folder-detail .fd-mock .cmark { color: #ffcf3d; }
-  .folder-detail .fd-mock .ctag { color: #c9b6ff; }
-
-  /* ============== §02 — Anatomy ============== */
-  .anatomy-stage {
-    margin-top: 24px;
-    display: grid;
-    grid-template-columns: 1.05fr 1fr;
-    gap: 24px;
-  }
-  @media (max-width: 880px) { .anatomy-stage { grid-template-columns: 1fr; } }
-
-  .anatomy-code {
-    background: var(--ink);
-    color: #d8d8e0;
-    padding: 22px 24px;
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 13px;
-    line-height: 1.95;
-    border-radius: 8px;
-    position: relative;
-    overflow-x: auto;
-  }
-  .anatomy-code .ac-fname {
-    position: absolute; top: 12px; right: 16px;
-    font-size: 10px; color: #6e6e7a; letter-spacing: 0.08em;
-  }
-  .anatomy-code .ac-dot {
-    position: absolute;
-    top: 14px; left: 16px;
-    width: 8px; height: 8px; border-radius: 50%;
-    background: #ff5f56;
-    box-shadow: 14px 0 0 #ffbd2e, 28px 0 0 #27c93f;
-  }
-  .anatomy-code pre { margin: 0; padding-top: 22px; }
-  .anatomy-code .ccom { color: #6e6e7a; }
-  .anatomy-code .ckey { color: #ff8a6e; }
-  .anatomy-code .cstr { color: #a8e6a3; }
-  .anatomy-code .cnum { color: #8ec5ff; }
-  .anatomy-code .cmark { color: #ffcf3d; }
-  .anatomy-code .ctag { color: #c9b6ff; }
-  .anatomy-code .cline {
-    display: block;
-    padding: 0 8px;
-    margin: 0 -8px;
-    border-left: 3px solid transparent;
-    border-radius: 3px;
-    transition: background 0.2s ease, border-color 0.2s ease;
-    cursor: pointer;
-  }
-  .anatomy-code .cline:hover { background: rgba(255,255,255,0.04); }
-  .anatomy-code .cline.is-active {
-    background: rgba(255,138,110,0.14);
-    border-left-color: #ff8a6e;
-  }
-
-  .anatomy-list {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-  }
-  .anat-card {
-    background: var(--paper);
-    border: 1px solid var(--line);
-    border-radius: 6px;
-    padding: 16px 18px;
-    cursor: pointer;
-    transition: all 0.18s ease;
-  }
-  .anat-card:hover { border-color: var(--accent); transform: translateX(2px); }
-  .anat-card.is-active {
-    border-color: var(--accent);
-    background: var(--accent-soft);
-    transform: translateX(4px);
-    box-shadow: 0 4px 14px rgba(255,77,46,0.12);
-  }
-  .anat-card .ak-num {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 10px;
-    color: var(--ink-mute);
-    letter-spacing: 0.1em;
-    margin-bottom: 4px;
-  }
-  .anat-card.is-active .ak-num { color: var(--accent); }
-  .anat-card .ak-title {
-    font-family: 'Noto Serif SC', serif;
-    font-size: 16px;
-    font-weight: 700;
-    margin: 0 0 4px;
-    line-height: 1.3;
-  }
-  .anat-card .ak-title code {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 13px;
-    background: var(--bg-2);
-    padding: 1px 6px;
-    border-radius: 3px;
-    margin-right: 6px;
-  }
-  .anat-card.is-active .ak-title code { background: rgba(255,255,255,0.6); }
-  .anat-card .ak-desc {
-    font-size: 13px;
-    color: var(--ink-soft);
-    margin: 0;
-    line-height: 1.55;
-  }
-  .anat-card .ak-desc strong { color: var(--ink); font-weight: 600; }
-
-  /* ============== §03 — Pyramid ============== */
-  .pyramid-stage {
-    margin-top: 24px;
-    background: var(--paper);
-    border: 1px solid var(--line);
-    border-radius: 8px;
-    padding: 32px 32px 28px;
-  }
-  .pyramid-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 32px;
-    align-items: center;
+    gap: 22px;
   }
-  @media (max-width: 880px) { .pyramid-grid { grid-template-columns: 1fr; gap: 24px; } }
-
-  .pyramid-svg {
-    width: 100%;
-    height: 380px;
-    display: block;
+  @media (max-width: 880px) { .vs-stage { grid-template-columns: 1fr; } }
+  .vs-card {
+    background: var(--paper);
+    border: 1.5px solid var(--line);
+    border-radius: 10px;
+    padding: 26px 26px 22px;
+    position: relative;
+    overflow: hidden;
   }
-  .pyramid-svg .py-tier {
-    transition: opacity 0.4s ease, filter 0.4s ease;
+  .vs-card.is-agent {
+    border-color: var(--accent);
   }
-  .pyramid-svg .py-tier.dimmed {
-    opacity: 0.28;
-    filter: saturate(0.4);
+  .vs-card.is-agent::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 4px;
+    background: var(--accent);
   }
-  .pyramid-svg .py-tier.active polygon,
-  .pyramid-svg .py-tier.active rect {
-    filter: drop-shadow(0 4px 16px rgba(255,77,46,0.35));
-  }
-  .pyramid-svg .py-flow {
-    stroke: var(--accent);
-    stroke-width: 2;
-    stroke-dasharray: 6 5;
-    fill: none;
-    opacity: 0;
-    transition: opacity 0.4s ease;
-  }
-  .pyramid-svg .py-flow.active {
-    opacity: 0.85;
-    animation: pyDash 1.4s linear infinite;
-  }
-  @keyframes pyDash { to { stroke-dashoffset: -22; } }
-
-  .pyramid-side {
+  .vs-head {
     display: flex;
-    flex-direction: column;
-    gap: 14px;
+    align-items: baseline;
+    justify-content: space-between;
+    margin-bottom: 10px;
+    gap: 12px;
   }
-  .pyramid-input {
-    background: var(--bg);
-    border: 1px solid var(--line);
-    border-radius: 6px;
-    padding: 16px 18px;
-  }
-  .pyramid-input label {
+  .vs-tag {
     font-family: 'JetBrains Mono', monospace;
     font-size: 10px;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
+    letter-spacing: 0.14em;
     color: var(--ink-mute);
-    margin-bottom: 8px;
+    text-transform: uppercase;
+  }
+  .vs-card.is-agent .vs-tag { color: var(--accent); }
+  .vs-title {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 22px;
+    font-weight: 800;
+    color: var(--ink);
+    margin: 0 0 6px;
+    letter-spacing: -0.01em;
+  }
+  .vs-title .em {
+    font-family: 'Noto Serif SC', serif;
+    color: var(--accent);
+    font-weight: 500;
+    font-style: normal;
+  }
+  .vs-sub {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11.5px;
+    color: var(--ink-soft);
+    letter-spacing: 0.04em;
+    margin-bottom: 14px;
+  }
+  .vs-svg {
+    width: 100%;
+    height: 280px;
     display: block;
   }
-  .pyramid-input .py-chips {
-    display: flex;
-    gap: 6px;
-    flex-wrap: wrap;
-    margin-bottom: 12px;
-  }
-  .pyramid-input .py-chips button {
-    background: var(--paper);
-    border: 1px solid var(--line);
+  .vs-foot {
+    margin-top: 8px;
+    padding-top: 14px;
+    border-top: 1px dashed var(--line);
+    font-size: 13px;
     color: var(--ink-soft);
-    padding: 6px 12px;
-    font-family: inherit;
-    font-size: 12px;
-    border-radius: 100px;
-    cursor: pointer;
-    transition: all 0.15s;
+    line-height: 1.6;
+    text-align: center;
   }
-  .pyramid-input .py-chips button:hover { border-color: var(--accent); color: var(--accent); }
-  .pyramid-input .py-chips button.active {
-    background: var(--ink);
-    border-color: var(--ink);
-    color: white;
-  }
-  .pyramid-input .py-query {
-    background: var(--paper);
-    border: 1px solid var(--line);
-    border-radius: 4px;
-    padding: 10px 12px;
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 12.5px;
-    color: var(--ink);
-    min-height: 24px;
-    line-height: 1.45;
-  }
-  .pyramid-input .py-query .py-prompt { color: var(--accent); margin-right: 6px; }
+  .vs-foot strong { color: var(--ink); font-weight: 700; }
+  .vs-card.is-agent .vs-foot { border-top-color: var(--accent-soft); }
 
-  .pyramid-trace {
-    background: var(--ink);
-    color: #d8d8e0;
-    border-radius: 6px;
-    padding: 16px 18px;
+  /* loop spin animation */
+  @keyframes vsLoopDash {
+    to { stroke-dashoffset: -36; }
+  }
+  .vs-loop-arrow {
+    fill: none;
+    stroke: var(--accent);
+    stroke-width: 1.8;
+    stroke-dasharray: 5 4;
+    animation: vsLoopDash 3s linear infinite;
+  }
+  .vs-loop-label {
     font-family: 'JetBrains Mono', monospace;
-    font-size: 12px;
-    line-height: 1.85;
-    min-height: 180px;
+    font-size: 10px;
+    fill: var(--ink-soft);
+    letter-spacing: 0.04em;
   }
-  .pyramid-trace .pt-row {
-    opacity: 0;
-    transform: translateX(-6px);
-    transition: opacity 0.3s ease, transform 0.3s ease;
+  .vs-loop-node {
+    fill: var(--paper);
+    stroke: var(--accent);
+    stroke-width: 1.5;
   }
-  .pyramid-trace .pt-row.show {
-    opacity: 1;
-    transform: translateX(0);
-  }
-  .pyramid-trace .pt-tier {
-    color: #ff8a6e;
-    margin-right: 6px;
+  .vs-loop-node-text {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    fill: var(--ink);
     font-weight: 600;
   }
-  .pyramid-trace .pt-tok {
-    color: #8ec5ff;
-    margin-left: 6px;
+
+  /* ============== §02 — Agent anatomy · 十字解剖图 ============== */
+  .anat-stage {
+    margin-top: 24px;
+    background: var(--paper);
+    border: 1.5px solid var(--line);
+    border-radius: 10px;
+    padding: 28px 28px 24px;
+    display: grid;
+    grid-template-columns: 1.2fr 1fr;
+    gap: 28px;
+    align-items: center;
   }
-  .pyramid-trace .pt-skill {
-    color: #a8e6a3;
+  @media (max-width: 880px) { .anat-stage { grid-template-columns: 1fr; gap: 18px; } }
+
+  .anat-svg {
+    width: 100%;
+    height: 420px;
+    display: block;
   }
-  .pyramid-trace .pt-meta {
-    color: #6e6e7a;
-    font-size: 10px;
-    margin-top: 10px;
-    padding-top: 8px;
-    border-top: 1px dashed rgba(255,255,255,0.1);
+  .anat-svg .anat-line {
+    stroke: var(--line);
+    stroke-width: 1.5;
+    fill: none;
+    transition: stroke 0.25s ease, stroke-width 0.25s ease;
+  }
+  .anat-svg .anat-node {
+    cursor: pointer;
+    transition: transform 0.25s ease;
+    transform-origin: center;
+    transform-box: fill-box;
+  }
+  .anat-svg .anat-node .anat-shape {
+    fill: var(--paper);
+    stroke: var(--line);
+    stroke-width: 1.5;
+    transition: fill 0.25s ease, stroke 0.25s ease, stroke-width 0.25s ease;
+  }
+  .anat-svg .anat-node .anat-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    font-weight: 700;
+    fill: var(--ink);
+    pointer-events: none;
+  }
+  .anat-svg .anat-node .anat-sublabel {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9.5px;
+    fill: var(--ink-mute);
     letter-spacing: 0.05em;
+    pointer-events: none;
+  }
+  .anat-svg .anat-node:hover .anat-shape,
+  .anat-svg .anat-node.is-active .anat-shape {
+    fill: var(--accent-soft);
+    stroke: var(--accent);
+    stroke-width: 2;
+  }
+  .anat-svg .anat-node.is-active {
+    filter: drop-shadow(0 4px 14px rgba(255,77,46,0.28));
+  }
+  .anat-svg .anat-node.is-active + .anat-line,
+  .anat-svg .anat-line.is-active {
+    stroke: var(--accent);
+    stroke-width: 2;
+  }
+  .anat-svg .anat-core circle {
+    fill: var(--ink);
+    stroke: var(--ink);
+  }
+  .anat-svg .anat-core text {
+    font-family: 'Noto Serif SC', serif;
+    font-weight: 700;
+    fill: var(--paper);
   }
 
-  /* ============== §06 — Cheatsheet ============== */
+  .anat-detail {
+    background: var(--bg);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 22px 24px;
+    min-height: 280px;
+  }
+  .anat-detail .ad-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.14em;
+    color: var(--accent);
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+  .anat-detail .ad-name {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 24px;
+    font-weight: 800;
+    margin: 0 0 6px;
+    line-height: 1.2;
+    letter-spacing: -0.01em;
+  }
+  .anat-detail .ad-name code {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 17px;
+    background: var(--accent-soft);
+    padding: 2px 8px;
+    border-radius: 4px;
+    color: var(--accent);
+    margin-right: 6px;
+  }
+  .anat-detail .ad-desc {
+    font-size: 14px;
+    color: var(--ink-soft);
+    line-height: 1.65;
+    margin: 12px 0;
+  }
+  .anat-detail .ad-desc strong { color: var(--ink); font-weight: 600; }
+  .anat-detail .ad-miss {
+    margin-top: 14px;
+    padding-top: 12px;
+    border-top: 1px dashed var(--line);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11.5px;
+    color: var(--accent);
+    line-height: 1.55;
+    letter-spacing: 0.02em;
+  }
+  .anat-detail .ad-miss::before {
+    content: '缺它 → ';
+    color: var(--ink-mute);
+  }
+
+  /* ============== §03 — 3 种 pattern 拓扑图 ============== */
+  .pat-stage {
+    margin-top: 24px;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 18px;
+  }
+  @media (max-width: 880px) { .pat-stage { grid-template-columns: 1fr; } }
+
+  .pat-card {
+    background: var(--paper);
+    border: 1.5px solid var(--line);
+    border-radius: 10px;
+    padding: 22px 22px 20px;
+    transition: all 0.2s ease;
+    cursor: default;
+    position: relative;
+    overflow: hidden;
+  }
+  .pat-card:hover {
+    border-color: var(--accent);
+    transform: translateY(-3px);
+    box-shadow: 0 10px 26px rgba(22,22,29,0.08);
+  }
+  .pat-card .pat-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.14em;
+    color: var(--accent);
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+  .pat-card .pat-title {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 19px;
+    font-weight: 800;
+    margin: 0 0 4px;
+    letter-spacing: -0.01em;
+    color: var(--ink);
+  }
+  .pat-card .pat-cn {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--ink-soft);
+    letter-spacing: 0.04em;
+    margin-bottom: 14px;
+  }
+  .pat-svg {
+    width: 100%;
+    height: 170px;
+    display: block;
+    margin-bottom: 14px;
+  }
+  .pat-svg .pat-node-circle {
+    fill: var(--paper);
+    stroke: var(--ink);
+    stroke-width: 2;
+    transition: fill 0.3s ease, stroke 0.3s ease;
+  }
+  .pat-svg .pat-node-circle.is-main {
+    fill: var(--ink);
+    stroke: var(--ink);
+  }
+  .pat-svg .pat-node-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    font-weight: 700;
+    fill: var(--ink);
+    pointer-events: none;
+  }
+  .pat-svg .pat-node-label.is-main {
+    fill: var(--paper);
+  }
+  .pat-svg .pat-link {
+    stroke: var(--ink);
+    stroke-width: 1.5;
+    fill: none;
+  }
+  .pat-card:hover .pat-svg .pat-node-circle:not(.is-main) {
+    animation: patPulse 1.2s ease-in-out infinite;
+  }
+  .pat-card:hover .pat-svg .pat-node-circle.is-main {
+    fill: var(--accent);
+    stroke: var(--accent);
+  }
+  .pat-card:hover .pat-svg .pat-link {
+    stroke: var(--accent);
+    animation: patDash 1.6s linear infinite;
+    stroke-dasharray: 4 3;
+  }
+  @keyframes patPulse {
+    0%, 100% { fill: var(--paper); }
+    50% { fill: var(--accent-soft); }
+  }
+  @keyframes patDash {
+    to { stroke-dashoffset: -14; }
+  }
+  .pat-card .pat-foot {
+    padding-top: 12px;
+    border-top: 1px dashed var(--line);
+    font-size: 12.5px;
+    color: var(--ink-soft);
+    line-height: 1.55;
+  }
+  .pat-card .pat-foot strong { color: var(--ink); font-weight: 600; }
+
+  /* ============== §04 — 组织树 + 闭环 ============== */
+  .org-stage {
+    margin-top: 24px;
+    display: grid;
+    grid-template-columns: 1.2fr 1fr;
+    gap: 22px;
+  }
+  @media (max-width: 880px) { .org-stage { grid-template-columns: 1fr; } }
+
+  .org-card {
+    background: var(--paper);
+    border: 1.5px solid var(--line);
+    border-radius: 10px;
+    padding: 26px 26px 22px;
+    position: relative;
+    overflow: hidden;
+  }
+  .org-card .org-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.14em;
+    color: var(--accent);
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+  .org-card .org-title {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 22px;
+    font-weight: 800;
+    margin: 0 0 16px;
+    letter-spacing: -0.01em;
+    line-height: 1.2;
+  }
+  .org-card .org-title .em {
+    font-family: 'Noto Serif SC', serif;
+    color: var(--accent);
+    font-weight: 500;
+    font-style: normal;
+  }
+  .org-svg {
+    width: 100%;
+    height: 340px;
+    display: block;
+  }
+  .org-svg .o-link {
+    stroke: var(--line);
+    stroke-width: 1.5;
+    fill: none;
+  }
+  .org-svg .o-link.is-tool {
+    stroke-dasharray: 3 3;
+    stroke: var(--ink-mute);
+  }
+  .org-svg .o-main-circle {
+    fill: var(--ink);
+    stroke: var(--ink);
+    stroke-width: 2;
+  }
+  .org-svg .o-main-text {
+    font-family: 'Noto Serif SC', serif;
+    font-weight: 700;
+    fill: var(--paper);
+    font-size: 20px;
+  }
+  .org-svg .o-sub-circle {
+    fill: var(--paper);
+    stroke: var(--accent);
+    stroke-width: 2;
+  }
+  .org-svg .o-sub-text {
+    font-family: 'Noto Serif SC', serif;
+    font-weight: 700;
+    fill: var(--ink);
+    font-size: 13px;
+  }
+  .org-svg .o-sub-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    fill: var(--ink-soft);
+    letter-spacing: 0.04em;
+  }
+  .org-svg .o-tool-box {
+    fill: var(--bg-2);
+    stroke: var(--line);
+    stroke-width: 1;
+  }
+  .org-svg .o-tool-text {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    fill: var(--ink);
+    letter-spacing: 0.02em;
+  }
+
+  /* single-agent loop svg */
+  .loop-svg {
+    width: 100%;
+    height: 340px;
+    display: block;
+  }
+  .loop-svg .l-node-circle {
+    fill: var(--paper);
+    stroke: var(--accent);
+    stroke-width: 2;
+  }
+  .loop-svg .l-node-text {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    font-weight: 700;
+    fill: var(--ink);
+  }
+  .loop-svg .l-arrow {
+    fill: none;
+    stroke: var(--accent);
+    stroke-width: 2;
+    stroke-linecap: round;
+  }
+  .loop-svg .l-arrow-dash {
+    fill: none;
+    stroke: var(--accent);
+    stroke-width: 2;
+    stroke-dasharray: 80 240;
+    animation: loopRun 4s linear infinite;
+  }
+  @keyframes loopRun {
+    to { stroke-dashoffset: -320; }
+  }
+  .loop-svg .l-center-text {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    fill: var(--ink-mute);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+  .loop-svg .l-center-sub {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 14px;
+    font-weight: 700;
+    fill: var(--ink);
+  }
+
+  /* §05 cheat 信息图 */
   .cheat-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
@@ -597,1374 +648,104 @@
   @media (max-width: 880px) { .cheat-grid { grid-template-columns: 1fr; } }
   .cheat-card {
     background: var(--paper);
-    border: 1px solid var(--line);
-    border-radius: 6px;
+    border: 1.5px solid var(--line);
+    border-radius: 8px;
     padding: 22px 22px 24px;
     border-top: 4px solid var(--accent);
+    display: flex;
+    flex-direction: column;
   }
   .cheat-card.b { border-top-color: #c9b6ff; }
   .cheat-card.c { border-top-color: var(--yellow); }
   .cheat-card .cc-num {
     font-family: 'JetBrains Mono', monospace;
-    font-size: 11px;
+    font-size: 10.5px;
     color: var(--ink-mute);
-    letter-spacing: 0.1em;
-    margin-bottom: 4px;
+    letter-spacing: 0.12em;
+    margin-bottom: 6px;
+    text-transform: uppercase;
   }
   .cheat-card h4 {
     font-family: 'Noto Serif SC', serif;
-    font-size: 22px;
-    margin: 0 0 6px;
+    font-size: 20px;
+    margin: 0 0 4px;
     font-weight: 800;
     letter-spacing: -0.01em;
+    line-height: 1.3;
   }
   .cheat-card .cc-sub {
     font-family: 'JetBrains Mono', monospace;
-    font-size: 11px;
+    font-size: 10.5px;
     color: var(--ink-soft);
-    margin-bottom: 14px;
-    letter-spacing: 0.05em;
+    letter-spacing: 0.04em;
+    margin-bottom: 4px;
   }
-  .cheat-card pre.cheat-tree {
-    background: var(--ink);
-    color: #d8d8e0;
-    padding: 14px 14px;
-    border-radius: 5px;
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 11.5px;
-    line-height: 1.85;
-    margin: 0 0 12px;
-    overflow-x: auto;
-  }
-  .cheat-card pre.cheat-tree .ccom { color: #6e6e7a; }
-  .cheat-card pre.cheat-tree .cmark { color: #ff8a6e; }
-  .cheat-card pre.cheat-tree .ckey { color: #ffcf3d; }
-  .cheat-card dl { margin: 0; padding: 0; font-size: 13px; }
+  .cheat-card dl { margin: 8px 0 0; padding: 0; font-size: 13px; }
   .cheat-card dl dt {
     font-family: 'JetBrains Mono', monospace;
     font-size: 10px;
     color: var(--ink-mute);
     letter-spacing: 0.08em;
     text-transform: uppercase;
-    margin-top: 12px;
+    margin-top: 10px;
   }
   .cheat-card dl dt:first-child { margin-top: 0; }
   .cheat-card dl dd {
     margin: 4px 0 0;
     color: var(--ink-soft);
-    font-size: 13px;
+    font-size: 12.5px;
     line-height: 1.55;
   }
   .cheat-card dl dd strong { color: var(--ink); font-weight: 600; }
-  .cheat-card dl dd code { font-family: 'JetBrains Mono', monospace; background: var(--bg-2); padding: 1px 6px; border-radius: 3px; font-size: 12px; color: var(--ink); }
 
-  .cheat-flow {
-    background: var(--bg);
-    border: 1px dashed var(--line);
-    border-radius: 4px;
-    padding: 12px 14px;
-    margin-top: 4px;
-  }
-  .cheat-flow .cf-step {
-    display: flex;
-    align-items: flex-start;
-    gap: 10px;
-    padding: 6px 0;
-    font-size: 12px;
-    color: var(--ink-soft);
-    line-height: 1.5;
-  }
-  .cheat-flow .cf-step .cf-tier {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 10px;
-    color: var(--accent);
-    background: var(--accent-soft);
-    padding: 2px 6px;
-    border-radius: 3px;
-    letter-spacing: 0.04em;
-    flex-shrink: 0;
-    font-weight: 600;
-    margin-top: 1px;
-  }
-  .cheat-flow .cf-step strong { color: var(--ink); font-weight: 600; }
-
-  /* ============= Unified next-post block ============= */
-  .next-post {
-    margin-top: 48px;
-    padding: 32px 36px;
-    background: var(--ink);
-    color: var(--bg);
-    border-radius: 8px;
-    display: grid;
-    grid-template-columns: 1fr auto;
-    gap: 32px;
-    align-items: center;
-    text-decoration: none;
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
-    position: relative;
-    overflow: hidden;
-  }
-  .next-post::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: radial-gradient(circle at 100% 0%, rgba(255,77,46,0.12), transparent 55%);
-    pointer-events: none;
-  }
-  .next-post:hover { transform: translateY(-2px); box-shadow: 0 14px 36px rgba(22,22,29,0.22); }
-  @media (max-width: 720px) { .next-post { grid-template-columns: 1fr; padding: 24px; gap: 20px; } }
-  .next-post .np-tag {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 11px;
-    color: var(--accent);
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-    margin-bottom: 12px;
-    display: inline-flex;
-    align-items: center;
-    gap: 10px;
-  }
-  .next-post .np-tag .np-status {
-    background: rgba(255,255,255,0.12);
-    color: rgba(255,255,255,0.7);
-    padding: 2px 8px;
-    border-radius: 3px;
-    font-size: 10px;
-    letter-spacing: 0.08em;
-  }
-  .next-post h4 {
-    font-family: 'Noto Serif SC', serif;
-    font-size: 26px;
-    margin: 0 0 10px;
-    font-weight: 700;
-    color: white;
-    line-height: 1.25;
-    letter-spacing: -0.01em;
-  }
-  .next-post h4 .em {
-    font-family: 'Noto Serif SC', serif;
-    font-weight: 500;
-    color: var(--accent);
-    font-style: normal;
-  }
-  .next-post p {
-    margin: 0;
-    color: rgba(255,255,255,0.72);
-    font-size: 14px;
-    line-height: 1.65;
-    max-width: 560px;
-  }
-  .next-post p strong { color: white; font-weight: 600; }
-  .next-post .np-cta {
-    display: inline-flex;
-    align-items: center;
-    gap: 10px;
-    padding: 14px 24px;
-    background: var(--accent);
-    color: white;
-    border-radius: 4px;
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 13px;
-    font-weight: 500;
-    letter-spacing: 0.04em;
-    white-space: nowrap;
-    transition: background 0.18s, color 0.18s, transform 0.18s;
-    position: relative;
-    z-index: 1;
-  }
-  .next-post:hover .np-cta { background: white; color: var(--ink); transform: translateX(2px); }
-  .next-post .np-cta .arr { font-family: 'Noto Serif SC', serif; font-size: 18px; font-weight: 500; }
-
-  /* Footer */
-  footer {
-    border-top: 1px solid var(--line);
-    padding: 56px 0 64px;
-    background: var(--bg);
-  }
-  .byline {
-    display: flex;
-    gap: 28px;
-    align-items: center;
-    padding-bottom: 32px;
-    border-bottom: 1px dashed var(--line);
-    margin-bottom: 24px;
-    position: relative;
-  }
-  .byline::before {
-    content: '';
-    position: absolute;
-    top: -56px; left: 0;
-    width: 32px; height: 1px;
-    background: var(--accent);
-  }
-  .byline .avatar {
-    width: 96px; height: 96px;
-    border-radius: 50%;
-    object-fit: cover;
-    flex-shrink: 0;
-    border: 3px solid var(--paper);
-    box-shadow: 0 0 0 1px var(--line), 0 6px 20px rgba(22,22,29,0.10);
-    background: var(--paper);
-  }
-  .byline-label {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 11px;
-    color: var(--ink-mute);
-    letter-spacing: 0.18em;
-    margin-bottom: 8px;
-  }
-  .byline-label .dot {
-    display: inline-block;
-    width: 6px; height: 6px;
-    background: var(--accent);
-    border-radius: 50%;
-    margin-right: 6px;
-    vertical-align: 1px;
-  }
-  .byline-name {
-    font-family: 'Noto Serif SC', serif;
-    font-size: clamp(28px, 4vw, 40px);
-    font-weight: 700;
-    line-height: 1.05;
-    letter-spacing: -0.01em;
-    margin: 0 0 8px;
-  }
-  .byline-name .em {
-    font-family: 'Noto Serif SC', serif;
-    font-weight: 500;
-    color: var(--accent);
-    font-style: normal;
-  }
-  .byline-tag {
-    font-size: 14px;
-    color: var(--ink-soft);
-    line-height: 1.55;
-    margin: 0;
-    max-width: 52ch;
-  }
-  .footer-meta {
-    text-align: center;
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 12px;
-    color: var(--ink-mute);
-    letter-spacing: 0.05em;
-  }
-  .footer-meta .heart { color: var(--accent); }
-  .footer-meta .mono { color: var(--ink-soft); font-weight: 500; }
-  @media (max-width: 600px) {
-    .byline { flex-direction: column; text-align: center; align-items: center; gap: 16px; }
-    .byline-tag { margin-left: auto; margin-right: auto; }
-  }
-  .byline-contact { margin-top: 14px; padding-top: 14px; border-top: 1px dashed var(--line); display: flex; align-items: center; gap: 10px; flex-wrap: wrap; font-size: 12px; }
-  .byline-contact .contact-label { font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-mute); padding: 2px 8px; border: 1px solid var(--line); border-radius: 3px; }
-  .byline-contact .contact-id { font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 600; color: var(--ink); background: var(--accent-soft); padding: 3px 10px; border-radius: 4px; letter-spacing: 0.02em; }
-  .byline-contact .contact-hint { font-size: 12px; color: var(--ink-soft); }
-
-  /* Subtle entry animation */
-  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
-  section { animation: fadeIn 0.6s ease-out backwards; }
-
-  /* === Roadmap Modal === */
-  .rm-modal { position: fixed; inset: 0; z-index: 1000; display: flex; align-items: center; justify-content: center; padding: 30px 16px; }
-  .rm-modal[hidden] { display: none; }
-  .rm-backdrop { position: absolute; inset: 0; background: rgba(22,22,29,0.55); backdrop-filter: blur(4px); animation: rm-fade 0.2s; }
-  @keyframes rm-fade { from { opacity: 0; } to { opacity: 1; } }
-  .rm-dialog { position: relative; background: var(--bg); border-radius: 12px; max-width: 720px; width: 100%; max-height: calc(100vh - 60px); overflow-y: auto; padding: 32px 36px 24px; box-shadow: 0 30px 80px rgba(0,0,0,0.3); animation: rm-pop 0.25s cubic-bezier(0.4,0,0.2,1); }
-  @keyframes rm-pop { from { transform: scale(0.96) translateY(8px); opacity: 0; } to { transform: scale(1) translateY(0); opacity: 1; } }
-  .rm-close { position: absolute; top: 14px; right: 16px; background: transparent; border: none; cursor: pointer; font-size: 20px; color: var(--ink-mute); width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: all 0.15s; line-height: 1; }
-  .rm-close:hover { background: var(--bg-2); color: var(--ink); }
-  .rm-header { margin-bottom: 22px; padding-bottom: 18px; border-bottom: 1px dashed var(--line); }
-  .rm-tag { font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.1em; color: var(--accent); text-transform: uppercase; margin-bottom: 8px; }
-  .rm-title { font-family: 'Noto Serif SC', serif; font-size: 28px; margin: 0 0 6px; font-weight: 900; letter-spacing: -0.02em; line-height: 1.1; }
-  .rm-title .rm-em { font-family: 'Noto Serif SC', serif; color: var(--accent); font-weight: 500; }
-  .rm-sub { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--ink-mute); margin: 0; }
-  .rm-body { display: flex; flex-direction: column; gap: 18px; }
-  .rm-mod-key { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ink); font-weight: 700; margin-bottom: 8px; letter-spacing: 0.04em; text-transform: uppercase; }
-  .rm-mod-list { display: flex; flex-direction: column; gap: 6px; }
-  .rm-cell { display: grid; grid-template-columns: 36px 1fr auto; gap: 12px; align-items: center; padding: 9px 13px; border-radius: 5px; background: var(--paper); border: 1px solid var(--line); text-decoration: none; color: inherit; transition: all 0.15s; }
-  .rm-cell:hover { border-color: var(--accent); background: var(--accent-soft); transform: translateX(3px); }
-  .rm-cell-code { font-family: 'Noto Serif SC', serif; font-weight: 500; color: var(--accent); font-size: 15px; }
-  .rm-cell-name { font-size: 13px; color: var(--ink); }
-  .rm-cell-tier { font-family: 'JetBrains Mono', monospace; font-size: 9px; letter-spacing: 0.08em; color: var(--ink-mute); text-transform: uppercase; border: 1px solid var(--line); padding: 2px 7px; border-radius: 3px; }
-  .rm-footer { margin-top: 22px; padding-top: 16px; border-top: 1px dashed var(--line); display: flex; justify-content: space-between; align-items: center; font-size: 12px; color: var(--ink-soft); flex-wrap: wrap; gap: 8px; }
-  .rm-wechat { font-family: 'JetBrains Mono', monospace; background: var(--accent-soft); color: var(--ink); padding: 3px 10px; border-radius: 3px; font-weight: 600; letter-spacing: 0.02em; }
-
-  /* ============== §04 — Figma Skills 实例 ============== */
-  .fk-intro {
-    background: var(--paper);
-    border: 1.5px solid var(--line);
-    border-radius: 8px;
-    padding: 22px 26px;
-    margin-bottom: 30px;
-    font-family: 'Noto Serif SC', serif;
-    font-size: 17px;
-    line-height: 1.8;
-    color: var(--ink);
-  }
-  .fk-intro strong { color: var(--ink); font-weight: 700; }
-  .fk-intro .em { color: var(--accent); font-weight: 700; }
-  .fk-intro code {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 14px;
-    background: var(--accent-soft);
-    padding: 2px 6px;
-    border-radius: 3px;
-    color: var(--accent);
-    font-weight: 600;
-  }
-
-  .fk-group-title {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 11px;
-    letter-spacing: 0.12em;
-    color: var(--ink-mute);
-    text-transform: uppercase;
-    margin: 28px 0 14px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
-  .fk-group-title::before {
-    content: '';
-    width: 16px;
-    height: 2px;
-    background: var(--accent);
-    display: inline-block;
-  }
-
-  .fk-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(290px, 1fr));
-    gap: 14px;
-    margin-bottom: 8px;
-  }
-
-  .fk-card {
-    background: var(--paper);
-    border: 1.5px solid var(--line);
-    border-radius: 8px;
-    padding: 18px 20px;
-    transition: all 0.18s ease;
-    position: relative;
-    overflow: hidden;
-  }
-  .fk-card:hover {
-    border-color: var(--ink);
-    transform: translateY(-2px);
-    box-shadow: var(--shadow);
-  }
-  .fk-card::before {
-    content: '';
-    position: absolute;
-    top: 0; left: 0;
+  .cheat-mini-svg {
     width: 100%;
-    height: 3px;
-    background: var(--accent);
-    transform: scaleX(0);
-    transform-origin: left;
-    transition: transform 0.25s ease;
-  }
-  .fk-card:hover::before { transform: scaleX(1); }
-
-  .fk-head {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 10px;
-    margin-bottom: 10px;
-  }
-  .fk-code {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 13px;
-    font-weight: 700;
-    color: var(--accent);
-    letter-spacing: 0.02em;
-  }
-  .fk-tag {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 9.5px;
-    letter-spacing: 0.1em;
-    color: var(--ink-mute);
-    background: var(--bg-2);
-    border: 1px solid var(--line);
-    border-radius: 3px;
-    padding: 2px 7px;
-    text-transform: uppercase;
-    flex-shrink: 0;
-  }
-  .fk-title {
-    font-family: 'Noto Serif SC', serif;
-    font-weight: 700;
-    font-size: 17px;
-    color: var(--ink);
-    margin-bottom: 10px;
-    line-height: 1.3;
-  }
-  .fk-desc {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 11px;
-    line-height: 1.7;
-    background: #1f1f29;
-    color: #d8d8e0;
-    padding: 10px 12px;
-    border-radius: 5px;
-    margin-bottom: 12px;
-    word-break: break-word;
-  }
-  .fk-when {
-    font-size: 12.5px;
-    color: var(--ink-soft);
-    line-height: 1.55;
-  }
-  .fk-when strong { color: var(--ink); font-weight: 600; }
-
-  /* 流程图 */
-  .fk-flow {
-    display: grid;
-    grid-template-columns: 1fr auto 1fr auto 1fr auto 1fr;
-    gap: 8px;
-    align-items: stretch;
-    margin: 24px 0 16px;
-  }
-  .fk-flow .flow-node {
-    background: var(--paper);
-    border: 1.5px solid var(--ink);
-    border-radius: 6px;
-    padding: 16px 14px;
-    text-align: center;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-  }
-  .fk-flow .flow-node.accent {
-    background: var(--ink);
-    color: var(--paper);
-    border-color: var(--ink);
-  }
-  .fk-flow .flow-node .fn-label {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 9px;
-    color: var(--ink-mute);
-    text-transform: uppercase;
-    letter-spacing: 0.12em;
-    margin-bottom: 8px;
-  }
-  .fk-flow .flow-node.accent .fn-label { color: var(--accent); }
-  .fk-flow .flow-node .fn-content {
-    font-family: 'Noto Sans SC', sans-serif;
-    font-size: 13px;
-    font-weight: 600;
-    color: var(--ink);
-    line-height: 1.4;
-  }
-  .fk-flow .flow-node.accent .fn-content { color: var(--paper); }
-  .fk-flow .flow-arrow {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 22px;
-    color: var(--accent);
-    font-weight: 700;
-  }
-  @media (max-width: 980px) {
-    .fk-flow { grid-template-columns: 1fr; }
-    .fk-flow .flow-arrow { transform: rotate(90deg); padding: 4px 0; }
-  }
-
-  /* 官方资源卡片 */
-  .refs-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: 14px;
-    margin-top: 18px;
-  }
-  .ref-card {
-    background: var(--paper);
-    border: 1.5px solid var(--line);
-    border-radius: 8px;
-    padding: 18px 20px;
-    text-decoration: none;
-    color: var(--ink);
-    transition: all 0.18s ease;
+    height: 170px;
     display: block;
-    position: relative;
+    margin: 8px 0 12px;
   }
-  .ref-card::after {
-    content: '↗';
-    position: absolute;
-    top: 14px;
-    right: 16px;
-    font-size: 16px;
-    color: var(--ink-mute);
-    transition: color 0.18s ease, transform 0.2s ease;
+  .vs-table {
+    margin-top: 4px;
+    border-collapse: collapse;
+    width: 100%;
+    font-size: 12.5px;
   }
-  .ref-card:hover {
-    border-color: var(--accent);
-    transform: translateY(-2px);
-    box-shadow: var(--shadow);
-  }
-  .ref-card:hover::after {
-    color: var(--accent);
-    transform: translate(2px, -2px);
-  }
-  .ref-card .rc-source {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 10px;
-    letter-spacing: 0.1em;
-    color: var(--ink-mute);
-    text-transform: uppercase;
-    margin-bottom: 8px;
-  }
-  .ref-card .rc-title {
-    font-family: 'Noto Serif SC', serif;
-    font-weight: 700;
-    font-size: 16px;
-    color: var(--ink);
-    margin-bottom: 8px;
-    line-height: 1.4;
-  }
-  .ref-card .rc-url {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 11px;
-    color: var(--accent);
-    word-break: break-all;
-  }
-
-
-
-  /* ============== §04 — Scene Theater ============== */
-  .scene-stage { margin: 24px 0 36px; }
-  .scene-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: 16px;
-  }
-
-  .scene-card {
-    background: var(--paper);
-    border: 1.5px solid var(--line);
-    border-radius: 10px;
-    padding: 22px 24px;
-    cursor: pointer;
-    position: relative;
-    overflow: hidden;
-    transition: all 0.2s ease;
+  .vs-table th, .vs-table td {
+    border-bottom: 1px dashed var(--line);
+    padding: 8px 6px;
     text-align: left;
-    font-family: inherit;
-    color: inherit;
+    vertical-align: top;
+    line-height: 1.5;
   }
-  .scene-card::before {
-    content: '';
-    position: absolute;
-    top: 0; left: 0; right: 0;
-    height: 4px;
-    background: var(--accent);
-    transform: scaleX(0);
-    transform-origin: left;
-    transition: transform 0.3s ease;
-  }
-  .scene-card:hover::before { transform: scaleX(1); }
-  .scene-card:hover {
-    border-color: var(--ink);
-    transform: translateY(-3px);
-    box-shadow: 0 14px 32px rgba(22,22,29,0.10);
-  }
-  .scene-card.is-seen::after {
-    content: '✓ 看过';
-    position: absolute;
-    top: 14px;
-    right: 16px;
+  .vs-table th {
     font-family: 'JetBrains Mono', monospace;
     font-size: 10px;
+    color: var(--ink-mute);
     letter-spacing: 0.1em;
-    color: #4ade80;
-    background: rgba(74,222,128,0.12);
-    padding: 2px 8px;
-    border-radius: 100px;
-  }
-
-  .sc-num {
-    font-family: 'Fraunces', serif;
-    font-size: 44px;
-    font-weight: 900;
-    color: var(--accent);
-    line-height: 0.9;
-    margin-bottom: 10px;
-  }
-  .sc-quote {
-    font-family: 'Noto Serif SC', serif;
-    font-size: 18px;
-    font-weight: 700;
-    color: var(--ink);
-    line-height: 1.4;
-    margin-bottom: 12px;
-    letter-spacing: -0.01em;
-  }
-  .sc-painpoint {
-    font-size: 13px;
-    color: var(--ink-soft);
-    line-height: 1.6;
-    margin-bottom: 18px;
-  }
-  .sc-foot {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding-top: 14px;
-    border-top: 1px dashed var(--line);
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 11px;
-    color: var(--ink-mute);
-  }
-  .sc-foot .skill {
-    color: var(--accent);
-    font-weight: 700;
-  }
-  .sc-foot .cta {
-    color: var(--ink);
+    text-transform: uppercase;
     font-weight: 600;
+    border-bottom: 1.5px solid var(--line);
   }
-
-  /* 场景详情面板 */
-  .scene-detail {
-    background: var(--paper);
-    border: 1.5px solid var(--line);
-    border-radius: 10px;
-    padding: 28px 32px 32px;
-    margin: 24px 0 36px;
-    animation: sdIn 0.32s cubic-bezier(0.4, 0, 0.2, 1);
-  }
-  @keyframes sdIn {
-    from { opacity: 0; transform: translateY(12px); }
-    to   { opacity: 1; transform: translateY(0); }
-  }
-  .scene-back {
-    background: transparent;
-    border: 1px solid var(--line);
+  .vs-table th.is-yes { color: var(--accent); }
+  .vs-table th.is-no { color: var(--ink-soft); }
+  .vs-table td.is-yes {
     color: var(--ink);
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 12px;
-    letter-spacing: 0.06em;
-    padding: 7px 14px;
-    border-radius: 5px;
-    cursor: pointer;
-    margin-bottom: 22px;
-    transition: all 0.15s ease;
-  }
-  .scene-back:hover {
-    border-color: var(--ink);
-    background: var(--bg-2);
-  }
-  .sd-head {
-    margin-bottom: 28px;
-    padding-bottom: 20px;
-    border-bottom: 1px solid var(--line);
-  }
-  .sd-tag {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 11px;
-    letter-spacing: 0.12em;
-    color: var(--accent);
-    text-transform: uppercase;
-    margin-bottom: 8px;
-  }
-  .sd-quote {
-    font-family: 'Noto Serif SC', serif;
-    font-size: 38px;
-    font-weight: 900;
-    color: var(--ink);
-    line-height: 1.2;
-    letter-spacing: -0.02em;
-    margin-bottom: 10px;
-  }
-  .sd-painpoint {
-    font-family: 'Noto Serif SC', serif;
-    font-size: 16px;
-    color: var(--ink-soft);
-    line-height: 1.7;
-  }
-
-  /* 4 幕 */
-  .acts {
-    display: flex;
-    flex-direction: column;
-    gap: 18px;
-  }
-  .act {
-    opacity: 0;
-    transform: translateY(12px);
-    transition: opacity 0.45s ease, transform 0.45s cubic-bezier(0.4, 0, 0.2, 1);
-  }
-  .act.show {
-    opacity: 1;
-    transform: translateY(0);
-  }
-  .act-label {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    margin-bottom: 10px;
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 11px;
-    letter-spacing: 0.14em;
-    color: var(--accent);
-    text-transform: uppercase;
-    font-weight: 700;
-  }
-  .act-label .act-no {
-    background: var(--accent);
-    color: var(--paper);
-    padding: 3px 8px;
-    border-radius: 3px;
-    font-weight: 700;
-  }
-
-  /* 幕 1: 你说 — 聊天气泡 */
-  .bubble-row {
-    display: flex;
-    gap: 12px;
-    align-items: flex-start;
-  }
-  .bubble-avatar {
-    width: 36px; height: 36px;
-    border-radius: 50%;
-    background: var(--accent);
-    color: var(--paper);
-    display: flex; align-items: center; justify-content: center;
-    font-family: 'Noto Serif SC', serif;
-    font-weight: 900;
-    font-size: 16px;
-    flex-shrink: 0;
-  }
-  .bubble {
-    background: var(--bg-2);
-    border: 1px solid var(--line);
-    border-radius: 6px 14px 14px 14px;
-    padding: 14px 18px;
-    font-family: 'Noto Serif SC', serif;
-    font-size: 18px;
-    color: var(--ink);
-    line-height: 1.5;
     font-weight: 500;
-    max-width: 600px;
   }
-
-  /* 幕 2: AI 听到 — 深色扫描区 */
-  .ai-listen {
-    background: #1f1f29;
-    border-radius: 8px;
-    padding: 22px 24px;
-    color: #d8d8e0;
-  }
-  .ai-listen-head {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 12px;
-    color: #8a8a96;
-    margin-bottom: 14px;
-    letter-spacing: 0.08em;
-  }
-  .ai-listen-head .em { color: var(--accent); font-weight: 700; }
-  .desc-scan {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 11.5px;
-    line-height: 1.5;
-  }
-  .desc-row {
-    padding: 6px 10px;
-    border-radius: 4px;
-    color: rgba(255,255,255,0.5);
-    transition: all 0.25s ease;
-    word-break: break-word;
-  }
-  .desc-row.is-hit {
-    background: var(--accent);
-    color: var(--paper);
-    font-weight: 700;
-    transform: translateX(6px);
-    box-shadow: 0 4px 16px rgba(255,77,46,0.4);
-  }
-  .desc-row .dr-code {
-    color: rgba(255,255,255,0.85);
-    font-weight: 700;
-    margin-right: 8px;
-  }
-  .desc-row.is-hit .dr-code { color: var(--paper); }
-  .ai-conclude {
-    margin-top: 14px;
-    padding-top: 14px;
-    border-top: 1px solid rgba(255,255,255,0.12);
-    font-family: 'Noto Sans SC', sans-serif;
-    font-size: 13.5px;
-    color: rgba(255,255,255,0.85);
-    line-height: 1.65;
-  }
-  .ai-conclude .em { color: var(--accent); font-weight: 700; }
-  .ai-conclude code {
-    font-family: 'JetBrains Mono', monospace;
-    background: rgba(255,77,46,0.18);
-    color: var(--accent);
-    padding: 1px 6px;
-    border-radius: 3px;
-    font-size: 12.5px;
-  }
-
-  /* 幕 3: Skill 在做 */
-  .skill-doing {
-    background: #fff;
-    border: 1.5px solid var(--line);
-    border-radius: 8px;
-    padding: 20px 24px;
-  }
-  .skill-doing-head {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 12px;
-    color: var(--ink-mute);
-    margin-bottom: 14px;
-    letter-spacing: 0.08em;
-  }
-  .skill-doing-head strong { color: var(--accent); font-weight: 700; }
-  .steps {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-  }
-  .step-row {
-    display: flex;
-    align-items: flex-start;
-    gap: 10px;
-    padding: 8px 0;
-    font-family: 'Noto Sans SC', sans-serif;
-    font-size: 14.5px;
-    color: var(--ink);
-    line-height: 1.5;
-  }
-  .step-tick {
-    width: 18px; height: 18px;
-    border-radius: 50%;
-    border: 1.5px solid var(--line);
-    flex-shrink: 0;
-    margin-top: 3px;
-    position: relative;
-    transition: all 0.3s ease;
-  }
-  .step-row.done .step-tick {
-    background: #4ade80;
-    border-color: #4ade80;
-  }
-  .step-row.done .step-tick::after {
-    content: '✓';
-    position: absolute;
-    top: 50%; left: 50%;
-    transform: translate(-50%, -50%);
-    color: #fff;
-    font-size: 11px;
-    font-weight: 700;
-  }
-  .step-row code {
-    font-family: 'JetBrains Mono', monospace;
-    background: var(--accent-soft);
-    color: var(--accent);
-    padding: 1px 5px;
-    border-radius: 3px;
-    font-size: 12.5px;
-  }
-
-  /* 幕 4: 结果 */
-  .result {
-    background: var(--accent-soft);
-    border: 1.5px solid var(--accent);
-    border-radius: 8px;
-    padding: 20px 24px;
-  }
-  .result-head {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 11px;
-    color: var(--accent);
-    margin-bottom: 14px;
-    letter-spacing: 0.12em;
-    font-weight: 700;
-    text-transform: uppercase;
-  }
-  .result-list {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-  }
-  .result-item {
-    display: flex;
-    align-items: flex-start;
-    gap: 10px;
-    font-family: 'Noto Sans SC', sans-serif;
-    font-size: 14.5px;
-    color: var(--ink);
-    line-height: 1.55;
-  }
-  .result-item::before {
-    content: '✓';
+  .vs-table td.is-yes::before {
+    content: '✓ ';
     color: var(--accent);
     font-weight: 700;
-    flex-shrink: 0;
-    margin-top: 1px;
   }
-  .result-foot {
-    margin-top: 16px;
-    padding-top: 14px;
-    border-top: 1px dashed rgba(255,77,46,0.32);
-    font-family: 'Noto Serif SC', serif;
-    font-size: 14px;
+  .vs-table td.is-no {
     color: var(--ink-soft);
-    line-height: 1.6;
   }
-  .result-foot strong { color: var(--ink); font-weight: 700; }
-
-  /* 下一场景按钮 */
-  .scene-nav {
-    margin-top: 28px;
-    padding-top: 22px;
-    border-top: 1px solid var(--line);
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 14px;
-    flex-wrap: wrap;
-  }
-  .scene-nav button {
-    background: var(--ink);
-    color: var(--paper);
-    border: none;
-    padding: 12px 22px;
-    border-radius: 6px;
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 12px;
-    letter-spacing: 0.08em;
-    cursor: pointer;
-    text-transform: uppercase;
-    font-weight: 700;
-    transition: all 0.15s ease;
-  }
-  .scene-nav button:hover {
-    background: var(--accent);
-    transform: translateY(-1px);
-  }
-  .scene-nav .nav-hint {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 11px;
+  .vs-table td.is-no::before {
+    content: '✗ ';
     color: var(--ink-mute);
-    letter-spacing: 0.06em;
-  }
-
-  @media (max-width: 720px) {
-    .scene-detail { padding: 22px 18px; }
-    .sd-quote { font-size: 26px; }
-    .bubble { font-size: 16px; }
-  }
-
-  /* ============== §04 — Agent Dispatch ============== */
-  .ad-stage {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 16px;
-    margin: 24px 0 8px;
-  }
-  .ad-pane-head {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 11px;
-    letter-spacing: 0.14em;
-    color: var(--ink-mute);
-    text-transform: uppercase;
-    margin-bottom: 14px;
-  }
-
-  .ad-tasks {
-    background: var(--paper);
-    border: 1.5px solid var(--line);
-    border-radius: 10px;
-    padding: 22px 24px;
-  }
-  .ad-task-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-    gap: 12px;
-  }
-  .ad-task {
-    background: var(--bg);
-    border: 1.5px solid var(--line);
-    border-radius: 8px;
-    padding: 16px 18px;
-    cursor: pointer;
-    text-align: left;
-    font-family: inherit;
-    color: inherit;
-    transition: all 0.18s ease;
-  }
-  .ad-task:hover {
-    border-color: var(--ink);
-    transform: translateY(-2px);
-  }
-  .ad-task.is-active {
-    border-color: var(--accent);
-    background: var(--accent-soft);
-  }
-  .ad-task-pattern {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 10px;
-    letter-spacing: 0.1em;
-    color: var(--accent);
-    text-transform: uppercase;
-    margin-bottom: 8px;
     font-weight: 700;
   }
-  .ad-task-name {
-    font-family: 'Noto Serif SC', serif;
-    font-size: 17px;
-    font-weight: 700;
-    color: var(--ink);
-    margin-bottom: 6px;
-    line-height: 1.3;
-  }
-  .ad-task-desc {
-    font-size: 12px;
-    color: var(--ink-soft);
-    line-height: 1.5;
-  }
-
-  /* 控制区 */
-  .ad-control {
-    background: var(--ink);
-    color: var(--paper);
-    border-radius: 10px;
-    padding: 22px 24px;
-    display: flex;
-    align-items: center;
-    gap: 18px;
-    flex-wrap: wrap;
-  }
-  .ad-main {
-    display: flex;
-    align-items: center;
-    gap: 14px;
-    flex: 1;
-    min-width: 200px;
-  }
-  .ad-avatar {
-    width: 50px;
-    height: 50px;
-    border-radius: 50%;
-    background: var(--accent);
-    color: var(--paper);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-family: 'Fraunces', serif;
-    font-size: 26px;
-    font-weight: 900;
-    font-style: italic;
-    flex-shrink: 0;
-  }
-  .ad-main-label {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 10px;
-    letter-spacing: 0.12em;
-    color: var(--accent);
-    margin-bottom: 4px;
-  }
-  .ad-main-status {
-    font-family: 'Noto Serif SC', serif;
-    font-size: 16px;
-    font-weight: 500;
-    color: var(--paper);
-    line-height: 1.4;
-  }
-  .ad-go, .ad-reset {
-    background: var(--accent);
-    color: var(--paper);
-    border: none;
-    padding: 12px 22px;
-    border-radius: 6px;
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 12px;
-    letter-spacing: 0.08em;
-    cursor: pointer;
-    text-transform: uppercase;
-    font-weight: 700;
-    transition: all 0.15s ease;
-  }
-  .ad-go:hover, .ad-reset:hover {
-    transform: translateY(-1px);
-    background: #ff6347;
-  }
-  .ad-go:disabled {
-    background: rgba(255,255,255,0.18);
-    cursor: not-allowed;
-    color: rgba(255,255,255,0.4);
-  }
-  .ad-reset {
-    background: transparent;
-    border: 1px solid rgba(255,255,255,0.3);
-    color: rgba(255,255,255,0.8);
-  }
-  .ad-reset:hover { background: rgba(255,255,255,0.08); }
-
-  /* 执行区 */
-  .ad-exec {
-    background: var(--paper);
-    border: 1.5px solid var(--line);
-    border-radius: 10px;
-    padding: 22px 24px;
-    min-height: 220px;
-  }
-  .ad-subagents {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-  }
-  .ad-empty {
-    color: var(--ink-mute);
-    font-style: italic;
-    text-align: center;
-    padding: 40px 20px;
-    font-family: 'Noto Serif SC', serif;
-    font-size: 14px;
-  }
-  .ad-subagent {
-    display: grid;
-    grid-template-columns: 36px 1fr 80px;
-    gap: 14px;
-    align-items: center;
-    padding: 14px 16px;
-    background: var(--bg);
-    border: 1.5px solid var(--line);
-    border-radius: 7px;
-    opacity: 0;
-    transform: translateY(8px);
-    animation: subagentIn 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
-  }
-  @keyframes subagentIn {
-    to { opacity: 1; transform: translateY(0); }
-  }
-  .ad-subagent.is-running {
-    border-color: var(--accent);
-    background: var(--accent-soft);
-  }
-  .ad-subagent.is-done {
-    border-color: #4ade80;
-    background: rgba(74,222,128,0.06);
-  }
-  .ad-subagent.is-failed {
-    border-color: #ef4444;
-    background: rgba(239,68,68,0.06);
-  }
-  .ad-sa-icon {
-    width: 36px;
-    height: 36px;
-    border-radius: 50%;
-    background: var(--ink);
-    color: var(--paper);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 11px;
-    font-weight: 700;
-    flex-shrink: 0;
-  }
-  .ad-subagent.is-running .ad-sa-icon { background: var(--accent); }
-  .ad-subagent.is-done .ad-sa-icon { background: #4ade80; }
-  .ad-subagent.is-failed .ad-sa-icon { background: #ef4444; }
-  .ad-sa-body {
-    min-width: 0;
-  }
-  .ad-sa-name {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 13px;
-    color: var(--ink);
-    font-weight: 700;
-    margin-bottom: 4px;
-  }
-  .ad-sa-task {
-    font-size: 12.5px;
-    color: var(--ink-soft);
-    line-height: 1.4;
-  }
-  .ad-sa-progress {
-    height: 6px;
-    background: var(--line);
-    border-radius: 3px;
-    overflow: hidden;
-  }
-  .ad-sa-progress-bar {
-    height: 100%;
-    background: var(--accent);
-    width: 0%;
-    transition: width 0.25s linear;
-  }
-  .ad-subagent.is-done .ad-sa-progress-bar {
-    background: #4ade80;
-    width: 100% !important;
-  }
-  .ad-subagent.is-failed .ad-sa-progress-bar {
-    background: #ef4444;
-    width: 100% !important;
-  }
-
-  /* 交付 */
-  .ad-deliver {
-    background: var(--accent-soft);
-    border: 1.5px solid var(--accent);
-    border-radius: 10px;
-    padding: 22px 24px;
-    animation: deliverIn 0.4s ease;
-  }
-  @keyframes deliverIn {
-    from { opacity: 0; transform: translateY(8px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
-  .ad-deliver-list {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-  }
-  .ad-deliver-item {
-    font-family: 'Noto Sans SC', sans-serif;
-    font-size: 14px;
-    color: var(--ink);
-    line-height: 1.5;
-  }
-  .ad-deliver-item code {
-    font-family: 'JetBrains Mono', monospace;
-    background: var(--paper);
-    color: var(--accent);
-    padding: 1px 6px;
-    border-radius: 3px;
-    font-size: 12.5px;
-  }
-
-  /* ============== §05 — 真假 Agent 鉴定 ============== */
-  .ai-id-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: 16px;
-    margin-top: 24px;
-  }
-  .ai-id-card {
-    background: var(--paper);
-    border: 1.5px solid var(--line);
-    border-radius: 10px;
-    padding: 22px 24px;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    position: relative;
-  }
-  .ai-id-card:hover {
-    border-color: var(--ink);
-    transform: translateY(-2px);
-    box-shadow: 0 10px 24px rgba(22,22,29,0.08);
-  }
-  .ai-id-card.is-answered {
-    cursor: default;
-  }
-  .ai-id-card.is-answered:hover {
-    transform: none;
-  }
-  .ai-id-card.is-correct {
-    border-color: #4ade80;
-    background: rgba(74,222,128,0.06);
-  }
-  .ai-id-card.is-wrong {
-    border-color: #ef4444;
-    background: rgba(239,68,68,0.06);
-  }
-  .aid-num {
-    font-family: 'Fraunces', serif;
-    font-size: 36px;
-    font-weight: 900;
-    color: var(--accent);
-    line-height: 0.9;
-    margin-bottom: 12px;
-    font-style: italic;
-  }
-  .aid-quote {
-    font-family: 'Noto Sans SC', sans-serif;
-    font-size: 13.5px;
-    line-height: 1.7;
-    color: var(--ink);
-    background: #1f1f29;
-    color: #d8d8e0;
-    padding: 14px 16px;
-    border-radius: 6px;
-    margin-bottom: 16px;
-    font-style: italic;
-  }
-  .aid-quote .speaker {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 11px;
-    color: var(--accent);
-    font-weight: 700;
-    margin-right: 6px;
-    letter-spacing: 0.06em;
-  }
-  .aid-q {
-    font-family: 'Noto Serif SC', serif;
-    font-size: 15px;
-    font-weight: 700;
-    color: var(--ink);
-    margin-bottom: 14px;
-    line-height: 1.4;
-  }
-  .aid-choices {
-    display: flex;
-    gap: 8px;
-  }
-  .aid-choice {
-    flex: 1;
-    background: transparent;
-    border: 1.5px solid var(--line);
-    color: var(--ink);
-    padding: 10px 14px;
-    border-radius: 6px;
-    font-family: 'Noto Sans SC', sans-serif;
-    font-size: 13px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.15s ease;
-  }
-  .aid-choice:hover:not(:disabled) {
-    border-color: var(--ink);
-    background: var(--bg-2);
-  }
-  .aid-choice:disabled {
-    cursor: not-allowed;
-    opacity: 0.55;
-  }
-  .aid-choice.is-correct {
-    background: #4ade80;
-    color: var(--paper);
-    border-color: #4ade80;
-    opacity: 1;
-  }
-  .aid-choice.is-wrong {
-    background: #ef4444;
-    color: var(--paper);
-    border-color: #ef4444;
-    opacity: 1;
-  }
-  .aid-feedback {
-    margin-top: 14px;
-    padding-top: 14px;
-    border-top: 1px dashed var(--line);
-    font-size: 12.5px;
-    color: var(--ink-soft);
-    line-height: 1.6;
-    display: none;
-  }
-  .aid-feedback.show { display: block; }
-  .aid-feedback strong { color: var(--ink); }
-  .aid-feedback .yes { color: #4ade80; font-weight: 700; }
-  .aid-feedback .no  { color: #ef4444; font-weight: 700; }
+  .vs-table tr:last-child td { border-bottom: none; }
 
 </style>
 </head>
@@ -1986,8 +767,8 @@
   <div class="wrap">
     <div class="hero-meta">
       <span class="pill fill">Q3 · Design × AI</span>
-      <span class="pill">阅读 12 分钟</span>
-      <span class="pill">含 6 个 Agent 场景</span>
+      <span class="pill">阅读 8 分钟</span>
+      <span class="pill">5 张可视化图</span>
       <span class="label">把 AI 当团队用</span>
     </div>
     <div class="hero-grid">
@@ -2004,7 +785,7 @@
       </div>
       <div class="hero-side">
         <div class="row"><span class="k">本页讲什么</span><span class="v">Agent 是什么 / 怎么协作</span></div>
-        <div class="row"><span class="k">含拆解</span><span class="v">4 件套 + 3 种协作模式 + 6 场景</span></div>
+        <div class="row"><span class="k">含拆解</span><span class="v">4 件套 + 3 种协作模式 + 派活组织树</span></div>
         <div class="row"><span class="k">面向</span><span class="v">在用 Claude Code 但只把它当 AI 问答</span></div>
         <div class="row"><span class="k">前置知识</span><span class="v">读完 Q1 MCP / Q2 Skills 更顺</span></div>
       </div>
@@ -2026,50 +807,69 @@
       </p>
     </div>
 
-    <div class="anatomy-stage">
-      <div class="anatomy-code">
-        <div class="ak-head">
-          <span class="dot-r"></span>
-          <span class="dot-y"></span>
-          <span class="dot-g"></span>
-          <span class="ak-file">普通 AI vs Agent · 行为差异</span>
+    <div class="vs-stage">
+      <!-- 左：普通 AI · 直线 -->
+      <div class="vs-card">
+        <div class="vs-head">
+          <span class="vs-tag">old · chat</span>
         </div>
-        <div class="ak-body" style="padding:20px 24px;">
-          <div style="font-family:'Noto Sans SC',sans-serif;font-size:13.5px;line-height:1.8;color:#d8d8e0;">
-            <div style="color:#8a8a96;margin-bottom:6px;"># 普通 AI · 单回合</div>
-            <div style="color:#82aaff;">你: 帮我写一个 SaaS 仪表盘</div>
-            <div style="color:#c3e88d;margin-bottom:14px;">AI: [给出一段代码] · 结束</div>
-            <div style="color:#8a8a96;margin-bottom:6px;"># Agent · 完整闭环</div>
-            <div style="color:#82aaff;">你: 帮我做一个 SaaS 仪表盘 (含设计+代码+测试)</div>
-            <div style="color:#ffcb6b;margin-bottom:4px;">Agent · 思考: 这需要 4 个 sub-agent 协作 →</div>
-            <div style="color:#ffcb6b;margin-bottom:4px;">         design-agent · code-agent · test-agent · deploy-agent</div>
-            <div style="color:#ffcb6b;margin-bottom:4px;">Agent · 派活并行执行 ...</div>
-            <div style="color:#ffcb6b;margin-bottom:4px;">Agent · test-agent 报错 → 派 fix-agent 修复</div>
-            <div style="color:#ffcb6b;margin-bottom:4px;">Agent · 整合 4 份输出</div>
-            <div style="color:#c3e88d;">Agent: [完整项目 · 含部署 URL] · 结束</div>
-          </div>
+        <div class="vs-title">普通 AI · <span class="em">一问一答</span></div>
+        <div class="vs-sub">linear · one-shot</div>
+        <svg class="vs-svg" viewBox="0 0 280 280" preserveAspectRatio="xMidYMid meet">
+          <!-- top input arrow -->
+          <text x="140" y="34" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="11" fill="#16161d" font-weight="600">user input</text>
+          <line x1="140" y1="46" x2="140" y2="106" stroke="#16161d" stroke-width="1.5"/>
+          <polyline points="134,100 140,108 146,100" fill="none" stroke="#16161d" stroke-width="1.5" stroke-linecap="round"/>
+          <text x="158" y="78" font-family="JetBrains Mono, monospace" font-size="10" fill="#8a8a92">prompt</text>
+          <!-- center AI circle -->
+          <circle cx="140" cy="140" r="34" fill="#16161d" stroke="#16161d" stroke-width="2"/>
+          <text x="140" y="145" text-anchor="middle" font-family="Noto Serif SC, serif" font-size="14" font-weight="700" fill="#faf7f0">AI</text>
+          <!-- bottom output arrow -->
+          <line x1="140" y1="174" x2="140" y2="234" stroke="#16161d" stroke-width="1.5"/>
+          <polyline points="134,228 140,236 146,228" fill="none" stroke="#16161d" stroke-width="1.5" stroke-linecap="round"/>
+          <text x="158" y="208" font-family="JetBrains Mono, monospace" font-size="10" fill="#8a8a92">answer</text>
+          <!-- bottom label -->
+          <text x="140" y="262" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="11" fill="#16161d" font-weight="600">output · done</text>
+        </svg>
+        <div class="vs-foot">
+          <strong>一问 → 一答 → 完</strong><br>
+          复杂任务需要你拆解、自己调度
         </div>
       </div>
 
-      <div class="anatomy-list">
-        <div class="anat-card" style="cursor:default;">
-          <div class="ak-tag">old</div>
-          <h4>普通 AI · <span class="em">单回合</span></h4>
-          <p>你<strong>问一句</strong>它<strong>答一句</strong>。复杂任务需要你<strong>拆解 + 调度</strong>。
-          每一步都靠你来回贴 prompt。AI 像一个<strong>临时工</strong>。</p>
+      <!-- 右：Agent · 闭环 -->
+      <div class="vs-card is-agent">
+        <div class="vs-head">
+          <span class="vs-tag">new · agent</span>
         </div>
-        <div class="anat-card" style="cursor:default;">
-          <div class="ak-tag">new</div>
-          <h4>Agent · <span class="em">自主闭环</span></h4>
-          <p>你<strong>下达目标</strong>它<strong>自己拆任务</strong>、自己用工具、自己反思修正。
-          你只看最终结果。Agent 像一个<strong>项目经理</strong>。</p>
-        </div>
-        <div class="anat-card" style="cursor:default;">
-          <div class="ak-tag">team</div>
-          <h4>多 Agent · <span class="em">一个团队</span></h4>
-          <p>main agent <strong>派活</strong>给 sub-agents 并行执行。
-          一个调研、一个写代码、一个跑测试。
-          你给目标，它们组队干完。</p>
+        <div class="vs-title">Agent · <span class="em">完整闭环</span></div>
+        <div class="vs-sub">thinking → tool → observe → reflect</div>
+        <svg class="vs-svg" viewBox="0 0 280 280" preserveAspectRatio="xMidYMid meet">
+          <!-- one clean dashed loop circle -->
+          <circle class="vs-loop-arrow" cx="140" cy="140" r="75"/>
+          <!-- 4 small chevron arrowheads along the loop (clockwise) -->
+          <polyline points="208,134 215,140 208,146" fill="none" stroke="#ff4d2e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          <polyline points="134,208 140,215 146,208" fill="none" stroke="#ff4d2e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          <polyline points="72,146 65,140 72,134" fill="none" stroke="#ff4d2e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          <polyline points="146,72 140,65 134,72" fill="none" stroke="#ff4d2e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          <!-- 4 stage nodes on loop -->
+          <circle class="vs-loop-node" cx="140" cy="65" r="22"/>
+          <text class="vs-loop-node-text" x="140" y="69" text-anchor="middle">think</text>
+          <circle class="vs-loop-node" cx="215" cy="140" r="22"/>
+          <text class="vs-loop-node-text" x="215" y="144" text-anchor="middle">tool</text>
+          <circle class="vs-loop-node" cx="140" cy="215" r="22"/>
+          <text class="vs-loop-node-text" x="140" y="219" text-anchor="middle">observe</text>
+          <circle class="vs-loop-node" cx="65" cy="140" r="22"/>
+          <text class="vs-loop-node-text" x="65" y="144" text-anchor="middle">reflect</text>
+          <!-- center Agent core -->
+          <circle cx="140" cy="140" r="28" fill="#ff4d2e" stroke="#ff4d2e" stroke-width="2"/>
+          <text x="140" y="145" text-anchor="middle" font-family="Noto Serif SC, serif" font-size="12" font-weight="700" fill="#faf7f0">Agent</text>
+          <!-- bottom label -->
+          <text x="140" y="262" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="11" fill="#ff4d2e" font-weight="600">loop until done</text>
+        </svg>
+        <div class="vs-foot">
+          <strong>下达目标 → 自己闭环 → 整合交付</strong><br>
+          AI + 工具 + 规划 + 反思 全自动循环
         </div>
       </div>
     </div>
@@ -2097,57 +897,63 @@
       </p>
     </div>
 
-    <div class="fk-grid" style="margin-top:24px;">
-      <div class="fk-card" style="cursor:default;">
-        <div class="fk-head">
-          <span class="fk-code">tools</span>
-          <span class="fk-tag">必须</span>
-        </div>
-        <div class="fk-title">能用什么工具</div>
-        <div class="fk-bilingual">
-          <div class="fk-bi-row"><span class="fk-bi-lang">EN</span><span class="fk-bi-text en">The set of MCP servers + skills the agent has access to. Determines its "physical abilities".</span></div>
-          <div class="fk-bi-row"><span class="fk-bi-lang">CN</span><span class="fk-bi-text cn">agent 能调用哪些 MCP + skills · 决定它"能动手做什么"</span></div>
-        </div>
-        <div class="fk-when">没工具 = 它只会用嘴说</div>
-      </div>
+    <div class="anat-stage">
+      <!-- 十字解剖图 -->
+      <svg class="anat-svg" id="anatSvg" viewBox="0 0 460 420" preserveAspectRatio="xMidYMid meet">
+        <!-- 4 线条连到中心 -->
+        <line class="anat-line" data-line="planning" x1="230" y1="110" x2="230" y2="180"/>
+        <line class="anat-line" data-line="reflection" x1="230" y1="240" x2="230" y2="310"/>
+        <line class="anat-line" data-line="memory" x1="105" y1="210" x2="180" y2="210"/>
+        <line class="anat-line" data-line="tools" x1="280" y1="210" x2="355" y2="210"/>
 
-      <div class="fk-card" style="cursor:default;">
-        <div class="fk-head">
-          <span class="fk-code">planning</span>
-          <span class="fk-tag">规划</span>
-        </div>
-        <div class="fk-title">先想清楚再做</div>
-        <div class="fk-bilingual">
-          <div class="fk-bi-row"><span class="fk-bi-lang">EN</span><span class="fk-bi-text en">Agent decomposes goals into steps before executing. Avoids reactive single-step thinking.</span></div>
-          <div class="fk-bi-row"><span class="fk-bi-lang">CN</span><span class="fk-bi-text cn">把大目标拆成 N 步 · 先列计划 · 一步步走 · 不再"想一步做一步"</span></div>
-        </div>
-        <div class="fk-when">没 planning = 走一步看一步 · 复杂任务必翻车</div>
-      </div>
+        <!-- 中心: AI 本体 -->
+        <g class="anat-core">
+          <circle cx="230" cy="210" r="40"/>
+          <text x="230" y="208" text-anchor="middle" font-size="13">AI</text>
+          <text x="230" y="225" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="9" fill="#faf7f0" opacity="0.6">model</text>
+        </g>
 
-      <div class="fk-card" style="cursor:default;">
-        <div class="fk-head">
-          <span class="fk-code">memory</span>
-          <span class="fk-tag">记忆</span>
-        </div>
-        <div class="fk-title">记住做过什么</div>
-        <div class="fk-bilingual">
-          <div class="fk-bi-row"><span class="fk-bi-lang">EN</span><span class="fk-bi-text en">Persistent context across turns. Knows what worked, what failed, what state things are in.</span></div>
-          <div class="fk-bi-row"><span class="fk-bi-lang">CN</span><span class="fk-bi-text cn">跨回合的上下文 · 哪些尝试过 · 哪些失败了 · 当前状态如何</span></div>
-        </div>
-        <div class="fk-when">没 memory = 每次都从头开始 · 同一个错犯无数次</div>
-      </div>
+        <!-- planning · 上 -->
+        <g class="anat-node" data-key="planning">
+          <rect class="anat-shape" x="160" y="50" width="140" height="58" rx="8"/>
+          <text class="anat-label" x="230" y="76" text-anchor="middle">planning</text>
+          <text class="anat-sublabel" x="230" y="94" text-anchor="middle">先想清楚再做</text>
+        </g>
 
-      <div class="fk-card" style="cursor:default;">
-        <div class="fk-head">
-          <span class="fk-code">reflection</span>
-          <span class="fk-tag">反思</span>
-        </div>
-        <div class="fk-title">失败了能反思</div>
-        <div class="fk-bilingual">
-          <div class="fk-bi-row"><span class="fk-bi-lang">EN</span><span class="fk-bi-text en">After each step, agent evaluates: did it work? If not, adjust approach and retry.</span></div>
-          <div class="fk-bi-row"><span class="fk-bi-lang">CN</span><span class="fk-bi-text cn">每步执行后 self-check · 失败原因分析 · 调整策略再试 · 不是一条道走到黑</span></div>
-        </div>
-        <div class="fk-when">没 reflection = 撞墙也不回头</div>
+        <!-- reflection · 下 -->
+        <g class="anat-node" data-key="reflection">
+          <rect class="anat-shape" x="160" y="312" width="140" height="58" rx="8"/>
+          <text class="anat-label" x="230" y="338" text-anchor="middle">reflection</text>
+          <text class="anat-sublabel" x="230" y="356" text-anchor="middle">失败能反思</text>
+        </g>
+
+        <!-- memory · 左 -->
+        <g class="anat-node" data-key="memory">
+          <rect class="anat-shape" x="0" y="180" width="105" height="60" rx="8"/>
+          <text class="anat-label" x="52" y="206" text-anchor="middle">memory</text>
+          <text class="anat-sublabel" x="52" y="224" text-anchor="middle">记住做过什么</text>
+        </g>
+
+        <!-- tools · 右 -->
+        <g class="anat-node" data-key="tools">
+          <rect class="anat-shape" x="355" y="180" width="105" height="60" rx="8"/>
+          <text class="anat-label" x="407" y="206" text-anchor="middle">tools</text>
+          <text class="anat-sublabel" x="407" y="224" text-anchor="middle">能用什么工具</text>
+        </g>
+
+        <!-- 顶部小标题 -->
+        <text x="230" y="20" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="10" fill="#8a8a92" letter-spacing="2">AGENT · 4 件套</text>
+      </svg>
+
+      <!-- 说明区 -->
+      <div class="anat-detail" id="anatDetail">
+        <div class="ad-tag">点周围 4 个节点看说明</div>
+        <h3 class="ad-name">Agent 内核</h3>
+        <p class="ad-desc">
+          中心是 <strong>AI 模型</strong>（引擎），周围 4 件套是<strong>让它成为 agent 的机制</strong>。
+          tools 让它<strong>动手</strong>，planning 让它<strong>规划</strong>，memory 让它<strong>记忆</strong>，reflection 让它<strong>自查</strong>。
+        </p>
+        <div class="ad-miss">四件齐全才叫 agent</div>
       </div>
     </div>
 
@@ -2175,44 +981,93 @@
       </p>
     </div>
 
-    <div class="fk-grid" style="margin-top:24px;">
-      <div class="fk-card" style="cursor:default;">
-        <div class="fk-head">
-          <span class="fk-code">orchestrator</span>
-          <span class="fk-tag">指挥型</span>
+    <div class="pat-stage">
+      <!-- Pattern 1 · Orchestrator -->
+      <div class="pat-card">
+        <div class="pat-tag">pattern · 01</div>
+        <div class="pat-title">Orchestrator</div>
+        <div class="pat-cn">一对多 · 指挥型</div>
+        <svg class="pat-svg" viewBox="0 0 220 170" preserveAspectRatio="xMidYMid meet">
+          <!-- links from main to subs -->
+          <line class="pat-link" x1="110" y1="42" x2="40" y2="130"/>
+          <line class="pat-link" x1="110" y1="42" x2="80" y2="130"/>
+          <line class="pat-link" x1="110" y1="42" x2="140" y2="130"/>
+          <line class="pat-link" x1="110" y1="42" x2="180" y2="130"/>
+          <!-- main -->
+          <circle class="pat-node-circle is-main" cx="110" cy="36" r="22"/>
+          <text class="pat-node-label is-main" x="110" y="40" text-anchor="middle">main</text>
+          <!-- subs -->
+          <circle class="pat-node-circle" cx="40" cy="138" r="14"/>
+          <text class="pat-node-label" x="40" y="142" text-anchor="middle">a</text>
+          <circle class="pat-node-circle" cx="80" cy="138" r="14"/>
+          <text class="pat-node-label" x="80" y="142" text-anchor="middle">b</text>
+          <circle class="pat-node-circle" cx="140" cy="138" r="14"/>
+          <text class="pat-node-label" x="140" y="142" text-anchor="middle">c</text>
+          <circle class="pat-node-circle" cx="180" cy="138" r="14"/>
+          <text class="pat-node-label" x="180" y="142" text-anchor="middle">d</text>
+        </svg>
+        <div class="pat-foot">
+          main agent 拆任务、派给 N 个 sub-agent、收集结果。<br>
+          <strong>适合：</strong>复杂目标 · 子任务有依赖
         </div>
-        <div class="fk-title">主管 派活</div>
-        <div class="fk-bilingual">
-          <div class="fk-bi-row"><span class="fk-bi-lang">EN</span><span class="fk-bi-text en">A main agent dispatches subtasks to sub-agents, collects results, decides next moves.</span></div>
-          <div class="fk-bi-row"><span class="fk-bi-lang">CN</span><span class="fk-bi-text cn">main agent 拿到目标 · 拆 N 个子任务 · 派给 N 个 sub-agent · 收集结果 · 决定下一步</span></div>
-        </div>
-        <div class="fk-when"><strong>适合：</strong>复杂目标 · 子任务有依赖关系</div>
       </div>
 
-      <div class="fk-card" style="cursor:default;">
-        <div class="fk-head">
-          <span class="fk-code">pipeline</span>
-          <span class="fk-tag">流水线</span>
+      <!-- Pattern 2 · Pipeline -->
+      <div class="pat-card">
+        <div class="pat-tag">pattern · 02</div>
+        <div class="pat-title">Pipeline</div>
+        <div class="pat-cn">A → B → C → D · 流水线</div>
+        <svg class="pat-svg" viewBox="0 0 220 170" preserveAspectRatio="xMidYMid meet">
+          <!-- chain links with arrows -->
+          <line class="pat-link" x1="38" y1="85" x2="68" y2="85"/>
+          <polyline points="62,80 70,85 62,90" fill="none" stroke="#16161d" stroke-width="1.5"/>
+          <line class="pat-link" x1="92" y1="85" x2="122" y2="85"/>
+          <polyline points="116,80 124,85 116,90" fill="none" stroke="#16161d" stroke-width="1.5"/>
+          <line class="pat-link" x1="146" y1="85" x2="176" y2="85"/>
+          <polyline points="170,80 178,85 170,90" fill="none" stroke="#16161d" stroke-width="1.5"/>
+          <!-- nodes -->
+          <circle class="pat-node-circle" cx="22" cy="85" r="16"/>
+          <text class="pat-node-label" x="22" y="89" text-anchor="middle">a</text>
+          <circle class="pat-node-circle" cx="80" cy="85" r="16"/>
+          <text class="pat-node-label" x="80" y="89" text-anchor="middle">b</text>
+          <circle class="pat-node-circle" cx="134" cy="85" r="16"/>
+          <text class="pat-node-label" x="134" y="89" text-anchor="middle">c</text>
+          <circle class="pat-node-circle" cx="192" cy="85" r="16"/>
+          <text class="pat-node-label" x="192" y="89" text-anchor="middle">d</text>
+        </svg>
+        <div class="pat-foot">
+          A 输出给 B 接，B 给 C，C 给 D。串行 · 每步专精。<br>
+          <strong>适合：</strong>工作流明确 · 每步专精
         </div>
-        <div class="fk-title">A 出给 B 接</div>
-        <div class="fk-bilingual">
-          <div class="fk-bi-row"><span class="fk-bi-lang">EN</span><span class="fk-bi-text en">Agent A outputs are piped into agent B as inputs. Sequential, each agent has a specialty.</span></div>
-          <div class="fk-bi-row"><span class="fk-bi-lang">CN</span><span class="fk-bi-text cn">A 写代码 → B 跑测试 → C 修 bug → D 提 PR · 串行链路 · 每个 agent 一个专长</span></div>
-        </div>
-        <div class="fk-when"><strong>适合：</strong>工作流明确 · 每步专精</div>
       </div>
 
-      <div class="fk-card" style="cursor:default;">
-        <div class="fk-head">
-          <span class="fk-code">parallel</span>
-          <span class="fk-tag">并行</span>
+      <!-- Pattern 3 · Parallel -->
+      <div class="pat-card">
+        <div class="pat-tag">pattern · 03</div>
+        <div class="pat-title">Parallel</div>
+        <div class="pat-cn">同时跑独立任务 · 并行</div>
+        <svg class="pat-svg" viewBox="0 0 220 170" preserveAspectRatio="xMidYMid meet">
+          <!-- vertical links (concurrent) -->
+          <line class="pat-link" x1="110" y1="42" x2="50" y2="130"/>
+          <line class="pat-link" x1="110" y1="42" x2="110" y2="130"/>
+          <line class="pat-link" x1="110" y1="42" x2="170" y2="130"/>
+          <!-- main -->
+          <circle class="pat-node-circle is-main" cx="110" cy="36" r="22"/>
+          <text class="pat-node-label is-main" x="110" y="40" text-anchor="middle">main</text>
+          <!-- subs -->
+          <circle class="pat-node-circle" cx="50" cy="138" r="16"/>
+          <text class="pat-node-label" x="50" y="142" text-anchor="middle">a</text>
+          <circle class="pat-node-circle" cx="110" cy="138" r="16"/>
+          <text class="pat-node-label" x="110" y="142" text-anchor="middle">b</text>
+          <circle class="pat-node-circle" cx="170" cy="138" r="16"/>
+          <text class="pat-node-label" x="170" y="142" text-anchor="middle">c</text>
+          <!-- concurrent tick -->
+          <text x="110" y="165" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="9" fill="#8a8a92" letter-spacing="2">3 同时启动</text>
+        </svg>
+        <div class="pat-foot">
+          N 个 agent 同时启动，跑独立子任务、最后汇总。<br>
+          <strong>适合：</strong>子任务独立 · 想省时间
         </div>
-        <div class="fk-title">同时干不同活</div>
-        <div class="fk-bilingual">
-          <div class="fk-bi-row"><span class="fk-bi-lang">EN</span><span class="fk-bi-text en">Multiple agents run concurrently on independent subtasks. Results merged at the end.</span></div>
-          <div class="fk-bi-row"><span class="fk-bi-lang">CN</span><span class="fk-bi-text cn">3 个 agent 同时干: 一个跑视觉回归 · 一个查 a11y · 一个测性能 · 最后汇总</span></div>
-        </div>
-        <div class="fk-when"><strong>适合：</strong>子任务互相独立 · 想省时间</div>
       </div>
     </div>
 
@@ -2223,258 +1078,268 @@
     </div>
   </div>
 </section>
-<!-- §04 — 派 Agent 模拟器 -->
+<!-- §04 — 组织树 + 闭环 -->
 <section id="agent-dispatch">
   <div class="wrap">
     <div class="section-head">
       <div>
         <div class="section-num"><strong>04</strong> / 派活</div>
-        <h2 class="section-title">下个目标<br><span class="em">看 Agents 怎么协作</span></h2>
+        <h2 class="section-title">main 派活 +<br><span class="em">sub 自己闭环</span></h2>
       </div>
       <p class="section-sub">
-        选一个真实任务, 点 <strong>▶ 派 Agent</strong> ——
-        看 main agent 怎么<strong>拆任务、派 sub-agents、并行/串行执行、整合交付</strong>。
+        左边看 <strong>main 怎么派给 sub</strong>，每个 sub 挂哪些工具。<br>
+        右边看 <strong>单个 sub 内部</strong>怎么 thinking → tool → observe → reflect 循环。
       </p>
     </div>
 
-    <div class="ad-stage">
-      <!-- 任务选择 -->
-      <div class="ad-tasks">
-        <div class="ad-pane-head">选一个目标 · CHOOSE A TASK</div>
-        <div class="ad-task-grid">
-          <button class="ad-task is-active" data-task="full-project">
-            <div class="ad-task-pattern">orchestrator · 派活型</div>
-            <div class="ad-task-name">做完整 SaaS 仪表盘</div>
-            <div class="ad-task-desc">需要设计 + 代码 + 测试 + 部署 4 件事</div>
-          </button>
-          <button class="ad-task" data-task="self-heal">
-            <div class="ad-task-pattern">pipeline · 流水线</div>
-            <div class="ad-task-name">写代码 + 自我修复</div>
-            <div class="ad-task-desc">写 → 测 → 修 → 再测 (自动循环)</div>
-          </button>
-          <button class="ad-task" data-task="parallel-audit">
-            <div class="ad-task-pattern">parallel · 并行型</div>
-            <div class="ad-task-name">并行 audit 报告</div>
-            <div class="ad-task-desc">视觉 + a11y + 性能同时跑</div>
-          </button>
-        </div>
+    <div class="org-stage">
+      <!-- 图 1 · 组织树 -->
+      <div class="org-card">
+        <div class="org-tag">tree · 派活</div>
+        <h3 class="org-title">main 派给 <span class="em">4 个 sub-agent</span></h3>
+        <svg class="org-svg" viewBox="0 0 460 340" preserveAspectRatio="xMidYMid meet">
+          <!-- main → sub links -->
+          <line class="o-link" x1="230" y1="48" x2="65" y2="135"/>
+          <line class="o-link" x1="230" y1="48" x2="175" y2="135"/>
+          <line class="o-link" x1="230" y1="48" x2="285" y2="135"/>
+          <line class="o-link" x1="230" y1="48" x2="395" y2="135"/>
+          <!-- main -->
+          <circle class="o-main-circle" cx="230" cy="36" r="26"/>
+          <text class="o-main-text" x="230" y="44" text-anchor="middle">M</text>
+          <text x="230" y="14" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="10" fill="#8a8a92" letter-spacing="2">MAIN AGENT</text>
+
+          <!-- design-agent -->
+          <circle class="o-sub-circle" cx="65" cy="148" r="22"/>
+          <text class="o-sub-text" x="65" y="153" text-anchor="middle">D</text>
+          <text class="o-sub-label" x="65" y="195" text-anchor="middle">design</text>
+          <text class="o-sub-label" x="65" y="208" text-anchor="middle" fill="#8a8a92">agent</text>
+          <line class="o-link is-tool" x1="65" y1="218" x2="65" y2="250"/>
+          <rect class="o-tool-box" x="20" y="252" width="90" height="22" rx="3"/>
+          <text class="o-tool-text" x="65" y="267" text-anchor="middle">Figma MCP</text>
+
+          <!-- code-agent -->
+          <circle class="o-sub-circle" cx="175" cy="148" r="22"/>
+          <text class="o-sub-text" x="175" y="153" text-anchor="middle">C</text>
+          <text class="o-sub-label" x="175" y="195" text-anchor="middle">code</text>
+          <text class="o-sub-label" x="175" y="208" text-anchor="middle" fill="#8a8a92">agent</text>
+          <line class="o-link is-tool" x1="175" y1="218" x2="175" y2="250"/>
+          <rect class="o-tool-box" x="125" y="252" width="100" height="22" rx="3"/>
+          <text class="o-tool-text" x="175" y="267" text-anchor="middle">Code Connect</text>
+          <line class="o-link is-tool" x1="175" y1="274" x2="175" y2="290"/>
+          <rect class="o-tool-box" x="125" y="290" width="100" height="22" rx="3"/>
+          <text class="o-tool-text" x="175" y="305" text-anchor="middle">Filesystem</text>
+
+          <!-- test-agent -->
+          <circle class="o-sub-circle" cx="285" cy="148" r="22"/>
+          <text class="o-sub-text" x="285" y="153" text-anchor="middle">T</text>
+          <text class="o-sub-label" x="285" y="195" text-anchor="middle">test</text>
+          <text class="o-sub-label" x="285" y="208" text-anchor="middle" fill="#8a8a92">agent</text>
+          <line class="o-link is-tool" x1="285" y1="218" x2="285" y2="250"/>
+          <rect class="o-tool-box" x="240" y="252" width="90" height="22" rx="3"/>
+          <text class="o-tool-text" x="285" y="267" text-anchor="middle">Playwright</text>
+
+          <!-- deploy-agent -->
+          <circle class="o-sub-circle" cx="395" cy="148" r="22"/>
+          <text class="o-sub-text" x="395" y="153" text-anchor="middle">V</text>
+          <text class="o-sub-label" x="395" y="195" text-anchor="middle">deploy</text>
+          <text class="o-sub-label" x="395" y="208" text-anchor="middle" fill="#8a8a92">agent</text>
+          <line class="o-link is-tool" x1="395" y1="218" x2="395" y2="250"/>
+          <rect class="o-tool-box" x="350" y="252" width="90" height="22" rx="3"/>
+          <text class="o-tool-text" x="395" y="267" text-anchor="middle">Vercel MCP</text>
+        </svg>
+        <div class="org-tag" style="margin-top:14px;margin-bottom:0;color:var(--ink-soft);">每个 sub 挂自己的 MCP / skill 工具</div>
       </div>
 
-      <!-- main agent + 控制 -->
-      <div class="ad-control">
-        <div class="ad-main">
-          <div class="ad-avatar">M</div>
-          <div class="ad-main-info">
-            <div class="ad-main-label">MAIN AGENT</div>
-            <div class="ad-main-status" id="ad-status">空闲 · 等指令</div>
-          </div>
-        </div>
-        <button class="ad-go" id="ad-go">▶ 派 Agent 开工</button>
-        <button class="ad-reset" id="ad-reset" hidden>↻ 重玩</button>
-      </div>
+      <!-- 图 2 · 单 agent 闭环 -->
+      <div class="org-card">
+        <div class="org-tag">loop · 闭环</div>
+        <h3 class="org-title">单个 agent <span class="em">自己转</span></h3>
+        <svg class="loop-svg" viewBox="0 0 320 340" preserveAspectRatio="xMidYMid meet">
+          <!-- main loop circle path (for moving glow) -->
+          <circle class="l-arrow" cx="160" cy="170" r="115" />
+          <circle class="l-arrow-dash" cx="160" cy="170" r="115" />
 
-      <!-- 执行区 -->
-      <div class="ad-exec" id="ad-exec">
-        <div class="ad-pane-head">Sub-Agents 执行栏 · EXECUTION</div>
-        <div class="ad-subagents" id="ad-subagents">
-          <div class="ad-empty">选好任务后点 ▶ 派 Agent 开工</div>
-        </div>
-      </div>
+          <!-- arrow heads on loop (clockwise) -->
+          <polyline points="270,158 280,170 270,182" fill="none" stroke="#ff4d2e" stroke-width="2" stroke-linecap="round"/>
+          <polyline points="148,278 160,288 172,278" fill="none" stroke="#ff4d2e" stroke-width="2" stroke-linecap="round"/>
+          <polyline points="50,182 40,170 50,158" fill="none" stroke="#ff4d2e" stroke-width="2" stroke-linecap="round"/>
+          <polyline points="172,62 160,52 148,62" fill="none" stroke="#ff4d2e" stroke-width="2" stroke-linecap="round"/>
 
-      <!-- 交付 -->
-      <div class="ad-deliver" id="ad-deliver" hidden>
-        <div class="ad-pane-head" style="color:var(--accent);">✓ 交付 · DELIVERABLES</div>
-        <div class="ad-deliver-list" id="ad-deliver-list"></div>
+          <!-- 4 nodes (top/right/bottom/left) -->
+          <circle class="l-node-circle" cx="160" cy="60" r="30"/>
+          <text class="l-node-text" x="160" y="58" text-anchor="middle">think</text>
+          <text class="l-node-text" x="160" y="72" text-anchor="middle" font-size="9" fill="#8a8a92">规划</text>
+
+          <circle class="l-node-circle" cx="270" cy="170" r="30"/>
+          <text class="l-node-text" x="270" y="168" text-anchor="middle">tool</text>
+          <text class="l-node-text" x="270" y="182" text-anchor="middle" font-size="9" fill="#8a8a92">用 MCP</text>
+
+          <circle class="l-node-circle" cx="160" cy="280" r="30"/>
+          <text class="l-node-text" x="160" y="278" text-anchor="middle">observe</text>
+          <text class="l-node-text" x="160" y="292" text-anchor="middle" font-size="9" fill="#8a8a92">看结果</text>
+
+          <circle class="l-node-circle" cx="50" cy="170" r="30"/>
+          <text class="l-node-text" x="50" y="168" text-anchor="middle">reflect</text>
+          <text class="l-node-text" x="50" y="182" text-anchor="middle" font-size="9" fill="#8a8a92">反思</text>
+
+          <!-- center label -->
+          <text class="l-center-text" x="160" y="160" text-anchor="middle">single agent</text>
+          <text class="l-center-sub" x="160" y="180" text-anchor="middle">loop · 4s 一圈</text>
+        </svg>
+        <div class="org-tag" style="margin-top:14px;margin-bottom:0;color:var(--ink-soft);">同样的循环 main 也在跑 · 嵌套</div>
       </div>
     </div>
 
     <div class="hint-strip" style="margin-top:32px;">
       <span class="hint-tag">领悟</span>
-      你只下达 <strong>一个目标</strong>, agent 框架自动拆任务、派 sub-agents、协作完成。
-      你没有写一行调度代码 ——
-      <strong>这就是 main agent 的价值</strong>。
+      你只下 <strong>一个目标</strong> 给 main，main 把活拆给 sub，每个 sub 自己跑 <code>think → tool → observe → reflect</code> 闭环。
+      没人写过调度代码 —— 这就是 <strong>agent 框架</strong>的价值。
     </div>
   </div>
 </section>
 
 
-<!-- §05 — 真假 Agent 鉴定 -->
-<section id="agent-id">
-  <div class="wrap">
-    <div class="section-head">
-      <div>
-        <div class="section-num"><strong>05</strong> / 鉴定</div>
-        <h2 class="section-title">真 Agent <br><span class="em">vs 普通 chat</span></h2>
-      </div>
-      <p class="section-sub">
-        4 个 AI 行为片段, 判断哪个是<strong>真 Agent</strong>, 哪个只是<strong>普通 chat</strong>。
-        看 <strong>4 件套 (tools / planning / memory / reflection)</strong> 齐不齐.
-      </p>
-    </div>
-
-    <div class="ai-id-grid" id="ai-id-grid">
-      <!-- JS 渲染 4 道题 -->
-    </div>
-  </div>
-</section>
-
-<!-- §06 — 场景剧场 -->
-<section id="figma-example">
-  <div class="wrap">
-    <div class="section-head">
-      <div>
-        <div class="section-num"><strong>06</strong> / 场景</div>
-        <h2 class="section-title">设计师能<br><span class="em">让 Agent 干 6 件事</span></h2>
-      </div>
-      <p class="section-sub">6 个真实场景 —— <strong>你下达目标 → main agent 派活 → sub-agents 协作 → 整合输出</strong>。点任意一张卡片，<strong>看完一出 4 幕戏</strong>。</p>
-    </div>
-
-    <div class="fk-intro">
-      <strong>注意：</strong>下面 6 个场景里 <span class="em">"AI 听到 → 派 agent → agent 协作"</span>
-      这个流程, 你<strong>不需要手动操作</strong>。
-      你只给 Claude / Cursor 下一个目标, agent 框架自动帮你完成所有调度。
-      这一节是让你看清<strong>背后到底发生了什么</strong>。
-    </div>
-
-    <!-- 主屏：6 个场景卡片 -->
-    <div class="scene-stage" id="scene-stage">
-      <div class="scene-grid" id="scene-grid">
-        <!-- 场景卡片 JS 渲染 -->
-      </div>
-    </div>
-
-    <!-- 场景详情：默认隐藏，点卡片时显示 -->
-    <div class="scene-detail" id="scene-detail" hidden>
-      <button class="scene-back" id="scene-back">← 返回 6 个场景</button>
-      <div class="scene-detail-body" id="scene-detail-body">
-        <!-- JS 渲染 -->
-      </div>
-    </div>
-
-    <div class="hint-strip" style="margin-top:32px;background:var(--accent-soft);border-color:var(--accent);">
-      <span class="hint-tag" style="background:var(--accent);color:var(--paper);">领悟</span>
-      你下的是<strong>目标</strong>不是<strong>指令</strong> ——
-      Agent 自己拆任务 · 派 sub-agent · 跑工具 · 反思修正 · 整合结果。
-      你只看交付。这就是 <span class="em">Agentic</span> 的终极形态。
-    </div>
-
-    <div class="hint-strip" style="margin-top:32px;">
-      <span class="hint-tag">延伸</span>
-      想看官方源码 / 文档：
-    </div>
-
-    <div class="refs-grid">
-      <a class="ref-card" href="https://developers.figma.com/docs/figma-mcp-server/" target="_blank" rel="noopener">
-        <div class="rc-source">Figma 官方</div>
-        <div class="rc-title">Figma MCP Server 开发者文档</div>
-        <div class="rc-url">developers.figma.com/docs/figma-mcp-server</div>
-      </a>
-      <a class="ref-card" href="https://github.com/anthropics/skills" target="_blank" rel="noopener">
-        <div class="rc-source">Anthropic GitHub</div>
-        <div class="rc-title">Skills 官方仓库（pptx / docx / pdf / xlsx 等）</div>
-        <div class="rc-url">github.com/anthropics/skills</div>
-      </a>
-      <a class="ref-card" href="https://www.anthropic.com/engineering/equipping-agents-for-the-real-world-with-agent-skills" target="_blank" rel="noopener">
-        <div class="rc-source">Anthropic 工程博客</div>
-        <div class="rc-title">Agent Skills 设计原理（progressive disclosure）</div>
-        <div class="rc-url">anthropic.com/engineering/equipping-agents-for-the-real-world-with-agent-skills</div>
-      </a>
-      <a class="ref-card" href="https://www.figma.com/blog/introducing-figma-mcp-server/" target="_blank" rel="noopener">
-        <div class="rc-source">Figma Blog</div>
-        <div class="rc-title">Figma MCP Server 首发公告</div>
-        <div class="rc-url">figma.com/blog/introducing-figma-mcp-server</div>
-      </a>
-    </div>
-  </div>
-</section>
-<!-- §07 — Cheatsheet -->
+<!-- §05 — 速查信息图 -->
 <section id="cheat">
   <div class="wrap">
     <div class="section-head">
       <div>
-        <div class="section-num"><strong>07</strong> / 速查</div>
-        <h2 class="section-title">三张<br><span class="em">速查卡</span></h2>
+        <div class="section-num"><strong>05</strong> / 速查</div>
+        <h2 class="section-title">三张<br><span class="em">速查图</span></h2>
       </div>
       <p class="section-sub">
-        全文压缩到三张卡。让 Agent 干活前翻一遍。
+        全文压缩到三张图。让 Agent 干活前翻一遍。
       </p>
     </div>
 
     <div class="cheat-grid">
+      <!-- 速查 01 · 4 件套迷你图 -->
       <div class="cheat-card">
-        <div class="chc-label">cheat · 01</div>
+        <div class="cc-num">cheat · 01</div>
         <h4>Agent · <span class="em">4 件套</span></h4>
-        <pre class="chc-tree">┌──── Agent ────┐
-│               │
-│  tools        │  ← 能用什么 MCP
-│               │  ← 能用什么 skills
-│               │
-│  planning     │  ← 拆任务能力
-│               │  ← 先想再做
-│               │
-│  memory       │  ← 跨回合记忆
-│               │  ← 知道做过什么
-│               │
-│  reflection   │  ← 失败自查
-│               │  ← 调整再试
-│               │
-└───────────────┘
-缺一件不是 agent
-只是 chatbot</pre>
+        <div class="cc-sub">tools · planning · memory · reflection</div>
+        <svg class="cheat-mini-svg" viewBox="0 0 260 170" preserveAspectRatio="xMidYMid meet">
+          <!-- 4 lines -->
+          <line x1="130" y1="48" x2="130" y2="70" stroke="#d5cdba" stroke-width="1.5"/>
+          <line x1="130" y1="100" x2="130" y2="122" stroke="#d5cdba" stroke-width="1.5"/>
+          <line x1="68" y1="85" x2="100" y2="85" stroke="#d5cdba" stroke-width="1.5"/>
+          <line x1="160" y1="85" x2="192" y2="85" stroke="#d5cdba" stroke-width="1.5"/>
+          <!-- center AI -->
+          <circle cx="130" cy="85" r="26" fill="#16161d"/>
+          <text x="130" y="89" text-anchor="middle" font-family="Noto Serif SC, serif" font-size="11" font-weight="700" fill="#faf7f0">AI</text>
+          <!-- planning top -->
+          <rect x="90" y="14" width="80" height="34" rx="5" fill="#ffe4dc" stroke="#ff4d2e" stroke-width="1.5"/>
+          <text x="130" y="36" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="11" font-weight="700" fill="#16161d">planning</text>
+          <!-- reflection bottom -->
+          <rect x="90" y="122" width="80" height="34" rx="5" fill="#ffe4dc" stroke="#ff4d2e" stroke-width="1.5"/>
+          <text x="130" y="144" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="11" font-weight="700" fill="#16161d">reflection</text>
+          <!-- memory left -->
+          <rect x="0" y="68" width="68" height="34" rx="5" fill="#ffe4dc" stroke="#ff4d2e" stroke-width="1.5"/>
+          <text x="34" y="90" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="11" font-weight="700" fill="#16161d">memory</text>
+          <!-- tools right -->
+          <rect x="192" y="68" width="68" height="34" rx="5" fill="#ffe4dc" stroke="#ff4d2e" stroke-width="1.5"/>
+          <text x="226" y="90" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="11" font-weight="700" fill="#16161d">tools</text>
+        </svg>
+        <dl>
+          <dt>必备</dt>
+          <dd>缺一件 = 不是 agent，只是 chatbot。Claude Code / Cursor / Devin 四件齐全。</dd>
+        </dl>
       </div>
 
-      <div class="cheat-card">
-        <div class="chc-label">cheat · 02</div>
+      <!-- 速查 02 · 3 pattern 缩略图 -->
+      <div class="cheat-card b">
+        <div class="cc-num">cheat · 02</div>
         <h4>3 种 <span class="em">协作 pattern</span></h4>
-        <div class="chc-rules">
-          <div class="chc-rule">
-            <span class="chc-rule-tag">01 · orchestrator</span>
-            <strong>主管派活</strong> · main 拆任务 → 派 sub-agents → 收结果
-            <br>适合: 复杂目标 + 子任务有依赖
-          </div>
-          <div class="chc-rule">
-            <span class="chc-rule-tag">02 · pipeline</span>
-            <strong>流水线</strong> · A → B → C 串行 · 每个专精
-            <br>适合: 工作流明确 + 每步专长
-          </div>
-          <div class="chc-rule">
-            <span class="chc-rule-tag">03 · parallel</span>
-            <strong>并行</strong> · N 个 agent 同时跑独立任务
-            <br>适合: 子任务独立 · 想省时间
-          </div>
-        </div>
+        <div class="cc-sub">orchestrator · pipeline · parallel</div>
+        <svg class="cheat-mini-svg" viewBox="0 0 260 170" preserveAspectRatio="xMidYMid meet">
+          <!-- Group 1 · orchestrator -->
+          <g>
+            <line x1="40" y1="50" x2="20" y2="95" stroke="#16161d" stroke-width="1.5"/>
+            <line x1="40" y1="50" x2="40" y2="95" stroke="#16161d" stroke-width="1.5"/>
+            <line x1="40" y1="50" x2="60" y2="95" stroke="#16161d" stroke-width="1.5"/>
+            <circle cx="40" cy="42" r="12" fill="#16161d"/>
+            <text x="40" y="46" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="9" fill="#faf7f0" font-weight="700">M</text>
+            <circle cx="20" cy="105" r="8" fill="#faf7f0" stroke="#16161d" stroke-width="1.5"/>
+            <circle cx="40" cy="105" r="8" fill="#faf7f0" stroke="#16161d" stroke-width="1.5"/>
+            <circle cx="60" cy="105" r="8" fill="#faf7f0" stroke="#16161d" stroke-width="1.5"/>
+            <text x="40" y="138" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="9" fill="#ff4d2e" font-weight="700">orchestrator</text>
+            <text x="40" y="152" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="9" fill="#8a8a92">一对多</text>
+          </g>
+
+          <!-- Group 2 · pipeline -->
+          <g>
+            <line x1="100" y1="75" x2="148" y2="75" stroke="#16161d" stroke-width="1.5"/>
+            <polyline points="142,71 150,75 142,79" fill="none" stroke="#16161d" stroke-width="1.5"/>
+            <circle cx="98" cy="75" r="8" fill="#faf7f0" stroke="#16161d" stroke-width="1.5"/>
+            <circle cx="125" cy="75" r="8" fill="#faf7f0" stroke="#16161d" stroke-width="1.5"/>
+            <circle cx="152" cy="75" r="8" fill="#faf7f0" stroke="#16161d" stroke-width="1.5"/>
+            <text x="125" y="138" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="9" fill="#ff4d2e" font-weight="700">pipeline</text>
+            <text x="125" y="152" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="9" fill="#8a8a92">A → B → C</text>
+          </g>
+
+          <!-- Group 3 · parallel -->
+          <g>
+            <line x1="220" y1="50" x2="200" y2="95" stroke="#16161d" stroke-width="1.5"/>
+            <line x1="220" y1="50" x2="220" y2="95" stroke="#16161d" stroke-width="1.5"/>
+            <line x1="220" y1="50" x2="240" y2="95" stroke="#16161d" stroke-width="1.5"/>
+            <circle cx="220" cy="42" r="12" fill="#16161d"/>
+            <text x="220" y="46" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="9" fill="#faf7f0" font-weight="700">M</text>
+            <circle cx="200" cy="105" r="8" fill="#ffe4dc" stroke="#ff4d2e" stroke-width="1.5"/>
+            <circle cx="220" cy="105" r="8" fill="#ffe4dc" stroke="#ff4d2e" stroke-width="1.5"/>
+            <circle cx="240" cy="105" r="8" fill="#ffe4dc" stroke="#ff4d2e" stroke-width="1.5"/>
+            <text x="220" y="138" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="9" fill="#ff4d2e" font-weight="700">parallel</text>
+            <text x="220" y="152" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="9" fill="#8a8a92">同时跑</text>
+          </g>
+        </svg>
+        <dl>
+          <dt>选哪个</dt>
+          <dd><strong>有依赖</strong> → orchestrator · <strong>线性</strong> → pipeline · <strong>独立</strong> → parallel</dd>
+        </dl>
       </div>
 
-      <div class="cheat-card">
-        <div class="chc-label">cheat · 03</div>
-        <h4>识别 <span class="em">真假 agent</span></h4>
-        <div class="chc-flow">
-          <div class="chc-flow-row">
-            <span class="chc-flow-step">✓</span>
-            <span>能调用工具 (MCP / skills)</span>
-          </div>
-          <div class="chc-flow-row">
-            <span class="chc-flow-step">✓</span>
-            <span>能拆任务 / 规划步骤</span>
-          </div>
-          <div class="chc-flow-row">
-            <span class="chc-flow-step">✓</span>
-            <span>能跨回合记住做过什么</span>
-          </div>
-          <div class="chc-flow-row">
-            <span class="chc-flow-step">✓</span>
-            <span>失败能 retry / 反思</span>
-          </div>
-          <div class="chc-flow-row">
-            <span class="chc-flow-step">✗</span>
-            <span>四件齐全 → Agent (Claude Code · Cursor · Devin)</span>
-          </div>
-          <div class="chc-flow-row">
-            <span class="chc-flow-step">✗</span>
-            <span>缺一件 → 只是 chat (ChatGPT 网页)</span>
-          </div>
-        </div>
+      <!-- 速查 03 · 真假 agent 对照表 -->
+      <div class="cheat-card c">
+        <div class="cc-num">cheat · 03</div>
+        <h4>真 Agent <span class="em">vs 普通 chat</span></h4>
+        <div class="cc-sub">vs 对照表</div>
+        <table class="vs-table">
+          <thead>
+            <tr>
+              <th class="is-no">普通 chat</th>
+              <th class="is-yes">真 Agent</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="is-no">只能说</td>
+              <td class="is-yes">能调用 MCP / skills</td>
+            </tr>
+            <tr>
+              <td class="is-no">想到哪做到哪</td>
+              <td class="is-yes">先规划再执行</td>
+            </tr>
+            <tr>
+              <td class="is-no">下回合就忘</td>
+              <td class="is-yes">跨回合有记忆</td>
+            </tr>
+            <tr>
+              <td class="is-no">失败也不回头</td>
+              <td class="is-yes">失败 retry / 反思</td>
+            </tr>
+            <tr>
+              <td class="is-no">ChatGPT 网页</td>
+              <td class="is-yes">Claude Code · Cursor · Devin</td>
+            </tr>
+          </tbody>
+        </table>
       </div>
+    </div>
+
+    <div class="hint-strip" style="margin-top:32px;">
+      <span class="hint-tag">领悟</span>
+      你下的是<strong>目标</strong>不是<strong>指令</strong> ——
+      Agent 自己拆任务 · 派 sub-agent · 跑工具 · 反思修正 · 整合结果。
+      你只看交付。这就是 <span class="em">Agentic</span> 的终极形态。
     </div>
   </div>
 </section>
@@ -2501,909 +1366,74 @@
 </footer>
 
 <script>
-// ========= §01 Folder explorer =========
+// ========= §02 Anatomy — node click reveals detail =========
 (function () {
-  const tree = document.getElementById('folderTree');
-  const detail = document.getElementById('folderDetail');
-  if (!tree || !detail) return;
-  const rows = tree.querySelectorAll('.ft-row[data-file]');
-  const replayBtn = document.getElementById('folderReplay');
-  const collapseBtn = document.getElementById('folderCollapse');
+  const svg = document.getElementById('anatSvg');
+  const detail = document.getElementById('anatDetail');
+  if (!svg || !detail) return;
 
-  const files = {
-    root: {
-      tag: '根目录 · ROOT',
-      name: '<code>pptx/</code> 整个 skill 的根',
-      meta: '<span class="opt">类型 · 文件夹</span> · <span class="opt">必须包含 SKILL.md</span>',
-      desc: '一个 skill 就是一个文件夹，名字就是 skill 的 id。Claude 启动时会扫所有这种文件夹，但<strong>只读每个里面的 SKILL.md 最前几行</strong>，不会展开其它。',
-      mock: '<span class="ccom"># 文件夹名 = skill 的代号</span>\n<span class="ccom"># 启动时被 Claude 注册</span>\npptx/\n├── SKILL.md\n├── scripts/\n├── references/\n└── templates/'
+  const nodes = svg.querySelectorAll('.anat-node');
+  const lines = svg.querySelectorAll('.anat-line');
+
+  const FACTS = {
+    tools: {
+      tag: '右 · TOOLS',
+      name: '<code>tools</code> 能用什么工具',
+      desc: 'agent 能调用哪些 <strong>MCP server</strong> + <strong>skills</strong>。决定它"能动手做什么" —— Figma MCP / Code Connect / Playwright / Vercel ... 都是它的工具。',
+      miss: '没工具 = 它只会用嘴说'
     },
-    skillmd: {
-      tag: '必须 · 入口',
-      name: '<code>SKILL.md</code> 唯一必须',
-      meta: '<span class="req">必须</span> · <span class="opt">markdown + YAML frontmatter</span>',
-      desc: '<strong>整个 skill 只有这一个文件必须存在</strong>。最上面是 YAML（name / description），下面是 markdown 正文。Claude 启动只看 YAML，匹配上了再打开正文。',
-      mock: '<span class="cmark">---</span>\n<span class="ckey">name</span>: <span class="cstr">pptx</span>\n<span class="ckey">description</span>: <span class="cstr">Use when ...</span>\n<span class="cmark">---</span>\n\n<span class="ctag"># PowerPoint Skill</span>\n## When to use\n## Steps'
+    planning: {
+      tag: '上 · PLANNING',
+      name: '<code>planning</code> 先想清楚再做',
+      desc: '把大目标拆成 N 步。<strong>先列计划再执行</strong>，一步步走。不再"想一步做一步"。Claude Code 的 todo list 就是 planning。',
+      miss: '没 planning = 复杂任务必翻车'
     },
-    scripts: {
-      tag: '可选 · 执行',
-      name: '<code>scripts/</code> 跑代码的地方',
-      meta: '<span class="opt">可选</span> · <span class="opt">Python · shell · 任何能跑的</span>',
-      desc: '如果 skill 需要做"<strong>Claude 自己干不了</strong>"的活（比如解析 .pptx 二进制），就写脚本放这里。SKILL.md 里告诉 Claude "需要时调用 scripts/xxx.py"。',
-      mock: 'scripts/\n├── ooxml.py        <span class="ccom"># 解析 pptx 内部 XML</span>\n├── extract_text.py <span class="ccom"># 抽出文字</span>\n└── make_slide.py   <span class="ccom"># 生成新 slide</span>'
+    memory: {
+      tag: '左 · MEMORY',
+      name: '<code>memory</code> 记住做过什么',
+      desc: '跨回合的上下文。<strong>哪些试过、哪些失败了、当前状态如何</strong>。包括 CLAUDE.md 文件、对话历史、todo 进度。',
+      miss: '没 memory = 同一个错犯无数次'
     },
-    ooxml: {
-      tag: '可选 · 脚本',
-      name: '<code>ooxml.py</code> 一个解析脚本',
-      meta: '<span class="opt">Python · ~80 行</span> · <span class="opt">SKILL.md 里通过 Bash 调用</span>',
-      desc: 'Claude 自己不太会拆 OOXML（pptx 的底层格式）—— 所以让它调用这个脚本。<strong>脚本输出文字 → Claude 拿到结果继续干活。</strong>',
-      mock: '<span class="ccom"># scripts/ooxml.py</span>\n<span class="ckey">import</span> zipfile\n<span class="ckey">def</span> <span class="ctag">extract</span>(path):\n    <span class="ckey">with</span> zipfile.ZipFile(path) <span class="ckey">as</span> z:\n        <span class="ckey">return</span> z.namelist()'
-    },
-    extract: {
-      tag: '可选 · 脚本',
-      name: '<code>extract_text.py</code>',
-      meta: '<span class="opt">Python · 跑一下抽出所有文字</span>',
-      desc: '专门负责"<strong>把 pptx 里所有可见文字抽出来</strong>"。Claude 在 SKILL.md 的 Steps 里被告知"第一步：run extract_text.py"。',
-      mock: '<span class="ccom"># 用法：</span>\n<span class="ccom"># bash$ python extract_text.py deck.pptx</span>\n<span class="ccom"># → 所有文字逐行打出来</span>'
-    },
-    references: {
-      tag: '可选 · 知识',
-      name: '<code>references/</code> 厚书',
-      meta: '<span class="opt">可选</span> · <span class="opt">markdown 文档 · 一般几百行</span>',
-      desc: '<strong>放查的东西</strong> —— 格式说明、规范清单、长例子。这是 progressive disclosure 最关键的一层：SKILL.md 里写 <code>@references/xx.md</code>，Claude <strong>用到才打开</strong>。',
-      mock: 'references/\n├── pptx_format.md   <span class="ccom"># 200 行讲 OOXML 结构</span>\n├── slide_layouts.md <span class="ccom"># 100 行讲布局类型</span>\n└── examples.md      <span class="ccom"># 300 行例子</span>'
-    },
-    pptxformat: {
-      tag: '可选 · 参考',
-      name: '<code>pptx_format.md</code>',
-      meta: '<span class="opt">长 markdown · 200 行讲 pptx 内部结构</span>',
-      desc: '<strong>SKILL.md 里不写这些细节</strong>，留在这里。Claude 在 SKILL.md 看到 <code>@references/pptx_format.md</code> 这一行，才会读这个文件 —— 用不到的话 token 不烧。',
-      mock: '<span class="ctag"># PPTX Format Reference</span>\n\n## 文件结构\n.pptx 实际是 zip ...\n\n## XML schema\n...'
-    },
-    templates: {
-      tag: '可选 · 素材',
-      name: '<code>templates/</code> 模板',
-      meta: '<span class="opt">可选</span> · <span class="opt">空白文件 · 样板</span>',
-      desc: '放<strong>填空式的素材</strong> —— 比如生成新 pptx 时，先复制一份 default.pptx 出来再改。Claude 会被告知"以这个为底"。',
-      mock: 'templates/\n├── default.pptx   <span class="ccom"># 16:9 / 白底 / 黑字</span>\n├── corporate.pptx <span class="ccom"># 公司皮</span>\n└── minimal.pptx   <span class="ccom"># 极简版</span>'
-    },
-    default: {
-      tag: '可选 · 模板',
-      name: '<code>default.pptx</code>',
-      meta: '<span class="opt">二进制 · 1 张空白 slide</span>',
-      desc: '<strong>每次生成新 pptx 时，Claude 先复制这份打底</strong>。不用从零拼 XML —— 只往里填新内容。这就是 templates/ 存在的全部理由。',
-      mock: '<span class="ccom"># 生成新 deck 的流程：</span>\n<span class="ccom"># 1. cp templates/default.pptx output.pptx</span>\n<span class="ccom"># 2. python scripts/add_slide.py output.pptx</span>\n<span class="ccom"># 3. 返回 output.pptx 给用户</span>'
+    reflection: {
+      tag: '下 · REFLECTION',
+      name: '<code>reflection</code> 失败能反思',
+      desc: '每步执行后 <strong>self-check</strong>：通过了吗？没通过原因是什么？<strong>调整策略再试</strong>。Claude 测试失败会自己改代码再跑。',
+      miss: '没 reflection = 撞墙也不回头'
     }
   };
 
   function setActive(key) {
-    rows.forEach(r => r.classList.toggle('is-active', r.dataset.file === key));
-    const f = files[key];
+    nodes.forEach(n => n.classList.toggle('is-active', n.dataset.key === key));
+    lines.forEach(l => l.classList.toggle('is-active', l.dataset.line === key));
+    const f = FACTS[key];
     if (!f) return;
     detail.innerHTML =
-      '<div class="fd-tag">' + f.tag + '</div>' +
-      '<h3 class="fd-name">' + f.name + '</h3>' +
-      '<div class="fd-meta">' + f.meta + '</div>' +
-      '<p class="fd-desc">' + f.desc + '</p>' +
-      '<pre class="fd-mock">' + f.mock + '</pre>';
+      '<div class="ad-tag">' + f.tag + '</div>' +
+      '<h3 class="ad-name">' + f.name + '</h3>' +
+      '<p class="ad-desc">' + f.desc + '</p>' +
+      '<div class="ad-miss">' + f.miss + '</div>';
   }
 
-  rows.forEach(r => {
-    r.addEventListener('click', () => setActive(r.dataset.file));
+  nodes.forEach(n => {
+    n.addEventListener('mouseenter', () => setActive(n.dataset.key));
+    n.addEventListener('click', () => setActive(n.dataset.key));
   });
 
-  // Animated entry — "fly out" of folder
-  function playFlyIn() {
-    rows.forEach((r, i) => {
-      r.classList.remove('fly-in');
-      r.classList.add('fly-out');
-    });
-    setTimeout(() => {
-      rows.forEach((r, i) => {
-        setTimeout(() => {
-          r.classList.remove('fly-out');
-          r.classList.add('fly-in');
-        }, i * 70);
-      });
-    }, 50);
-    setTimeout(() => setActive('skillmd'), 800);
-  }
-
-  replayBtn && replayBtn.addEventListener('click', playFlyIn);
-  collapseBtn && collapseBtn.addEventListener('click', () => {
-    rows.forEach(r => {
-      if (r.classList.contains('ft-indent-2')) {
-        r.style.display = (r.style.display === 'none') ? '' : 'none';
-      }
-    });
-  });
-
-  // initial reveal once user scrolls near
+  // initial state — cycle thru 4 once on first reveal
   const io = new IntersectionObserver((entries) => {
     entries.forEach(e => {
       if (e.isIntersecting) {
-        playFlyIn();
-        io.disconnect();
-      }
-    });
-  }, { threshold: 0.25 });
-  io.observe(tree);
-})();
-
-// ========= §02 Anatomy — code ↔ card =========
-(function () {
-  const code = document.getElementById('anatomyCode');
-  const list = document.getElementById('anatomyList');
-  if (!code || !list) return;
-  const cards = list.querySelectorAll('.anat-card[data-key]');
-  const lines = code.querySelectorAll('.cline[data-key]');
-
-  function setActive(key) {
-    cards.forEach(c => c.classList.toggle('is-active', c.dataset.key === key));
-    lines.forEach(l => l.classList.toggle('is-active', l.dataset.key === key));
-  }
-
-  cards.forEach(c => {
-    c.addEventListener('mouseenter', () => setActive(c.dataset.key));
-    c.addEventListener('click', () => setActive(c.dataset.key));
-  });
-  lines.forEach(l => {
-    l.addEventListener('mouseenter', () => setActive(l.dataset.key));
-    l.addEventListener('click', () => setActive(l.dataset.key));
-  });
-
-  // default
-  setTimeout(() => setActive('desc'), 600);
-})();
-
-// ========= §03 Pyramid — progressive disclosure =========
-(function () {
-  const svg = document.getElementById('pyramidSvg');
-  const chips = document.getElementById('pyChips');
-  const queryText = document.getElementById('pyQueryText');
-  const trace = document.getElementById('pyramidTrace');
-  const dot = document.getElementById('pyDot');
-  if (!svg || !chips || !trace) return;
-
-  const tiers = svg.querySelectorAll('.py-tier');
-  const flows = svg.querySelectorAll('.py-flow');
-
-  const scenarios = {
-    'review-figma': {
-      text: 'review 这个 Figma 设计稿',
-      steps: [
-        { tier: 1, text: '<span class="pt-tier">[Tier 1]</span> 扫所有 skill 的 description<span class="pt-tok"> +100 tok</span>', delay: 0 },
-        { tier: 1, text: '› 命中 <span class="pt-skill">design-reviewer</span> · 关键词 "review" + "design"', delay: 500 },
-        { tier: 2, text: '<span class="pt-tier">[Tier 2]</span> 打开 design-reviewer/SKILL.md<span class="pt-tok"> +600 tok</span>', delay: 1100 },
-        { tier: 2, text: '› 按 Steps 走：1. 抽 frame 信息 2. 对照规则', delay: 1700 },
-        { tier: 3, text: '<span class="pt-tier">[Tier 3]</span> 读 <span class="pt-skill">@references/spacing_rules.md</span><span class="pt-tok"> +1200 tok</span>', delay: 2400 },
-        { tier: 0, text: '› 返回审稿结果给用户。<span class="pt-meta">总用：~1900 tok · 全 skill 启动只占 100</span>', delay: 3100 }
-      ]
-    },
-    'make-pptx': {
-      text: '把会议纪要做成 PPT',
-      steps: [
-        { tier: 1, text: '<span class="pt-tier">[Tier 1]</span> 扫所有 skill 的 description<span class="pt-tok"> +100 tok</span>', delay: 0 },
-        { tier: 1, text: '› 命中 <span class="pt-skill">pptx</span> · 关键词 "PPT" → ".pptx"', delay: 500 },
-        { tier: 2, text: '<span class="pt-tier">[Tier 2]</span> 打开 pptx/SKILL.md<span class="pt-tok"> +500 tok</span>', delay: 1100 },
-        { tier: 3, text: '<span class="pt-tier">[Tier 3]</span> 调 <span class="pt-skill">scripts/make_slide.py</span>', delay: 1700 },
-        { tier: 3, text: '› 复制 <span class="pt-skill">templates/default.pptx</span> 打底', delay: 2300 },
-        { tier: 0, text: '› 返回 output.pptx。<span class="pt-meta">design-reviewer 完全没被打开 —— 0 token 浪费</span>', delay: 3000 }
-      ]
-    },
-    'audit-design': {
-      text: '审一下我这套组件',
-      steps: [
-        { tier: 1, text: '<span class="pt-tier">[Tier 1]</span> 扫所有 skill 的 description<span class="pt-tok"> +100 tok</span>', delay: 0 },
-        { tier: 1, text: '› 命中 <span class="pt-skill">design-reviewer</span> · 关键词 "audit"', delay: 500 },
-        { tier: 1, text: '› 也命中 <span class="pt-skill">library-auditor</span> · "组件" + "审"', delay: 1000 },
-        { tier: 2, text: '<span class="pt-tier">[Tier 2]</span> 反问用户：审 spacing 规范，还是 library 完整性？', delay: 1600 },
-        { tier: 0, text: '› 等用户澄清后再决定打开哪个 Tier 2。<span class="pt-meta">两个 description 都对上 = 主动消歧</span>', delay: 2300 }
-      ]
-    },
-    lunch: {
-      text: '今晚吃什么',
-      steps: [
-        { tier: 1, text: '<span class="pt-tier">[Tier 1]</span> 扫所有 skill 的 description<span class="pt-tok"> +100 tok</span>', delay: 0 },
-        { tier: 0, text: '› 没有 skill 命中 · 普通对话回答', delay: 800 },
-        { tier: 0, text: '› 推荐：附近的兰州拉面？<span class="pt-meta">100 个 skill 挂着 ≠ 100 次浪费 —— 全程只读 100 tok</span>', delay: 1500 }
-      ]
-    }
-  };
-
-  function highlight(tier) {
-    tiers.forEach(t => {
-      const isActive = String(tier) === t.dataset.tier;
-      const isDimmed = tier && Number(t.dataset.tier) > tier;
-      t.classList.toggle('active', isActive);
-      t.classList.toggle('dimmed', !!isDimmed);
-    });
-    flows.forEach(f => {
-      const [from, to] = f.dataset.flow.split('-').map(Number);
-      f.classList.toggle('active', tier && to <= tier);
-    });
-    if (dot) {
-      dot.setAttribute('opacity', tier ? 1 : 0);
-      if (tier === 1) dot.setAttribute('cy', 135);
-      if (tier === 2) dot.setAttribute('cy', 215);
-      if (tier === 3) dot.setAttribute('cy', 295);
-    }
-  }
-
-  function playScenario(key) {
-    const s = scenarios[key];
-    if (!s) return;
-    queryText.textContent = s.text;
-    trace.innerHTML = '';
-    chips.querySelectorAll('button').forEach(b => b.classList.toggle('active', b.dataset.q === key));
-    highlight(0);
-
-    s.steps.forEach((step) => {
-      const row = document.createElement('div');
-      row.className = 'pt-row';
-      row.innerHTML = step.text;
-      trace.appendChild(row);
-      setTimeout(() => {
-        row.classList.add('show');
-        if (step.tier) highlight(step.tier);
-      }, step.delay);
-    });
-  }
-
-  chips.querySelectorAll('button').forEach(b => {
-    b.addEventListener('click', () => playScenario(b.dataset.q));
-  });
-
-  // auto-play first scenario when scrolled in
-  const io = new IntersectionObserver((entries) => {
-    entries.forEach(e => {
-      if (e.isIntersecting) {
-        setTimeout(() => playScenario('review-figma'), 400);
+        const keys = ['planning', 'tools', 'reflection', 'memory'];
+        keys.forEach((k, i) => setTimeout(() => setActive(k), 600 + i * 700));
+        setTimeout(() => setActive('tools'), 600 + keys.length * 700 + 200);
         io.disconnect();
       }
     });
   }, { threshold: 0.3 });
   io.observe(svg);
 })();
-
-
-
-
-
-// ========= §04 Scene Theater =========
-(function () {
-  const grid = document.getElementById('scene-grid');
-  const detail = document.getElementById('scene-detail');
-  const detailBody = document.getElementById('scene-detail-body');
-  const stage = document.getElementById('scene-stage');
-  const backBtn = document.getElementById('scene-back');
-  if (!grid || !detail) return;
-
-  const SCENES = [
-    {
-      n: '01',
-      quote: '"帮我从需求到代码做完整一个 SaaS 仪表盘"',
-      painpoint: '一个 AI 干不完 · 需要设计 + 代码 + 测试 + 部署 · 跨多个工具',
-      skill: 'Orchestrator + 4 Sub-agents',
-      act1: { user: '你说', text: '帮我做一个 SaaS 仪表盘 (含设计 / 代码 / 测试 / 部署 URL)' },
-      act2: {
-        scan: [
-          { code: 'design-agent',  desc: '"Generate Figma design from requirements, apply design system..."', hit: true },
-          { code: 'code-agent',    desc: '"Implement Figma design to React + Tailwind, use Code Connect..."', hit: true },
-          { code: 'test-agent',    desc: '"Run unit + visual regression tests, report issues..."', hit: true },
-          { code: 'deploy-agent',  desc: '"Deploy to Vercel, configure DNS, return URL..."', hit: true }
-        ],
-        conclude: 'Main agent 拆任务 → 派 <span class="em">4 个 sub-agent</span> 并行/串行协作 (orchestrator pattern)'
-      },
-      act3: {
-        skill: 'main agent · orchestrator',
-        steps: [
-          'main 拆任务: 设计 → 实现 → 测试 → 部署 (4 步)',
-          'design-agent 跑 Figma MCP 生成设计稿',
-          'code-agent 接 design 输出 + 跑 Figma + Code Connect 出 React',
-          'test-agent 用 Playwright MCP 跑视觉回归 + 单测',
-          'deploy-agent 推 Vercel + 拿 production URL',
-          'main 整合 4 份输出 → 给你最终交付'
-        ]
-      },
-      act4: {
-        items: [
-          'Figma 文件: <code>SaaS Dashboard v1</code>',
-          'React 代码: 已 commit · 含 8 个组件',
-          '测试报告: 24/24 通过 · visual diff 0 ⚠',
-          'production URL: <code>https://my-saas.vercel.app</code>'
-        ],
-        next: '20 分钟前你只说了一句话, 现在拿到了完整项目'
-      }
-    },
-    {
-      n: '02',
-      quote: '"帮我做一份 UI audit 报告"',
-      painpoint: '一份完整 audit 要查 5 个方面 · 手动跑超过半天 · 漏检一个就交付翻车',
-      skill: 'Orchestrator + Sub-agents',
-      act1: { user: '你说', text: '对这个 Figma 文件做一份完整 UI audit · 包含视觉/a11y/间距' },
-      act2: {
-        scan: [
-          { code: 'visual-checker',  desc: '"Detect visual inconsistencies, brand color drift, typography violations..."', hit: true },
-          { code: 'a11y-checker',    desc: '"Check ARIA, color contrast, semantic HTML, keyboard nav..."', hit: true },
-          { code: 'spacing-auditor', desc: '"Audit padding / gap / margin against design token rhythm..."', hit: true },
-          { code: 'design-agent',    desc: '"Generate new design from prompt..."', hit: false }
-        ],
-        conclude: 'Main agent 派给 <span class="em">3 个 sub-agent</span> 各管一个方面 (parallel pattern)'
-      },
-      act3: {
-        skill: 'main agent · parallel orchestration',
-        steps: [
-          'main 读 Figma 文件 → 拆 3 个独立子任务',
-          'visual-checker 并行: 扫颜色 / 字号 / 风格违规',
-          'a11y-checker 并行: ARIA / 对比度 / semantic',
-          'spacing-auditor 并行: padding / gap / margin 节奏',
-          '3 个 sub-agent 同时跑 (5 分钟而非 30 分钟)',
-          'main 整合 3 份报告 → 一份完整 audit'
-        ]
-      },
-      act4: {
-        items: [
-          '一份 audit 报告 (24 页)',
-          '视觉问题: 14 处 (颜色/字号/风格)',
-          'a11y 问题: 8 处 (对比度不足 / 缺 ARIA)',
-          '间距问题: 23 处 (违反 4/8/16 节奏)'
-        ],
-        next: '你只下了一个目标 · 3 个 agent 5 分钟并行跑完 · 比手动快 6 倍'
-      }
-    },
-    {
-      n: '03',
-      quote: '"做这个功能, 自己测试, 错了自己改"',
-      painpoint: '写完代码 → 跑测试 → 失败 → 改代码 → 再跑 → 来回 5 次 · 手动太烦',
-      skill: 'Self-Healing Loop',
-      act1: { user: '你说', text: '实现这个登录功能, 跑测试如果失败自己修, 直到通过' },
-      act2: {
-        scan: [
-          { code: 'generator-agent', desc: '"Generate code based on requirements, follow project conventions..."', hit: true },
-          { code: 'tester-agent',    desc: '"Run unit + integration + visual tests, report failures..."', hit: true },
-          { code: 'fixer-agent',     desc: '"Analyze test failures, propose fixes, apply changes..."', hit: true },
-          { code: 'design-agent',    desc: '"Generate Figma design..."', hit: false }
-        ],
-        conclude: 'Generator → Tester → (失败) → Fixer → Tester 自动循环 (self-healing loop pattern)'
-      },
-      act3: {
-        skill: 'self-healing loop',
-        steps: [
-          'generator-agent 写出 v1 代码',
-          'tester-agent 跑 12 个测试 → 失败 3 个',
-          'fixer-agent 分析失败 → 改代码 → v2',
-          'tester 重跑 → 还失败 1 个',
-          'fixer 再改 → v3',
-          'tester 通过 12/12 → 退出循环'
-        ]
-      },
-      act4: {
-        items: [
-          '最终代码: <code>Login.tsx</code> · 通过 12/12 测试',
-          'agent 自己迭代了 3 次 (你完全没参与)',
-          '附带 self-healing 日志: 改了什么 / 为什么改',
-          '你只看最终结果 · 中间过程透明可查'
-        ],
-        next: '这就是 "AI 编程时代" 的核心 — agent 自我修正闭环'
-      }
-    },
-    {
-      n: '04',
-      quote: '"实现这个复杂功能 · 自己规划怎么做"',
-      painpoint: '功能复杂 · 一次性让 AI 写它会跑偏 · 想让它先想清楚再动手',
-      skill: 'Planning + Reflection',
-      act1: { user: '你说', text: '实现支付集成 (Stripe + 异常处理 + 退款) · 先规划再做' },
-      act2: {
-        scan: [
-          { code: 'planner-agent',    desc: '"Break complex tasks into ordered steps, identify dependencies..."', hit: true },
-          { code: 'executor-agent',   desc: '"Execute each planned step, use appropriate tools..."', hit: true },
-          { code: 'reflector-agent',  desc: '"After each step, evaluate output, decide retry or proceed..."', hit: true },
-          { code: 'fixer-agent',      desc: '"Fix bugs..."', hit: false }
-        ],
-        conclude: 'Plan-then-execute pattern · 每步执行后<span class="em">反思</span> · 错了立即调整'
-      },
-      act3: {
-        skill: 'planning + reflection',
-        steps: [
-          'planner-agent 输出 todo: 7 步骤 · 含依赖关系',
-          '步骤 1: Stripe webhook endpoint (executor 写) → reflect 通过',
-          '步骤 2: payment flow UI (executor 写) → reflect 通过',
-          '步骤 3: 异常处理 (executor 写) → reflect <strong>失败</strong> · 漏了 5 种错误',
-          '调整: 重新写步骤 3 · 覆盖全部错误',
-          '步骤 4-7: 类似流程'
-        ]
-      },
-      act4: {
-        items: [
-          '7 步全部完成 + 反思日志',
-          '其中 2 步触发 reflection 修正',
-          '最终代码质量: 比一次性写的高 40%',
-          '附带 todo · 哪步在哪个 commit 完成'
-        ],
-        next: 'Planning + reflection 让 AI 不再"想到哪写到哪"'
-      }
-    },
-    {
-      n: '05',
-      quote: '"跑这个部署 · 失败了自己重试"',
-      painpoint: 'CI / 部署经常网络问题 · 跑一半挂了 · 手动重启麻烦',
-      skill: 'Error Recovery + Retry',
-      act1: { user: '你说', text: '部署到 production · 失败了自动 retry · 最多 3 次' },
-      act2: {
-        scan: [
-          { code: 'deploy-agent',     desc: '"Deploy application to production with retry strategy..."', hit: true },
-          { code: 'error-analyzer',   desc: '"Analyze failure logs, classify error type, suggest fix..."', hit: true },
-          { code: 'retry-agent',      desc: '"Adjust parameters based on previous failure, retry with backoff..."', hit: true },
-          { code: 'tester-agent',     desc: '"Run tests..."', hit: false }
-        ],
-        conclude: 'Try → Catch → Analyze → Retry 循环 · 每次失败<span class="em">调整策略</span>再试'
-      },
-      act3: {
-        skill: 'error recovery',
-        steps: [
-          '第 1 次部署 → 失败 (网络超时)',
-          'error-analyzer: 这是临时网络问题 · 等 30s 再试',
-          '第 2 次部署 → 失败 (env var 缺失)',
-          'error-analyzer: 这是配置问题 · 读 .env.example · 补缺失变量',
-          'retry-agent: 添加缺失变量 → 第 3 次部署',
-          '✓ 成功'
-        ]
-      },
-      act4: {
-        items: [
-          'production URL: 已上线',
-          'retry 日志: 3 次尝试 / 2 次失败原因',
-          '失败原因都被自动分析 + 修复',
-          '你一觉醒来发现已经部署完了'
-        ],
-        next: 'agent 自动 retry 比你设 cron 跑脚本智能十倍'
-      }
-    },
-    {
-      n: '06',
-      quote: '"同时跑视觉回归 + a11y + 性能审查"',
-      painpoint: '3 件事手动一件件跑 · 半小时 · 想要 5 分钟出 3 份报告',
-      skill: 'Parallel Agents',
-      act1: { user: '你说', text: '对这个 PR · 同时跑 visual regression + a11y audit + performance check' },
-      act2: {
-        scan: [
-          { code: 'visual-agent',     desc: '"Multi-viewport screenshots, pixel diff against baseline..."', hit: true },
-          { code: 'a11y-agent',       desc: '"ARIA + contrast + keyboard nav + screen reader..."', hit: true },
-          { code: 'perf-agent',       desc: '"LCP + FCP + CLS + bundle size + render timing..."', hit: true },
-          { code: 'deploy-agent',     desc: '"Deploy..."', hit: false }
-        ],
-        conclude: '3 个 agent 并行启动 · 互相独立 · <span class="em">5 分钟出 3 份报告</span>'
-      },
-      act3: {
-        skill: 'parallel execution',
-        steps: [
-          'main 启动 3 个 sub-agent (并发, 不等待)',
-          'visual-agent · 跑 5 viewport screenshot + pixel diff (3 分钟)',
-          'a11y-agent · axe-core 扫 + screen reader 模拟 (2 分钟)',
-          'perf-agent · Lighthouse + bundle 分析 (4 分钟)',
-          '5 分钟全部完成 (不是 3+2+4=9 分钟)',
-          'main 整合 3 份独立报告 + 综合摘要'
-        ]
-      },
-      act4: {
-        items: [
-          'visual report: 3 处差异 (mobile / dark / tablet)',
-          'a11y report: 5 处违反 WCAG AA',
-          'perf report: LCP 2.1s (达标) · bundle 256KB (减 12KB 可)',
-          '综合摘要: 这个 PR 不能合 · 修 a11y'
-        ],
-        next: 'parallel 模式: 5 分钟出 3 份报告 · 比 sequential 快 1.8 倍'
-      }
-    }
-  ];
-
-  const seen = new Set();
-
-  // 渲染主屏
-  function renderGrid() {
-    grid.innerHTML = '';
-    SCENES.forEach((s, i) => {
-      const btn = document.createElement('button');
-      btn.className = 'scene-card' + (seen.has(i) ? ' is-seen' : '');
-      btn.innerHTML =
-        '<div class="sc-num">' + s.n + '</div>' +
-        '<div class="sc-quote">' + s.quote + '</div>' +
-        '<div class="sc-painpoint">' + s.painpoint + '</div>' +
-        '<div class="sc-foot">' +
-          '<span class="skill">' + s.skill + '</span>' +
-          '<span class="cta">看一出戏 →</span>' +
-        '</div>';
-      btn.addEventListener('click', () => openScene(i));
-      grid.appendChild(btn);
-    });
-  }
-
-  // 打开场景详情
-  function openScene(idx) {
-    const s = SCENES[idx];
-    // 渲染 detail
-    let html = '<div class="sd-head">' +
-      '<div class="sd-tag">场景 · ' + s.n + ' · SKILL: ' + s.skill + '</div>' +
-      '<div class="sd-quote">' + s.quote + '</div>' +
-      '<div class="sd-painpoint">' + s.painpoint + '</div>' +
-      '</div>' +
-      '<div class="acts">';
-
-    // 幕 1
-    html += '<div class="act" data-act="1">' +
-      '<div class="act-label"><span class="act-no">幕 01</span>你说</div>' +
-      '<div class="bubble-row">' +
-        '<div class="bubble-avatar">你</div>' +
-        '<div class="bubble">' + s.act1.text + '</div>' +
-      '</div>' +
-    '</div>';
-
-    // 幕 2
-    let scanHtml = s.act2.scan.map(r =>
-      '<div class="desc-row' + (r.hit ? ' is-hit' : '') + '">' +
-        '<span class="dr-code">' + r.code + '</span>' + r.desc +
-      '</div>'
-    ).join('');
-    html += '<div class="act" data-act="2">' +
-      '<div class="act-label"><span class="act-no">幕 02</span>AI 听到 · 扫描 9 个 description</div>' +
-      '<div class="ai-listen">' +
-        '<div class="ai-listen-head">扫描 9 个 skill 的 description, 找匹配 ——</div>' +
-        '<div class="desc-scan">' + scanHtml + '</div>' +
-        '<div class="ai-conclude">' + s.act2.conclude + '</div>' +
-      '</div>' +
-    '</div>';
-
-    // 幕 3
-    let stepsHtml = s.act3.steps.map((step, j) =>
-      '<div class="step-row" data-step="' + j + '">' +
-        '<span class="step-tick"></span>' +
-        '<span>' + step + '</span>' +
-      '</div>'
-    ).join('');
-    html += '<div class="act" data-act="3">' +
-      '<div class="act-label"><span class="act-no">幕 03</span>Skill 在做 · ' + s.act3.skill + '</div>' +
-      '<div class="skill-doing">' +
-        '<div class="skill-doing-head">触发 <strong>' + s.act3.skill + '</strong> · 执行步骤：</div>' +
-        '<div class="steps">' + stepsHtml + '</div>' +
-      '</div>' +
-    '</div>';
-
-    // 幕 4
-    let resultHtml = s.act4.items.map(it => '<div class="result-item">' + it + '</div>').join('');
-    html += '<div class="act" data-act="4">' +
-      '<div class="act-label"><span class="act-no">幕 04</span>结果 · 你拿到什么</div>' +
-      '<div class="result">' +
-        '<div class="result-head">实际输出</div>' +
-        '<div class="result-list">' + resultHtml + '</div>' +
-        '<div class="result-foot"><strong>下一步：</strong>' + s.act4.next + '</div>' +
-      '</div>' +
-    '</div>';
-
-    html += '</div>';
-
-    // 下一场景按钮
-    const nextIdx = (idx + 1) % SCENES.length;
-    html += '<div class="scene-nav">' +
-      '<span class="nav-hint">看完一出 → 还有 ' + (SCENES.length - 1) + ' 个场景</span>' +
-      '<button id="scene-next">下一个场景 · ' + SCENES[nextIdx].n + ' →</button>' +
-    '</div>';
-
-    detailBody.innerHTML = html;
-
-    // 切换 UI
-    stage.hidden = true;
-    detail.hidden = false;
-    detail.scrollIntoView({ behavior: 'smooth', block: 'start' });
-
-    // 逐幕揭示 + 步骤打勾动画
-    const acts = detail.querySelectorAll('.act');
-    acts.forEach((a, i) => {
-      setTimeout(() => {
-        a.classList.add('show');
-        // 幕 3 步骤逐个打勾
-        if (a.dataset.act === '3') {
-          const steps = a.querySelectorAll('.step-row');
-          steps.forEach((stRow, j) => {
-            setTimeout(() => stRow.classList.add('done'), 400 + j * 280);
-          });
-        }
-      }, 350 + i * 700);
-    });
-
-    // 下一场景按钮
-    const nextBtn = document.getElementById('scene-next');
-    if (nextBtn) {
-      nextBtn.addEventListener('click', () => {
-        seen.add(idx);
-        renderGrid();
-        openScene(nextIdx);
-      });
-    }
-  }
-
-  // 返回主屏
-  backBtn.addEventListener('click', () => {
-    // 标记当前场景已看过
-    const tag = detailBody.querySelector('.sd-tag')?.textContent || '';
-    const m = tag.match(/(\d{2})/);
-    if (m) {
-      const idx = SCENES.findIndex(s => s.n === m[1]);
-      if (idx >= 0) seen.add(idx);
-    }
-    renderGrid();
-    detail.hidden = true;
-    stage.hidden = false;
-    stage.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  });
-
-  // Init
-  renderGrid();
-})();
-
-
-// ========= §04 Agent Dispatch =========
-(function() {
-  const stage = document.getElementById('agent-dispatch');
-  if (!stage) return;
-
-  const TASKS = {
-    'full-project': {
-      thinking: '拆任务: 设计 → 代码 → 测试 → 部署',
-      subAgents: [
-        { id: 'D', name: 'design-agent',  task: '生成 Figma 稿 (用现有 design tokens)', duration: 2400 },
-        { id: 'C', name: 'code-agent',    task: '实现 React + Tailwind (12 个组件)',   duration: 3000 },
-        { id: 'T', name: 'test-agent',    task: '跑单元测试 + visual regression',       duration: 1800 },
-        { id: 'V', name: 'deploy-agent',  task: '部署到 Vercel · 拿 URL',              duration: 2000 }
-      ],
-      pattern: 'sequential',
-      deliverables: [
-        '✓ Figma 文件: <code>SaaS Dashboard v1</code>',
-        '✓ React 代码: 12 个组件已 commit',
-        '✓ 测试: 24/24 通过 · visual diff 0',
-        '✓ Production URL: <code>https://my-saas.vercel.app</code>'
-      ]
-    },
-    'self-heal': {
-      thinking: '串行: generator → tester → fixer → tester (loop)',
-      subAgents: [
-        { id: 'G', name: 'generator',  task: '生成代码 v1',                     duration: 1800 },
-        { id: 'T1', name: 'tester',     task: '跑测试 → ✗ 失败 3 个',           duration: 1400, failsAt: 100 },
-        { id: 'F', name: 'fixer',      task: '分析失败 → 修复 → v2',           duration: 2200 },
-        { id: 'T2', name: 'tester',     task: '重测 → ✓ 12/12 通过',           duration: 1400 }
-      ],
-      pattern: 'sequential',
-      deliverables: [
-        '✓ 最终代码 <code>v2</code> (自动修复后)',
-        '✓ 测试: 12/12 通过',
-        '✓ self-healing 日志: 1 轮 (fixer 改了 props 类型)',
-        '✓ 你完全没参与中间过程'
-      ]
-    },
-    'parallel-audit': {
-      thinking: '并行: 3 个 sub-agent 同时启动',
-      subAgents: [
-        { id: 'V', name: 'visual-agent', task: '5 个 viewport 截图 + pixel diff', duration: 2800, parallel: true },
-        { id: 'A', name: 'a11y-agent',   task: 'WCAG 扫描 + screen reader 模拟',  duration: 2200, parallel: true },
-        { id: 'P', name: 'perf-agent',   task: 'LCP / FCP / bundle 分析',         duration: 3500, parallel: true }
-      ],
-      pattern: 'parallel',
-      deliverables: [
-        '✓ Visual 报告: 3 处差异 (mobile/dark/tablet)',
-        '✓ a11y 报告: 5 处违反 WCAG AA',
-        '✓ 性能报告: LCP 2.1s · 可减 12KB',
-        '✓ 综合: PR 不能合 · 修 a11y 后通过 · <strong>5 分钟 (并行省 4 分钟)</strong>'
-      ]
-    }
-  };
-
-  let currentTask = 'full-project';
-  let running = false;
-  let runTimers = [];
-
-  const tasksGrid = stage.querySelectorAll('.ad-task');
-  const statusEl = document.getElementById('ad-status');
-  const goBtn = document.getElementById('ad-go');
-  const resetBtn = document.getElementById('ad-reset');
-  const subagentsEl = document.getElementById('ad-subagents');
-  const deliverEl = document.getElementById('ad-deliver');
-  const deliverList = document.getElementById('ad-deliver-list');
-
-  function resetUI() {
-    runTimers.forEach(t => clearTimeout(t));
-    runTimers = [];
-    subagentsEl.innerHTML = '<div class="ad-empty">选好任务后点 ▶ 派 Agent 开工</div>';
-    deliverEl.hidden = true;
-    statusEl.textContent = '空闲 · 等指令';
-    goBtn.hidden = false;
-    goBtn.disabled = false;
-    resetBtn.hidden = true;
-    running = false;
-  }
-
-  tasksGrid.forEach(t => {
-    t.addEventListener('click', () => {
-      if (running) return;
-      tasksGrid.forEach(x => x.classList.remove('is-active'));
-      t.classList.add('is-active');
-      currentTask = t.dataset.task;
-      resetUI();
-    });
-  });
-
-  function renderSubAgents(task) {
-    subagentsEl.innerHTML = '';
-    task.subAgents.forEach((sa, i) => {
-      const div = document.createElement('div');
-      div.className = 'ad-subagent';
-      div.dataset.id = sa.id + i;
-      div.style.animationDelay = (i * 0.15) + 's';
-      div.innerHTML =
-        '<div class="ad-sa-icon">' + sa.id + '</div>' +
-        '<div class="ad-sa-body">' +
-          '<div class="ad-sa-name">' + sa.name + '</div>' +
-          '<div class="ad-sa-task">' + sa.task + '</div>' +
-        '</div>' +
-        '<div class="ad-sa-progress"><div class="ad-sa-progress-bar"></div></div>';
-      subagentsEl.appendChild(div);
-    });
-  }
-
-  function runTask() {
-    const task = TASKS[currentTask];
-    if (!task || running) return;
-    running = true;
-    goBtn.disabled = true;
-    goBtn.hidden = true;
-    deliverEl.hidden = true;
-
-    // Step 1: thinking
-    statusEl.textContent = '思考: ' + task.thinking;
-
-    // Step 2: 渲染 sub-agents (空)
-    setTimeout(() => {
-      renderSubAgents(task);
-      statusEl.textContent = '派活完成 · 等 sub-agents 执行';
-
-      // Step 3: 执行 sub-agents
-      const rows = subagentsEl.querySelectorAll('.ad-subagent');
-      const startTimes = [];
-      let cumulative = 0;
-      task.subAgents.forEach((sa, i) => {
-        if (task.pattern === 'parallel' && sa.parallel) {
-          startTimes.push(0);
-        } else {
-          startTimes.push(cumulative);
-          cumulative += sa.duration + 200;
-        }
-      });
-
-      task.subAgents.forEach((sa, i) => {
-        const row = rows[i];
-        const bar = row.querySelector('.ad-sa-progress-bar');
-        // 启动
-        runTimers.push(setTimeout(() => {
-          row.classList.add('is-running');
-          statusEl.textContent = sa.name + ' 在跑: ' + sa.task;
-          bar.style.transition = 'width ' + sa.duration + 'ms linear';
-          bar.style.width = '100%';
-        }, 800 + startTimes[i]));
-
-        // 完成 (或 fail)
-        runTimers.push(setTimeout(() => {
-          row.classList.remove('is-running');
-          if (sa.failsAt) {
-            row.classList.add('is-failed');
-          } else {
-            row.classList.add('is-done');
-          }
-        }, 800 + startTimes[i] + sa.duration));
-      });
-
-      // 全部完成 → 显示交付
-      const totalDur = task.pattern === 'parallel'
-        ? Math.max(...task.subAgents.map(s => s.duration))
-        : task.subAgents.reduce((sum, s) => sum + s.duration + 200, 0);
-
-      runTimers.push(setTimeout(() => {
-        statusEl.textContent = '✓ 全部完成 · 整合交付';
-        deliverList.innerHTML = task.deliverables.map(d =>
-          '<div class="ad-deliver-item">' + d + '</div>'
-        ).join('');
-        deliverEl.hidden = false;
-        resetBtn.hidden = false;
-      }, 800 + totalDur + 400));
-
-    }, 1400);
-  }
-
-  goBtn.addEventListener('click', runTask);
-  resetBtn.addEventListener('click', resetUI);
-
-  // Init
-  resetUI();
-})();
-
-// ========= §05 Agent ID Quiz =========
-(function() {
-  const grid = document.getElementById('ai-id-grid');
-  if (!grid) return;
-
-  const Q = [
-    {
-      num: '01',
-      quote: '<span class="speaker">USER:</span>"今天天气怎么样?"<br><span class="speaker">AI:</span>"我不能查实时天气, 抱歉."',
-      question: '这是 Agent 吗?',
-      answer: false,
-      explain: '只能"用嘴说" · 没有工具调用能力 · <span class="no">不是 Agent</span>, 是普通 chat。'
-    },
-    {
-      num: '02',
-      quote: '<span class="speaker">USER:</span>"帮我提一个 PR · 修这个 bug · 然后跑测试 · 失败的话自己改"<br><span class="speaker">AI:</span>"好的, 我先用 git diff 看改动, 然后..."<br>(随后调 GitHub MCP · 跑 Playwright · 失败 retry · 最终提交)',
-      question: '这是 Agent 吗?',
-      answer: true,
-      explain: '4 件套全齐 (tools: MCP · planning: 先分析 · memory: 跟踪步骤 · reflection: 失败 retry) · <span class="yes">真 Agent</span>。'
-    },
-    {
-      num: '03',
-      quote: '<span class="speaker">USER:</span>"帮我写一段排序代码"<br><span class="speaker">AI:</span>(直接给代码)<br><span class="speaker">USER:</span>"刚才那个再优化下"<br><span class="speaker">AI:</span>"刚才的什么?"',
-      question: '这是 Agent 吗?',
-      answer: false,
-      explain: '<span class="no">不是</span>. 能写代码 (像 tools) · 但 <strong>没有 memory</strong> (跨回合不记得) · 不是 agent。'
-    },
-    {
-      num: '04',
-      quote: '<span class="speaker">USER:</span>"做一份完整 UI audit 报告"<br><span class="speaker">AI:</span>(规划: 视觉/a11y/性能 3 维) → 派 3 sub-agent 并行 → 每个跑工具 → 汇总报告 · 期间检测 a11y agent 失败 retry)',
-      question: '这是 Agent 吗?',
-      answer: true,
-      explain: 'planning (拆 3 维) + tools (多 MCP) + memory (跟踪 3 个 sub-agent) + reflection (失败 retry) · <span class="yes">真 Agent</span> · 而且是 multi-agent。'
-    }
-  ];
-
-  function render() {
-    grid.innerHTML = '';
-    Q.forEach((q, i) => {
-      const card = document.createElement('div');
-      card.className = 'ai-id-card';
-      card.innerHTML =
-        '<div class="aid-num">' + q.num + '</div>' +
-        '<div class="aid-quote">' + q.quote + '</div>' +
-        '<div class="aid-q">' + q.question + '</div>' +
-        '<div class="aid-choices">' +
-          '<button class="aid-choice" data-ans="true">是 Agent</button>' +
-          '<button class="aid-choice" data-ans="false">不是</button>' +
-        '</div>' +
-        '<div class="aid-feedback">' + q.explain + '</div>';
-
-      const choices = card.querySelectorAll('.aid-choice');
-      const fb = card.querySelector('.aid-feedback');
-      choices.forEach(btn => {
-        btn.addEventListener('click', () => {
-          if (card.classList.contains('is-answered')) return;
-          const isYes = btn.dataset.ans === 'true';
-          const correct = isYes === q.answer;
-          card.classList.add('is-answered');
-          if (correct) {
-            card.classList.add('is-correct');
-            btn.classList.add('is-correct');
-          } else {
-            card.classList.add('is-wrong');
-            btn.classList.add('is-wrong');
-            // 也亮一下对的
-            const rightBtn = card.querySelector('[data-ans="' + q.answer + '"]');
-            if (rightBtn) rightBtn.classList.add('is-correct');
-          }
-          choices.forEach(b => b.disabled = true);
-          fb.classList.add('show');
-        });
-      });
-      grid.appendChild(card);
-    });
-  }
-  render();
-})();
-
 </script>
+
 
 <!-- 路线图弹窗 -->
 <div class="rm-modal" id="rm-modal" hidden>

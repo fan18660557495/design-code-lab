@@ -1133,434 +1133,241 @@
 
 
 
-  /* ============== §04 — Scene Theater ============== */
-  .scene-stage { margin: 24px 0 36px; }
-  .scene-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: 16px;
-  }
-
-  .scene-card {
+  /* ============== §04 — 5 步工作流路径图 ============== */
+  .wf-stage {
+    margin-top: 24px;
     background: var(--paper);
     border: 1.5px solid var(--line);
     border-radius: 10px;
-    padding: 22px 24px;
-    cursor: pointer;
+    padding: 32px 30px 28px;
     position: relative;
-    overflow: hidden;
-    transition: all 0.2s ease;
-    text-align: left;
-    font-family: inherit;
-    color: inherit;
   }
-  .scene-card::before {
-    content: '';
-    position: absolute;
-    top: 0; left: 0; right: 0;
-    height: 4px;
-    background: var(--accent);
-    transform: scaleX(0);
-    transform-origin: left;
-    transition: transform 0.3s ease;
+  .wf-path-wrap {
+    position: relative;
+    margin-bottom: 28px;
   }
-  .scene-card:hover::before { transform: scaleX(1); }
-  .scene-card:hover {
-    border-color: var(--ink);
-    transform: translateY(-3px);
-    box-shadow: 0 14px 32px rgba(22,22,29,0.10);
+  .wf-path-svg {
+    width: 100%;
+    height: 150px;
+    display: block;
   }
-  .scene-card.is-seen::after {
-    content: '✓ 看过';
-    position: absolute;
-    top: 14px;
-    right: 16px;
+  .wf-path-svg .wf-line {
+    stroke: var(--line);
+    stroke-width: 2;
+    fill: none;
+  }
+  .wf-path-svg .wf-line.is-done {
+    stroke: var(--accent);
+  }
+  .wf-path-svg .wf-node-circle {
+    fill: var(--paper);
+    stroke: var(--ink);
+    stroke-width: 1.8;
+    cursor: pointer;
+    transition: all 0.25s ease;
+  }
+  .wf-path-svg .wf-node-circle:hover {
+    stroke: var(--accent);
+    stroke-width: 2.5;
+  }
+  .wf-path-svg .wf-node-circle.is-active {
+    fill: var(--accent);
+    stroke: var(--accent);
+  }
+  .wf-path-svg .wf-node-circle.is-done {
+    fill: var(--paper);
+    stroke: var(--accent);
+    stroke-width: 2;
+  }
+  .wf-path-svg .wf-node-num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14px;
+    font-weight: 700;
+    fill: var(--ink);
+    pointer-events: none;
+    transition: fill 0.25s ease;
+  }
+  .wf-path-svg .wf-node-num.is-active {
+    fill: var(--paper);
+  }
+  .wf-path-svg .wf-node-num.is-done {
+    fill: var(--accent);
+  }
+  .wf-path-svg .wf-node-cn {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 15px;
+    font-weight: 700;
+    fill: var(--ink);
+    pointer-events: none;
+  }
+  .wf-path-svg .wf-node-cn.is-active {
+    fill: var(--accent);
+  }
+  .wf-path-svg .wf-node-en {
     font-family: 'JetBrains Mono', monospace;
     font-size: 10px;
-    letter-spacing: 0.1em;
-    color: #4ade80;
-    background: rgba(74,222,128,0.12);
-    padding: 2px 8px;
-    border-radius: 100px;
-  }
-
-  .sc-num {
-    font-family: 'Fraunces', serif;
-    font-size: 44px;
-    font-weight: 900;
-    color: var(--accent);
-    line-height: 0.9;
-    margin-bottom: 10px;
-  }
-  .sc-quote {
-    font-family: 'Noto Serif SC', serif;
-    font-size: 18px;
-    font-weight: 700;
-    color: var(--ink);
-    line-height: 1.4;
-    margin-bottom: 12px;
-    letter-spacing: -0.01em;
-  }
-  .sc-painpoint {
-    font-size: 13px;
-    color: var(--ink-soft);
-    line-height: 1.6;
-    margin-bottom: 18px;
-  }
-  .sc-foot {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding-top: 14px;
-    border-top: 1px dashed var(--line);
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 11px;
-    color: var(--ink-mute);
-  }
-  .sc-foot .skill {
-    color: var(--accent);
-    font-weight: 700;
-  }
-  .sc-foot .cta {
-    color: var(--ink);
-    font-weight: 600;
-  }
-
-  /* 场景详情面板 */
-  .scene-detail {
-    background: var(--paper);
-    border: 1.5px solid var(--line);
-    border-radius: 10px;
-    padding: 28px 32px 32px;
-    margin: 24px 0 36px;
-    animation: sdIn 0.32s cubic-bezier(0.4, 0, 0.2, 1);
-  }
-  @keyframes sdIn {
-    from { opacity: 0; transform: translateY(12px); }
-    to   { opacity: 1; transform: translateY(0); }
-  }
-  .scene-back {
-    background: transparent;
-    border: 1px solid var(--line);
-    color: var(--ink);
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 12px;
-    letter-spacing: 0.06em;
-    padding: 7px 14px;
-    border-radius: 5px;
-    cursor: pointer;
-    margin-bottom: 22px;
-    transition: all 0.15s ease;
-  }
-  .scene-back:hover {
-    border-color: var(--ink);
-    background: var(--bg-2);
-  }
-  .sd-head {
-    margin-bottom: 28px;
-    padding-bottom: 20px;
-    border-bottom: 1px solid var(--line);
-  }
-  .sd-tag {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 11px;
+    fill: var(--ink-mute);
     letter-spacing: 0.12em;
-    color: var(--accent);
-    text-transform: uppercase;
-    margin-bottom: 8px;
+    pointer-events: none;
   }
-  .sd-quote {
-    font-family: 'Noto Serif SC', serif;
-    font-size: 38px;
-    font-weight: 900;
-    color: var(--ink);
-    line-height: 1.2;
-    letter-spacing: -0.02em;
-    margin-bottom: 10px;
+  .wf-path-svg .wf-node-en.is-active {
+    fill: var(--accent);
   }
-  .sd-painpoint {
-    font-family: 'Noto Serif SC', serif;
-    font-size: 16px;
-    color: var(--ink-soft);
-    line-height: 1.7;
-  }
-
-  /* 4 幕 */
-  .acts {
-    display: flex;
-    flex-direction: column;
-    gap: 18px;
-  }
-  .act {
+  .wf-pulse {
+    fill: var(--accent);
     opacity: 0;
-    transform: translateY(12px);
-    transition: opacity 0.45s ease, transform 0.45s cubic-bezier(0.4, 0, 0.2, 1);
   }
-  .act.show {
-    opacity: 1;
-    transform: translateY(0);
+  .wf-pulse.is-on {
+    animation: wfPulse 1.6s ease-out infinite;
   }
-  .act-label {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    margin-bottom: 10px;
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 11px;
-    letter-spacing: 0.14em;
-    color: var(--accent);
-    text-transform: uppercase;
-    font-weight: 700;
-  }
-  .act-label .act-no {
-    background: var(--accent);
-    color: var(--paper);
-    padding: 3px 8px;
-    border-radius: 3px;
-    font-weight: 700;
+  @keyframes wfPulse {
+    0% { opacity: 0.55; r: 22; }
+    100% { opacity: 0; r: 40; }
   }
 
-  /* 幕 1: 你说 — 聊天气泡 */
-  .bubble-row {
+  /* play controls */
+  .wf-controls {
     display: flex;
-    gap: 12px;
-    align-items: flex-start;
-  }
-  .bubble-avatar {
-    width: 36px; height: 36px;
-    border-radius: 50%;
-    background: var(--accent);
-    color: var(--paper);
-    display: flex; align-items: center; justify-content: center;
-    font-family: 'Noto Serif SC', serif;
-    font-weight: 900;
-    font-size: 16px;
-    flex-shrink: 0;
-  }
-  .bubble {
-    background: var(--bg-2);
-    border: 1px solid var(--line);
-    border-radius: 6px 14px 14px 14px;
-    padding: 14px 18px;
-    font-family: 'Noto Serif SC', serif;
-    font-size: 18px;
-    color: var(--ink);
-    line-height: 1.5;
-    font-weight: 500;
-    max-width: 600px;
-  }
-
-  /* 幕 2: AI 听到 — 深色扫描区 */
-  .ai-listen {
-    background: #1f1f29;
-    border-radius: 8px;
-    padding: 22px 24px;
-    color: #d8d8e0;
-  }
-  .ai-listen-head {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 12px;
-    color: #8a8a96;
-    margin-bottom: 14px;
-    letter-spacing: 0.08em;
-  }
-  .ai-listen-head .em { color: var(--accent); font-weight: 700; }
-  .desc-scan {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 11.5px;
-    line-height: 1.5;
-  }
-  .desc-row {
-    padding: 6px 10px;
-    border-radius: 4px;
-    color: rgba(255,255,255,0.5);
-    transition: all 0.25s ease;
-    word-break: break-word;
-  }
-  .desc-row.is-hit {
-    background: var(--accent);
-    color: var(--paper);
-    font-weight: 700;
-    transform: translateX(6px);
-    box-shadow: 0 4px 16px rgba(255,77,46,0.4);
-  }
-  .desc-row .dr-code {
-    color: rgba(255,255,255,0.85);
-    font-weight: 700;
-    margin-right: 8px;
-  }
-  .desc-row.is-hit .dr-code { color: var(--paper); }
-  .ai-conclude {
-    margin-top: 14px;
-    padding-top: 14px;
-    border-top: 1px solid rgba(255,255,255,0.12);
-    font-family: 'Noto Sans SC', sans-serif;
-    font-size: 13.5px;
-    color: rgba(255,255,255,0.85);
-    line-height: 1.65;
-  }
-  .ai-conclude .em { color: var(--accent); font-weight: 700; }
-  .ai-conclude code {
-    font-family: 'JetBrains Mono', monospace;
-    background: rgba(255,77,46,0.18);
-    color: var(--accent);
-    padding: 1px 6px;
-    border-radius: 3px;
-    font-size: 12.5px;
-  }
-
-  /* 幕 3: Skill 在做 */
-  .skill-doing {
-    background: #fff;
-    border: 1.5px solid var(--line);
-    border-radius: 8px;
-    padding: 20px 24px;
-  }
-  .skill-doing-head {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 12px;
-    color: var(--ink-mute);
-    margin-bottom: 14px;
-    letter-spacing: 0.08em;
-  }
-  .skill-doing-head strong { color: var(--accent); font-weight: 700; }
-  .steps {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-  }
-  .step-row {
-    display: flex;
-    align-items: flex-start;
-    gap: 10px;
-    padding: 8px 0;
-    font-family: 'Noto Sans SC', sans-serif;
-    font-size: 14.5px;
-    color: var(--ink);
-    line-height: 1.5;
-  }
-  .step-tick {
-    width: 18px; height: 18px;
-    border-radius: 50%;
-    border: 1.5px solid var(--line);
-    flex-shrink: 0;
-    margin-top: 3px;
-    position: relative;
-    transition: all 0.3s ease;
-  }
-  .step-row.done .step-tick {
-    background: #4ade80;
-    border-color: #4ade80;
-  }
-  .step-row.done .step-tick::after {
-    content: '✓';
-    position: absolute;
-    top: 50%; left: 50%;
-    transform: translate(-50%, -50%);
-    color: #fff;
-    font-size: 11px;
-    font-weight: 700;
-  }
-  .step-row code {
-    font-family: 'JetBrains Mono', monospace;
-    background: var(--accent-soft);
-    color: var(--accent);
-    padding: 1px 5px;
-    border-radius: 3px;
-    font-size: 12.5px;
-  }
-
-  /* 幕 4: 结果 */
-  .result {
-    background: var(--accent-soft);
-    border: 1.5px solid var(--accent);
-    border-radius: 8px;
-    padding: 20px 24px;
-  }
-  .result-head {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 11px;
-    color: var(--accent);
-    margin-bottom: 14px;
-    letter-spacing: 0.12em;
-    font-weight: 700;
-    text-transform: uppercase;
-  }
-  .result-list {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-  }
-  .result-item {
-    display: flex;
-    align-items: flex-start;
-    gap: 10px;
-    font-family: 'Noto Sans SC', sans-serif;
-    font-size: 14.5px;
-    color: var(--ink);
-    line-height: 1.55;
-  }
-  .result-item::before {
-    content: '✓';
-    color: var(--accent);
-    font-weight: 700;
-    flex-shrink: 0;
-    margin-top: 1px;
-  }
-  .result-foot {
-    margin-top: 16px;
-    padding-top: 14px;
-    border-top: 1px dashed rgba(255,77,46,0.32);
-    font-family: 'Noto Serif SC', serif;
-    font-size: 14px;
-    color: var(--ink-soft);
-    line-height: 1.6;
-  }
-  .result-foot strong { color: var(--ink); font-weight: 700; }
-
-  /* 下一场景按钮 */
-  .scene-nav {
-    margin-top: 28px;
-    padding-top: 22px;
-    border-top: 1px solid var(--line);
-    display: flex;
-    justify-content: space-between;
     align-items: center;
     gap: 14px;
+    margin-bottom: 18px;
+    padding-bottom: 18px;
+    border-bottom: 1px dashed var(--line);
     flex-wrap: wrap;
   }
-  .scene-nav button {
+  .wf-play {
     background: var(--ink);
     color: var(--paper);
     border: none;
-    padding: 12px 22px;
-    border-radius: 6px;
+    padding: 8px 16px;
+    border-radius: 5px;
     font-family: 'JetBrains Mono', monospace;
-    font-size: 12px;
+    font-size: 11px;
     letter-spacing: 0.08em;
     cursor: pointer;
-    text-transform: uppercase;
     font-weight: 700;
     transition: all 0.15s ease;
   }
-  .scene-nav button:hover {
-    background: var(--accent);
-    transform: translateY(-1px);
-  }
-  .scene-nav .nav-hint {
+  .wf-play:hover { background: var(--accent); }
+  .wf-play.is-playing { background: var(--accent); }
+  .wf-progress-label {
     font-family: 'JetBrains Mono', monospace;
     font-size: 11px;
-    color: var(--ink-mute);
     letter-spacing: 0.06em;
+    color: var(--ink-mute);
+  }
+  .wf-progress-label strong { color: var(--accent); font-weight: 700; }
+
+  /* skill cards container */
+  .wf-skill-block {
+    display: grid;
+    grid-template-columns: 1.4fr 1fr;
+    gap: 16px;
+    animation: wfFade 0.35s ease;
+  }
+  @media (max-width: 880px) { .wf-skill-block { grid-template-columns: 1fr; } }
+  @keyframes wfFade {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .wf-skill-card {
+    background: #ffffff;
+    border: 1.5px solid var(--line);
+    border-radius: 8px;
+    padding: 20px 22px;
+    position: relative;
+    overflow: hidden;
+  }
+  .wf-skill-card.is-main {
+    border-color: var(--accent);
+    border-top: 4px solid var(--accent);
+  }
+  .wf-skill-card.is-helper {
+    border-top: 4px solid var(--line);
+    background: var(--bg-2);
+  }
+  .wf-skill-card .ws-role {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--ink-mute);
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+  .wf-skill-card.is-main .ws-role { color: var(--accent); }
+  .wf-skill-card .ws-code {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--accent);
+    margin-bottom: 10px;
+    word-break: break-all;
+  }
+  .wf-skill-card.is-helper .ws-code { color: var(--ink-soft); }
+  .wf-skill-card .ws-title {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--ink);
+    line-height: 1.35;
+    margin-bottom: 10px;
+  }
+  .wf-skill-card .ws-desc-en {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    line-height: 1.65;
+    background: #1f1f29;
+    color: #d8d8e0;
+    padding: 10px 12px;
+    border-radius: 4px;
+    margin-bottom: 10px;
+  }
+  .wf-skill-card.is-helper .ws-desc-en { display: none; }
+  .wf-skill-card .ws-desc-cn {
+    font-size: 13px;
+    line-height: 1.6;
+    color: var(--ink-soft);
+    margin-bottom: 12px;
+  }
+  .wf-skill-card .ws-desc-cn strong { color: var(--ink); font-weight: 600; }
+  .wf-skill-card .ws-trigger {
+    border-top: 1px dashed var(--line);
+    padding-top: 10px;
+    margin-top: auto;
+  }
+  .wf-skill-card .ws-trigger-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9.5px;
+    color: var(--ink-mute);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+  .wf-skill-card .ws-trigger-text {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 13.5px;
+    color: var(--ink);
+    line-height: 1.5;
+    font-weight: 500;
+  }
+  .wf-skill-card .ws-trigger-text::before {
+    content: '› ';
+    color: var(--accent);
+    font-weight: 700;
+  }
+
+  /* ============== §05 — Cheat 信息图 ============== */
+  .cheat-mini-svg {
+    width: 100%;
+    height: 200px;
+    display: block;
+    margin: 4px 0 10px;
   }
 
   @media (max-width: 720px) {
-    .scene-detail { padding: 22px 18px; }
-    .sd-quote { font-size: 26px; }
-    .bubble { font-size: 16px; }
+    .wf-stage { padding: 24px 18px; }
+    .wf-path-svg { height: 130px; }
   }
 </style>
 </head>
@@ -1865,17 +1672,17 @@ pptx/
     </div>
   </div>
 </section>
-<!-- §04 — 场景剧场 6 场景 × 4 幕 -->
+<!-- §04 — 5 步 Figma AI 工作流路径图 -->
 <section id="figma-example">
   <div class="wrap">
     <div class="section-head">
       <div>
-        <div class="section-num"><strong>04</strong> / 场景</div>
-        <h2 class="section-title">设计师的<br><span class="em">6 个 AI 时刻</span></h2>
+        <div class="section-num"><strong>04</strong> / 流程</div>
+        <h2 class="section-title">5 步把 9 个<br><span class="em">Figma skill</span> 串起来</h2>
       </div>
       <p class="section-sub">
-        看 6 个真实场景 —— <strong>你想干什么 → AI 听到了什么 → Skill 怎么做 → 实现你的需求</strong>。
-        点任意一张卡片，<strong>看完一出 4 幕戏</strong>。
+        Figma 官方 9 个 skill，落到一条线性的工作流上 ——
+        <strong>起稿 → 应用 → 审查 → 映射 → 实现</strong>。点节点或自动播放，看每一步用哪些 skill。
       </p>
     </div>
 
@@ -1883,20 +1690,61 @@ pptx/
       <strong>注意：</strong>这些 skill <span class="em">不是</span>你手动调用的，
       是给 <strong>AI agent</strong> 用的 ——
       你跟 Claude 用自然语言说一句话，AI 根据 description <strong>自动找到该用的 skill</strong>。
-      下面 6 个场景全都来自设计师的真实痛点。
+      下面把它们排进同一条工作流，看每一步该叫谁。
     </div>
 
-    <!-- 主屏：6 个场景卡片 -->
-    <div class="scene-stage" id="scene-stage">
-      <div class="scene-grid" id="scene-grid">
-        <!-- 场景卡片 JS 渲染 -->
+    <div class="wf-stage">
+      <div class="wf-controls">
+        <button class="wf-play" id="wfPlay" type="button">▶ 自动播放</button>
+        <div class="wf-progress-label">当前 · <strong id="wfStepLabel">01 / 起稿</strong> · 共 5 步</div>
       </div>
-    </div>
 
-    <!-- 场景详情：默认隐藏，点卡片时显示 -->
-    <div class="scene-detail" id="scene-detail" hidden>
-      <button class="scene-back" id="scene-back">← 返回 6 个场景</button>
-      <div class="scene-detail-body" id="scene-detail-body">
+      <div class="wf-path-wrap">
+        <svg class="wf-path-svg" id="wfSvg" viewBox="0 0 1000 150" preserveAspectRatio="xMidYMid meet">
+          <!-- segments between nodes (drawn first, behind circles) -->
+          <line class="wf-line" data-seg="1" x1="120" y1="55" x2="290" y2="55"/>
+          <line class="wf-line" data-seg="2" x1="330" y1="55" x2="500" y2="55"/>
+          <line class="wf-line" data-seg="3" x1="540" y1="55" x2="710" y2="55"/>
+          <line class="wf-line" data-seg="4" x1="750" y1="55" x2="920" y2="55"/>
+
+          <!-- pulse ring for active node -->
+          <circle class="wf-pulse" id="wfPulse" cx="100" cy="55" r="22"/>
+
+          <!-- 5 nodes -->
+          <g class="wf-node" data-step="1">
+            <circle class="wf-node-circle" data-step="1" cx="100" cy="55" r="22"/>
+            <text class="wf-node-num" data-step="1" x="100" y="60" text-anchor="middle">01</text>
+            <text class="wf-node-cn" data-step="1" x="100" y="105" text-anchor="middle">起稿</text>
+            <text class="wf-node-en" data-step="1" x="100" y="124" text-anchor="middle">CREATE</text>
+          </g>
+          <g class="wf-node" data-step="2">
+            <circle class="wf-node-circle" data-step="2" cx="310" cy="55" r="22"/>
+            <text class="wf-node-num" data-step="2" x="310" y="60" text-anchor="middle">02</text>
+            <text class="wf-node-cn" data-step="2" x="310" y="105" text-anchor="middle">应用</text>
+            <text class="wf-node-en" data-step="2" x="310" y="124" text-anchor="middle">APPLY</text>
+          </g>
+          <g class="wf-node" data-step="3">
+            <circle class="wf-node-circle" data-step="3" cx="520" cy="55" r="22"/>
+            <text class="wf-node-num" data-step="3" x="520" y="60" text-anchor="middle">03</text>
+            <text class="wf-node-cn" data-step="3" x="520" y="105" text-anchor="middle">审查</text>
+            <text class="wf-node-en" data-step="3" x="520" y="124" text-anchor="middle">AUDIT</text>
+          </g>
+          <g class="wf-node" data-step="4">
+            <circle class="wf-node-circle" data-step="4" cx="730" cy="55" r="22"/>
+            <text class="wf-node-num" data-step="4" x="730" y="60" text-anchor="middle">04</text>
+            <text class="wf-node-cn" data-step="4" x="730" y="105" text-anchor="middle">映射</text>
+            <text class="wf-node-en" data-step="4" x="730" y="124" text-anchor="middle">CONNECT</text>
+          </g>
+          <g class="wf-node" data-step="5">
+            <circle class="wf-node-circle" data-step="5" cx="940" cy="55" r="22"/>
+            <text class="wf-node-num" data-step="5" x="940" y="60" text-anchor="middle">05</text>
+            <text class="wf-node-cn" data-step="5" x="940" y="105" text-anchor="middle">实现</text>
+            <text class="wf-node-en" data-step="5" x="940" y="124" text-anchor="middle">IMPLEMENT</text>
+          </g>
+        </svg>
+      </div>
+
+      <div class="wf-skill-block" id="wfSkillBlock">
         <!-- JS 渲染 -->
       </div>
     </div>
@@ -1905,7 +1753,7 @@ pptx/
       <span class="hint-tag" style="background:var(--accent);color:var(--paper);">领悟</span>
       你不需要记任何 skill 名 —— 你跟 AI 用<strong>自然语言</strong>说话，
       AI 根据每个 skill 的 description <strong>自动找到对的工具</strong>用。
-      这就是 <span class="em">Agentic</span> 的本质。
+      这条 5 步线，串起 Figma 官方 9 个 skill 的 <span class="em">完整闭环</span>。
     </div>
 
     <div class="hint-strip" style="margin-top:32px;">
@@ -1952,56 +1800,122 @@ pptx/
     </div>
 
     <div class="cheat-grid">
+      <!-- 速查 01 · Skill 文件结构 SVG -->
       <div class="cheat-card">
-        <div class="cc-num">CARD 01 · 结构</div>
-        <h4>文件夹长这样</h4>
-        <div class="cc-sub">只有第一项必须</div>
-<pre class="cheat-tree">my-skill/
-<span class="cmark">├── SKILL.md</span>          <span class="ccom"># 必须</span>
-├── scripts/          <span class="ccom"># 可选 · 执行脚本</span>
-│   └── do_thing.py
-├── references/       <span class="ccom"># 可选 · 长资料</span>
-│   └── rules.md
-└── templates/        <span class="ccom"># 可选 · 模板素材</span>
-    └── starter.txt</pre>
+        <div class="cc-num">cheat · 01</div>
+        <h4>Skill <span class="em">文件结构</span></h4>
+        <div class="cc-sub">folder · 1 必填 + 3 可选</div>
+        <svg class="cheat-mini-svg" viewBox="0 0 280 200" preserveAspectRatio="xMidYMid meet">
+          <!-- root folder -->
+          <rect x="8" y="8" width="22" height="18" rx="2" fill="#ffcf3d" stroke="#16161d" stroke-width="1.2"/>
+          <text x="38" y="22" font-family="JetBrains Mono, monospace" font-size="12" font-weight="700" fill="#16161d">my-skill/</text>
+          <!-- vertical guide line -->
+          <line x1="20" y1="34" x2="20" y2="186" stroke="#d5cdba" stroke-width="1" stroke-dasharray="2 3"/>
+          <!-- SKILL.md required -->
+          <line x1="20" y1="54" x2="44" y2="54" stroke="#d5cdba" stroke-width="1"/>
+          <rect x="44" y="44" width="80" height="20" rx="3" fill="#ffe4dc" stroke="#ff4d2e" stroke-width="1.5"/>
+          <text x="84" y="58" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="11" font-weight="700" fill="#ff4d2e">SKILL.md</text>
+          <text x="134" y="58" font-family="JetBrains Mono, monospace" font-size="10" fill="#ff4d2e" font-weight="700">必须 · MUST</text>
+
+          <!-- scripts/ optional -->
+          <line x1="20" y1="86" x2="44" y2="86" stroke="#d5cdba" stroke-width="1"/>
+          <rect x="44" y="76" width="80" height="20" rx="3" fill="#faf7f0" stroke="#d5cdba" stroke-width="1.2"/>
+          <text x="84" y="90" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="11" font-weight="600" fill="#16161d">scripts/</text>
+          <text x="134" y="90" font-family="JetBrains Mono, monospace" font-size="10" fill="#8a8a92">可选 · 执行脚本</text>
+
+          <!-- references/ optional -->
+          <line x1="20" y1="118" x2="44" y2="118" stroke="#d5cdba" stroke-width="1"/>
+          <rect x="44" y="108" width="80" height="20" rx="3" fill="#faf7f0" stroke="#d5cdba" stroke-width="1.2"/>
+          <text x="84" y="122" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="11" font-weight="600" fill="#16161d">references/</text>
+          <text x="134" y="122" font-family="JetBrains Mono, monospace" font-size="10" fill="#8a8a92">可选 · 长资料</text>
+
+          <!-- templates/ optional -->
+          <line x1="20" y1="150" x2="44" y2="150" stroke="#d5cdba" stroke-width="1"/>
+          <rect x="44" y="140" width="80" height="20" rx="3" fill="#faf7f0" stroke="#d5cdba" stroke-width="1.2"/>
+          <text x="84" y="154" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="11" font-weight="600" fill="#16161d">templates/</text>
+          <text x="134" y="154" font-family="JetBrains Mono, monospace" font-size="10" fill="#8a8a92">可选 · 模板</text>
+
+          <!-- foot label -->
+          <text x="140" y="186" text-anchor="middle" font-family="Noto Serif SC, serif" font-size="11" font-weight="700" fill="#16161d">一份 SKILL.md = 一个最小 skill</text>
+        </svg>
         <dl>
           <dt>记住</dt>
-          <dd>最小可用 skill = <strong>一个文件夹 + 一份 SKILL.md</strong>。其余都是后来加的。</dd>
+          <dd>最小可用 skill = <strong>一个文件夹 + 一份 SKILL.md</strong>。其余三个都是后来按需加的。</dd>
         </dl>
       </div>
 
+      <!-- 速查 02 · SKILL.md 公式可视化 -->
       <div class="cheat-card b">
-        <div class="cc-num">CARD 02 · 公式</div>
-        <h4>SKILL.md 公式</h4>
-        <div class="cc-sub">YAML + markdown</div>
-<pre class="cheat-tree"><span class="cmark">---</span>
-<span class="ckey">name</span>: my-skill          <span class="ccom"># 必须</span>
-<span class="ckey">description</span>: ...        <span class="ccom"># 必须 + 关键</span>
-<span class="ckey">allowed-tools</span>: [...]    <span class="ccom"># 可选</span>
-<span class="cmark">---</span>
+        <div class="cc-num">cheat · 02</div>
+        <h4>SKILL.md <span class="em">公式</span></h4>
+        <div class="cc-sub">YAML frontmatter + markdown</div>
+        <svg class="cheat-mini-svg" viewBox="0 0 280 200" preserveAspectRatio="xMidYMid meet">
+          <!-- YAML frontmatter block -->
+          <rect x="14" y="8" width="252" height="86" rx="5" fill="#fff2c4" stroke="#b48010" stroke-width="1.5"/>
+          <text x="24" y="24" font-family="JetBrains Mono, monospace" font-size="9" font-weight="700" fill="#b48010" letter-spacing="0.1em">YAML FRONTMATTER · TIER 1</text>
+          <text x="24" y="42" font-family="JetBrains Mono, monospace" font-size="11" fill="#16161d"><tspan font-weight="700" fill="#ff4d2e">name:</tspan> my-skill</text>
+          <text x="24" y="58" font-family="JetBrains Mono, monospace" font-size="11" fill="#16161d"><tspan font-weight="700" fill="#ff4d2e">description:</tspan> Use when …</text>
+          <text x="24" y="74" font-family="JetBrains Mono, monospace" font-size="11" fill="#16161d"><tspan font-weight="700" fill="#8a8a92">allowed-tools:</tspan> [Read, Bash]</text>
+          <text x="24" y="88" font-family="JetBrains Mono, monospace" font-size="9" fill="#b48010">必须 · 启动加载 · ~100 token</text>
 
-<span class="ccom"># When to use</span>
-<span class="ccom"># Steps</span>
-<span class="ccom"># 参考 @references/xx.md</span></pre>
+          <!-- arrow body -->
+          <line x1="140" y1="98" x2="140" y2="110" stroke="#8a8a92" stroke-width="1.5"/>
+          <polyline points="135,107 140,113 145,107" fill="none" stroke="#8a8a92" stroke-width="1.5"/>
+
+          <!-- markdown body -->
+          <rect x="14" y="114" width="252" height="50" rx="5" fill="#faf7f0" stroke="#d5cdba" stroke-width="1.5"/>
+          <text x="24" y="130" font-family="JetBrains Mono, monospace" font-size="9" font-weight="700" fill="#16161d" letter-spacing="0.1em">MARKDOWN BODY · TIER 2</text>
+          <text x="24" y="146" font-family="JetBrains Mono, monospace" font-size="11" fill="#16161d"># When to use · # Steps · # Tips</text>
+          <text x="24" y="160" font-family="JetBrains Mono, monospace" font-size="10" fill="#ff4d2e">→ <tspan fill="#0a4cff">@references/rules.md</tspan></text>
+
+          <!-- ref arrow to tier 3 -->
+          <line x1="200" y1="168" x2="200" y2="180" stroke="#0a4cff" stroke-width="1.5" stroke-dasharray="2 2"/>
+          <polyline points="195,177 200,183 205,177" fill="none" stroke="#0a4cff" stroke-width="1.5"/>
+          <rect x="148" y="183" width="116" height="14" rx="3" fill="#dde6ff" stroke="#0a4cff" stroke-width="1.2"/>
+          <text x="206" y="193" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="9" font-weight="700" fill="#0a4cff">读到才打开 · TIER 3</text>
+        </svg>
         <dl>
           <dt>description 公式</dt>
-          <dd><strong>动词开头</strong> + <strong>具体场景清单</strong> + <strong>3-5 个 sample queries</strong> + <strong>DO NOT 排除清单</strong>。</dd>
+          <dd><strong>动词开头</strong> + <strong>具体场景</strong> + <strong>3-5 个 sample</strong> + <strong>DO NOT 排除</strong>。</dd>
         </dl>
       </div>
 
+      <!-- 速查 03 · 3 层加载金字塔（§03 迷你版） -->
       <div class="cheat-card c">
-        <div class="cc-num">CARD 03 · 流程</div>
-        <h4>触发的全过程</h4>
-        <div class="cc-sub">用户问 → Claude 想 → skill 用</div>
-        <div class="cheat-flow">
-          <div class="cf-step"><span class="cf-tier">TIER 1</span><span><strong>用户说话</strong> · Claude 把消息和所有 skill 的 description 对一遍（只读这一段）。</span></div>
-          <div class="cf-step"><span class="cf-tier">TIER 2</span><span><strong>命中了</strong> · 打开匹配 skill 的 SKILL.md 正文，按 When / Steps 走。</span></div>
-          <div class="cf-step"><span class="cf-tier">TIER 3</span><span><strong>读到 @reference</strong> · 才真的打开那个文件 —— 不读不烧 token。</span></div>
-          <div class="cf-step"><span class="cf-tier">DONE</span><span><strong>跑完返回</strong> · 离开 skill，回到普通对话，下一轮重来。</span></div>
-        </div>
-        <dl style="margin-top:12px;">
+        <div class="cc-num">cheat · 03</div>
+        <h4>3 层 <span class="em">加载金字塔</span></h4>
+        <div class="cc-sub">progressive disclosure</div>
+        <svg class="cheat-mini-svg" viewBox="0 0 280 200" preserveAspectRatio="xMidYMid meet">
+          <!-- Tier 3 base -->
+          <polygon points="20,170 260,170 220,128 60,128" fill="#dde6ff" stroke="#0a4cff" stroke-width="1.5"/>
+          <text x="140" y="148" text-anchor="middle" font-family="Noto Serif SC, serif" font-size="13" font-weight="700" fill="#0a4cff">TIER 3</text>
+          <text x="140" y="162" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="9" fill="#0a4cff">@references / scripts</text>
+
+          <!-- Tier 2 middle -->
+          <polygon points="60,128 220,128 184,86 96,86" fill="#fff2c4" stroke="#b48010" stroke-width="1.5"/>
+          <text x="140" y="106" text-anchor="middle" font-family="Noto Serif SC, serif" font-size="13" font-weight="700" fill="#b48010">TIER 2</text>
+          <text x="140" y="120" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="9" fill="#b48010">SKILL.md 正文</text>
+
+          <!-- Tier 1 top -->
+          <polygon points="96,86 184,86 156,44 124,44" fill="#ffe4dc" stroke="#ff4d2e" stroke-width="1.5"/>
+          <text x="140" y="64" text-anchor="middle" font-family="Noto Serif SC, serif" font-size="13" font-weight="700" fill="#ff4d2e">TIER 1</text>
+          <text x="140" y="78" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="8" fill="#ff4d2e">name + description</text>
+
+          <!-- side annotations -->
+          <text x="262" y="64" text-anchor="end" font-family="JetBrains Mono, monospace" font-size="9" fill="#ff4d2e" font-weight="700">启动就读</text>
+          <text x="262" y="107" text-anchor="end" font-family="JetBrains Mono, monospace" font-size="9" fill="#b48010" font-weight="700">命中再读</text>
+          <text x="262" y="150" text-anchor="end" font-family="JetBrains Mono, monospace" font-size="9" fill="#0a4cff" font-weight="700">引用才读</text>
+
+          <!-- top label -->
+          <text x="140" y="22" text-anchor="middle" font-family="Noto Serif SC, serif" font-size="11" font-weight="700" fill="#16161d">用到才往下挖</text>
+          <text x="140" y="36" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="8" fill="#8a8a92">不读不烧 token</text>
+
+          <!-- foot label -->
+          <text x="140" y="190" text-anchor="middle" font-family="Noto Serif SC, serif" font-size="10" font-weight="700" fill="#16161d">100 个 skill 挂着，启动只读 100 行</text>
+        </svg>
+        <dl>
           <dt>记住</dt>
-          <dd>Tier 1 = 入门券，<strong>没这关后面都没机会</strong>。所以 description 是杠杆。</dd>
+          <dd>Tier 1 = 入门券，<strong>没这关后面都没机会</strong>。所以 description 是杠杆最长的一行。</dd>
         </dl>
       </div>
     </div>
@@ -2308,363 +2222,239 @@ pptx/
 
 
 
-// ========= §04 Scene Theater =========
+// ========= §04 Workflow Path · 5 步 9 skill =========
 (function () {
-  const grid = document.getElementById('scene-grid');
-  const detail = document.getElementById('scene-detail');
-  const detailBody = document.getElementById('scene-detail-body');
-  const stage = document.getElementById('scene-stage');
-  const backBtn = document.getElementById('scene-back');
-  if (!grid || !detail) return;
+  const svg = document.getElementById('wfSvg');
+  const block = document.getElementById('wfSkillBlock');
+  const playBtn = document.getElementById('wfPlay');
+  const stepLabel = document.getElementById('wfStepLabel');
+  const pulse = document.getElementById('wfPulse');
+  if (!svg || !block || !playBtn) return;
 
-  const SCENES = [
+  // 5 steps · each step holds 1 main skill + 0~1 helper skills
+  const STEPS = [
     {
-      n: '01',
-      quote: '"我要从 0 画一个 SaaS 登录页"',
-      painpoint: '时间紧 · 想先出一版给大家看 · 不想再开 Sketch 拖元素',
-      skill: '/figma-generate-design',
-      act1: { user: '你说', text: '帮我画一个 SaaS 登录页' },
-      act2: {
-        scan: [
-          { code: 'generate-design', desc: '"Generates a Figma design from a text prompt..."', hit: true },
-          { code: 'apply-system',    desc: '"Scans Figma frames and adjusts..."', hit: false },
-          { code: 'rad-spacing',     desc: '"Audits padding / gap / margin..."', hit: false },
-          { code: 'implement',       desc: '"Translates Figma designs into code..."', hit: false }
-        ],
-        conclude: '命中 <span class="em">"画 + 页面"</span> 关键词 → 触发 <code>figma-generate-design</code>'
+      n: 1,
+      cn: '起稿',
+      en: 'CREATE',
+      x: 100,
+      main: {
+        code: '/figma-generate-design',
+        title: '从一句话生成 Figma 设计稿',
+        descEn: 'Generates a Figma design from a text prompt, applying the user\'s design system tokens.',
+        descCn: '把一句话需求<strong>直接画在 Figma canvas</strong> —— 用你项目的 token（颜色 / 字号 / 间距）。',
+        trigger: '帮我画一个 SaaS 登录页'
       },
-      act3: {
-        skill: '/figma-generate-design',
-        steps: [
-          '读你项目的 <code>design tokens</code>（color / type / spacing）',
-          '在 canvas 创建 frame（默认 <code>1440×900</code>）',
-          '按 SaaS 登录页 layout 绘制（logo · 表单 · CTA · 辅助链接）',
-          '用 token 配色 / 字号 / 间距'
-        ]
-      },
-      act4: {
-        items: [
-          'Figma canvas 多了「登录页」frame',
-          '用了你品牌色 + 字号系统',
-          '间距遵循 4 / 8 / 16 节奏'
-        ],
-        next: '给同事看 → 改改细节 → 走下一步'
+      helper: {
+        code: '/figma-generate-library',
+        title: '生成基础组件库',
+        descCn: '从 0 起一套<strong>组件库底子</strong>（Button / Input / Card / Tag …），后续 reusable。',
+        trigger: '给我项目搭一套基础组件库'
       }
     },
     {
-      n: '02',
-      quote: '"稿子间距乱七八糟，懒得手动对"',
-      painpoint: '50 个元素 · 手动对齐眼瞎 · 还可能漏',
-      skill: '/rad-spacing',
-      act1: { user: '你说', text: '看下这个 frame 的间距有没有问题' },
-      act2: {
-        scan: [
-          { code: 'rad-spacing',     desc: '"Audits padding / gap / margin values..."', hit: true },
-          { code: 'apply-system',    desc: '"Scans Figma frames and adjusts..."', hit: false },
-          { code: 'generate-design', desc: '"Generates a Figma design from a prompt..."', hit: false },
-          { code: 'implement',       desc: '"Translates Figma designs into code..."', hit: false }
-        ],
-        conclude: '命中 <span class="em">"间距 + 看下 / 检查"</span> → 触发 <code>rad-spacing</code>'
-      },
-      act3: {
-        skill: '/rad-spacing',
-        steps: [
-          '扫描 frame 内所有元素的 padding / gap / margin',
-          '对比 <code>4 / 8 / 12 / 16 / 24</code> 节奏规则',
-          '标出违反的位置（精确到元素）',
-          '输出报告（共 13 处违规）'
-        ]
-      },
-      act4: {
-        items: [
-          'violation report 一份',
-          '<code>padding-top: 11px</code> ⚠ 建议 8 或 12',
-          '<code>gap: 7px</code> ⚠ 建议 4 或 8',
-          '... 共 13 项'
-        ],
-        next: '点"接受全部"→ AI 自动修；或者自己挑着改'
+      n: 2,
+      cn: '应用',
+      en: 'APPLY',
+      x: 310,
+      main: {
+        code: '/apply-design-system',
+        title: '把现有稿子套到设计系统上',
+        descEn: 'Scans Figma frames and adjusts colors, typography, spacing to match the project design system.',
+        descCn: '一份稿子<strong>没用 token</strong> → 这个 skill 扫一遍，自动换成 token 化的颜色 / 字号 / 间距。',
+        trigger: '把这份稿子套上我们的设计系统'
       }
     },
     {
-      n: '03',
-      quote: '"我改了 Figma token，但代码还是老的"',
-      painpoint: 'Figma Variables 是一份 · 代码 CSS variables 是另一份 · 永远在漂移',
-      skill: '/sync-figma-token',
-      act1: { user: '你说', text: '检查一下 token 有没有漂移' },
-      act2: {
-        scan: [
-          { code: 'sync-figma-token', desc: '"Detects mismatches between Figma Variables and code CSS variables..."', hit: true },
-          { code: 'apply-system',     desc: '"Scans frames and adjusts to system..."', hit: false },
-          { code: 'rad-spacing',      desc: '"Audits padding / gap / margin..."', hit: false },
-          { code: 'create-rules',     desc: '"Generates custom design system rules..."', hit: false }
-        ],
-        conclude: '命中 <span class="em">"token + 漂移"</span> → 触发 <code>sync-figma-token</code>'
+      n: 3,
+      cn: '审查',
+      en: 'AUDIT',
+      x: 520,
+      main: {
+        code: '/rad-spacing',
+        title: '审间距 · padding / gap / margin',
+        descEn: 'Audits padding, gap and margin values across Figma frames against a rhythm system.',
+        descCn: '50 个元素<strong>手动对齐眼瞎</strong> → 一键扫描 padding / gap / margin，标出违反节奏的位置。',
+        trigger: '看下这个 frame 的间距有没有问题'
       },
-      act3: {
-        skill: '/sync-figma-token',
-        steps: [
-          '读 Figma Variables（color / spacing / typography）',
-          '读代码里的 <code>tokens.css</code> 或 <code>theme.ts</code>',
-          'diff 比对，找出不一致',
-          '输出对照表 + 一键同步选项'
-        ]
-      },
-      act4: {
-        items: [
-          '<code>color/brand-500</code>: Figma <strong>#FF5E1A</strong> / 代码 <strong>#FF6B30</strong> ✗',
-          '<code>space/4</code>: Figma <strong>8px</strong> / 代码 <strong>8px</strong> ✓',
-          '<code>radius/md</code>: Figma <strong>6px</strong> / 代码 <strong>8px</strong> ✗',
-          '... 共 3 项不一致'
-        ],
-        next: '点"一键以 Figma 为准同步" → 直接改代码；或选某几项手动改'
+      helper: {
+        code: '/create-voice',
+        title: '审文案语气一致性',
+        descCn: '扫所有 copy，检查是否符合<strong>品牌 voice</strong>（正式 / 友好 / 简洁），不一致的标出来。',
+        trigger: '看下整稿文案语气统不统一'
       }
     },
     {
-      n: '04',
-      quote: '"AI 给的代码不用我项目的 Button"',
-      painpoint: 'AI 不知道你 codebase 有什么 · 永远造新的 <code>&lt;button class="..."&gt;</code> · 一致性全无',
-      skill: 'figma:code-connect-components',
-      act1: { user: '你说', text: '把 Figma 的 Button 跟代码里的关联一下' },
-      act2: {
-        scan: [
-          { code: 'code-connect',     desc: '"Connects Figma design components to code components using Code Connect..."', hit: true },
-          { code: 'sync-token',       desc: '"Detects mismatches between Figma Variables..."', hit: false },
-          { code: 'implement',        desc: '"Translates Figma designs into code..."', hit: false },
-          { code: 'apply-system',     desc: '"Scans frames and adjusts to system..."', hit: false }
-        ],
-        conclude: '命中 <span class="em">"关联 + 代码"</span> → 触发 <code>figma:code-connect-components</code>'
+      n: 4,
+      cn: '映射',
+      en: 'CONNECT',
+      x: 730,
+      main: {
+        code: 'figma:code-connect-components',
+        title: '把 Figma 组件绑到代码组件',
+        descEn: 'Connects Figma design components to code components using Code Connect.',
+        descCn: 'AI 出代码总<strong>不用你 codebase 的 Button</strong> → 用这个把 Figma 组件和代码组件做映射。',
+        trigger: '把 Figma 的 Button 跟代码里的关联一下'
       },
-      act3: {
-        skill: 'figma:code-connect-components',
-        steps: [
-          '在 Figma 选中 Button 组件 + 拿到所有 variants',
-          '扫 codebase 找你的 <code>Button.tsx</code> 实现',
-          '在 <code>Button.tsx</code> 旁边生成 <code>.figma.tsx</code> 映射文件',
-          '把 Figma <code>variant=primary/size=lg</code> 对应到 props'
-        ]
-      },
-      act4: {
-        items: [
-          'Code Connect 配置文件已生成',
-          '<code>Figma · variant=primary</code> ↔ <code>&lt;Button variant="primary"&gt;</code>',
-          'AI 以后出代码会<strong>直接用</strong>你的 Button',
-          '不再造 <code>&lt;button className="rounded..."&gt;</code>'
-        ],
-        next: '所有 figma:implement-design 出的代码都自动用你的组件'
+      helper: {
+        code: '/sync-figma-token',
+        title: '同步 token 漂移',
+        descCn: '比对 <strong>Figma Variables ↔ 代码 CSS variables</strong>，找出不一致，一键同步。',
+        trigger: '检查一下 token 有没有漂移'
       }
     },
     {
-      n: '05',
-      quote: '"前端说这稿子结构乱，做不出来"',
-      painpoint: '稿子很美 · 但图层嵌套 / 命名都没规范 · 前端要重画一遍',
-      skill: 'figma:implement-design',
-      act1: { user: '你说', text: '把这个 Figma 实现出来，出 React 代码' },
-      act2: {
-        scan: [
-          { code: 'implement',        desc: '"Translates Figma designs into production-ready code..."', hit: true },
-          { code: 'code-connect',     desc: '"Connects Figma components to code..."', hit: false },
-          { code: 'generate-design',  desc: '"Generates a Figma design from a prompt..."', hit: false },
-          { code: 'apply-system',     desc: '"Scans frames and adjusts to system..."', hit: false }
-        ],
-        conclude: '命中 <span class="em">"实现 + React 代码"</span> → 触发 <code>figma:implement-design</code>'
+      n: 5,
+      cn: '实现',
+      en: 'IMPLEMENT',
+      x: 940,
+      main: {
+        code: 'figma:implement-design',
+        title: '把 Figma 稿子翻成生产代码',
+        descEn: 'Translates Figma designs into production-ready code with 1:1 visual fidelity.',
+        descCn: '读 Figma 的 layer 树 + 你的 design rules + Code Connect 映射，<strong>出一份能跑的 React</strong>。',
+        trigger: '把这个 Figma 实现出来，出 React 代码'
       },
-      act3: {
-        skill: 'figma:implement-design',
-        steps: [
-          '读 Figma frame 的 layer 树 + Auto Layout 设置',
-          '读你的 design system rules（<code>/figma-rules.md</code>）',
-          '读 Code Connect 映射（确保用你项目的 Button / Card / Input）',
-          '生成 React + Tailwind 代码（含 hover / focus / disabled）'
-        ]
-      },
-      act4: {
-        items: [
-          '一份 React 组件代码（约 50 行）',
-          '用了你的 <code>&lt;Button&gt;</code> <code>&lt;Card&gt;</code> <code>&lt;Input&gt;</code>',
-          '所有 state 写齐：default · hover · focus · disabled',
-          '响应式断点跟着 Tailwind 默认走'
-        ],
-        next: '复制粘贴进项目 → 接业务逻辑就能跑'
-      }
-    },
-    {
-      n: '06',
-      quote: '"老板让我整理整个设计系统"',
-      painpoint: '组件库 200+ · 没人知道哪些代码用了 / 哪些命名乱了 · 想哭',
-      skill: 'figma:create-design-system-rules',
-      act1: { user: '你说', text: '给我项目生成一份设计系统规则' },
-      act2: {
-        scan: [
-          { code: 'create-rules',     desc: '"Generates custom design system rules for the user\'s codebase..."', hit: true },
-          { code: 'apply-system',     desc: '"Scans frames and adjusts to system..."', hit: false },
-          { code: 'code-connect',     desc: '"Connects Figma components to code..."', hit: false },
-          { code: 'sync-token',       desc: '"Detects mismatches between Figma Variables..."', hit: false }
-        ],
-        conclude: '命中 <span class="em">"设计系统 + 生成规则"</span> → 触发 <code>figma:create-design-system-rules</code>'
-      },
-      act3: {
-        skill: 'figma:create-design-system-rules',
-        steps: [
-          '扫描 Figma library 所有组件 + variants',
-          '扫描代码所有组件实现',
-          '比对找 parity（Figma 有 / 代码没；代码有 / Figma 没）',
-          '抽取共同规范（间距 / 命名 / variant 命名）',
-          '输出 <code>design-rules.md</code>'
-        ]
-      },
-      act4: {
-        items: [
-          '<code>design-rules.md</code> 一份（约 120 行）',
-          '含组件命名规则 / 间距 token / 状态规范',
-          'AI 以后改稿都会遵循这份规则',
-          '新人 onboarding 文档直接用'
-        ],
-        next: '把它放到 repo 根目录 → AI / 团队都能读到'
+      helper: {
+        code: 'figma:create-design-system-rules',
+        title: '为 codebase 生成设计系统规则',
+        descCn: '扫 codebase + Figma library，<strong>抽出一份 design-rules.md</strong>，让 AI 改稿都遵守。',
+        trigger: '给我项目生成一份设计系统规则'
       }
     }
   ];
 
-  const seen = new Set();
+  let active = 1;
+  let timer = null;
+  let playing = false;
 
-  // 渲染主屏
-  function renderGrid() {
-    grid.innerHTML = '';
-    SCENES.forEach((s, i) => {
-      const btn = document.createElement('button');
-      btn.className = 'scene-card' + (seen.has(i) ? ' is-seen' : '');
-      btn.innerHTML =
-        '<div class="sc-num">' + s.n + '</div>' +
-        '<div class="sc-quote">' + s.quote + '</div>' +
-        '<div class="sc-painpoint">' + s.painpoint + '</div>' +
-        '<div class="sc-foot">' +
-          '<span class="skill">' + s.skill + '</span>' +
-          '<span class="cta">看一出戏 →</span>' +
-        '</div>';
-      btn.addEventListener('click', () => openScene(i));
-      grid.appendChild(btn);
+  const circles = svg.querySelectorAll('.wf-node-circle');
+  const nums = svg.querySelectorAll('.wf-node-num');
+  const cns = svg.querySelectorAll('.wf-node-cn');
+  const ens = svg.querySelectorAll('.wf-node-en');
+  const lines = svg.querySelectorAll('.wf-line');
+
+  function renderStep(n) {
+    active = n;
+    const step = STEPS[n - 1];
+
+    // update node states
+    circles.forEach(c => {
+      const s = parseInt(c.dataset.step, 10);
+      c.classList.toggle('is-active', s === n);
+      c.classList.toggle('is-done', s < n);
     });
-  }
-
-  // 打开场景详情
-  function openScene(idx) {
-    const s = SCENES[idx];
-    // 渲染 detail
-    let html = '<div class="sd-head">' +
-      '<div class="sd-tag">场景 · ' + s.n + ' · SKILL: ' + s.skill + '</div>' +
-      '<div class="sd-quote">' + s.quote + '</div>' +
-      '<div class="sd-painpoint">' + s.painpoint + '</div>' +
-      '</div>' +
-      '<div class="acts">';
-
-    // 幕 1
-    html += '<div class="act" data-act="1">' +
-      '<div class="act-label"><span class="act-no">幕 01</span>你说</div>' +
-      '<div class="bubble-row">' +
-        '<div class="bubble-avatar">你</div>' +
-        '<div class="bubble">' + s.act1.text + '</div>' +
-      '</div>' +
-    '</div>';
-
-    // 幕 2
-    let scanHtml = s.act2.scan.map(r =>
-      '<div class="desc-row' + (r.hit ? ' is-hit' : '') + '">' +
-        '<span class="dr-code">' + r.code + '</span>' + r.desc +
-      '</div>'
-    ).join('');
-    html += '<div class="act" data-act="2">' +
-      '<div class="act-label"><span class="act-no">幕 02</span>AI 听到 · 扫描 9 个 description</div>' +
-      '<div class="ai-listen">' +
-        '<div class="ai-listen-head">扫描 9 个 skill 的 description, 找匹配 ——</div>' +
-        '<div class="desc-scan">' + scanHtml + '</div>' +
-        '<div class="ai-conclude">' + s.act2.conclude + '</div>' +
-      '</div>' +
-    '</div>';
-
-    // 幕 3
-    let stepsHtml = s.act3.steps.map((step, j) =>
-      '<div class="step-row" data-step="' + j + '">' +
-        '<span class="step-tick"></span>' +
-        '<span>' + step + '</span>' +
-      '</div>'
-    ).join('');
-    html += '<div class="act" data-act="3">' +
-      '<div class="act-label"><span class="act-no">幕 03</span>Skill 在做 · ' + s.act3.skill + '</div>' +
-      '<div class="skill-doing">' +
-        '<div class="skill-doing-head">触发 <strong>' + s.act3.skill + '</strong> · 执行步骤：</div>' +
-        '<div class="steps">' + stepsHtml + '</div>' +
-      '</div>' +
-    '</div>';
-
-    // 幕 4
-    let resultHtml = s.act4.items.map(it => '<div class="result-item">' + it + '</div>').join('');
-    html += '<div class="act" data-act="4">' +
-      '<div class="act-label"><span class="act-no">幕 04</span>结果 · 你拿到什么</div>' +
-      '<div class="result">' +
-        '<div class="result-head">实际输出</div>' +
-        '<div class="result-list">' + resultHtml + '</div>' +
-        '<div class="result-foot"><strong>下一步：</strong>' + s.act4.next + '</div>' +
-      '</div>' +
-    '</div>';
-
-    html += '</div>';
-
-    // 下一场景按钮
-    const nextIdx = (idx + 1) % SCENES.length;
-    html += '<div class="scene-nav">' +
-      '<span class="nav-hint">看完一出 → 还有 ' + (SCENES.length - 1) + ' 个场景</span>' +
-      '<button id="scene-next">下一个场景 · ' + SCENES[nextIdx].n + ' →</button>' +
-    '</div>';
-
-    detailBody.innerHTML = html;
-
-    // 切换 UI
-    stage.hidden = true;
-    detail.hidden = false;
-    detail.scrollIntoView({ behavior: 'smooth', block: 'start' });
-
-    // 逐幕揭示 + 步骤打勾动画
-    const acts = detail.querySelectorAll('.act');
-    acts.forEach((a, i) => {
-      setTimeout(() => {
-        a.classList.add('show');
-        // 幕 3 步骤逐个打勾
-        if (a.dataset.act === '3') {
-          const steps = a.querySelectorAll('.step-row');
-          steps.forEach((stRow, j) => {
-            setTimeout(() => stRow.classList.add('done'), 400 + j * 280);
-          });
-        }
-      }, 350 + i * 700);
+    nums.forEach(t => {
+      const s = parseInt(t.dataset.step, 10);
+      t.classList.toggle('is-active', s === n);
+      t.classList.toggle('is-done', s < n);
+    });
+    cns.forEach(t => {
+      const s = parseInt(t.dataset.step, 10);
+      t.classList.toggle('is-active', s === n);
+    });
+    ens.forEach(t => {
+      const s = parseInt(t.dataset.step, 10);
+      t.classList.toggle('is-active', s === n);
+    });
+    lines.forEach(l => {
+      const s = parseInt(l.dataset.seg, 10);
+      l.classList.toggle('is-done', s < n);
     });
 
-    // 下一场景按钮
-    const nextBtn = document.getElementById('scene-next');
-    if (nextBtn) {
-      nextBtn.addEventListener('click', () => {
-        seen.add(idx);
-        renderGrid();
-        openScene(nextIdx);
-      });
+    // move pulse
+    if (pulse) {
+      pulse.setAttribute('cx', step.x);
+      pulse.classList.add('is-on');
     }
+
+    // step label
+    if (stepLabel) {
+      stepLabel.textContent = String(n).padStart(2, '0') + ' / ' + step.cn;
+    }
+
+    // render skill cards
+    let html = '<div class="wf-skill-card is-main">' +
+      '<div class="ws-role">主 skill · MAIN</div>' +
+      '<div class="ws-code">' + step.main.code + '</div>' +
+      '<div class="ws-title">' + step.main.title + '</div>' +
+      '<div class="ws-desc-en">' + step.main.descEn + '</div>' +
+      '<div class="ws-desc-cn">' + step.main.descCn + '</div>' +
+      '<div class="ws-trigger">' +
+        '<div class="ws-trigger-label">你这样跟 AI 说</div>' +
+        '<div class="ws-trigger-text">' + step.main.trigger + '</div>' +
+      '</div>' +
+    '</div>';
+
+    if (step.helper) {
+      html += '<div class="wf-skill-card is-helper">' +
+        '<div class="ws-role">辅助 · HELPER</div>' +
+        '<div class="ws-code">' + step.helper.code + '</div>' +
+        '<div class="ws-title">' + step.helper.title + '</div>' +
+        '<div class="ws-desc-cn">' + step.helper.descCn + '</div>' +
+        '<div class="ws-trigger">' +
+          '<div class="ws-trigger-label">触发例子</div>' +
+          '<div class="ws-trigger-text">' + step.helper.trigger + '</div>' +
+        '</div>' +
+      '</div>';
+    } else {
+      html += '<div class="wf-skill-card is-helper">' +
+        '<div class="ws-role">辅助 · HELPER</div>' +
+        '<div class="ws-code" style="color:var(--ink-mute);">— · 无</div>' +
+        '<div class="ws-title" style="color:var(--ink-mute);font-weight:500;">这一步只用主 skill 就够</div>' +
+        '<div class="ws-desc-cn">某些步骤的工作流是<strong>线性的</strong> —— 主 skill 一个就能闭环，不需要旁挂。</div>' +
+      '</div>';
+    }
+    block.innerHTML = html;
   }
 
-  // 返回主屏
-  backBtn.addEventListener('click', () => {
-    // 标记当前场景已看过
-    const tag = detailBody.querySelector('.sd-tag')?.textContent || '';
-    const m = tag.match(/(\d{2})/);
-    if (m) {
-      const idx = SCENES.findIndex(s => s.n === m[1]);
-      if (idx >= 0) seen.add(idx);
-    }
-    renderGrid();
-    detail.hidden = true;
-    stage.hidden = false;
-    stage.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  function next() {
+    const n = active >= STEPS.length ? 1 : active + 1;
+    renderStep(n);
+  }
+
+  function stopPlay() {
+    playing = false;
+    if (timer) { clearInterval(timer); timer = null; }
+    playBtn.textContent = '▶ 自动播放';
+    playBtn.classList.remove('is-playing');
+  }
+
+  function startPlay() {
+    playing = true;
+    playBtn.textContent = '⏸ 暂停';
+    playBtn.classList.add('is-playing');
+    timer = setInterval(next, 4000);
+  }
+
+  // node click → switch step + stop autoplay
+  circles.forEach(c => {
+    c.addEventListener('click', () => {
+      const n = parseInt(c.dataset.step, 10);
+      if (!isNaN(n)) {
+        stopPlay();
+        renderStep(n);
+      }
+    });
   });
 
-  // Init
-  renderGrid();
+  playBtn.addEventListener('click', () => {
+    if (playing) stopPlay(); else startPlay();
+  });
+
+  // init — step 1
+  renderStep(1);
+
+  // auto-start playing when scrolled into view (only once)
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting && !playing) {
+        startPlay();
+        io.disconnect();
+      }
+    });
+  }, { threshold: 0.3 });
+  io.observe(svg);
 })();
 
 </script>
