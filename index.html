@@ -1441,28 +1441,44 @@
 
   /* Input section (条件渲染区) */
   .cdx-input-section { padding: 4px 0; }
-  /* 参考图选择器 */
-  .cdx-refs-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin: 4px 0; }
+  /* 参考图选择器 — 真实小图 (Unsplash), 缩小尺寸 */
+  .cdx-refs-row {
+    display: grid; grid-template-columns: repeat(4, 1fr);
+    gap: 5px; margin: 4px 0;
+    max-width: 280px;  /* 整行更紧凑 */
+  }
   .cdx-ref {
-    aspect-ratio: 1; border: 1.5px solid var(--line); border-radius: 4px;
+    aspect-ratio: 4 / 3;
+    border: 1.5px solid var(--line); border-radius: 3px;
     cursor: pointer; padding: 0; position: relative;
-    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    display: block;
     overflow: hidden;
+    background: var(--bg-2);
     transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
   }
+  .cdx-ref-img {
+    width: 100%; height: 100%;
+    object-fit: cover;
+    display: block;
+    transition: transform 0.3s ease;
+  }
   .cdx-ref:hover { transform: translateY(-1px); border-color: var(--ink); box-shadow: 0 3px 8px rgba(0,0,0,0.25); }
-  .cdx-ref.is-on { border-color: var(--accent); border-width: 2px; box-shadow: 0 0 0 2px rgba(255,77,46,0.25), 0 4px 10px rgba(255,77,46,0.3); }
+  .cdx-ref:hover .cdx-ref-img { transform: scale(1.06); }
+  .cdx-ref.is-on { border-color: var(--accent); border-width: 2px; box-shadow: 0 0 0 2px rgba(255,77,46,0.3), 0 4px 10px rgba(255,77,46,0.3); }
   .cdx-ref.is-on::after {
     content: '✓'; position: absolute; top: 2px; right: 4px;
     font-size: 10px; font-weight: 700; color: white;
-    text-shadow: 0 1px 2px rgba(0,0,0,0.6);
+    text-shadow: 0 1px 2px rgba(0,0,0,0.7);
+    z-index: 2;
   }
-  .cdx-ref-em { font-size: 16px; line-height: 1; filter: drop-shadow(0 1px 2px rgba(0,0,0,0.4)); }
   .cdx-ref-label {
+    position: absolute; left: 0; right: 0; bottom: 0;
     font-family: 'JetBrains Mono', monospace; font-size: 8.5px;
     color: white; letter-spacing: 0.04em;
-    margin-top: 2px;
-    text-shadow: 0 1px 2px rgba(0,0,0,0.7);
+    background: linear-gradient(transparent, rgba(0,0,0,0.7));
+    padding: 8px 4px 3px;
+    text-align: center;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.8);
   }
   .cdx-extracted {
     font-family: 'JetBrains Mono', monospace; font-size: 11px;
@@ -2292,20 +2308,20 @@
     return '#' + hx(r) + hx(g) + hx(b);
   }
 
-  /* 4 张参考图预设 (用 CSS 渐变模拟, 各自有提取出的主色) */
+  /* 4 张参考图预设 (Unsplash 小图, 各自标了 AI 取色的主色) */
   var CDX_REFS = [
-    { id: 'sunset', label: '日落', emoji: '🌅',
-      gradient: 'linear-gradient(135deg, #ff7e3f 0%, #ff4d6d 50%, #6a2c8c 100%)',
-      dominant: '#ff4d2e' },
-    { id: 'forest', label: '森林', emoji: '🌲',
-      gradient: 'linear-gradient(160deg, #1d4e37 0%, #3a8055 50%, #b3c66a 100%)',
-      dominant: '#2f7a4a' },
-    { id: 'neon',   label: '霓虹', emoji: '🌃',
-      gradient: 'linear-gradient(135deg, #6b1aa3 0%, #d12a78 50%, #1ec6d6 100%)',
+    { id: 'sunset', label: '日落',
+      img: 'https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=160&q=70',
+      dominant: '#ff7a3a' },
+    { id: 'forest', label: '森林',
+      img: 'https://images.unsplash.com/photo-1448375240586-882707db888b?w=160&q=70',
+      dominant: '#4a7339' },
+    { id: 'neon',   label: '霓虹',
+      img: 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=160&q=70',
       dominant: '#d12a78' },
-    { id: 'autumn', label: '秋叶', emoji: '🍂',
-      gradient: 'linear-gradient(150deg, #6b2a0f 0%, #c66a1f 50%, #f0c350 100%)',
-      dominant: '#b85a18' }
+    { id: 'autumn', label: '秋叶',
+      img: 'https://images.unsplash.com/photo-1507371341162-763b5e419408?w=160&q=70',
+      dominant: '#c75a1a' }
   ];
 
   var demos = {
@@ -2373,7 +2389,10 @@
             });
           } else {
             var refsHTML = CDX_REFS.map(function(r){
-              return '<button type="button" class="cdx-ref' + (pickedRefId === r.id ? ' is-on' : '') + '" data-id="' + r.id + '" style="background:' + r.gradient + '" title="' + r.label + '"><span class="cdx-ref-em">' + r.emoji + '</span><span class="cdx-ref-label">' + r.label + '</span></button>';
+              return '<button type="button" class="cdx-ref' + (pickedRefId === r.id ? ' is-on' : '') + '" data-id="' + r.id + '" title="' + r.label + '">' +
+                '<img class="cdx-ref-img" src="' + r.img + '" alt="' + r.label + '" loading="lazy">' +
+                '<span class="cdx-ref-label">' + r.label + '</span>' +
+              '</button>';
             }).join('');
             var picked = pickedRefId ? CDX_REFS.find(function(x){ return x.id === pickedRefId; }) : null;
             var extractedHTML = picked
