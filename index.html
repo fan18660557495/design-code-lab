@@ -497,34 +497,55 @@
   .screen-content::-webkit-scrollbar { width: 4px; }
   .screen-content::-webkit-scrollbar-thumb { background: var(--line); border-radius: 2px; }
 
-  /* TV channel-change transitions — 出场 (旧内容离开) + 入场 (新内容到来) */
+  /* === TV channel-change transitions === */
+  /* 整个容器: 出场 = 过曝白光压扁淡出 */
   .screen-content.is-leaving {
     animation: tv-out 0.22s ease-in forwards;
     pointer-events: none;
   }
-  .screen-content.is-entering {
-    animation: tv-in 0.34s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
-    pointer-events: none;
-  }
-  /* 旧内容: 高光过曝 → 压扁 → 淡出 */
+  .screen-content.is-leaving > * { /* leaving 时所有子元素一起淡 */ }
   @keyframes tv-out {
     0%   { opacity: 1; transform: translateY(0) scaleY(1); filter: brightness(1) contrast(1); }
     50%  { opacity: 0.9; filter: brightness(1.6) contrast(1.5); }
     100% { opacity: 0; transform: translateY(-10px) scaleY(0.88); filter: brightness(2.4) contrast(2.4); }
   }
-  /* 新内容: 从下方过曝压扁状态 → 弹回正常 */
-  @keyframes tv-in {
-    0%   { opacity: 0; transform: translateY(14px) scaleY(0.88); filter: brightness(2.4) contrast(2.4); }
-    35%  { opacity: 0.85; filter: brightness(1.5) contrast(1.4); }
-    70%  { opacity: 1; transform: translateY(-2px) scaleY(1.01); filter: brightness(1.1); }
+
+  /* 入场: 容器立刻 reset, 每个子元素自己 stagger 进场 */
+  .screen-content.is-entering {
+    opacity: 1; transform: none;
+    pointer-events: none;
+  }
+  /* 直接子元素: 从下方过曝状态弹回 */
+  .screen-content.is-entering > * {
+    opacity: 0;
+    animation: sc-child-in 0.46s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+    animation-delay: calc(var(--anim-i, 0) * 60ms);
+  }
+  @keyframes sc-child-in {
+    0%   { opacity: 0; transform: translateY(16px) scaleY(0.9); filter: brightness(2.2) contrast(1.6); }
+    40%  { opacity: 0.85; filter: brightness(1.4); }
+    75%  { opacity: 1; transform: translateY(-2px) scaleY(1.01); filter: brightness(1.05); }
     100% { opacity: 1; transform: translateY(0) scaleY(1); filter: none; }
   }
+  /* 嵌套列表项 (keys / mod-lessons / ch-modules / mod-bullets): 横向滑入 + 二级 stagger */
+  .screen-content.is-entering .sc-keys li,
+  .screen-content.is-entering .sc-mod-lessons li,
+  .screen-content.is-entering .sc-ch-modules li {
+    opacity: 0;
+    animation: sc-list-in 0.38s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+    animation-delay: calc(var(--anim-i, 0) * 36ms + 220ms);
+  }
+  @keyframes sc-list-in {
+    0%   { opacity: 0; transform: translateX(-12px); filter: brightness(1.4); }
+    100% { opacity: 1; transform: translateX(0); filter: none; }
+  }
+
   /* 切换时 CRT 横线一闪 — pseudo element on screen-frame */
   .screen-frame.is-flashing::before {
     background:
       repeating-linear-gradient(0deg, transparent 0 2px, rgba(0,0,0,0.14) 2px 3px),
       linear-gradient(0deg, transparent 48%, rgba(255,255,255,0.4) 50%, transparent 52%);
-    animation: tv-scanline-pulse 0.4s ease-out;
+    animation: tv-scanline-pulse 0.45s ease-out;
   }
   @keyframes tv-scanline-pulse {
     0%   { background-position: 0 -100%; opacity: 0.9; }
@@ -1997,6 +2018,15 @@
     screenContent.classList.remove('is-leaving');
     screenContent.classList.add('is-entering');
 
+    /* Per-child stagger indices — each direct child + nested list items get an
+       --anim-i so the entrance animation can stagger them in sequence. */
+    Array.prototype.slice.call(screenContent.children).forEach(function(el, i){
+      el.style.setProperty('--anim-i', i);
+    });
+    screenContent.querySelectorAll('.sc-keys li, .sc-mod-lessons li, .sc-ch-modules li').forEach(function(el, i){
+      el.style.setProperty('--anim-i', i);
+    });
+
     /* Wire play button if present */
     var playBtn = screenContent.querySelector('[data-play]');
     if (playBtn) playBtn.addEventListener('click', function(){ openPlayer(f); });
@@ -2012,11 +2042,17 @@
       }
     }
 
-    /* Cleanup entering class after animation completes */
+    /* Cleanup entering class after the longest child animation finishes
+       (60ms × maxIndex + ~460ms animation duration + small buffer) */
+    var childCount = screenContent.children.length;
+    var maxNested = screenContent.querySelectorAll('.sc-keys li, .sc-mod-lessons li, .sc-ch-modules li').length;
+    var totalDuration = Math.max(childCount * 60 + 460, maxNested * 36 + 220 + 380) + 80;
     _screenSwapTimer = setTimeout(function(){
       screenContent.classList.remove('is-entering');
+      /* clear inline --anim-i so re-flow doesn't carry stale values */
+      Array.prototype.slice.call(screenContent.children).forEach(function(el){ el.style.removeProperty('--anim-i'); });
       _screenSwapTimer = null;
-    }, 360);
+    }, totalDuration);
   }
 
   /* ===== Roadmap (channel guide) modal — uses VOL.II j-* journey-map style ===== */
