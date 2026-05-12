@@ -1223,6 +1223,26 @@
   .g-bar-check circle { fill: var(--accent); stroke: var(--paper); stroke-width: 1.5; }
   .g-bar.read:hover .g-bar-check circle, .g-bar.current .g-bar-check circle { stroke: rgba(255,255,255,0.5); }
 
+  /* "尽请期待" 占位条 — 虚线橙色, 不可点 */
+  .g-bar-tbd { pointer-events: none; }
+  .g-bar-tbd rect {
+    fill: var(--accent-soft);
+    stroke: var(--accent);
+    stroke-width: 1.5;
+    stroke-dasharray: 4 3;
+    opacity: 0.85;
+    animation: g-tbd-pulse 2.4s ease-in-out infinite;
+  }
+  @keyframes g-tbd-pulse {
+    0%, 100% { opacity: 0.85; }
+    50%      { opacity: 0.55; }
+  }
+  .g-bar-tbd-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 700; font-size: 11px;
+    fill: var(--accent); letter-spacing: 0.1em;
+  }
+
   /* Anchor chips (head + tail) */
   .g-chip { cursor: pointer; transition: transform 0.15s ease; transform-box: fill-box; transform-origin: center; }
   .g-chip:hover { transform: translateY(-2px); }
@@ -1662,11 +1682,11 @@
       <div class="zoom-hint">滚轮 / 双指 缩放 · 拖拽 平移 · <span class="k">+ −</span> <span class="k">0</span></div>
     </div>
     <div class="roadmap-legend">
-      <span class="leg-item"><span class="leg-dot leg-dot--lesson"></span>未看</span>
-      <span class="leg-item"><span class="leg-dot leg-dot--watched"></span>已看</span>
+      <span class="leg-item"><span class="leg-dot leg-dot--lesson"></span>未播</span>
+      <span class="leg-item"><span class="leg-dot leg-dot--watched"></span>已播</span>
       <span class="leg-item"><span class="leg-dot leg-dot--current"></span>正在播放</span>
       <span class="leg-item"><span class="leg-dot leg-dot--slate"></span>章节锚点</span>
-      <span class="leg-item"><span class="leg-dot leg-dot--end"></span>WIP · 整理中</span>
+      <span class="leg-item"><span class="leg-dot leg-dot--end"></span>尽请期待</span>
     </div>
   </div>
 </div>
@@ -1857,7 +1877,7 @@
         '<div class="frame-slate-title">' + escapeHtml(f.data.title) + '</div>';
     } else if (f.kind === 'tbd') {
       el.classList.add('frame--tbd');
-      html = '<div class="frame-tbd-stamp">CH.' + f.data.num + ' · WIP</div>';
+      html = '<div class="frame-tbd-stamp">CH.' + f.data.num + ' · 尽请期待</div>';
     } else if (f.kind === 'end-chapter') {
       el.classList.add('frame--end');
       html = '<div class="frame-end-text">END · CH.' + f.data.num + '</div>';
@@ -1967,11 +1987,11 @@
         '<ul class="sc-mod-lessons">' + lessonsListHTML + '</ul>';
     } else if (f.kind === 'tbd') {
       html =
-        '<div class="sc-head"><span><span class="sc-take">CHAPTER ' + f.data.num + '</span></span><span>WIP</span></div>' +
+        '<div class="sc-head"><span><span class="sc-take">CHAPTER ' + f.data.num + '</span></span><span>尽请期待</span></div>' +
         '<div class="sc-chapter-num" style="opacity:0.4">' + f.data.num + '</div>' +
         '<h2 class="sc-title" style="color:var(--ink-soft)">' + escapeHtml(f.data.title) + '</h2>' +
         '<p class="sc-tagline">' + escapeHtml(f.data.subtitle) + '</p>' +
-        '<div class="sc-section" style="margin-top:auto;text-align:center;padding:24px;border:1.5px dashed var(--ink-mute);border-radius:6px;color:var(--ink-mute)"><h4 style="color:var(--ink-mute);margin:0">DRAFT · COMING SOON</h4></div>';
+        '<div class="sc-section" style="margin-top:auto;text-align:center;padding:24px;border:1.5px dashed var(--accent);border-radius:6px;color:var(--accent);background:var(--accent-soft)"><h4 style="color:var(--accent);margin:0">✦ 尽请期待 · COMING SOON</h4></div>';
     } else if (f.kind === 'end-chapter') {
       html =
         '<div class="sc-head"><span><span class="sc-take">END</span></span><span>CH.' + f.data.num + ' · END</span></div>' +
@@ -2033,7 +2053,8 @@
     var moduleY = {}; moduleY['M·1'] = Y_M1; moduleY['M·2'] = Y_M2; moduleY['M·3'] = Y_M3;
 
     /* 视图宽 = 最长 lane 的长度 + padding */
-    var maxLessons = Math.max.apply(null, modules.map(function(m){ return m.lessons.length; }));
+    /* +1 留给 "尽请期待" 占位条 (每个 module 末尾) */
+    var maxLessons = Math.max.apply(null, modules.map(function(m){ return m.lessons.length; })) + 1;
     var laneW = maxLessons * (BAR_W + BAR_GAP) - BAR_GAP;
     var W = LEFT_PAD + laneW + RIGHT_PAD;
 
@@ -2066,15 +2087,23 @@
     /* === Module swim lanes === */
     modules.forEach(function(m){
       var y = moduleY[m.num];
-      var modLaneW = m.lessons.length * (BAR_W + BAR_GAP) - BAR_GAP;
+      /* 每个 module lane 比已有 lessons 再多一格, 留给"尽请期待"占位条 */
+      var modLaneW = (m.lessons.length + 1) * (BAR_W + BAR_GAP) - BAR_GAP;
       /* lane bg */
       svg += '<rect class="g-lane" x="' + LEFT_PAD + '" y="' + y + '" width="' + modLaneW + '" height="' + LANE_H + '" />';
+      /* "尽请期待" 占位条: 紧接在最后一节 lesson 之后, 虚线橙色 */
+      var tbdX = LEFT_PAD + m.lessons.length * (BAR_W + BAR_GAP);
+      svg += '<g class="g-bar-tbd" aria-hidden="true">' +
+        '<rect x="' + tbdX + '" y="' + (y + 6) + '" width="' + BAR_W + '" height="' + (LANE_H - 12) + '" rx="3" />' +
+        '<text class="g-bar-tbd-label" x="' + (tbdX + BAR_W/2) + '" y="' + (y + LANE_H/2 - 4) + '" text-anchor="middle">尽请</text>' +
+        '<text class="g-bar-tbd-label" x="' + (tbdX + BAR_W/2) + '" y="' + (y + LANE_H/2 + 14) + '" text-anchor="middle">期待</text>' +
+        '</g>';
       /* clickable module label group on the left */
       var jumpIdx = moduleSlateIdx[m.num];
       svg += '<g class="g-mod-label-group"' + (jumpIdx != null ? ' data-jump-idx="' + jumpIdx + '"' : '') + '>';
       svg += '<rect x="' + (LEFT_PAD - 144) + '" y="' + y + '" width="138" height="' + LANE_H + '" class="g-mod-label-bg" />';
       svg += '<text class="g-mod-num" x="' + (LEFT_PAD - 132) + '" y="' + (y + 28) + '">' + m.num + '</text>';
-      svg += '<text class="g-mod-time" x="' + (LEFT_PAD - 132) + '" y="' + (y + 48) + '">' + m.lessons.length + ' 节</text>';
+      svg += '<text class="g-mod-time" x="' + (LEFT_PAD - 132) + '" y="' + (y + 48) + '">' + m.lessons.length + ' 节 + 更新中</text>';
       svg += '<text class="g-mod-title" x="' + (LEFT_PAD - 132) + '" y="' + (y + 72) + '">' + escapeHtml(m.title) + '</text>';
       svg += '</g>';
     });
@@ -2124,7 +2153,7 @@
     /* Tail row: END · CH I, then CH II (WIP), then FIN */
     var tailChips = [];
     if (anchorIdx.endChapter >= 0) tailChips.push({ idx: anchorIdx.endChapter, label: 'END · CH I', kind: 'end' });
-    if (anchorIdx.tbd >= 0) tailChips.push({ idx: anchorIdx.tbd, label: 'CH II · WIP', kind: 'tbd' });
+    if (anchorIdx.tbd >= 0) tailChips.push({ idx: anchorIdx.tbd, label: 'CH II · 尽请期待', kind: 'tbd' });
     if (anchorIdx.endReel >= 0) tailChips.push({ idx: anchorIdx.endReel, label: '— FIN —', kind: 'fin' });
     var txStart = LEFT_PAD;
     tailChips.forEach(function(c){
