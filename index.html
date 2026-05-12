@@ -1489,103 +1489,66 @@
     75% { transform: translateX(-2px); }
   }
 
-  /* ============ MOBILE ============ */
-
-  /* 手机竖屏: 直接把 body 旋转 90°, 用户横屏拿手机会看到正常方向; 竖屏拿
-     也强制以横屏布局显示. body transform 自动给 fixed 后代生成 containing
-     block, 所以 topbar/cinema-stage/modals 都跟着旋转, 不需要额外 wrapper. */
-  @media (max-width: 900px) and (orientation: portrait) {
-    html { overflow: hidden; height: 100vh; }
-    body {
-      position: absolute;
-      top: 0; left: 100vw;
-      width: 100vh; height: 100vw;
-      min-height: 0;       /* 覆盖默认的 100vh, 让 height 真正生效 */
-      transform: rotate(90deg);
-      transform-origin: top left;
-      overflow: hidden;
-    }
-  }
-
-  /* === 移动端 / 小平板: 不论 portrait 旋转后还是真 landscape, 都用同一套
-        胶卷竖在右侧的横屏布局 === */
-  @media (max-width: 1024px) and (orientation: landscape),
-         (max-width: 900px) and (orientation: portrait) {
+  /* ============ MOBILE — 竖屏, 全部缩小适配 ============ */
+  @media (max-width: 760px) {
     .topbar-meta { display: none; }
-    .tv-bezel { width: min(70vw, 440px); padding: 18px 18px 14px; border-radius: 22px; }
-    .tv-hint { bottom: -42px; font-size: 9.5px; }
 
-    .cinema-room {
-      padding: 56px 10px 10px;
-      flex-direction: row;       /* screen on left, reel on right */
-      gap: 10px;
+    /* TV closed state — 整机收小 */
+    .tv-bezel {
+      width: min(88vw, 360px);
+      padding: 16px 16px 12px;
+      border-radius: 22px;
     }
-    .screen-area {
-      flex: 1;
-      margin-bottom: 0;
-    }
+    .tv-stand { width: 180px; height: 22px; }
+    .tv-stand::after { width: 260px; margin-top: 18px; }
+    .tv-hint { bottom: -40px; font-size: 9.5px; }
+    .tv { transform: translateY(-16px); }
+
+    /* Poster 内边距收紧 */
+    .tv-poster { padding: 10px; }
+    .poster-frame { padding: 18px 22px 16px; gap: 6px; }
+    .poster-en { font-size: clamp(22px, 5.5vw, 30px); }
+    .poster-cn { font-size: clamp(12px, 3.2vw, 15px); }
+    .poster-host img { width: 30px; height: 30px; }
+    .poster-host span { font-size: 7.5px; }
+
+    /* Cinema room — 竖向, 一切都缩小 */
+    .cinema-room { padding: 56px 10px 10px; }
+    .screen-area { margin-bottom: 10px; }
     .screen-frame {
-      max-height: none;          /* let it fill available height */
-      max-width: none;
+      max-height: calc(100vh - 260px);   /* 留位给 reel + controls */
       box-shadow:
         inset 0 0 0 1px var(--line),
         0 0 0 8px var(--tv-cabinet),
         0 0 0 9px rgba(0,0,0,0.25);
     }
+    .screen-content { padding: 16px 18px; }
+    .sc-title { font-size: 20px; }
+    .sc-tagline { font-size: 13px; }
+    .sc-keys li { font-size: 12px; }
 
-    /* 胶卷 → 竖向, 在屏幕右侧 */
-    .reel-area {
-      flex: 0 0 110px;            /* fixed-width column */
-      height: auto;               /* matches screen height */
-      padding: 0 12px;            /* sprockets now on left/right edges */
-      align-self: stretch;
-    }
-    /* sprocket holes: 左右两条 (而不是上下) */
-    .reel-area::before, .reel-area::after {
-      top: 0; bottom: 0;
-      width: 9px; height: auto;
-      background-image: radial-gradient(circle, var(--bg) 36%, transparent 40%);
-      background-size: 9px 18px;
-      background-repeat: repeat-y;
-    }
-    .reel-area::before { left: 2px; right: auto; }
-    .reel-area::after  { right: 2px; bottom: auto; top: 0; left: auto; }
-
-    /* track: vertical scroll */
-    .reel-track {
-      flex-direction: column;
-      overflow-x: hidden;
-      overflow-y: auto;
-      scroll-snap-type: y mandatory;
-      padding: 50% 10px;          /* top/bottom 50% so first/last frame can center */
-      scroll-padding: 50% 0;
-      gap: 4px;
-      height: 100%;
-    }
+    /* Reel 横向滚动, 卡片缩小 */
+    .reel-area { padding: 10px 0; }
     .reel-frame {
-      flex-shrink: 0;
-      width: 86px;
-      aspect-ratio: 4 / 3;
-      scroll-snap-align: center;
+      width: 124px;
+      aspect-ratio: 16 / 11;
+      padding: 7px 9px;
     }
-    /* controls 仍在底部, 但 cinema-room 是 flex-row, 所以放到 left column 底部
-       — 把 controls 从 cinema-room flow 中取出, fix 到屏幕底部居中 */
-    .cinema-controls {
-      position: fixed;
-      bottom: 10px; left: 10px; right: 130px;  /* 给 reel 让位 */
-      margin: 0;
-      flex-wrap: wrap; gap: 6px;
-      padding: 0 8px;
-      pointer-events: auto;
-    }
-    .cinema-controls .cinema-btn { font-size: 11px; padding: 5px 10px; }
-    .cinema-controls .cinema-position { min-width: 56px; font-size: 10px; }
+    .reel-frame .frame-title { font-size: 11px; line-height: 1.25; }
+    .reel-frame .frame-take, .reel-frame .frame-meta { font-size: 7.5px; }
+    .reel-frame.frame--slate .frame-slate-num { font-size: 22px; }
+    .reel-frame.frame--slate .frame-slate-title { font-size: 9.5px; }
 
-    .screen-content { padding: 22px 24px; }
-    .sc-title { font-size: clamp(18px, 3vw, 24px); }
+    /* Controls — 大一点适合手指点 */
+    .cinema-controls { flex-wrap: wrap; gap: 6px; padding: 4px 8px; }
+    .cinema-controls .cinema-btn {
+      font-size: 11px;
+      padding: 8px 12px;
+      min-height: 36px;
+    }
+    .cinema-controls-sep { display: none; }
+    .cinema-position { min-width: 64px; font-size: 10.5px; }
   }
-
-  /* (portrait <900px 已经被 body rotate(90deg) 强制变 landscape, 不再需要单独 portrait 布局规则) */
 </style>
 </head>
 <body class="is-tv-off">
