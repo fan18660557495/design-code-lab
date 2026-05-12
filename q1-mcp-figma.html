@@ -56,6 +56,7 @@
   .topbar {
     border-bottom: 1px dashed var(--line);
     padding: 16px 0;
+    background: var(--bg);
     position: sticky;
     top: 0;
     z-index: 100;
@@ -70,6 +71,13 @@
   .nav-links a.current { color: var(--accent); font-weight: 600; }
   a.brand { text-decoration: none; color: inherit; transition: color 0.2s; cursor: pointer; }
   a.brand:hover { color: var(--accent); }
+  .brand-block { display: flex; align-items: center; min-width: 0; flex: 1; }
+  .brand-block .brand { flex-shrink: 0; }
+  .brand-arrow { margin-right: 6px; color: var(--ink-mute); display: inline-block; transition: transform 0.2s, color 0.2s; }
+  .brand:hover .brand-arrow { color: var(--accent); transform: translateX(-2px); }
+  .brand-sep { margin: 0 10px; color: var(--ink-mute); font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 300; }
+  .brand-current { font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 500; color: var(--ink-soft); letter-spacing: 0.02em; }
+  @media (max-width: 760px) { .brand-sep, .brand-current { display: none; } }
   .nav-links a[data-rm-open] { cursor: pointer; }
 
   /* Hero */
@@ -778,6 +786,8 @@
   .rm-cell:hover { border-color: var(--accent); background: var(--accent-soft); transform: translateX(3px); }
   .rm-cell-code { font-family: 'Noto Serif SC', serif; font-weight: 500; color: var(--accent); font-size: 15px; }
   .rm-cell-name { font-size: 13px; color: var(--ink); }
+  .rm-cell-tbd { background: var(--bg-2); border-style: dashed; cursor: default; opacity: 0.6; }
+  .rm-cell-tbd:hover { transform: none; border-color: var(--line); background: var(--bg-2); }
   .rm-cell-tier { font-family: 'JetBrains Mono', monospace; font-size: 9px; letter-spacing: 0.08em; color: var(--ink-mute); text-transform: uppercase; border: 1px solid var(--line); padding: 2px 7px; border-radius: 3px; }
   .rm-footer { margin-top: 22px; padding-top: 16px; border-top: 1px dashed var(--line); display: flex; justify-content: space-between; align-items: center; font-size: 12px; color: var(--ink-soft); flex-wrap: wrap; gap: 8px; }
   .rm-wechat { font-family: 'JetBrains Mono', monospace; background: var(--accent-soft); color: var(--ink); padding: 3px 10px; border-radius: 3px; font-weight: 600; letter-spacing: 0.02em; }
@@ -1869,10 +1879,9 @@
 <!-- Top bar -->
 <div class="topbar">
   <div class="wrap topbar-inner">
-    <a href="index.html" class="brand"><span class="dot"></span>MCP · Model Context Protocol</a>
+    <div class="brand-block"><a href="index.html" class="brand"><span class="brand-arrow">←</span><span class="dot"></span>AI LABBOOK</a><span class="brand-sep">/</span><span class="brand-current">MCP · Model Context Protocol</span></div>
     <nav class="nav-links">
-      <a href="index.html#roadmap" data-rm-open>路线图</a>
-      <a href="index.html#manifesto">关于</a>
+      <a href="index.html#menu" data-rm-open>路线图</a>
     </nav>
   </div>
 </div>
@@ -2979,88 +2988,27 @@ $ claude plugin install figma
   <div class="rm-dialog" role="dialog" aria-label="完整路线图">
     <button class="rm-close" data-rm-close aria-label="关闭">✕</button>
     <div class="rm-header">
-      <div class="rm-tag">完整路线图 · ROADMAP</div>
-      <h3 class="rm-title">9 模块 <span class="rm-em">·</span> 28 篇</h3>
-      <p class="rm-sub">设计篇 5 模块 / 15 篇 + 工程篇 4 系列 / 13 篇</p>
+      <div class="rm-tag">AI 地图 · MAP</div>
+      <h3 class="rm-title">2 章 <span class="rm-em">·</span> 3 篇上线</h3>
+      <p class="rm-sub">原理篇 1 章 / 3 篇 + 协作篇 整理中</p>
     </div>
     <div class="rm-body">
       <div class="rm-mod">
-        <div class="rm-mod-key">A · 单元素与组件</div>
+        <div class="rm-mod-key">Q · AI 工具与协议</div>
         <div class="rm-mod-list">
-          <a href="basics-figma.html" class="rm-cell"><span class="rm-cell-code">A0</span><span class="rm-cell-name">三件套 · HTML / CSS / JS</span><span class="rm-cell-tier">入门</span></a>
-          <a href="box-figma.html" class="rm-cell"><span class="rm-cell-code">A1</span><span class="rm-cell-name">盒子 · Auto Layout</span><span class="rm-cell-tier">基础</span></a>
-          <a href="components-figma.html" class="rm-cell"><span class="rm-cell-code">A2</span><span class="rm-cell-name">组件 · Variants &amp; Props</span><span class="rm-cell-tier">基础</span></a>
-          <a href="button-system-figma.html" class="rm-cell"><span class="rm-cell-code">A3</span><span class="rm-cell-name">Button System · 组件演化</span><span class="rm-cell-tier">进阶</span></a>
+          <a href="q1-mcp-figma.html" class="rm-cell"><span class="rm-cell-code">Q1</span><span class="rm-cell-name">MCP · AI 的 USB 接口</span><span class="rm-cell-tier">工具</span></a>
+          <a href="q2-skills-figma.html" class="rm-cell"><span class="rm-cell-code">Q2</span><span class="rm-cell-name">Skills · SKILL.md 拆解</span><span class="rm-cell-tier">工具</span></a>
+          <a href="q3-agent-figma.html" class="rm-cell"><span class="rm-cell-code">Q3</span><span class="rm-cell-name">Agent · 团队式 AI</span><span class="rm-cell-tier">工具</span></a>
         </div>
       </div>
       <div class="rm-mod">
-        <div class="rm-mod-key">B · 多组件协作</div>
+        <div class="rm-mod-key">K · 设计 × AI 协作 （待补充）</div>
         <div class="rm-mod-list">
-          <a href="page-figma.html" class="rm-cell"><span class="rm-cell-code">B0</span><span class="rm-cell-name">拼页面 · 组件嵌套</span><span class="rm-cell-tier">入门</span></a>
-          <a href="data-flow-figma.html" class="rm-cell"><span class="rm-cell-code">B1</span><span class="rm-cell-name">数据流 · 概念</span><span class="rm-cell-tier">基础</span></a>
-          <a href="data-flow-cases-figma.html" class="rm-cell"><span class="rm-cell-code">B2</span><span class="rm-cell-name">数据流 · 实战 5 案例</span><span class="rm-cell-tier">进阶</span></a>
+          <span class="rm-cell rm-cell-tbd"><span class="rm-cell-code">K1</span><span class="rm-cell-name">整理中 · Coming Soon</span><span class="rm-cell-tier">TBD</span></span>
+          <span class="rm-cell rm-cell-tbd"><span class="rm-cell-code">K2</span><span class="rm-cell-name">整理中 · Coming Soon</span><span class="rm-cell-tier">TBD</span></span>
+          <span class="rm-cell rm-cell-tbd"><span class="rm-cell-code">K3</span><span class="rm-cell-name">整理中 · Coming Soon</span><span class="rm-cell-tier">TBD</span></span>
         </div>
       </div>
-      <div class="rm-mod">
-        <div class="rm-mod-key">C · 视觉系统</div>
-        <div class="rm-mod-list">
-          <a href="tokens-figma.html" class="rm-cell"><span class="rm-cell-code">C0</span><span class="rm-cell-name">Variables / Tokens 入门</span><span class="rm-cell-tier">入门</span></a>
-          <a href="colors-type-figma.html" class="rm-cell"><span class="rm-cell-code">C1</span><span class="rm-cell-name">Colors / Type / Spacing</span><span class="rm-cell-tier">基础</span></a>
-          <a href="theme-switch-figma.html" class="rm-cell"><span class="rm-cell-code">C2</span><span class="rm-cell-name">Theme 切换实战</span><span class="rm-cell-tier">进阶</span></a>
-        </div>
-      </div>
-      <div class="rm-mod">
-        <div class="rm-mod-key">D · 状态与交互</div>
-        <div class="rm-mod-list">
-          <a href="states-figma.html" class="rm-cell"><span class="rm-cell-code">D0</span><span class="rm-cell-name">视觉态 · 看得见的状态</span><span class="rm-cell-tier">入门</span></a>
-          <a href="interactive-figma.html" class="rm-cell"><span class="rm-cell-code">D1</span><span class="rm-cell-name">Interactive Component</span><span class="rm-cell-tier">基础</span></a>
-          <a href="transition-figma.html" class="rm-cell"><span class="rm-cell-code">D2</span><span class="rm-cell-name">动画 · Transition</span><span class="rm-cell-tier">进阶</span></a>
-        </div>
-      </div>
-      <div class="rm-mod">
-        <div class="rm-mod-key">E · 工程化</div>
-        <div class="rm-mod-list">
-          <a href="naming-figma.html" class="rm-cell"><span class="rm-cell-code">E0</span><span class="rm-cell-name">命名 / 图层规范</span><span class="rm-cell-tier">入门</span></a>
-          <a href="handoff-figma.html" class="rm-cell"><span class="rm-cell-code">E2</span><span class="rm-cell-name">Handoff &amp; 设计系统</span><span class="rm-cell-tier">进阶</span></a>
-        </div>
-      </div>
-      <div class="rm-mod">
-        <div class="rm-mod-key">F · 工程入门</div>
-        <div class="rm-mod-list">
-          <a href="f1-npm-figma.html" class="rm-cell"><span class="rm-cell-code">F1</span><span class="rm-cell-name">npm 是什么</span><span class="rm-cell-tier">入门</span></a>
-          <a href="f2-import-figma.html" class="rm-cell"><span class="rm-cell-code">F2</span><span class="rm-cell-name">import 与路径</span><span class="rm-cell-tier">入门</span></a>
-          <a href="f3-dev-build-figma.html" class="rm-cell"><span class="rm-cell-code">F3</span><span class="rm-cell-name">dev vs build</span><span class="rm-cell-tier">基础</span></a>
-          <a href="f4-hidden-files-figma.html" class="rm-cell"><span class="rm-cell-code">F4</span><span class="rm-cell-name">看不见的文件</span><span class="rm-cell-tier">基础</span></a>
-        </div>
-      </div>
-      <div class="rm-mod">
-        <div class="rm-mod-key">G · 版本控制</div>
-        <div class="rm-mod-list">
-          <a href="g1-commit-branch-figma.html" class="rm-cell"><span class="rm-cell-code">G1</span><span class="rm-cell-name">commit / branch</span><span class="rm-cell-tier">入门</span></a>
-          <a href="g2-conflict-figma.html" class="rm-cell"><span class="rm-cell-code">G2</span><span class="rm-cell-name">冲突怎么解</span><span class="rm-cell-tier">基础</span></a>
-          <a href="g3-pr-review-figma.html" class="rm-cell"><span class="rm-cell-code">G3</span><span class="rm-cell-name">PR / Review</span><span class="rm-cell-tier">进阶</span></a>
-        </div>
-      </div>
-      <div class="rm-mod">
-        <div class="rm-mod-key">H · 浏览器调试</div>
-        <div class="rm-mod-list">
-          <a href="h1-devtools-elements-figma.html" class="rm-cell"><span class="rm-cell-code">H1</span><span class="rm-cell-name">DevTools Elements</span><span class="rm-cell-tier">入门</span></a>
-          <a href="h2-console-error-figma.html" class="rm-cell"><span class="rm-cell-code">H2</span><span class="rm-cell-name">Console 报错</span><span class="rm-cell-tier">基础</span></a>
-          <a href="h3-network-figma.html" class="rm-cell"><span class="rm-cell-code">H3</span><span class="rm-cell-name">Network 面板</span><span class="rm-cell-tier">进阶</span></a>
-        </div>
-      </div>
-      <div class="rm-mod">
-        <div class="rm-mod-key">J · 上线</div>
-        <div class="rm-mod-list">
-          <a href="j1-dns-figma.html" class="rm-cell"><span class="rm-cell-code">J1</span><span class="rm-cell-name">DNS / 域名</span><span class="rm-cell-tier">基础</span></a>
-          <a href="j2-vercel-figma.html" class="rm-cell"><span class="rm-cell-code">J2</span><span class="rm-cell-name">Vercel 部署</span><span class="rm-cell-tier">基础</span></a>
-          <a href="j3-cache-cdn-figma.html" class="rm-cell"><span class="rm-cell-code">J3</span><span class="rm-cell-name">缓存 / CDN</span><span class="rm-cell-tier">进阶</span></a>
-        </div>
-      </div>
-    </div>
-    <div class="rm-footer">
-      <span>未完待续 · 想看什么主题加我聊</span>
-      <span class="rm-wechat">微信 vanvan_0422</span>
     </div>
   </div>
 </div>

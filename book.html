@@ -1,0 +1,3817 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI LABBOOK — 给设计师的 AI 课</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,300..900&family=Geist:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Noto+Sans+SC:wght@300;400;500;700;900&family=Noto+Serif+SC:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f3eee5;
+    --bg-2: #ebe4d4;
+    --ink: #16161d;
+    --ink-soft: #4a4a55;
+    --ink-mute: #8a8a92;
+    --line: #d5cdba;
+    --line-soft: #e3dcca;
+    --accent: #ff4d2e;
+    --accent-soft: #ffe4dc;
+    --blue: #0a4cff;
+    --blue-soft: #dde6ff;
+    --green: #1f6b3a;
+    --green-soft: #d4ecdb;
+    --yellow: #ffcf3d;
+    --paper: #faf7f0;
+    --shadow: 0 1px 0 rgba(0,0,0,0.04), 0 8px 24px rgba(22,22,29,0.06);
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'Geist', 'Noto Sans SC', system-ui, -apple-system, sans-serif;
+    font-size: 16px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    background-image:
+      radial-gradient(circle at 1px 1px, rgba(22,22,29,0.05) 1px, transparent 0);
+    background-size: 24px 24px;
+  }
+
+  /* Typography */
+  .display-cn { font-family: 'Noto Serif SC', 'Fraunces', serif; font-weight: 900; letter-spacing: -0.01em; }
+  .display-en { font-family: 'Fraunces', 'Noto Serif SC', serif; font-weight: 600; font-style: italic; letter-spacing: -0.02em; }
+  .mono { font-family: 'JetBrains Mono', monospace; }
+  .label { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-mute); }
+
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 0 32px; }
+
+  /* Top bar — 跟 index.html (cinema) 完全一致：边到边 + 14px 24px padding + 固定 */
+  .topbar {
+    position: fixed; top: 0; left: 0; right: 0;
+    z-index: 100;
+    padding: 14px 24px;
+    display: flex; justify-content: space-between; align-items: center;
+    background: var(--bg);
+    border-bottom: 1px dashed var(--line);
+  }
+  .topbar-inner { display: contents; }  /* 历史包装层不再起作用, 让 brand+vol-tabs 直接作为 .topbar 的 flex item */
+  body { padding-top: 56px; }            /* 给固定 topbar 留位 */
+  .brand { font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 600; }
+  .brand .dot { display: inline-block; width: 8px; height: 8px; background: var(--accent); border-radius: 50%; margin-right: 8px; vertical-align: middle; animation: pulse 2s ease-in-out infinite; }
+  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+  .nav-links { display: flex; gap: 20px; font-size: 13px; flex-wrap: wrap; }
+  .nav-links a { color: var(--ink-soft); text-decoration: none; transition: color 0.2s; }
+  .nav-links a:hover { color: var(--accent); }
+  .nav-links a.current { color: var(--accent); font-weight: 600; }
+  .nav-links a.dim { color: var(--ink-mute); }
+
+  /* Hero */
+  .hero { padding: 120px 0 100px; position: relative; overflow: hidden; }
+  .hero-meta { display: flex; gap: 12px; margin-bottom: 36px; align-items: center; flex-wrap: wrap; }
+  .hero-meta .pill { padding: 6px 12px; border: 1px solid var(--ink); border-radius: 100px; font-size: 11px; font-family: 'JetBrains Mono', monospace; letter-spacing: 0.05em; }
+  .hero-meta .pill.fill { background: var(--ink); color: var(--bg); }
+  .hero h1 {
+    font-family: 'Noto Serif SC', 'Fraunces', serif;
+    font-weight: 900;
+    font-size: clamp(56px, 9vw, 124px);
+    line-height: 0.92;
+    letter-spacing: -0.04em;
+    margin: 0 0 32px;
+  }
+  .hero h1 .em { font-family: 'Noto Serif SC', serif; font-weight: 500; color: var(--accent); }
+  .hero h1 .x { display: inline-block; transform: translateY(-0.05em); margin: 0 0.05em; color: var(--ink-mute); font-weight: 300; }
+  .hero p.lede { font-size: 22px; line-height: 1.5; max-width: 640px; color: var(--ink-soft); margin: 0 0 48px; }
+  .hero p.lede .em { font-family: 'Noto Serif SC', serif; color: var(--accent); }
+  .hero-grid { display: grid; grid-template-columns: 1.4fr 1fr; gap: 48px; align-items: end; }
+  @media (max-width: 880px) { .hero-grid { grid-template-columns: 1fr; } }
+  .hero-side {
+    border-left: 1px dashed var(--line);
+    padding-left: 24px;
+    font-size: 13px;
+    color: var(--ink-soft);
+  }
+  .hero-side .row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px dashed var(--line); }
+  .hero-side .row:last-child { border-bottom: none; }
+  .hero-side .row .k { color: var(--ink-mute); font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.05em; text-transform: uppercase; }
+  .hero-side .row .v { font-weight: 500; }
+
+  /* Section */
+  section { padding: 80px 0; border-top: 1px solid var(--line); position: relative; }
+  .section-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 56px; flex-wrap: wrap; gap: 16px; }
+  .section-num { font-family: 'JetBrains Mono', monospace; font-size: 13px; color: var(--ink-mute); letter-spacing: 0.1em; }
+  .section-num strong { color: var(--accent); }
+  .section-title {
+    font-family: 'Noto Serif SC', serif;
+    font-weight: 900;
+    font-size: clamp(32px, 4.5vw, 52px);
+    line-height: 1.05;
+    letter-spacing: -0.02em;
+    margin: 0;
+    max-width: 18ch;
+  }
+  .section-title .em { font-family: 'Noto Serif SC', serif; font-weight: 500; color: var(--accent); }
+  .section-sub { color: var(--ink-soft); font-size: 17px; max-width: 38ch; line-height: 1.55; margin: 0; }
+
+  /* Manifesto */
+  .manifesto {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 48px;
+    margin-top: 24px;
+    position: relative;
+  }
+  .manifesto::before, .manifesto::after {
+    content: '';
+    position: absolute;
+    width: 16px; height: 16px;
+    border: 1px solid var(--accent);
+  }
+  .manifesto::before { top: 16px; left: 16px; border-right: none; border-bottom: none; }
+  .manifesto::after { bottom: 16px; right: 16px; border-left: none; border-top: none; }
+  .manifesto h3 {
+    font-family: 'Noto Serif SC', serif;
+    font-weight: 900;
+    font-size: 28px;
+    margin: 0 0 24px;
+    letter-spacing: -0.02em;
+  }
+  .manifesto h3 .em { font-family: 'Noto Serif SC', serif; font-weight: 500; color: var(--accent); }
+  .manifesto p {
+    font-size: 16px;
+    line-height: 1.7;
+    color: var(--ink-soft);
+    margin: 0 0 16px;
+    max-width: 60ch;
+  }
+  .manifesto p:last-child { margin-bottom: 0; }
+  .manifesto strong { color: var(--ink); font-weight: 600; }
+  .manifesto .em { font-family: 'Noto Serif SC', serif; color: var(--accent); }
+
+  /* ====================================================== */
+  /* ===== Journey map (旅程路径图)                     ===== */
+  /* ====================================================== */
+  .journey-wrap {
+    position: relative;
+    background: var(--paper);
+    border: 1.5px solid var(--ink);
+    border-radius: 12px;
+    padding: 28px 28px 36px;
+    margin-top: 16px;
+    overflow: hidden;
+    /* graph-paper inside the canvas */
+    background-image:
+      linear-gradient(rgba(22,22,29,0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(22,22,29,0.04) 1px, transparent 1px);
+    background-size: 24px 24px;
+    background-position: -1px -1px;
+  }
+  .journey-wrap::before {
+    /* corner ticks like a lab notebook page */
+    content: '';
+    position: absolute;
+    top: 10px; left: 10px;
+    width: 22px; height: 22px;
+    border-top: 1.5px solid var(--ink);
+    border-left: 1.5px solid var(--ink);
+    pointer-events: none;
+  }
+  .journey-wrap::after {
+    content: '';
+    position: absolute;
+    bottom: 10px; right: 10px;
+    width: 22px; height: 22px;
+    border-bottom: 1.5px solid var(--ink);
+    border-right: 1.5px solid var(--ink);
+    pointer-events: none;
+  }
+
+  /* Top labels: notebook + figure caption */
+  .journey-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 14px;
+    padding: 0 4px;
+  }
+  .nb-card {
+    background: var(--bg);
+    border: 1.5px solid var(--ink);
+    border-radius: 4px;
+    padding: 8px 12px 6px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    line-height: 1.45;
+    color: var(--ink);
+    transform: rotate(-1deg);
+  }
+  .nb-card .nb-h {
+    color: var(--accent);
+    font-weight: 700;
+  }
+  .nb-card .nb-s {
+    color: var(--ink-mute);
+    font-size: 10px;
+  }
+  .fig-cap {
+    text-align: right;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--ink-soft);
+    letter-spacing: 0.06em;
+    line-height: 1.5;
+    transform: rotate(0.6deg);
+  }
+  .fig-cap .compass {
+    display: inline-block;
+    width: 22px; height: 22px;
+    border: 1.5px solid var(--ink);
+    border-radius: 50%;
+    position: relative;
+    vertical-align: middle;
+    margin-right: 8px;
+    background: var(--paper);
+  }
+  .fig-cap .compass::before {
+    content: 'N';
+    position: absolute;
+    top: -1px; left: 50%; transform: translateX(-50%);
+    font-size: 7px; font-weight: 700;
+    color: var(--accent);
+    line-height: 1;
+  }
+  .fig-cap .compass::after {
+    content: '';
+    position: absolute;
+    top: 3px; left: 50%;
+    width: 1.5px; height: 8px;
+    background: var(--accent);
+    transform: translateX(-50%);
+  }
+  .fig-cap .v {
+    color: var(--accent);
+    font-weight: 700;
+  }
+  .fig-cap small {
+    display: block;
+    color: var(--ink-mute);
+    font-size: 10px;
+    margin-top: 2px;
+  }
+
+  /* Stage layout: SVG on left, sticky panel on right */
+  .journey-stage {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 220px;
+    gap: 24px;
+    align-items: start;
+  }
+  @media (max-width: 980px) {
+    .journey-stage { grid-template-columns: 1fr; }
+  }
+
+  .journey-svg-host {
+    position: relative;
+    width: 100%;
+    height: min(85vh, 1100px);
+    overflow: hidden;
+    border: 1.5px solid var(--ink-soft);
+    border-radius: 10px;
+    background:
+      linear-gradient(var(--paper), var(--paper)),
+      repeating-linear-gradient(0deg, transparent 0, transparent 19px, rgba(22,22,29,0.04) 19px, rgba(22,22,29,0.04) 20px),
+      repeating-linear-gradient(90deg, transparent 0, transparent 19px, rgba(22,22,29,0.04) 19px, rgba(22,22,29,0.04) 20px);
+    background-blend-mode: multiply;
+    cursor: grab;
+    touch-action: none;
+  }
+  .journey-svg-host.is-dragging { cursor: grabbing; }
+  .journey-svg {
+    width: 100%;
+    height: 100%;
+    display: block;
+    overflow: visible;
+    transform-origin: 0 0;
+    transition: transform 0.06s linear;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+  .journey-svg-host.is-dragging .journey-svg { transition: none; }
+
+  /* === Zoom controls overlay === */
+  .zoom-ctrl {
+    position: absolute;
+    bottom: 14px;
+    right: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    background: var(--paper);
+    border: 1px solid var(--ink-soft);
+    border-radius: 8px;
+    padding: 4px;
+    box-shadow: 0 6px 18px rgba(22,22,29,0.08);
+    z-index: 10;
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .zoom-btn {
+    width: 30px; height: 30px;
+    background: transparent;
+    border: none;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--ink);
+    cursor: pointer;
+    border-radius: 4px;
+    transition: all 0.15s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+  }
+  .zoom-btn:hover {
+    background: var(--accent-soft);
+    color: var(--accent);
+  }
+  .zoom-btn:active { transform: scale(0.94); }
+  .zoom-btn.zoom-fit {
+    font-size: 14px;
+  }
+  .zoom-level {
+    font-size: 9.5px;
+    text-align: center;
+    color: var(--ink-mute);
+    padding: 2px 0;
+    border-top: 1px dashed var(--line);
+    border-bottom: 1px dashed var(--line);
+    letter-spacing: 0.04em;
+    user-select: none;
+  }
+
+  /* Hint label at corner */
+  .zoom-hint {
+    position: absolute;
+    bottom: 14px;
+    left: 14px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10.5px;
+    color: var(--ink-mute);
+    letter-spacing: 0.04em;
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 6px 10px;
+    pointer-events: none;
+    z-index: 10;
+    opacity: 0.85;
+  }
+  .zoom-hint .k {
+    color: var(--ink);
+    font-weight: 700;
+    background: var(--accent-soft);
+    padding: 1px 5px;
+    border-radius: 3px;
+    margin: 0 2px;
+  }
+
+  @media (max-width: 720px) {
+    .journey-svg-host { height: 75vh; }
+    .zoom-hint { font-size: 9.5px; padding: 4px 7px; }
+    .zoom-btn { width: 28px; height: 28px; }
+  }
+
+  /* SVG nodes/paths styling controlled here */
+  .j-path {
+    fill: none;
+    stroke: var(--ink-mute);
+    stroke-width: 1.6;
+    stroke-dasharray: 6 6;
+    opacity: 0.55;
+    transition: stroke 0.3s ease, opacity 0.3s ease, stroke-dasharray 0.3s ease;
+  }
+  .j-path.read {
+    stroke: var(--accent);
+    stroke-dasharray: none;
+    opacity: 1;
+  }
+
+  /* Cluster (module) capsule */
+  .j-cluster-bg {
+    fill: var(--bg);
+    stroke: var(--line);
+    stroke-width: 1.5;
+    stroke-dasharray: 4 4;
+  }
+  .j-cluster-banner {
+    fill: var(--paper);
+    stroke: var(--ink);
+    stroke-width: 1.5;
+  }
+  .j-cluster-banner-text {
+    font-family: 'Noto Serif SC', serif;
+    font-weight: 700;
+    font-size: 13px;
+    fill: var(--ink);
+  }
+  .j-cluster-banner-key {
+    fill: var(--accent);
+    font-weight: 900;
+  }
+
+  /* Article node — outer group holds position via transform attribute,
+     inner group handles hover lift so we don't clobber SVG transform. */
+  .j-node {
+    cursor: pointer;
+  }
+  .j-node-inner {
+    transition: transform 0.18s cubic-bezier(0.4, 0, 0.2, 1);
+    transform-box: fill-box;
+    transform-origin: center;
+  }
+  .j-node-circle {
+    fill: var(--paper);
+    stroke: var(--ink);
+    stroke-width: 2;
+    transition: fill 0.2s ease, stroke 0.2s ease, filter 0.25s ease;
+  }
+  .j-node-text {
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 800;
+    font-size: 16px;
+    fill: var(--ink);
+    text-anchor: middle;
+    dominant-baseline: central;
+    pointer-events: none;
+    transition: fill 0.2s ease;
+    letter-spacing: -0.02em;
+  }
+  .j-node:hover .j-node-inner {
+    transform: translateY(-3px) scale(1.08);
+  }
+  .j-node:hover .j-node-circle {
+    fill: var(--accent);
+    stroke: var(--accent);
+    filter: drop-shadow(0 4px 10px rgba(255,77,46,0.35));
+  }
+  .j-node:hover .j-node-text {
+    fill: #fff;
+  }
+
+  /* Read state */
+  .j-node.read .j-node-circle {
+    stroke: var(--accent);
+    stroke-width: 2;
+  }
+  .j-node.read .j-node-text {
+    fill: var(--accent);
+  }
+  .j-node-check {
+    fill: var(--accent);
+    stroke: var(--paper);
+    stroke-width: 1.5;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+  }
+  .j-node.read .j-node-check { opacity: 1; }
+  .j-node-check-tick {
+    fill: none;
+    stroke: #fff;
+    stroke-width: 1.6;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+  }
+  .j-node.read .j-node-check-tick { opacity: 1; }
+
+  /* START / END big nodes */
+  .j-anchor {
+    fill: var(--ink);
+    stroke: var(--ink);
+    stroke-width: 1.5;
+  }
+  .j-anchor-end {
+    fill: var(--accent);
+    stroke: var(--accent);
+  }
+  .j-anchor-text {
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 700;
+    font-size: 11px;
+    fill: var(--paper);
+    text-anchor: middle;
+    dominant-baseline: central;
+    letter-spacing: 0.05em;
+  }
+  .j-anchor-cn {
+    font-family: 'Noto Serif SC', serif;
+    font-weight: 900;
+    font-size: 14px;
+    fill: var(--paper);
+    text-anchor: middle;
+    dominant-baseline: central;
+  }
+
+  /* Branch labels: 设计篇 / 工程篇 */
+  .j-branch-label-bg {
+    fill: var(--bg);
+    stroke: var(--ink);
+    stroke-width: 1.5;
+  }
+  .j-branch-label {
+    font-family: 'Noto Serif SC', serif;
+    font-weight: 900;
+    font-size: 15px;
+    fill: var(--ink);
+    text-anchor: middle;
+    dominant-baseline: central;
+    letter-spacing: 0.04em;
+  }
+  .j-branch-label .j-arrow {
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 700;
+    fill: var(--accent);
+  }
+
+  /* Hand-drawn annotation labels (浮动小标签) */
+  .j-anno-text {
+    font-family: 'Noto Serif SC', serif;
+    font-weight: 700;
+    font-size: 12px;
+    fill: var(--accent);
+  }
+  .j-anno-line {
+    fill: none;
+    stroke: var(--accent);
+    stroke-width: 1.4;
+    stroke-dasharray: 3 3;
+    stroke-linecap: round;
+  }
+  .j-anno-en {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    fill: var(--ink-soft);
+    letter-spacing: 0.06em;
+  }
+
+  /* Filter dim states */
+  .journey-svg.filter-read .j-node:not(.read) { opacity: 0.18; pointer-events: none; }
+  .journey-svg.filter-read .j-node:not(.read) .j-node-circle { filter: none; }
+  .journey-svg.filter-unread .j-node.read { opacity: 0.18; pointer-events: none; }
+
+  /* Tooltip (HTML overlay) */
+  .j-tooltip {
+    position: absolute;
+    z-index: 50;
+    pointer-events: none;
+    background: var(--ink);
+    color: var(--paper);
+    padding: 10px 14px;
+    border-radius: 6px;
+    font-size: 12.5px;
+    line-height: 1.4;
+    min-width: 200px;
+    max-width: 260px;
+    box-shadow: 0 12px 24px rgba(0,0,0,0.18);
+    opacity: 0;
+    transform: translate(-50%, calc(-100% - 14px)) scale(0.96);
+    transition: opacity 0.15s ease, transform 0.15s ease;
+    will-change: transform, opacity;
+  }
+  .j-tooltip.on {
+    opacity: 1;
+    transform: translate(-50%, calc(-100% - 14px)) scale(1);
+  }
+  .j-tooltip::after {
+    content: '';
+    position: absolute;
+    bottom: -6px;
+    left: 50%;
+    transform: translateX(-50%) rotate(45deg);
+    width: 10px; height: 10px;
+    background: var(--ink);
+  }
+  .j-tooltip-code {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10.5px;
+    color: var(--accent);
+    letter-spacing: 0.08em;
+    margin-bottom: 4px;
+    font-weight: 600;
+  }
+  .j-tooltip-title {
+    font-family: 'Noto Serif SC', serif;
+    font-weight: 700;
+    font-size: 13.5px;
+    color: var(--paper);
+    margin-bottom: 4px;
+    letter-spacing: -0.005em;
+  }
+  .j-tooltip-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 8px;
+    padding-top: 7px;
+    border-top: 1px dashed rgba(255,255,255,0.18);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10.5px;
+    letter-spacing: 0.04em;
+    color: rgba(250,247,240,0.65);
+  }
+  .j-tooltip-tier {
+    color: var(--accent);
+    font-weight: 600;
+  }
+  .j-tooltip-go {
+    color: var(--paper);
+  }
+
+  /* Right side panel */
+  .journey-panel {
+    position: sticky;
+    top: 90px;
+    background: var(--bg);
+    border: 1.5px solid var(--ink);
+    border-radius: 8px;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  @media (max-width: 980px) {
+    .journey-panel {
+      position: static;
+      flex-direction: row;
+      flex-wrap: wrap;
+      align-items: stretch;
+      justify-content: space-between;
+      gap: 14px;
+      margin-top: 18px;
+    }
+  }
+  .jp-block {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .jp-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    color: var(--ink-mute);
+    text-transform: uppercase;
+  }
+  .jp-progress-num {
+    font-family: 'Noto Serif SC', serif;
+    font-weight: 900;
+    font-size: 32px;
+    line-height: 1;
+    letter-spacing: -0.02em;
+  }
+  .jp-progress-num .jp-cur { color: var(--accent); }
+  .jp-progress-num .jp-tot { color: var(--ink-mute); font-weight: 500; font-size: 22px; }
+  .jp-bar {
+    display: flex;
+    gap: 2px;
+    margin-top: 6px;
+    flex-wrap: wrap;
+  }
+  .jp-tick {
+    width: 10px;
+    height: 5px;
+    background: var(--line);
+    border-radius: 1px;
+    transition: background 0.2s ease;
+  }
+  .jp-tick.on {
+    background: var(--accent);
+  }
+
+  .jp-filters {
+    display: flex;
+    gap: 4px;
+    flex-direction: column;
+  }
+  @media (max-width: 980px) {
+    .jp-filters { flex-direction: row; flex: 1 1 100%; }
+  }
+  .jp-filter {
+    flex: 1;
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    padding: 7px 10px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.06em;
+    color: var(--ink-soft);
+    text-align: left;
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+  .jp-filter:hover { border-color: var(--ink); color: var(--ink); }
+  .jp-filter.active {
+    background: var(--ink);
+    border-color: var(--ink);
+    color: var(--paper);
+  }
+  .jp-filter .jp-fnum {
+    color: var(--ink-mute);
+    font-weight: 500;
+    margin-left: 4px;
+  }
+  .jp-filter.active .jp-fnum { color: var(--accent); }
+
+  .jp-reset {
+    background: transparent;
+    border: 1px dashed var(--line);
+    border-radius: 4px;
+    padding: 6px 10px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10.5px;
+    letter-spacing: 0.05em;
+    color: var(--ink-mute);
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+  .jp-reset:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+    border-style: solid;
+  }
+
+  .jp-legend {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10.5px;
+    color: var(--ink-soft);
+    line-height: 1.4;
+  }
+  .jp-legend .ld {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .jp-legend .ld-dot {
+    width: 14px; height: 14px;
+    border-radius: 50%;
+    background: var(--paper);
+    border: 1.6px solid var(--ink);
+    display: inline-block;
+    flex-shrink: 0;
+  }
+  .jp-legend .ld-dot.read {
+    border-color: var(--accent);
+    border-width: 2px;
+  }
+  .jp-legend .ld-dot.read::after {
+    content: '✓';
+    color: var(--accent);
+    font-size: 8px;
+    display: block;
+    text-align: center;
+    line-height: 10px;
+    font-weight: 700;
+  }
+
+  /* ===== Finale (slim) ===== */
+  .finale-banner {
+    position: relative;
+    background: linear-gradient(135deg, var(--green-soft) 0%, var(--paper) 60%, var(--accent-soft) 100%);
+    border: 1px solid var(--green);
+    border-radius: 12px;
+    padding: 56px 56px 44px;
+    overflow: hidden;
+  }
+  .finale-banner::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image: radial-gradient(circle at 1px 1px, rgba(31, 107, 58, 0.08) 1px, transparent 0);
+    background-size: 18px 18px;
+    pointer-events: none;
+  }
+  .finale-corner {
+    position: absolute;
+    width: 24px; height: 24px;
+    border: 2px solid var(--green);
+    z-index: 2;
+  }
+  .finale-tl { top: 16px; left: 16px; border-right: none; border-bottom: none; }
+  .finale-tr { top: 16px; right: 16px; border-left: none; border-bottom: none; }
+  .finale-bl { bottom: 16px; left: 16px; border-right: none; border-top: none; }
+  .finale-br { bottom: 16px; right: 16px; border-left: none; border-top: none; }
+  .finale-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--green);
+    color: var(--paper);
+    padding: 6px 14px;
+    border-radius: 100px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    font-weight: 600;
+    margin-bottom: 22px;
+    position: relative;
+    z-index: 2;
+  }
+  .finale-check {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 16px; height: 16px;
+    background: var(--paper);
+    color: var(--green);
+    border-radius: 50%;
+    font-size: 10px;
+    font-weight: 900;
+  }
+  .finale-title {
+    font-family: 'Noto Serif SC', serif;
+    font-weight: 900;
+    font-size: clamp(32px, 4.5vw, 48px);
+    line-height: 1.05;
+    letter-spacing: -0.03em;
+    margin: 0 0 18px;
+    color: var(--ink);
+    position: relative;
+    z-index: 2;
+  }
+  .finale-title .em {
+    font-family: 'Noto Serif SC', serif;
+    font-weight: 500;
+    color: var(--accent);
+  }
+  .finale-title .confetti {
+    color: var(--accent);
+    font-family: 'Fraunces', serif;
+    margin-left: 6px;
+    display: inline-block;
+    animation: confetti-spin 3s ease-in-out infinite;
+  }
+  @keyframes confetti-spin {
+    0%, 100% { transform: rotate(0deg) scale(1); }
+    50% { transform: rotate(15deg) scale(1.15); }
+  }
+  .finale-blurb {
+    font-size: 16.5px;
+    line-height: 1.6;
+    color: var(--ink-soft);
+    max-width: 60ch;
+    margin: 0 0 22px;
+    position: relative;
+    z-index: 2;
+  }
+  .finale-blurb strong {
+    color: var(--ink);
+    font-weight: 600;
+  }
+  .finale-footnote {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 14px;
+    color: var(--ink-mute);
+    margin: 0;
+    padding-top: 14px;
+    border-top: 1px dashed var(--green);
+    position: relative;
+    z-index: 2;
+  }
+  .finale-footnote strong {
+    color: var(--ink);
+    font-weight: 600;
+  }
+  .finale-footnote .em {
+    color: var(--accent);
+    margin: 0 4px;
+  }
+  .finale-footnote .confetti {
+    color: var(--green);
+    margin-left: 4px;
+    display: inline-block;
+    animation: confetti-spin 3s ease-in-out infinite;
+    animation-delay: 0.5s;
+  }
+  @media (max-width: 720px) {
+    .finale-banner { padding: 44px 26px 34px; }
+  }
+
+  /* Footer */
+  footer {
+    border-top: 1px solid var(--line);
+    padding: 60px 0 80px;
+    background: var(--bg-2);
+    margin-top: 60px;
+  }
+  .byline-group { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 28px; }
+  .byline { display: flex; gap: 16px; align-items: flex-start; margin: 0; min-width: 0; }
+  .avatar { width: 56px; height: 56px; border-radius: 50%; border: 1px solid var(--line); object-fit: cover; flex-shrink: 0; }
+  .byline-meta { flex: 1; min-width: 0; }
+  .byline-label { font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.1em; color: var(--ink-mute); margin-bottom: 4px; }
+  .byline-label .dot { display: inline-block; width: 6px; height: 6px; background: var(--accent); border-radius: 50%; margin-right: 6px; vertical-align: middle; }
+  .byline-name { font-family: 'Noto Serif SC', serif; font-weight: 900; font-size: 18px; margin: 0 0 4px; }
+  .byline-name .em { font-family: 'Noto Serif SC', serif; color: var(--accent); font-weight: 500; }
+  .byline-tag { font-size: 12px; color: var(--ink-soft); margin: 0; line-height: 1.55; }
+  .footer-meta { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ink-mute); letter-spacing: 0.05em; padding-top: 20px; border-top: 1px dashed var(--line); }
+  .footer-meta .heart { color: var(--accent); margin: 0 4px; animation: heartbeat 2s ease-in-out infinite; display: inline-block; }
+  @keyframes heartbeat { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.2); } }
+  @media (max-width: 700px) {
+    .byline-group { grid-template-columns: 1fr; gap: 18px; }
+    .byline + .byline { padding-top: 18px; border-top: 1px dashed var(--line); }
+  }
+  a.brand { text-decoration: none; color: inherit; transition: color 0.2s; cursor: pointer; }
+  a.brand:hover { color: var(--accent); }
+  .byline-contact { margin-top: 10px; padding-top: 10px; border-top: 1px dashed var(--line); display: flex; align-items: flex-start; gap: 10px; font-size: 12px; }
+  .byline-contact .contact-label { font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-mute); padding: 1px 6px; border: 1px solid var(--line); border-radius: 3px; align-self: flex-start; }
+  .byline-contact .contact-id { font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 600; color: var(--ink); background: var(--accent-soft); padding: 2px 8px; border-radius: 4px; letter-spacing: 0.02em; align-self: flex-start; }
+  .byline-contact .contact-hint { font-size: 11px; color: var(--ink-soft); line-height: 1.5; }
+  .byline-contact-text { display: flex; flex-direction: column; gap: 5px; min-width: 0; flex: 1; padding-top: 1px; }
+  .byline-contact .qr-card { width: 68px; height: 68px; border: 1px solid var(--line); border-radius: 5px; overflow: hidden; flex-shrink: 0; position: relative; background: #fff; }
+  .byline-contact .qr-card.qr-empty { border-style: dashed; background: var(--accent-soft); }
+  .byline-contact .qr-card.qr-empty::after { content: "二维码\A 待补充"; position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; text-align: center; white-space: pre-line; font-family: 'JetBrains Mono', monospace; font-size: 8px; color: var(--ink-mute); letter-spacing: 0.05em; line-height: 1.5; }
+  .byline-contact .qr-card img { width: 100%; height: 100%; display: block; object-fit: cover; }
+
+  /* === Roadmap Modal === */
+  .rm-modal { position: fixed; inset: 0; z-index: 1000; display: flex; align-items: center; justify-content: center; padding: 30px 16px; }
+  .rm-modal[hidden] { display: none; }
+  .rm-backdrop { position: absolute; inset: 0; background: rgba(22,22,29,0.55); backdrop-filter: blur(4px); animation: rm-fade 0.2s; }
+  @keyframes rm-fade { from { opacity: 0; } to { opacity: 1; } }
+  .rm-dialog { position: relative; background: var(--bg); border-radius: 12px; max-width: 760px; width: 100%; max-height: calc(100vh - 60px); overflow-y: auto; padding: 32px 36px 24px; box-shadow: 0 30px 80px rgba(0,0,0,0.3); animation: rm-pop 0.25s cubic-bezier(0.4,0,0.2,1); }
+  @keyframes rm-pop { from { transform: scale(0.96) translateY(8px); opacity: 0; } to { transform: scale(1) translateY(0); opacity: 1; } }
+  .rm-close { position: absolute; top: 14px; right: 16px; background: transparent; border: none; cursor: pointer; font-size: 20px; color: var(--ink-mute); width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: all 0.15s; line-height: 1; }
+  .rm-close:hover { background: var(--bg-2); color: var(--ink); }
+  .rm-header { margin-bottom: 22px; padding-bottom: 18px; border-bottom: 1px dashed var(--line); }
+  .rm-tag { font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.1em; color: var(--accent); text-transform: uppercase; margin-bottom: 8px; }
+  .rm-title { font-family: 'Noto Serif SC', serif; font-size: 28px; margin: 0 0 6px; font-weight: 900; letter-spacing: -0.02em; line-height: 1.1; }
+  .rm-title .rm-em { font-family: 'Noto Serif SC', serif; color: var(--accent); font-weight: 500; }
+  .rm-sub { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--ink-mute); margin: 0; }
+  .rm-body { display: grid; grid-template-columns: 1fr 1fr; gap: 22px 28px; }
+  @media (max-width: 720px) { .rm-body { grid-template-columns: 1fr; } }
+  .rm-mod-key { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ink); font-weight: 700; margin-bottom: 8px; letter-spacing: 0.04em; text-transform: uppercase; }
+  .rm-mod-list { display: flex; flex-direction: column; gap: 5px; }
+  .rm-cell { display: grid; grid-template-columns: 30px 1fr auto; gap: 10px; align-items: center; padding: 8px 12px; border-radius: 5px; background: var(--paper); border: 1px solid var(--line); text-decoration: none; color: inherit; transition: all 0.15s; }
+  .rm-cell:hover { border-color: var(--accent); background: var(--accent-soft); transform: translateX(3px); }
+  .rm-cell-code { font-family: 'JetBrains Mono', monospace; font-weight: 700; color: var(--accent); font-size: 12px; letter-spacing: 0.04em; }
+  .rm-cell-name { font-size: 12.5px; color: var(--ink); }
+  .rm-cell-tier { font-family: 'JetBrains Mono', monospace; font-size: 9px; letter-spacing: 0.08em; color: var(--ink-mute); text-transform: uppercase; border: 1px solid var(--line); padding: 2px 6px; border-radius: 3px; }
+  .rm-footer { margin-top: 22px; padding-top: 16px; border-top: 1px dashed var(--line); display: flex; justify-content: space-between; align-items: center; font-size: 12px; color: var(--ink-soft); flex-wrap: wrap; gap: 8px; }
+  .rm-wechat { font-family: 'JetBrains Mono', monospace; background: var(--accent-soft); color: var(--ink); padding: 3px 10px; border-radius: 3px; font-weight: 600; letter-spacing: 0.02em; }
+  .nav-links a[data-rm-open] { cursor: pointer; }
+
+  /* === Volume tabs (3-tab nav: 课程 / AI 应用 / 代码) === */
+  .vol-tabs { display: flex; gap: 6px; align-items: center; }
+  .vol-tab { display: inline-flex; align-items: baseline; gap: 8px; background: transparent; border: 1px solid var(--line); padding: 6px 14px; border-radius: 4px; font-family: 'JetBrains Mono', monospace; font-size: 10.5px; color: var(--ink-mute); cursor: pointer; transition: all 0.2s ease; position: relative; letter-spacing: 0.04em; }
+  .vol-tab:hover { border-color: var(--ink-soft); color: var(--ink); background: var(--bg-2); transform: translateY(-1px); }
+  .vol-tab[aria-selected="true"] { background: var(--ink); border-color: var(--ink); color: var(--bg); font-weight: 700; }
+  .vol-tab[aria-selected="true"]::after { content: ''; position: absolute; left: 50%; bottom: -6px; width: 6px; height: 6px; background: var(--accent); border-radius: 50%; transform: translateX(-50%); animation: heartbeat 2s ease-in-out infinite; }
+  .vol-tab-num { font-weight: 700; letter-spacing: 0.06em; }
+  .vol-tab-name { font-family: 'Noto Serif SC', serif; font-size: 13px; font-weight: 500; letter-spacing: 0; }
+  @media (max-width: 760px) { .vol-tab-name { display: none; } .vol-tab { padding: 6px 10px; } }
+
+  /* === Volume panel switching === */
+  .vol-panel { display: none; }
+  .vol-panel.is-active { display: block; animation: vol-fade-in 0.4s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; }
+  @keyframes vol-fade-in {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* === WIP placeholder (VOL.I & VOL.II) === */
+  .wip-wrap { min-height: 70vh; padding: 80px 0 120px; display: flex; align-items: center; }
+  .wip-card { position: relative; max-width: 720px; margin: 0 auto; padding: 56px 48px 52px; background: var(--paper); border: 1px solid var(--line); border-radius: 4px; box-shadow: 0 1px 0 var(--line), 0 22px 60px -32px rgba(22,22,29,0.18); }
+  .wip-card::before { content: ''; position: absolute; left: -1px; right: -1px; top: -1px; height: 4px; background: linear-gradient(90deg, var(--accent) 0%, var(--accent) 24%, var(--ink) 24%, var(--ink) 100%); border-radius: 4px 4px 0 0; }
+  .wip-stamp { position: absolute; top: 18px; right: 22px; transform: rotate(6deg); border: 1.5px dashed var(--accent); color: var(--accent); padding: 6px 12px; border-radius: 3px; font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 700; letter-spacing: 0.18em; }
+  .wip-stamp .dot-pulse { display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--accent); margin-right: 6px; vertical-align: middle; animation: heartbeat 2s ease-in-out infinite; }
+  .wip-meta { font-family: 'JetBrains Mono', monospace; font-size: 10.5px; letter-spacing: 0.16em; color: var(--ink-mute); margin-bottom: 24px; text-transform: uppercase; }
+  .wip-meta .sep { color: var(--line); margin: 0 8px; }
+  .wip-title { font-family: 'Noto Serif SC', serif; font-weight: 900; font-size: 56px; line-height: 1.05; margin: 0 0 28px; letter-spacing: -0.01em; }
+  .wip-title .wip-em { font-family: 'Noto Serif SC', serif; font-weight: 500; color: var(--accent); position: relative; }
+  .wip-title .wip-em::after { content: ''; position: absolute; left: 0; right: 6px; bottom: 4px; height: 6px; background: var(--accent-soft); z-index: -1; }
+  .wip-lede { font-size: 16px; line-height: 1.7; color: var(--ink-soft); margin: 0 0 36px; max-width: 540px; }
+  .wip-lede .em { color: var(--ink); font-weight: 500; font-family: 'Noto Serif SC', serif; }
+  .wip-progress { display: flex; align-items: center; gap: 14px; margin-bottom: 28px; padding: 16px 18px; background: var(--bg-2); border: 1px dashed var(--line); border-radius: 5px; }
+  .wip-progress-label { font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.1em; color: var(--ink-mute); text-transform: uppercase; white-space: nowrap; }
+  .wip-bar { flex: 1; height: 6px; background: var(--bg); border-radius: 100px; overflow: hidden; position: relative; border: 1px solid var(--line); }
+  .wip-bar-fill { height: 100%; background: linear-gradient(90deg, var(--accent) 0%, #ff7a4d 100%); border-radius: 100px; position: relative; transition: width 0.6s cubic-bezier(0.2, 0.8, 0.2, 1); }
+  .wip-bar-fill::after { content: ''; position: absolute; right: 0; top: -2px; bottom: -2px; width: 8px; background: var(--accent); border-radius: 50%; box-shadow: 0 0 0 3px rgba(232,93,47,0.18); }
+  .wip-progress-val { font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 700; color: var(--ink); letter-spacing: 0.02em; min-width: 36px; text-align: right; }
+  .wip-tags { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 32px; }
+  .wip-tag { display: inline-flex; align-items: center; gap: 6px; font-family: 'JetBrains Mono', monospace; font-size: 10.5px; letter-spacing: 0.05em; color: var(--ink-soft); background: var(--bg-2); border: 1px solid var(--line); padding: 4px 10px; border-radius: 3px; transition: all 0.15s; }
+  .wip-tag::before { content: '#'; color: var(--accent); font-weight: 700; }
+  .wip-tag:hover { background: var(--accent-soft); border-color: var(--accent); color: var(--ink); }
+  .wip-foot { display: flex; align-items: center; justify-content: space-between; padding-top: 22px; border-top: 1px dashed var(--line); font-size: 12px; color: var(--ink-mute); flex-wrap: wrap; gap: 12px; }
+  .wip-foot-hint { font-family: 'JetBrains Mono', monospace; font-size: 10.5px; letter-spacing: 0.08em; }
+  .wip-foot-jump { display: inline-flex; align-items: center; gap: 6px; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ink); background: var(--accent-soft); padding: 5px 12px; border-radius: 3px; cursor: pointer; border: 1px solid transparent; transition: all 0.15s; text-decoration: none; }
+  .wip-foot-jump:hover { border-color: var(--accent); transform: translateX(2px); }
+  .wip-foot-jump .arrow { transition: transform 0.15s; }
+  .wip-foot-jump:hover .arrow { transform: translateX(2px); }
+  @media (max-width: 640px) {
+    .wip-card { padding: 40px 28px 36px; }
+    .wip-title { font-size: 40px; }
+    .wip-stamp { top: 12px; right: 14px; }
+  }
+
+  /* === VOL.II content layout (hero + article cards + coming-soon) === */
+  .vol-2-wrap { padding: 60px 0 100px; }
+  .vol-2-hero { max-width: 720px; margin: 0 auto 56px; }
+  .vol-2-meta { font-family: 'JetBrains Mono', monospace; font-size: 10.5px; letter-spacing: 0.16em; color: var(--ink-mute); margin-bottom: 20px; }
+  .vol-2-meta .sep { color: var(--line); margin: 0 8px; }
+  .vol-2-title { font-family: 'Noto Serif SC', serif; font-weight: 900; font-size: 52px; line-height: 1.1; margin: 0 0 24px; letter-spacing: -0.01em; }
+  .vol-2-title .em { font-family: 'Noto Serif SC', serif; font-weight: 500; color: var(--accent); position: relative; }
+  .vol-2-title .em::after { content: ''; position: absolute; left: 0; right: 6px; bottom: 4px; height: 6px; background: var(--accent-soft); z-index: -1; }
+  .vol-2-lede { font-size: 16px; line-height: 1.7; color: var(--ink-soft); margin: 0 0 32px; max-width: 580px; }
+  .vol-2-lede .em { color: var(--ink); font-weight: 500; font-family: 'Noto Serif SC', serif; }
+  .vol-2-progress { display: inline-flex; align-items: center; gap: 14px; padding: 12px 16px; background: var(--bg-2); border: 1px dashed var(--line); border-radius: 5px; }
+  .vol-2-progress-label { font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.1em; color: var(--ink-mute); text-transform: uppercase; }
+  .vol-2-progress .wip-bar { width: 160px; }
+  .vol-2-progress-val { font-family: 'JetBrains Mono', monospace; font-size: 11.5px; font-weight: 700; color: var(--ink); letter-spacing: 0.02em; }
+
+  .vol-2-section-head { display: flex; align-items: baseline; gap: 14px; margin-bottom: 22px; padding-bottom: 14px; border-bottom: 1px dashed var(--line); }
+  .vol-2-section-num { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; color: var(--accent); letter-spacing: 0.08em; }
+  .vol-2-section-title { font-family: 'Noto Serif SC', serif; font-size: 20px; font-weight: 900; margin: 0; }
+  .vol-2-section-count { margin-left: auto; font-family: 'JetBrains Mono', monospace; font-size: 10.5px; letter-spacing: 0.06em; color: var(--ink-mute); }
+
+  .vol-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; margin: 0 0 56px; }
+  @media (max-width: 880px) { .vol-cards { grid-template-columns: 1fr; } }
+  .vol-card { position: relative; display: block; padding: 28px 24px 22px; background: var(--paper); border: 1px solid var(--line); border-radius: 5px; text-decoration: none; color: var(--ink); transition: all 0.2s ease; overflow: hidden; }
+  .vol-card::before { content: ''; position: absolute; left: 0; top: 0; right: 0; height: 3px; background: var(--accent); transform: scaleX(0); transform-origin: left center; transition: transform 0.25s ease; }
+  .vol-card:hover { border-color: var(--accent); transform: translateY(-3px); box-shadow: 0 10px 28px -16px rgba(22,22,29,0.22); }
+  .vol-card:hover::before { transform: scaleX(1); }
+  .vol-card-head { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 18px; }
+  .vol-card-num { font-family: 'Noto Serif SC', serif; font-weight: 900; font-size: 32px; color: var(--accent); line-height: 1; letter-spacing: -0.02em; }
+  .vol-card-tag { font-family: 'JetBrains Mono', monospace; font-size: 9.5px; letter-spacing: 0.12em; color: var(--ink-mute); border: 1px solid var(--line); padding: 3px 8px; border-radius: 3px; text-transform: uppercase; white-space: nowrap; }
+  .vol-card-title { font-family: 'Noto Serif SC', serif; font-weight: 900; font-size: 19px; line-height: 1.45; margin: 0 0 10px; letter-spacing: -0.01em; }
+  .vol-card-title .em { font-family: 'Noto Serif SC', serif; font-weight: 500; color: var(--accent); }
+  .vol-card-sub { font-size: 12.5px; line-height: 1.6; color: var(--ink-soft); margin: 0 0 22px; }
+  .vol-card-foot { display: flex; justify-content: space-between; align-items: center; padding-top: 14px; border-top: 1px dashed var(--line); }
+  .vol-card-meta { font-family: 'JetBrains Mono', monospace; font-size: 10.5px; letter-spacing: 0.04em; color: var(--ink-mute); }
+  .vol-card-arrow { font-family: 'JetBrains Mono', monospace; font-size: 14px; color: var(--ink-mute); transition: transform 0.2s ease, color 0.2s; }
+  .vol-card:hover .vol-card-arrow { color: var(--accent); transform: translateX(4px); }
+
+  .vol-2-coming { position: relative; padding: 32px 32px 28px; background: var(--bg-2); border: 1px dashed var(--line); border-radius: 5px; }
+  .vol-2-coming::before { content: 'COMING SOON'; position: absolute; top: -10px; left: 24px; font-family: 'JetBrains Mono', monospace; font-size: 9.5px; font-weight: 700; letter-spacing: 0.18em; color: var(--accent); background: var(--bg); padding: 2px 10px; border: 1px dashed var(--accent); border-radius: 3px; }
+  .vol-2-coming-title { font-family: 'Noto Serif SC', serif; font-weight: 900; font-size: 22px; margin: 0 0 10px; }
+  .vol-2-coming-lede { font-size: 13.5px; color: var(--ink-soft); line-height: 1.7; margin: 0 0 16px; }
+  .vol-2-coming-tags { display: flex; flex-wrap: wrap; gap: 8px; }
+
+  @media (max-width: 640px) {
+    .vol-2-title { font-size: 36px; }
+    .vol-2-wrap { padding: 40px 0 60px; }
+  }
+
+  /* === VOL.I curriculum book === */
+  .curr-book { position: relative; }
+  .curr-pages { position: relative; padding: 20px 0 20px 76px; }
+  .curr-spine { position: absolute; left: 18px; top: 0; bottom: 0; width: 26px; border-right: 1px dashed var(--line); display: flex; flex-direction: column; justify-content: space-around; padding: 80px 0; pointer-events: none; }
+  .curr-hole { width: 13px; height: 13px; border-radius: 50%; border: 1.5px solid var(--line); background: var(--paper); margin-left: 6px; }
+
+  .curr-chapter { position: relative; margin-bottom: 36px; padding: 36px 36px 30px; background: var(--paper); border: 1px solid var(--line); border-radius: 8px; transition: border-color 0.25s ease, box-shadow 0.25s ease, transform 0.25s ease; }
+  .curr-chapter:hover { border-color: var(--accent); box-shadow: 0 14px 36px -18px rgba(22,22,29,0.22); transform: translateY(-2px); }
+
+  .curr-chapter-head { display: grid; grid-template-columns: 90px 1fr auto; gap: 24px; align-items: start; margin-bottom: 24px; padding-bottom: 22px; border-bottom: 1px dashed var(--line); }
+  .curr-num { font-family: 'Fraunces', 'Noto Serif SC', serif; font-style: italic; font-weight: 600; font-size: 64px; line-height: 1; color: var(--accent); letter-spacing: -0.02em; text-align: left; }
+  .curr-titles { min-width: 0; padding-top: 8px; }
+  .curr-title { font-family: 'Noto Serif SC', serif; font-weight: 900; font-size: 28px; margin: 0 0 8px; letter-spacing: -0.01em; line-height: 1.2; }
+  .curr-subtitle { font-size: 13.5px; color: var(--ink-soft); margin: 0; line-height: 1.55; }
+  .curr-stats { display: flex; flex-direction: column; gap: 5px; text-align: right; padding-top: 12px; }
+  .curr-stats .stat-row { font-family: 'JetBrains Mono', monospace; font-size: 10.5px; color: var(--ink-mute); letter-spacing: 0.04em; }
+  .curr-stats .stat-row .k { font-size: 9.5px; letter-spacing: 0.14em; margin-right: 8px; text-transform: uppercase; }
+  .curr-stats .stat-row b { color: var(--ink); font-weight: 700; font-size: 13px; font-family: 'Noto Serif SC', serif; }
+
+  /* 价值标签 (hover 显示) */
+  .curr-value { position: relative; max-height: 0; opacity: 0; overflow: hidden; padding: 0 18px; background: var(--accent-soft); border: 1px dashed var(--accent); border-radius: 5px; transition: max-height 0.32s ease, opacity 0.25s ease, padding 0.32s ease, margin 0.32s ease; }
+  .curr-chapter:hover .curr-value { max-height: 200px; opacity: 1; padding: 14px 18px; margin: 0 0 22px; }
+  .curr-value-label { display: inline-block; font-family: 'JetBrains Mono', monospace; font-size: 9px; font-weight: 700; letter-spacing: 0.18em; color: var(--accent); text-transform: uppercase; margin-right: 10px; padding: 2px 8px; border: 1px solid var(--accent); border-radius: 3px; }
+  .curr-value p { display: inline; margin: 0; font-size: 13px; line-height: 1.7; color: var(--ink); }
+  .curr-value p strong { color: var(--ink); font-weight: 700; }
+
+  .curr-modules { display: grid; gap: 22px; }
+  .curr-module { padding-top: 18px; border-top: 1px dashed var(--line); }
+  .curr-module:first-child { border-top: none; padding-top: 0; }
+  .curr-mod-head { display: flex; align-items: baseline; gap: 14px; margin-bottom: 14px; }
+  .curr-mod-num { font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 700; letter-spacing: 0.14em; color: var(--accent); padding: 3px 8px; border: 1px solid var(--accent); border-radius: 3px; }
+  .curr-mod-title { font-family: 'Noto Serif SC', serif; font-weight: 700; font-size: 17px; margin: 0; flex: 1; letter-spacing: -0.005em; }
+  .curr-mod-count { font-family: 'JetBrains Mono', monospace; font-size: 10.5px; color: var(--ink-mute); letter-spacing: 0.04em; white-space: nowrap; }
+
+  .curr-lessons { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 4px 28px; }
+  .curr-lessons li { font-size: 13px; color: var(--ink-soft); padding: 5px 0; display: flex; align-items: baseline; gap: 12px; transition: color 0.2s; border-bottom: 1px dotted transparent; }
+  .curr-lessons li .ln { font-family: 'JetBrains Mono', monospace; font-size: 10.5px; color: var(--ink-mute); letter-spacing: 0.04em; font-weight: 500; min-width: 18px; }
+  .curr-chapter:hover .curr-lessons li { color: var(--ink); }
+  .curr-chapter:hover .curr-lessons li .ln { color: var(--accent); }
+
+  /* TBD chapter */
+  .curr-chapter-tbd { background: var(--bg-2); border-style: dashed; opacity: 0.7; }
+  .curr-chapter-tbd:hover { transform: none; box-shadow: none; border-color: var(--line); }
+  .curr-chapter-tbd .curr-num { color: var(--ink-mute); }
+  .curr-chapter-tbd .curr-title { color: var(--ink-soft); }
+  .curr-chapter-tbd .curr-chapter-head { border-bottom: none; padding-bottom: 0; margin-bottom: 0; }
+
+  .curr-page-foot { margin-top: 20px; padding: 16px 0 0 76px; display: flex; justify-content: space-between; align-items: center; font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.16em; color: var(--ink-mute); text-transform: uppercase; border-top: 1px dashed var(--line); }
+  .curr-page-foot-cap { text-transform: none; letter-spacing: 0.06em; }
+
+  @media (max-width: 720px) {
+    .curr-pages { padding-left: 36px; }
+    .curr-spine { left: 6px; }
+    .curr-chapter { padding: 24px 22px; }
+    .curr-chapter-head { grid-template-columns: 56px 1fr; gap: 14px; }
+    .curr-num { font-size: 44px; }
+    .curr-title { font-size: 22px; }
+    .curr-stats { grid-column: 1 / -1; flex-direction: row; gap: 14px; text-align: left; padding-top: 0; }
+    .curr-page-foot { padding-left: 36px; }
+  }
+
+  /* ===================== 真书 · book ===================== */
+  .book-shell {
+    position: relative;
+    --book-w: min(960px, 96vw);
+    --page-w: calc(var(--book-w) / 2);
+    /* 高度跟视口绑定: 视口高 - topbar(66) - section padding(36) - progress(40) - controls(54) - 缓冲 */
+    --book-h: min(640px, calc(100vh - 240px));
+    --flip-dur: 0.85s;
+  }
+  @media (max-width: 760px) { .book-shell { --book-h: 720px; } }
+
+  /* === VOL.I · 全屏书 layout (没 hero, 没 section-head, 进来即书) === */
+  .vol-panel--book .hero { display: none; }
+  /* 把外层 vol-panel 的 80px 上下 padding 也吃掉, 让书直接贴在 topbar 下 */
+  .vol-panel--book.is-active { padding: 0; }
+  .curriculum--book-only {
+    padding: 20px 0 16px;
+    min-height: calc(100vh - 66px);
+    border-top: none;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .curriculum--book-only .section-head { display: none; }
+  .wrap--book { padding: 0 24px; width: 100%; }
+  /* 在 VOL.I 时隐藏全局底部 footer (其它 VOL 不受影响) */
+  body.is-vol-1 footer { display: none; }
+  /* 书在大屏时把内容居中 + 给侧边的 thumb-index 留点空间 */
+  .vol-panel--book .book-shell { margin: 0 auto; max-width: min(1040px, 96vw); }
+  @media (max-width: 760px) {
+    .curriculum--book-only { padding: 16px 0; min-height: 0; }
+  }
+
+  /* 顶部 progress bar — 在封面 spread 时隐藏 (类似"合上"的状态) */
+  .book-progress { display: flex; align-items: center; gap: 14px; margin: 0 auto 30px; max-width: var(--book-w); padding: 10px 14px; background: var(--bg-2); border: 1px dashed var(--line); border-radius: 5px; transition: all 0.3s; }
+  .book-progress[hidden] { display: none; }
+  .book-progress-label { font-family: 'JetBrains Mono', monospace; font-size: 9.5px; letter-spacing: 0.18em; color: var(--ink-mute); font-weight: 700; }
+  .book-progress-bar { flex: 1; height: 4px; background: var(--bg); border-radius: 100px; overflow: hidden; border: 1px solid var(--line); }
+  .book-progress-fill { height: 100%; width: 0%; background: linear-gradient(90deg, var(--accent), #ff7a4d); transition: width 0.45s cubic-bezier(0.2,0.8,0.2,1); }
+  .book-progress-text { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; color: var(--ink); letter-spacing: 0.04em; min-width: 50px; text-align: right; }
+
+  /* stage：书的舞台 */
+  .book-stage { position: relative; display: flex; justify-content: center; perspective: 2600px; perspective-origin: 50% 35%; min-height: var(--book-h); }
+
+  /* 主书体 */
+  .book-vol { position: relative; width: var(--book-w); height: var(--book-h); transform-style: preserve-3d; }
+
+  /* === 封面 spread (idx 0)：暗色调 + 2 页内容 (跟内页用同一套翻页系统) === */
+  .book-spread[data-kind="cover"] {
+    background: linear-gradient(135deg, #1a1a22 0%, #2a2a32 55%, #181820 100%) !important;
+    color: #f3eee5;
+    box-shadow:
+      0 0 0 1px #000,
+      0 30px 60px -25px rgba(22,22,29,0.55) !important;
+    cursor: pointer;
+  }
+  .book-spread[data-kind="cover"]::before {
+    background: linear-gradient(90deg, transparent, rgba(0,0,0,0.45) 30%, rgba(0,0,0,0.6) 50%, rgba(0,0,0,0.45) 70%, transparent) !important;
+  }
+  .book-spread[data-kind="cover"] .book-page { background: transparent !important; padding: 50px 48px 44px; position: relative; }
+  .book-spread[data-kind="cover"] .book-page-left { border-right: none !important; padding-right: 56px; }
+  .book-spread[data-kind="cover"] .book-page-right { padding-left: 56px; }
+  /* 内框装饰 */
+  .book-spread[data-kind="cover"] .book-page::after {
+    content: ''; position: absolute; left: 22px; top: 22px; right: 22px; bottom: 22px;
+    border: 1px solid rgba(243,238,229,0.14); border-radius: 3px; pointer-events: none;
+  }
+
+  /* === 封面页面内容样式 === */
+  .page--cover-left { display: flex; flex-direction: column; height: 100%; }
+  .page--cover-right { display: flex; flex-direction: column; height: 100%; gap: 18px; }
+
+  .cover-band { font-family: 'JetBrains Mono', monospace; font-size: 10.5px; letter-spacing: 0.22em; color: rgba(243,238,229,0.55); text-transform: uppercase; align-self: flex-start; padding: 5px 12px; border: 1px solid rgba(243,238,229,0.25); border-radius: 3px; }
+  .cover-title { display: flex; flex-direction: column; align-items: flex-start; line-height: 1; margin: 32px 0 auto; }
+  .cover-en { font-family: 'Fraunces', serif; font-style: italic; font-weight: 600; font-size: 64px; color: #f3eee5; letter-spacing: -0.03em; line-height: 0.95; }
+  .cover-en:nth-child(2) { color: var(--accent); margin-left: 22px; }
+  .cover-cn { font-family: 'Noto Serif SC', serif; font-weight: 900; font-size: 30px; color: #f3eee5; margin-top: 12px; letter-spacing: 0.04em; }
+  .cover-author { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: rgba(243,238,229,0.7); display: flex; align-items: center; gap: 8px; }
+  .cover-author .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); display: inline-block; }
+
+  .cover-meta { display: flex; flex-wrap: wrap; gap: 6px; }
+  .cover-meta .meta-pill { font-family: 'JetBrains Mono', monospace; font-size: 9.5px; letter-spacing: 0.14em; color: rgba(243,238,229,0.7); padding: 4px 9px; border: 1px solid rgba(243,238,229,0.22); border-radius: 100px; text-transform: uppercase; }
+  .cover-lede { font-family: 'Noto Serif SC', serif; font-weight: 700; font-size: 22px; line-height: 1.45; color: rgba(243,238,229,0.95); margin: 0; letter-spacing: -0.005em; }
+  .cover-lede .em { font-family: 'Noto Serif SC', serif; color: var(--accent); font-weight: 500; }
+  .cover-side { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 0; border-top: 1px dashed rgba(243,238,229,0.22); }
+  .cover-side li { display: grid; grid-template-columns: 64px 1fr; align-items: baseline; gap: 12px; padding: 10px 0; border-bottom: 1px dashed rgba(243,238,229,0.22); font-size: 12.5px; }
+  .cover-side li .k { font-family: 'JetBrains Mono', monospace; font-size: 9.5px; letter-spacing: 0.14em; color: rgba(243,238,229,0.45); text-transform: uppercase; }
+  .cover-side li .v { color: rgba(243,238,229,0.92); font-weight: 500; }
+
+  /* 点击翻开 提示 — 大 + 橙色 + 呼吸动画 */
+  .cover-hint {
+    margin-top: auto;
+    align-self: flex-end;
+    font-family: 'JetBrains Mono', monospace; font-size: 13px;
+    letter-spacing: 0.14em; text-transform: uppercase;
+    color: var(--accent); font-weight: 700;
+    display: inline-flex; align-items: center; gap: 10px;
+    padding: 8px 14px;
+    border: 1.5px solid var(--accent);
+    border-radius: 100px;
+    background: rgba(255,77,46,0.08);
+    animation: cover-hint-pulse 2.2s ease-in-out infinite;
+  }
+  .cover-corner { font-size: 16px; display: inline-block; animation: cover-hint-arrow 1.6s ease-in-out infinite; }
+  @keyframes cover-hint-pulse {
+    0%, 100% { transform: translateY(0); box-shadow: 0 0 0 0 rgba(255,77,46,0.32); }
+    50% { transform: translateY(-3px); box-shadow: 0 0 0 8px rgba(255,77,46,0); }
+  }
+  @keyframes cover-hint-arrow {
+    0%, 100% { transform: translate(0, 0); }
+    50% { transform: translate(3px, 3px); }
+  }
+
+  /* === LEGACY (kept just so leftover .book-cover-* CSS below doesn't break) === */
+  .book-cover-3d {
+    display: none;
+  }
+  /* spreads 容器 — cover 也是其中一个 spread, 永远 visible */
+  .book-spreads {
+    position: absolute; inset: 0;
+    transform-style: preserve-3d;
+  }
+
+  .book-spread {
+    position: absolute; inset: 0;
+    display: grid; grid-template-columns: 1fr 1fr;
+    background: var(--paper);
+    border-radius: 4px;
+    box-shadow:
+      0 0 0 1px var(--line),
+      0 30px 60px -25px rgba(22,22,29,0.35),
+      0 2px 0 -1px #d5cdba inset;
+    overflow: hidden;
+    opacity: 0; pointer-events: none;
+    transform: translateZ(-30px);
+    transition: opacity 0.35s, transform 0.5s;
+  }
+  .book-spread.is-current { opacity: 1; pointer-events: auto; transform: translateZ(0); position: absolute; z-index: 2; transition: none; }
+
+  /* === Real page flip (一张飞页 + 双面 backface) === */
+  .book-flip-page {
+    position: absolute;
+    top: 0;
+    width: 50%;
+    height: 100%;
+    z-index: 100;
+    pointer-events: none;
+    transform-style: preserve-3d;
+    will-change: transform;
+  }
+  .book-flip-page--next { left: 50%; transform-origin: left center; transform: translateZ(0) rotateY(0.001deg); }
+  .book-flip-page--prev { left: 0; transform-origin: right center; transform: translateZ(0) rotateY(0.001deg); }
+  .book-flip-page--next.is-flipping { animation: book-flip-next 0.75s cubic-bezier(0.45, 0, 0.2, 1) forwards; }
+  .book-flip-page--prev.is-flipping { animation: book-flip-prev 0.75s cubic-bezier(0.45, 0, 0.2, 1) forwards; }
+  @keyframes book-flip-next { 0% { transform: translateZ(0) rotateY(0deg); } 100% { transform: translateZ(0) rotateY(-180deg); } }
+  @keyframes book-flip-prev { 0% { transform: translateZ(0) rotateY(0deg); } 100% { transform: translateZ(0) rotateY(180deg); } }
+
+  .book-flip-face {
+    position: absolute; inset: 0;
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+    background: var(--paper);
+    overflow: hidden;
+    box-shadow: 0 0 0 1px var(--line);
+  }
+  .book-flip-back { transform: rotateY(180deg); }
+  .book-flip-face .book-page {
+    padding: 38px 40px 46px;
+    height: 100%;
+    position: relative;
+    box-sizing: border-box;
+  }
+  .book-flip-face .book-page-left { border-right: 1px dashed var(--line); }
+
+  /* 翻页时一道阴影 */
+  .book-flip-page.is-flipping::after {
+    content: ''; position: absolute; inset: 0;
+    background: linear-gradient(to right, rgba(0,0,0,0) 0%, rgba(0,0,0,0.15) 50%, rgba(0,0,0,0) 100%);
+    opacity: 0; pointer-events: none;
+    animation: flip-shadow-pass 0.75s cubic-bezier(0.45, 0, 0.2, 1) forwards;
+  }
+  @keyframes flip-shadow-pass {
+    0%, 100% { opacity: 0; }
+    50% { opacity: 0.6; }
+  }
+
+  /* 中缝（gutter） */
+  .book-spread::before {
+    content: ''; position: absolute; left: 50%; top: 0; bottom: 0; width: 12px; transform: translateX(-50%);
+    background: linear-gradient(90deg, transparent, rgba(22,22,29,0.12) 30%, rgba(22,22,29,0.18) 50%, rgba(22,22,29,0.12) 70%, transparent);
+    pointer-events: none; z-index: 10;
+  }
+
+  /* 单页样式 */
+  .book-page { position: relative; padding: 38px 40px 46px; overflow: hidden; }
+  .book-page.book-page-left { border-right: 1px dashed var(--line); }
+  .book-page.book-page-right { background: linear-gradient(180deg, transparent, rgba(0,0,0,0.012)); }
+
+  /* 页眉/页脚 */
+  .book-page-head { font-family: 'JetBrains Mono', monospace; font-size: 9.5px; letter-spacing: 0.16em; color: var(--ink-mute); text-transform: uppercase; margin-bottom: 24px; display: flex; justify-content: space-between; }
+  .book-page-foot { position: absolute; left: 40px; right: 40px; bottom: 14px; font-family: 'JetBrains Mono', monospace; font-size: 9px; letter-spacing: 0.14em; color: var(--ink-mute); display: flex; justify-content: space-between; align-items: center; pointer-events: none; }
+  .book-page-foot-num { color: var(--accent); font-weight: 700; }
+
+  /* 章节封面页（左页） */
+  .page--chapter-cover { display: flex; flex-direction: column; }
+  .page--chapter-cover .ch-num { font-family: 'Fraunces', serif; font-style: italic; font-weight: 600; font-size: 152px; line-height: 0.9; color: var(--accent); letter-spacing: -0.03em; margin-bottom: 6px; }
+  .page--chapter-cover .ch-band { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.18em; color: var(--ink-mute); text-transform: uppercase; margin-bottom: 8px; }
+  .page--chapter-cover .ch-title { font-family: 'Noto Serif SC', serif; font-weight: 900; font-size: 36px; line-height: 1.15; margin: 8px 0 14px; letter-spacing: -0.01em; }
+  .page--chapter-cover .ch-sub { font-size: 13.5px; line-height: 1.7; color: var(--ink-soft); margin: 0 0 24px; }
+  .page--chapter-cover .ch-stats { display: flex; gap: 24px; padding: 14px 18px; background: var(--bg-2); border: 1px dashed var(--line); border-radius: 5px; margin-top: auto; }
+  .page--chapter-cover .ch-stats .s { display: flex; flex-direction: column; gap: 2px; }
+  .page--chapter-cover .ch-stats .s .k { font-family: 'JetBrains Mono', monospace; font-size: 9.5px; letter-spacing: 0.14em; color: var(--ink-mute); text-transform: uppercase; }
+  .page--chapter-cover .ch-stats .s b { font-family: 'Noto Serif SC', serif; font-weight: 700; font-size: 18px; color: var(--ink); }
+
+  /* 章节目录页（右页） */
+  .page--chapter-toc .ch-toc-h { font-family: 'JetBrains Mono', monospace; font-size: 10.5px; letter-spacing: 0.16em; color: var(--ink-mute); text-transform: uppercase; margin-bottom: 18px; }
+  .page--chapter-toc .ch-toc-title { font-family: 'Noto Serif SC', serif; font-weight: 900; font-size: 22px; margin: 0 0 24px; }
+  .page--chapter-toc .ch-toc-title .em { color: var(--accent); font-weight: 500; }
+  .page--chapter-toc .ch-toc-mod { margin-bottom: 22px; }
+  .page--chapter-toc .ch-toc-mod-head { display: flex; align-items: baseline; gap: 10px; margin-bottom: 10px; padding-bottom: 6px; border-bottom: 1px dashed var(--line); }
+  .page--chapter-toc .ch-toc-mod-num { font-family: 'JetBrains Mono', monospace; font-size: 9.5px; font-weight: 700; letter-spacing: 0.14em; color: var(--accent); }
+  .page--chapter-toc .ch-toc-mod-title { font-family: 'Noto Serif SC', serif; font-weight: 700; font-size: 14.5px; margin: 0; flex: 1; }
+  .page--chapter-toc .ch-toc-mod-count { font-family: 'JetBrains Mono', monospace; font-size: 9.5px; color: var(--ink-mute); }
+  .page--chapter-toc .ch-toc-lessons { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 4px 12px; }
+  .page--chapter-toc .ch-toc-lessons li { font-size: 11.5px; color: var(--ink-soft); display: flex; gap: 8px; padding: 2px 0; cursor: pointer; transition: color 0.15s, background 0.15s; border-radius: 3px; padding-left: 4px; }
+  .page--chapter-toc .ch-toc-lessons li:hover { background: var(--accent-soft); color: var(--ink); }
+  .page--chapter-toc .ch-toc-lessons li.is-done { color: var(--ink); }
+  .page--chapter-toc .ch-toc-lessons li.is-done::before { content: '✓'; color: var(--accent); font-weight: 700; }
+  .page--chapter-toc .ch-toc-lessons .ln { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--ink-mute); min-width: 14px; }
+
+  /* 章节介绍页 */
+  .page--chapter-intro h4 { font-family: 'JetBrains Mono', monospace; font-size: 10.5px; letter-spacing: 0.16em; color: var(--accent); text-transform: uppercase; margin: 0 0 10px; }
+  .page--chapter-intro h3 { font-family: 'Noto Serif SC', serif; font-weight: 900; font-size: 24px; margin: 0 0 18px; letter-spacing: -0.01em; }
+  .page--chapter-intro p { font-size: 13.5px; line-height: 1.75; color: var(--ink); margin: 0 0 14px; }
+  .page--chapter-intro p strong { color: var(--ink); font-weight: 600; }
+  .page--chapter-intro p .em { font-family: 'Noto Serif SC', serif; color: var(--accent); font-weight: 500; }
+  .page--chapter-intro .value-box { padding: 16px 18px; background: var(--accent-soft); border: 1px dashed var(--accent); border-radius: 5px; margin-top: 18px; }
+  .page--chapter-intro .value-box-label { font-family: 'JetBrains Mono', monospace; font-size: 9px; font-weight: 700; letter-spacing: 0.18em; color: var(--accent); text-transform: uppercase; margin-right: 8px; padding: 2px 8px; border: 1px solid var(--accent); border-radius: 3px; display: inline-block; margin-bottom: 8px; }
+  .page--chapter-intro .value-box-text { font-size: 13px; line-height: 1.7; margin: 0; }
+
+  /* 模块开场页 */
+  .page--module-cover .m-num { font-family: 'Fraunces', serif; font-style: italic; font-weight: 600; font-size: 96px; line-height: 0.9; color: var(--accent); margin-bottom: 6px; }
+  .page--module-cover .m-band { font-family: 'JetBrains Mono', monospace; font-size: 10.5px; letter-spacing: 0.18em; color: var(--ink-mute); text-transform: uppercase; margin-bottom: 8px; }
+  .page--module-cover .m-title { font-family: 'Noto Serif SC', serif; font-weight: 900; font-size: 28px; line-height: 1.2; margin: 0 0 16px; }
+  .page--module-cover .m-sub { font-size: 13px; line-height: 1.7; color: var(--ink-soft); margin: 0; }
+  .page--module-cover .m-count { font-family: 'JetBrains Mono', monospace; font-size: 10.5px; color: var(--ink-mute); margin-top: auto; padding-top: 18px; border-top: 1px dashed var(--line); display: flex; justify-content: space-between; }
+
+  .page--module-lessons .m-lessons-h { font-family: 'JetBrains Mono', monospace; font-size: 10.5px; letter-spacing: 0.16em; color: var(--ink-mute); text-transform: uppercase; margin-bottom: 18px; }
+  .page--module-lessons .m-lessons-list { list-style: none; padding: 0; margin: 0; counter-reset: lsn; }
+  .page--module-lessons .m-lessons-list li { display: flex; align-items: baseline; gap: 14px; padding: 9px 0; border-bottom: 1px dashed var(--line); cursor: pointer; transition: background 0.15s, padding-left 0.15s; }
+  .page--module-lessons .m-lessons-list li:hover { background: var(--accent-soft); padding-left: 8px; }
+  .page--module-lessons .m-lessons-list li .ln { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--accent); font-weight: 700; min-width: 22px; }
+  .page--module-lessons .m-lessons-list li .ti { font-size: 13.5px; color: var(--ink); flex: 1; }
+  .page--module-lessons .m-lessons-list li .arr { color: var(--ink-mute); transition: color 0.15s, transform 0.15s; }
+  .page--module-lessons .m-lessons-list li:hover .arr { color: var(--accent); transform: translateX(3px); }
+
+  /* 小节封面页（左页） */
+  .page--lesson-cover { display: flex; flex-direction: column; }
+  .page--lesson-cover .l-band { font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.18em; color: var(--accent); text-transform: uppercase; margin-bottom: 14px; }
+  .page--lesson-cover .l-num { font-family: 'Fraunces', serif; font-style: italic; font-weight: 600; font-size: 86px; line-height: 0.9; color: var(--ink); letter-spacing: -0.03em; margin-bottom: 8px; }
+  .page--lesson-cover .l-title { font-family: 'Noto Serif SC', serif; font-weight: 900; font-size: 30px; line-height: 1.2; margin: 0 0 14px; }
+  .page--lesson-cover .l-tagline { font-size: 13.5px; line-height: 1.65; color: var(--ink-soft); margin: 0 0 18px; }
+  .page--lesson-cover .l-meta { margin-top: auto; padding-top: 18px; border-top: 1px dashed var(--line); display: flex; justify-content: space-between; font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--ink-mute); letter-spacing: 0.06em; }
+
+  /* 小节内容页（右页） */
+  .page--lesson-body p { font-size: 12.5px; line-height: 1.75; color: var(--ink); margin: 0 0 10px; }
+  .page--lesson-body p strong { color: var(--ink); font-weight: 600; }
+  .page--lesson-body p .em { color: var(--accent); font-weight: 500; }
+  .page--lesson-body .l-keys { list-style: none; padding: 0; margin: 14px 0; }
+  .page--lesson-body .l-keys li { font-size: 12.5px; line-height: 1.6; color: var(--ink); display: flex; gap: 10px; padding: 6px 0; border-bottom: 1px dotted var(--line); }
+  .page--lesson-body .l-keys li::before { content: '▸'; color: var(--accent); font-weight: 700; }
+  .page--lesson-body .l-keys li:last-child { border-bottom: none; }
+  .page--lesson-body .practice-card { margin-top: 14px; padding: 14px 16px; background: var(--bg-2); border: 1px dashed var(--accent); border-radius: 5px; position: relative; }
+  .page--lesson-body .practice-card::before { content: 'PRACTICE'; position: absolute; top: -8px; left: 14px; font-family: 'JetBrains Mono', monospace; font-size: 9px; font-weight: 700; letter-spacing: 0.18em; color: var(--accent); background: var(--paper); padding: 1px 7px; border: 1px dashed var(--accent); border-radius: 3px; }
+  .page--lesson-body .practice-card h5 { font-family: 'Noto Serif SC', serif; font-weight: 700; font-size: 13.5px; margin: 4px 0 6px; }
+  .page--lesson-body .practice-card p { font-size: 11.5px; line-height: 1.6; color: var(--ink-soft); margin: 0; }
+  .page--lesson-body .practice-card .pc-status { font-family: 'JetBrains Mono', monospace; font-size: 9px; letter-spacing: 0.14em; color: var(--ink-mute); margin-top: 8px; display: inline-block; padding: 2px 8px; border: 1px solid var(--line); border-radius: 3px; }
+
+  /* "完结" 章节封面页（结业） */
+  .page--chapter-done { display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 56px 40px; }
+  .page--chapter-done .done-band { font-family: 'JetBrains Mono', monospace; font-size: 10.5px; letter-spacing: 0.22em; color: var(--accent); text-transform: uppercase; }
+  .page--chapter-done .done-title { font-family: 'Noto Serif SC', serif; font-weight: 900; font-size: 36px; margin: 14px 0; }
+  .page--chapter-done .done-sub { font-size: 13.5px; color: var(--ink-soft); max-width: 240px; line-height: 1.7; margin: 0 0 24px; }
+  .page--chapter-done .done-cert { width: 96px; height: 96px; border: 2px dashed var(--accent); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: var(--accent); font-family: 'Fraunces', serif; font-style: italic; font-weight: 600; font-size: 44px; }
+
+  /* TBD chapter (章节占位) */
+  .page--tbd { display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; opacity: 0.62; }
+  .page--tbd .tbd-stamp { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.22em; color: var(--ink-mute); border: 1.5px dashed var(--ink-mute); padding: 6px 14px; border-radius: 3px; transform: rotate(-3deg); margin-bottom: 28px; }
+  .page--tbd h3 { font-family: 'Noto Serif SC', serif; font-weight: 900; font-size: 28px; margin: 0 0 12px; color: var(--ink-soft); }
+  .page--tbd p { font-size: 12.5px; color: var(--ink-mute); margin: 0; max-width: 240px; line-height: 1.7; }
+
+  /* 右侧 thumb index 章节标签（贴 book-vol 右边）— 在封面 spread 时隐藏 */
+  .book-thumb-index { position: absolute; left: 100%; top: 28px; bottom: 28px; display: flex; flex-direction: column; gap: 6px; align-items: stretch; transition: opacity 0.3s; }
+  .book-thumb-index[hidden] { display: none; }
+  .book-thumb-tab { background: var(--paper); border: 1px solid var(--line); border-left: none; border-radius: 0 5px 5px 0; padding: 10px 8px 10px 6px; font-family: 'Fraunces', serif; font-style: italic; font-weight: 600; font-size: 16px; color: var(--ink-soft); cursor: pointer; transition: all 0.2s; min-width: 30px; text-align: center; }
+  .book-thumb-tab:hover { background: var(--accent-soft); color: var(--accent); border-color: var(--accent); transform: translateX(3px); }
+  .book-thumb-tab.is-active { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+  .book-thumb-tab.is-tbd { opacity: 0.5; }
+  @media (max-width: 900px) { .book-thumb-index { display: none; } }
+
+  /* 翻页控件 */
+  .book-controls { display: flex; align-items: center; justify-content: center; gap: 8px; margin: 24px auto 0; font-family: 'JetBrains Mono', monospace; }
+  .book-controls[hidden] { display: none; }
+  .book-btn { background: var(--paper); border: 1px solid var(--line); color: var(--ink); padding: 7px 14px; border-radius: 5px; cursor: pointer; font-family: 'JetBrains Mono', monospace; font-size: 12.5px; font-weight: 500; transition: all 0.15s; }
+  .book-btn:hover { border-color: var(--accent); background: var(--accent-soft); transform: translateY(-1px); }
+  .book-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+  .book-page-info { font-size: 11.5px; color: var(--ink-mute); letter-spacing: 0.08em; min-width: 70px; text-align: center; }
+  .book-controls-sep { color: var(--line); margin: 0 4px; }
+  .book-close-btn { background: var(--bg-2); }
+  .book-cover-btn { background: var(--bg-2); }
+
+  /* 鸟瞰目录 modal */
+  .book-overview { position: fixed; inset: 0; z-index: 999; display: flex; align-items: center; justify-content: center; padding: 24px; }
+  .book-overview[hidden] { display: none; }
+  .book-overview-backdrop { position: absolute; inset: 0; background: rgba(22,22,29,0.6); backdrop-filter: blur(4px); animation: fade-in 0.2s; }
+  @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+  .book-overview-panel { position: relative; background: var(--bg); border-radius: 10px; max-width: 1100px; width: 100%; max-height: calc(100vh - 48px); overflow-y: auto; padding: 28px 32px; box-shadow: 0 30px 80px rgba(0,0,0,0.3); animation: pop-in 0.25s cubic-bezier(0.3,1.4,0.5,1); }
+  @keyframes pop-in { from { transform: scale(0.95); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+  .book-overview-close { position: absolute; top: 16px; right: 18px; background: transparent; border: none; cursor: pointer; font-size: 20px; color: var(--ink-mute); width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: all 0.15s; }
+  .book-overview-close:hover { background: var(--bg-2); color: var(--ink); }
+  .book-overview-header { margin-bottom: 22px; padding-bottom: 16px; border-bottom: 1px dashed var(--line); }
+  .book-overview-tag { font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.18em; color: var(--accent); text-transform: uppercase; margin-bottom: 6px; }
+  .book-overview-title { font-family: 'Noto Serif SC', serif; font-weight: 900; font-size: 24px; margin: 0; }
+  .book-overview-title .rm-em { color: var(--accent); font-weight: 500; }
+  .book-overview-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; }
+  .book-thumb {
+    aspect-ratio: 3 / 2; background: var(--paper); border: 1px solid var(--line); border-radius: 4px; padding: 10px 12px;
+    display: flex; flex-direction: column; justify-content: space-between;
+    cursor: pointer; transition: all 0.18s ease; overflow: hidden; position: relative;
+  }
+  .book-thumb:hover { border-color: var(--accent); transform: translateY(-2px); box-shadow: 0 8px 18px -10px rgba(22,22,29,0.25); }
+  .book-thumb.is-current { background: var(--accent-soft); border-color: var(--accent); }
+  .book-thumb.is-done::after { content: '✓'; position: absolute; top: 6px; right: 8px; color: var(--accent); font-weight: 700; }
+  .book-thumb-kind { font-family: 'JetBrains Mono', monospace; font-size: 8.5px; letter-spacing: 0.14em; color: var(--ink-mute); text-transform: uppercase; }
+  .book-thumb-title { font-family: 'Noto Serif SC', serif; font-weight: 700; font-size: 13px; color: var(--ink); line-height: 1.3; }
+  .book-thumb-pageno { font-family: 'JetBrains Mono', monospace; font-size: 9.5px; color: var(--accent); font-weight: 700; }
+
+  /* 移动端 fallback：竖屏改为单页滚动；横屏保留 spread */
+  @media (max-width: 760px) and (orientation: portrait) {
+    .book-shell { --book-h: auto; }
+    .book-stage { perspective: none; min-height: 0; }
+    .book-vol { width: 100%; height: auto; }
+    .book-spreads { position: relative; }
+    .book-spread { position: relative; opacity: 1 !important; transform: none !important; grid-template-columns: 1fr; pointer-events: auto; margin-bottom: 14px; animation: none !important; }
+    .book-spread::before { display: none; }
+    .book-page.book-page-left { border-right: none; border-bottom: 1px dashed var(--line); }
+    .book-controls { display: none; }
+  }
+
+  /* VOL.II static SVG roadmap host */
+  .vol-2-svg-host { width: 100%; padding: 40px 24px 60px; display: flex; align-items: center; justify-content: center; }
+  .journey-svg-static { width: 100%; max-width: 760px; height: auto; display: block; }
+
+  /* Placeholder (tbd) styling for K cluster */
+  .j-node-tbd { pointer-events: none; }
+  .j-node-tbd .j-node-circle { fill: transparent; stroke: var(--ink-mute); stroke-dasharray: 5 3; opacity: 0.5; }
+  .j-node-tbd .j-node-text { fill: var(--ink-mute); opacity: 0.55; }
+  .j-cluster-tbd .j-cluster-bg { opacity: 0.45; stroke-dasharray: 5 4; }
+  .j-cluster-tbd .j-cluster-banner { opacity: 0.55; }
+  .j-cluster-tbd .j-cluster-banner-text { opacity: 0.65; }
+  .j-path-tbd { opacity: 0.4; stroke-dasharray: 6 5; }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="wrap topbar-inner">
+    <a href="index.html" class="brand"><span class="dot"></span>AI LABBOOK</a>
+    <nav class="vol-tabs" role="tablist" aria-label="三卷切换">
+      <!-- VOL.I 已经迁到 cinema (index.html), 在 book.html 上点 VOL.I 直接跳走 -->
+      <a class="vol-tab" href="index.html" role="tab">
+        <span class="vol-tab-num">VOL. I</span>
+        <span class="vol-tab-name">给设计师的零基础 AI 课</span>
+      </a>
+      <button class="vol-tab" data-vol="2" role="tab" aria-selected="false">
+        <span class="vol-tab-num">VOL. II</span>
+        <span class="vol-tab-name">AI × Design</span>
+      </button>
+      <button class="vol-tab" data-vol="3" role="tab" aria-selected="false">
+        <span class="vol-tab-num">VOL. III</span>
+        <span class="vol-tab-name">Code × Design</span>
+      </button>
+    </nav>
+  </div>
+</div>
+
+<!-- VOL. I · 给设计师的零基础 AI 课 -->
+<section class="vol-panel vol-panel--book" data-vol="1" role="tabpanel" aria-labelledby="vol-1">
+
+<section id="curriculum" class="curriculum--book-only">
+  <div class="wrap wrap--book">
+    <!-- 真书容器 -->
+    <div class="book-shell" id="book-vol1">
+      <div class="book-progress" aria-hidden="true">
+        <span class="book-progress-label">READING</span>
+        <div class="book-progress-bar"><div class="book-progress-fill" id="book-prog-fill"></div></div>
+        <span class="book-progress-text" id="book-prog-text">0 / 0</span>
+      </div>
+
+      <div class="book-stage">
+        <!-- 主书体 (cover 现在是 spread idx 0, 由 JS 生成, 跟内页用同一套翻页动画) -->
+        <div class="book-vol" id="book-vol-3d">
+          <!-- spread 容器 (idx 0 = 封面 spread) -->
+          <div class="book-spreads" id="book-spreads"></div>
+
+          <!-- 右侧 thumb index 章节标签（贴书 right edge） -->
+          <nav class="book-thumb-index" id="book-thumb" aria-label="章节"></nav>
+        </div>
+      </div>
+
+      <!-- 翻页控件 -->
+      <div class="book-controls" id="book-controls" hidden>
+        <button class="book-btn book-cover-btn" id="book-back-cover" aria-label="返回封面" title="返回封面">↺ 封面</button>
+        <button class="book-btn book-prev" id="book-prev" aria-label="上一页">←</button>
+        <span class="book-page-info" id="book-page-info">0 / 0</span>
+        <button class="book-btn book-next" id="book-next" aria-label="下一页">→</button>
+        <span class="book-controls-sep">/</span>
+        <button class="book-btn book-overview-toggle" id="book-overview-btn" aria-label="鸟瞰目录" title="鸟瞰 (O)">⊞</button>
+        <button class="book-btn book-close-btn" id="book-close" aria-label="合上书" title="合上 (ESC)">合上</button>
+      </div>
+
+      <!-- 鸟瞰目录 modal -->
+      <div class="book-overview" id="book-overview" hidden>
+        <div class="book-overview-backdrop" data-overview-close></div>
+        <div class="book-overview-panel">
+          <button class="book-overview-close" data-overview-close aria-label="关闭">✕</button>
+          <div class="book-overview-header">
+            <div class="book-overview-tag">OVERVIEW · 鸟瞰目录</div>
+            <h3 class="book-overview-title">所有 <span class="rm-em">spreads</span></h3>
+          </div>
+          <div class="book-overview-grid" id="book-overview-grid"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+</section>
+
+<!-- VOL. II · AI × Design (hero + manifesto + dual-track roadmap) -->
+<section class="vol-panel" data-vol="2" role="tabpanel" aria-labelledby="vol-2">
+
+<header class="hero">
+  <div class="wrap">
+    <div class="hero-meta">
+      <span class="pill fill">笔记 · NOTES</span>
+      <span class="pill">2026 · 实验室</span>
+      <span class="pill">2 章 · 3 篇上线</span>
+      <span class="label">设计师 × AI</span>
+    </div>
+    <div class="hero-grid">
+      <div>
+        <h1>
+          <span class="display-en">AI</span>
+          <span class="x">×</span>
+          <span class="display-en">Design</span><br>
+          <span class="display-cn">笔记</span>
+        </h1>
+        <p class="lede">
+          这一卷专门聊 <span class="em">AI</span> ——<br>
+          从底层原理到设计协作，<span class="em">把"黑盒"拆开看</span>。
+        </p>
+      </div>
+      <div class="hero-side">
+        <div class="row"><span class="k">已上线</span><span class="v">3 篇 · Q 系列</span></div>
+        <div class="row"><span class="k">主理人</span><span class="v">CE 青年</span></div>
+        <div class="row"><span class="k">分支</span><span class="v">原理篇 / 协作篇</span></div>
+        <div class="row"><span class="k">状态</span><span class="v">整理中 →</span></div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<section>
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>00</strong> / 缘起</div>
+        <h2 class="section-title">为什么<br>把 <span class="em">AI</span> 单独一卷？</h2>
+      </div>
+      <p class="section-sub">
+        AI 有自己的一套语言 ——
+        设计师不写代码，也得知道 AI 在干嘛。
+      </p>
+    </div>
+
+    <div class="manifesto">
+      <h3>这一卷是 <span class="em">AI 的拆解</span>。</h3>
+      <p>
+        AI 不是一个黑盒。它有<strong>协议（MCP）</strong>、<strong>技能（Skills）</strong>、<strong>团队结构（Agent）</strong>。
+        这些概念背后，是 AI 怎么"长出手"、怎么"被调度"、怎么和人协作的逻辑。
+      </p>
+      <p>
+        这一卷的目的不是让你写代码 ——
+        是让你<strong>能跟 AI 说人话</strong>、<strong>能看懂 AI 在干啥</strong>、
+        <span class="em">知道 AI 的边界在哪</span>。
+      </p>
+      <p>
+        内容会沿两条线走 ——
+        <strong>原理篇</strong>（Q 系列，AI 自己怎么工作）+
+        <strong>协作篇</strong>（K 系列，设计师怎么和 AI 一起做事）。
+        边整理边补。
+      </p>
+      <p style="margin-top:24px;font-size:14px;color:var(--ink-mute);">
+        本质上，这是给设计师的<strong style="color:var(--ink);">AI 拆解手册</strong>。
+      </p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>01</strong> / AI 地图</div>
+        <h2 class="section-title">一张图<br>看完 <span class="em">这一卷</span>。</h2>
+      </div>
+      <p class="section-sub">
+        从底部「你在这里」出发，分两路 —— 左边原理篇 (Q 系列 · 已上线)，右边协作篇 (K 系列 · 整理中)。
+        <strong>点节点进文章，灰节点是待补充。</strong>
+      </p>
+    </div>
+
+    <div class="journey-wrap">
+      <div class="journey-meta">
+        <div class="nb-card">
+          <div class="nb-h">LAB NOTEBOOK</div>
+          <div>VOL. 02 / 2026</div>
+          <div class="nb-s">— AI × Design —</div>
+        </div>
+        <div class="fig-cap">
+          <span class="compass" aria-hidden="true"></span>
+          <span class="v">FIG. 02</span> · AI 地图
+          <small>v 0.1 · 3 nodes · 2 clusters</small>
+        </div>
+      </div>
+
+      <div class="journey-stage">
+        <div class="journey-svg-host" id="j-host-2" style="height: min(72vh, 640px);">
+
+          <!-- Zoom hint label (bottom-left) -->
+          <div class="zoom-hint">
+            <span class="k">滚轮</span>缩放 · <span class="k">拖拽</span>平移 · <span class="k">点节点</span>进入文章
+          </div>
+
+          <!-- Zoom controls (bottom-right) -->
+          <div class="zoom-ctrl">
+            <button class="zoom-btn" id="zoom-in-2" aria-label="放大" title="放大 (+)">+</button>
+            <div class="zoom-level" id="zoom-level-2">100%</div>
+            <button class="zoom-btn" id="zoom-out-2" aria-label="缩小" title="缩小 (-)">−</button>
+            <button class="zoom-btn zoom-fit" id="zoom-fit-2" aria-label="适应" title="复位 (0)">⌖</button>
+          </div>
+
+          <svg class="journey-svg" id="journey-svg-2" viewBox="0 0 720 540"
+               preserveAspectRatio="xMidYMid meet"
+               xmlns="http://www.w3.org/2000/svg" role="img"
+               aria-label="VOL.II AI × Design 路线图：从你在这里出发，左侧原理篇 Q1/Q2/Q3，右侧协作篇 K 系列待补充">
+
+            <defs>
+              <pattern id="grid-vol2" x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse">
+                <circle cx="1" cy="1" r="0.7" fill="#d5cdba" opacity="0.45"/>
+              </pattern>
+            </defs>
+            <rect width="720" height="540" fill="url(#grid-vol2)"/>
+
+            <!-- Paths -->
+            <path id="p-vol2-Q" d="M 360 450 C 300 400 220 360 200 270" class="j-path"/>
+            <path d="M 360 450 C 420 400 500 360 520 270" class="j-path j-path-tbd"/>
+
+            <!-- Top placeholder -->
+            <g transform="translate(360 90)">
+              <rect x="-78" y="-18" width="156" height="36" rx="18" fill="var(--bg)" stroke="#d5cdba" stroke-dasharray="3 3"/>
+              <text x="0" y="5" text-anchor="middle" font-family="'JetBrains Mono', monospace" font-size="10.5" letter-spacing="0.14em" fill="var(--ink-mute)">更多 · COMING</text>
+            </g>
+
+            <!-- START -->
+            <g transform="translate(360 470)">
+              <circle r="40" fill="var(--ink)"/>
+              <text y="-2" text-anchor="middle" font-family="'Noto Serif SC', serif" font-weight="700" font-size="15" fill="var(--bg)">你在这里</text>
+              <text y="16" text-anchor="middle" font-family="'JetBrains Mono', monospace" font-size="9" letter-spacing="0.14em" fill="var(--bg)" opacity="0.7">START</text>
+            </g>
+
+            <!-- Branch labels -->
+            <text x="200" y="400" text-anchor="middle" font-family="'JetBrains Mono', monospace" font-size="11" font-weight="700" letter-spacing="0.08em" fill="var(--ink-mute)">原 理 篇</text>
+            <text x="200" y="418" text-anchor="middle" font-family="'JetBrains Mono', monospace" font-size="10" letter-spacing="0.05em" fill="var(--ink-mute)" opacity="0.7">3 篇 · Q 系列 →</text>
+            <text x="520" y="400" text-anchor="middle" font-family="'JetBrains Mono', monospace" font-size="11" font-weight="700" letter-spacing="0.08em" fill="var(--ink-mute)" opacity="0.55">协 作 篇</text>
+            <text x="520" y="418" text-anchor="middle" font-family="'JetBrains Mono', monospace" font-size="10" letter-spacing="0.05em" fill="var(--ink-mute)" opacity="0.55">待补充 · K 系列</text>
+
+            <!-- Q · 原理篇 cluster -->
+            <g class="j-cluster" data-mod="Q" transform="translate(200 230)">
+              <rect class="j-cluster-bg" x="-108" y="-46" width="216" height="92" rx="46"></rect>
+              <g transform="translate(-108 -64) rotate(-1.5)">
+                <rect class="j-cluster-banner" x="0" y="0" width="184" height="26" rx="13"></rect>
+                <text class="j-cluster-banner-text" x="14" y="17"><tspan class="j-cluster-banner-key">Q</tspan> · AI 工具与协议</text>
+              </g>
+              <g class="j-node" data-code="Q1" data-href="q1-mcp-figma.html" data-title="MCP · AI 的 USB 接口" data-tier="工具" transform="translate(-64 0)">
+                <g class="j-node-inner">
+                  <circle class="j-node-circle" r="28"></circle>
+                  <text class="j-node-text">Q1</text>
+                  <circle class="j-node-check" cx="20" cy="18" r="7"></circle>
+                  <path class="j-node-check-tick" d="M 17 18 L 19.5 20.5 L 23 17"></path>
+                </g>
+              </g>
+              <g class="j-node" data-code="Q2" data-href="q2-skills-figma.html" data-title="Skills · SKILL.md 拆解" data-tier="工具" transform="translate(0 0)">
+                <g class="j-node-inner">
+                  <circle class="j-node-circle" r="28"></circle>
+                  <text class="j-node-text">Q2</text>
+                  <circle class="j-node-check" cx="20" cy="18" r="7"></circle>
+                  <path class="j-node-check-tick" d="M 17 18 L 19.5 20.5 L 23 17"></path>
+                </g>
+              </g>
+              <g class="j-node" data-code="Q3" data-href="q3-agent-figma.html" data-title="Agent · 团队式 AI" data-tier="工具" transform="translate(64 0)">
+                <g class="j-node-inner">
+                  <circle class="j-node-circle" r="28"></circle>
+                  <text class="j-node-text">Q3</text>
+                  <circle class="j-node-check" cx="20" cy="18" r="7"></circle>
+                  <path class="j-node-check-tick" d="M 17 18 L 19.5 20.5 L 23 17"></path>
+                </g>
+              </g>
+            </g>
+
+            <!-- K · 协作篇 cluster (placeholder) -->
+            <g class="j-cluster j-cluster-tbd" data-mod="K" transform="translate(520 230)">
+              <rect class="j-cluster-bg" x="-108" y="-46" width="216" height="92" rx="46"></rect>
+              <g transform="translate(-108 -64) rotate(1.5)">
+                <rect class="j-cluster-banner" x="0" y="0" width="196" height="26" rx="13"></rect>
+                <text class="j-cluster-banner-text" x="14" y="17"><tspan class="j-cluster-banner-key">K</tspan> · 设计 × AI 协作</text>
+              </g>
+              <g class="j-node j-node-tbd" data-code="K1" transform="translate(-64 0)">
+                <g class="j-node-inner">
+                  <circle class="j-node-circle" r="28"></circle>
+                  <text class="j-node-text">K1</text>
+                </g>
+              </g>
+              <g class="j-node j-node-tbd" data-code="K2" transform="translate(0 0)">
+                <g class="j-node-inner">
+                  <circle class="j-node-circle" r="28"></circle>
+                  <text class="j-node-text">K2</text>
+                </g>
+              </g>
+              <g class="j-node j-node-tbd" data-code="K3" transform="translate(64 0)">
+                <g class="j-node-inner">
+                  <circle class="j-node-circle" r="28"></circle>
+                  <text class="j-node-text">K3</text>
+                </g>
+              </g>
+            </g>
+          </svg>
+        </div>
+
+        <aside class="journey-panel" aria-label="进度与筛选">
+          <div class="jp-block">
+            <div class="jp-label">PROGRESS</div>
+            <div class="jp-progress-num">
+              <span class="jp-cur" id="jp-cur-2">0</span><span class="jp-tot"> / 3</span>
+            </div>
+            <div class="jp-bar" id="jp-bar-2"></div>
+          </div>
+
+          <div class="jp-block jp-filters" role="group" aria-label="过滤">
+            <button class="jp-filter active" data-filter-2="all">[ ALL ]<span class="jp-fnum" id="jp-n-all-2">3</span></button>
+            <button class="jp-filter" data-filter-2="read">[ 已读 ]<span class="jp-fnum" id="jp-n-read-2">0</span></button>
+            <button class="jp-filter" data-filter-2="unread">[ 未读 ]<span class="jp-fnum" id="jp-n-unread-2">3</span></button>
+          </div>
+
+          <div class="jp-block">
+            <button class="jp-reset" id="jp-reset-2">↺ 清空已读记录</button>
+          </div>
+
+          <div class="jp-block">
+            <div class="jp-label">LEGEND</div>
+            <div class="jp-legend">
+              <div class="ld"><span class="ld-dot"></span><span>未读节点</span></div>
+              <div class="ld"><span class="ld-dot read"></span><span>已读节点</span></div>
+              <div class="ld" style="margin-top:4px;color:var(--ink-mute);font-size:10px;">点击进文章 · K 系列待补充</div>
+            </div>
+          </div>
+        </aside>
+      </div>
+    </div>
+  </div>
+</section>
+
+</section>
+
+<!-- VOL. III · 代码 (existing content) -->
+<section class="vol-panel" data-vol="3" role="tabpanel" aria-labelledby="vol-3">
+<header class="hero">
+  <div class="wrap">
+    <div class="hero-meta">
+      <span class="pill fill">合集 · COLLECTION</span>
+      <span class="pill">2026 · 实验室</span>
+      <span class="pill">8 模块 · 26 篇</span>
+      <span class="label">设计师 × 前端</span>
+    </div>
+    <div class="hero-grid">
+      <div>
+        <h1>
+          <span class="display-en">Design</span>
+          <span class="x">×</span>
+          <span class="display-en">Code</span><br>
+          <span class="display-cn">实验室</span>
+        </h1>
+        <p class="lede">
+          完整路线图 <span class="em">·</span> 26 篇 <span class="em">·</span> 8 模块。<br>
+          下面这张图就是全部 —— 从「你在这里」一路爬到「撒花」，<br>
+          点节点进文章，<span class="em">已读会自动标记</span>。
+        </p>
+      </div>
+      <div class="hero-side">
+        <div class="row"><span class="k">主线</span><span class="v">26 篇 · 全部上线</span></div>
+        <div class="row"><span class="k">主理人</span><span class="v">范米花儿</span></div>
+        <div class="row"><span class="k">分支</span><span class="v">设计篇 / 工程篇</span></div>
+        <div class="row"><span class="k">状态</span><span class="v">未完待续 →</span></div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<section id="manifesto">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>00</strong> / 缘起</div>
+        <h2 class="section-title">为什么<br>做这个 <span class="em">合集</span>？</h2>
+      </div>
+      <p class="section-sub">
+        我自己用 AI 做 UI 时的挫败感，加上很多设计师朋友的提问 ——
+        是这个合集的起点。
+      </p>
+    </div>
+
+    <div class="manifesto">
+      <h3>本质上，是想做个 <span class="em">翻译</span>。</h3>
+      <p>
+        我自己最早用 AI 做 UI 的时候，经常一脸懵 ——
+        AI 生成的稿子<strong>看着差不多，但拆开就错</strong>；想让它改，又说不清；
+        改完哪儿都不对劲，又指不出问题在哪。
+      </p>
+      <p>
+        后来跟很多设计师朋友聊，发现大家都有这种<strong>挫败感</strong>。
+        本质问题其实很简单 —— 我们对 AI 在干嘛、代码在做啥，<strong>几乎一点不懂</strong>。
+        但纯文字的代码教程，又看不下去也记不住。
+      </p>
+      <p>
+        所以做了这个合集 ——
+        用「<strong>小游戏 + Figma 类比</strong>」把代码侧最基础的几件事讲清楚。
+        学完你不会写代码，但当 AI 不听话、当你跟前端讨论改动时，
+        <span class="em">能说得出口、听得懂、知道怎么改</span> ——
+        让设计和代码之间的<strong>鸿沟</strong>，小一点。
+      </p>
+      <p style="margin-top:24px;font-size:14px;color:var(--ink-mute);">
+        本质上，这是一个<strong style="color:var(--ink);">桥梁</strong>，或者说一份<strong style="color:var(--ink);">翻译</strong>。
+      </p>
+    </div>
+  </div>
+</section>
+
+<section id="roadmap">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>01</strong> / 完整地图</div>
+        <h2 class="section-title">一张图<br>看完 <span class="em">全部</span>。</h2>
+      </div>
+      <p class="section-sub">
+        从底部「你在这里」出发，分两路 —— 左边设计篇 4 模块 13 篇，右边工程篇 4 系列 13 篇。
+        一路向上经过 9 个聚落，顶上汇合到「撒花」。
+        <strong>hover 看简介，点击进文章，已读自动标记。</strong>
+      </p>
+    </div>
+
+    <div class="journey-wrap" id="journey">
+      <div class="journey-meta">
+        <div class="nb-card">
+          <div class="nb-h">LAB NOTEBOOK</div>
+          <div>VOL. 01 / 2026</div>
+          <div class="nb-s">— Design × Code —</div>
+        </div>
+        <div class="fig-cap">
+          <span class="compass" aria-hidden="true"></span>
+          <span class="v">FIG. 01</span> · 完整路线图
+          <small>v 1.1 · 26 nodes · 8 clusters</small>
+        </div>
+      </div>
+
+      <div class="journey-stage">
+        <div class="journey-svg-host" id="j-host">
+
+          <!-- Zoom hint label (bottom-left) -->
+          <div class="zoom-hint">
+            <span class="k">滚轮</span>缩放 · <span class="k">拖拽</span>平移 · <span class="k">点节点</span>进入文章
+          </div>
+
+          <!-- Zoom controls (bottom-right) -->
+          <div class="zoom-ctrl">
+            <button class="zoom-btn" id="zoom-in" aria-label="放大" title="放大 (+)">+</button>
+            <div class="zoom-level" id="zoom-level">100%</div>
+            <button class="zoom-btn" id="zoom-out" aria-label="缩小" title="缩小 (-)">−</button>
+            <button class="zoom-btn zoom-fit" id="zoom-fit" aria-label="适应" title="复位 (0)">⌖</button>
+          </div>
+
+          <!--
+            Journey SVG.
+            ViewBox: 1200 × 1900.
+            Layout (top -> bottom):
+              y = 180   START (你在这里) circle
+              y = 400   branch labels
+              y = 680   A · F   (第 1 行)
+              y = 930   B · G
+              y = 1180  C · H
+              y = 1430  D · J   (工程篇到此)
+              y = 1680  E       (设计篇独有)
+              y = 1840  END (撒花) circle
+            Design column anchored around x = 360
+            Engineering column anchored around x = 840
+          -->
+          <svg class="journey-svg" id="journey-svg"
+               viewBox="0 0 1200 1900"
+               preserveAspectRatio="xMidYMid meet"
+               role="img"
+               aria-label="完整旅程路径图：从你在这里出发，左侧设计篇 4 模块、右侧工程篇 4 系列，顶部撒花。">
+
+            <!-- ===== background paths (drawn first, behind everything) ===== -->
+            <g id="paths">
+              <!-- main trunk: START up-and-fork -->
+              <path class="j-path" id="p-start-design"
+                    d="M 600 200 C 600 260, 360 280, 360 400"></path>
+              <path class="j-path" id="p-start-eng"
+                    d="M 600 200 C 600 260, 840 280, 840 400"></path>
+
+              <!-- design left column: A -> B -> C -> D -> E -->
+              <path class="j-path" id="p-A-B"
+                    d="M 360 680 C 320 770, 400 820, 360 930"></path>
+              <path class="j-path" id="p-B-C"
+                    d="M 360 930 C 410 1020, 320 1070, 360 1180"></path>
+              <path class="j-path" id="p-C-D"
+                    d="M 360 1180 C 320 1270, 400 1320, 360 1430"></path>
+              <path class="j-path" id="p-D-E"
+                    d="M 360 1430 C 410 1520, 320 1570, 360 1680"></path>
+
+              <!-- engineering right column: F -> G -> H -> J (aligned with A B C D) -->
+              <path class="j-path" id="p-F-G"
+                    d="M 840 680 C 880 770, 800 820, 840 930"></path>
+              <path class="j-path" id="p-G-H"
+                    d="M 840 930 C 800 1020, 880 1070, 840 1180"></path>
+              <path class="j-path" id="p-H-J"
+                    d="M 840 1180 C 880 1270, 800 1320, 840 1430"></path>
+
+              <!-- branch label connectors to first cluster -->
+              <path class="j-path" id="p-branch-A"
+                    d="M 360 400 C 360 470, 360 560, 360 680"></path>
+              <path class="j-path" id="p-branch-F"
+                    d="M 840 400 C 840 470, 840 560, 840 680"></path>
+
+              <!-- bottom merge: E and J converge down to END (撒花) -->
+              <path class="j-path" id="p-E-end"
+                    d="M 360 1680 C 360 1740, 480 1770, 600 1810"></path>
+              <path class="j-path" id="p-J-end"
+                    d="M 840 1430 C 840 1560, 720 1700, 600 1810"></path>
+            </g>
+
+            <!-- ===== top END (撒花) ===== -->
+            <g id="end">
+              <circle class="j-anchor j-anchor-end" cx="600" cy="1840" r="44"></circle>
+              <text class="j-anchor-cn" x="600" y="1826">撒 花</text>
+              <text class="j-anchor-text" x="600" y="1848">FINISH ✨</text>
+            </g>
+
+            <!-- ===== branch labels at y=1500 ===== -->
+            <g id="branch-design">
+              <rect class="j-branch-label-bg" x="270" y="426" width="180" height="52" rx="6"></rect>
+              <text class="j-branch-label" x="360" y="407">设 计 篇</text>
+              <text class="j-branch-label" x="360" y="387" style="font-size:11px;font-family:'JetBrains Mono',monospace;font-weight:600;letter-spacing:.06em;fill:var(--ink-mute);">13 篇 · A → D <tspan class="j-arrow">→</tspan></text>
+            </g>
+            <g id="branch-eng">
+              <rect class="j-branch-label-bg" x="750" y="426" width="180" height="52" rx="6"></rect>
+              <text class="j-branch-label" x="840" y="407">工 程 篇</text>
+              <text class="j-branch-label" x="840" y="387" style="font-size:11px;font-family:'JetBrains Mono',monospace;font-weight:600;letter-spacing:.06em;fill:var(--ink-mute);">13 篇 · F → J <tspan class="j-arrow">→</tspan></text>
+            </g>
+
+            <!-- ===== START anchor ===== -->
+            <g id="start">
+              <circle class="j-anchor" cx="600" cy="180" r="48"></circle>
+              <text class="j-anchor-cn" x="600" y="165">你在这里</text>
+              <text class="j-anchor-text" x="600" y="188">START · 00</text>
+            </g>
+
+            <!-- ============================================
+                 CLUSTER GROUPS
+                 each cluster: dashed capsule + banner + nodes
+                 =========================================== -->
+
+            <!-- A · 单元素与组件 (4 nodes, design column) -->
+            <g class="j-cluster" data-mod="A" transform="translate(360 680)">
+              <rect class="j-cluster-bg" x="-200" y="-50" width="400" height="100" rx="48"></rect>
+              <!-- banner pill -->
+              <g transform="translate(-200 -68) rotate(-1.5)">
+                <rect class="j-cluster-banner" x="0" y="0" width="220" height="26" rx="13"></rect>
+                <text class="j-cluster-banner-text" x="14" y="17"><tspan class="j-cluster-banner-key">A</tspan> · 单元素与组件</text>
+              </g>
+              <!-- nodes: A0 A1 A2 A3 spaced ~84px -->
+              <g class="j-node" data-code="A0" data-href="basics-figma.html" data-title="三件套 · HTML / CSS / JS" data-tier="入门" data-recommend="1" transform="translate(-126 0)">
+                <g class="j-node-inner">
+                  <circle class="j-node-circle" r="28"></circle>
+                  <text class="j-node-text">A0</text>
+                  <circle class="j-node-check" cx="20" cy="18" r="7"></circle>
+                  <path class="j-node-check-tick" d="M 17 18 L 19.5 20.5 L 23 17"></path>
+                </g>
+              </g>
+              <g class="j-node" data-code="A1" data-href="box-figma.html" data-title="盒子 · Auto Layout" data-tier="基础" transform="translate(-42 0)">
+                <g class="j-node-inner">
+                  <circle class="j-node-circle" r="28"></circle>
+                  <text class="j-node-text">A1</text>
+                  <circle class="j-node-check" cx="20" cy="18" r="7"></circle>
+                  <path class="j-node-check-tick" d="M 17 18 L 19.5 20.5 L 23 17"></path>
+                </g>
+              </g>
+              <g class="j-node" data-code="A2" data-href="components-figma.html" data-title="组件 · Variants & Props" data-tier="基础" transform="translate(42 0)">
+                <g class="j-node-inner">
+                  <circle class="j-node-circle" r="28"></circle>
+                  <text class="j-node-text">A2</text>
+                  <circle class="j-node-check" cx="20" cy="18" r="7"></circle>
+                  <path class="j-node-check-tick" d="M 17 18 L 19.5 20.5 L 23 17"></path>
+                </g>
+              </g>
+              <g class="j-node" data-code="A3" data-href="button-system-figma.html" data-title="Button System · 组件演化" data-tier="进阶" transform="translate(126 0)">
+                <g class="j-node-inner">
+                  <circle class="j-node-circle" r="28"></circle>
+                  <text class="j-node-text">A3</text>
+                  <circle class="j-node-check" cx="20" cy="18" r="7"></circle>
+                  <path class="j-node-check-tick" d="M 17 18 L 19.5 20.5 L 23 17"></path>
+                </g>
+              </g>
+            </g>
+
+            <!-- B · 多组件协作 (3 nodes) -->
+            <g class="j-cluster" data-mod="B" transform="translate(360 930)">
+              <rect class="j-cluster-bg" x="-160" y="-50" width="320" height="100" rx="48"></rect>
+              <g transform="translate(-160 -68) rotate(1.2)">
+                <rect class="j-cluster-banner" x="0" y="0" width="206" height="26" rx="13"></rect>
+                <text class="j-cluster-banner-text" x="14" y="17"><tspan class="j-cluster-banner-key">B</tspan> · 多组件协作</text>
+              </g>
+              <g class="j-node" data-code="B0" data-href="page-figma.html" data-title="拼页面 · 组件嵌套" data-tier="入门" transform="translate(-84 0)">
+                <g class="j-node-inner">
+                  <circle class="j-node-circle" r="28"></circle>
+                  <text class="j-node-text">B0</text>
+                  <circle class="j-node-check" cx="20" cy="18" r="7"></circle>
+                  <path class="j-node-check-tick" d="M 17 18 L 19.5 20.5 L 23 17"></path>
+                </g>
+              </g>
+              <g class="j-node" data-code="B1" data-href="data-flow-figma.html" data-title="数据流 · 概念" data-tier="基础" data-recommend="1" transform="translate(0 0)">
+                <g class="j-node-inner">
+                  <circle class="j-node-circle" r="28"></circle>
+                  <text class="j-node-text">B1</text>
+                  <circle class="j-node-check" cx="20" cy="18" r="7"></circle>
+                  <path class="j-node-check-tick" d="M 17 18 L 19.5 20.5 L 23 17"></path>
+                </g>
+              </g>
+              <g class="j-node" data-code="B2" data-href="data-flow-cases-figma.html" data-title="数据流 · 实战 5 案例" data-tier="进阶" transform="translate(84 0)">
+                <g class="j-node-inner">
+                  <circle class="j-node-circle" r="28"></circle>
+                  <text class="j-node-text">B2</text>
+                  <circle class="j-node-check" cx="20" cy="18" r="7"></circle>
+                  <path class="j-node-check-tick" d="M 17 18 L 19.5 20.5 L 23 17"></path>
+                </g>
+              </g>
+            </g>
+
+            <!-- C · 视觉系统 (3 nodes) -->
+            <g class="j-cluster" data-mod="C" transform="translate(360 1180)">
+              <rect class="j-cluster-bg" x="-160" y="-50" width="320" height="100" rx="48"></rect>
+              <g transform="translate(-160 -68) rotate(-1)">
+                <rect class="j-cluster-banner" x="0" y="0" width="180" height="26" rx="13"></rect>
+                <text class="j-cluster-banner-text" x="14" y="17"><tspan class="j-cluster-banner-key">C</tspan> · 视觉系统</text>
+              </g>
+              <g class="j-node" data-code="C0" data-href="tokens-figma.html" data-title="Variables / Tokens 入门" data-tier="入门" transform="translate(-84 0)">
+                <g class="j-node-inner">
+                  <circle class="j-node-circle" r="28"></circle>
+                  <text class="j-node-text">C0</text>
+                  <circle class="j-node-check" cx="20" cy="18" r="7"></circle>
+                  <path class="j-node-check-tick" d="M 17 18 L 19.5 20.5 L 23 17"></path>
+                </g>
+              </g>
+              <g class="j-node" data-code="C1" data-href="colors-type-figma.html" data-title="Colors / Type / Spacing" data-tier="基础" transform="translate(0 0)">
+                <g class="j-node-inner">
+                  <circle class="j-node-circle" r="28"></circle>
+                  <text class="j-node-text">C1</text>
+                  <circle class="j-node-check" cx="20" cy="18" r="7"></circle>
+                  <path class="j-node-check-tick" d="M 17 18 L 19.5 20.5 L 23 17"></path>
+                </g>
+              </g>
+              <g class="j-node" data-code="C2" data-href="theme-switch-figma.html" data-title="Theme 切换实战" data-tier="进阶" transform="translate(84 0)">
+                <g class="j-node-inner">
+                  <circle class="j-node-circle" r="28"></circle>
+                  <text class="j-node-text">C2</text>
+                  <circle class="j-node-check" cx="20" cy="18" r="7"></circle>
+                  <path class="j-node-check-tick" d="M 17 18 L 19.5 20.5 L 23 17"></path>
+                </g>
+              </g>
+            </g>
+
+            <!-- D · 状态与交互 (3 nodes) -->
+            <g class="j-cluster" data-mod="D" transform="translate(360 1430)">
+              <rect class="j-cluster-bg" x="-160" y="-50" width="320" height="100" rx="48"></rect>
+              <g transform="translate(-160 -68) rotate(1.5)">
+                <rect class="j-cluster-banner" x="0" y="0" width="200" height="26" rx="13"></rect>
+                <text class="j-cluster-banner-text" x="14" y="17"><tspan class="j-cluster-banner-key">D</tspan> · 状态与交互</text>
+              </g>
+              <g class="j-node" data-code="D0" data-href="states-figma.html" data-title="视觉态 · 看得见的状态" data-tier="入门" transform="translate(-84 0)">
+                <g class="j-node-inner">
+                  <circle class="j-node-circle" r="28"></circle>
+                  <text class="j-node-text">D0</text>
+                  <circle class="j-node-check" cx="20" cy="18" r="7"></circle>
+                  <path class="j-node-check-tick" d="M 17 18 L 19.5 20.5 L 23 17"></path>
+                </g>
+              </g>
+              <g class="j-node" data-code="D1" data-href="interactive-figma.html" data-title="Interactive Component" data-tier="基础" transform="translate(0 0)">
+                <g class="j-node-inner">
+                  <circle class="j-node-circle" r="28"></circle>
+                  <text class="j-node-text">D1</text>
+                  <circle class="j-node-check" cx="20" cy="18" r="7"></circle>
+                  <path class="j-node-check-tick" d="M 17 18 L 19.5 20.5 L 23 17"></path>
+                </g>
+              </g>
+              <g class="j-node" data-code="D2" data-href="transition-figma.html" data-title="动画 · Transition" data-tier="进阶" transform="translate(84 0)">
+                <g class="j-node-inner">
+                  <circle class="j-node-circle" r="28"></circle>
+                  <text class="j-node-text">D2</text>
+                  <circle class="j-node-check" cx="20" cy="18" r="7"></circle>
+                  <path class="j-node-check-tick" d="M 17 18 L 19.5 20.5 L 23 17"></path>
+                </g>
+              </g>
+            </g>
+
+            <!-- F · 工程入门 (4 nodes, eng column) -->
+            <g class="j-cluster" data-mod="F" transform="translate(840 680)">
+              <rect class="j-cluster-bg" x="-200" y="-50" width="400" height="100" rx="48"></rect>
+              <g transform="translate(-200 -68) rotate(1)">
+                <rect class="j-cluster-banner" x="0" y="0" width="216" height="26" rx="13"></rect>
+                <text class="j-cluster-banner-text" x="14" y="17"><tspan class="j-cluster-banner-key">F</tspan> · 工程入门 · 跑不起来</text>
+              </g>
+              <g class="j-node" data-code="F1" data-href="f1-npm-figma.html" data-title="npm 是什么" data-tier="工程" transform="translate(-126 0)">
+                <g class="j-node-inner">
+                  <circle class="j-node-circle" r="28"></circle>
+                  <text class="j-node-text">F1</text>
+                  <circle class="j-node-check" cx="20" cy="18" r="7"></circle>
+                  <path class="j-node-check-tick" d="M 17 18 L 19.5 20.5 L 23 17"></path>
+                </g>
+              </g>
+              <g class="j-node" data-code="F2" data-href="f2-import-figma.html" data-title="import 与路径" data-tier="工程" transform="translate(-42 0)">
+                <g class="j-node-inner">
+                  <circle class="j-node-circle" r="28"></circle>
+                  <text class="j-node-text">F2</text>
+                  <circle class="j-node-check" cx="20" cy="18" r="7"></circle>
+                  <path class="j-node-check-tick" d="M 17 18 L 19.5 20.5 L 23 17"></path>
+                </g>
+              </g>
+              <g class="j-node" data-code="F3" data-href="f3-dev-build-figma.html" data-title="dev vs build" data-tier="工程" transform="translate(42 0)">
+                <g class="j-node-inner">
+                  <circle class="j-node-circle" r="28"></circle>
+                  <text class="j-node-text">F3</text>
+                  <circle class="j-node-check" cx="20" cy="18" r="7"></circle>
+                  <path class="j-node-check-tick" d="M 17 18 L 19.5 20.5 L 23 17"></path>
+                </g>
+              </g>
+              <g class="j-node" data-code="F4" data-href="f4-hidden-files-figma.html" data-title="看不见的文件" data-tier="工程" transform="translate(126 0)">
+                <g class="j-node-inner">
+                  <circle class="j-node-circle" r="28"></circle>
+                  <text class="j-node-text">F4</text>
+                  <circle class="j-node-check" cx="20" cy="18" r="7"></circle>
+                  <path class="j-node-check-tick" d="M 17 18 L 19.5 20.5 L 23 17"></path>
+                </g>
+              </g>
+            </g>
+
+            <!-- G · 版本控制 (3 nodes) -->
+            <g class="j-cluster" data-mod="G" transform="translate(840 930)">
+              <rect class="j-cluster-bg" x="-160" y="-50" width="320" height="100" rx="48"></rect>
+              <g transform="translate(-160 -68) rotate(-1.4)">
+                <rect class="j-cluster-banner" x="0" y="0" width="226" height="26" rx="13"></rect>
+                <text class="j-cluster-banner-text" x="14" y="17"><tspan class="j-cluster-banner-key">G</tspan> · 版本控制 · AI 写完之后</text>
+              </g>
+              <g class="j-node" data-code="G1" data-href="g1-commit-branch-figma.html" data-title="commit / branch" data-tier="工程" transform="translate(-84 0)">
+                <g class="j-node-inner">
+                  <circle class="j-node-circle" r="28"></circle>
+                  <text class="j-node-text">G1</text>
+                  <circle class="j-node-check" cx="20" cy="18" r="7"></circle>
+                  <path class="j-node-check-tick" d="M 17 18 L 19.5 20.5 L 23 17"></path>
+                </g>
+              </g>
+              <g class="j-node" data-code="G2" data-href="g2-conflict-figma.html" data-title="冲突怎么解" data-tier="工程" transform="translate(0 0)">
+                <g class="j-node-inner">
+                  <circle class="j-node-circle" r="28"></circle>
+                  <text class="j-node-text">G2</text>
+                  <circle class="j-node-check" cx="20" cy="18" r="7"></circle>
+                  <path class="j-node-check-tick" d="M 17 18 L 19.5 20.5 L 23 17"></path>
+                </g>
+              </g>
+              <g class="j-node" data-code="G3" data-href="g3-pr-review-figma.html" data-title="PR / Review" data-tier="工程" transform="translate(84 0)">
+                <g class="j-node-inner">
+                  <circle class="j-node-circle" r="28"></circle>
+                  <text class="j-node-text">G3</text>
+                  <circle class="j-node-check" cx="20" cy="18" r="7"></circle>
+                  <path class="j-node-check-tick" d="M 17 18 L 19.5 20.5 L 23 17"></path>
+                </g>
+              </g>
+            </g>
+
+            <!-- H · 浏览器调试 (3 nodes) -->
+            <g class="j-cluster" data-mod="H" transform="translate(840 1180)">
+              <rect class="j-cluster-bg" x="-160" y="-50" width="320" height="100" rx="48"></rect>
+              <g transform="translate(-160 -68) rotate(1.4)">
+                <rect class="j-cluster-banner" x="0" y="0" width="240" height="26" rx="13"></rect>
+                <text class="j-cluster-banner-text" x="14" y="17"><tspan class="j-cluster-banner-key">H</tspan> · 浏览器调试 · 不长那样</text>
+              </g>
+              <g class="j-node" data-code="H1" data-href="h1-devtools-elements-figma.html" data-title="DevTools Elements" data-tier="工程" transform="translate(-84 0)">
+                <g class="j-node-inner">
+                  <circle class="j-node-circle" r="28"></circle>
+                  <text class="j-node-text">H1</text>
+                  <circle class="j-node-check" cx="20" cy="18" r="7"></circle>
+                  <path class="j-node-check-tick" d="M 17 18 L 19.5 20.5 L 23 17"></path>
+                </g>
+              </g>
+              <g class="j-node" data-code="H2" data-href="h2-console-error-figma.html" data-title="Console 报错" data-tier="工程" transform="translate(0 0)">
+                <g class="j-node-inner">
+                  <circle class="j-node-circle" r="28"></circle>
+                  <text class="j-node-text">H2</text>
+                  <circle class="j-node-check" cx="20" cy="18" r="7"></circle>
+                  <path class="j-node-check-tick" d="M 17 18 L 19.5 20.5 L 23 17"></path>
+                </g>
+              </g>
+              <g class="j-node" data-code="H3" data-href="h3-network-figma.html" data-title="Network 面板" data-tier="工程" transform="translate(84 0)">
+                <g class="j-node-inner">
+                  <circle class="j-node-circle" r="28"></circle>
+                  <text class="j-node-text">H3</text>
+                  <circle class="j-node-check" cx="20" cy="18" r="7"></circle>
+                  <path class="j-node-check-tick" d="M 17 18 L 19.5 20.5 L 23 17"></path>
+                </g>
+              </g>
+            </g>
+
+            <!-- J · 上线 (3 nodes) -->
+            <g class="j-cluster" data-mod="J" transform="translate(840 1430)">
+              <rect class="j-cluster-bg" x="-160" y="-50" width="320" height="100" rx="48"></rect>
+              <g transform="translate(-160 -68) rotate(-1)">
+                <rect class="j-cluster-banner" x="0" y="0" width="200" height="26" rx="13"></rect>
+                <text class="j-cluster-banner-text" x="14" y="17"><tspan class="j-cluster-banner-key">J</tspan> · 上线 · 让别人看到</text>
+              </g>
+              <g class="j-node" data-code="J1" data-href="j1-dns-figma.html" data-title="DNS / 域名" data-tier="工程" transform="translate(-84 0)">
+                <g class="j-node-inner">
+                  <circle class="j-node-circle" r="28"></circle>
+                  <text class="j-node-text">J1</text>
+                  <circle class="j-node-check" cx="20" cy="18" r="7"></circle>
+                  <path class="j-node-check-tick" d="M 17 18 L 19.5 20.5 L 23 17"></path>
+                </g>
+              </g>
+              <g class="j-node" data-code="J2" data-href="j2-vercel-figma.html" data-title="Vercel 部署" data-tier="工程" transform="translate(0 0)">
+                <g class="j-node-inner">
+                  <circle class="j-node-circle" r="28"></circle>
+                  <text class="j-node-text">J2</text>
+                  <circle class="j-node-check" cx="20" cy="18" r="7"></circle>
+                  <path class="j-node-check-tick" d="M 17 18 L 19.5 20.5 L 23 17"></path>
+                </g>
+              </g>
+              <g class="j-node" data-code="J3" data-href="j3-cache-cdn-figma.html" data-title="缓存 / CDN" data-tier="工程" transform="translate(84 0)">
+                <g class="j-node-inner">
+                  <circle class="j-node-circle" r="28"></circle>
+                  <text class="j-node-text">J3</text>
+                  <circle class="j-node-check" cx="20" cy="18" r="7"></circle>
+                  <path class="j-node-check-tick" d="M 17 18 L 19.5 20.5 L 23 17"></path>
+                </g>
+              </g>
+            </g>
+
+            <!-- ===== Hand-drawn annotations ===== -->
+            <!-- 你在这里 → START (cy=180, cx=600) -->
+            <g id="anno-start">
+              <text class="j-anno-text" x="780" y="156" transform="rotate(-2 780 156)">↙ 你在这里</text>
+              <text class="j-anno-en" x="780" y="174" transform="rotate(-2 780 174)">YOU ARE HERE</text>
+              <path class="j-anno-line" d="M 770 168 C 730 174, 690 178, 660 180"></path>
+              <!-- arrowhead pointing left toward START circle -->
+              <path d="M 660 180 L 668 174 M 660 180 L 668 186" stroke="var(--accent)" stroke-width="1.4" fill="none" stroke-linecap="round"></path>
+            </g>
+
+            <!-- 推荐起点 → A0 (cluster A at 360,680, A0 at translate(-126,0) → absolute (234,680)) -->
+            <g id="anno-recommend">
+              <text class="j-anno-text" x="80" y="624" transform="rotate(-3 80 624)">★ 推荐起点</text>
+              <text class="j-anno-en" x="80" y="642" transform="rotate(-3 80 642)">SUGGESTED · A0</text>
+              <path class="j-anno-line" d="M 184 632 C 200 644, 210 656, 216 668"></path>
+              <!-- arrowhead pointing toward A0 (absolute 234, 680) — top edge ~ (234, 658) -->
+              <path d="M 216 668 L 224 664 M 216 668 L 218 676" stroke="var(--accent)" stroke-width="1.4" fill="none" stroke-linecap="round"></path>
+            </g>
+
+            <!-- 上线撒花 → END (cy=1840, cx=600) -->
+            <g id="anno-end">
+              <text class="j-anno-text" x="900" y="1830" transform="rotate(2 900 1830)">→ 上线撒花！</text>
+              <text class="j-anno-en" x="900" y="1848" transform="rotate(2 900 1848)">SHIPPED</text>
+              <path class="j-anno-line" d="M 890 1838 C 820 1844, 740 1844, 650 1840"></path>
+              <path d="M 650 1840 L 660 1834 M 650 1840 L 658 1846" stroke="var(--accent)" stroke-width="1.4" fill="none" stroke-linecap="round"></path>
+            </g>
+
+            <!-- Module count side notes (subtle) -->
+            <text x="100" y="500" class="j-anno-en" transform="rotate(-90 100 500)" style="fill:var(--ink-mute);">DESIGN ⟶  A · B · C · D · E</text>
+            <text x="1100" y="500" class="j-anno-en" transform="rotate(90 1100 500)" style="fill:var(--ink-mute);">ENGINEERING ⟶  F · G · H · J</text>
+
+            <!-- bottom faint figure scale -->
+            <g transform="translate(50 1840)">
+              <line x1="0" y1="0" x2="80" y2="0" stroke="var(--ink-mute)" stroke-width="1"></line>
+              <line x1="0" y1="-4" x2="0" y2="4" stroke="var(--ink-mute)" stroke-width="1"></line>
+              <line x1="80" y1="-4" x2="80" y2="4" stroke="var(--ink-mute)" stroke-width="1"></line>
+              <text x="40" y="20" text-anchor="middle" class="j-anno-en" style="fill:var(--ink-mute);">~ 1 NODE</text>
+            </g>
+            <text x="1150" y="1856" text-anchor="end" class="j-anno-en" style="fill:var(--ink-mute);">DCL · MAP v1.0 · 2026 · ƒ</text>
+          </svg>
+
+          <!-- HTML tooltip (overlay) -->
+          <div class="j-tooltip" id="j-tip" role="tooltip" aria-hidden="true">
+            <div class="j-tooltip-code" id="j-tip-code">A0</div>
+            <div class="j-tooltip-title" id="j-tip-title">三件套 · HTML / CSS / JS</div>
+            <div class="j-tooltip-meta">
+              <span class="j-tooltip-tier" id="j-tip-tier">入门</span>
+              <span class="j-tooltip-go">继续阅读 →</span>
+            </div>
+          </div>
+        </div>
+
+        <aside class="journey-panel" aria-label="进度与筛选">
+          <div class="jp-block">
+            <div class="jp-label">PROGRESS</div>
+            <div class="jp-progress-num">
+              <span class="jp-cur" id="jp-cur">0</span><span class="jp-tot"> / 28</span>
+            </div>
+            <div class="jp-bar" id="jp-bar"><!-- 28 ticks injected by JS --></div>
+          </div>
+
+          <div class="jp-block jp-filters" role="group" aria-label="过滤">
+            <button class="jp-filter active" data-filter="all">[ ALL ]<span class="jp-fnum" id="jp-n-all">28</span></button>
+            <button class="jp-filter" data-filter="read">[ 已读 ]<span class="jp-fnum" id="jp-n-read">0</span></button>
+            <button class="jp-filter" data-filter="unread">[ 未读 ]<span class="jp-fnum" id="jp-n-unread">28</span></button>
+          </div>
+
+          <div class="jp-block">
+            <button class="jp-reset" id="jp-reset">↺ 清空已读记录</button>
+          </div>
+
+          <div class="jp-block">
+            <div class="jp-label">LEGEND</div>
+            <div class="jp-legend">
+              <div class="ld"><span class="ld-dot"></span><span>未读节点</span></div>
+              <div class="ld"><span class="ld-dot read"></span><span>已读节点</span></div>
+              <div class="ld" style="margin-top:4px;color:var(--ink-mute);font-size:10px;">点击进文章 · hover 看简介</div>
+            </div>
+          </div>
+        </aside>
+      </div>
+    </div>
+  </div>
+</section>
+</section><!-- /vol-3 -->
+
+
+<footer>
+  <div class="wrap">
+    <div class="byline-group">
+      <div class="byline">
+        <img class="avatar" src="author.jpg" alt="范米花儿">
+        <div class="byline-meta">
+          <div class="byline-label"><span class="dot"></span>主理人 · CURATOR</div>
+          <h3 class="byline-name">嗨，我是 <span class="em">范米花儿</span></h3>
+          <p class="byline-tag">设计工程师 ——<br>设计 × 代码，两边都做。</p>
+        </div>
+      </div>
+      <div class="byline">
+        <img class="avatar" src="avatar-ce.jpg" alt="CE 青年">
+        <div class="byline-meta">
+          <div class="byline-label"><span class="dot"></span>合作者 · CO-AUTHOR</div>
+          <h3 class="byline-name">还有 <span class="em">CE 青年</span></h3>
+          <p class="byline-tag">B 端交互 / AI 产品 ——<br>把体验落进产品里。</p>
+        </div>
+      </div>
+    </div>
+    <div class="footer-meta">
+      做于 <span class="mono">2026</span> · 用 <span class="heart">●</span> 写给 <span class="mono">DESIGNERS &amp; DEVELOPERS</span>
+    </div>
+  </div>
+</footer>
+
+
+<!-- 路线图弹窗 (8 模块) -->
+<div class="rm-modal" id="rm-modal" hidden>
+  <div class="rm-backdrop" data-rm-close></div>
+  <div class="rm-dialog" role="dialog" aria-label="完整路线图">
+    <button class="rm-close" data-rm-close aria-label="关闭">✕</button>
+    <div class="rm-header">
+      <div class="rm-tag">完整路线图 · ROADMAP</div>
+      <h3 class="rm-title">8 模块 <span class="rm-em">·</span> 26 篇</h3>
+      <p class="rm-sub">设计篇 15 · 工程篇 13 · 全部上线</p>
+    </div>
+    <div class="rm-body">
+      <div class="rm-mod">
+        <div class="rm-mod-key">A · 单元素与组件</div>
+        <div class="rm-mod-list">
+          <a href="basics-figma.html" class="rm-cell"><span class="rm-cell-code">A0</span><span class="rm-cell-name">三件套 · HTML / CSS / JS</span><span class="rm-cell-tier">入门</span></a>
+          <a href="box-figma.html" class="rm-cell"><span class="rm-cell-code">A1</span><span class="rm-cell-name">盒子 · Auto Layout</span><span class="rm-cell-tier">基础</span></a>
+          <a href="components-figma.html" class="rm-cell"><span class="rm-cell-code">A2</span><span class="rm-cell-name">组件 · Variants &amp; Props</span><span class="rm-cell-tier">基础</span></a>
+          <a href="button-system-figma.html" class="rm-cell"><span class="rm-cell-code">A3</span><span class="rm-cell-name">Button System · 组件演化</span><span class="rm-cell-tier">进阶</span></a>
+        </div>
+      </div>
+      <div class="rm-mod">
+        <div class="rm-mod-key">B · 多组件协作</div>
+        <div class="rm-mod-list">
+          <a href="page-figma.html" class="rm-cell"><span class="rm-cell-code">B0</span><span class="rm-cell-name">拼页面 · 组件嵌套</span><span class="rm-cell-tier">入门</span></a>
+          <a href="data-flow-figma.html" class="rm-cell"><span class="rm-cell-code">B1</span><span class="rm-cell-name">数据流 · 概念</span><span class="rm-cell-tier">基础</span></a>
+          <a href="data-flow-cases-figma.html" class="rm-cell"><span class="rm-cell-code">B2</span><span class="rm-cell-name">数据流 · 实战 5 案例</span><span class="rm-cell-tier">进阶</span></a>
+        </div>
+      </div>
+      <div class="rm-mod">
+        <div class="rm-mod-key">C · 视觉系统</div>
+        <div class="rm-mod-list">
+          <a href="tokens-figma.html" class="rm-cell"><span class="rm-cell-code">C0</span><span class="rm-cell-name">Variables / Tokens 入门</span><span class="rm-cell-tier">入门</span></a>
+          <a href="colors-type-figma.html" class="rm-cell"><span class="rm-cell-code">C1</span><span class="rm-cell-name">Colors / Type / Spacing</span><span class="rm-cell-tier">基础</span></a>
+          <a href="theme-switch-figma.html" class="rm-cell"><span class="rm-cell-code">C2</span><span class="rm-cell-name">Theme 切换实战</span><span class="rm-cell-tier">进阶</span></a>
+        </div>
+      </div>
+      <div class="rm-mod">
+        <div class="rm-mod-key">D · 状态与交互</div>
+        <div class="rm-mod-list">
+          <a href="states-figma.html" class="rm-cell"><span class="rm-cell-code">D0</span><span class="rm-cell-name">视觉态 · 看得见的状态</span><span class="rm-cell-tier">入门</span></a>
+          <a href="interactive-figma.html" class="rm-cell"><span class="rm-cell-code">D1</span><span class="rm-cell-name">Interactive Component</span><span class="rm-cell-tier">基础</span></a>
+          <a href="transition-figma.html" class="rm-cell"><span class="rm-cell-code">D2</span><span class="rm-cell-name">动画 · Transition</span><span class="rm-cell-tier">进阶</span></a>
+        </div>
+      </div>
+      <div class="rm-mod">
+        <div class="rm-mod-key">F · 工程入门 · 跑不起来</div>
+        <div class="rm-mod-list">
+          <a href="f1-npm-figma.html" class="rm-cell"><span class="rm-cell-code">F1</span><span class="rm-cell-name">npm 是什么</span><span class="rm-cell-tier">工程</span></a>
+          <a href="f2-import-figma.html" class="rm-cell"><span class="rm-cell-code">F2</span><span class="rm-cell-name">import 与路径</span><span class="rm-cell-tier">工程</span></a>
+          <a href="f3-dev-build-figma.html" class="rm-cell"><span class="rm-cell-code">F3</span><span class="rm-cell-name">dev vs build</span><span class="rm-cell-tier">工程</span></a>
+          <a href="f4-hidden-files-figma.html" class="rm-cell"><span class="rm-cell-code">F4</span><span class="rm-cell-name">看不见的文件</span><span class="rm-cell-tier">工程</span></a>
+        </div>
+      </div>
+      <div class="rm-mod">
+        <div class="rm-mod-key">G · 版本控制 · AI 写完之后</div>
+        <div class="rm-mod-list">
+          <a href="g1-commit-branch-figma.html" class="rm-cell"><span class="rm-cell-code">G1</span><span class="rm-cell-name">commit / branch</span><span class="rm-cell-tier">工程</span></a>
+          <a href="g2-conflict-figma.html" class="rm-cell"><span class="rm-cell-code">G2</span><span class="rm-cell-name">冲突怎么解</span><span class="rm-cell-tier">工程</span></a>
+          <a href="g3-pr-review-figma.html" class="rm-cell"><span class="rm-cell-code">G3</span><span class="rm-cell-name">PR / Review</span><span class="rm-cell-tier">工程</span></a>
+        </div>
+      </div>
+      <div class="rm-mod">
+        <div class="rm-mod-key">H · 浏览器调试 · 不长那样</div>
+        <div class="rm-mod-list">
+          <a href="h1-devtools-elements-figma.html" class="rm-cell"><span class="rm-cell-code">H1</span><span class="rm-cell-name">DevTools Elements</span><span class="rm-cell-tier">工程</span></a>
+          <a href="h2-console-error-figma.html" class="rm-cell"><span class="rm-cell-code">H2</span><span class="rm-cell-name">Console 报错</span><span class="rm-cell-tier">工程</span></a>
+          <a href="h3-network-figma.html" class="rm-cell"><span class="rm-cell-code">H3</span><span class="rm-cell-name">Network 面板</span><span class="rm-cell-tier">工程</span></a>
+        </div>
+      </div>
+      <div class="rm-mod">
+        <div class="rm-mod-key">J · 上线 · 让别人看到</div>
+        <div class="rm-mod-list">
+          <a href="j1-dns-figma.html" class="rm-cell"><span class="rm-cell-code">J1</span><span class="rm-cell-name">DNS / 域名</span><span class="rm-cell-tier">工程</span></a>
+          <a href="j2-vercel-figma.html" class="rm-cell"><span class="rm-cell-code">J2</span><span class="rm-cell-name">Vercel 部署</span><span class="rm-cell-tier">工程</span></a>
+          <a href="j3-cache-cdn-figma.html" class="rm-cell"><span class="rm-cell-code">J3</span><span class="rm-cell-name">缓存 / CDN</span><span class="rm-cell-tier">工程</span></a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ========================================================
+   Volume tabs (3 panels: 课程 / AI 应用 / 代码)
+   ======================================================== */
+(function(){
+  var tabs = document.querySelectorAll('.vol-tab');
+  var panels = document.querySelectorAll('.vol-panel');
+  if (!tabs.length || !panels.length) return;
+
+  function activate(vol, opts){
+    if (!vol) return;  /* skip anchor tabs (VOL.I → cinema) */
+    opts = opts || {};
+    tabs.forEach(function(t){
+      /* Skip <a> tabs — they navigate away, never highlighted on book.html */
+      if (t.tagName === 'A') return;
+      t.setAttribute('aria-selected', t.dataset.vol === vol ? 'true' : 'false');
+    });
+    panels.forEach(function(p){
+      var on = p.dataset.vol === vol;
+      // Re-trigger fade-in animation by removing then re-adding
+      p.classList.remove('is-active');
+      if (on) {
+        // Force reflow so the animation re-runs even if class is re-added immediately
+        void p.offsetWidth;
+        p.classList.add('is-active');
+      }
+    });
+    /* mark body so VOL.I-only styles (e.g. hide global footer) can target it */
+    document.body.classList.remove('is-vol-1', 'is-vol-2', 'is-vol-3');
+    document.body.classList.add('is-vol-' + vol);
+    if (!opts.silent) {
+      var hash = '#vol-' + vol;
+      if (location.hash !== hash) {
+        history.replaceState(null, '', hash);
+      }
+      window.scrollTo({ top: 0, behavior: 'instant' });
+    }
+  }
+
+  // Wire up tab clicks (anchor tabs let the browser navigate)
+  tabs.forEach(function(t){
+    if (t.tagName === 'A') return;
+    t.addEventListener('click', function(){ activate(t.dataset.vol); });
+  });
+
+  // Wire up in-page jump links (e.g. "翻到 VOL. III" buttons in WIP placeholders)
+  document.querySelectorAll('[data-vol-jump]').forEach(function(a){
+    a.addEventListener('click', function(e){
+      e.preventDefault();
+      activate(a.dataset.volJump);
+    });
+  });
+
+  // Initial activation from URL hash, default = VOL. I
+  var initial = '1';
+  var m = location.hash.match(/^#vol-(\d)/);
+  if (m) initial = m[1];
+  activate(initial, { silent: true });
+
+  // React to hash changes (back/forward, external links)
+  window.addEventListener('hashchange', function(){
+    var m2 = location.hash.match(/^#vol-(\d)/);
+    if (m2) activate(m2[1], { silent: true });
+  });
+})();
+
+/* ========================================================
+   Roadmap modal
+   ======================================================== */
+(function(){
+  var modal = document.getElementById('rm-modal');
+  if (!modal) return;
+  var openBtns = document.querySelectorAll('[data-rm-open]');
+  var closeBtns = modal.querySelectorAll('[data-rm-close]');
+  function open() { modal.hidden = false; document.body.style.overflow = 'hidden'; }
+  function close() { modal.hidden = true; document.body.style.overflow = ''; }
+  openBtns.forEach(function(b){ b.addEventListener('click', function(e){ e.preventDefault(); open(); }); });
+  closeBtns.forEach(function(b){ b.addEventListener('click', close); });
+  document.addEventListener('keydown', function(e){ if (e.key === 'Escape' && !modal.hidden) close(); });
+})();
+
+/* ========================================================
+   Journey map: progress, filter, tooltip, click-through
+   ======================================================== */
+(function(){
+  var STORAGE_KEY = 'dcl-read-articles';
+  var TOTAL = 28;
+
+  var svg = document.getElementById('journey-svg');
+  var host = document.getElementById('j-host');
+  var tip = document.getElementById('j-tip');
+  var tipCode = document.getElementById('j-tip-code');
+  var tipTitle = document.getElementById('j-tip-title');
+  var tipTier = document.getElementById('j-tip-tier');
+  if (!svg || !host || !tip) return;
+
+  var nodes = Array.prototype.slice.call(svg.querySelectorAll('.j-node'));
+
+  /* relationships: which path turns "read" when which clusters fully visited */
+  // simpler: each path becomes "read" when at least one node in the *next* cluster up the chain has been read
+  // path id -> cluster code that triggers it
+  var pathTrigger = {
+    'p-start-design': 'A',
+    'p-start-eng':    'F',
+    'p-branch-A':     'A',
+    'p-branch-F':     'F',
+    'p-A-B':          'B',
+    'p-B-C':          'C',
+    'p-C-D':          'D',
+    'p-D-E':          'E',
+    'p-F-G':          'G',
+    'p-G-H':          'H',
+    'p-H-J':          'J',
+    'p-E-end':        'E',
+    'p-J-end':        'J'
+  };
+
+  /* ---------- read-state storage ---------- */
+  function loadRead() {
+    try {
+      var raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return [];
+      var arr = JSON.parse(raw);
+      return Array.isArray(arr) ? arr : [];
+    } catch (e) { return []; }
+  }
+  function saveRead(arr) {
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(arr)); } catch (e) {}
+  }
+  function markRead(code) {
+    var arr = loadRead();
+    if (arr.indexOf(code) === -1) {
+      arr.push(code);
+      saveRead(arr);
+    }
+  }
+
+  /* ---------- render state to DOM ---------- */
+  function render() {
+    var read = loadRead();
+    var readSet = {};
+    read.forEach(function(c){ readSet[c] = true; });
+
+    /* nodes */
+    nodes.forEach(function(n){
+      var code = n.getAttribute('data-code');
+      if (readSet[code]) n.classList.add('read');
+      else n.classList.remove('read');
+    });
+
+    /* paths: read if at least one node downstream/upstream ish */
+    // for a path triggered by cluster X, mark read if any node with code starting with X is read
+    Object.keys(pathTrigger).forEach(function(pid){
+      var trigger = pathTrigger[pid];
+      var hit = false;
+      for (var k in readSet) { if (readSet[k] && k.charAt(0) === trigger) { hit = true; break; } }
+      var p = document.getElementById(pid);
+      if (p) p.classList.toggle('read', hit);
+    });
+
+    /* progress numbers */
+    var n = read.length;
+    var cur = document.getElementById('jp-cur'); if (cur) cur.textContent = String(n);
+    var nAll = document.getElementById('jp-n-all'); if (nAll) nAll.textContent = String(TOTAL);
+    var nRd = document.getElementById('jp-n-read'); if (nRd) nRd.textContent = String(n);
+    var nUn = document.getElementById('jp-n-unread'); if (nUn) nUn.textContent = String(TOTAL - n);
+
+    /* progress bar ticks */
+    renderBar(n);
+  }
+
+  function renderBar(n) {
+    var bar = document.getElementById('jp-bar');
+    if (!bar) return;
+    if (bar.childElementCount !== TOTAL) {
+      bar.innerHTML = '';
+      for (var i = 0; i < TOTAL; i++) {
+        var t = document.createElement('span');
+        t.className = 'jp-tick';
+        bar.appendChild(t);
+      }
+    }
+    var ticks = bar.children;
+    for (var j = 0; j < ticks.length; j++) {
+      ticks[j].classList.toggle('on', j < n);
+    }
+  }
+
+  /* ---------- filters ---------- */
+  var filterBtns = Array.prototype.slice.call(document.querySelectorAll('.jp-filter'));
+  function setFilter(mode) {
+    svg.classList.remove('filter-all', 'filter-read', 'filter-unread');
+    if (mode === 'read') svg.classList.add('filter-read');
+    else if (mode === 'unread') svg.classList.add('filter-unread');
+    filterBtns.forEach(function(b){ b.classList.toggle('active', b.getAttribute('data-filter') === mode); });
+  }
+  filterBtns.forEach(function(b){
+    b.addEventListener('click', function(){
+      setFilter(b.getAttribute('data-filter'));
+    });
+  });
+
+  /* ---------- reset ---------- */
+  var resetBtn = document.getElementById('jp-reset');
+  if (resetBtn) {
+    resetBtn.addEventListener('click', function(){
+      if (confirm('清空所有已读记录？')) {
+        saveRead([]);
+        render();
+      }
+    });
+  }
+
+  /* ---------- node interactions ---------- */
+  function showTip(node) {
+    var code = node.getAttribute('data-code');
+    var title = node.getAttribute('data-title') || '';
+    var tier = node.getAttribute('data-tier') || '';
+    tipCode.textContent = code;
+    tipTitle.textContent = title;
+    tipTier.textContent = tier;
+
+    /* compute position relative to host */
+    var rect = node.getBoundingClientRect();
+    var hostRect = host.getBoundingClientRect();
+    var x = rect.left + rect.width / 2 - hostRect.left;
+    var y = rect.top - hostRect.top;
+    tip.style.left = x + 'px';
+    tip.style.top = y + 'px';
+    tip.classList.add('on');
+    tip.setAttribute('aria-hidden', 'false');
+  }
+  function hideTip() {
+    tip.classList.remove('on');
+    tip.setAttribute('aria-hidden', 'true');
+  }
+
+  nodes.forEach(function(n){
+    var href = n.getAttribute('data-href');
+    var code = n.getAttribute('data-code');
+
+    n.addEventListener('mouseenter', function(){ showTip(n); });
+    n.addEventListener('mouseleave', hideTip);
+    n.addEventListener('focus', function(){ showTip(n); });
+    n.addEventListener('blur', hideTip);
+
+    n.addEventListener('click', function(e){
+      e.preventDefault();
+      if (code) markRead(code);
+      // tiny delay so storage flushes (and also gives a hint of reaction)
+      if (href) {
+        setTimeout(function(){ window.location.href = href; }, 30);
+      }
+    });
+
+    /* keyboard */
+    n.setAttribute('tabindex', '0');
+    n.setAttribute('role', 'link');
+    n.setAttribute('aria-label', code + ' ' + (n.getAttribute('data-title') || ''));
+    n.addEventListener('keydown', function(e){
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        if (code) markRead(code);
+        if (href) window.location.href = href;
+      }
+    });
+  });
+
+  /* hide tooltip on scroll/resize to avoid stranded label */
+  window.addEventListener('scroll', hideTip, { passive: true });
+  window.addEventListener('resize', hideTip);
+
+  /* initial render */
+  render();
+})();
+
+/* ========================================================
+   Journey map: zoom & pan (wheel / drag / buttons)
+   ======================================================== */
+(function(){
+  var host = document.getElementById('j-host');
+  var svg  = document.getElementById('journey-svg');
+  var levelEl = document.getElementById('zoom-level');
+  if (!host || !svg) return;
+
+  var zoom = 1;
+  var panX = 0;
+  var panY = 0;
+  var MIN_ZOOM = 0.4;
+  var MAX_ZOOM = 3.5;
+
+  function apply() {
+    svg.style.transform = 'translate(' + panX + 'px,' + panY + 'px) scale(' + zoom + ')';
+    if (levelEl) levelEl.textContent = Math.round(zoom * 100) + '%';
+  }
+  function reset() {
+    zoom = 1; panX = 0; panY = 0;
+    apply();
+  }
+
+  /* ---------- wheel zoom (zoom toward cursor) ---------- */
+  host.addEventListener('wheel', function(e){
+    e.preventDefault();
+    var rect = host.getBoundingClientRect();
+    var mx = e.clientX - rect.left;
+    var my = e.clientY - rect.top;
+    var delta = -e.deltaY * 0.0015;
+    var newZoom = Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, zoom + delta * zoom));
+    if (newZoom === zoom) return;
+    /* keep cursor anchor stable */
+    panX = mx - (mx - panX) * (newZoom / zoom);
+    panY = my - (my - panY) * (newZoom / zoom);
+    zoom = newZoom;
+    apply();
+  }, { passive: false });
+
+  /* ---------- drag pan ---------- */
+  var isDragging = false;
+  var startX = 0, startY = 0;
+  var pStartX = 0, pStartY = 0;
+
+  host.addEventListener('pointerdown', function(e){
+    /* don't pan if user is interacting with a node or a control */
+    if (e.target.closest('.j-node')) return;
+    if (e.target.closest('.zoom-ctrl')) return;
+    if (e.target.closest('.zoom-hint')) return;
+    isDragging = true;
+    host.classList.add('is-dragging');
+    startX = e.clientX; startY = e.clientY;
+    pStartX = panX; pStartY = panY;
+    host.setPointerCapture && host.setPointerCapture(e.pointerId);
+    e.preventDefault();
+  });
+  host.addEventListener('pointermove', function(e){
+    if (!isDragging) return;
+    panX = pStartX + (e.clientX - startX);
+    panY = pStartY + (e.clientY - startY);
+    apply();
+  });
+  function endDrag(e){
+    if (!isDragging) return;
+    isDragging = false;
+    host.classList.remove('is-dragging');
+    if (host.releasePointerCapture && e && e.pointerId != null) {
+      try { host.releasePointerCapture(e.pointerId); } catch(_) {}
+    }
+  }
+  host.addEventListener('pointerup', endDrag);
+  host.addEventListener('pointercancel', endDrag);
+  host.addEventListener('pointerleave', function(){ /* keep dragging if outside */ });
+
+  /* ---------- buttons ---------- */
+  var btnIn = document.getElementById('zoom-in');
+  var btnOut = document.getElementById('zoom-out');
+  var btnFit = document.getElementById('zoom-fit');
+  function zoomBy(factor) {
+    var newZoom = Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, zoom * factor));
+    /* keep center stable */
+    var cx = host.clientWidth / 2;
+    var cy = host.clientHeight / 2;
+    panX = cx - (cx - panX) * (newZoom / zoom);
+    panY = cy - (cy - panY) * (newZoom / zoom);
+    zoom = newZoom;
+    apply();
+  }
+  btnIn  && btnIn.addEventListener('click',  function(){ zoomBy(1.25); });
+  btnOut && btnOut.addEventListener('click', function(){ zoomBy(1/1.25); });
+  btnFit && btnFit.addEventListener('click', reset);
+
+  /* ---------- keyboard ---------- */
+  document.addEventListener('keydown', function(e){
+    if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA')) return;
+    if (e.key === '+' || e.key === '=') { zoomBy(1.25); }
+    else if (e.key === '-' || e.key === '_') { zoomBy(1/1.25); }
+    else if (e.key === '0') { reset(); }
+  });
+
+  /* ---------- pinch zoom on touch (two fingers) ---------- */
+  var pointers = new Map();
+  var pinchStartDist = 0;
+  var pinchStartZoom = 1;
+  host.addEventListener('pointerdown', function(e){
+    if (e.pointerType === 'touch') {
+      pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+      if (pointers.size === 2) {
+        var pts = Array.from(pointers.values());
+        pinchStartDist = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y);
+        pinchStartZoom = zoom;
+      }
+    }
+  });
+  host.addEventListener('pointermove', function(e){
+    if (e.pointerType === 'touch' && pointers.has(e.pointerId)) {
+      pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+      if (pointers.size === 2) {
+        var pts = Array.from(pointers.values());
+        var dist = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y);
+        if (pinchStartDist > 0) {
+          var newZoom = Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, pinchStartZoom * dist / pinchStartDist));
+          var cx = (pts[0].x + pts[1].x) / 2 - host.getBoundingClientRect().left;
+          var cy = (pts[0].y + pts[1].y) / 2 - host.getBoundingClientRect().top;
+          panX = cx - (cx - panX) * (newZoom / zoom);
+          panY = cy - (cy - panY) * (newZoom / zoom);
+          zoom = newZoom;
+          apply();
+        }
+      }
+    }
+  });
+  function clearTouch(e){ if (e.pointerType === 'touch') pointers.delete(e.pointerId); }
+  host.addEventListener('pointerup', clearTouch);
+  host.addEventListener('pointercancel', clearTouch);
+
+  /* initial */
+  apply();
+})();
+
+/* ========================================================
+   VOL.II AI map: zoom & pan + node click + read-state (shares VOL.III storage)
+   ======================================================== */
+(function(){
+  var host = document.getElementById('j-host-2');
+  var svg  = document.getElementById('journey-svg-2');
+  var levelEl = document.getElementById('zoom-level-2');
+  if (!host || !svg) return;
+
+  var STORAGE_KEY = 'dcl-read-articles';
+
+  function loadRead() {
+    try {
+      var raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return [];
+      var arr = JSON.parse(raw);
+      return Array.isArray(arr) ? arr : [];
+    } catch (e) { return []; }
+  }
+  function saveRead(arr) {
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(arr)); } catch (e) {}
+  }
+  function markRead(code) {
+    var arr = loadRead();
+    if (arr.indexOf(code) === -1) { arr.push(code); saveRead(arr); }
+  }
+  var TOTAL_Q = 3; // Q1/Q2/Q3 (K series excluded as they're placeholders)
+
+  function renderRead() {
+    var read = loadRead();
+    var rs = {}; read.forEach(function(c){ rs[c] = true; });
+    svg.querySelectorAll('.j-node[data-code]').forEach(function(n){
+      n.classList.toggle('read', !!rs[n.getAttribute('data-code')]);
+    });
+    /* Q path lights up if any Q node is read */
+    var anyQ = false;
+    for (var k in rs) { if (rs[k] && k.charAt(0) === 'Q') { anyQ = true; break; } }
+    var pQ = document.getElementById('p-vol2-Q');
+    if (pQ) pQ.classList.toggle('read', anyQ);
+
+    /* Panel: count Q reads only (K placeholders aren't counted) */
+    var qReadCount = 0;
+    ['Q1','Q2','Q3'].forEach(function(c){ if (rs[c]) qReadCount++; });
+    var cur = document.getElementById('jp-cur-2'); if (cur) cur.textContent = String(qReadCount);
+    var nAll = document.getElementById('jp-n-all-2'); if (nAll) nAll.textContent = String(TOTAL_Q);
+    var nRd = document.getElementById('jp-n-read-2'); if (nRd) nRd.textContent = String(qReadCount);
+    var nUn = document.getElementById('jp-n-unread-2'); if (nUn) nUn.textContent = String(TOTAL_Q - qReadCount);
+    renderBar(qReadCount);
+  }
+
+  function renderBar(n) {
+    var bar = document.getElementById('jp-bar-2');
+    if (!bar) return;
+    if (bar.childElementCount !== TOTAL_Q) {
+      bar.innerHTML = '';
+      for (var i = 0; i < TOTAL_Q; i++) {
+        var t = document.createElement('span');
+        t.className = 'jp-tick';
+        bar.appendChild(t);
+      }
+    }
+    var ticks = bar.children;
+    for (var j = 0; j < ticks.length; j++) {
+      ticks[j].classList.toggle('on', j < n);
+    }
+  }
+
+  /* Filters: highlight/dim nodes by read state */
+  var filterBtns = Array.prototype.slice.call(document.querySelectorAll('[data-filter-2]'));
+  function setFilter(mode) {
+    svg.classList.remove('filter-all', 'filter-read', 'filter-unread');
+    if (mode === 'read') svg.classList.add('filter-read');
+    else if (mode === 'unread') svg.classList.add('filter-unread');
+    filterBtns.forEach(function(b){ b.classList.toggle('active', b.getAttribute('data-filter-2') === mode); });
+  }
+  filterBtns.forEach(function(b){
+    b.addEventListener('click', function(){ setFilter(b.getAttribute('data-filter-2')); });
+  });
+
+  /* Reset */
+  var resetBtn = document.getElementById('jp-reset-2');
+  if (resetBtn) {
+    resetBtn.addEventListener('click', function(){
+      if (confirm('清空所有已读记录？(含 VOL.III)')) {
+        saveRead([]);
+        renderRead();
+        /* Also re-render VOL.III if visible */
+        var event = new Event('storage'); window.dispatchEvent(event);
+      }
+    });
+  }
+
+  /* node click: mark read + navigate */
+  svg.querySelectorAll('.j-node[data-href]').forEach(function(n){
+    n.style.cursor = 'pointer';
+    var code = n.getAttribute('data-code');
+    n.addEventListener('click', function(){
+      var href = n.getAttribute('data-href');
+      if (code) markRead(code);
+      if (href) setTimeout(function(){ window.location.href = href; }, 30);
+    });
+  });
+
+  /* initial read-state render */
+  renderRead();
+  /* re-render when this panel becomes visible (tab switch) */
+  window.addEventListener('hashchange', function(){
+    if (location.hash === '#vol-2') renderRead();
+  });
+
+  var zoom = 1, panX = 0, panY = 0;
+  var MIN_ZOOM = 0.4, MAX_ZOOM = 3.5;
+
+  function apply() {
+    svg.style.transform = 'translate(' + panX + 'px,' + panY + 'px) scale(' + zoom + ')';
+    if (levelEl) levelEl.textContent = Math.round(zoom * 100) + '%';
+  }
+  function reset() { zoom = 1; panX = 0; panY = 0; apply(); }
+
+  host.addEventListener('wheel', function(e){
+    e.preventDefault();
+    var rect = host.getBoundingClientRect();
+    var mx = e.clientX - rect.left;
+    var my = e.clientY - rect.top;
+    var delta = -e.deltaY * 0.0015;
+    var newZoom = Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, zoom + delta * zoom));
+    if (newZoom === zoom) return;
+    panX = mx - (mx - panX) * (newZoom / zoom);
+    panY = my - (my - panY) * (newZoom / zoom);
+    zoom = newZoom;
+    apply();
+  }, { passive: false });
+
+  var isDragging = false, startX = 0, startY = 0, pStartX = 0, pStartY = 0;
+  host.addEventListener('pointerdown', function(e){
+    if (e.target.closest('.j-node')) return;
+    if (e.target.closest('.zoom-ctrl')) return;
+    if (e.target.closest('.zoom-hint')) return;
+    isDragging = true;
+    host.classList.add('is-dragging');
+    startX = e.clientX; startY = e.clientY;
+    pStartX = panX; pStartY = panY;
+    host.setPointerCapture && host.setPointerCapture(e.pointerId);
+    e.preventDefault();
+  });
+  host.addEventListener('pointermove', function(e){
+    if (!isDragging) return;
+    panX = pStartX + (e.clientX - startX);
+    panY = pStartY + (e.clientY - startY);
+    apply();
+  });
+  function endDrag(e){
+    if (!isDragging) return;
+    isDragging = false;
+    host.classList.remove('is-dragging');
+    if (host.releasePointerCapture && e && e.pointerId != null) {
+      try { host.releasePointerCapture(e.pointerId); } catch(_) {}
+    }
+  }
+  host.addEventListener('pointerup', endDrag);
+  host.addEventListener('pointercancel', endDrag);
+
+  var btnIn = document.getElementById('zoom-in-2');
+  var btnOut = document.getElementById('zoom-out-2');
+  var btnFit = document.getElementById('zoom-fit-2');
+  function zoomBy(factor) {
+    var newZoom = Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, zoom * factor));
+    var cx = host.clientWidth / 2;
+    var cy = host.clientHeight / 2;
+    panX = cx - (cx - panX) * (newZoom / zoom);
+    panY = cy - (cy - panY) * (newZoom / zoom);
+    zoom = newZoom;
+    apply();
+  }
+  btnIn  && btnIn.addEventListener('click',  function(){ zoomBy(1.25); });
+  btnOut && btnOut.addEventListener('click', function(){ zoomBy(1/1.25); });
+  btnFit && btnFit.addEventListener('click', reset);
+
+  /* pinch zoom on touch */
+  var pointers = new Map();
+  var pinchStartDist = 0, pinchStartZoom = 1;
+  host.addEventListener('pointerdown', function(e){
+    if (e.pointerType === 'touch') {
+      pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+      if (pointers.size === 2) {
+        var pts = Array.from(pointers.values());
+        pinchStartDist = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y);
+        pinchStartZoom = zoom;
+      }
+    }
+  });
+  host.addEventListener('pointermove', function(e){
+    if (e.pointerType === 'touch' && pointers.has(e.pointerId)) {
+      pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+      if (pointers.size === 2) {
+        var pts = Array.from(pointers.values());
+        var dist = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y);
+        if (pinchStartDist > 0) {
+          var newZoom = Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, pinchStartZoom * dist / pinchStartDist));
+          var cx = (pts[0].x + pts[1].x) / 2 - host.getBoundingClientRect().left;
+          var cy = (pts[0].y + pts[1].y) / 2 - host.getBoundingClientRect().top;
+          panX = cx - (cx - panX) * (newZoom / zoom);
+          panY = cy - (cy - panY) * (newZoom / zoom);
+          zoom = newZoom;
+          apply();
+        }
+      }
+    }
+  });
+  function clearTouch(e){ if (e.pointerType === 'touch') pointers.delete(e.pointerId); }
+  host.addEventListener('pointerup', clearTouch);
+  host.addEventListener('pointercancel', clearTouch);
+
+  apply();
+})();
+
+/* ========================================================
+   VOL.I · 课程书 (book engine)
+   ======================================================== */
+(function(){
+  var shell = document.getElementById('book-vol1');
+  var spreadsHost = document.getElementById('book-spreads');
+  if (!shell || !spreadsHost) return;
+
+  /* ===== Course data ===== */
+  var data = {
+    intro: {
+      h4: '关于这门课',
+      h3: '为什么<br>为设计师做这门 <span class="em">AI 课</span>？',
+      sub: 'AI 不是替代设计师的，是放大设计师的 —— 前提是你得知道 AI 在干嘛、能干嘛、不能干嘛。',
+      paragraphs: [
+        '过去一年，大多数设计师面对 AI 都有这种感觉 —— <strong>能用，但用不好</strong>；<strong>知道它强，但不知道强在哪</strong>。想让 AI 干活，但说不清要它干啥；干完发现错，也指不出错在哪。',
+        '这门课的目的不是让你成为"AI 专家" —— 是让你 <strong>建立一套用 AI 做设计的工作流</strong>：<span class="em">什么时候用、用哪个、怎么调、怎么验证、怎么交付</span>。',
+        '课程的结构会跟着实战路径走 —— 从 <strong>0-1 搭建</strong> 到 <strong>设计稿/需求 转前端</strong>，再到 <strong>团队协作</strong>。每节都附带一个能玩的小练习或 case study，<strong>看完就能用</strong>。',
+        '本质上，这是一本给设计师的 <strong>AI 工具书</strong>。'
+      ]
+    },
+    chapters: [
+      {
+        num: 'I',
+        title: 'AI 设计工作流',
+        subtitle: '从规范到落地 —— 一套 AI 辅助的设计流程',
+        introH4: '为什么这一章',
+        introH3: '把 AI 装进设计师的<span class="em">日常</span>',
+        introBody: [
+          'AI 不是用来替设计师画稿的，是用来 <strong>把重复劳动自动化、把灵感变成可交付物</strong>。这一章不教技巧，教 <span class="em">工作流</span> —— 设计师每天要做的事，怎么用 AI 把它们串起来。',
+          '我们从 <strong>0-1 搭建一套设计规范和组件库</strong> 开始；接着是 <strong>把设计稿变成可跑的前端页面</strong>；最后是 <strong>直接从需求生成页面</strong>。每个模块都是一个独立工作流，组合起来就是设计师的"现代化产线"。',
+          '看完这一章，你会建立一种新的工作直觉 —— 不是"这件事 AI 能做吗"，而是 <strong>"这件事 AI 能做到几成、剩下的我怎么补"</strong>。'
+        ],
+        valueText: '用 AI 从零搭一套设计规范和组件库；把设计稿和需求 <strong>变成可跑的前端页面</strong>，不写代码也能交付。',
+        who: '0 基础设计师 · 想用 AI 提效',
+        stats: { mod: 3, lsn: 19, time: '~ 3h' },
+        modules: [
+          {
+            num: 'M·1',
+            title: '0-1 搭建规范及组件',
+            sub: '从零搭建设计规范 —— 颜色、字体、间距、组件，一次到位。',
+            intro: '设计规范不是"做完产品后整理出来的"，是 <strong>开工前先定下来</strong> 的。这一模块教你用 AI 工具，按层次（基础变量 → 文档 → 组件）一步一步把规范立起来。',
+            lessons: [
+              { num: '01', title: '颜色搭建', tagline: '从主色到中性色，一次性把色板捋清楚。', body: ['这节聊设计系统里 <strong>色彩的层级</strong>：主色 / 辅助色 / 状态色 / 中性色，分别承担什么角色、用在哪。', '用 AI 工具生成基础色板的 <strong>3 种实操方法</strong>：从图片取色 / 从品牌色推导 / 从语义生成。'], keys: ['色板层级 4 层 · 主辅状中', '语义命名 vs 数值命名', '色板生成的 3 种姿势'], practice: '给你一张品牌主视觉，让 AI 推导一整套色板。' },
+              { num: '02', title: '字体搭建', tagline: '字号阶梯 + 行高 + 字重 = 字体规范三大支柱。', body: ['字体规范远不止"选个字"那么简单。这节聊 <strong>字号阶梯</strong>（H1-H6 + Body + Caption）、<strong>行高比例</strong>、<strong>字重梯度</strong>，怎么用 AI 一次性建好。'], keys: ['字号阶梯：从 12 到 64', '行高 1.4-1.7 是黄金区间', '字重 3-4 档够用了'], practice: '让 AI 根据你的产品类型推荐字号阶梯。' },
+              { num: '03', title: '圆角间距搭建', tagline: '间距系统 + 圆角规范，让设计有节奏感。', body: ['<strong>4 / 8 base 系统</strong>是设计师的"标尺"。这节讲怎么用 AI 帮你建一套 spacing token 和 radius token，并应用到组件上。'], keys: ['4 / 8 base 系统', 'spacing token 命名', 'radius 3 档：sm / md / lg'], practice: '让 AI 把你的现有页面间距规范化。' },
+              { num: '04', title: '效果搭建', tagline: 'Shadow / Blur / Stroke —— 容易被忽视的视觉效果。', body: ['效果（shadow / blur / stroke / opacity）是设计系统里 <strong>最容易乱</strong> 的一环。这节讲怎么用 AI 帮你把效果分级、命名、应用。'], keys: ['shadow 3-4 级深度', '不同表面对应不同 shadow', 'stroke 的语义化'], practice: '生成一套 Material 风格的 shadow 体系。' },
+              { num: '05', title: '规范文档内容', tagline: '一份合格的规范文档，应该写些什么？', body: ['<strong>规范不是 token 列表</strong>，是 <strong>使用指南</strong>。这节讲一份规范文档该有的内容：原则、变量、组件、示例、Do/Don\'t。用 AI 写文档大纲和示例。'], keys: ['原则在前、变量在后', '每个 token 都要有 use case', 'Do/Don\'t 比定义有用'], practice: '让 AI 帮你写一节规范文档的草稿。' },
+              { num: '06', title: '规范文档排版一', tagline: '基础版式 —— 让文档好读不只是好看。', body: ['排版决定了文档 <strong>能不能被读下去</strong>。这节聊基础版式：层级、栏宽、留白、对齐、信息密度。'], keys: ['每段不超过 4 行', '关键字加粗优于斜体', '左对齐 + 适度留白'], practice: '用 AI 给你的旧文档做"可读性体检"。' },
+              { num: '07', title: '规范文档排版二', tagline: '进阶版式 —— 图文混排、代码块、对照表。', body: ['进阶排版怎么处理 <strong>多种内容类型</strong>：组件演示图、代码片段、对照表、checklist。AI 怎么帮你生成这些专门的版式块。'], keys: ['组件演示图布局', '代码块的命名 + 注释', '对照表 vs 列表怎么选'], practice: '把一段散文式的规范改成对照表。' },
+              { num: '08', title: '按钮组件搭建', tagline: '从一个 Button 开始 —— 组件搭建的 0-1 实例。', body: ['Button 是组件库里 <strong>最简单也最复杂</strong> 的组件。这节用 Button 做实例，教你怎么从 0 搭一个完整组件：变体 / 状态 / 尺寸 / 用法。'], keys: ['variant 3-5 个就够', 'state 5 态：default/hover/active/disabled/loading', 'size 3 档：sm/md/lg'], practice: '用 AI 帮你列出一个完整 Button 的所有变体。' },
+              { num: '09', title: '按钮组件规范', tagline: '组件文档怎么写 —— Button 的最佳实践', body: ['组件做完不写文档等于白做。这节讲一个组件文档应该包含什么：定义、用法、变体、状态、Do/Don\'t、可访问性。'], keys: ['先写"用法"再写"参数"', '可访问性 a11y 必须有', 'Do/Don\'t 配示例'], practice: '让 AI 帮你写一份完整的 Button 文档。' },
+              { num: '10', title: '图标组件', tagline: '图标系统怎么建：风格 / 网格 / 命名 / 替换。', body: ['图标看着简单，搭起来坑很多。<strong>网格规范</strong>、<strong>视觉权重</strong>、<strong>命名方案</strong>、<strong>替换流程</strong> —— 这节用 AI 帮你建一套图标体系。'], keys: ['24x24 网格 + 1.5 stroke', '风格统一比好看重要', '命名：动作-对象 (eg: arrow-right)'], practice: '让 AI 评估你现有图标库的一致性。' },
+              { num: '11', title: '组件搭建 Skills', tagline: '11 节回顾 —— 组件搭建的可复用 Skill。', body: ['这节是 M.1 的 <strong>总结+Skill 化</strong>：把前面 10 节学到的东西，封装成 AI Skill —— 一句话调用、自动产出。'], keys: ['Skill = 触发条件 + 步骤 + 产出', 'SKILL.md 怎么写', '团队共享 Skill 的方式'], practice: '把 M.1 学到的工作流封装成一个 SKILL.md。' }
+            ]
+          },
+          {
+            num: 'M·2',
+            title: '设计稿 → 前端页面',
+            sub: 'Figma 稿子怎么 1:1 变成前端能跑的页面 —— 5 个具体场景拆解。',
+            intro: '设计稿和前端代码之间有 <strong>一道翻译鸿沟</strong>。这一模块从 5 个真实场景出发，看 AI 怎么帮你跨过这条鸿沟。',
+            lessons: [
+              { num: '01', title: '数据大屏整理篇', tagline: '大屏前的"打地基"：图层、命名、组件化', body: ['数据大屏稿子复杂，<strong>开工前的整理决定 80% 的还原速度</strong>。这节讲图层结构、命名规范、组件抽取的整理工作流。'], keys: ['图层结构 3 层够了', '命名带 prefix', '可复用的元素先组件化'], practice: '用 AI 给你的大屏稿做"整洁度体检"。' },
+              { num: '02', title: '数据大屏还原篇', tagline: 'AI 看图 → 前端代码，怎么还原得像?', body: ['这节是 <strong>还原核心</strong>：从 Figma 稿到 HTML/CSS 实现，AI 在哪些环节能帮上忙、哪些环节还是需要人。'], keys: ['先还原结构，再还原细节', '色板和字体作为 token 输入', 'AI 不擅长精确像素值'], practice: '让 AI 把一个简单 widget 变成 HTML/CSS。' },
+              { num: '03', title: '数据大屏动画交互篇', tagline: '动画怎么交付：从描述到实现', body: ['动画是 Figma 稿子 <strong>最难翻译</strong> 的部分。这节聊怎么用 AI 把"动画感觉"翻译成具体的 transition / keyframe。'], keys: ['用动作动词描述：fade / slide / pop', '时长 200-400ms 是黄金', 'cubic-bezier 比 ease 准确'], practice: 'AI 帮你写一段 transition 描述给前端。' },
+              { num: '04', title: '数据大屏切图 Skills', tagline: '切图自动化：从手工导出到批量 Skill', body: ['切图繁琐但必要。这节讲怎么把切图流程做成 <strong>可复用的 Skill</strong>：命名规则、格式选择、压缩参数。'], keys: ['SVG > PNG > JPG（按场景选）', '命名：模块_组件_状态', '批量导出比手工快 10 倍'], practice: '封装一个"一键切图"的 SKILL.md。' },
+              { num: '05', title: '移动端页面还原', tagline: '响应式 + 触屏 —— 移动端还原的特殊点', body: ['移动端比 PC 端 <strong>多了响应式 + 触屏交互</strong>。这节讲移动端还原的特殊考量，以及 AI 在这里的局限。'], keys: ['断点 3 档：375 / 768 / 1024', 'touch target 最小 44px', 'AI 不擅长真机调试，要自己上'], practice: '让 AI 给你的移动端稿生成响应式断点方案。' }
+            ]
+          },
+          {
+            num: 'M·3',
+            title: '需求 → 前端页面',
+            sub: '没有设计稿，直接从需求到页面 —— 3 种实战路径。',
+            intro: '有时候设计稿来不及画，但页面要上线。这一模块讲 <strong>跳过设计稿、直接从需求生成页面</strong> 的 3 种姿势，每种适合不同场景。',
+            lessons: [
+              { num: '01', title: '基于现有组件规范', tagline: '有规范的情况：拼装即生成', body: ['有规范库的话，<strong>需求 → 页面是最快的</strong>。这节讲怎么把需求文档拆成"组件指令"，让 AI 拼装出页面。'], keys: ['先列组件清单，再拼布局', '规范是 AI 的"词典"', '复杂交互不依赖 AI，让人接手'], practice: '从一份 PRD 直接拼出页面骨架。' },
+              { num: '02', title: '基于 Image2', tagline: '靠"参考图"驱动 —— Image2 的实战姿势', body: ['没规范但有 <strong>参考图</strong> 的话，用 Image2 系列工具（Imagen / Image-to-Code）能直接出页面。这节讲怎么挑参考图、给好 prompt、对齐风格。'], keys: ['参考图比 prompt 重要', '同一系列截 3 张更稳', '风格关键词要先提炼'], practice: '用 3 张参考图生成一个 dashboard。' },
+              { num: '03', title: '基于开源 UI 库', tagline: '不重复造轮子 —— 用 shadcn/ui 等开源库', body: ['<strong>开源 UI 库</strong>（shadcn/ui / radix / chakra）已经把"组件 + 规范"给你了。这节讲怎么用 AI 配合开源库，10 分钟产出一个能上线的页面。'], keys: ['shadcn = 复制粘贴式组件', '主题在 tailwind config 改', '复杂业务还得自己拼'], practice: '用 shadcn + AI 搭一个登录页。' }
+            ]
+          }
+        ]
+      },
+      {
+        num: 'II',
+        tbd: true,
+        title: '章节整理中',
+        subtitle: '更多主题正在规划，持续补充 ——'
+      }
+    ]
+  };
+
+  /* ===== Render utilities ===== */
+  function el(tag, cls, html) {
+    var e = document.createElement(tag);
+    if (cls) e.className = cls;
+    if (html != null) e.innerHTML = html;
+    return e;
+  }
+  function escape(s) { return s ? String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;') : ''; }
+  function pageHead(left, right) {
+    return '<div class="book-page-head"><span>' + left + '</span><span>' + right + '</span></div>';
+  }
+  function pageFoot(left, num, total) {
+    return '<div class="book-page-foot"><span>' + left + '</span><span class="book-page-foot-num">' + num + ' / ' + total + '</span></div>';
+  }
+
+  /* ===== Spread builders ===== */
+  function makeSpread(leftHTML, rightHTML, dataset) {
+    var s = document.createElement('div');
+    s.className = 'book-spread';
+    if (dataset) { for (var k in dataset) s.dataset[k] = dataset[k]; }
+    s.innerHTML =
+      '<div class="book-page book-page-left">' + leftHTML + '</div>' +
+      '<div class="book-page book-page-right">' + rightHTML + '</div>';
+    return s;
+  }
+
+  function buildIntroSpread(intro, idx, total) {
+    var left =
+      '<div class="page--chapter-intro">' +
+        pageHead('00 · 关于这门课', 'PREFACE') +
+        '<h4>' + escape(intro.h4) + '</h4>' +
+        '<h3>' + intro.h3 + '</h3>' +
+        '<p style="margin-top:16px;font-size:14px;color:var(--ink-soft);line-height:1.7">' + escape(intro.sub) + '</p>' +
+        pageFoot('PREFACE · 引言', idx, total) +
+      '</div>';
+    var right =
+      '<div class="page--chapter-intro">' +
+        pageHead('为什么做这门课', '00') +
+        intro.paragraphs.map(function(p){ return '<p>' + p + '</p>'; }).join('') +
+        pageFoot('翻到下一页，看课程大纲 →', idx + 1, total) +
+      '</div>';
+    return makeSpread(left, right, { kind: 'intro' });
+  }
+
+  function buildChapterCoverSpread(ch, idx, total, chCode) {
+    var left =
+      '<div class="page--chapter-cover">' +
+        pageHead('CHAPTER · ' + ch.num, 'VOL. 01 · 2026') +
+        '<div class="ch-band">CHAPTER · ' + ch.num + '</div>' +
+        '<div class="ch-num">' + ch.num + '</div>' +
+        '<h2 class="ch-title">' + escape(ch.title) + '</h2>' +
+        '<p class="ch-sub">' + escape(ch.subtitle) + '</p>' +
+        '<div class="ch-stats">' +
+          '<div class="s"><span class="k">MOD</span><b>' + ch.stats.mod + '</b></div>' +
+          '<div class="s"><span class="k">LSN</span><b>' + ch.stats.lsn + '</b></div>' +
+          '<div class="s"><span class="k">TIME</span><b>' + ch.stats.time + '</b></div>' +
+        '</div>' +
+        pageFoot('CHAPTER · ' + ch.num, idx, total) +
+      '</div>';
+
+    /* Right page: TOC */
+    var modulesHTML = ch.modules.map(function(m){
+      var lessonsHTML = m.lessons.map(function(l){
+        return '<li data-jump-lesson="' + chCode + '-' + m.num.replace('·','').trim() + '-' + l.num + '"><span class="ln">' + l.num + '</span>' + escape(l.title) + '</li>';
+      }).join('');
+      return '<div class="ch-toc-mod">' +
+        '<div class="ch-toc-mod-head">' +
+          '<span class="ch-toc-mod-num">' + m.num + '</span>' +
+          '<h4 class="ch-toc-mod-title">' + escape(m.title) + '</h4>' +
+          '<span class="ch-toc-mod-count">' + m.lessons.length + ' 节</span>' +
+        '</div>' +
+        '<ul class="ch-toc-lessons">' + lessonsHTML + '</ul>' +
+      '</div>';
+    }).join('');
+
+    var right =
+      '<div class="page--chapter-toc">' +
+        pageHead('章节目录 · CONTENTS', '03 模块 · ' + ch.stats.lsn + ' 节') +
+        '<div class="ch-toc-h">章节目录</div>' +
+        '<h3 class="ch-toc-title">本章 <span class="em">导览</span></h3>' +
+        modulesHTML +
+        pageFoot('点击小节可直接翻到 ↓', idx + 1, total) +
+      '</div>';
+
+    return makeSpread(left, right, { kind: 'chapter-cover', chapter: ch.num });
+  }
+
+  function buildChapterIntroSpread(ch, idx, total) {
+    var left =
+      '<div class="page--chapter-intro">' +
+        pageHead('CHAPTER · ' + ch.num + ' · 缘起', '00') +
+        '<h4>' + escape(ch.introH4) + '</h4>' +
+        '<h3>' + ch.introH3 + '</h3>' +
+        ch.introBody.map(function(p){ return '<p>' + p + '</p>'; }).join('') +
+        pageFoot('CHAPTER · ' + ch.num + ' · INTRO', idx, total) +
+      '</div>';
+    var right =
+      '<div class="page--chapter-intro">' +
+        pageHead('CHAPTER · ' + ch.num + ' · 价值', 'WHO') +
+        '<h4>学完能做什么</h4>' +
+        '<div class="value-box"><span class="value-box-label">学完能做</span><p class="value-box-text">' + ch.valueText + '</p></div>' +
+        '<h4 style="margin-top:24px">面向谁</h4>' +
+        '<p>' + escape(ch.who) + '</p>' +
+        '<h4 style="margin-top:18px">章节体量</h4>' +
+        '<p><strong>' + ch.stats.mod + '</strong> 模块 · <strong>' + ch.stats.lsn + '</strong> 节 · 估计 <strong>' + ch.stats.time + '</strong></p>' +
+        pageFoot('准备好了？翻到下一页 →', idx + 1, total) +
+      '</div>';
+    return makeSpread(left, right, { kind: 'chapter-intro', chapter: ch.num });
+  }
+
+  function buildModuleSpread(ch, m, idx, total) {
+    var left =
+      '<div class="page--module-cover">' +
+        pageHead('MODULE · ' + m.num, 'CHAPTER · ' + ch.num) +
+        '<div class="m-band">' + m.num + ' · 模块开场</div>' +
+        '<div class="m-num">' + m.num.replace('M·','').trim() + '</div>' +
+        '<h2 class="m-title">' + escape(m.title) + '</h2>' +
+        '<p class="m-sub">' + escape(m.sub) + '</p>' +
+        '<p class="m-sub" style="margin-top:14px">' + m.intro + '</p>' +
+        '<div class="m-count"><span>' + m.lessons.length + ' 节 · ~ ' + (m.lessons.length * 12) + ' min</span><span>MODULE</span></div>' +
+        pageFoot('MODULE · ' + m.num, idx, total) +
+      '</div>';
+    var lessonsListHTML = m.lessons.map(function(l, i){
+      return '<li data-jump-lesson="' + ch.num + '-' + m.num.replace('·','').trim() + '-' + l.num + '"><span class="ln">' + l.num + '</span><span class="ti">' + escape(l.title) + '</span><span class="arr">→</span></li>';
+    }).join('');
+    var right =
+      '<div class="page--module-lessons">' +
+        pageHead('章节 · ' + m.num, m.lessons.length + ' 节') +
+        '<div class="m-lessons-h">本模块 · 小节列表</div>' +
+        '<ul class="m-lessons-list">' + lessonsListHTML + '</ul>' +
+        pageFoot('点击小节直接翻 ↑', idx + 1, total) +
+      '</div>';
+    return makeSpread(left, right, { kind: 'module', chapter: ch.num, module: m.num });
+  }
+
+  function buildLessonSpread(ch, m, l, lessonIdx, totalLessons, idx, total) {
+    var left =
+      '<div class="page--lesson-cover">' +
+        pageHead(m.num + ' · ' + escape(m.title), lessonIdx + ' / ' + totalLessons) +
+        '<div class="l-band">' + ch.num + ' · ' + m.num + ' · LSN ' + l.num + '</div>' +
+        '<div class="l-num">' + l.num + '</div>' +
+        '<h2 class="l-title">' + escape(l.title) + '</h2>' +
+        '<p class="l-tagline">' + escape(l.tagline || '') + '</p>' +
+        '<div class="l-meta"><span>约 12 min</span><span>LESSON · ' + l.num + '</span></div>' +
+        pageFoot('LESSON · ' + l.num, idx, total) +
+      '</div>';
+    var bodyHTML = (l.body || []).map(function(p){ return '<p>' + p + '</p>'; }).join('');
+    var keysHTML = l.keys && l.keys.length ? ('<ul class="l-keys">' + l.keys.map(function(k){ return '<li>' + escape(k) + '</li>'; }).join('') + '</ul>') : '';
+    var practiceHTML = l.practice ? (
+      '<div class="practice-card">' +
+        '<h5>课后实操</h5>' +
+        '<p>' + escape(l.practice) + '</p>' +
+        '<span class="pc-status">小游戏 · 待补充</span>' +
+      '</div>'
+    ) : '';
+    var right =
+      '<div class="page--lesson-body">' +
+        pageHead('内容 · 介绍', l.num) +
+        bodyHTML +
+        keysHTML +
+        practiceHTML +
+        pageFoot('翻下一节 →', idx + 1, total) +
+      '</div>';
+    return makeSpread(left, right, { kind: 'lesson', chapter: ch.num, module: m.num, lesson: l.num, jumpKey: ch.num + '-' + m.num.replace('·','').trim() + '-' + l.num });
+  }
+
+  function buildChapterDoneSpread(ch, idx, total) {
+    var left =
+      '<div class="page--chapter-done">' +
+        pageHead('CHAPTER · ' + ch.num + ' · 完结', 'DONE') +
+        '<div class="done-cert">' + ch.num + '</div>' +
+        '<div class="done-band">CHAPTER COMPLETED</div>' +
+        '<h3 class="done-title">读完 第 ' + ch.num + ' 卷</h3>' +
+        '<p class="done-sub">' + escape(ch.title) + ' · 全部 ' + ch.stats.lsn + ' 节读完。给自己鼓个掌。</p>' +
+        pageFoot('CHAPTER · ' + ch.num + ' · END', idx, total) +
+      '</div>';
+    var right =
+      '<div class="page--chapter-done">' +
+        pageHead('下一章 · NEXT', '→') +
+        '<div class="done-band">NEXT CHAPTER</div>' +
+        '<h3 class="done-title">章节整理中</h3>' +
+        '<p class="done-sub">更多主题正在规划，持续补充 ——</p>' +
+        pageFoot('翻下一卷 →', idx + 1, total) +
+      '</div>';
+    return makeSpread(left, right, { kind: 'chapter-done', chapter: ch.num });
+  }
+
+  function buildTBDSpread(ch, idx, total) {
+    var left = '<div class="page--tbd">' +
+      pageHead('CHAPTER · ' + ch.num, 'WIP') +
+      '<div class="tbd-stamp">DRAFT · WIP</div>' +
+      '<h3>' + escape(ch.title) + '</h3>' +
+      '<p>' + escape(ch.subtitle) + '</p>' +
+      pageFoot('TBD', idx, total) +
+      '</div>';
+    var right = '<div class="page--tbd">' +
+      pageHead('整理中 · 持续补充', 'TBD') +
+      '<div class="tbd-stamp">COMING SOON</div>' +
+      '<h3>更多章节</h3>' +
+      '<p>规划中的章节会陆续上线 ——</p>' +
+      pageFoot('END', idx + 1, total) +
+      '</div>';
+    return makeSpread(left, right, { kind: 'tbd', chapter: ch.num });
+  }
+
+  /* === 封面 spread (idx 0) - 跟内页用同一套结构, 共用 flip 动画 === */
+  function buildCoverSpread(idx, total) {
+    var left =
+      '<div class="page--cover-left">' +
+        '<div class="cover-band">CURRICULUM · VOL. 01 / 2026</div>' +
+        '<div class="cover-title">' +
+          '<span class="cover-en">AI for</span>' +
+          '<span class="cover-en">Designers</span>' +
+          '<span class="cover-cn">零基础课</span>' +
+        '</div>' +
+        '<div class="cover-author"><span class="dot"></span>范米花儿 / CE 青年</div>' +
+      '</div>';
+    var right =
+      '<div class="page--cover-right">' +
+        '<div class="cover-meta">' +
+          '<span class="meta-pill">课程 · CURRICULUM</span>' +
+          '<span class="meta-pill">2026 · 实验室</span>' +
+          '<span class="meta-pill">1 章 · 19 课时</span>' +
+        '</div>' +
+        '<h3 class="cover-lede">从 <span class="em">AI 工作流</span> 到 设计协作 ——<br>这套课不教你写代码，<span class="em">教你把 AI 当工具用</span>。</h3>' +
+        '<ul class="cover-side">' +
+          '<li><span class="k">主线</span><span class="v">1 / N · 整理中</span></li>' +
+          '<li><span class="k">面向</span><span class="v">设计师 · 零基础</span></li>' +
+          '<li><span class="k">状态</span><span class="v">建设中 →</span></li>' +
+          '<li><span class="k">操作</span><span class="v">点击翻开 · ←/→ 翻页 · ESC 合上</span></li>' +
+        '</ul>' +
+        '<div class="cover-hint"><span>点击翻开</span><span class="cover-corner">↘</span></div>' +
+      '</div>';
+    return makeSpread(left, right, { kind: 'cover' });
+  }
+
+  /* ===== Build all spreads ===== */
+  /* NOTE: per-module spread (buildModuleSpread) was removed — chapter-cover TOC already
+     lists every lesson, the second module-level lesson list was redundant. */
+  var allSpreads = [];
+  /* Cover spread (idx 0) — same structural unit as inner spreads → flip animation is identical */
+  allSpreads.push({ build: buildCoverSpread, args: [] });
+  /* Intro spread (preface) */
+  if (data.intro) {
+    allSpreads.push({ build: buildIntroSpread, args: [data.intro] });
+  }
+  data.chapters.forEach(function(ch){
+    if (ch.tbd) {
+      allSpreads.push({ build: buildTBDSpread, args: [ch] });
+      return;
+    }
+    var totalLessonsInChapter = ch.modules.reduce(function(acc, m){ return acc + m.lessons.length; }, 0);
+    var lessonIdx = 0;
+    allSpreads.push({ build: buildChapterCoverSpread, args: [ch, null, null, ch.num] });
+    allSpreads.push({ build: buildChapterIntroSpread, args: [ch] });
+    ch.modules.forEach(function(m){
+      m.lessons.forEach(function(l){
+        lessonIdx++;
+        allSpreads.push({ build: buildLessonSpread, args: [ch, m, l, lessonIdx, totalLessonsInChapter] });
+      });
+    });
+    allSpreads.push({ build: buildChapterDoneSpread, args: [ch] });
+  });
+
+  var totalSpreads = allSpreads.length;
+  allSpreads.forEach(function(s, i){
+    var args = s.args.slice();
+    args.push(i + 1);
+    args.push(totalSpreads);
+    var sp = s.build.apply(null, args);
+    sp.dataset.spread = i;
+    spreadsHost.appendChild(sp);
+  });
+
+  /* ===== State & flip engine ===== */
+  var STORAGE_KEY = 'dcl-book-vol1-completed';
+  var completed = new Set();
+  try {
+    var raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) JSON.parse(raw).forEach(function(i){ completed.add(parseInt(i)); });
+  } catch (e) {}
+
+  var current = 0;
+  var allSpreadEls = spreadsHost.querySelectorAll('.book-spread');
+
+  function applyCompleted() {
+    allSpreadEls.forEach(function(el){
+      var i = parseInt(el.dataset.spread);
+      el.classList.toggle('is-completed', completed.has(i));
+    });
+  }
+
+  function markCompleted(i) {
+    if (completed.has(i)) return;
+    completed.add(i);
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(Array.from(completed))); } catch (e) {}
+    var el = spreadsHost.querySelector('[data-spread="' + i + '"]');
+    if (el) el.classList.add('is-completed');
+    updateProgress();
+  }
+
+  function updateProgress() {
+    var pos = current + 1;
+    var pct = totalSpreads > 0 ? (pos / totalSpreads * 100) : 0;
+    var fill = document.getElementById('book-prog-fill');
+    if (fill) fill.style.width = pct + '%';
+    var txt = document.getElementById('book-prog-text');
+    if (txt) txt.textContent = pos + ' / ' + totalSpreads;
+    var pi = document.getElementById('book-page-info');
+    if (pi) pi.textContent = pos + ' / ' + totalSpreads;
+  }
+
+  var isFlipping = false;
+  var FLIP_DURATION = 750;
+
+  /* Instant switch (used by jumps / overview / TOC) */
+  function showSpread(idx) {
+    if (idx < 0 || idx >= totalSpreads) return;
+    if (isFlipping) {
+      var live = spreadsHost.querySelector('.book-flip-page');
+      if (live) live.remove();
+      isFlipping = false;
+    }
+    var oldEl = spreadsHost.querySelector('.book-spread.is-current');
+    var newEl = spreadsHost.querySelector('[data-spread="' + idx + '"]');
+    if (!newEl) return;
+    if (oldEl) oldEl.classList.remove('is-current');
+    newEl.classList.add('is-current');
+    current = idx;
+    updateProgress();
+    updateActiveThumb();
+    updateChromeForCover();
+  }
+
+  /* 在封面 spread 时隐藏 progress / controls / thumb-index — 看起来像"合上"的状态 */
+  function updateChromeForCover() {
+    var onCover = current === 0;
+    var prog = document.querySelector('.book-progress');
+    var ctrl = document.getElementById('book-controls');
+    var thumb = document.getElementById('book-thumb');
+    if (prog) prog.hidden = onCover;
+    if (ctrl) ctrl.hidden = onCover;
+    if (thumb) thumb.hidden = onCover;
+  }
+
+  /* Animated flip — next (forward) */
+  function flipNext() {
+    if (isFlipping || current >= totalSpreads - 1) return;
+    var oldSp = spreadsHost.querySelector('[data-spread="' + current + '"]');
+    var newSp = spreadsHost.querySelector('[data-spread="' + (current + 1) + '"]');
+    if (!oldSp || !newSp) return;
+    isFlipping = true;
+
+    var oldRight = oldSp.querySelector('.book-page-right').innerHTML;
+    var newLeft = newSp.querySelector('.book-page-left').innerHTML;
+
+    var flip = document.createElement('div');
+    flip.className = 'book-flip-page book-flip-page--next';
+    flip.innerHTML =
+      '<div class="book-flip-face book-flip-front"><div class="book-page book-page-right">' + oldRight + '</div></div>' +
+      '<div class="book-flip-face book-flip-back"><div class="book-page book-page-left">' + newLeft + '</div></div>';
+    spreadsHost.appendChild(flip);
+
+    /* Drive with Web Animations API (more reliable than CSS animation in 3D context) */
+    var anim = flip.animate(
+      [
+        { transform: 'translateZ(0) rotateY(0deg)' },
+        { transform: 'translateZ(0) rotateY(-180deg)' }
+      ],
+      { duration: FLIP_DURATION, easing: 'cubic-bezier(0.45, 0, 0.2, 1)', fill: 'forwards' }
+    );
+
+    /* At halfway: swap underlying spreads (page is edge-on, swap is invisible) */
+    setTimeout(function(){
+      oldSp.classList.remove('is-current');
+      newSp.classList.add('is-current');
+      current = current + 1;
+      updateProgress();
+      updateActiveThumb();
+      updateChromeForCover();
+    }, FLIP_DURATION / 2);
+
+    /* At end: remove the flip page */
+    anim.onfinish = function(){
+      flip.remove();
+      isFlipping = false;
+    };
+  }
+
+  /* Animated flip — prev (backward) */
+  function flipPrev() {
+    if (isFlipping || current <= 0) return;
+    var oldSp = spreadsHost.querySelector('[data-spread="' + current + '"]');
+    var newSp = spreadsHost.querySelector('[data-spread="' + (current - 1) + '"]');
+    if (!oldSp || !newSp) return;
+    isFlipping = true;
+
+    var oldLeft = oldSp.querySelector('.book-page-left').innerHTML;
+    var newRight = newSp.querySelector('.book-page-right').innerHTML;
+
+    var flip = document.createElement('div');
+    flip.className = 'book-flip-page book-flip-page--prev';
+    flip.innerHTML =
+      '<div class="book-flip-face book-flip-front"><div class="book-page book-page-left">' + oldLeft + '</div></div>' +
+      '<div class="book-flip-face book-flip-back"><div class="book-page book-page-right">' + newRight + '</div></div>';
+    spreadsHost.appendChild(flip);
+
+    var anim = flip.animate(
+      [
+        { transform: 'translateZ(0) rotateY(0deg)' },
+        { transform: 'translateZ(0) rotateY(180deg)' }
+      ],
+      { duration: FLIP_DURATION, easing: 'cubic-bezier(0.45, 0, 0.2, 1)', fill: 'forwards' }
+    );
+
+    setTimeout(function(){
+      oldSp.classList.remove('is-current');
+      newSp.classList.add('is-current');
+      current = current - 1;
+      updateProgress();
+      updateActiveThumb();
+      updateChromeForCover();
+    }, FLIP_DURATION / 2);
+
+    anim.onfinish = function(){
+      flip.remove();
+      isFlipping = false;
+    };
+  }
+
+  function next() { flipNext(); }
+  function prev() { flipPrev(); }
+
+  /* "合上" / "封面" — 用同一套翻页动画动到 idx 0 (cover spread)
+     如果只差 1-2 页, 走真翻页; 否则连续翻 (节奏快一点) */
+  function closeBook() {
+    if (current === 0) return;
+    if (current === 1) { flipPrev(); return; }
+    /* 跨多 spread 时, 串联快速 flipPrev 直到回到封面 */
+    var step = function() {
+      if (current === 0) return;
+      flipPrev();
+      setTimeout(step, FLIP_DURATION * 0.55);
+    };
+    step();
+  }
+
+  document.getElementById('book-prev').addEventListener('click', prev);
+  document.getElementById('book-next').addEventListener('click', next);
+  document.getElementById('book-close').addEventListener('click', closeBook);
+  document.getElementById('book-back-cover').addEventListener('click', closeBook);
+
+  /* Click page edges to flip (corner = bottom 30%) — except 封面 spread, 全部点击都翻开 */
+  spreadsHost.addEventListener('click', function(e){
+    var sp = e.target.closest('.book-spread');
+    if (!sp || !sp.classList.contains('is-current')) return;
+    /* TOC / module list jump → instant */
+    var jump = e.target.closest('[data-jump-lesson]');
+    if (jump) {
+      var key = jump.getAttribute('data-jump-lesson');
+      var target = spreadsHost.querySelector('[data-jump-key="' + key + '"]');
+      if (target) showSpread(parseInt(target.dataset.spread));
+      return;
+    }
+    /* 封面 spread: 点击任何位置 → 翻开 */
+    if (sp.dataset.kind === 'cover') {
+      flipNext();
+      return;
+    }
+    /* click right page bottom area → flip next; left page bottom → flip prev */
+    var rect = sp.getBoundingClientRect();
+    var x = e.clientX - rect.left;
+    var y = e.clientY - rect.top;
+    if (y > rect.height * 0.7) {
+      if (x > rect.width * 0.55) flipNext();
+      else if (x < rect.width * 0.45) flipPrev();
+    }
+  });
+
+  /* Keyboard — only active when VOL.I 是当前面板 */
+  document.addEventListener('keydown', function(e){
+    var panel = document.querySelector('.vol-panel--book');
+    if (!panel || !panel.classList.contains('is-active')) return;
+    if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA')) return;
+    if (document.getElementById('book-overview').hidden === false) {
+      if (e.key === 'Escape' || e.key === 'o' || e.key === 'O') { toggleOverview(false); e.preventDefault(); }
+      return;
+    }
+    if (e.key === 'ArrowRight') { next(); e.preventDefault(); }
+    else if (e.key === 'ArrowLeft') { prev(); e.preventDefault(); }
+    else if (e.key === 'Escape') { closeBook(); e.preventDefault(); }
+    else if (e.key === 'o' || e.key === 'O') { toggleOverview(true); e.preventDefault(); }
+    else if (e.key === '1' || e.key === '2' || e.key === '3') {
+      var n = (['I','II','III'])[parseInt(e.key) - 1];
+      jumpToChapter(n);
+    }
+  });
+
+  /* Touch swipe */
+  var touchStart = null;
+  spreadsHost.addEventListener('touchstart', function(e){
+    if (e.touches.length === 1) touchStart = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+  });
+  spreadsHost.addEventListener('touchend', function(e){
+    if (!touchStart) return;
+    var dx = e.changedTouches[0].clientX - touchStart.x;
+    var dy = e.changedTouches[0].clientY - touchStart.y;
+    if (Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy)) {
+      if (dx < 0) next(); else prev();
+    }
+    touchStart = null;
+  });
+
+  /* ===== Thumb index (chapter tabs) ===== */
+  var thumbNav = document.getElementById('book-thumb');
+  data.chapters.forEach(function(ch){
+    var b = document.createElement('button');
+    b.className = 'book-thumb-tab' + (ch.tbd ? ' is-tbd' : '');
+    b.textContent = ch.num;
+    b.title = ch.title;
+    b.addEventListener('click', function(){ jumpToChapter(ch.num); });
+    thumbNav.appendChild(b);
+  });
+
+  function jumpToChapter(num) {
+    var target = spreadsHost.querySelector('[data-kind="chapter-cover"][data-chapter="' + num + '"]') || spreadsHost.querySelector('[data-kind="tbd"][data-chapter="' + num + '"]');
+    if (target) {
+      var ti = parseInt(target.dataset.spread);
+      showSpread(ti, ti > current ? 'next' : 'prev');
+    }
+  }
+  function updateActiveThumb() {
+    var spEl = spreadsHost.querySelector('[data-spread="' + current + '"]');
+    var ch = spEl ? spEl.dataset.chapter : null;
+    Array.prototype.slice.call(thumbNav.children).forEach(function(b, i){
+      b.classList.toggle('is-active', b.textContent === ch);
+    });
+  }
+
+  /* ===== Overview ===== */
+  var overviewEl = document.getElementById('book-overview');
+  var overviewGrid = document.getElementById('book-overview-grid');
+  /* IMPORTANT: portal the overview modal to <body> so position:fixed escapes
+     the .vol-panel ancestor (whose fade-in animation leaves a transform that
+     would otherwise establish a containing block and trap the modal). */
+  if (overviewEl && overviewEl.parentElement !== document.body) {
+    document.body.appendChild(overviewEl);
+  }
+  function buildOverview() {
+    overviewGrid.innerHTML = '';
+    allSpreadEls.forEach(function(sp, i){
+      var t = document.createElement('button');
+      t.className = 'book-thumb';
+      var kind = sp.dataset.kind || '';
+      var ch = sp.dataset.chapter || '';
+      var title = '';
+      var titleEl = sp.querySelector('.ch-title, .l-title, .m-title, h3');
+      if (titleEl) title = titleEl.textContent.trim();
+      else title = kind.toUpperCase();
+      t.innerHTML =
+        '<span class="book-thumb-kind">' + kind.replace('-', ' · ').toUpperCase() + ' · CH ' + ch + '</span>' +
+        '<span class="book-thumb-title">' + escape(title.slice(0, 24)) + '</span>' +
+        '<span class="book-thumb-pageno">PAGE ' + (i + 1) + '</span>';
+      if (i === current) t.classList.add('is-current');
+      t.addEventListener('click', function(){ showSpread(i, i > current ? 'next' : 'prev'); toggleOverview(false); });
+      overviewGrid.appendChild(t);
+    });
+  }
+  function toggleOverview(show) {
+    if (show) {
+      buildOverview();
+      overviewEl.hidden = false;
+      document.body.style.overflow = 'hidden';
+    } else {
+      overviewEl.hidden = true;
+      document.body.style.overflow = '';
+    }
+  }
+  document.getElementById('book-overview-btn').addEventListener('click', function(){ toggleOverview(true); });
+  Array.prototype.slice.call(overviewEl.querySelectorAll('[data-overview-close]')).forEach(function(b){ b.addEventListener('click', function(){ toggleOverview(false); }); });
+
+  /* ===== Init ===== */
+  applyCompleted();
+  updateProgress();
+  /* Pre-mount the first spread so it's visible underneath the cover the
+     moment it starts flipping open (no blank flash). */
+  showSpread(0);
+})();
+</script>
+</body>
+</html>
