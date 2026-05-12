@@ -497,15 +497,38 @@
   .screen-content::-webkit-scrollbar { width: 4px; }
   .screen-content::-webkit-scrollbar-thumb { background: var(--line); border-radius: 2px; }
 
-  /* Glitch transition when content swaps */
-  .screen-content.is-changing {
-    animation: screen-glitch 0.28s ease-out;
+  /* TV channel-change transitions — 出场 (旧内容离开) + 入场 (新内容到来) */
+  .screen-content.is-leaving {
+    animation: tv-out 0.22s ease-in forwards;
+    pointer-events: none;
   }
-  @keyframes screen-glitch {
-    0%   { opacity: 1; transform: translateX(0); }
-    20%  { opacity: 0.3; transform: translateX(-4px); }
-    40%  { opacity: 0.5; transform: translateX(3px); }
-    100% { opacity: 1; transform: translateX(0); }
+  .screen-content.is-entering {
+    animation: tv-in 0.34s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+    pointer-events: none;
+  }
+  /* 旧内容: 高光过曝 → 压扁 → 淡出 */
+  @keyframes tv-out {
+    0%   { opacity: 1; transform: translateY(0) scaleY(1); filter: brightness(1) contrast(1); }
+    50%  { opacity: 0.9; filter: brightness(1.6) contrast(1.5); }
+    100% { opacity: 0; transform: translateY(-10px) scaleY(0.88); filter: brightness(2.4) contrast(2.4); }
+  }
+  /* 新内容: 从下方过曝压扁状态 → 弹回正常 */
+  @keyframes tv-in {
+    0%   { opacity: 0; transform: translateY(14px) scaleY(0.88); filter: brightness(2.4) contrast(2.4); }
+    35%  { opacity: 0.85; filter: brightness(1.5) contrast(1.4); }
+    70%  { opacity: 1; transform: translateY(-2px) scaleY(1.01); filter: brightness(1.1); }
+    100% { opacity: 1; transform: translateY(0) scaleY(1); filter: none; }
+  }
+  /* 切换时 CRT 横线一闪 — pseudo element on screen-frame */
+  .screen-frame.is-flashing::before {
+    background:
+      repeating-linear-gradient(0deg, transparent 0 2px, rgba(0,0,0,0.14) 2px 3px),
+      linear-gradient(0deg, transparent 48%, rgba(255,255,255,0.4) 50%, transparent 52%);
+    animation: tv-scanline-pulse 0.4s ease-out;
+  }
+  @keyframes tv-scanline-pulse {
+    0%   { background-position: 0 -100%; opacity: 0.9; }
+    100% { background-position: 0 200%; opacity: 0; }
   }
 
   /* Screen content — 暗字 on cream playbill */
@@ -1866,12 +1889,26 @@
     positionEl.textContent = pad2(idx + 1) + ' / ' + pad2(frames.length);
   }
 
+  var _screenSwapTimer = null;
   function renderScreen(f) {
-    /* Glitch transition: re-trigger animation */
-    screenContent.classList.remove('is-changing');
-    void screenContent.offsetWidth;
-    screenContent.classList.add('is-changing');
+    /* === TV-channel-change transition: 出场 → swap → 入场 === */
+    if (_screenSwapTimer) { clearTimeout(_screenSwapTimer); _screenSwapTimer = null; }
 
+    /* Begin out-animation */
+    screenContent.classList.remove('is-entering');
+    screenContent.classList.add('is-leaving');
+    /* CRT scanline flash on the screen frame */
+    var screenFrame = screenContent.parentElement;
+    screenFrame.classList.remove('is-flashing');
+    void screenFrame.offsetWidth;
+    screenFrame.classList.add('is-flashing');
+
+    _screenSwapTimer = setTimeout(function(){
+      _renderScreenSwap(f);
+    }, 200);
+  }
+
+  function _renderScreenSwap(f) {
     var html = '';
     if (f.kind === 'lesson') {
       var l = f.data, m = f.module;
@@ -1956,6 +1993,9 @@
         '</div>';
     }
     screenContent.innerHTML = html;
+    /* Swap out → in classes */
+    screenContent.classList.remove('is-leaving');
+    screenContent.classList.add('is-entering');
 
     /* Wire play button if present */
     var playBtn = screenContent.querySelector('[data-play]');
@@ -1971,6 +2011,12 @@
         try { def.render(host); } catch(e) { console.error('demo render failed', e); }
       }
     }
+
+    /* Cleanup entering class after animation completes */
+    _screenSwapTimer = setTimeout(function(){
+      screenContent.classList.remove('is-entering');
+      _screenSwapTimer = null;
+    }, 360);
   }
 
   /* ===== Roadmap (channel guide) modal — uses VOL.II j-* journey-map style ===== */
