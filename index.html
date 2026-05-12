@@ -1456,14 +1456,13 @@
     background: var(--bg-2);
     transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
   }
-  .cdx-ref-img {
+  .cdx-ref-svg {
     width: 100%; height: 100%;
-    object-fit: cover;
     display: block;
     transition: transform 0.3s ease;
   }
   .cdx-ref:hover { transform: translateY(-1px); border-color: var(--ink); box-shadow: 0 3px 8px rgba(0,0,0,0.25); }
-  .cdx-ref:hover .cdx-ref-img { transform: scale(1.06); }
+  .cdx-ref:hover .cdx-ref-svg { transform: scale(1.06); }
   .cdx-ref.is-on { border-color: var(--accent); border-width: 2px; box-shadow: 0 0 0 2px rgba(255,77,46,0.3), 0 4px 10px rgba(255,77,46,0.3); }
   .cdx-ref.is-on::after {
     content: '✓'; position: absolute; top: 2px; right: 4px;
@@ -2308,20 +2307,85 @@
     return '#' + hx(r) + hx(g) + hx(b);
   }
 
-  /* 4 张参考图预设 (Unsplash 小图, 各自标了 AI 取色的主色) */
+  /* 4 张界面参考图 (内联 SVG 模拟 UI/Web 设计稿, AI 从其中取主色) */
   var CDX_REFS = [
-    { id: 'sunset', label: '日落',
-      img: 'https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=160&q=70',
-      dominant: '#ff7a3a' },
-    { id: 'forest', label: '森林',
-      img: 'https://images.unsplash.com/photo-1448375240586-882707db888b?w=160&q=70',
-      dominant: '#4a7339' },
-    { id: 'neon',   label: '霓虹',
-      img: 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=160&q=70',
-      dominant: '#d12a78' },
-    { id: 'autumn', label: '秋叶',
-      img: 'https://images.unsplash.com/photo-1507371341162-763b5e419408?w=160&q=70',
-      dominant: '#c75a1a' }
+    { id: 'minimal', label: '极简 · Light',
+      dominant: '#3b6bff',
+      svg:
+        '<rect width="80" height="60" fill="#f5f6f8"/>' +
+        '<rect x="0" y="0" width="80" height="9" fill="#ffffff"/>' +
+        '<circle cx="6" cy="4.5" r="1.4" fill="#3b6bff"/>' +
+        '<rect x="11" y="3.5" width="14" height="2" rx="0.5" fill="#1f2937"/>' +
+        '<rect x="64" y="3" width="10" height="3" rx="1.5" fill="#3b6bff"/>' +
+        '<rect x="8" y="14" width="48" height="3.5" rx="0.8" fill="#1f2937"/>' +
+        '<rect x="8" y="20" width="36" height="2" rx="0.5" fill="#9ca3af"/>' +
+        '<rect x="8" y="23.5" width="42" height="2" rx="0.5" fill="#9ca3af"/>' +
+        '<rect x="8" y="34" width="30" height="18" rx="1.5" fill="#ffffff" stroke="#e5e7eb" stroke-width="0.4"/>' +
+        '<rect x="11" y="37" width="8" height="8" rx="1" fill="#3b6bff" opacity="0.15"/>' +
+        '<rect x="11" y="47" width="14" height="1.4" rx="0.4" fill="#1f2937"/>' +
+        '<rect x="42" y="34" width="30" height="18" rx="1.5" fill="#ffffff" stroke="#e5e7eb" stroke-width="0.4"/>' +
+        '<rect x="45" y="37" width="8" height="8" rx="1" fill="#3b6bff" opacity="0.15"/>' +
+        '<rect x="45" y="47" width="14" height="1.4" rx="0.4" fill="#1f2937"/>' },
+    { id: 'dashboard', label: '暗色 · Dashboard',
+      dominant: '#10b981',
+      svg:
+        '<rect width="80" height="60" fill="#0f172a"/>' +
+        '<rect x="0" y="0" width="80" height="8" fill="#1e293b"/>' +
+        '<rect x="4" y="3" width="14" height="2" rx="0.5" fill="#10b981"/>' +
+        '<rect x="62" y="2.5" width="12" height="3" rx="1.5" fill="#10b981"/>' +
+        '<rect x="5" y="13" width="34" height="20" rx="1.5" fill="#1e293b"/>' +
+        '<polyline points="8,28 14,24 20,26 26,20 32,22 36,18" stroke="#10b981" stroke-width="0.8" fill="none"/>' +
+        '<circle cx="36" cy="18" r="1" fill="#10b981"/>' +
+        '<rect x="41" y="13" width="34" height="20" rx="1.5" fill="#1e293b"/>' +
+        '<rect x="44" y="28" width="2.5" height="4" rx="0.3" fill="#22d3ee"/>' +
+        '<rect x="48" y="25" width="2.5" height="7" rx="0.3" fill="#22d3ee"/>' +
+        '<rect x="52" y="22" width="2.5" height="10" rx="0.3" fill="#22d3ee"/>' +
+        '<rect x="56" y="19" width="2.5" height="13" rx="0.3" fill="#22d3ee"/>' +
+        '<rect x="60" y="16" width="2.5" height="16" rx="0.3" fill="#10b981"/>' +
+        '<rect x="64" y="20" width="2.5" height="12" rx="0.3" fill="#22d3ee"/>' +
+        '<rect x="68" y="24" width="2.5" height="8" rx="0.3" fill="#22d3ee"/>' +
+        '<rect x="5" y="37" width="70" height="3" rx="0.5" fill="#1e293b"/>' +
+        '<rect x="5" y="42" width="70" height="3" rx="0.5" fill="#1e293b"/>' +
+        '<rect x="5" y="47" width="70" height="3" rx="0.5" fill="#1e293b"/>' },
+    { id: 'gradient', label: '渐变 · Landing',
+      dominant: '#a855f7',
+      svg:
+        '<defs><linearGradient id="cdxg1" x1="0" y1="0" x2="1" y2="1">' +
+          '<stop offset="0" stop-color="#7c3aed"/>' +
+          '<stop offset="0.5" stop-color="#c026d3"/>' +
+          '<stop offset="1" stop-color="#f43f5e"/>' +
+        '</linearGradient></defs>' +
+        '<rect width="80" height="60" fill="url(#cdxg1)"/>' +
+        '<circle cx="14" cy="46" r="14" fill="#ffffff" opacity="0.06"/>' +
+        '<circle cx="66" cy="14" r="10" fill="#ffffff" opacity="0.08"/>' +
+        '<rect x="4" y="4" width="10" height="1.6" rx="0.4" fill="#ffffff" opacity="0.92"/>' +
+        '<rect x="60" y="3.5" width="16" height="3" rx="1.5" fill="#ffffff" opacity="0.18"/>' +
+        '<rect x="10" y="20" width="60" height="4" rx="0.6" fill="#ffffff" opacity="0.96"/>' +
+        '<rect x="10" y="27" width="48" height="2.2" rx="0.5" fill="#ffffff" opacity="0.7"/>' +
+        '<rect x="10" y="31" width="44" height="2.2" rx="0.5" fill="#ffffff" opacity="0.7"/>' +
+        '<rect x="10" y="42" width="20" height="6" rx="3" fill="#ffffff"/>' +
+        '<rect x="34" y="42" width="20" height="6" rx="3" fill="#ffffff" opacity="0.2" stroke="#ffffff" stroke-width="0.4"/>' },
+    { id: 'editorial', label: '编辑 · Magazine',
+      dominant: '#c2410c',
+      svg:
+        '<rect width="80" height="60" fill="#fef9f1"/>' +
+        '<rect x="0" y="0" width="80" height="6" fill="#fef9f1"/>' +
+        '<rect x="4" y="2" width="10" height="2" rx="0.4" fill="#c2410c"/>' +
+        '<rect x="32" y="2.4" width="6" height="1.2" rx="0.3" fill="#1c1917"/>' +
+        '<rect x="40" y="2.4" width="6" height="1.2" rx="0.3" fill="#1c1917"/>' +
+        '<rect x="48" y="2.4" width="6" height="1.2" rx="0.3" fill="#1c1917"/>' +
+        '<rect x="4" y="10" width="36" height="42" fill="#c2410c"/>' +
+        '<rect x="8" y="18" width="28" height="2.5" rx="0.4" fill="#ffffff" opacity="0.95"/>' +
+        '<rect x="8" y="22" width="22" height="2.5" rx="0.4" fill="#ffffff" opacity="0.95"/>' +
+        '<rect x="8" y="40" width="10" height="6" rx="3" fill="#ffffff"/>' +
+        '<rect x="44" y="10" width="32" height="3" rx="0.5" fill="#1c1917"/>' +
+        '<rect x="44" y="16" width="32" height="1.6" rx="0.4" fill="#78716c"/>' +
+        '<rect x="44" y="20" width="28" height="1.6" rx="0.4" fill="#78716c"/>' +
+        '<rect x="44" y="24" width="30" height="1.6" rx="0.4" fill="#78716c"/>' +
+        '<rect x="44" y="30" width="32" height="1.6" rx="0.4" fill="#78716c"/>' +
+        '<rect x="44" y="34" width="26" height="1.6" rx="0.4" fill="#78716c"/>' +
+        '<rect x="44" y="42" width="14" height="6" rx="0" fill="#1c1917"/>' +
+        '<rect x="62" y="42" width="14" height="6" rx="0" fill="#fbbf24"/>' }
   ];
 
   var demos = {
@@ -2390,7 +2454,7 @@
           } else {
             var refsHTML = CDX_REFS.map(function(r){
               return '<button type="button" class="cdx-ref' + (pickedRefId === r.id ? ' is-on' : '') + '" data-id="' + r.id + '" title="' + r.label + '">' +
-                '<img class="cdx-ref-img" src="' + r.img + '" alt="' + r.label + '" loading="lazy">' +
+                '<svg class="cdx-ref-svg" viewBox="0 0 80 60" preserveAspectRatio="xMidYMid slice" aria-hidden="true">' + r.svg + '</svg>' +
                 '<span class="cdx-ref-label">' + r.label + '</span>' +
               '</button>';
             }).join('');
