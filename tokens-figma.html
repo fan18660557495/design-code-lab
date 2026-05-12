@@ -56,8 +56,6 @@
     position: sticky;
     top: 0;
     z-index: 100;
-    backdrop-filter: blur(8px);
-    background: rgba(243, 238, 229, 0.85);
   }
   .topbar-inner { display: flex; justify-content: space-between; align-items: center; gap: 24px; }
   .brand { font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 600; }
@@ -1126,7 +1124,29 @@
   .rm-footer { margin-top: 22px; padding-top: 16px; border-top: 1px dashed var(--line); display: flex; justify-content: space-between; align-items: center; font-size: 12px; color: var(--ink-soft); flex-wrap: wrap; gap: 8px; }
   .rm-wechat { font-family: 'JetBrains Mono', monospace; background: var(--accent-soft); color: var(--ink); padding: 3px 10px; border-radius: 3px; font-weight: 600; letter-spacing: 0.02em; }
   .nav-links a[data-rm-open] { cursor: pointer; }
-</style>
+
+  /* === footer co-author chips (CE 青年) === */
+  .byline-group, .byline-wrap.byline-group { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 28px; }
+  .byline-group .byline { display: flex; gap: 16px; align-items: flex-start; margin: 0; min-width: 0; }
+  .byline-group .avatar { width: 56px; height: 56px; flex-shrink: 0; }
+  .byline-group .byline-meta { min-width: 0; }
+  .byline-group .byline-name { font-size: 18px; }
+  .byline-group .byline-tag { font-size: 12px; line-height: 1.55; }
+  .byline-group .byline-contact { margin-top: 10px; padding-top: 10px; display: flex; align-items: flex-start; gap: 10px; flex-wrap: nowrap; }
+  .byline-group .byline-contact .contact-label { padding: 1px 6px; font-size: 10px; align-self: flex-start; }
+  .byline-group .byline-contact .contact-id { padding: 2px 8px; font-size: 12px; align-self: flex-start; }
+  .byline-group .byline-contact .contact-hint { font-size: 11px; line-height: 1.5; }
+  .byline-contact-text { display: flex; flex-direction: column; gap: 5px; min-width: 0; flex: 1; padding-top: 1px; }
+  .byline-contact .qr-card { width: 68px; height: 68px; border: 1px solid var(--line); border-radius: 5px; overflow: hidden; flex-shrink: 0; position: relative; background: #fff; }
+  .byline-contact .qr-card.qr-empty { border-style: dashed; background: var(--accent-soft); }
+  .byline-contact .qr-card.qr-empty::after { content: "二维码\A 待补充"; position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; text-align: center; white-space: pre-line; font-family: 'JetBrains Mono', monospace; font-size: 8px; color: var(--ink-mute); letter-spacing: 0.05em; line-height: 1.5; }
+  .byline-contact .qr-card img { width: 100%; height: 100%; display: block; object-fit: cover; }
+  @media (max-width: 700px) {
+    .byline-group, .byline-wrap.byline-group { grid-template-columns: 1fr; gap: 18px; }
+    .byline-group .byline + .byline { padding-top: 18px; border-top: 1px dashed var(--line); }
+  }
+
+  </style>
 </head>
 <body>
 
@@ -1776,18 +1796,23 @@
 <!-- Footer -->
 <footer>
   <div class="wrap">
+    <div class="byline-group">
     <div class="byline">
       <img class="avatar" src="author.jpg" alt="范米花儿">
       <div class="byline-meta">
         <div class="byline-label"><span class="dot"></span>作者 · WRITTEN BY</div>
         <h3 class="byline-name">嗨，我是 <span class="em">范米花儿</span></h3>
-        <p class="byline-tag">C0 · 入门 · Variables / Tokens 入门 ——<br>给设计师的代码侧基础，从"色板"这个你最熟的事开始。</p>
-        <div class="byline-contact">
-          <span class="contact-label">微信</span>
-          <span class="contact-id">vanvan_0422</span>
-          <span class="contact-hint">想看什么主题，加我聊</span>
-        </div>
+        <p class="byline-tag">设计工程师 ——<br>设计 × 代码，两边都做。</p>
       </div>
+    </div>
+    <div class="byline">
+      <img class="avatar" src="avatar-ce.jpg" alt="CE 青年">
+      <div class="byline-meta">
+        <div class="byline-label"><span class="dot"></span>合作者 · CO-AUTHOR</div>
+        <h3 class="byline-name">还有 <span class="em">CE 青年</span></h3>
+        <p class="byline-tag">B 端交互 / AI 产品 ——<br>把体验落进产品里。</p>
+      </div>
+    </div>
     </div>
     <div class="footer-meta">
       做于 <span class="mono">2026</span> · 用 <span class="heart">●</span> 写给 <span class="mono">DESIGNERS &amp; DEVELOPERS</span>

@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Design × Code Lab — 设计 × 代码 实验室</title>
+<title>AI LABBOOK — 给设计师的 AI 课</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,300..900&family=Geist:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Noto+Sans+SC:wght@300;400;500;700;900&family=Noto+Serif+SC:wght@400;500;700;900&display=swap" rel="stylesheet">
@@ -56,8 +56,7 @@
     position: sticky;
     top: 0;
     z-index: 100;
-    backdrop-filter: blur(8px);
-    background: rgba(243, 238, 229, 0.85);
+    background: var(--bg);
   }
   .topbar-inner { display: flex; justify-content: space-between; align-items: center; gap: 24px; }
   .brand { font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 600; }
@@ -915,27 +914,33 @@
     background: var(--bg-2);
     margin-top: 60px;
   }
-  .byline { display: flex; gap: 20px; align-items: center; margin-bottom: 40px; }
-  .avatar { width: 64px; height: 64px; border-radius: 50%; border: 1px solid var(--line); object-fit: cover; }
-  .byline-meta { flex: 1; }
+  .byline-group { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 28px; }
+  .byline { display: flex; gap: 16px; align-items: flex-start; margin: 0; min-width: 0; }
+  .avatar { width: 56px; height: 56px; border-radius: 50%; border: 1px solid var(--line); object-fit: cover; flex-shrink: 0; }
+  .byline-meta { flex: 1; min-width: 0; }
   .byline-label { font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.1em; color: var(--ink-mute); margin-bottom: 4px; }
   .byline-label .dot { display: inline-block; width: 6px; height: 6px; background: var(--accent); border-radius: 50%; margin-right: 6px; vertical-align: middle; }
-  .byline-name { font-family: 'Noto Serif SC', serif; font-weight: 900; font-size: 20px; margin: 0 0 4px; }
+  .byline-name { font-family: 'Noto Serif SC', serif; font-weight: 900; font-size: 18px; margin: 0 0 4px; }
   .byline-name .em { font-family: 'Noto Serif SC', serif; color: var(--accent); font-weight: 500; }
-  .byline-tag { font-size: 13px; color: var(--ink-soft); margin: 0; line-height: 1.5; }
-  .footer-meta { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ink-mute); letter-spacing: 0.05em; padding-top: 24px; border-top: 1px dashed var(--line); }
+  .byline-tag { font-size: 12px; color: var(--ink-soft); margin: 0; line-height: 1.55; }
+  .footer-meta { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ink-mute); letter-spacing: 0.05em; padding-top: 20px; border-top: 1px dashed var(--line); }
   .footer-meta .heart { color: var(--accent); margin: 0 4px; animation: heartbeat 2s ease-in-out infinite; display: inline-block; }
   @keyframes heartbeat { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.2); } }
-  @media (max-width: 600px) {
-    .byline { flex-direction: column; text-align: center; align-items: center; gap: 16px; }
-    .byline-tag { margin-left: auto; margin-right: auto; }
+  @media (max-width: 700px) {
+    .byline-group { grid-template-columns: 1fr; gap: 18px; }
+    .byline + .byline { padding-top: 18px; border-top: 1px dashed var(--line); }
   }
   a.brand { text-decoration: none; color: inherit; transition: color 0.2s; cursor: pointer; }
   a.brand:hover { color: var(--accent); }
-  .byline-contact { margin-top: 14px; padding-top: 14px; border-top: 1px dashed var(--line); display: flex; align-items: center; gap: 10px; flex-wrap: wrap; font-size: 12px; }
-  .byline-contact .contact-label { font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-mute); padding: 2px 8px; border: 1px solid var(--line); border-radius: 3px; }
-  .byline-contact .contact-id { font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 600; color: var(--ink); background: var(--accent-soft); padding: 3px 10px; border-radius: 4px; letter-spacing: 0.02em; }
-  .byline-contact .contact-hint { font-size: 12px; color: var(--ink-soft); }
+  .byline-contact { margin-top: 10px; padding-top: 10px; border-top: 1px dashed var(--line); display: flex; align-items: flex-start; gap: 10px; font-size: 12px; }
+  .byline-contact .contact-label { font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-mute); padding: 1px 6px; border: 1px solid var(--line); border-radius: 3px; align-self: flex-start; }
+  .byline-contact .contact-id { font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 600; color: var(--ink); background: var(--accent-soft); padding: 2px 8px; border-radius: 4px; letter-spacing: 0.02em; align-self: flex-start; }
+  .byline-contact .contact-hint { font-size: 11px; color: var(--ink-soft); line-height: 1.5; }
+  .byline-contact-text { display: flex; flex-direction: column; gap: 5px; min-width: 0; flex: 1; padding-top: 1px; }
+  .byline-contact .qr-card { width: 68px; height: 68px; border: 1px solid var(--line); border-radius: 5px; overflow: hidden; flex-shrink: 0; position: relative; background: #fff; }
+  .byline-contact .qr-card.qr-empty { border-style: dashed; background: var(--accent-soft); }
+  .byline-contact .qr-card.qr-empty::after { content: "二维码\A 待补充"; position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; text-align: center; white-space: pre-line; font-family: 'JetBrains Mono', monospace; font-size: 8px; color: var(--ink-mute); letter-spacing: 0.05em; line-height: 1.5; }
+  .byline-contact .qr-card img { width: 100%; height: 100%; display: block; object-fit: cover; }
 
   /* === Roadmap Modal === */
   .rm-modal { position: fixed; inset: 0; z-index: 1000; display: flex; align-items: center; justify-content: center; padding: 30px 16px; }
@@ -963,26 +968,240 @@
   .rm-footer { margin-top: 22px; padding-top: 16px; border-top: 1px dashed var(--line); display: flex; justify-content: space-between; align-items: center; font-size: 12px; color: var(--ink-soft); flex-wrap: wrap; gap: 8px; }
   .rm-wechat { font-family: 'JetBrains Mono', monospace; background: var(--accent-soft); color: var(--ink); padding: 3px 10px; border-radius: 3px; font-weight: 600; letter-spacing: 0.02em; }
   .nav-links a[data-rm-open] { cursor: pointer; }
+
+  /* === Volume tabs (3-tab nav: 课程 / AI 应用 / 代码) === */
+  .vol-tabs { display: flex; gap: 6px; align-items: center; }
+  .vol-tab { display: inline-flex; align-items: baseline; gap: 8px; background: transparent; border: 1px solid var(--line); padding: 6px 14px; border-radius: 4px; font-family: 'JetBrains Mono', monospace; font-size: 10.5px; color: var(--ink-mute); cursor: pointer; transition: all 0.2s ease; position: relative; letter-spacing: 0.04em; }
+  .vol-tab:hover { border-color: var(--ink-soft); color: var(--ink); background: var(--bg-2); transform: translateY(-1px); }
+  .vol-tab[aria-selected="true"] { background: var(--ink); border-color: var(--ink); color: var(--bg); font-weight: 700; }
+  .vol-tab[aria-selected="true"]::after { content: ''; position: absolute; left: 50%; bottom: -6px; width: 6px; height: 6px; background: var(--accent); border-radius: 50%; transform: translateX(-50%); animation: heartbeat 2s ease-in-out infinite; }
+  .vol-tab-num { font-weight: 700; letter-spacing: 0.06em; }
+  .vol-tab-name { font-family: 'Noto Serif SC', serif; font-size: 13px; font-weight: 500; letter-spacing: 0; }
+  @media (max-width: 760px) { .vol-tab-name { display: none; } .vol-tab { padding: 6px 10px; } }
+
+  /* === Volume panel switching === */
+  .vol-panel { display: none; }
+  .vol-panel.is-active { display: block; animation: vol-fade-in 0.4s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; }
+  @keyframes vol-fade-in {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* === WIP placeholder (VOL.I & VOL.II) === */
+  .wip-wrap { min-height: 70vh; padding: 80px 0 120px; display: flex; align-items: center; }
+  .wip-card { position: relative; max-width: 720px; margin: 0 auto; padding: 56px 48px 52px; background: var(--paper); border: 1px solid var(--line); border-radius: 4px; box-shadow: 0 1px 0 var(--line), 0 22px 60px -32px rgba(22,22,29,0.18); }
+  .wip-card::before { content: ''; position: absolute; left: -1px; right: -1px; top: -1px; height: 4px; background: linear-gradient(90deg, var(--accent) 0%, var(--accent) 24%, var(--ink) 24%, var(--ink) 100%); border-radius: 4px 4px 0 0; }
+  .wip-stamp { position: absolute; top: 18px; right: 22px; transform: rotate(6deg); border: 1.5px dashed var(--accent); color: var(--accent); padding: 6px 12px; border-radius: 3px; font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 700; letter-spacing: 0.18em; }
+  .wip-stamp .dot-pulse { display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--accent); margin-right: 6px; vertical-align: middle; animation: heartbeat 2s ease-in-out infinite; }
+  .wip-meta { font-family: 'JetBrains Mono', monospace; font-size: 10.5px; letter-spacing: 0.16em; color: var(--ink-mute); margin-bottom: 24px; text-transform: uppercase; }
+  .wip-meta .sep { color: var(--line); margin: 0 8px; }
+  .wip-title { font-family: 'Noto Serif SC', serif; font-weight: 900; font-size: 56px; line-height: 1.05; margin: 0 0 28px; letter-spacing: -0.01em; }
+  .wip-title .wip-em { font-family: 'Noto Serif SC', serif; font-weight: 500; color: var(--accent); position: relative; }
+  .wip-title .wip-em::after { content: ''; position: absolute; left: 0; right: 6px; bottom: 4px; height: 6px; background: var(--accent-soft); z-index: -1; }
+  .wip-lede { font-size: 16px; line-height: 1.7; color: var(--ink-soft); margin: 0 0 36px; max-width: 540px; }
+  .wip-lede .em { color: var(--ink); font-weight: 500; font-family: 'Noto Serif SC', serif; }
+  .wip-progress { display: flex; align-items: center; gap: 14px; margin-bottom: 28px; padding: 16px 18px; background: var(--bg-2); border: 1px dashed var(--line); border-radius: 5px; }
+  .wip-progress-label { font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.1em; color: var(--ink-mute); text-transform: uppercase; white-space: nowrap; }
+  .wip-bar { flex: 1; height: 6px; background: var(--bg); border-radius: 100px; overflow: hidden; position: relative; border: 1px solid var(--line); }
+  .wip-bar-fill { height: 100%; background: linear-gradient(90deg, var(--accent) 0%, #ff7a4d 100%); border-radius: 100px; position: relative; transition: width 0.6s cubic-bezier(0.2, 0.8, 0.2, 1); }
+  .wip-bar-fill::after { content: ''; position: absolute; right: 0; top: -2px; bottom: -2px; width: 8px; background: var(--accent); border-radius: 50%; box-shadow: 0 0 0 3px rgba(232,93,47,0.18); }
+  .wip-progress-val { font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 700; color: var(--ink); letter-spacing: 0.02em; min-width: 36px; text-align: right; }
+  .wip-tags { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 32px; }
+  .wip-tag { display: inline-flex; align-items: center; gap: 6px; font-family: 'JetBrains Mono', monospace; font-size: 10.5px; letter-spacing: 0.05em; color: var(--ink-soft); background: var(--bg-2); border: 1px solid var(--line); padding: 4px 10px; border-radius: 3px; transition: all 0.15s; }
+  .wip-tag::before { content: '#'; color: var(--accent); font-weight: 700; }
+  .wip-tag:hover { background: var(--accent-soft); border-color: var(--accent); color: var(--ink); }
+  .wip-foot { display: flex; align-items: center; justify-content: space-between; padding-top: 22px; border-top: 1px dashed var(--line); font-size: 12px; color: var(--ink-mute); flex-wrap: wrap; gap: 12px; }
+  .wip-foot-hint { font-family: 'JetBrains Mono', monospace; font-size: 10.5px; letter-spacing: 0.08em; }
+  .wip-foot-jump { display: inline-flex; align-items: center; gap: 6px; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ink); background: var(--accent-soft); padding: 5px 12px; border-radius: 3px; cursor: pointer; border: 1px solid transparent; transition: all 0.15s; text-decoration: none; }
+  .wip-foot-jump:hover { border-color: var(--accent); transform: translateX(2px); }
+  .wip-foot-jump .arrow { transition: transform 0.15s; }
+  .wip-foot-jump:hover .arrow { transform: translateX(2px); }
+  @media (max-width: 640px) {
+    .wip-card { padding: 40px 28px 36px; }
+    .wip-title { font-size: 40px; }
+    .wip-stamp { top: 12px; right: 14px; }
+  }
+
+  /* === VOL.II content layout (hero + article cards + coming-soon) === */
+  .vol-2-wrap { padding: 60px 0 100px; }
+  .vol-2-hero { max-width: 720px; margin: 0 auto 56px; }
+  .vol-2-meta { font-family: 'JetBrains Mono', monospace; font-size: 10.5px; letter-spacing: 0.16em; color: var(--ink-mute); margin-bottom: 20px; text-transform: uppercase; }
+  .vol-2-meta .sep { color: var(--line); margin: 0 8px; }
+  .vol-2-title { font-family: 'Noto Serif SC', serif; font-weight: 900; font-size: 52px; line-height: 1.1; margin: 0 0 24px; letter-spacing: -0.01em; }
+  .vol-2-title .em { font-family: 'Noto Serif SC', serif; font-weight: 500; color: var(--accent); position: relative; }
+  .vol-2-title .em::after { content: ''; position: absolute; left: 0; right: 6px; bottom: 4px; height: 6px; background: var(--accent-soft); z-index: -1; }
+  .vol-2-lede { font-size: 16px; line-height: 1.7; color: var(--ink-soft); margin: 0 0 32px; max-width: 580px; }
+  .vol-2-lede .em { color: var(--ink); font-weight: 500; font-family: 'Noto Serif SC', serif; }
+  .vol-2-progress { display: inline-flex; align-items: center; gap: 14px; padding: 12px 16px; background: var(--bg-2); border: 1px dashed var(--line); border-radius: 5px; }
+  .vol-2-progress-label { font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.1em; color: var(--ink-mute); text-transform: uppercase; }
+  .vol-2-progress .wip-bar { width: 160px; }
+  .vol-2-progress-val { font-family: 'JetBrains Mono', monospace; font-size: 11.5px; font-weight: 700; color: var(--ink); letter-spacing: 0.02em; }
+
+  .vol-2-section-head { display: flex; align-items: baseline; gap: 14px; margin-bottom: 22px; padding-bottom: 14px; border-bottom: 1px dashed var(--line); }
+  .vol-2-section-num { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; color: var(--accent); letter-spacing: 0.08em; }
+  .vol-2-section-title { font-family: 'Noto Serif SC', serif; font-size: 20px; font-weight: 900; margin: 0; }
+  .vol-2-section-count { margin-left: auto; font-family: 'JetBrains Mono', monospace; font-size: 10.5px; letter-spacing: 0.06em; color: var(--ink-mute); }
+
+  .vol-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; margin: 0 0 56px; }
+  @media (max-width: 880px) { .vol-cards { grid-template-columns: 1fr; } }
+  .vol-card { position: relative; display: block; padding: 28px 24px 22px; background: var(--paper); border: 1px solid var(--line); border-radius: 5px; text-decoration: none; color: var(--ink); transition: all 0.2s ease; overflow: hidden; }
+  .vol-card::before { content: ''; position: absolute; left: 0; top: 0; right: 0; height: 3px; background: var(--accent); transform: scaleX(0); transform-origin: left center; transition: transform 0.25s ease; }
+  .vol-card:hover { border-color: var(--accent); transform: translateY(-3px); box-shadow: 0 10px 28px -16px rgba(22,22,29,0.22); }
+  .vol-card:hover::before { transform: scaleX(1); }
+  .vol-card-head { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 18px; }
+  .vol-card-num { font-family: 'Noto Serif SC', serif; font-weight: 900; font-size: 32px; color: var(--accent); line-height: 1; letter-spacing: -0.02em; }
+  .vol-card-tag { font-family: 'JetBrains Mono', monospace; font-size: 9.5px; letter-spacing: 0.12em; color: var(--ink-mute); border: 1px solid var(--line); padding: 3px 8px; border-radius: 3px; text-transform: uppercase; white-space: nowrap; }
+  .vol-card-title { font-family: 'Noto Serif SC', serif; font-weight: 900; font-size: 19px; line-height: 1.45; margin: 0 0 10px; letter-spacing: -0.01em; }
+  .vol-card-title .em { font-family: 'Noto Serif SC', serif; font-weight: 500; color: var(--accent); }
+  .vol-card-sub { font-size: 12.5px; line-height: 1.6; color: var(--ink-soft); margin: 0 0 22px; }
+  .vol-card-foot { display: flex; justify-content: space-between; align-items: center; padding-top: 14px; border-top: 1px dashed var(--line); }
+  .vol-card-meta { font-family: 'JetBrains Mono', monospace; font-size: 10.5px; letter-spacing: 0.04em; color: var(--ink-mute); }
+  .vol-card-arrow { font-family: 'JetBrains Mono', monospace; font-size: 14px; color: var(--ink-mute); transition: transform 0.2s ease, color 0.2s; }
+  .vol-card:hover .vol-card-arrow { color: var(--accent); transform: translateX(4px); }
+
+  .vol-2-coming { position: relative; padding: 32px 32px 28px; background: var(--bg-2); border: 1px dashed var(--line); border-radius: 5px; }
+  .vol-2-coming::before { content: 'COMING SOON'; position: absolute; top: -10px; left: 24px; font-family: 'JetBrains Mono', monospace; font-size: 9.5px; font-weight: 700; letter-spacing: 0.18em; color: var(--accent); background: var(--bg); padding: 2px 10px; border: 1px dashed var(--accent); border-radius: 3px; }
+  .vol-2-coming-title { font-family: 'Noto Serif SC', serif; font-weight: 900; font-size: 22px; margin: 0 0 10px; }
+  .vol-2-coming-lede { font-size: 13.5px; color: var(--ink-soft); line-height: 1.7; margin: 0 0 16px; }
+  .vol-2-coming-tags { display: flex; flex-wrap: wrap; gap: 8px; }
+
+  @media (max-width: 640px) {
+    .vol-2-title { font-size: 36px; }
+    .vol-2-wrap { padding: 40px 0 60px; }
+  }
 </style>
 </head>
 <body>
 
 <div class="topbar">
   <div class="wrap topbar-inner">
-    <a href="index.html" class="brand"><span class="dot"></span>DESIGN × CODE LAB</a>
-    <nav class="nav-links">
-      <a href="index.html#roadmap" data-rm-open>路线图</a>
-      <a href="index.html#manifesto">关于</a>
+    <a href="index.html" class="brand"><span class="dot"></span>AI LABBOOK</a>
+    <nav class="vol-tabs" role="tablist" aria-label="三卷切换">
+      <button class="vol-tab" data-vol="1" role="tab" aria-selected="true">
+        <span class="vol-tab-num">VOL. I</span>
+        <span class="vol-tab-name">给设计师的零基础 AI 课</span>
+      </button>
+      <button class="vol-tab" data-vol="2" role="tab" aria-selected="false">
+        <span class="vol-tab-num">VOL. II</span>
+        <span class="vol-tab-name">AI 底层原理</span>
+      </button>
+      <button class="vol-tab" data-vol="3" role="tab" aria-selected="false">
+        <span class="vol-tab-num">VOL. III</span>
+        <span class="vol-tab-name">Design × Code 实验室</span>
+      </button>
     </nav>
   </div>
 </div>
 
+<!-- VOL. I · 课程大纲 (WIP placeholder) -->
+<section class="vol-panel" data-vol="1" role="tabpanel" aria-labelledby="vol-1">
+  <div class="wrap wip-wrap">
+    <div class="wip-card">
+      <div class="wip-stamp"><span class="dot-pulse"></span>DRAFT · WIP</div>
+      <div class="wip-meta">VOL. I<span class="sep">/</span>给设计师的零基础 AI 课<span class="sep">/</span>2026</div>
+      <h2 class="wip-title">一条主线，<br>从零开始的 <span class="wip-em">AI 课</span></h2>
+      <p class="wip-lede">这里会变成一张 <span class="em">课程路线图</span> ——<br>章节、关卡、小游戏一路向上。<br>大纲还在整理，每条都会变成一个能玩的节点。</p>
+      <div class="wip-progress">
+        <span class="wip-progress-label">大纲整理</span>
+        <div class="wip-bar"><div class="wip-bar-fill" style="width:18%"></div></div>
+        <span class="wip-progress-val">18%</span>
+      </div>
+      <div class="wip-tags">
+        <span class="wip-tag">课程节奏</span>
+        <span class="wip-tag">关卡设计</span>
+        <span class="wip-tag">小游戏</span>
+        <span class="wip-tag">叙事弧</span>
+        <span class="wip-tag">范米花儿 × CE 青年</span>
+      </div>
+      <div class="wip-foot">
+        <span class="wip-foot-hint">// 想先看现有内容 ?</span>
+        <a class="wip-foot-jump" href="#vol-3" data-vol-jump="3">翻到 VOL. III · Design × Code 实验室 <span class="arrow">→</span></a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- VOL. II · AI 底层原理 -->
+<section class="vol-panel" data-vol="2" role="tabpanel" aria-labelledby="vol-2">
+  <div class="wrap vol-2-wrap">
+    <header class="vol-2-hero">
+      <div class="vol-2-meta">VOL. II<span class="sep">/</span>AI 底层原理<span class="sep">/</span>2026</div>
+      <h1 class="vol-2-title">附录 · 二<br><span class="em">AI 底层原理</span></h1>
+      <p class="vol-2-lede">把 AI 的"黑盒"拆开 ——<br>不是为了写代码，是为了 <span class="em">心里有底</span>。</p>
+      <div class="vol-2-progress">
+        <span class="vol-2-progress-label">已上线</span>
+        <div class="wip-bar"><div class="wip-bar-fill" style="width:25%"></div></div>
+        <span class="vol-2-progress-val">3 / 12</span>
+      </div>
+    </header>
+
+    <div class="vol-2-section-head">
+      <span class="vol-2-section-num">§ 01</span>
+      <h2 class="vol-2-section-title">工具与协议</h2>
+      <span class="vol-2-section-count">3 篇 · 已上线</span>
+    </div>
+
+    <div class="vol-cards">
+      <a class="vol-card" href="q1-mcp-figma.html">
+        <div class="vol-card-head">
+          <span class="vol-card-num">Q1</span>
+          <span class="vol-card-tag">AI · MCP</span>
+        </div>
+        <h3 class="vol-card-title">MCP 不是新 AI，<br>是 AI 的 <span class="em">USB 接口</span></h3>
+        <p class="vol-card-sub">让 AI 接外部工具的协议 —— 不写代码也能装上。</p>
+        <div class="vol-card-foot">
+          <span class="vol-card-meta">5 张图 + 装配台 · 10 min</span>
+          <span class="vol-card-arrow">→</span>
+        </div>
+      </a>
+      <a class="vol-card" href="q2-skills-figma.html">
+        <div class="vol-card-head">
+          <span class="vol-card-num">Q2</span>
+          <span class="vol-card-tag">AI · SKILLS</span>
+        </div>
+        <h3 class="vol-card-title">你天天用 Skills，<br><span class="em">没拆开看过</span></h3>
+        <p class="vol-card-sub">SKILL.md 写着"什么时候用我"—— 把 Anthropic Skills 内部结构拆开。</p>
+        <div class="vol-card-foot">
+          <span class="vol-card-meta">含 SKILL.md 全拆解 · 10 min</span>
+          <span class="vol-card-arrow">→</span>
+        </div>
+      </a>
+      <a class="vol-card" href="q3-agent-figma.html">
+        <div class="vol-card-head">
+          <span class="vol-card-num">Q3</span>
+          <span class="vol-card-tag">AI · AGENT</span>
+        </div>
+        <h3 class="vol-card-title">Agent 不是一个人，<br>是 <span class="em">一个团队</span></h3>
+        <p class="vol-card-sub">AI + 工具 + 规划 + 反思 —— 拆任务、派 sub-agent、整合结果。</p>
+        <div class="vol-card-foot">
+          <span class="vol-card-meta">5 张可视化图 · 8 min</span>
+          <span class="vol-card-arrow">→</span>
+        </div>
+      </a>
+    </div>
+
+    <div class="vol-2-coming">
+      <h3 class="vol-2-coming-title">接下来 · 整理中</h3>
+      <p class="vol-2-coming-lede">大模型是怎么"读"和"写"的 · Token / Context / Embedding 是什么 · Prompt 工程心智模型 · ……</p>
+      <div class="vol-2-coming-tags">
+        <span class="wip-tag">LLM</span>
+        <span class="wip-tag">Token</span>
+        <span class="wip-tag">Context</span>
+        <span class="wip-tag">Prompt</span>
+        <span class="wip-tag">Embedding</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- VOL. III · 代码 (existing content) -->
+<section class="vol-panel" data-vol="3" role="tabpanel" aria-labelledby="vol-3">
 <header class="hero">
   <div class="wrap">
     <div class="hero-meta">
       <span class="pill fill">合集 · COLLECTION</span>
       <span class="pill">2026 · 实验室</span>
-      <span class="pill">9 模块 · 28 篇</span>
+      <span class="pill">8 模块 · 26 篇</span>
       <span class="label">设计师 × 前端</span>
     </div>
     <div class="hero-grid">
@@ -994,13 +1213,13 @@
           <span class="display-cn">实验室</span>
         </h1>
         <p class="lede">
-          完整路线图 <span class="em">·</span> 28 篇 <span class="em">·</span> 9 模块。<br>
+          完整路线图 <span class="em">·</span> 26 篇 <span class="em">·</span> 8 模块。<br>
           下面这张图就是全部 —— 从「你在这里」一路爬到「撒花」，<br>
           点节点进文章，<span class="em">已读会自动标记</span>。
         </p>
       </div>
       <div class="hero-side">
-        <div class="row"><span class="k">主线</span><span class="v">28 篇 · 全部上线</span></div>
+        <div class="row"><span class="k">主线</span><span class="v">26 篇 · 全部上线</span></div>
         <div class="row"><span class="k">主理人</span><span class="v">范米花儿</span></div>
         <div class="row"><span class="k">分支</span><span class="v">设计篇 / 工程篇</span></div>
         <div class="row"><span class="k">状态</span><span class="v">未完待续 →</span></div>
@@ -1056,7 +1275,7 @@
         <h2 class="section-title">一张图<br>看完 <span class="em">全部</span>。</h2>
       </div>
       <p class="section-sub">
-        从底部「你在这里」出发，分两路 —— 左边设计篇 5 模块 15 篇，右边工程篇 4 系列 13 篇。
+        从底部「你在这里」出发，分两路 —— 左边设计篇 4 模块 13 篇，右边工程篇 4 系列 13 篇。
         一路向上经过 9 个聚落，顶上汇合到「撒花」。
         <strong>hover 看简介，点击进文章，已读自动标记。</strong>
       </p>
@@ -1072,7 +1291,7 @@
         <div class="fig-cap">
           <span class="compass" aria-hidden="true"></span>
           <span class="v">FIG. 01</span> · 完整路线图
-          <small>v 1.0 · 28 nodes · 9 clusters</small>
+          <small>v 1.1 · 26 nodes · 8 clusters</small>
         </div>
       </div>
 
@@ -1111,7 +1330,7 @@
                viewBox="0 0 1200 1900"
                preserveAspectRatio="xMidYMid meet"
                role="img"
-               aria-label="完整旅程路径图：从你在这里出发，左侧设计篇 5 模块、右侧工程篇 4 系列，顶部撒花。">
+               aria-label="完整旅程路径图：从你在这里出发，左侧设计篇 4 模块、右侧工程篇 4 系列，顶部撒花。">
 
             <!-- ===== background paths (drawn first, behind everything) ===== -->
             <g id="paths">
@@ -1163,7 +1382,7 @@
             <g id="branch-design">
               <rect class="j-branch-label-bg" x="270" y="426" width="180" height="52" rx="6"></rect>
               <text class="j-branch-label" x="360" y="407">设 计 篇</text>
-              <text class="j-branch-label" x="360" y="387" style="font-size:11px;font-family:'JetBrains Mono',monospace;font-weight:600;letter-spacing:.06em;fill:var(--ink-mute);">15 篇 · A → E <tspan class="j-arrow">→</tspan></text>
+              <text class="j-branch-label" x="360" y="387" style="font-size:11px;font-family:'JetBrains Mono',monospace;font-weight:600;letter-spacing:.06em;fill:var(--ink-mute);">13 篇 · A → D <tspan class="j-arrow">→</tspan></text>
             </g>
             <g id="branch-eng">
               <rect class="j-branch-label-bg" x="750" y="426" width="180" height="52" rx="6"></rect>
@@ -1319,31 +1538,6 @@
                 <g class="j-node-inner">
                   <circle class="j-node-circle" r="28"></circle>
                   <text class="j-node-text">D2</text>
-                  <circle class="j-node-check" cx="20" cy="18" r="7"></circle>
-                  <path class="j-node-check-tick" d="M 17 18 L 19.5 20.5 L 23 17"></path>
-                </g>
-              </g>
-            </g>
-
-            <!-- E · 工程化 (2 nodes) -->
-            <g class="j-cluster" data-mod="E" transform="translate(360 1680)">
-              <rect class="j-cluster-bg" x="-130" y="-50" width="260" height="100" rx="48"></rect>
-              <g transform="translate(-130 -68) rotate(-1.2)">
-                <rect class="j-cluster-banner" x="0" y="0" width="160" height="26" rx="13"></rect>
-                <text class="j-cluster-banner-text" x="14" y="17"><tspan class="j-cluster-banner-key">E</tspan> · 工程化</text>
-              </g>
-              <g class="j-node" data-code="E0" data-href="naming-figma.html" data-title="命名 / 图层规范" data-tier="入门" transform="translate(-42 0)">
-                <g class="j-node-inner">
-                  <circle class="j-node-circle" r="28"></circle>
-                  <text class="j-node-text">E0</text>
-                  <circle class="j-node-check" cx="20" cy="18" r="7"></circle>
-                  <path class="j-node-check-tick" d="M 17 18 L 19.5 20.5 L 23 17"></path>
-                </g>
-              </g>
-              <g class="j-node" data-code="E2" data-href="handoff-figma.html" data-title="Handoff & 设计系统" data-tier="进阶" transform="translate(42 0)">
-                <g class="j-node-inner">
-                  <circle class="j-node-circle" r="28"></circle>
-                  <text class="j-node-text">E2</text>
                   <circle class="j-node-check" cx="20" cy="18" r="7"></circle>
                   <path class="j-node-check-tick" d="M 17 18 L 19.5 20.5 L 23 17"></path>
                 </g>
@@ -1574,20 +1768,26 @@
     </div>
   </div>
 </section>
+</section><!-- /vol-3 -->
 
 
 <footer>
   <div class="wrap">
-    <div class="byline">
-      <img class="avatar" src="author.jpg" alt="范米花儿">
-      <div class="byline-meta">
-        <div class="byline-label"><span class="dot"></span>主理人 · CURATOR</div>
-        <h3 class="byline-name">嗨，我是 <span class="em">范米花儿</span></h3>
-        <p class="byline-tag">一个关于设计师该懂的代码侧基础的实验合集 ——<br>每篇一件事，每篇一个能玩的小游戏。</p>
-        <div class="byline-contact">
-          <span class="contact-label">微信</span>
-          <span class="contact-id">vanvan_0422</span>
-          <span class="contact-hint">想看什么主题，加我聊</span>
+    <div class="byline-group">
+      <div class="byline">
+        <img class="avatar" src="author.jpg" alt="范米花儿">
+        <div class="byline-meta">
+          <div class="byline-label"><span class="dot"></span>主理人 · CURATOR</div>
+          <h3 class="byline-name">嗨，我是 <span class="em">范米花儿</span></h3>
+          <p class="byline-tag">设计工程师 ——<br>设计 × 代码，两边都做。</p>
+        </div>
+      </div>
+      <div class="byline">
+        <img class="avatar" src="avatar-ce.jpg" alt="CE 青年">
+        <div class="byline-meta">
+          <div class="byline-label"><span class="dot"></span>合作者 · CO-AUTHOR</div>
+          <h3 class="byline-name">还有 <span class="em">CE 青年</span></h3>
+          <p class="byline-tag">B 端交互 / AI 产品 ——<br>把体验落进产品里。</p>
         </div>
       </div>
     </div>
@@ -1598,14 +1798,14 @@
 </footer>
 
 
-<!-- 路线图弹窗 (9 模块) -->
+<!-- 路线图弹窗 (8 模块) -->
 <div class="rm-modal" id="rm-modal" hidden>
   <div class="rm-backdrop" data-rm-close></div>
   <div class="rm-dialog" role="dialog" aria-label="完整路线图">
     <button class="rm-close" data-rm-close aria-label="关闭">✕</button>
     <div class="rm-header">
       <div class="rm-tag">完整路线图 · ROADMAP</div>
-      <h3 class="rm-title">9 模块 <span class="rm-em">·</span> 28 篇</h3>
+      <h3 class="rm-title">8 模块 <span class="rm-em">·</span> 26 篇</h3>
       <p class="rm-sub">设计篇 15 · 工程篇 13 · 全部上线</p>
     </div>
     <div class="rm-body">
@@ -1640,13 +1840,6 @@
           <a href="states-figma.html" class="rm-cell"><span class="rm-cell-code">D0</span><span class="rm-cell-name">视觉态 · 看得见的状态</span><span class="rm-cell-tier">入门</span></a>
           <a href="interactive-figma.html" class="rm-cell"><span class="rm-cell-code">D1</span><span class="rm-cell-name">Interactive Component</span><span class="rm-cell-tier">基础</span></a>
           <a href="transition-figma.html" class="rm-cell"><span class="rm-cell-code">D2</span><span class="rm-cell-name">动画 · Transition</span><span class="rm-cell-tier">进阶</span></a>
-        </div>
-      </div>
-      <div class="rm-mod">
-        <div class="rm-mod-key">E · 工程化</div>
-        <div class="rm-mod-list">
-          <a href="naming-figma.html" class="rm-cell"><span class="rm-cell-code">E0</span><span class="rm-cell-name">命名 / 图层规范</span><span class="rm-cell-tier">入门</span></a>
-          <a href="handoff-figma.html" class="rm-cell"><span class="rm-cell-code">E2</span><span class="rm-cell-name">Handoff &amp; 设计系统</span><span class="rm-cell-tier">进阶</span></a>
         </div>
       </div>
       <div class="rm-mod">
@@ -1691,6 +1884,64 @@
 </div>
 
 <script>
+/* ========================================================
+   Volume tabs (3 panels: 课程 / AI 应用 / 代码)
+   ======================================================== */
+(function(){
+  var tabs = document.querySelectorAll('.vol-tab');
+  var panels = document.querySelectorAll('.vol-panel');
+  if (!tabs.length || !panels.length) return;
+
+  function activate(vol, opts){
+    opts = opts || {};
+    tabs.forEach(function(t){
+      t.setAttribute('aria-selected', t.dataset.vol === vol ? 'true' : 'false');
+    });
+    panels.forEach(function(p){
+      var on = p.dataset.vol === vol;
+      // Re-trigger fade-in animation by removing then re-adding
+      p.classList.remove('is-active');
+      if (on) {
+        // Force reflow so the animation re-runs even if class is re-added immediately
+        void p.offsetWidth;
+        p.classList.add('is-active');
+      }
+    });
+    if (!opts.silent) {
+      var hash = '#vol-' + vol;
+      if (location.hash !== hash) {
+        history.replaceState(null, '', hash);
+      }
+      window.scrollTo({ top: 0, behavior: 'instant' });
+    }
+  }
+
+  // Wire up tab clicks
+  tabs.forEach(function(t){
+    t.addEventListener('click', function(){ activate(t.dataset.vol); });
+  });
+
+  // Wire up in-page jump links (e.g. "翻到 VOL. III" buttons in WIP placeholders)
+  document.querySelectorAll('[data-vol-jump]').forEach(function(a){
+    a.addEventListener('click', function(e){
+      e.preventDefault();
+      activate(a.dataset.volJump);
+    });
+  });
+
+  // Initial activation from URL hash, default = VOL. I
+  var initial = '1';
+  var m = location.hash.match(/^#vol-(\d)/);
+  if (m) initial = m[1];
+  activate(initial, { silent: true });
+
+  // React to hash changes (back/forward, external links)
+  window.addEventListener('hashchange', function(){
+    var m2 = location.hash.match(/^#vol-(\d)/);
+    if (m2) activate(m2[1], { silent: true });
+  });
+})();
+
 /* ========================================================
    Roadmap modal
    ======================================================== */
