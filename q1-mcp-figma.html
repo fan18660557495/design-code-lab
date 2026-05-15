@@ -1872,6 +1872,132 @@
     .byline-group .byline + .byline { padding-top: 18px; border-top: 1px dashed var(--line); }
   }
 
+  /* §03 MCP types · 4 类横评 */
+  .mcp-types-grid {
+    margin-top: 24px;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 14px;
+  }
+  @media (max-width: 1000px) { .mcp-types-grid { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 560px)  { .mcp-types-grid { grid-template-columns: 1fr; } }
+  .mcp-type-card {
+    background: var(--paper);
+    border: 1.5px solid var(--line);
+    border-radius: 8px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    transition: all 0.2s;
+  }
+  .mcp-type-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(22,22,29,0.06);
+  }
+  .mcp-type-card.lvl-low  { border-color: var(--green); }
+  .mcp-type-card.lvl-midlow { border-color: #5b9a4a; }
+  .mcp-type-card.lvl-mid  { border-color: var(--yellow); }
+  .mcp-type-card.lvl-high { border-color: var(--accent); }
+
+  .mcp-type-head {
+    padding: 16px 18px 14px;
+    border-bottom: 1px dashed rgba(0,0,0,0.1);
+  }
+  .mcp-type-card.lvl-low  .mcp-type-head { background: var(--green-soft); }
+  .mcp-type-card.lvl-midlow .mcp-type-head { background: #e3f0d8; }
+  .mcp-type-card.lvl-mid  .mcp-type-head { background: #fff5d4; }
+  .mcp-type-card.lvl-high .mcp-type-head { background: var(--accent-soft); }
+  .mcp-type-chip {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.06em;
+    color: var(--ink-soft);
+    display: inline-block;
+    margin-bottom: 8px;
+    padding: 2px 8px;
+    background: rgba(255,255,255,0.55);
+    border: 1px solid rgba(0,0,0,0.08);
+    border-radius: 100px;
+    text-transform: uppercase;
+    font-weight: 600;
+  }
+  .mcp-type-num {
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    font-size: 28px;
+    font-weight: 500;
+    color: var(--ink-mute);
+    line-height: 1;
+    margin-bottom: 6px;
+  }
+  .mcp-type-card.lvl-low  .mcp-type-num { color: var(--green); }
+  .mcp-type-card.lvl-midlow .mcp-type-num { color: #5b9a4a; }
+  .mcp-type-card.lvl-mid  .mcp-type-num { color: #c5970b; }
+  .mcp-type-card.lvl-high .mcp-type-num { color: var(--accent); }
+  .mcp-type-name {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 17px;
+    font-weight: 800;
+    color: var(--ink);
+    margin: 0;
+    line-height: 1.25;
+  }
+  .mcp-type-examples {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10.5px;
+    color: var(--ink-mute);
+    margin-top: 6px;
+    line-height: 1.5;
+    letter-spacing: 0.02em;
+  }
+
+  .mcp-type-body {
+    padding: 14px 18px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    flex: 1;
+  }
+  .mcp-type-row {
+    display: grid;
+    grid-template-columns: 44px 1fr;
+    gap: 10px;
+    font-size: 12.5px;
+    line-height: 1.5;
+  }
+  .mcp-row-k {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9.5px;
+    color: var(--ink-mute);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    padding-top: 2px;
+    font-weight: 600;
+  }
+  .mcp-row-v { color: var(--ink-soft); }
+  .mcp-row-v strong { color: var(--ink); font-weight: 600; }
+
+  .mcp-type-foot {
+    padding: 10px 16px 12px;
+    background: var(--bg);
+    font-size: 11.5px;
+    color: var(--ink-soft);
+    line-height: 1.5;
+    border-top: 1px dashed var(--line);
+  }
+  .mcp-type-foot .when {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9.5px;
+    letter-spacing: 0.08em;
+    margin-right: 6px;
+    text-transform: uppercase;
+    font-weight: 700;
+  }
+  .mcp-type-card.lvl-low  .mcp-type-foot .when { color: var(--green); }
+  .mcp-type-card.lvl-midlow .mcp-type-foot .when { color: #5b9a4a; }
+  .mcp-type-card.lvl-mid  .mcp-type-foot .when { color: #c5970b; }
+  .mcp-type-card.lvl-high .mcp-type-foot .when { color: var(--accent); }
+
   </style>
 </head>
 <body>
@@ -2138,12 +2264,107 @@
   </div>
 </section>
 
-<!-- §03 -->
+<!-- §03 MCP types · 4 类横评 -->
+<section id="mcp-types">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>03</strong> / 不只一种</div>
+        <h2 class="section-title">MCP 不只<br><span class="em">Figma</span> 那一种。</h2>
+      </div>
+      <p class="section-sub">
+        大家说"MCP"通常都在说 Figma MCP —— 其实是个<strong>协议家族</strong>。
+        4 类主流 MCP,<strong>能干啥 / 在哪儿干 / 多有侵入性</strong> 差别巨大。
+      </p>
+    </div>
+
+    <div class="hint-strip">
+      <span class="hint-tag">提示</span>下面 4 类按<strong>侵入性</strong>从低到高排 —— AI 能"碰到"的范围越来越大。
+    </div>
+
+    <div class="mcp-types-grid">
+      <div class="mcp-type-card lvl-low">
+        <div class="mcp-type-head">
+          <span class="mcp-type-chip">🟢 低侵入</span>
+          <div class="mcp-type-num">01</div>
+          <h3 class="mcp-type-name">设计资产读取</h3>
+          <div class="mcp-type-examples">Figma MCP · Sketch MCP</div>
+        </div>
+        <div class="mcp-type-body">
+          <div class="mcp-type-row"><span class="mcp-row-k">干嘛</span><span class="mcp-row-v">读你的<strong>设计稿 JSON</strong> · 图层 · 组件 · token</span></div>
+          <div class="mcp-type-row"><span class="mcp-row-k">范围</span><span class="mcp-row-v">只读 · <strong>不写不改</strong></span></div>
+          <div class="mcp-type-row"><span class="mcp-row-k">能动</span><span class="mcp-row-v">看不见 / 不点 / 安全</span></div>
+        </div>
+        <div class="mcp-type-foot">
+          <span class="when">用在</span>想让 AI 还原设计稿成代码
+        </div>
+      </div>
+
+      <div class="mcp-type-card lvl-midlow">
+        <div class="mcp-type-head">
+          <span class="mcp-type-chip">🟢 低-中侵入</span>
+          <div class="mcp-type-num">02</div>
+          <h3 class="mcp-type-name">工程 · 代码 / 文件</h3>
+          <div class="mcp-type-examples">GitHub MCP · shadcn MCP · File system MCP · Git MCP</div>
+        </div>
+        <div class="mcp-type-body">
+          <div class="mcp-type-row"><span class="mcp-row-k">干嘛</span><span class="mcp-row-v">读写<strong>代码 / 文件 / issue / PR</strong></span></div>
+          <div class="mcp-type-row"><span class="mcp-row-k">范围</span><span class="mcp-row-v">你授权的<strong>仓库 / 文件夹</strong></span></div>
+          <div class="mcp-type-row"><span class="mcp-row-k">能动</span><span class="mcp-row-v">改文件 · 提 PR · 但不动 UI</span></div>
+        </div>
+        <div class="mcp-type-foot">
+          <span class="when">用在</span>跟前端协作 · 改代码 · 拉组件
+        </div>
+      </div>
+
+      <div class="mcp-type-card lvl-mid">
+        <div class="mcp-type-head">
+          <span class="mcp-type-chip">🟡 中侵入</span>
+          <div class="mcp-type-num">03</div>
+          <h3 class="mcp-type-name">网页自动化</h3>
+          <div class="mcp-type-examples">Chrome MCP · Playwright · Browserbase</div>
+        </div>
+        <div class="mcp-type-body">
+          <div class="mcp-type-row"><span class="mcp-row-k">干嘛</span><span class="mcp-row-v">在浏览器里<strong>点 · 填表 · 切 tab · 抓内容</strong></span></div>
+          <div class="mcp-type-row"><span class="mcp-row-k">范围</span><span class="mcp-row-v">只在<strong>浏览器</strong>内 · 出不去</span></div>
+          <div class="mcp-type-row"><span class="mcp-row-k">能动</span><span class="mcp-row-v">模拟用户的 web 操作</span></div>
+        </div>
+        <div class="mcp-type-foot">
+          <span class="when">用在</span>调研 / 自动浏览 / 抓素材
+        </div>
+      </div>
+
+      <div class="mcp-type-card lvl-high">
+        <div class="mcp-type-head">
+          <span class="mcp-type-chip">🔴 高侵入</span>
+          <div class="mcp-type-num">04</div>
+          <h3 class="mcp-type-name">桌面 · 系统接管</h3>
+          <div class="mcp-type-examples">Computer Use · AppleScript · Terminal MCP</div>
+        </div>
+        <div class="mcp-type-body">
+          <div class="mcp-type-row"><span class="mcp-row-k">干嘛</span><span class="mcp-row-v"><strong>看屏幕 · 控鼠标 · 跨应用 · 跑命令</strong></span></div>
+          <div class="mcp-type-row"><span class="mcp-row-k">范围</span><span class="mcp-row-v">整台 Mac / Win · <strong>没边界</strong></span></div>
+          <div class="mcp-type-row"><span class="mcp-row-k">能动</span><span class="mcp-row-v">任何应用 · 任何文件 · 系统命令</span></div>
+        </div>
+        <div class="mcp-type-foot">
+          <span class="when">用在</span>跨应用复杂任务 · 但鼠标会被抢
+        </div>
+      </div>
+    </div>
+
+    <div class="hint-strip" style="margin-top:24px;background:var(--bg-2);border-left-color:var(--ink);">
+      <span class="hint-tag" style="color:var(--ink);">关键</span>
+      "MCP" 一词包了 N 个差别巨大的东西。<strong>先看清楚你在用哪一种</strong>,才知道 AI 能干啥、不能干啥、会不会跑偏。
+    </div>
+  </div>
+</section>
+
+<!-- §04 -->
 <section id="mcp-install">
   <div class="wrap">
     <div class="section-head">
       <div>
-        <div class="section-num"><strong>03</strong> / 装法</div>
+        <div class="section-num"><strong>04</strong> / 装法</div>
         <h2 class="section-title">远程一朵云<br>本地一台 Mac · <span class="em">两种装法</span></h2>
       </div>
       <p class="section-sub">
@@ -2269,12 +2490,12 @@ $ claude plugin install figma
   </div>
 </section>
 
-<!-- §04 — MCP 装配台 -->
+<!-- §05 — MCP 装配台 -->
 <section id="mcp-assembly">
   <div class="wrap">
     <div class="section-head">
       <div>
-        <div class="section-num"><strong>04</strong> / 装配台</div>
+        <div class="section-num"><strong>05</strong> / 装配台</div>
         <h2 class="section-title">点 MCP<br><span class="em">看 AI 长出新能力</span></h2>
       </div>
       <p class="section-sub">
@@ -2338,12 +2559,12 @@ $ claude plugin install figma
   </div>
 </section>
 
-<!-- §05 — Cheatsheet (visual infographics) -->
+<!-- §06 — Cheatsheet (visual infographics) -->
 <section id="cheat">
   <div class="wrap">
     <div class="section-head">
       <div>
-        <div class="section-num"><strong>05</strong> / 速查</div>
+        <div class="section-num"><strong>06</strong> / 速查</div>
         <h2 class="section-title">三张<br><span class="em">速查图</span></h2>
       </div>
       <p class="section-sub">
