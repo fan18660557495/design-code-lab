@@ -1,0 +1,1962 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>shadcn vs Ant Design — 能改的 vs 能用的</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,300..900&family=Geist:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Noto+Sans+SC:wght@300;400;500;700;900&family=Noto+Serif+SC:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f3eee5;
+    --bg-2: #ebe4d4;
+    --ink: #16161d;
+    --ink-soft: #4a4a55;
+    --ink-mute: #8a8a92;
+    --line: #d5cdba;
+    --line-soft: #e3dcca;
+    --accent: #ff4d2e;
+    --accent-soft: #ffe4dc;
+    --blue: #1677ff;          /* antd primary */
+    --blue-soft: #e6f0ff;
+    --green: #1f6b3a;
+    --green-soft: #d4ecdb;
+    --yellow: #ffcf3d;
+    --paper: #faf7f0;
+    --shadow: 0 1px 0 rgba(0,0,0,0.04), 0 8px 24px rgba(22,22,29,0.06);
+
+    /* K1 lib palette */
+    --shadcn-ink: #0a0a0a;
+    --shadcn-mute: #71717a;
+    --shadcn-bg: #ffffff;
+    --shadcn-line: #e5e7eb;
+    --antd-blue: #1677ff;
+    --antd-blue-hover: #4096ff;
+    --antd-text: rgba(0,0,0,0.88);
+    --antd-bg: #ffffff;
+    --antd-line: #d9d9d9;
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'Geist', 'Noto Sans SC', system-ui, -apple-system, sans-serif;
+    font-size: 16px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    background-image: radial-gradient(circle at 1px 1px, rgba(22,22,29,0.05) 1px, transparent 0);
+    background-size: 24px 24px;
+  }
+
+  /* Typography */
+  .display-cn { font-family: 'Noto Serif SC', 'Fraunces', serif; font-weight: 900; letter-spacing: -0.01em; }
+  .display-en { font-family: 'Fraunces', 'Noto Serif SC', serif; font-weight: 600; font-style: italic; letter-spacing: -0.02em; }
+  .mono { font-family: 'JetBrains Mono', monospace; }
+  .label { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-mute); }
+
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 0 32px; }
+
+  /* topbar */
+  .topbar { border-bottom: 1px dashed var(--line); padding: 16px 0; background: var(--bg); position: sticky; top: 0; z-index: 100; }
+  .topbar-inner { display: flex; justify-content: space-between; align-items: center; gap: 24px; flex-wrap: wrap; }
+  .brand { font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 600; }
+  .brand .dot { display: inline-block; width: 8px; height: 8px; background: var(--accent); border-radius: 50%; margin-right: 8px; vertical-align: middle; animation: pulse 2s ease-in-out infinite; }
+  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+  .nav-links { display: flex; gap: 18px; font-size: 13px; flex-wrap: wrap; }
+  .nav-links a { color: var(--ink-soft); text-decoration: none; transition: color 0.2s; }
+  .nav-links a:hover { color: var(--accent); }
+  a.brand { text-decoration: none; color: inherit; transition: color 0.2s; cursor: pointer; }
+  a.brand:hover { color: var(--accent); }
+  .brand-block { display: flex; align-items: center; min-width: 0; flex: 1; }
+  .brand-arrow { margin-right: 6px; color: var(--ink-mute); display: inline-block; transition: transform 0.2s, color 0.2s; }
+  .brand:hover .brand-arrow { color: var(--accent); transform: translateX(-2px); }
+  .brand-sep { margin: 0 10px; color: var(--ink-mute); font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 300; }
+  .brand-current { font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 500; color: var(--ink-soft); letter-spacing: 0.02em; }
+  @media (max-width: 760px) { .brand-sep, .brand-current { display: none; } }
+
+  /* hero */
+  .hero { padding: 100px 0 80px; position: relative; overflow: hidden; }
+  .hero-meta { display: flex; gap: 24px; margin-bottom: 32px; align-items: center; flex-wrap: wrap; }
+  .hero-meta .pill { padding: 6px 12px; border: 1px solid var(--ink); border-radius: 100px; font-size: 11px; font-family: 'JetBrains Mono', monospace; letter-spacing: 0.05em; }
+  .hero-meta .pill.fill { background: var(--ink); color: var(--bg); }
+  .hero h1 { font-family: 'Noto Serif SC', 'Fraunces', serif; font-weight: 900; font-size: clamp(46px, 6.5vw, 86px); line-height: 0.98; letter-spacing: -0.03em; margin: 0 0 24px; }
+  .hero h1 .em { font-family: 'Noto Serif SC', serif; font-weight: 500; color: var(--accent); }
+  .hero h1 .x { display: inline-block; transform: translateY(-0.05em); margin: 0 0.08em; color: var(--ink-mute); font-weight: 300; }
+  .hero p.lede { font-size: 20px; line-height: 1.5; max-width: 640px; color: var(--ink-soft); margin: 0 0 40px; }
+  .hero p.lede .em { font-family: 'Noto Serif SC', serif; color: var(--accent); font-weight: 500; }
+  .hero-grid { display: grid; grid-template-columns: 1.4fr 1fr; gap: 48px; align-items: end; }
+  @media (max-width: 880px) { .hero-grid { grid-template-columns: 1fr; } }
+  .hero-side { border-left: 1px dashed var(--line); padding-left: 24px; font-size: 13px; color: var(--ink-soft); }
+  .hero-side .row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px dashed var(--line); }
+  .hero-side .row:last-child { border-bottom: none; }
+  .hero-side .row .k { color: var(--ink-mute); font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.05em; text-transform: uppercase; }
+  .hero-side .row .v { font-weight: 500; }
+
+  /* section */
+  section { padding: 80px 0; border-top: 1px solid var(--line); position: relative; animation: fadeIn 0.6s ease-out backwards; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+  .section-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 48px; flex-wrap: wrap; gap: 16px; }
+  .section-num { font-family: 'JetBrains Mono', monospace; font-size: 13px; color: var(--ink-mute); letter-spacing: 0.1em; }
+  .section-num strong { color: var(--accent); }
+  .section-title { font-family: 'Noto Serif SC', serif; font-weight: 900; font-size: clamp(32px, 4.5vw, 52px); line-height: 1.05; letter-spacing: -0.02em; margin: 0; max-width: 18ch; }
+  .section-title .em { font-family: 'Noto Serif SC', serif; font-weight: 500; color: var(--accent); }
+  .section-sub { color: var(--ink-soft); font-size: 17px; max-width: 38ch; line-height: 1.55; margin: 0; }
+
+  .em { font-family: 'Noto Serif SC', serif; font-weight: 500; color: var(--accent); }
+
+  /* hint strip (reused) */
+  .hint-strip { margin-top: 16px; padding: 14px 18px; background: var(--accent-soft); border-left: 3px solid var(--accent); border-radius: 4px; font-size: 13px; color: var(--ink); line-height: 1.55; }
+  .hint-strip .hint-tag { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--accent); letter-spacing: 0.12em; margin-right: 10px; text-transform: uppercase; }
+
+  /* quote box */
+  .quote-box { margin: 32px 0 0; padding: 24px 28px; background: var(--paper); border-left: 3px solid var(--ink); border-radius: 0 6px 6px 0; font-family: 'Noto Serif SC', serif; font-size: 18px; line-height: 1.55; color: var(--ink); font-weight: 500; }
+  .quote-box .quote-mark { font-family: 'Noto Serif SC', serif; color: var(--accent); font-size: 28px; line-height: 1; margin-right: 8px; font-weight: 500; }
+  .quote-box .quote-attr { display: block; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ink-mute); margin-top: 12px; letter-spacing: 0.05em; font-weight: 400; }
+
+  /* ============ §00.5 词汇表 (glossary chip strip) ============ */
+  .glossary {
+    margin-top: 12px;
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 20px 24px;
+  }
+  .glossary-head {
+    display: flex; justify-content: space-between; align-items: baseline;
+    margin-bottom: 14px; padding-bottom: 12px;
+    border-bottom: 1px dashed var(--line);
+    flex-wrap: wrap; gap: 8px;
+  }
+  .glossary-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px; color: var(--accent);
+    letter-spacing: 0.12em; text-transform: uppercase;
+  }
+  .glossary-title { font-family: 'Noto Serif SC', serif; font-size: 18px; font-weight: 700; margin: 0; }
+  .glossary-title .em { color: var(--accent); font-weight: 500; }
+  .glossary-sub { font-size: 12px; color: var(--ink-mute); font-family: 'JetBrains Mono', monospace; letter-spacing: 0.04em; }
+  .glossary-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 14px;
+  }
+  @media (max-width: 880px) { .glossary-grid { grid-template-columns: 1fr 1fr; } }
+  @media (max-width: 600px) { .glossary-grid { grid-template-columns: 1fr; } }
+  .gl-item {
+    border: 1px dashed var(--line);
+    border-radius: 5px;
+    padding: 12px 14px;
+    background: var(--bg);
+    transition: all 0.18s;
+  }
+  .gl-item:hover { border-color: var(--accent); border-style: solid; background: var(--accent-soft); }
+  .gl-term {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12.5px; font-weight: 600;
+    color: var(--ink);
+    margin-bottom: 4px;
+  }
+  .gl-fig {
+    font-size: 12.5px;
+    color: var(--ink-soft);
+    line-height: 1.5;
+  }
+  .gl-fig strong { color: var(--ink); font-weight: 600; }
+  .gl-arrow {
+    color: var(--accent);
+    font-weight: 600;
+    margin: 0 4px;
+  }
+
+  /* ============ §01 problem grid ============ */
+  .problem-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; margin-top: 24px; }
+  @media (max-width: 880px) { .problem-grid { grid-template-columns: 1fr; } }
+  .problem-card {
+    background: var(--paper);
+    border: 1.5px solid var(--line);
+    border-radius: 6px;
+    padding: 32px 28px 28px;
+    position: relative;
+  }
+  .problem-card.shadcn { border-color: var(--ink); background: #ffffff; }
+  .problem-card.antd { border-color: var(--antd-blue); background: var(--blue-soft); }
+  .problem-card .tag {
+    position: absolute; top: -12px; left: 24px;
+    background: var(--bg); padding: 2px 10px;
+    font-family: 'JetBrains Mono', monospace; font-size: 11px;
+    letter-spacing: 0.1em;
+  }
+  .problem-card.shadcn .tag { color: var(--ink); border: 1px solid var(--ink); }
+  .problem-card.antd .tag { color: var(--antd-blue); border: 1px solid var(--antd-blue); }
+  .problem-card h3 {
+    font-family: 'Noto Serif SC', serif; font-size: 22px;
+    margin: 0 0 6px; font-weight: 800; line-height: 1.3;
+  }
+  .problem-card .pc-tagline {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 14px; color: var(--ink-mute);
+    margin: 0 0 14px;
+    font-weight: 500;
+  }
+  .problem-card p { margin: 0 0 12px; color: var(--ink-soft); font-size: 14px; line-height: 1.6; }
+  .problem-card p:last-child { margin-bottom: 0; }
+  .problem-card p strong { color: var(--ink); font-weight: 600; }
+  .pc-feat {
+    margin-top: 14px;
+    padding-top: 14px;
+    border-top: 1px dashed var(--line);
+    display: flex; flex-direction: column; gap: 6px;
+    font-size: 13px;
+  }
+  .pc-feat .pf-row {
+    display: flex; align-items: baseline; gap: 8px;
+  }
+  .pc-feat .pf-mark {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px; color: var(--accent);
+    flex-shrink: 0;
+    width: 16px;
+  }
+  .problem-card.antd .pc-feat .pf-mark { color: var(--antd-blue); }
+  .pc-feat .pf-text { color: var(--ink-soft); line-height: 1.5; }
+  .pc-feat .pf-text strong { color: var(--ink); font-weight: 600; }
+
+  /* ============ §02 file tree compare ============ */
+  .tree-stage {
+    margin-top: 24px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+  }
+  @media (max-width: 880px) { .tree-stage { grid-template-columns: 1fr; } }
+  .tree-card {
+    background: var(--paper);
+    border: 1.5px solid var(--line);
+    border-radius: 8px;
+    overflow: hidden;
+    display: flex; flex-direction: column;
+  }
+  .tree-card.shadcn { border-color: var(--ink); }
+  .tree-card.antd { border-color: var(--antd-blue); }
+  .tree-head {
+    background: var(--ink);
+    color: white;
+    padding: 12px 18px;
+    display: flex; align-items: center; gap: 12px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+  }
+  .tree-card.antd .tree-head { background: var(--antd-blue); }
+  .tree-head .th-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); }
+  .tree-card.antd .tree-head .th-dot { background: white; }
+  .tree-head .th-name { font-weight: 600; letter-spacing: 0.04em; }
+  .tree-head .th-tag { margin-left: auto; font-size: 10px; opacity: 0.7; letter-spacing: 0.1em; }
+  .tree-body {
+    padding: 18px 20px 8px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    line-height: 1.85;
+    background: var(--bg);
+    flex: 1;
+  }
+  .tree-row {
+    display: flex; align-items: center; gap: 6px;
+    padding: 4px 8px;
+    border-radius: 4px;
+    transition: all 0.18s;
+    cursor: pointer;
+    margin: 0 -8px;
+  }
+  .tree-row:hover { background: var(--accent-soft); }
+  .tree-row.lock { color: var(--ink-mute); cursor: help; }
+  .tree-row.lock:hover { background: rgba(22,22,29,0.06); }
+  .tree-row.indent-1 { padding-left: 24px; }
+  .tree-row.indent-2 { padding-left: 44px; }
+  .tree-row.indent-3 { padding-left: 64px; }
+  .tree-icon {
+    width: 16px; flex-shrink: 0;
+    color: var(--ink-mute);
+    font-size: 12px;
+  }
+  .tree-row.dir .tree-icon { color: var(--accent); }
+  .tree-card.antd .tree-row.dir .tree-icon { color: var(--antd-blue); }
+  .tree-name { color: var(--ink); }
+  .tree-row.lock .tree-name { color: var(--ink-mute); text-decoration: line-through; text-decoration-color: var(--ink-mute); text-decoration-thickness: 1px; }
+  .tree-edit {
+    margin-left: auto;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    padding: 1px 6px;
+    border-radius: 3px;
+    letter-spacing: 0.04em;
+  }
+  .tree-edit.ok { color: var(--green); background: var(--green-soft); }
+  .tree-edit.no { color: var(--ink-mute); background: rgba(0,0,0,0.06); }
+  .tree-foot {
+    padding: 14px 20px;
+    background: var(--paper);
+    border-top: 1px dashed var(--line);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--ink-soft);
+    line-height: 1.6;
+  }
+  .tree-foot strong { color: var(--ink); font-weight: 600; }
+  .tree-card.shadcn .tree-foot strong { color: var(--ink); }
+  .tree-card.antd .tree-foot strong { color: var(--antd-blue); }
+
+  .tree-figma-strip {
+    margin-top: 20px;
+    padding: 16px 20px;
+    background: var(--bg-2);
+    border-left: 3px solid var(--ink);
+    border-radius: 0 6px 6px 0;
+    font-size: 13.5px;
+    line-height: 1.65;
+    color: var(--ink);
+  }
+  .tree-figma-strip .tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px; color: var(--ink);
+    letter-spacing: 0.12em; text-transform: uppercase;
+    margin-right: 10px;
+  }
+  .tree-figma-strip strong { color: var(--accent); font-weight: 600; }
+
+  /* ============ §03 visual defaults ============ */
+  .vis-stage {
+    margin-top: 24px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+  }
+  @media (max-width: 880px) { .vis-stage { grid-template-columns: 1fr; } }
+  .vis-card {
+    background: var(--paper);
+    border: 1.5px solid var(--line);
+    border-radius: 8px;
+    overflow: hidden;
+    display: flex; flex-direction: column;
+  }
+  .vis-card.shadcn { border-color: var(--ink); }
+  .vis-card.antd { border-color: var(--antd-blue); }
+  .vis-head {
+    padding: 16px 22px;
+    border-bottom: 1px solid var(--line);
+    background: var(--paper);
+  }
+  .vis-head .vh-key {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    margin-bottom: 4px;
+  }
+  .vis-card.shadcn .vh-key { color: var(--ink-mute); }
+  .vis-card.antd .vh-key { color: var(--antd-blue); }
+  .vis-head .vh-name {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 18px; font-weight: 800;
+    color: var(--ink);
+  }
+  .vis-head .vh-tagline {
+    font-size: 12.5px;
+    color: var(--ink-soft);
+    margin-top: 4px;
+    line-height: 1.5;
+  }
+  .vis-body {
+    flex: 1;
+    padding: 32px 28px;
+    display: flex; flex-direction: column;
+    gap: 28px;
+    background: #fafafa;
+  }
+  .vis-card.antd .vis-body { background: #f5f5f5; }
+  .vis-group {
+    display: flex; flex-direction: column;
+    gap: 8px;
+  }
+  .vis-group-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    color: var(--ink-mute);
+    text-transform: uppercase;
+  }
+  .vis-row {
+    display: flex; flex-wrap: wrap; gap: 10px; align-items: center;
+  }
+
+  /* shadcn-style components (mock) */
+  .sc-btn {
+    font-family: 'Geist', system-ui, sans-serif;
+    font-size: 14px; font-weight: 500;
+    padding: 8px 16px;
+    border-radius: 6px;
+    border: 1px solid transparent;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .sc-btn-primary { background: var(--shadcn-ink); color: white; }
+  .sc-btn-primary:hover { background: #27272a; }
+  .sc-btn-outline { background: white; color: var(--shadcn-ink); border-color: var(--shadcn-line); }
+  .sc-btn-outline:hover { background: #f4f4f5; }
+  .sc-btn-ghost { background: transparent; color: var(--shadcn-ink); }
+  .sc-btn-ghost:hover { background: #f4f4f5; }
+  .sc-input {
+    font-family: 'Geist', system-ui, sans-serif;
+    font-size: 14px;
+    padding: 8px 12px;
+    border: 1px solid var(--shadcn-line);
+    border-radius: 6px;
+    background: white;
+    width: 220px;
+    outline: none;
+  }
+  .sc-input:focus { border-color: var(--shadcn-ink); box-shadow: 0 0 0 2px rgba(0,0,0,0.05); }
+  .sc-card {
+    background: white;
+    border: 1px solid var(--shadcn-line);
+    border-radius: 8px;
+    padding: 20px 22px;
+    width: 100%;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+  }
+  .sc-card-title { font-family: 'Geist', sans-serif; font-size: 16px; font-weight: 600; color: var(--shadcn-ink); margin: 0 0 4px; }
+  .sc-card-desc { font-size: 13px; color: var(--shadcn-mute); margin: 0 0 14px; line-height: 1.55; }
+  .sc-badge {
+    display: inline-flex; align-items: center;
+    padding: 2px 8px;
+    background: var(--shadcn-ink); color: white;
+    border-radius: 100px;
+    font-size: 11px; font-weight: 600;
+    font-family: 'Geist', sans-serif;
+  }
+  .sc-badge.outline { background: transparent; color: var(--shadcn-ink); border: 1px solid var(--shadcn-line); }
+
+  /* antd-style components (mock) */
+  .ad-btn {
+    font-family: 'PingFang SC', system-ui, sans-serif;
+    font-size: 14px; font-weight: 400;
+    padding: 5px 16px;
+    border-radius: 6px;
+    border: 1px solid transparent;
+    cursor: pointer;
+    transition: all 0.15s;
+    line-height: 1.5715;
+  }
+  .ad-btn-primary { background: var(--antd-blue); color: white; box-shadow: 0 2px 0 rgba(5,145,255,0.1); }
+  .ad-btn-primary:hover { background: var(--antd-blue-hover); }
+  .ad-btn-default { background: white; color: var(--antd-text); border-color: var(--antd-line); }
+  .ad-btn-default:hover { color: var(--antd-blue); border-color: var(--antd-blue); }
+  .ad-btn-text { background: transparent; color: var(--antd-text); }
+  .ad-btn-text:hover { background: rgba(0,0,0,0.06); }
+  .ad-input {
+    font-family: 'PingFang SC', system-ui, sans-serif;
+    font-size: 14px;
+    padding: 4px 11px;
+    border: 1px solid var(--antd-line);
+    border-radius: 6px;
+    background: white;
+    width: 220px;
+    outline: none;
+    color: var(--antd-text);
+    line-height: 1.5715;
+  }
+  .ad-input:focus { border-color: var(--antd-blue); box-shadow: 0 0 0 2px rgba(5,145,255,0.1); }
+  .ad-card {
+    background: white;
+    border: 1px solid #f0f0f0;
+    border-radius: 8px;
+    padding: 0;
+    width: 100%;
+    box-shadow: 0 1px 2px -2px rgba(0,0,0,0.16), 0 3px 6px 0 rgba(0,0,0,0.05);
+    overflow: hidden;
+  }
+  .ad-card-head {
+    border-bottom: 1px solid #f0f0f0;
+    padding: 12px 22px;
+    background: white;
+  }
+  .ad-card-title { font-family: 'PingFang SC', sans-serif; font-size: 16px; font-weight: 600; color: var(--antd-text); margin: 0; }
+  .ad-card-body { padding: 18px 22px; }
+  .ad-card-desc { font-size: 13px; color: rgba(0,0,0,0.65); margin: 0 0 14px; line-height: 1.5715; }
+  .ad-badge {
+    display: inline-flex; align-items: center;
+    padding: 1px 8px;
+    background: var(--antd-blue); color: white;
+    border-radius: 4px;
+    font-size: 12px; font-weight: 400;
+    font-family: 'PingFang SC', sans-serif;
+  }
+  .ad-badge.outline { background: var(--blue-soft); color: var(--antd-blue); border: 1px solid var(--antd-blue); }
+
+  .vis-caption {
+    margin-top: 24px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    font-size: 13px;
+    color: var(--ink-soft);
+    line-height: 1.6;
+  }
+  @media (max-width: 880px) { .vis-caption { grid-template-columns: 1fr; } }
+  .vis-caption-block {
+    padding: 14px 18px;
+    background: var(--paper);
+    border-radius: 5px;
+    border: 1px dashed var(--line);
+  }
+  .vis-caption-block strong { color: var(--ink); font-weight: 600; }
+  .vis-caption-block .vc-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    margin-bottom: 6px;
+    display: block;
+  }
+  .vis-caption-block.shadcn .vc-tag { color: var(--ink); }
+  .vis-caption-block.antd .vc-tag { color: var(--antd-blue); }
+
+  /* ============ §04 radius change paths ============ */
+  .path-stage {
+    margin-top: 24px;
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 0;
+    overflow: hidden;
+  }
+  .path-question {
+    padding: 22px 28px;
+    background: var(--bg-2);
+    border-bottom: 1px solid var(--line);
+  }
+  .path-q-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    color: var(--accent);
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+  .path-q-text {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 19px;
+    font-weight: 700;
+    color: var(--ink);
+    margin: 0;
+    line-height: 1.4;
+  }
+  .path-q-text .em { color: var(--accent); font-weight: 500; }
+  .path-tabs {
+    display: flex;
+    background: var(--bg);
+    border-bottom: 1px solid var(--line);
+  }
+  .path-tab {
+    flex: 1;
+    padding: 16px 20px;
+    background: transparent;
+    border: none;
+    border-bottom: 3px solid transparent;
+    cursor: pointer;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    color: var(--ink-mute);
+    letter-spacing: 0.04em;
+    transition: all 0.18s;
+    text-align: left;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .path-tab:hover { color: var(--ink); }
+  .path-tab.is-active { color: var(--ink); border-bottom-color: var(--accent); background: var(--paper); }
+  .path-tab-num {
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    font-size: 18px;
+    color: var(--accent);
+  }
+  .path-tab-name {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 15px;
+    font-weight: 700;
+  }
+  .path-tab-side {
+    margin-left: auto;
+    font-size: 11px;
+    color: var(--ink-mute);
+  }
+  .path-panel { display: none; padding: 32px 36px; }
+  .path-panel.is-active { display: block; animation: fadeIn 0.3s ease-out; }
+
+  .path-flow {
+    display: grid;
+    grid-template-columns: 1fr 60px 1fr;
+    gap: 16px;
+    align-items: stretch;
+    margin-bottom: 24px;
+  }
+  @media (max-width: 760px) { .path-flow { grid-template-columns: 1fr; } }
+  .path-block {
+    background: var(--bg);
+    border: 1.5px solid var(--line);
+    border-radius: 8px;
+    padding: 22px 24px;
+  }
+  .path-block.target { border-color: var(--accent); background: var(--accent-soft); }
+  .path-block-stage {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    color: var(--ink-mute);
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+  .path-block.target .path-block-stage { color: var(--accent); }
+  .path-block-title {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 17px;
+    font-weight: 800;
+    color: var(--ink);
+    margin: 0 0 10px;
+  }
+  .path-block-text {
+    font-size: 13px;
+    color: var(--ink-soft);
+    line-height: 1.6;
+    margin: 0;
+  }
+  .path-block-text strong { color: var(--ink); font-weight: 600; }
+  .path-arrow {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    font-size: 32px;
+    color: var(--accent);
+  }
+  @media (max-width: 760px) { .path-arrow { transform: rotate(90deg); padding: 6px; font-size: 24px; } }
+
+  .impact-stage {
+    margin-top: 4px;
+    padding: 20px 22px;
+    background: var(--bg);
+    border-radius: 6px;
+    border: 1px dashed var(--line);
+  }
+  .impact-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    color: var(--ink-mute);
+    text-transform: uppercase;
+    margin-bottom: 12px;
+  }
+  .impact-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+  }
+  @media (max-width: 600px) { .impact-grid { grid-template-columns: repeat(2, 1fr); } }
+  .impact-chip {
+    padding: 10px 12px;
+    border-radius: 5px;
+    border: 1px solid var(--line);
+    background: var(--paper);
+    font-size: 12px;
+    color: var(--ink-soft);
+    text-align: center;
+    transition: all 0.2s;
+  }
+  .impact-chip.affected {
+    background: var(--accent);
+    color: white;
+    border-color: var(--accent);
+    font-weight: 600;
+  }
+  .impact-chip.affected.warn {
+    background: var(--yellow);
+    color: var(--ink);
+    border-color: var(--yellow);
+  }
+  .impact-chip-name { font-family: 'JetBrains Mono', monospace; font-size: 11.5px; margin-bottom: 2px; }
+  .impact-chip-state { font-size: 10px; opacity: 0.75; }
+
+  .path-conclusion {
+    margin-top: 22px;
+    padding: 16px 20px;
+    background: var(--paper);
+    border-left: 3px solid var(--ink);
+    border-radius: 0 5px 5px 0;
+    font-size: 13.5px;
+    line-height: 1.6;
+    color: var(--ink);
+  }
+  .path-conclusion .pc-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--accent);
+    letter-spacing: 0.1em;
+    margin-right: 10px;
+    text-transform: uppercase;
+  }
+  .path-conclusion strong { color: var(--accent); font-weight: 600; }
+
+  /* ============ §05 scenario picker ============ */
+  .scn-stage {
+    margin-top: 24px;
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  .scn-picker {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0;
+    border-bottom: 1px solid var(--line);
+    background: var(--bg);
+  }
+  @media (max-width: 880px) { .scn-picker { grid-template-columns: repeat(2, 1fr); } }
+  .scn-btn {
+    padding: 22px 18px;
+    background: transparent;
+    border: none;
+    border-right: 1px solid var(--line);
+    border-bottom: 1px solid var(--line);
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.2s;
+    display: flex; flex-direction: column;
+    align-items: center; gap: 8px;
+  }
+  .scn-btn:last-child { border-right: none; }
+  @media (max-width: 880px) {
+    .scn-btn:nth-child(2n) { border-right: none; }
+  }
+  .scn-btn:hover { background: var(--bg-2); }
+  .scn-btn.is-active { background: var(--ink); color: white; }
+  .scn-btn-icon {
+    font-size: 26px;
+    line-height: 1;
+  }
+  .scn-btn-name {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--ink);
+  }
+  .scn-btn.is-active .scn-btn-name { color: white; }
+  .scn-btn-eg {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--ink-mute);
+    letter-spacing: 0.04em;
+  }
+  .scn-btn.is-active .scn-btn-eg { color: rgba(255,255,255,0.7); }
+
+  .scn-result {
+    padding: 28px 32px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+  }
+  @media (max-width: 880px) { .scn-result { grid-template-columns: 1fr; } }
+  .scn-lib {
+    background: var(--bg);
+    border: 1.5px solid var(--line);
+    border-radius: 8px;
+    padding: 22px 24px;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+  }
+  .scn-lib.win {
+    border-color: var(--green);
+    background: var(--green-soft);
+  }
+  .scn-lib.win::before {
+    content: '✓ 推荐';
+    position: absolute; top: 14px; right: 16px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px; letter-spacing: 0.1em;
+    background: var(--green);
+    color: white;
+    padding: 3px 10px;
+    border-radius: 100px;
+  }
+  .scn-lib.miss {
+    opacity: 0.45;
+    border-style: dashed;
+  }
+  .scn-lib-name {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 22px;
+    font-weight: 800;
+    margin: 0 0 4px;
+    color: var(--ink);
+  }
+  .scn-lib-score {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--ink-mute);
+    margin-bottom: 14px;
+  }
+  .scn-lib-score-bar {
+    height: 8px;
+    background: rgba(0,0,0,0.06);
+    border-radius: 100px;
+    margin-top: 6px;
+    overflow: hidden;
+  }
+  .scn-lib-score-fill {
+    height: 100%;
+    background: var(--accent);
+    border-radius: 100px;
+    transition: width 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  .scn-lib.win .scn-lib-score-fill { background: var(--green); }
+  .scn-lib-why {
+    font-size: 13.5px;
+    color: var(--ink-soft);
+    line-height: 1.6;
+    margin: 0 0 12px;
+  }
+  .scn-lib-why strong { color: var(--ink); font-weight: 600; }
+  .scn-lib-case {
+    padding: 10px 14px;
+    background: var(--paper);
+    border-radius: 5px;
+    font-size: 12.5px;
+    color: var(--ink-soft);
+    border: 1px dashed var(--line);
+  }
+  .scn-lib-case .sc-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--ink-mute);
+    letter-spacing: 0.1em;
+    margin-right: 8px;
+    text-transform: uppercase;
+  }
+  .scn-lib-case strong { color: var(--ink); font-weight: 600; }
+
+  /* ============ §06 AI协作 ============ */
+  .ai-table {
+    margin-top: 24px;
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  .ai-row {
+    display: grid;
+    grid-template-columns: 200px 1fr 1fr;
+    border-bottom: 1px solid var(--line);
+  }
+  .ai-row:last-child { border-bottom: none; }
+  @media (max-width: 760px) { .ai-row { grid-template-columns: 1fr; } }
+  .ai-row.head {
+    background: var(--ink);
+    color: white;
+  }
+  .ai-row.head .ai-cell {
+    padding: 14px 22px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    letter-spacing: 0.05em;
+    border-right: 1px solid rgba(255,255,255,0.1);
+  }
+  .ai-row.head .ai-cell:last-child { border-right: none; }
+  .ai-row.head .ai-cell.lib-shadcn { color: var(--accent); font-weight: 600; }
+  .ai-row.head .ai-cell.lib-antd { color: #82b6ff; font-weight: 600; }
+  .ai-cell {
+    padding: 18px 22px;
+    border-right: 1px dashed var(--line);
+    font-size: 14px;
+    line-height: 1.6;
+    color: var(--ink-soft);
+  }
+  .ai-cell:last-child { border-right: none; }
+  @media (max-width: 760px) {
+    .ai-cell { border-right: none; border-bottom: 1px dashed var(--line); }
+    .ai-cell:last-child { border-bottom: none; }
+    .ai-row.head .ai-cell { border-bottom: 1px solid rgba(255,255,255,0.1); }
+  }
+  .ai-cell.q {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--ink);
+    background: var(--bg);
+  }
+  .ai-cell.q .ai-q-num {
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    color: var(--accent);
+    margin-right: 6px;
+    font-weight: 500;
+    font-size: 17px;
+  }
+  .ai-cell strong { color: var(--ink); font-weight: 600; }
+  .ai-cell .tick { color: var(--green); font-weight: 600; }
+  .ai-cell .cross { color: var(--accent); font-weight: 600; }
+
+  .ai-conclusion {
+    margin-top: 24px;
+    padding: 20px 24px;
+    background: var(--ink);
+    color: var(--bg);
+    border-radius: 8px;
+    font-family: 'Noto Serif SC', serif;
+    font-size: 17px;
+    line-height: 1.55;
+    font-weight: 500;
+  }
+  .ai-conclusion .em { color: var(--accent); font-weight: 500; }
+  .ai-conclusion-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--accent);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+    display: block;
+  }
+
+  /* ============ §07 cheatsheet ============ */
+  .cheat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-top: 24px; }
+  @media (max-width: 880px) { .cheat-grid { grid-template-columns: 1fr; } }
+  .cheat-block { background: var(--paper); border: 1px solid var(--line); border-radius: 8px; padding: 24px 26px; }
+  .cheat-block h3 { font-family: 'Noto Serif SC', serif; font-size: 18px; font-weight: 800; margin: 0 0 14px; letter-spacing: -0.01em; }
+  .cheat-block h3 .em { font-family: 'Noto Serif SC', serif; color: var(--accent); font-weight: 500; }
+  .cheat-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .cheat-table th, .cheat-table td { text-align: left; padding: 9px 10px; border-bottom: 1px dashed var(--line); vertical-align: top; }
+  .cheat-table tr:last-child td { border-bottom: none; }
+  .cheat-table th { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--ink-mute); letter-spacing: 0.08em; text-transform: uppercase; font-weight: 500; }
+  .cheat-table .term { font-family: 'JetBrains Mono', monospace; font-size: 12.5px; color: var(--ink); font-weight: 600; white-space: nowrap; }
+  .cheat-table .desc { color: var(--ink-soft); line-height: 1.5; }
+  .cheat-table .desc strong { color: var(--ink); font-weight: 600; }
+  .cheat-block .cheat-foot { margin-top: 16px; font-size: 12px; color: var(--ink-mute); border-top: 1px dashed var(--line); padding-top: 12px; line-height: 1.55; }
+  .cheat-pick {
+    display: inline-flex;
+    align-items: center;
+    padding: 2px 8px;
+    border-radius: 3px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    font-weight: 600;
+  }
+  .cheat-pick.shadcn { background: var(--ink); color: white; }
+  .cheat-pick.antd { background: var(--antd-blue); color: white; }
+  .cheat-pick.either { background: var(--bg-2); color: var(--ink); }
+
+  /* ============= Next post ============= */
+  .next-post {
+    margin-top: 48px;
+    padding: 32px 36px;
+    background: var(--ink);
+    color: var(--bg);
+    border-radius: 8px;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 32px;
+    align-items: center;
+    text-decoration: none;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    position: relative;
+    overflow: hidden;
+  }
+  .next-post::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: radial-gradient(circle at 100% 0%, rgba(255,77,46,0.12), transparent 55%);
+    pointer-events: none;
+  }
+  .next-post:hover { transform: translateY(-2px); box-shadow: 0 14px 36px rgba(22,22,29,0.22); }
+  @media (max-width: 720px) { .next-post { grid-template-columns: 1fr; padding: 24px; gap: 20px; } }
+  .next-post .np-tag { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--accent); letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 12px; display: inline-block; }
+  .next-post h4 { font-family: 'Noto Serif SC', serif; font-size: 26px; margin: 0 0 10px; font-weight: 700; color: white; line-height: 1.25; letter-spacing: -0.01em; }
+  .next-post h4 .em { font-family: 'Noto Serif SC', serif; font-weight: 500; color: var(--accent); }
+  .next-post p { margin: 0; color: rgba(255,255,255,0.72); font-size: 14px; line-height: 1.65; max-width: 560px; }
+  .next-post p strong { color: white; font-weight: 600; }
+  .next-post .np-cta { display: inline-flex; align-items: center; gap: 10px; padding: 14px 24px; background: var(--accent); color: white; border-radius: 4px; font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 500; letter-spacing: 0.04em; white-space: nowrap; transition: background 0.18s, color 0.18s, transform 0.18s; position: relative; z-index: 1; }
+  .next-post:hover .np-cta { background: white; color: var(--ink); transform: translateX(2px); }
+  .next-post .np-cta .arr { font-family: 'Fraunces', serif; font-style: italic; font-size: 18px; font-weight: 500; }
+
+  /* footer */
+  footer { border-top: 1px solid var(--line); padding: 56px 0 64px; background: var(--bg); }
+  .byline-wrap { position: relative; }
+  .byline { display: flex; gap: 28px; align-items: center; padding-bottom: 32px; border-bottom: 1px dashed var(--line); margin-bottom: 24px; position: relative; }
+  .byline::before { content: ''; position: absolute; top: -56px; left: 0; width: 32px; height: 1px; background: var(--accent); }
+  .byline .avatar { width: 96px; height: 96px; border-radius: 50%; object-fit: cover; flex-shrink: 0; border: 3px solid var(--paper); box-shadow: 0 0 0 1px var(--line), 0 6px 20px rgba(22,22,29,0.10); background: var(--paper); }
+  .byline-label { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ink-mute); letter-spacing: 0.18em; margin-bottom: 8px; }
+  .byline-label .dot { display: inline-block; width: 6px; height: 6px; background: var(--accent); border-radius: 50%; margin-right: 6px; vertical-align: 1px; }
+  .byline-name { font-family: 'Noto Serif SC', 'Fraunces', serif; font-size: clamp(28px, 4vw, 40px); font-weight: 700; line-height: 1.05; letter-spacing: -0.01em; margin: 0 0 8px; }
+  .byline-name .em { font-family: 'Noto Serif SC', serif; font-weight: 500; color: var(--accent); }
+  .byline-tag { font-size: 14px; color: var(--ink-soft); line-height: 1.55; margin: 0; max-width: 52ch; }
+  .footer-meta { text-align: center; font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--ink-mute); letter-spacing: 0.05em; }
+  .footer-meta .heart { color: var(--accent); }
+  .footer-meta .mono { color: var(--ink-soft); font-weight: 500; }
+  @media (max-width: 600px) { .byline { flex-direction: column; text-align: center; align-items: center; gap: 16px; } }
+
+  .byline-group, .byline-wrap.byline-group { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 28px; }
+  .byline-group .byline { display: flex; gap: 16px; align-items: flex-start; margin: 0; min-width: 0; padding-bottom: 0; border-bottom: none; }
+  .byline-group .avatar { width: 56px; height: 56px; flex-shrink: 0; }
+  .byline-group .byline-meta { min-width: 0; }
+  .byline-group .byline-name { font-size: 18px; }
+  .byline-group .byline-tag { font-size: 12px; line-height: 1.55; }
+  @media (max-width: 700px) {
+    .byline-group, .byline-wrap.byline-group { grid-template-columns: 1fr; gap: 18px; }
+    .byline-group .byline + .byline { padding-top: 18px; border-top: 1px dashed var(--line); }
+  }
+
+  /* Roadmap modal (reused) */
+  .rm-modal { position: fixed; inset: 0; z-index: 1000; display: flex; align-items: center; justify-content: center; padding: 30px 16px; }
+  .rm-modal[hidden] { display: none; }
+  .rm-backdrop { position: absolute; inset: 0; background: rgba(22,22,29,0.55); backdrop-filter: blur(4px); animation: rm-fade 0.2s; }
+  @keyframes rm-fade { from { opacity: 0; } to { opacity: 1; } }
+  .rm-dialog { position: relative; background: var(--bg); border-radius: 12px; max-width: 720px; width: 100%; max-height: calc(100vh - 60px); overflow-y: auto; padding: 32px 36px 24px; box-shadow: 0 30px 80px rgba(0,0,0,0.3); animation: rm-pop 0.25s cubic-bezier(0.4,0,0.2,1); }
+  @keyframes rm-pop { from { transform: scale(0.96) translateY(8px); opacity: 0; } to { transform: scale(1) translateY(0); opacity: 1; } }
+  .rm-close { position: absolute; top: 14px; right: 16px; background: transparent; border: none; cursor: pointer; font-size: 20px; color: var(--ink-mute); width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: all 0.15s; line-height: 1; }
+  .rm-close:hover { background: var(--bg-2); color: var(--ink); }
+  .rm-header { margin-bottom: 22px; padding-bottom: 18px; border-bottom: 1px dashed var(--line); }
+  .rm-tag { font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.1em; color: var(--accent); text-transform: uppercase; margin-bottom: 8px; }
+  .rm-title { font-family: 'Noto Serif SC', serif; font-size: 28px; margin: 0 0 6px; font-weight: 900; letter-spacing: -0.02em; line-height: 1.1; }
+  .rm-title .rm-em { font-family: 'Noto Serif SC', serif; color: var(--accent); font-weight: 500; }
+  .rm-sub { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--ink-mute); margin: 0; }
+  .rm-body { display: flex; flex-direction: column; gap: 18px; }
+  .rm-mod-key { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ink); font-weight: 700; margin-bottom: 8px; letter-spacing: 0.04em; text-transform: uppercase; }
+  .rm-mod-list { display: flex; flex-direction: column; gap: 6px; }
+  .rm-cell { display: grid; grid-template-columns: 36px 1fr auto; gap: 12px; align-items: center; padding: 9px 13px; border-radius: 5px; background: var(--paper); border: 1px solid var(--line); text-decoration: none; color: inherit; transition: all 0.15s; }
+  .rm-cell:hover { border-color: var(--accent); background: var(--accent-soft); transform: translateX(3px); }
+  .rm-cell.rm-cell-current { border-color: var(--accent); background: var(--accent-soft); }
+  .rm-cell-code { font-family: 'Fraunces', serif; font-style: italic; font-weight: 500; color: var(--accent); font-size: 15px; }
+  .rm-cell-name { font-size: 13px; color: var(--ink); }
+  .rm-cell-tier { font-family: 'JetBrains Mono', monospace; font-size: 9px; letter-spacing: 0.08em; color: var(--ink-mute); text-transform: uppercase; border: 1px solid var(--line); padding: 2px 7px; border-radius: 3px; }
+  .rm-cell-tier.rm-tier-current { background: var(--accent); color: white; border-color: var(--accent); }
+  .nav-links a[data-rm-open] { cursor: pointer; }
+
+</style>
+</head>
+<body>
+
+<!-- Top bar -->
+<div class="topbar">
+  <div class="wrap topbar-inner">
+    <div class="brand-block"><a href="index.html" class="brand"><span class="brand-arrow">←</span><span class="dot"></span>AI LABBOOK</a><span class="brand-sep">/</span><span class="brand-current">K1 · UI 库选型</span></div>
+    <nav class="nav-links">
+      <a href="index.html#menu" data-rm-open>路线图</a>
+    </nav>
+  </div>
+</div>
+
+<!-- Hero -->
+<header class="hero">
+  <div class="wrap">
+    <div class="hero-meta">
+      <span class="pill fill">实验互动 · INTERACTIVE</span>
+      <span class="pill">2026 · 设计 × 代码</span>
+      <span class="pill">K1 · 基础 · 选型</span>
+      <span class="label">阅读时长 ≈ 10 分钟</span>
+    </div>
+    <div class="hero-grid">
+      <div>
+        <h1>
+          <span class="display-en">shadcn</span><span class="x">×</span><span class="display-en">Ant Design</span><br>
+          <span class="display-cn">一个能</span><span class="em">改</span><span class="display-cn">·一个能</span><span class="em">用</span><span class="display-cn">。</span>
+        </h1>
+        <p class="lede">
+          为什么 AI 写出来的页面跟你公司风格<span class="em">差很远</span>？<br>
+          很多时候根子在 UI 库的<strong style="color:var(--ink);">选型</strong>。<br>
+          这一篇用 Figma 类比 + 视觉对比，让你能跟前端说清"为什么"。
+        </p>
+      </div>
+      <div class="hero-side">
+        <div class="row"><span class="k">本页讲什么</span><span class="v">两大 UI 库的差异</span></div>
+        <div class="row"><span class="k">含互动</span><span class="v">场景判断 / 路径切换</span></div>
+        <div class="row"><span class="k">面向</span><span class="v">设计师 · 零代码</span></div>
+        <div class="row"><span class="k">前置知识</span><span class="v">看过 F1 · npm</span></div>
+      </div>
+    </div>
+
+    <!-- §00.5 词汇表 (small block right after hero) -->
+    <div class="glossary" style="margin-top:40px;">
+      <div class="glossary-head">
+        <div>
+          <div class="glossary-tag">GLOSSARY · 词汇表</div>
+          <h3 class="glossary-title">先把<span class="em">黑话</span>翻成 Figma 话</h3>
+        </div>
+        <span class="glossary-sub">6 个词 · 全文反复出现</span>
+      </div>
+      <div class="glossary-grid">
+        <div class="gl-item">
+          <div class="gl-term">UI 库 / 组件库</div>
+          <div class="gl-fig">一套预制的<strong>按钮、表单、卡片</strong> <span class="gl-arrow">≈</span> Figma 里的 <strong>Component Library</strong></div>
+        </div>
+        <div class="gl-item">
+          <div class="gl-term">npm install</div>
+          <div class="gl-fig">把组件库装进项目 <span class="gl-arrow">≈</span> 在 Figma 里 <strong>publish/enable</strong> 一个 library</div>
+        </div>
+        <div class="gl-item">
+          <div class="gl-term">源码</div>
+          <div class="gl-fig">组件长这样的<strong>原始代码</strong> <span class="gl-arrow">≈</span> 主组件的<strong>图层结构</strong></div>
+        </div>
+        <div class="gl-item">
+          <div class="gl-term">props / variant</div>
+          <div class="gl-fig">组件可调的<strong>开关</strong>（大小/颜色/状态）<span class="gl-arrow">≈</span> Figma <strong>Variants</strong></div>
+        </div>
+        <div class="gl-item">
+          <div class="gl-term">token / variable</div>
+          <div class="gl-fig">全站<strong>共享变量</strong>（一改全改）<span class="gl-arrow">≈</span> Figma <strong>Variables</strong></div>
+        </div>
+        <div class="gl-item">
+          <div class="gl-term">detach</div>
+          <div class="gl-fig">把<strong>引用</strong>变成<strong>独立副本</strong>，断开同步 <span class="gl-arrow">→</span> 同名同义</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- §01 misconceptions / one-liner -->
+<section id="oneliner">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>01</strong> / 一句话</div>
+        <h2 class="section-title">一个<span class="em">抄进来</span>，<br>一个<span class="em">借来用</span>。</h2>
+      </div>
+      <p class="section-sub">
+        这俩名字听起来都是"UI 库"，但<strong>骨子里完全不同</strong>。
+        先把这层差异讲透，后面所有对比都从这里长出来。
+      </p>
+    </div>
+
+    <div class="problem-grid">
+      <div class="problem-card shadcn">
+        <span class="tag">SHADCN/UI · 抄进来</span>
+        <h3>把代码<span class="em" style="color:var(--ink);">抄</span>进你家</h3>
+        <p class="pc-tagline">下载一份开源 Figma kit，detach 之后<br>所有图层都能改。</p>
+        <p>用一个叫 <code style="background:var(--bg-2);padding:1px 5px;border-radius:2px;font-size:12px;font-family:'JetBrains Mono',monospace;">npx shadcn add button</code> 的命令，把 Button 组件的<strong>源代码</strong>直接复制到你项目的 <code style="background:var(--bg-2);padding:1px 5px;border-radius:2px;font-size:12px;font-family:'JetBrains Mono',monospace;">components/ui/</code> 文件夹里。</p>
+        <p>之后这份代码就是<strong>你的了</strong>。改字号、改颜色、删一半、加新功能，随便。</p>
+        <div class="pc-feat">
+          <div class="pf-row"><span class="pf-mark">→</span><span class="pf-text"><strong>视觉风格</strong>：极简 · 黑白 · 大留白（欧美 SaaS 风）</span></div>
+          <div class="pf-row"><span class="pf-mark">→</span><span class="pf-text"><strong>自由度</strong>：满分。源码就在眼前</span></div>
+          <div class="pf-row"><span class="pf-mark">→</span><span class="pf-text"><strong>代价</strong>：组件少 · 复杂场景要自己拼</span></div>
+        </div>
+      </div>
+
+      <div class="problem-card antd">
+        <span class="tag">ANT DESIGN · 借来用</span>
+        <h3>用公司的<span class="em" style="color:var(--antd-blue);">盒子</span></h3>
+        <p class="pc-tagline">enable 公司发布的 team library，<br>组件只能用，进不去改图层。</p>
+        <p>用 <code style="background:var(--blue-soft);padding:1px 5px;border-radius:2px;font-size:12px;font-family:'JetBrains Mono',monospace;color:var(--antd-blue);">npm install antd</code> 把整个组件库<strong>装在角落</strong>（一个叫 node_modules 的隐藏文件夹），写代码时<strong>引用</strong>它的组件。</p>
+        <p>组件源码<strong>不归你</strong>——能调它给的 props（开关），但深度定制要走"主题配置"那一套，绕。</p>
+        <div class="pc-feat">
+          <div class="pf-row"><span class="pf-mark">→</span><span class="pf-text"><strong>视觉风格</strong>：蓝色为主 · 信息密 · 像中后台</span></div>
+          <div class="pf-row"><span class="pf-mark">→</span><span class="pf-text"><strong>自由度</strong>：受限。深改容易翻车</span></div>
+          <div class="pf-row"><span class="pf-mark">→</span><span class="pf-text"><strong>好处</strong>：组件超全 · 复杂场景拿来即用</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="quote-box">
+      <span class="quote-mark">"</span>
+      shadcn 是<span class="em">抄进来</span> —— 代码在你家，能改。
+      Antd 是<span class="em">借来用</span> —— 代码在它家，只能调。
+      <span class="quote-attr">—— 这一句话记住，后面所有差异都顺了</span>
+    </div>
+  </div>
+</section>
+
+<!-- §02 file tree compare -->
+<section id="tree">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>02</strong> / 代码归谁</div>
+        <h2 class="section-title">同一个 Button<br>住<span class="em">哪儿</span>？</h2>
+      </div>
+      <p class="section-sub">
+        打开两个项目的文件夹长这样 ——
+        位置不同 = 你能不能改它。<strong>hover 任意一行</strong>看说明。
+      </p>
+    </div>
+
+    <div class="hint-strip">
+      <span class="hint-tag">玩法</span>绿色 <strong>✏️ 你的</strong> = 源码归你，随便改；灰色 <strong>🔒 锁住</strong> = 在 node_modules 里，看得见但<strong>动不了</strong>。
+    </div>
+
+    <div class="tree-stage">
+      <!-- shadcn tree -->
+      <div class="tree-card shadcn">
+        <div class="tree-head">
+          <span class="th-dot"></span>
+          <span class="th-name">your-project/ (shadcn)</span>
+          <span class="th-tag">抄进来</span>
+        </div>
+        <div class="tree-body">
+          <div class="tree-row dir"><span class="tree-icon">▸</span><span class="tree-name">components/</span></div>
+          <div class="tree-row indent-1 dir"><span class="tree-icon">▸</span><span class="tree-name">ui/</span></div>
+          <div class="tree-row indent-2" title="按钮的源代码,你能改字号、颜色、圆角"><span class="tree-icon">⌥</span><span class="tree-name">button.tsx</span><span class="tree-edit ok">✏️ 你的</span></div>
+          <div class="tree-row indent-2" title="输入框的源代码,你能改"><span class="tree-icon">⌥</span><span class="tree-name">input.tsx</span><span class="tree-edit ok">✏️ 你的</span></div>
+          <div class="tree-row indent-2" title="卡片的源代码,你能改"><span class="tree-icon">⌥</span><span class="tree-name">card.tsx</span><span class="tree-edit ok">✏️ 你的</span></div>
+          <div class="tree-row indent-2" title="对话框的源代码,你能改"><span class="tree-icon">⌥</span><span class="tree-name">dialog.tsx</span><span class="tree-edit ok">✏️ 你的</span></div>
+          <div class="tree-row"><span class="tree-icon">⌥</span><span class="tree-name">App.tsx</span><span class="tree-edit ok">✏️ 你的</span></div>
+          <div class="tree-row dir"><span class="tree-icon">▸</span><span class="tree-name">node_modules/</span></div>
+          <div class="tree-row indent-1 lock" title="底层依赖(Radix、动效引擎),平时不用看"><span class="tree-icon">📦</span><span class="tree-name">@radix-ui/...</span><span class="tree-edit no">🔒 锁住</span></div>
+          <div class="tree-row indent-1 lock" title="另一些底层工具"><span class="tree-icon">📦</span><span class="tree-name">clsx, cva ...</span><span class="tree-edit no">🔒 锁住</span></div>
+        </div>
+        <div class="tree-foot">
+          <strong>结论</strong>：Button 长什么样、怎么动 —— 全在 <code style="background:var(--bg-2);padding:1px 4px;border-radius:2px;">button.tsx</code> 里。改它 <strong>= 你说了算</strong>。
+        </div>
+      </div>
+
+      <!-- antd tree -->
+      <div class="tree-card antd">
+        <div class="tree-head">
+          <span class="th-dot"></span>
+          <span class="th-name">your-project/ (antd)</span>
+          <span class="th-tag">借来用</span>
+        </div>
+        <div class="tree-body">
+          <div class="tree-row dir"><span class="tree-icon">▸</span><span class="tree-name">src/</span></div>
+          <div class="tree-row indent-1"><span class="tree-icon">⌥</span><span class="tree-name">App.tsx</span><span class="tree-edit ok">✏️ 你的</span></div>
+          <div class="tree-row indent-2" style="font-size:11px;color:var(--ink-mute);"><span class="tree-icon" style="opacity:0.6;">↳</span><span class="tree-name" style="color:var(--antd-blue);font-style:italic;">写: import {'{'} Button {'}'} from 'antd'</span></div>
+          <div class="tree-row dir"><span class="tree-icon">▸</span><span class="tree-name">node_modules/</span></div>
+          <div class="tree-row indent-1 dir lock" title="Antd 整个库装在这"><span class="tree-icon">📦</span><span class="tree-name">antd/</span><span class="tree-edit no">🔒 锁住</span></div>
+          <div class="tree-row indent-2 lock" title="Antd 的 Button 源码就在这——你看得见但不能改"><span class="tree-icon">⌥</span><span class="tree-name">Button/index.tsx</span><span class="tree-edit no">🔒 锁住</span></div>
+          <div class="tree-row indent-2 lock" title="样式文件——改了下次安装就丢"><span class="tree-icon">⌥</span><span class="tree-name">Button/style.less</span><span class="tree-edit no">🔒 锁住</span></div>
+          <div class="tree-row indent-2 lock" title="Antd 其他几百个组件"><span class="tree-icon">📦</span><span class="tree-name">Input, Form, Table ...</span><span class="tree-edit no">🔒 锁住</span></div>
+        </div>
+        <div class="tree-foot">
+          <strong>结论</strong>：Button 长什么样 —— 在 antd 自己家 (<code style="background:var(--blue-soft);padding:1px 4px;border-radius:2px;color:var(--antd-blue);">node_modules/antd/</code>)。你只能<strong>调它的开关</strong>，不能进去改图层。
+        </div>
+      </div>
+    </div>
+
+    <div class="tree-figma-strip">
+      <span class="tag">FIGMA 类比</span>
+      <strong>shadcn</strong> = 在 Figma Community 下个 free kit，拖进自己文件 <strong>detach</strong> 之后，所有图层任你改。
+      <br>
+      <strong>Antd</strong> = 用公司发布的 <strong>team library</strong>，组件 instance 在你画布上，但只能改 variants —— 想进图层？得回到 library 文件去改。
+    </div>
+  </div>
+</section>
+
+<!-- §03 visual defaults -->
+<section id="visual">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>03</strong> / 视觉默认值</div>
+        <h2 class="section-title">不调任何参数 ——<br>它们<span class="em">长什么样</span>？</h2>
+      </div>
+      <p class="section-sub">
+        下面是<strong>真实渲染</strong>的两套组件 —— 没有调任何参数，就是开箱默认。
+        左右对比，立刻能感受到风格差异。
+      </p>
+    </div>
+
+    <div class="vis-stage">
+      <!-- shadcn visual -->
+      <div class="vis-card shadcn">
+        <div class="vis-head">
+          <div class="vh-key">SHADCN/UI · DEFAULT</div>
+          <div class="vh-name">shadcn 默认值</div>
+          <div class="vh-tagline">字体: Geist · 色调: 黑白中性 · 圆角: 6px · 信息密度: 松</div>
+        </div>
+        <div class="vis-body">
+          <div class="vis-group">
+            <div class="vis-group-label">·· BUTTON</div>
+            <div class="vis-row">
+              <button class="sc-btn sc-btn-primary">Primary</button>
+              <button class="sc-btn sc-btn-outline">Outline</button>
+              <button class="sc-btn sc-btn-ghost">Ghost</button>
+            </div>
+          </div>
+          <div class="vis-group">
+            <div class="vis-group-label">·· INPUT</div>
+            <div class="vis-row">
+              <input class="sc-input" placeholder="Email" type="text">
+            </div>
+          </div>
+          <div class="vis-group">
+            <div class="vis-group-label">·· BADGE</div>
+            <div class="vis-row">
+              <span class="sc-badge">New</span>
+              <span class="sc-badge outline">Draft</span>
+            </div>
+          </div>
+          <div class="vis-group">
+            <div class="vis-group-label">·· CARD</div>
+            <div class="vis-row">
+              <div class="sc-card">
+                <h4 class="sc-card-title">Create new project</h4>
+                <p class="sc-card-desc">Deploy your design system in under 60 seconds.</p>
+                <button class="sc-btn sc-btn-primary">Continue</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- antd visual -->
+      <div class="vis-card antd">
+        <div class="vis-head">
+          <div class="vh-key">ANT DESIGN · DEFAULT</div>
+          <div class="vh-name">Antd 默认值</div>
+          <div class="vh-tagline">字体: PingFang · 色调: 蓝主色 #1677ff · 圆角: 6px · 信息密度: 紧</div>
+        </div>
+        <div class="vis-body">
+          <div class="vis-group">
+            <div class="vis-group-label">·· BUTTON</div>
+            <div class="vis-row">
+              <button class="ad-btn ad-btn-primary">主要按钮</button>
+              <button class="ad-btn ad-btn-default">默认按钮</button>
+              <button class="ad-btn ad-btn-text">文字按钮</button>
+            </div>
+          </div>
+          <div class="vis-group">
+            <div class="vis-group-label">·· INPUT</div>
+            <div class="vis-row">
+              <input class="ad-input" placeholder="请输入邮箱" type="text">
+            </div>
+          </div>
+          <div class="vis-group">
+            <div class="vis-group-label">·· TAG</div>
+            <div class="vis-row">
+              <span class="ad-badge">新建</span>
+              <span class="ad-badge outline">草稿</span>
+            </div>
+          </div>
+          <div class="vis-group">
+            <div class="vis-group-label">·· CARD</div>
+            <div class="vis-row">
+              <div class="ad-card">
+                <div class="ad-card-head"><h4 class="ad-card-title">新建项目</h4></div>
+                <div class="ad-card-body">
+                  <p class="ad-card-desc">60 秒内部署你的设计系统。</p>
+                  <button class="ad-btn ad-btn-primary">继续</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="vis-caption">
+      <div class="vis-caption-block shadcn">
+        <span class="vc-tag">·· SHADCN 的味道</span>
+        像 <strong>Vercel / Linear / Notion</strong> 的官网 —— 黑白干净、间距大、阴影淡。
+        AI 写出的设计稿 90% 默认是这种调调（因为底层就用它）。
+      </div>
+      <div class="vis-caption-block antd">
+        <span class="vc-tag">·· ANTD 的味道</span>
+        像 <strong>阿里云 / 钉钉 / 各种 B 端工作台</strong> —— 蓝色主调、密度高、表格表单一抓一大把。
+        国内中后台的"基础设施"，一眼能认出来。
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- §04 radius change paths -->
+<section id="paths">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>04</strong> / 改一个圆角</div>
+        <h2 class="section-title">改完<span class="em">什么</span><br>会跟着变？</h2>
+      </div>
+      <p class="section-sub">
+        老板说"按钮圆角从 6 改成 12"。同样一个改动 ——
+        两个库的<strong>影响范围</strong>完全不同。点 tab 切换看。
+      </p>
+    </div>
+
+    <div class="path-stage">
+      <div class="path-question">
+        <div class="path-q-tag">SCENARIO · 场景题</div>
+        <p class="path-q-text">老板：「<span class="em">所有按钮</span>的圆角，从 6px 改成 12px」</p>
+      </div>
+
+      <div class="path-tabs">
+        <button class="path-tab is-active" data-path="shadcn">
+          <span class="path-tab-num">A</span>
+          <div>
+            <div class="path-tab-name">shadcn 路线</div>
+            <div class="path-tab-side">精准但要逐个改</div>
+          </div>
+        </button>
+        <button class="path-tab" data-path="antd">
+          <span class="path-tab-num">B</span>
+          <div>
+            <div class="path-tab-name">Antd 路线</div>
+            <div class="path-tab-side">省事但容易误伤</div>
+          </div>
+        </button>
+      </div>
+
+      <!-- shadcn panel -->
+      <div class="path-panel is-active" data-panel="shadcn">
+        <div class="path-flow">
+          <div class="path-block">
+            <div class="path-block-stage">1 · 进哪个文件</div>
+            <h4 class="path-block-title">打开 <code style="font-family:'JetBrains Mono',monospace;font-size:14px;background:var(--bg-2);padding:2px 6px;border-radius:3px;">button.tsx</code></h4>
+            <p class="path-block-text">就在你的 <strong>components/ui/</strong> 里 —— 是你自己的代码。直接改这一个文件。</p>
+          </div>
+          <div class="path-arrow">→</div>
+          <div class="path-block target">
+            <div class="path-block-stage">2 · 改了之后</div>
+            <h4 class="path-block-title">只有 <strong>Button</strong> 变圆</h4>
+            <p class="path-block-text">改的就是这一个组件的源码。其他组件（Card / Input / Modal）<strong>完全不动</strong>。</p>
+          </div>
+        </div>
+
+        <div class="impact-stage">
+          <div class="impact-label">↓ 影响范围 (整站组件)</div>
+          <div class="impact-grid">
+            <div class="impact-chip affected"><div class="impact-chip-name">Button</div><div class="impact-chip-state">✓ 变圆 12px</div></div>
+            <div class="impact-chip"><div class="impact-chip-name">Card</div><div class="impact-chip-state">不动</div></div>
+            <div class="impact-chip"><div class="impact-chip-name">Input</div><div class="impact-chip-state">不动</div></div>
+            <div class="impact-chip"><div class="impact-chip-name">Modal</div><div class="impact-chip-state">不动</div></div>
+            <div class="impact-chip"><div class="impact-chip-name">Badge</div><div class="impact-chip-state">不动</div></div>
+            <div class="impact-chip"><div class="impact-chip-name">Tooltip</div><div class="impact-chip-state">不动</div></div>
+            <div class="impact-chip"><div class="impact-chip-name">Dropdown</div><div class="impact-chip-state">不动</div></div>
+            <div class="impact-chip"><div class="impact-chip-name">Avatar</div><div class="impact-chip-state">不动</div></div>
+          </div>
+        </div>
+
+        <div class="path-conclusion">
+          <span class="pc-tag">所以呢</span>
+          像在 Figma 里 <strong>改一个主组件</strong> —— 只动它自己。
+          要全站一起圆？就得 8 个组件都改一遍。<strong>精准 = 控制权 + 体力活</strong>。
+        </div>
+      </div>
+
+      <!-- antd panel -->
+      <div class="path-panel" data-panel="antd">
+        <div class="path-flow">
+          <div class="path-block">
+            <div class="path-block-stage">1 · 进哪个文件</div>
+            <h4 class="path-block-title">改<strong>主题配置</strong>一行</h4>
+            <p class="path-block-text">在 App 根部包个 <code style="font-family:'JetBrains Mono',monospace;font-size:12px;background:var(--blue-soft);padding:2px 6px;border-radius:3px;color:var(--antd-blue);">&lt;ConfigProvider&gt;</code>，写一个 <strong>borderRadius: 12</strong>。</p>
+          </div>
+          <div class="path-arrow">→</div>
+          <div class="path-block target">
+            <div class="path-block-stage">2 · 改了之后</div>
+            <h4 class="path-block-title">所有<strong>带圆角的组件</strong>一起变</h4>
+            <p class="path-block-text">Button、Card、Input、Modal、Tag…… <strong>全都变圆 12px</strong>。哪怕你只想动 Button。</p>
+          </div>
+        </div>
+
+        <div class="impact-stage">
+          <div class="impact-label">↓ 影响范围 (整站组件)</div>
+          <div class="impact-grid">
+            <div class="impact-chip affected"><div class="impact-chip-name">Button</div><div class="impact-chip-state">✓ 变圆 12px</div></div>
+            <div class="impact-chip affected warn"><div class="impact-chip-name">Card</div><div class="impact-chip-state">⚠ 跟着变</div></div>
+            <div class="impact-chip affected warn"><div class="impact-chip-name">Input</div><div class="impact-chip-state">⚠ 跟着变</div></div>
+            <div class="impact-chip affected warn"><div class="impact-chip-name">Modal</div><div class="impact-chip-state">⚠ 跟着变</div></div>
+            <div class="impact-chip affected warn"><div class="impact-chip-name">Tag</div><div class="impact-chip-state">⚠ 跟着变</div></div>
+            <div class="impact-chip affected warn"><div class="impact-chip-name">Alert</div><div class="impact-chip-state">⚠ 跟着变</div></div>
+            <div class="impact-chip affected warn"><div class="impact-chip-name">Dropdown</div><div class="impact-chip-state">⚠ 跟着变</div></div>
+            <div class="impact-chip affected warn"><div class="impact-chip-name">Notification</div><div class="impact-chip-state">⚠ 跟着变</div></div>
+          </div>
+        </div>
+
+        <div class="path-conclusion">
+          <span class="pc-tag">所以呢</span>
+          像在 Figma 里 <strong>改 library 的 radius variable</strong> —— 一改全改，省事。
+          代价是<strong>容易误伤</strong>：你只想动按钮，结果连 Modal 都圆了。如果要单独动按钮，反而<strong>得绕</strong>。
+        </div>
+      </div>
+    </div>
+
+    <div class="hint-strip" style="margin-top:24px;">
+      <span class="hint-tag">关键</span>
+      <strong>不是哪个好</strong>，是知道这俩<strong>逻辑相反</strong>：shadcn 默认<strong>精准（动一个就一个）</strong>，Antd 默认<strong>全局（一改全改）</strong>。要反过来都行，但要绕。
+    </div>
+  </div>
+</section>
+
+<!-- §05 scenario picker -->
+<section id="scenarios">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>05</strong> / 你在做啥</div>
+        <h2 class="section-title">点你的<br><span class="em">场景</span>。</h2>
+      </div>
+      <p class="section-sub">
+        没有"哪个更好" —— 只有"哪个更适合你现在做的东西"。
+        选 4 个场景之一，看推荐 + 真实案例。
+      </p>
+    </div>
+
+    <div class="hint-strip">
+      <span class="hint-tag">玩法</span>点上面的<strong>场景按钮</strong>，下面两张卡会亮起推荐 + 给分。
+    </div>
+
+    <div class="scn-stage">
+      <div class="scn-picker">
+        <button class="scn-btn is-active" data-scn="saas">
+          <span class="scn-btn-icon">▲</span>
+          <span class="scn-btn-name">SaaS / 营销页</span>
+          <span class="scn-btn-eg">官网 · 落地页</span>
+        </button>
+        <button class="scn-btn" data-scn="ai">
+          <span class="scn-btn-icon">◆</span>
+          <span class="scn-btn-name">AI 工具</span>
+          <span class="scn-btn-eg">chat · 编辑器</span>
+        </button>
+        <button class="scn-btn" data-scn="crm">
+          <span class="scn-btn-icon">▦</span>
+          <span class="scn-btn-name">中后台 / CRM</span>
+          <span class="scn-btn-eg">表格 · 表单流</span>
+        </button>
+        <button class="scn-btn" data-scn="gov">
+          <span class="scn-btn-icon">▣</span>
+          <span class="scn-btn-name">政企 / 内部系统</span>
+          <span class="scn-btn-eg">复杂数据 · 上传</span>
+        </button>
+      </div>
+
+      <div class="scn-result">
+        <div class="scn-lib" id="scnShadcn">
+          <h3 class="scn-lib-name">shadcn/ui</h3>
+          <div class="scn-lib-score">
+            <span id="scnShadcnScore">— / 5</span>
+            <div class="scn-lib-score-bar"><div class="scn-lib-score-fill" id="scnShadcnBar" style="width:0%;"></div></div>
+          </div>
+          <p class="scn-lib-why" id="scnShadcnWhy">点上面任意一个场景。</p>
+          <div class="scn-lib-case" id="scnShadcnCase">
+            <span class="sc-label">CASE</span>
+            <span id="scnShadcnCaseText">—</span>
+          </div>
+        </div>
+
+        <div class="scn-lib" id="scnAntd">
+          <h3 class="scn-lib-name">Ant Design</h3>
+          <div class="scn-lib-score">
+            <span id="scnAntdScore">— / 5</span>
+            <div class="scn-lib-score-bar"><div class="scn-lib-score-fill" id="scnAntdBar" style="width:0%;"></div></div>
+          </div>
+          <p class="scn-lib-why" id="scnAntdWhy">点上面任意一个场景。</p>
+          <div class="scn-lib-case" id="scnAntdCase">
+            <span class="sc-label">CASE</span>
+            <span id="scnAntdCaseText">—</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- §06 AI协作 -->
+<section id="ai">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>06</strong> / AI 协作</div>
+        <h2 class="section-title">你画了稿，<br>AI 来<span class="em">实现</span>。</h2>
+      </div>
+      <p class="section-sub">
+        同一份设计稿，扔给 Cursor / Claude / v0，
+        在 shadcn 项目和 Antd 项目里<strong>会得到不同结果</strong>。
+      </p>
+    </div>
+
+    <div class="ai-table">
+      <div class="ai-row head">
+        <div class="ai-cell">·· 你的体验</div>
+        <div class="ai-cell lib-shadcn">在 SHADCN 项目里</div>
+        <div class="ai-cell lib-antd">在 ANTD 项目里</div>
+      </div>
+      <div class="ai-row">
+        <div class="ai-cell q"><span class="ai-q-num">01</span>AI 写出来第一眼</div>
+        <div class="ai-cell"><span class="tick">✓</span> <strong>接近你的稿子</strong> —— shadcn 默认就是极简风，AI 也是这套审美。</div>
+        <div class="ai-cell"><span class="cross">×</span> <strong>默认很 antd 味</strong> —— 蓝色按钮、紧凑表格，跟你欧美风设计稿差很远。</div>
+      </div>
+      <div class="ai-row">
+        <div class="ai-cell q"><span class="ai-q-num">02</span>想调成你的设计</div>
+        <div class="ai-cell"><span class="tick">✓</span> AI 直接改组件源码。<strong>你点 inspect 看一眼能验收</strong>。</div>
+        <div class="ai-cell"><span class="cross">×</span> AI 改完你常发现没生效 —— 因为要改的是<strong>主题配置</strong>，不是组件本身。</div>
+      </div>
+      <div class="ai-row">
+        <div class="ai-cell q"><span class="ai-q-num">03</span>跟前端沟通</div>
+        <div class="ai-cell"><span class="tick">✓</span> 你说"改这个按钮"，前端就改 button.tsx —— <strong>说人话</strong>。</div>
+        <div class="ai-cell"><span class="cross">×</span> 前端会说"得改 theme token"、"得改 ConfigProvider" —— <strong>得学黑话</strong>。</div>
+      </div>
+      <div class="ai-row">
+        <div class="ai-cell q"><span class="ai-q-num">04</span>做复杂表格 / 表单</div>
+        <div class="ai-cell"><span class="cross">×</span> AI 经常要拼组件 —— 因为 shadcn 没有现成的"高级表格"。</div>
+        <div class="ai-cell"><span class="tick">✓</span> AI 一句 <code style="font-family:'JetBrains Mono',monospace;font-size:12px;background:var(--bg-2);padding:1px 5px;border-radius:2px;">&lt;Table /&gt;</code> 搞定 —— <strong>这是 Antd 的主场</strong>。</div>
+      </div>
+    </div>
+
+    <div class="ai-conclusion">
+      <span class="ai-conclusion-tag">⚠ 重要提醒</span>
+      <strong style="color:white;">不要"硬切"。</strong> 你公司是 Antd 项目，就用 Antd 跟 AI 协作 ——
+      逼 AI 写 shadcn 会让<span class="em">整个项目割裂</span>，最后两套样式打架，更难收拾。
+      选型是<strong style="color:white;">在项目立项时决定的事</strong>，不是设计师能临时切换的。
+    </div>
+  </div>
+</section>
+
+<!-- §07 cheatsheet -->
+<section id="cheat">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>07</strong> / 速查</div>
+        <h2 class="section-title">截图保存<br>这<span class="em">一页</span>。</h2>
+      </div>
+      <p class="section-sub">
+        三张小表：决策表 + 设计师对话表 + Figma 类比速查。
+        看到陌生场景查一眼，比每次都问 AI 快。
+      </p>
+    </div>
+
+    <div class="cheat-grid">
+      <div class="cheat-block">
+        <h3><span class="em">·</span> 5 行决策表</h3>
+        <table class="cheat-table">
+          <thead>
+            <tr><th>你的情况</th><th>选</th></tr>
+          </thead>
+          <tbody>
+            <tr><td class="desc">做<strong>营销页 / 官网 / SaaS</strong></td><td><span class="cheat-pick shadcn">shadcn</span></td></tr>
+            <tr><td class="desc">做<strong>AI 产品 / 工具</strong>（chat、编辑器）</td><td><span class="cheat-pick shadcn">shadcn</span></td></tr>
+            <tr><td class="desc">做<strong>中后台 / CRM / 数据系统</strong></td><td><span class="cheat-pick antd">Antd</span></td></tr>
+            <tr><td class="desc">做<strong>政企 / 内部管理</strong>系统</td><td><span class="cheat-pick antd">Antd</span></td></tr>
+            <tr><td class="desc"><strong>公司已经在用</strong>某一个</td><td><span class="cheat-pick either">跟着走</span></td></tr>
+          </tbody>
+        </table>
+        <div class="cheat-foot">
+          最后一条优先级最高 ——<strong>不要为了"换库"而推翻公司项目</strong>。
+        </div>
+      </div>
+
+      <div class="cheat-block">
+        <h3><span class="em">·</span> 跟前端这样说</h3>
+        <table class="cheat-table">
+          <thead>
+            <tr><th>你想要</th><th>说法</th></tr>
+          </thead>
+          <tbody>
+            <tr><td class="desc">改一个按钮的样式</td><td class="desc">shadcn: "改 <code style="font-family:'JetBrains Mono',monospace;font-size:11px;background:var(--bg-2);padding:1px 4px;border-radius:2px;">button.tsx</code>"<br>Antd: "在<strong>这个页面</strong>覆盖"</td></tr>
+            <tr><td class="desc">改全站的圆角 / 主色</td><td class="desc">shadcn: "改 <strong>tokens</strong>"<br>Antd: "改 <strong>ConfigProvider</strong>"</td></tr>
+            <tr><td class="desc">加一个 Antd 没有的组件</td><td class="desc">"<strong>我们自己写一个</strong>"<br>（Antd 项目也可以混 shadcn 单组件）</td></tr>
+            <tr><td class="desc">想要一个复杂表格</td><td class="desc">Antd: "<code style="font-family:'JetBrains Mono',monospace;font-size:11px;background:var(--blue-soft);padding:1px 4px;border-radius:2px;color:var(--antd-blue);">&lt;Table /&gt;</code> 直接用"<br>shadcn: "<strong>得拼</strong> (TanStack Table)"</td></tr>
+          </tbody>
+        </table>
+        <div class="cheat-foot">
+          术语对上了，前端就知道你不是外行。
+        </div>
+      </div>
+    </div>
+
+    <div class="cheat-block" style="margin-top:18px;">
+      <h3><span class="em">·</span> Figma 类比速查</h3>
+      <table class="cheat-table">
+        <thead>
+          <tr><th>代码概念</th><th>Figma 类比 (你已经会了)</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="term">shadcn 抄源码</td>
+            <td class="desc">从 Community 下个 kit，<strong>detach</strong> 之后所有图层任改。</td>
+          </tr>
+          <tr>
+            <td class="term">Antd 引用组件</td>
+            <td class="desc">用 <strong>team library</strong>，组件 instance 只能调 variants，进不去图层。</td>
+          </tr>
+          <tr>
+            <td class="term">ConfigProvider</td>
+            <td class="desc">改 library 的 <strong>variables</strong> —— 一改全改。</td>
+          </tr>
+          <tr>
+            <td class="term">改单个组件 className</td>
+            <td class="desc">改这一个 <strong>instance 的 override</strong>，只动它自己。</td>
+          </tr>
+          <tr>
+            <td class="term">tokens / design tokens</td>
+            <td class="desc">就是 Figma <strong>Variables</strong>。下一篇 K2 会展开。</td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="cheat-foot">
+        你看，"代码黑话"翻译成 Figma 话 —— 设计师天天在干的事。
+      </div>
+    </div>
+
+    <a href="index.html#menu" class="next-post" data-rm-open>
+      <div>
+        <div class="np-tag">下一篇 · NEXT · K2 · 基础</div>
+        <h4>Tailwind 是<span class="em"> · </span>每个属性一个 token</h4>
+        <p>AI 写出来 <code style="background:rgba(255,255,255,0.12);padding:1px 5px;border-radius:2px;font-size:12px;font-family:'JetBrains Mono',monospace;">className="flex gap-2 px-4 ..."</code> 一长串看不懂？这就是 Tailwind 的方言。下一篇用 Figma Variables 类比一次讲清。</p>
+      </div>
+      <span class="np-cta">回到路线图 <span class="arr">→</span></span>
+    </a>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div class="byline-wrap byline-group">
+      <div class="byline">
+        <img class="avatar" src="author.jpg" alt="范米花儿">
+        <div class="byline-meta">
+          <div class="byline-label"><span class="dot"></span>作者 · WRITTEN BY</div>
+          <h3 class="byline-name">嗨，我是 <span class="em">范米花儿</span></h3>
+          <p class="byline-tag">设计工程师 ——<br>设计 × 代码，两边都做。</p>
+        </div>
+      </div>
+      <div class="byline">
+        <img class="avatar" src="avatar-ce.jpg" alt="CE 青年">
+        <div class="byline-meta">
+          <div class="byline-label"><span class="dot"></span>合作者 · CO-AUTHOR</div>
+          <h3 class="byline-name">还有 <span class="em">CE 青年</span></h3>
+          <p class="byline-tag">B 端交互 / AI 产品 ——<br>把体验落进产品里。</p>
+        </div>
+      </div>
+    </div>
+    <div class="footer-meta">
+      做于 <span class="mono">2026</span> · 用 <span class="heart">●</span> 写给 <span class="mono">DESIGNERS &amp; DEVELOPERS</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+// ==========================================================
+//  §04 path tabs
+// ==========================================================
+(function () {
+  const tabs = document.querySelectorAll('.path-tab');
+  const panels = document.querySelectorAll('.path-panel');
+  if (!tabs.length) return;
+  tabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+      const key = tab.dataset.path;
+      tabs.forEach(t => t.classList.toggle('is-active', t === tab));
+      panels.forEach(p => p.classList.toggle('is-active', p.dataset.panel === key));
+    });
+  });
+})();
+
+// ==========================================================
+//  §05 scenario picker
+// ==========================================================
+(function () {
+  const scenarios = {
+    saas: {
+      shadcn: {
+        score: 5,
+        why: '<strong>极简风默认就是它的家</strong>。营销页要的大留白、清爽配色、克制阴影 —— shadcn 开箱就是这调调。改起来也轻，不需要打主题战。',
+        case: 'Vercel · Linear · Resend · Cal.com'
+      },
+      antd: {
+        score: 2,
+        why: '可以做，但要花<strong>大力气覆盖蓝色 + 紧凑感</strong>。营销页风格本来就跟 Antd 的"中后台基因"对冲。',
+        case: '少见 · 多半会被前端劝退'
+      }
+    },
+    ai: {
+      shadcn: {
+        score: 5,
+        why: '<strong>当下 AI 编辑器、chat 产品几乎全用它</strong>。Cursor / Claude / v0 / bolt 都吃这套。AI 写出来就跟你设计稿对得上。',
+        case: 'v0 · Lovable · Cursor 官网 · ChatGPT 风格'
+      },
+      antd: {
+        score: 2,
+        why: '不是不能做，是<strong>跟主流审美错位</strong>。AI 工具用户期待简洁高级感，Antd 调起来很重。',
+        case: '少 · 国内一些 B 端 AI 应用'
+      }
+    },
+    crm: {
+      shadcn: {
+        score: 3,
+        why: '基础组件够，但复杂表格 / 高级表单 / 树 / 穿梭框<strong>得自己拼</strong>。如果你的产品<strong>主要是表格</strong>，会写到吐。',
+        case: '小型 CRM · 工具型 SaaS'
+      },
+      antd: {
+        score: 5,
+        why: '<strong>这就是 Antd 的主场</strong>。Table 自带分页、筛选、排序、多选；Form 自带校验、联动、布局。复杂场景<strong>开箱即用</strong>。',
+        case: '阿里云 · 钉钉 · 飞书 · 各种 SaaS 后台'
+      }
+    },
+    gov: {
+      shadcn: {
+        score: 2,
+        why: '<strong>不合适</strong>。这类系统组件需求超全（上传、级联、复杂表单、富文本……），shadcn 缺一大半，全靠自己拼。',
+        case: '几乎没有'
+      },
+      antd: {
+        score: 5,
+        why: '<strong>Antd 的原生场景</strong>。蚂蚁内部就是做政企产品起家的，所有"中国式管理后台"需要的组件都<strong>预制好了</strong>。',
+        case: '政府系统 · 银行内部 · 国央企管理平台'
+      }
+    }
+  };
+
+  const btns = document.querySelectorAll('.scn-btn');
+  const shadcnLib = document.getElementById('scnShadcn');
+  const antdLib = document.getElementById('scnAntd');
+  const shadcnScore = document.getElementById('scnShadcnScore');
+  const antdScore = document.getElementById('scnAntdScore');
+  const shadcnBar = document.getElementById('scnShadcnBar');
+  const antdBar = document.getElementById('scnAntdBar');
+  const shadcnWhy = document.getElementById('scnShadcnWhy');
+  const antdWhy = document.getElementById('scnAntdWhy');
+  const shadcnCase = document.getElementById('scnShadcnCaseText');
+  const antdCase = document.getElementById('scnAntdCaseText');
+
+  function pick(key) {
+    const data = scenarios[key];
+    if (!data) return;
+    btns.forEach(b => b.classList.toggle('is-active', b.dataset.scn === key));
+
+    const s = data.shadcn;
+    const a = data.antd;
+    shadcnScore.textContent = s.score + ' / 5';
+    antdScore.textContent = a.score + ' / 5';
+    shadcnBar.style.width = (s.score * 20) + '%';
+    antdBar.style.width = (a.score * 20) + '%';
+    shadcnWhy.innerHTML = s.why;
+    antdWhy.innerHTML = a.why;
+    shadcnCase.innerHTML = s.case;
+    antdCase.innerHTML = a.case;
+
+    // win / miss styling
+    if (s.score > a.score) {
+      shadcnLib.classList.add('win'); shadcnLib.classList.remove('miss');
+      antdLib.classList.remove('win'); antdLib.classList.add('miss');
+    } else if (a.score > s.score) {
+      antdLib.classList.add('win'); antdLib.classList.remove('miss');
+      shadcnLib.classList.remove('win'); shadcnLib.classList.add('miss');
+    } else {
+      shadcnLib.classList.remove('win', 'miss');
+      antdLib.classList.remove('win', 'miss');
+    }
+  }
+
+  btns.forEach(btn => btn.addEventListener('click', () => pick(btn.dataset.scn)));
+
+  // default
+  pick('saas');
+})();
+
+// ==========================================================
+//  Roadmap modal
+// ==========================================================
+(function(){
+  var modal = document.getElementById('rm-modal');
+  if (!modal) return;
+  var openBtns = document.querySelectorAll('[data-rm-open]');
+  var closeBtns = modal.querySelectorAll('[data-rm-close]');
+  function open() { modal.hidden = false; document.body.style.overflow = 'hidden'; }
+  function close() { modal.hidden = true; document.body.style.overflow = ''; }
+  openBtns.forEach(function(b){ b.addEventListener('click', function(e){ e.preventDefault(); open(); }); });
+  closeBtns.forEach(function(b){ b.addEventListener('click', close); });
+  document.addEventListener('keydown', function(e){ if (e.key === 'Escape' && !modal.hidden) close(); });
+})();
+</script>
+
+<!-- 路线图弹窗 -->
+<div class="rm-modal" id="rm-modal" hidden>
+  <div class="rm-backdrop" data-rm-close></div>
+  <div class="rm-dialog" role="dialog" aria-label="完整路线图">
+    <button class="rm-close" data-rm-close aria-label="关闭">✕</button>
+    <div class="rm-header">
+      <div class="rm-tag">完整路线图 · ROADMAP</div>
+      <h3 class="rm-title">8 模块 <span class="rm-em">·</span> 26 篇</h3>
+      <p class="rm-sub">设计篇 4 模块 / 13 篇 + 工程篇 4 系列 / 13 篇</p>
+    </div>
+    <div class="rm-body">
+      <div class="rm-mod">
+        <div class="rm-mod-key">A · 单元素与组件</div>
+        <div class="rm-mod-list">
+          <a href="basics-figma.html" class="rm-cell"><span class="rm-cell-code">A0</span><span class="rm-cell-name">三件套 · HTML / CSS / JS</span><span class="rm-cell-tier">入门</span></a>
+          <a href="box-figma.html" class="rm-cell"><span class="rm-cell-code">A1</span><span class="rm-cell-name">盒子 · Auto Layout</span><span class="rm-cell-tier">基础</span></a>
+          <a href="components-figma.html" class="rm-cell"><span class="rm-cell-code">A2</span><span class="rm-cell-name">组件 · Variants &amp; Props</span><span class="rm-cell-tier">基础</span></a>
+          <a href="button-system-figma.html" class="rm-cell"><span class="rm-cell-code">A3</span><span class="rm-cell-name">Button System · 组件演化</span><span class="rm-cell-tier">进阶</span></a>
+        </div>
+      </div>
+      <div class="rm-mod">
+        <div class="rm-mod-key">B · 多组件协作</div>
+        <div class="rm-mod-list">
+          <a href="page-figma.html" class="rm-cell"><span class="rm-cell-code">B0</span><span class="rm-cell-name">拼页面 · 组件嵌套</span><span class="rm-cell-tier">入门</span></a>
+          <a href="data-flow-figma.html" class="rm-cell"><span class="rm-cell-code">B1</span><span class="rm-cell-name">数据流 · 概念</span><span class="rm-cell-tier">基础</span></a>
+          <a href="data-flow-cases-figma.html" class="rm-cell"><span class="rm-cell-code">B2</span><span class="rm-cell-name">数据流 · 实战 5 案例</span><span class="rm-cell-tier">进阶</span></a>
+        </div>
+      </div>
+      <div class="rm-mod">
+        <div class="rm-mod-key">C · 视觉系统</div>
+        <div class="rm-mod-list">
+          <a href="tokens-figma.html" class="rm-cell"><span class="rm-cell-code">C0</span><span class="rm-cell-name">Variables / Tokens 入门</span><span class="rm-cell-tier">入门</span></a>
+          <a href="colors-type-figma.html" class="rm-cell"><span class="rm-cell-code">C1</span><span class="rm-cell-name">Colors / Type / Spacing</span><span class="rm-cell-tier">基础</span></a>
+          <a href="theme-switch-figma.html" class="rm-cell"><span class="rm-cell-code">C2</span><span class="rm-cell-name">Theme 切换实战</span><span class="rm-cell-tier">进阶</span></a>
+        </div>
+      </div>
+      <div class="rm-mod">
+        <div class="rm-mod-key">D · 状态与交互</div>
+        <div class="rm-mod-list">
+          <a href="states-figma.html" class="rm-cell"><span class="rm-cell-code">D0</span><span class="rm-cell-name">视觉态 · 看得见的状态</span><span class="rm-cell-tier">入门</span></a>
+          <a href="interactive-figma.html" class="rm-cell"><span class="rm-cell-code">D1</span><span class="rm-cell-name">Interactive Component</span><span class="rm-cell-tier">基础</span></a>
+          <a href="transition-figma.html" class="rm-cell"><span class="rm-cell-code">D2</span><span class="rm-cell-name">动画 · Transition</span><span class="rm-cell-tier">进阶</span></a>
+        </div>
+      </div>
+      <div class="rm-mod">
+        <div class="rm-mod-key">F · 工程入门</div>
+        <div class="rm-mod-list">
+          <a href="f1-npm-figma.html" class="rm-cell"><span class="rm-cell-code">F1</span><span class="rm-cell-name">npm 是什么</span><span class="rm-cell-tier">入门</span></a>
+          <a href="f2-import-figma.html" class="rm-cell"><span class="rm-cell-code">F2</span><span class="rm-cell-name">import 与路径</span><span class="rm-cell-tier">入门</span></a>
+          <a href="f3-dev-build-figma.html" class="rm-cell"><span class="rm-cell-code">F3</span><span class="rm-cell-name">dev vs build</span><span class="rm-cell-tier">基础</span></a>
+          <a href="f4-hidden-files-figma.html" class="rm-cell"><span class="rm-cell-code">F4</span><span class="rm-cell-name">看不见的文件</span><span class="rm-cell-tier">基础</span></a>
+        </div>
+      </div>
+      <div class="rm-mod">
+        <div class="rm-mod-key">G · 版本控制</div>
+        <div class="rm-mod-list">
+          <a href="g1-commit-branch-figma.html" class="rm-cell"><span class="rm-cell-code">G1</span><span class="rm-cell-name">commit / branch</span><span class="rm-cell-tier">入门</span></a>
+          <a href="g2-conflict-figma.html" class="rm-cell"><span class="rm-cell-code">G2</span><span class="rm-cell-name">冲突怎么解</span><span class="rm-cell-tier">基础</span></a>
+          <a href="g3-pr-review-figma.html" class="rm-cell"><span class="rm-cell-code">G3</span><span class="rm-cell-name">PR / Review</span><span class="rm-cell-tier">进阶</span></a>
+        </div>
+      </div>
+      <div class="rm-mod">
+        <div class="rm-mod-key">H · 浏览器调试</div>
+        <div class="rm-mod-list">
+          <a href="h1-devtools-elements-figma.html" class="rm-cell"><span class="rm-cell-code">H1</span><span class="rm-cell-name">DevTools Elements</span><span class="rm-cell-tier">入门</span></a>
+          <a href="h2-console-error-figma.html" class="rm-cell"><span class="rm-cell-code">H2</span><span class="rm-cell-name">Console 报错</span><span class="rm-cell-tier">基础</span></a>
+          <a href="h3-network-figma.html" class="rm-cell"><span class="rm-cell-code">H3</span><span class="rm-cell-name">Network 面板</span><span class="rm-cell-tier">进阶</span></a>
+        </div>
+      </div>
+      <div class="rm-mod">
+        <div class="rm-mod-key">J · 上线</div>
+        <div class="rm-mod-list">
+          <a href="j1-dns-figma.html" class="rm-cell"><span class="rm-cell-code">J1</span><span class="rm-cell-name">DNS / 域名</span><span class="rm-cell-tier">基础</span></a>
+          <a href="j2-vercel-figma.html" class="rm-cell"><span class="rm-cell-code">J2</span><span class="rm-cell-name">Vercel 部署</span><span class="rm-cell-tier">基础</span></a>
+          <a href="j3-cache-cdn-figma.html" class="rm-cell"><span class="rm-cell-code">J3</span><span class="rm-cell-name">缓存 / CDN</span><span class="rm-cell-tier">进阶</span></a>
+        </div>
+      </div>
+      <div class="rm-mod">
+        <div class="rm-mod-key" style="color:var(--accent);">K · 生态选型 (NEW)</div>
+        <div class="rm-mod-list">
+          <a href="k1-ui-library-figma.html" class="rm-cell rm-cell-current"><span class="rm-cell-code">K1</span><span class="rm-cell-name">UI 库 · shadcn vs Antd</span><span class="rm-cell-tier rm-tier-current">基础</span></a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

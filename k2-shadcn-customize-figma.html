@@ -1,0 +1,1743 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>shadcn 改造 — 抄进来之后,变成你家的</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,300..900&family=Geist:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Noto+Sans+SC:wght@300;400;500;700;900&family=Noto+Serif+SC:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f3eee5;
+    --bg-2: #ebe4d4;
+    --ink: #16161d;
+    --ink-soft: #4a4a55;
+    --ink-mute: #8a8a92;
+    --line: #d5cdba;
+    --line-soft: #e3dcca;
+    --accent: #ff4d2e;
+    --accent-soft: #ffe4dc;
+    --blue: #1677ff;
+    --blue-soft: #e6f0ff;
+    --green: #1f6b3a;
+    --green-soft: #d4ecdb;
+    --yellow: #ffcf3d;
+    --paper: #faf7f0;
+    --shadow: 0 1px 0 rgba(0,0,0,0.04), 0 8px 24px rgba(22,22,29,0.06);
+
+    /* Theme switcher — defaults to shadcn black-white */
+    --th-primary: #0a0a0a;
+    --th-primary-fg: #ffffff;
+    --th-bg: #ffffff;
+    --th-card: #ffffff;
+    --th-text: #0a0a0a;
+    --th-text-soft: #71717a;
+    --th-border: #e5e7eb;
+    --th-radius: 6px;
+    --th-font: 'Geist', system-ui, sans-serif;
+    --th-density-x: 16px;
+    --th-density-y: 8px;
+    --th-shadow: 0 1px 2px rgba(0,0,0,0.04);
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'Geist', 'Noto Sans SC', system-ui, -apple-system, sans-serif;
+    font-size: 16px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    background-image: radial-gradient(circle at 1px 1px, rgba(22,22,29,0.05) 1px, transparent 0);
+    background-size: 24px 24px;
+  }
+
+  /* Typography */
+  .display-cn { font-family: 'Noto Serif SC', 'Fraunces', serif; font-weight: 900; letter-spacing: -0.01em; }
+  .display-en { font-family: 'Fraunces', 'Noto Serif SC', serif; font-weight: 600; font-style: italic; letter-spacing: -0.02em; }
+  .mono { font-family: 'JetBrains Mono', monospace; }
+  .label { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-mute); }
+
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 0 32px; }
+
+  /* topbar */
+  .topbar { border-bottom: 1px dashed var(--line); padding: 16px 0; background: var(--bg); position: sticky; top: 0; z-index: 100; }
+  .topbar-inner { display: flex; justify-content: space-between; align-items: center; gap: 24px; flex-wrap: wrap; }
+  .brand { font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 600; }
+  .brand .dot { display: inline-block; width: 8px; height: 8px; background: var(--accent); border-radius: 50%; margin-right: 8px; vertical-align: middle; animation: pulse 2s ease-in-out infinite; }
+  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+  .nav-links { display: flex; gap: 18px; font-size: 13px; flex-wrap: wrap; }
+  .nav-links a { color: var(--ink-soft); text-decoration: none; transition: color 0.2s; }
+  .nav-links a:hover { color: var(--accent); }
+  a.brand { text-decoration: none; color: inherit; transition: color 0.2s; cursor: pointer; }
+  a.brand:hover { color: var(--accent); }
+  .brand-block { display: flex; align-items: center; min-width: 0; flex: 1; }
+  .brand-arrow { margin-right: 6px; color: var(--ink-mute); display: inline-block; transition: transform 0.2s, color 0.2s; }
+  .brand:hover .brand-arrow { color: var(--accent); transform: translateX(-2px); }
+  .brand-sep { margin: 0 10px; color: var(--ink-mute); font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 300; }
+  .brand-current { font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 500; color: var(--ink-soft); letter-spacing: 0.02em; }
+  @media (max-width: 760px) { .brand-sep, .brand-current { display: none; } }
+
+  /* hero */
+  .hero { padding: 100px 0 80px; position: relative; overflow: hidden; }
+  .hero-meta { display: flex; gap: 24px; margin-bottom: 32px; align-items: center; flex-wrap: wrap; }
+  .hero-meta .pill { padding: 6px 12px; border: 1px solid var(--ink); border-radius: 100px; font-size: 11px; font-family: 'JetBrains Mono', monospace; letter-spacing: 0.05em; }
+  .hero-meta .pill.fill { background: var(--ink); color: var(--bg); }
+  .hero h1 { font-family: 'Noto Serif SC', 'Fraunces', serif; font-weight: 900; font-size: clamp(46px, 6.5vw, 86px); line-height: 0.98; letter-spacing: -0.03em; margin: 0 0 24px; }
+  .hero h1 .em { font-family: 'Noto Serif SC', serif; font-weight: 500; color: var(--accent); }
+  .hero h1 .x { display: inline-block; transform: translateY(-0.05em); margin: 0 0.08em; color: var(--ink-mute); font-weight: 300; }
+  .hero p.lede { font-size: 20px; line-height: 1.5; max-width: 640px; color: var(--ink-soft); margin: 0 0 40px; }
+  .hero p.lede .em { font-family: 'Noto Serif SC', serif; color: var(--accent); font-weight: 500; }
+  .hero-grid { display: grid; grid-template-columns: 1.4fr 1fr; gap: 48px; align-items: end; }
+  @media (max-width: 880px) { .hero-grid { grid-template-columns: 1fr; } }
+  .hero-side { border-left: 1px dashed var(--line); padding-left: 24px; font-size: 13px; color: var(--ink-soft); }
+  .hero-side .row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px dashed var(--line); }
+  .hero-side .row:last-child { border-bottom: none; }
+  .hero-side .row .k { color: var(--ink-mute); font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.05em; text-transform: uppercase; }
+  .hero-side .row .v { font-weight: 500; }
+
+  /* section */
+  section { padding: 80px 0; border-top: 1px solid var(--line); position: relative; animation: fadeIn 0.6s ease-out backwards; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+  .section-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 48px; flex-wrap: wrap; gap: 16px; }
+  .section-num { font-family: 'JetBrains Mono', monospace; font-size: 13px; color: var(--ink-mute); letter-spacing: 0.1em; }
+  .section-num strong { color: var(--accent); }
+  .section-title { font-family: 'Noto Serif SC', serif; font-weight: 900; font-size: clamp(32px, 4.5vw, 52px); line-height: 1.05; letter-spacing: -0.02em; margin: 0; max-width: 18ch; }
+  .section-title .em { font-family: 'Noto Serif SC', serif; font-weight: 500; color: var(--accent); }
+  .section-sub { color: var(--ink-soft); font-size: 17px; max-width: 38ch; line-height: 1.55; margin: 0; }
+
+  .em { font-family: 'Noto Serif SC', serif; font-weight: 500; color: var(--accent); }
+
+  /* hint strip */
+  .hint-strip { margin-top: 16px; padding: 14px 18px; background: var(--accent-soft); border-left: 3px solid var(--accent); border-radius: 4px; font-size: 13px; color: var(--ink); line-height: 1.55; }
+  .hint-strip .hint-tag { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--accent); letter-spacing: 0.12em; margin-right: 10px; text-transform: uppercase; }
+
+  /* quote box */
+  .quote-box { margin: 32px 0 0; padding: 24px 28px; background: var(--paper); border-left: 3px solid var(--ink); border-radius: 0 6px 6px 0; font-family: 'Noto Serif SC', serif; font-size: 18px; line-height: 1.55; color: var(--ink); font-weight: 500; }
+  .quote-box .quote-mark { font-family: 'Noto Serif SC', serif; color: var(--accent); font-size: 28px; line-height: 1; margin-right: 8px; font-weight: 500; }
+  .quote-box .quote-attr { display: block; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ink-mute); margin-top: 12px; letter-spacing: 0.05em; font-weight: 400; }
+
+  /* glossary (reused from K1) */
+  .glossary { margin-top: 12px; background: var(--paper); border: 1px solid var(--line); border-radius: 8px; padding: 20px 24px; }
+  .glossary-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 14px; padding-bottom: 12px; border-bottom: 1px dashed var(--line); flex-wrap: wrap; gap: 8px; }
+  .glossary-tag { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--accent); letter-spacing: 0.12em; text-transform: uppercase; }
+  .glossary-title { font-family: 'Noto Serif SC', serif; font-size: 18px; font-weight: 700; margin: 0; }
+  .glossary-title .em { color: var(--accent); font-weight: 500; }
+  .glossary-sub { font-size: 12px; color: var(--ink-mute); font-family: 'JetBrains Mono', monospace; letter-spacing: 0.04em; }
+  .glossary-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+  @media (max-width: 880px) { .glossary-grid { grid-template-columns: 1fr 1fr; } }
+  @media (max-width: 600px) { .glossary-grid { grid-template-columns: 1fr; } }
+  .gl-item { border: 1px dashed var(--line); border-radius: 5px; padding: 12px 14px; background: var(--bg); transition: all 0.18s; }
+  .gl-item:hover { border-color: var(--accent); border-style: solid; background: var(--accent-soft); }
+  .gl-term { font-family: 'JetBrains Mono', monospace; font-size: 12.5px; font-weight: 600; color: var(--ink); margin-bottom: 4px; }
+  .gl-fig { font-size: 12.5px; color: var(--ink-soft); line-height: 1.5; }
+  .gl-fig strong { color: var(--ink); font-weight: 600; }
+  .gl-arrow { color: var(--accent); font-weight: 600; margin: 0 4px; }
+
+  /* §01 problem-grid (default vs customized) */
+  .problem-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; margin-top: 24px; }
+  @media (max-width: 880px) { .problem-grid { grid-template-columns: 1fr; } }
+  .problem-card { background: var(--paper); border: 1.5px solid var(--line); border-radius: 6px; padding: 32px 28px 28px; position: relative; }
+  .problem-card.default { border-color: var(--ink-mute); background: #f5f5f7; }
+  .problem-card.custom { border-color: var(--accent); background: var(--accent-soft); }
+  .problem-card .tag { position: absolute; top: -12px; left: 24px; background: var(--bg); padding: 2px 10px; font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.1em; }
+  .problem-card.default .tag { color: var(--ink-mute); border: 1px solid var(--ink-mute); }
+  .problem-card.custom .tag { color: var(--accent); border: 1px solid var(--accent); }
+  .problem-card h3 { font-family: 'Noto Serif SC', serif; font-size: 22px; margin: 0 0 6px; font-weight: 800; line-height: 1.3; }
+  .problem-card .pc-tagline { font-family: 'Noto Serif SC', serif; font-size: 14px; color: var(--ink-mute); margin: 0 0 14px; font-weight: 500; }
+  .problem-card p { margin: 0 0 12px; color: var(--ink-soft); font-size: 14px; line-height: 1.6; }
+  .problem-card p:last-child { margin-bottom: 0; }
+  .problem-card p strong { color: var(--ink); font-weight: 600; }
+  .pc-examples {
+    margin-top: 14px; padding-top: 14px;
+    border-top: 1px dashed var(--line);
+    display: flex; flex-wrap: wrap; gap: 6px;
+  }
+  .pc-eg {
+    padding: 3px 10px;
+    background: var(--bg);
+    border: 1px solid var(--line);
+    border-radius: 100px;
+    font-size: 11px;
+    color: var(--ink-soft);
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .problem-card.custom .pc-eg { background: white; border-color: var(--accent); color: var(--accent); }
+
+  /* §02 three-layer model */
+  .layer-stage {
+    margin-top: 24px;
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    overflow: hidden;
+    display: grid;
+    grid-template-columns: 1.2fr 1fr;
+  }
+  @media (max-width: 880px) { .layer-stage { grid-template-columns: 1fr; } }
+  .layer-visual {
+    padding: 36px 32px;
+    background: var(--bg);
+    border-right: 1px solid var(--line);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    position: relative;
+  }
+  @media (max-width: 880px) { .layer-visual { border-right: none; border-bottom: 1px solid var(--line); } }
+  .layer-row {
+    background: var(--paper);
+    border: 1.5px solid var(--line);
+    border-radius: 6px;
+    padding: 16px 20px;
+    cursor: pointer;
+    transition: all 0.2s;
+    position: relative;
+    overflow: hidden;
+  }
+  .layer-row:hover { transform: translateX(4px); border-color: var(--ink-soft); }
+  .layer-row.is-active {
+    border-color: var(--accent);
+    background: var(--accent-soft);
+    box-shadow: 0 4px 12px rgba(255,77,46,0.15);
+  }
+  .layer-row.is-active::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 4px;
+    background: var(--accent);
+  }
+  .layer-name {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 17px;
+    font-weight: 800;
+    color: var(--ink);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .layer-name .layer-num {
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    font-size: 18px;
+    color: var(--accent);
+    font-weight: 500;
+  }
+  .layer-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--ink-mute);
+    margin-top: 4px;
+    letter-spacing: 0.04em;
+  }
+  .layer-row.is-active .layer-tag { color: var(--accent); }
+  .layer-arrow {
+    text-align: center;
+    color: var(--ink-mute);
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    font-size: 16px;
+    padding: 2px 0;
+  }
+  .layer-arrow .a-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    color: var(--ink-mute);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-right: 6px;
+  }
+  .layer-info {
+    padding: 36px 36px 32px;
+    display: flex; flex-direction: column;
+    gap: 16px;
+  }
+  .layer-info-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--accent);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+  .layer-info-title {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 22px;
+    font-weight: 800;
+    color: var(--ink);
+    margin: 0;
+    line-height: 1.25;
+  }
+  .layer-info-desc {
+    font-size: 14px;
+    color: var(--ink-soft);
+    line-height: 1.65;
+    margin: 0;
+  }
+  .layer-info-desc strong { color: var(--ink); font-weight: 600; }
+  .layer-info-section {
+    padding-top: 14px;
+    border-top: 1px dashed var(--line);
+  }
+  .layer-info-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--ink-mute);
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+  .layer-info-text {
+    font-size: 13px;
+    color: var(--ink-soft);
+    line-height: 1.6;
+    margin: 0;
+  }
+  .layer-info-text strong { color: var(--ink); font-weight: 600; }
+  .layer-info-impact {
+    display: flex; flex-wrap: wrap; gap: 6px;
+    margin-top: 8px;
+  }
+  .impact-pill {
+    padding: 3px 9px;
+    background: var(--accent-soft);
+    border: 1px solid var(--accent);
+    border-radius: 100px;
+    font-size: 10.5px;
+    color: var(--accent);
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 600;
+  }
+  .impact-pill.weak {
+    background: var(--bg-2);
+    border-color: var(--line);
+    color: var(--ink-mute);
+    font-weight: 400;
+  }
+
+  /* §03 theme switcher (killer) */
+  .theme-stage {
+    margin-top: 24px;
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  .theme-picker {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 0;
+    background: var(--bg);
+    border-bottom: 1px solid var(--line);
+  }
+  @media (max-width: 760px) {
+    .theme-picker { grid-template-columns: repeat(2, 1fr); }
+  }
+  .theme-btn {
+    padding: 18px 14px;
+    background: transparent;
+    border: none;
+    border-right: 1px solid var(--line);
+    border-bottom: 1px solid var(--line);
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.2s;
+    display: flex; flex-direction: column;
+    align-items: center; gap: 8px;
+    position: relative;
+  }
+  .theme-btn:last-child { border-right: none; }
+  .theme-btn:hover { background: var(--bg-2); }
+  .theme-btn.is-active {
+    background: var(--ink);
+    color: white;
+  }
+  .theme-btn.is-active::after {
+    content: '';
+    position: absolute;
+    bottom: -1px; left: 50%;
+    transform: translateX(-50%);
+    width: 30px; height: 3px;
+    background: var(--accent);
+    border-radius: 2px;
+  }
+  .theme-btn-swatch {
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    border: 2px solid white;
+    box-shadow: 0 0 0 1px rgba(0,0,0,0.1), 0 2px 6px rgba(0,0,0,0.08);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px;
+    color: white;
+    font-weight: 600;
+  }
+  .theme-btn-name {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--ink);
+    margin-top: 2px;
+  }
+  .theme-btn.is-active .theme-btn-name { color: white; }
+  .theme-btn-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9.5px;
+    color: var(--ink-mute);
+    letter-spacing: 0.05em;
+  }
+  .theme-btn.is-active .theme-btn-tag { color: rgba(255,255,255,0.7); }
+
+  .theme-canvas {
+    background: var(--th-bg);
+    padding: 40px 36px 36px;
+    transition: background 0.4s ease;
+    position: relative;
+    min-height: 480px;
+  }
+  .theme-meta {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 14px;
+    margin-bottom: 28px;
+    padding: 14px 18px;
+    background: rgba(0,0,0,0.04);
+    border-radius: 6px;
+  }
+  @media (max-width: 760px) {
+    .theme-meta { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+  }
+  .theme-meta-cell {
+    display: flex; flex-direction: column;
+    gap: 2px;
+  }
+  .theme-meta-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9.5px;
+    color: var(--th-text-soft);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  .theme-meta-value {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--th-text);
+    font-weight: 600;
+    transition: color 0.3s;
+  }
+  .theme-meta-swatch {
+    display: inline-block;
+    width: 14px; height: 14px;
+    border-radius: 3px;
+    margin-right: 6px;
+    vertical-align: middle;
+    border: 1px solid rgba(0,0,0,0.1);
+    transition: background 0.4s ease;
+  }
+
+  .theme-rendered {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+  }
+  @media (max-width: 760px) { .theme-rendered { grid-template-columns: 1fr; } }
+  .theme-group { display: flex; flex-direction: column; gap: 16px; }
+  .theme-group-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    color: var(--th-text-soft);
+    text-transform: uppercase;
+  }
+  .theme-row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+
+  /* Themed components — all driven by --th-* */
+  .th-btn {
+    font-family: var(--th-font);
+    font-size: 14px; font-weight: 500;
+    padding: var(--th-density-y) var(--th-density-x);
+    border-radius: var(--th-radius);
+    border: 1px solid transparent;
+    cursor: pointer;
+    transition: all 0.15s, background 0.4s, border-radius 0.4s;
+    line-height: 1.4;
+  }
+  .th-btn-primary {
+    background: var(--th-primary);
+    color: var(--th-primary-fg);
+    box-shadow: var(--th-shadow);
+  }
+  .th-btn-outline {
+    background: var(--th-card);
+    color: var(--th-text);
+    border-color: var(--th-border);
+  }
+  .th-btn-ghost {
+    background: transparent;
+    color: var(--th-text);
+  }
+  .th-input {
+    font-family: var(--th-font);
+    font-size: 14px;
+    padding: var(--th-density-y) calc(var(--th-density-x) - 4px);
+    border: 1px solid var(--th-border);
+    border-radius: var(--th-radius);
+    background: var(--th-card);
+    color: var(--th-text);
+    width: 100%;
+    outline: none;
+    transition: border-color 0.15s, background 0.4s, border-radius 0.4s, border-color 0.4s;
+  }
+  .th-input:focus { border-color: var(--th-primary); }
+  .th-card {
+    background: var(--th-card);
+    border: 1px solid var(--th-border);
+    border-radius: var(--th-radius);
+    padding: 20px 22px;
+    width: 100%;
+    box-shadow: var(--th-shadow);
+    transition: background 0.4s, border-radius 0.4s, border-color 0.4s;
+  }
+  .th-card-title {
+    font-family: var(--th-font);
+    font-size: 16px; font-weight: 600;
+    color: var(--th-text);
+    margin: 0 0 4px;
+  }
+  .th-card-desc {
+    font-family: var(--th-font);
+    font-size: 13px; color: var(--th-text-soft);
+    margin: 0 0 16px; line-height: 1.55;
+  }
+  .th-badge {
+    display: inline-flex; align-items: center;
+    padding: 2px 10px;
+    background: var(--th-primary);
+    color: var(--th-primary-fg);
+    border-radius: 100px;
+    font-family: var(--th-font);
+    font-size: 11px; font-weight: 600;
+  }
+  .th-badge.outline {
+    background: transparent;
+    color: var(--th-primary);
+    border: 1px solid var(--th-primary);
+  }
+
+  /* §04 4-step implementation */
+  .step-stage { margin-top: 24px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+  @media (max-width: 1080px) { .step-stage { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 600px) { .step-stage { grid-template-columns: 1fr; } }
+  .step-card {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    overflow: hidden;
+    display: flex; flex-direction: column;
+    transition: all 0.2s;
+  }
+  .step-card:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(22,22,29,0.06); border-color: var(--accent); }
+  .step-head {
+    padding: 16px 20px;
+    background: var(--ink);
+    color: white;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .step-num {
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    font-size: 26px;
+    color: var(--accent);
+    font-weight: 500;
+    line-height: 1;
+  }
+  .step-title {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 16px;
+    font-weight: 700;
+    line-height: 1.3;
+  }
+  .step-body {
+    padding: 20px 22px;
+    display: flex; flex-direction: column;
+    gap: 14px;
+    flex: 1;
+  }
+  .step-what {
+    font-size: 13.5px;
+    line-height: 1.6;
+    color: var(--ink-soft);
+    margin: 0;
+  }
+  .step-what strong { color: var(--ink); font-weight: 600; }
+  .step-vis {
+    padding: 16px;
+    background: var(--bg);
+    border-radius: 5px;
+    border: 1px dashed var(--line);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11.5px;
+    color: var(--ink-soft);
+    line-height: 1.55;
+  }
+  .step-vis .vk { color: var(--accent); font-weight: 600; }
+  .step-vis .vc { color: var(--ink-mute); }
+  .step-fig {
+    margin-top: auto;
+    padding: 10px 14px;
+    background: var(--bg-2);
+    border-radius: 4px;
+    font-size: 11.5px;
+    color: var(--ink-soft);
+    line-height: 1.5;
+  }
+  .step-fig .fig-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9.5px;
+    color: var(--ink);
+    letter-spacing: 0.08em;
+    font-weight: 700;
+    margin-right: 6px;
+  }
+  .step-fig strong { color: var(--ink); font-weight: 600; }
+
+  /* §05 upgrade + collab */
+  .uc-stage { margin-top: 24px; display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  @media (max-width: 880px) { .uc-stage { grid-template-columns: 1fr; } }
+  .uc-card {
+    background: var(--paper);
+    border: 1.5px solid var(--line);
+    border-radius: 8px;
+    padding: 26px 28px;
+  }
+  .uc-head {
+    display: flex; align-items: baseline; gap: 12px;
+    margin-bottom: 16px;
+    padding-bottom: 14px;
+    border-bottom: 1px dashed var(--line);
+  }
+  .uc-icon {
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    font-size: 28px;
+    color: var(--accent);
+    font-weight: 500;
+    line-height: 1;
+  }
+  .uc-title {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 20px;
+    font-weight: 800;
+    margin: 0;
+    color: var(--ink);
+  }
+  .uc-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    color: var(--ink-mute);
+    margin-left: auto;
+  }
+  .uc-q {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--ink);
+    margin: 0 0 8px;
+  }
+  .uc-a {
+    font-size: 13.5px;
+    color: var(--ink-soft);
+    line-height: 1.65;
+    margin: 0 0 14px;
+  }
+  .uc-a strong { color: var(--ink); font-weight: 600; }
+  .uc-points {
+    display: flex; flex-direction: column;
+    gap: 10px;
+    margin-top: 14px;
+  }
+  .uc-point {
+    display: flex; gap: 12px;
+    align-items: flex-start;
+    padding: 10px 14px;
+    background: var(--bg);
+    border-radius: 5px;
+    border: 1px solid var(--line-soft);
+  }
+  .uc-point-num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--accent);
+    font-weight: 700;
+    flex-shrink: 0;
+    width: 22px;
+    text-align: center;
+    padding-top: 1px;
+  }
+  .uc-point-text {
+    font-size: 12.5px;
+    color: var(--ink-soft);
+    line-height: 1.55;
+  }
+  .uc-point-text strong { color: var(--ink); font-weight: 600; }
+  .uc-fig {
+    margin-top: 14px;
+    padding: 12px 14px;
+    background: var(--accent-soft);
+    border-left: 3px solid var(--accent);
+    border-radius: 0 4px 4px 0;
+    font-size: 12px;
+    color: var(--ink);
+    line-height: 1.55;
+  }
+  .uc-fig .fig-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9.5px;
+    color: var(--accent);
+    letter-spacing: 0.1em;
+    font-weight: 700;
+    margin-right: 6px;
+    text-transform: uppercase;
+  }
+  .uc-fig strong { color: var(--accent); font-weight: 600; }
+
+  /* §06 cheatsheet */
+  .cheat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-top: 24px; }
+  @media (max-width: 880px) { .cheat-grid { grid-template-columns: 1fr; } }
+  .cheat-block { background: var(--paper); border: 1px solid var(--line); border-radius: 8px; padding: 24px 26px; }
+  .cheat-block h3 { font-family: 'Noto Serif SC', serif; font-size: 18px; font-weight: 800; margin: 0 0 14px; letter-spacing: -0.01em; }
+  .cheat-block h3 .em { font-family: 'Noto Serif SC', serif; color: var(--accent); font-weight: 500; }
+  .cheat-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .cheat-table th, .cheat-table td { text-align: left; padding: 9px 10px; border-bottom: 1px dashed var(--line); vertical-align: top; }
+  .cheat-table tr:last-child td { border-bottom: none; }
+  .cheat-table th { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--ink-mute); letter-spacing: 0.08em; text-transform: uppercase; font-weight: 500; }
+  .cheat-table .term { font-family: 'JetBrains Mono', monospace; font-size: 12.5px; color: var(--ink); font-weight: 600; white-space: nowrap; }
+  .cheat-table .desc { color: var(--ink-soft); line-height: 1.5; }
+  .cheat-table .desc strong { color: var(--ink); font-weight: 600; }
+  .cheat-block .cheat-foot { margin-top: 16px; font-size: 12px; color: var(--ink-mute); border-top: 1px dashed var(--line); padding-top: 12px; line-height: 1.55; }
+  .depth-pill {
+    display: inline-flex;
+    padding: 2px 8px;
+    border-radius: 3px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    font-weight: 600;
+  }
+  .depth-pill.shallow { background: var(--green-soft); color: var(--green); }
+  .depth-pill.medium  { background: var(--accent-soft); color: var(--accent); }
+  .depth-pill.deep    { background: var(--ink); color: white; }
+
+  /* Next post (reused) */
+  .next-post { margin-top: 48px; padding: 32px 36px; background: var(--ink); color: var(--bg); border-radius: 8px; display: grid; grid-template-columns: 1fr auto; gap: 32px; align-items: center; text-decoration: none; transition: transform 0.2s ease, box-shadow 0.2s ease; position: relative; overflow: hidden; }
+  .next-post::before { content: ''; position: absolute; inset: 0; background: radial-gradient(circle at 100% 0%, rgba(255,77,46,0.12), transparent 55%); pointer-events: none; }
+  .next-post:hover { transform: translateY(-2px); box-shadow: 0 14px 36px rgba(22,22,29,0.22); }
+  @media (max-width: 720px) { .next-post { grid-template-columns: 1fr; padding: 24px; gap: 20px; } }
+  .next-post .np-tag { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--accent); letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 12px; display: inline-block; }
+  .next-post h4 { font-family: 'Noto Serif SC', serif; font-size: 26px; margin: 0 0 10px; font-weight: 700; color: white; line-height: 1.25; letter-spacing: -0.01em; }
+  .next-post h4 .em { font-family: 'Noto Serif SC', serif; font-weight: 500; color: var(--accent); }
+  .next-post p { margin: 0; color: rgba(255,255,255,0.72); font-size: 14px; line-height: 1.65; max-width: 560px; }
+  .next-post p strong { color: white; font-weight: 600; }
+  .next-post .np-cta { display: inline-flex; align-items: center; gap: 10px; padding: 14px 24px; background: var(--accent); color: white; border-radius: 4px; font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 500; letter-spacing: 0.04em; white-space: nowrap; transition: background 0.18s, color 0.18s, transform 0.18s; position: relative; z-index: 1; }
+  .next-post:hover .np-cta { background: white; color: var(--ink); transform: translateX(2px); }
+  .next-post .np-cta .arr { font-family: 'Fraunces', serif; font-style: italic; font-size: 18px; font-weight: 500; }
+
+  /* footer (reused) */
+  footer { border-top: 1px solid var(--line); padding: 56px 0 64px; background: var(--bg); }
+  .byline-wrap { position: relative; }
+  .byline { display: flex; gap: 28px; align-items: center; padding-bottom: 32px; border-bottom: 1px dashed var(--line); margin-bottom: 24px; position: relative; }
+  .byline::before { content: ''; position: absolute; top: -56px; left: 0; width: 32px; height: 1px; background: var(--accent); }
+  .byline .avatar { width: 96px; height: 96px; border-radius: 50%; object-fit: cover; flex-shrink: 0; border: 3px solid var(--paper); box-shadow: 0 0 0 1px var(--line), 0 6px 20px rgba(22,22,29,0.10); background: var(--paper); }
+  .byline-label { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ink-mute); letter-spacing: 0.18em; margin-bottom: 8px; }
+  .byline-label .dot { display: inline-block; width: 6px; height: 6px; background: var(--accent); border-radius: 50%; margin-right: 6px; vertical-align: 1px; }
+  .byline-name { font-family: 'Noto Serif SC', 'Fraunces', serif; font-size: clamp(28px, 4vw, 40px); font-weight: 700; line-height: 1.05; letter-spacing: -0.01em; margin: 0 0 8px; }
+  .byline-name .em { font-family: 'Noto Serif SC', serif; font-weight: 500; color: var(--accent); }
+  .byline-tag { font-size: 14px; color: var(--ink-soft); line-height: 1.55; margin: 0; max-width: 52ch; }
+  .footer-meta { text-align: center; font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--ink-mute); letter-spacing: 0.05em; }
+  .footer-meta .heart { color: var(--accent); }
+  .footer-meta .mono { color: var(--ink-soft); font-weight: 500; }
+  @media (max-width: 600px) { .byline { flex-direction: column; text-align: center; align-items: center; gap: 16px; } }
+  .byline-group, .byline-wrap.byline-group { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 28px; }
+  .byline-group .byline { display: flex; gap: 16px; align-items: flex-start; margin: 0; min-width: 0; padding-bottom: 0; border-bottom: none; }
+  .byline-group .avatar { width: 56px; height: 56px; flex-shrink: 0; }
+  .byline-group .byline-meta { min-width: 0; }
+  .byline-group .byline-name { font-size: 18px; }
+  .byline-group .byline-tag { font-size: 12px; line-height: 1.55; }
+  @media (max-width: 700px) {
+    .byline-group, .byline-wrap.byline-group { grid-template-columns: 1fr; gap: 18px; }
+    .byline-group .byline + .byline { padding-top: 18px; border-top: 1px dashed var(--line); }
+  }
+
+  /* roadmap modal */
+  .rm-modal { position: fixed; inset: 0; z-index: 1000; display: flex; align-items: center; justify-content: center; padding: 30px 16px; }
+  .rm-modal[hidden] { display: none; }
+  .rm-backdrop { position: absolute; inset: 0; background: rgba(22,22,29,0.55); backdrop-filter: blur(4px); animation: rm-fade 0.2s; }
+  @keyframes rm-fade { from { opacity: 0; } to { opacity: 1; } }
+  .rm-dialog { position: relative; background: var(--bg); border-radius: 12px; max-width: 720px; width: 100%; max-height: calc(100vh - 60px); overflow-y: auto; padding: 32px 36px 24px; box-shadow: 0 30px 80px rgba(0,0,0,0.3); animation: rm-pop 0.25s cubic-bezier(0.4,0,0.2,1); }
+  @keyframes rm-pop { from { transform: scale(0.96) translateY(8px); opacity: 0; } to { transform: scale(1) translateY(0); opacity: 1; } }
+  .rm-close { position: absolute; top: 14px; right: 16px; background: transparent; border: none; cursor: pointer; font-size: 20px; color: var(--ink-mute); width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: all 0.15s; line-height: 1; }
+  .rm-close:hover { background: var(--bg-2); color: var(--ink); }
+  .rm-header { margin-bottom: 22px; padding-bottom: 18px; border-bottom: 1px dashed var(--line); }
+  .rm-tag { font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.1em; color: var(--accent); text-transform: uppercase; margin-bottom: 8px; }
+  .rm-title { font-family: 'Noto Serif SC', serif; font-size: 28px; margin: 0 0 6px; font-weight: 900; letter-spacing: -0.02em; line-height: 1.1; }
+  .rm-title .rm-em { font-family: 'Noto Serif SC', serif; color: var(--accent); font-weight: 500; }
+  .rm-sub { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--ink-mute); margin: 0; }
+  .rm-body { display: flex; flex-direction: column; gap: 18px; }
+  .rm-mod-key { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ink); font-weight: 700; margin-bottom: 8px; letter-spacing: 0.04em; text-transform: uppercase; }
+  .rm-mod-list { display: flex; flex-direction: column; gap: 6px; }
+  .rm-cell { display: grid; grid-template-columns: 36px 1fr auto; gap: 12px; align-items: center; padding: 9px 13px; border-radius: 5px; background: var(--paper); border: 1px solid var(--line); text-decoration: none; color: inherit; transition: all 0.15s; }
+  .rm-cell:hover { border-color: var(--accent); background: var(--accent-soft); transform: translateX(3px); }
+  .rm-cell.rm-cell-current { border-color: var(--accent); background: var(--accent-soft); }
+  .rm-cell-code { font-family: 'Fraunces', serif; font-style: italic; font-weight: 500; color: var(--accent); font-size: 15px; }
+  .rm-cell-name { font-size: 13px; color: var(--ink); }
+  .rm-cell-tier { font-family: 'JetBrains Mono', monospace; font-size: 9px; letter-spacing: 0.08em; color: var(--ink-mute); text-transform: uppercase; border: 1px solid var(--line); padding: 2px 7px; border-radius: 3px; }
+  .rm-cell-tier.rm-tier-current { background: var(--accent); color: white; border-color: var(--accent); }
+  .nav-links a[data-rm-open] { cursor: pointer; }
+
+</style>
+</head>
+<body>
+
+<!-- Top bar -->
+<div class="topbar">
+  <div class="wrap topbar-inner">
+    <div class="brand-block"><a href="index.html" class="brand"><span class="brand-arrow">←</span><span class="dot"></span>AI LABBOOK</a><span class="brand-sep">/</span><span class="brand-current">K2 · shadcn 改造</span></div>
+    <nav class="nav-links">
+      <a href="k1-ui-library-figma.html">← K1</a>
+      <a href="index.html#menu" data-rm-open>路线图</a>
+    </nav>
+  </div>
+</div>
+
+<!-- Hero -->
+<header class="hero">
+  <div class="wrap">
+    <div class="hero-meta">
+      <span class="pill fill">实验互动 · INTERACTIVE</span>
+      <span class="pill">2026 · 设计 × 代码</span>
+      <span class="pill">K2 · 基础 · 改造</span>
+      <span class="label">阅读时长 ≈ 10 分钟</span>
+    </div>
+    <div class="hero-grid">
+      <div>
+        <h1>
+          <span class="display-en">shadcn</span><span class="x">·</span><span class="display-cn">抄进来</span><br>
+          <span class="display-cn">之后呢</span><span class="em">?</span>
+        </h1>
+        <p class="lede">
+          shadcn 默认长一个样 ——<span class="em">Vercel</span> 那种<br>
+          黑白极简。这一篇教你<strong style="color:var(--ink);">改成你家的</strong>。<br>
+          一个换肤滑块,五种风格,设计师扫一眼就懂。
+        </p>
+      </div>
+      <div class="hero-side">
+        <div class="row"><span class="k">本页讲什么</span><span class="v">shadcn 改造路径</span></div>
+        <div class="row"><span class="k">含互动</span><span class="v">三层模型 / 主题切换</span></div>
+        <div class="row"><span class="k">面向</span><span class="v">设计师 · 已选 shadcn</span></div>
+        <div class="row"><span class="k">前置知识</span><span class="v">看过 K1 · 库选型</span></div>
+      </div>
+    </div>
+
+    <!-- glossary -->
+    <div class="glossary" style="margin-top:40px;">
+      <div class="glossary-head">
+        <div>
+          <div class="glossary-tag">GLOSSARY · 词汇表</div>
+          <h3 class="glossary-title">先翻几个<span class="em">关键词</span></h3>
+        </div>
+        <span class="glossary-sub">6 个词 · 全文反复出现</span>
+      </div>
+      <div class="glossary-grid">
+        <div class="gl-item">
+          <div class="gl-term">源码</div>
+          <div class="gl-fig">shadcn 抄进你 components/ui/ 的代码 <span class="gl-arrow">≈</span> <strong>detach 后的主组件图层</strong></div>
+        </div>
+        <div class="gl-item">
+          <div class="gl-term">token</div>
+          <div class="gl-fig">设计变量(颜色/字号/圆角…) <span class="gl-arrow">≈</span> Figma <strong>Variables</strong></div>
+        </div>
+        <div class="gl-item">
+          <div class="gl-term">主题 / theme</div>
+          <div class="gl-fig">一整套 token 的<strong>预设</strong> <span class="gl-arrow">≈</span> Figma <strong>variable mode</strong> (dark/light)</div>
+        </div>
+        <div class="gl-item">
+          <div class="gl-term">base 组件</div>
+          <div class="gl-fig">原子级组件(Button/Input/Card) <span class="gl-arrow">≈</span> Figma <strong>主组件</strong></div>
+        </div>
+        <div class="gl-item">
+          <div class="gl-term">复合组件</div>
+          <div class="gl-fig">用 base 拼出的区块(页头/侧栏…)<span class="gl-arrow">≈</span> Figma <strong>嵌套组件</strong></div>
+        </div>
+        <div class="gl-item">
+          <div class="gl-term">fork / 私有包</div>
+          <div class="gl-fig">把改造后的版本<strong>打包发出去</strong>给全公司用 <span class="gl-arrow">≈</span> <strong>publish team library</strong></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- §01 default vs customized -->
+<section id="why">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>01</strong> / 不是终点</div>
+        <h2 class="section-title">默认 shadcn<br>不是<span class="em">终点</span>。</h2>
+      </div>
+      <p class="section-sub">
+        K1 选完 shadcn,问题马上来了 ——
+        AI 写出来的东西全长一个样,跟你公司风格不像。
+        这一篇就接着回答<strong>"接下来呢"</strong>。
+      </p>
+    </div>
+
+    <div class="problem-grid">
+      <div class="problem-card default">
+        <span class="tag">DEFAULT · 不动它</span>
+        <h3>默认 shadcn 是<span class="em" style="color:var(--ink-mute);">无印良品</span></h3>
+        <p class="pc-tagline">极简 · 中性 · 通用 ——<br>谁用都长一个样。</p>
+        <p>shadcn 默认就是<strong>欧美 SaaS 风</strong>:黑白主调、6px 圆角、Geist 字体、大留白。</p>
+        <p>你不改它的话,做出来的 UI <strong>跟全世界其他 shadcn 用户撞脸</strong>。</p>
+        <div class="pc-examples">
+          <span class="pc-eg">Vercel</span>
+          <span class="pc-eg">Linear</span>
+          <span class="pc-eg">Resend</span>
+          <span class="pc-eg">Cal.com</span>
+          <span class="pc-eg">v0</span>
+          <span class="pc-eg">...</span>
+        </div>
+      </div>
+
+      <div class="problem-card custom">
+        <span class="tag">CUSTOMIZED · 改造过</span>
+        <h3>改造后是<span class="em">你家的</span></h3>
+        <p class="pc-tagline">同一份组件源码 ——<br>换 token 就<strong>千店千面</strong>。</p>
+        <p>把 shadcn 当<strong>地基</strong>:source code 是你的,token 是你定的,base 组件也能改。</p>
+        <p>同样一个 Button,<strong>苹果风 · 星巴克绿 · 政企蓝 · 公司品牌色</strong>都能切。</p>
+        <div class="pc-examples">
+          <span class="pc-eg">苹果风</span>
+          <span class="pc-eg">星巴克</span>
+          <span class="pc-eg">政企蓝</span>
+          <span class="pc-eg">你公司</span>
+          <span class="pc-eg">任何主题</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="quote-box">
+      <span class="quote-mark">"</span>
+      我从最基础的颜色开始 ——
+      在对话里跟 AI 聊我需要什么样的风格、什么样的主题色值,
+      整体的所有的设计变量<span class="em">都是在 shadcn 的基础上去调整的</span>。
+      <span class="quote-attr">—— 范米花儿(在汇川的咨询里)</span>
+    </div>
+  </div>
+</section>
+
+<!-- §02 three-layer model -->
+<section id="layers">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>02</strong> / 三层地基</div>
+        <h2 class="section-title">shadcn 改造的<br><span class="em">三层</span>。</h2>
+      </div>
+      <p class="section-sub">
+        改造不是一拍脑袋全改,有<strong>三层</strong>。
+        每一层改起来的<strong>难度和影响</strong>不一样。
+        点左边任意一层,看右边解释。
+      </p>
+    </div>
+
+    <div class="hint-strip">
+      <span class="hint-tag">玩法</span>点左边<strong>三层中任意一层</strong> —— 右边显示这层改什么、影响哪里、Figma 类比。
+    </div>
+
+    <div class="layer-stage" id="layerStage">
+      <div class="layer-visual">
+        <div class="layer-row is-active" data-layer="token">
+          <div class="layer-name"><span class="layer-num">L3</span>Token 层 / 设计变量</div>
+          <div class="layer-tag">最上层 · 改起来最轻 · 影响全站</div>
+        </div>
+        <div class="layer-arrow"><span class="a-label">CONSUMES ↓</span>消费下层</div>
+        <div class="layer-row" data-layer="base">
+          <div class="layer-name"><span class="layer-num">L2</span>Base 组件 / 原子件</div>
+          <div class="layer-tag">中间层 · 改起来中等 · 影响所有用它的地方</div>
+        </div>
+        <div class="layer-arrow"><span class="a-label">PROVIDES ↑</span>提供给上层</div>
+        <div class="layer-row" data-layer="composite">
+          <div class="layer-name"><span class="layer-num">L1</span>复合组件 / 区块</div>
+          <div class="layer-tag">业务层 · 改起来最重 · 只影响一个场景</div>
+        </div>
+      </div>
+
+      <div class="layer-info">
+        <div class="layer-info-tag" id="layerTag">L3 · TOKEN</div>
+        <h3 class="layer-info-title" id="layerTitle">改 token —— 一改全改</h3>
+        <p class="layer-info-desc" id="layerDesc">
+          <strong>token</strong> = 一堆"全局变量":主色、文本色、圆角、字号、间距。
+          所有组件都<strong>读这套变量</strong>,所以改 token = 改完所有组件。
+          90% 的"换皮"都在这一层完成 —— 也是<strong>性价比最高</strong>的改造。
+        </p>
+        <div class="layer-info-section">
+          <div class="layer-info-label">Figma 类比</div>
+          <p class="layer-info-text" id="layerFig">改 <strong>Variables</strong> 的值 —— 所有引用这个 variable 的组件 instance 一起变。</p>
+        </div>
+        <div class="layer-info-section">
+          <div class="layer-info-label">改了之后会影响</div>
+          <div class="layer-info-impact" id="layerImpact">
+            <span class="impact-pill">所有按钮</span>
+            <span class="impact-pill">所有卡片</span>
+            <span class="impact-pill">所有输入框</span>
+            <span class="impact-pill">所有徽章</span>
+            <span class="impact-pill">所有 Modal</span>
+            <span class="impact-pill">复合组件也跟着变</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- §03 theme switcher -->
+<section id="theme">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>03</strong> / 换皮看效果</div>
+        <h2 class="section-title">同一组组件,<br>切<span class="em">5 套</span>主题。</h2>
+      </div>
+      <p class="section-sub">
+        这是 §02 里"改 token"的<strong>真实演示</strong>。
+        组件的代码完全没变 —— <strong>只换了 token</strong>。
+        点上面任意一个主题,看下面所有组件实时换皮。
+      </p>
+    </div>
+
+    <div class="hint-strip">
+      <span class="hint-tag">⭐ 互动</span>点 5 个主题切换 —— 同一段代码,五种风格。<strong>这就是 token 的威力</strong>。
+    </div>
+
+    <div class="theme-stage">
+      <div class="theme-picker">
+        <button class="theme-btn is-active" data-theme="default">
+          <span class="theme-btn-swatch" style="background:#0a0a0a;">·</span>
+          <span class="theme-btn-name">默认</span>
+          <span class="theme-btn-tag">shadcn 出厂</span>
+        </button>
+        <button class="theme-btn" data-theme="apple">
+          <span class="theme-btn-swatch" style="background:#007aff;">·</span>
+          <span class="theme-btn-name">苹果</span>
+          <span class="theme-btn-tag">高级简约</span>
+        </button>
+        <button class="theme-btn" data-theme="starbucks">
+          <span class="theme-btn-swatch" style="background:#006241;">·</span>
+          <span class="theme-btn-name">星巴克</span>
+          <span class="theme-btn-tag">圆润温暖</span>
+        </button>
+        <button class="theme-btn" data-theme="enterprise">
+          <span class="theme-btn-swatch" style="background:#1677ff;">·</span>
+          <span class="theme-btn-name">企业蓝</span>
+          <span class="theme-btn-tag">中后台风</span>
+        </button>
+        <button class="theme-btn" data-theme="gov">
+          <span class="theme-btn-swatch" style="background:#003366;">·</span>
+          <span class="theme-btn-name">政企</span>
+          <span class="theme-btn-tag">方正稳重</span>
+        </button>
+      </div>
+
+      <div class="theme-canvas" id="themeCanvas">
+        <div class="theme-meta">
+          <div class="theme-meta-cell">
+            <div class="theme-meta-label">PRIMARY</div>
+            <div class="theme-meta-value"><span class="theme-meta-swatch" id="metaPrimary" style="background:#0a0a0a;"></span><span id="metaPrimaryHex">#0a0a0a</span></div>
+          </div>
+          <div class="theme-meta-cell">
+            <div class="theme-meta-label">RADIUS</div>
+            <div class="theme-meta-value" id="metaRadius">6 px</div>
+          </div>
+          <div class="theme-meta-cell">
+            <div class="theme-meta-label">FONT</div>
+            <div class="theme-meta-value" id="metaFont">Geist</div>
+          </div>
+          <div class="theme-meta-cell">
+            <div class="theme-meta-label">DENSITY</div>
+            <div class="theme-meta-value" id="metaDensity">Relaxed</div>
+          </div>
+          <div class="theme-meta-cell">
+            <div class="theme-meta-label">FEELING</div>
+            <div class="theme-meta-value" id="metaFeeling">极简中性</div>
+          </div>
+        </div>
+
+        <div class="theme-rendered">
+          <div class="theme-group">
+            <div class="theme-group-label">·· BUTTON</div>
+            <div class="theme-row">
+              <button class="th-btn th-btn-primary">Primary</button>
+              <button class="th-btn th-btn-outline">Outline</button>
+              <button class="th-btn th-btn-ghost">Ghost</button>
+            </div>
+
+            <div class="theme-group-label" style="margin-top:8px;">·· INPUT</div>
+            <div class="theme-row">
+              <input class="th-input" placeholder="输入邮箱" style="max-width:260px;">
+            </div>
+
+            <div class="theme-group-label" style="margin-top:8px;">·· BADGE</div>
+            <div class="theme-row">
+              <span class="th-badge">在售</span>
+              <span class="th-badge outline">草稿</span>
+            </div>
+          </div>
+
+          <div class="theme-group">
+            <div class="theme-group-label">·· CARD</div>
+            <div class="theme-row">
+              <div class="th-card">
+                <h4 class="th-card-title" id="thCardTitle">Create new project</h4>
+                <p class="th-card-desc" id="thCardDesc">Deploy your design system in under 60 seconds.</p>
+                <button class="th-btn th-btn-primary" id="thCardBtn">Continue</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="quote-box" style="margin-top:32px;">
+      <span class="quote-mark">"</span>
+      你看 —— 上面 5 个按钮、5 个卡片,<span class="em">代码一行没改</span>,
+      只换了一组 token。
+      <strong style="color:var(--ink);">这就是设计师该懂的"换底层"</strong>。
+      <span class="quote-attr">—— 改 token, 不改组件</span>
+    </div>
+  </div>
+</section>
+
+<!-- §04 4 steps -->
+<section id="steps">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>04</strong> / 实操</div>
+        <h2 class="section-title">改造 <span class="em">4 步</span>。</h2>
+      </div>
+      <p class="section-sub">
+        知道了原理之后,具体怎么操作?
+        按这<strong>四步走</strong>,从浅到深,每一步都可以停。
+      </p>
+    </div>
+
+    <div class="step-stage">
+      <div class="step-card">
+        <div class="step-head">
+          <span class="step-num">01</span>
+          <div class="step-title">改 Token · 90% 工作</div>
+        </div>
+        <div class="step-body">
+          <p class="step-what"><strong>改一组变量</strong>:主色、辅色、文本色、圆角、字号、间距、字体。
+          这一步搞定就解决了<strong>大部分换皮需求</strong>。</p>
+          <div class="step-vis">
+<span class="vc">// tokens.css (改这里)</span>
+<span class="vk">--primary</span>: <span class="vc">#0a0a0a</span> → <span class="vk">#1677ff</span>;
+<span class="vk">--radius</span>: <span class="vc">6px</span> → <span class="vk">2px</span>;
+<span class="vk">--font</span>: <span class="vc">Geist</span> → <span class="vk">PingFang</span>;
+          </div>
+          <div class="step-fig">
+            <span class="fig-tag">FIGMA 类比</span>改 <strong>Variables</strong> 的值
+          </div>
+        </div>
+      </div>
+
+      <div class="step-card">
+        <div class="step-head">
+          <span class="step-num">02</span>
+          <div class="step-title">调 Base 组件 · 细节</div>
+        </div>
+        <div class="step-body">
+          <p class="step-what">token 不够时,<strong>改 base 组件源码</strong>:按钮再高一点、Input 加个图标插槽、Card 默认带头部。</p>
+          <div class="step-vis">
+<span class="vc">// button.tsx (打开这个文件)</span>
+<span class="vk">height:</span> 36px → <span class="vk">40px</span>;
+<span class="vk">+</span> 加一个 loading 状态
+<span class="vk">+</span> 加一个 icon 插槽
+          </div>
+          <div class="step-fig">
+            <span class="fig-tag">FIGMA 类比</span>进<strong>主组件</strong>改图层
+          </div>
+        </div>
+      </div>
+
+      <div class="step-card">
+        <div class="step-head">
+          <span class="step-num">03</span>
+          <div class="step-title">删 / 加组件 · 取舍</div>
+        </div>
+        <div class="step-body">
+          <p class="step-what"><strong>不用的删掉</strong>(shadcn 给的可能 80% 不需要);<strong>没有的自己加</strong>(比如复杂表格、特殊上传)。</p>
+          <div class="step-vis">
+<span class="vk">−</span> 删: drawer (用不到)
+<span class="vk">−</span> 删: command (用不到)
+<span class="vk">+</span> 加: file-upload (业务需要)
+<span class="vk">+</span> 加: complex-table
+          </div>
+          <div class="step-fig">
+            <span class="fig-tag">FIGMA 类比</span>清 library 的<strong>主组件</strong>
+          </div>
+        </div>
+      </div>
+
+      <div class="step-card">
+        <div class="step-head">
+          <span class="step-num">04</span>
+          <div class="step-title">拼复合组件 · 沉淀</div>
+        </div>
+        <div class="step-body">
+          <p class="step-what"><strong>基于 base 组件拼区块</strong>:页头、侧栏、数据卡片、空状态…… 让 AI 直接调用,而不是每次现拼。</p>
+          <div class="step-vis">
+<span class="vc">// page-header.tsx (新建)</span>
+import <span class="vk">Button</span> from './ui/button'
+import <span class="vk">Badge</span> from './ui/badge'
+<span class="vc">// 拼成: 标题 + 面包屑 + 操作区</span>
+          </div>
+          <div class="step-fig">
+            <span class="fig-tag">FIGMA 类比</span>拼<strong>嵌套主组件</strong>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="hint-strip" style="margin-top:24px;">
+      <span class="hint-tag">提示</span>
+      <strong>不必每步都做</strong> —— 90% 的项目改完 Step 1 就够用了。
+      Step 4 是规模化(团队 5+ 人)才需要的"预制菜沉淀"。
+    </div>
+  </div>
+</section>
+
+<!-- §05 upgrade + collab -->
+<section id="upgrade">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>05</strong> / 升级 + 协作</div>
+        <h2 class="section-title">改完之后,<br>会有<span class="em">什么坑</span>?</h2>
+      </div>
+      <p class="section-sub">
+        改造完不是结束 —— 还有<strong>两个长期问题</strong>:
+        shadcn 自己升级了你跟不跟?5-10 个人怎么用同一份?
+      </p>
+    </div>
+
+    <div class="uc-stage">
+      <div class="uc-card">
+        <div class="uc-head">
+          <span class="uc-icon">↑</span>
+          <h3 class="uc-title">升级问题</h3>
+          <span class="uc-tag">UPGRADE</span>
+        </div>
+        <p class="uc-q">shadcn 自己升级了 ——<br>我改过的还在吗?</p>
+        <p class="uc-a">
+          <strong>token 不丢</strong>(因为是单独文件);
+          <strong>base 组件改过的部分可能要手动 merge</strong>(因为你的改动跟新版可能冲突)。
+        </p>
+        <div class="uc-points">
+          <div class="uc-point">
+            <span class="uc-point-num">①</span>
+            <span class="uc-point-text"><strong>跟还是不跟</strong> —— 大部分团队<strong>选不跟</strong>,锁在当前版本</span>
+          </div>
+          <div class="uc-point">
+            <span class="uc-point-num">②</span>
+            <span class="uc-point-text">真要升级,用 <strong>diff-merge</strong> —— AI 帮你看哪里冲突</span>
+          </div>
+          <div class="uc-point">
+            <span class="uc-point-num">③</span>
+            <span class="uc-point-text"><strong>蓝色丸子</strong>:核心组件改得越深,升级越疼</span>
+          </div>
+        </div>
+        <div class="uc-fig">
+          <span class="fig-tag">类比</span>
+          像 <strong>detach 了 Figma kit 之后,原 kit 升级了</strong>。
+          你已经改过的图层,要不要同步,人工决定。
+        </div>
+      </div>
+
+      <div class="uc-card">
+        <div class="uc-head">
+          <span class="uc-icon">⋯</span>
+          <h3 class="uc-title">协作问题</h3>
+          <span class="uc-tag">COLLAB</span>
+        </div>
+        <p class="uc-q">5-10 个人都在改 ——<br>怎么保证大家用同一份?</p>
+        <p class="uc-a">
+          <strong>三个保险</strong>:私有 NPM 包统一发布、Git 共享 token 文件、给 AI 写 rules 强制约束。
+        </p>
+        <div class="uc-points">
+          <div class="uc-point">
+            <span class="uc-point-num">①</span>
+            <span class="uc-point-text"><strong>私有 NPM 包</strong>:打包发到公司内部 registry,大家 install 用</span>
+          </div>
+          <div class="uc-point">
+            <span class="uc-point-num">②</span>
+            <span class="uc-point-text"><strong>Git monorepo</strong>:把改造后的 ui 库放在主仓库,大家直接引用</span>
+          </div>
+          <div class="uc-point">
+            <span class="uc-point-num">③</span>
+            <span class="uc-point-text"><strong>AI rules 文档</strong>:写一份"必须用 @company/ui",AI 不会乱用 shadcn 原版</span>
+          </div>
+        </div>
+        <div class="uc-fig">
+          <span class="fig-tag">类比</span>
+          像 <strong>公司 publish 一个 team library</strong>,
+          大家都 enable —— 自动保持一致,不允许 detach。
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- §06 cheatsheet -->
+<section id="cheat">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>06</strong> / 速查</div>
+        <h2 class="section-title">截图保存<br>这<span class="em">一页</span>。</h2>
+      </div>
+      <p class="section-sub">
+        三张小表:改造深度对照表 + Figma Variables ↔ 代码 token 对应 + 工作量预估。
+      </p>
+    </div>
+
+    <div class="cheat-grid">
+      <div class="cheat-block">
+        <h3><span class="em">·</span> 改造深度速查</h3>
+        <table class="cheat-table">
+          <thead>
+            <tr><th>深度</th><th>做什么</th><th>工作量</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><span class="depth-pill shallow">浅改</span></td><td class="desc">只改 token (颜色 / 圆角 / 字体)</td><td class="desc">半天</td></tr>
+            <tr><td><span class="depth-pill medium">中改</span></td><td class="desc">token + 调几个 base 组件细节</td><td class="desc">1-2 天</td></tr>
+            <tr><td><span class="depth-pill deep">深改</span></td><td class="desc">token + base + 删/加组件 + 拼复合组件</td><td class="desc">1-2 周</td></tr>
+          </tbody>
+        </table>
+        <div class="cheat-foot">
+          <strong>90% 的项目浅改就够了</strong> —— 别一上来就深改,反而失控。
+        </div>
+      </div>
+
+      <div class="cheat-block">
+        <h3><span class="em">·</span> Figma 变量 ↔ 代码 token</h3>
+        <table class="cheat-table">
+          <thead>
+            <tr><th>Figma</th><th>代码 token</th></tr>
+          </thead>
+          <tbody>
+            <tr><td class="term">Color variable</td><td class="desc"><code style="font-family:'JetBrains Mono',monospace;font-size:11px;background:var(--bg-2);padding:1px 5px;border-radius:2px;">--primary</code> / <code style="font-family:'JetBrains Mono',monospace;font-size:11px;background:var(--bg-2);padding:1px 5px;border-radius:2px;">--background</code></td></tr>
+            <tr><td class="term">Number (spacing)</td><td class="desc"><code style="font-family:'JetBrains Mono',monospace;font-size:11px;background:var(--bg-2);padding:1px 5px;border-radius:2px;">--spacing-4</code> / <code style="font-family:'JetBrains Mono',monospace;font-size:11px;background:var(--bg-2);padding:1px 5px;border-radius:2px;">--padding-x</code></td></tr>
+            <tr><td class="term">Number (radius)</td><td class="desc"><code style="font-family:'JetBrains Mono',monospace;font-size:11px;background:var(--bg-2);padding:1px 5px;border-radius:2px;">--radius</code></td></tr>
+            <tr><td class="term">Text style</td><td class="desc"><code style="font-family:'JetBrains Mono',monospace;font-size:11px;background:var(--bg-2);padding:1px 5px;border-radius:2px;">--font-size-sm</code> / <code style="font-family:'JetBrains Mono',monospace;font-size:11px;background:var(--bg-2);padding:1px 5px;border-radius:2px;">--font-family</code></td></tr>
+            <tr><td class="term">Variable mode</td><td class="desc">同一组 token 的<strong>预设</strong>(light / dark / brand)</td></tr>
+          </tbody>
+        </table>
+        <div class="cheat-foot">
+          一一对应。你在 Figma 里定的 variables,前端在代码里就这么命名。
+        </div>
+      </div>
+    </div>
+
+    <div class="cheat-block" style="margin-top:18px;">
+      <h3><span class="em">·</span> 跟前端这样说</h3>
+      <table class="cheat-table">
+        <thead>
+          <tr><th>你想要</th><th>说法 (这样说前端就懂了)</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="desc">全站换主色</td>
+            <td class="desc">"改 <code style="font-family:'JetBrains Mono',monospace;font-size:11px;background:var(--bg-2);padding:1px 5px;border-radius:2px;">--primary</code> token"</td>
+          </tr>
+          <tr>
+            <td class="desc">圆角全变大</td>
+            <td class="desc">"改 <code style="font-family:'JetBrains Mono',monospace;font-size:11px;background:var(--bg-2);padding:1px 5px;border-radius:2px;">--radius</code> token"</td>
+          </tr>
+          <tr>
+            <td class="desc">所有按钮加 4px 高度</td>
+            <td class="desc">"改 <code style="font-family:'JetBrains Mono',monospace;font-size:11px;background:var(--bg-2);padding:1px 5px;border-radius:2px;">button.tsx</code>"(token 改不了高度,要改源码)</td>
+          </tr>
+          <tr>
+            <td class="desc">单个页面圆角不一样</td>
+            <td class="desc">"在那个组件上加 className override"</td>
+          </tr>
+          <tr>
+            <td class="desc">公司要用统一一套</td>
+            <td class="desc">"打包成<strong>私有 npm 包</strong> <code style="font-family:'JetBrains Mono',monospace;font-size:11px;background:var(--bg-2);padding:1px 5px;border-radius:2px;">@company/ui</code>"</td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="cheat-foot">
+        把对的术语说出来,前端就知道你不是外行 —— 沟通效率立刻翻倍。
+      </div>
+    </div>
+
+    <a href="index.html#menu" class="next-post" data-rm-open>
+      <div>
+        <div class="np-tag">下一篇 · NEXT · K3 · 基础</div>
+        <h4>颗粒度的代价<span class="em"> · </span>AI 拼不准的根因</h4>
+        <p>为什么用 200 个原子让 AI 拼总走样?用 10 个复合组件就高?<strong>不是 AI 笨,是你给的积木太多了</strong>。下一篇用一个"选择空间膨胀器"讲清楚。</p>
+      </div>
+      <span class="np-cta">回到路线图 <span class="arr">→</span></span>
+    </a>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div class="byline-wrap byline-group">
+      <div class="byline">
+        <img class="avatar" src="author.jpg" alt="范米花儿">
+        <div class="byline-meta">
+          <div class="byline-label"><span class="dot"></span>作者 · WRITTEN BY</div>
+          <h3 class="byline-name">嗨,我是 <span class="em">范米花儿</span></h3>
+          <p class="byline-tag">设计工程师 ——<br>设计 × 代码,两边都做。</p>
+        </div>
+      </div>
+      <div class="byline">
+        <img class="avatar" src="avatar-ce.jpg" alt="CE 青年">
+        <div class="byline-meta">
+          <div class="byline-label"><span class="dot"></span>合作者 · CO-AUTHOR</div>
+          <h3 class="byline-name">还有 <span class="em">CE 青年</span></h3>
+          <p class="byline-tag">B 端交互 / AI 产品 ——<br>把体验落进产品里。</p>
+        </div>
+      </div>
+    </div>
+    <div class="footer-meta">
+      做于 <span class="mono">2026</span> · 用 <span class="heart">●</span> 写给 <span class="mono">DESIGNERS &amp; DEVELOPERS</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+// ==========================================================
+//  §02 three-layer model interaction
+// ==========================================================
+(function () {
+  const stage = document.getElementById('layerStage');
+  if (!stage) return;
+  const rows = stage.querySelectorAll('.layer-row');
+  const tagEl = document.getElementById('layerTag');
+  const titleEl = document.getElementById('layerTitle');
+  const descEl = document.getElementById('layerDesc');
+  const figEl = document.getElementById('layerFig');
+  const impactEl = document.getElementById('layerImpact');
+
+  const dict = {
+    token: {
+      tag: 'L3 · TOKEN',
+      title: '改 token —— 一改全改',
+      desc: '<strong>token</strong> = 一堆"全局变量":主色、文本色、圆角、字号、间距。所有组件都<strong>读这套变量</strong>,所以改 token = 改完所有组件。90% 的"换皮"都在这一层完成 —— 也是<strong>性价比最高</strong>的改造。',
+      fig: '改 <strong>Variables</strong> 的值 —— 所有引用这个 variable 的组件 instance 一起变。',
+      impact: [
+        { txt: '所有按钮', cls: '' },
+        { txt: '所有卡片', cls: '' },
+        { txt: '所有输入框', cls: '' },
+        { txt: '所有徽章', cls: '' },
+        { txt: '所有 Modal', cls: '' },
+        { txt: '复合组件也跟着变', cls: '' }
+      ]
+    },
+    base: {
+      tag: 'L2 · BASE 组件',
+      title: '改 base —— 一个组件级',
+      desc: '打开 <code style="font-family:\'JetBrains Mono\',monospace;font-size:12px;background:var(--bg-2);padding:1px 5px;border-radius:2px;">button.tsx</code> 这种文件,改它的结构、加新功能、改默认行为。<strong>影响范围只在这一个组件</strong> —— 但用到它的地方全部受影响。比改 token 重一点。',
+      fig: '进 Figma <strong>主组件</strong>改图层结构 —— 所有 instance 跟着变。',
+      impact: [
+        { txt: '只这一个组件', cls: '' },
+        { txt: '所有用它的地方', cls: '' },
+        { txt: '复合组件里嵌的它', cls: '' },
+        { txt: '其他组件不动', cls: 'weak' },
+        { txt: 'token 也不动', cls: 'weak' }
+      ]
+    },
+    composite: {
+      tag: 'L1 · 复合组件',
+      title: '改复合组件 —— 一个场景级',
+      desc: '<strong>复合组件</strong> = 用 base 组件拼出来的<strong>区块</strong>:页头、侧栏、空状态、数据卡片、登录表单。改它只影响<strong>这一个场景</strong>。最重的工作,但也最具体可控。',
+      fig: '改一个<strong>嵌套主组件</strong>(Page Header / Sidebar) —— 只影响用到这个嵌套件的页面。',
+      impact: [
+        { txt: '只这一个区块', cls: '' },
+        { txt: '其他页面不动', cls: 'weak' },
+        { txt: 'base 组件不动', cls: 'weak' },
+        { txt: 'token 不动', cls: 'weak' }
+      ]
+    }
+  };
+
+  function setActive(key) {
+    rows.forEach(r => r.classList.toggle('is-active', r.dataset.layer === key));
+    const d = dict[key];
+    if (!d) return;
+    tagEl.textContent = d.tag;
+    titleEl.textContent = d.title;
+    descEl.innerHTML = d.desc;
+    figEl.innerHTML = d.fig;
+    impactEl.innerHTML = '';
+    d.impact.forEach(it => {
+      const span = document.createElement('span');
+      span.className = 'impact-pill ' + (it.cls || '');
+      span.textContent = it.txt;
+      impactEl.appendChild(span);
+    });
+  }
+
+  rows.forEach(r => {
+    r.addEventListener('click', () => setActive(r.dataset.layer));
+    r.addEventListener('mouseenter', () => setActive(r.dataset.layer));
+  });
+
+  setActive('token');
+})();
+
+// ==========================================================
+//  §03 theme switcher
+// ==========================================================
+(function () {
+  const themes = {
+    default: {
+      primary: '#0a0a0a',
+      primaryFg: '#ffffff',
+      bg: '#ffffff',
+      card: '#ffffff',
+      text: '#0a0a0a',
+      textSoft: '#71717a',
+      border: '#e5e7eb',
+      radius: '6px',
+      font: "'Geist', system-ui, sans-serif",
+      densityX: '16px',
+      densityY: '8px',
+      shadow: '0 1px 2px rgba(0,0,0,0.04)',
+      meta: { primary: '#0a0a0a', radius: '6 px', font: 'Geist', density: 'Relaxed', feeling: '极简中性' },
+      copy: { title: 'Create new project', desc: 'Deploy your design system in under 60 seconds.', btn: 'Continue' }
+    },
+    apple: {
+      primary: '#007aff',
+      primaryFg: '#ffffff',
+      bg: '#f5f5f7',
+      card: '#ffffff',
+      text: '#1d1d1f',
+      textSoft: '#6e6e73',
+      border: '#d2d2d7',
+      radius: '12px',
+      font: "-apple-system, 'SF Pro Text', system-ui, sans-serif",
+      densityX: '20px',
+      densityY: '10px',
+      shadow: '0 2px 8px rgba(0,0,0,0.04)',
+      meta: { primary: '#007aff', radius: '12 px', font: 'SF Pro', density: 'Relaxed', feeling: '高级简约' },
+      copy: { title: 'Create new project', desc: 'Deploy your design system in under 60 seconds.', btn: 'Continue' }
+    },
+    starbucks: {
+      primary: '#006241',
+      primaryFg: '#ffffff',
+      bg: '#f9f7f2',
+      card: '#ffffff',
+      text: '#1e3932',
+      textSoft: '#6b6660',
+      border: '#e7e4dc',
+      radius: '24px',
+      font: "'Fraunces', 'Noto Serif SC', Georgia, serif",
+      densityX: '22px',
+      densityY: '11px',
+      shadow: '0 2px 10px rgba(30,57,50,0.08)',
+      meta: { primary: '#006241', radius: '24 px', font: 'Serif', density: 'Cozy', feeling: '圆润温暖' },
+      copy: { title: '创建新订单', desc: '60 秒上线一杯属于你的咖啡。', btn: '下一步' }
+    },
+    enterprise: {
+      primary: '#1677ff',
+      primaryFg: '#ffffff',
+      bg: '#f5f5f5',
+      card: '#ffffff',
+      text: 'rgba(0,0,0,0.88)',
+      textSoft: 'rgba(0,0,0,0.55)',
+      border: '#d9d9d9',
+      radius: '6px',
+      font: "'PingFang SC', 'Microsoft YaHei', system-ui, sans-serif",
+      densityX: '15px',
+      densityY: '6px',
+      shadow: '0 2px 0 rgba(5,145,255,0.06)',
+      meta: { primary: '#1677ff', radius: '6 px', font: 'PingFang', density: 'Tight', feeling: '中后台风' },
+      copy: { title: '新建项目', desc: '60 秒内部署你的设计系统。', btn: '下一步' }
+    },
+    gov: {
+      primary: '#003366',
+      primaryFg: '#ffffff',
+      bg: '#f0f0f0',
+      card: '#ffffff',
+      text: '#1a1a1a',
+      textSoft: '#555555',
+      border: '#bfbfbf',
+      radius: '2px',
+      font: "'Microsoft YaHei', 'PingFang SC', system-ui, sans-serif",
+      densityX: '14px',
+      densityY: '6px',
+      shadow: '0 1px 0 rgba(0,0,0,0.06)',
+      meta: { primary: '#003366', radius: '2 px', font: '雅黑', density: 'Tight', feeling: '方正稳重' },
+      copy: { title: '新建项目', desc: '请填写项目基础信息,点击下一步继续。', btn: '下一步' }
+    }
+  };
+
+  const btns = document.querySelectorAll('.theme-btn');
+  const canvas = document.getElementById('themeCanvas');
+  const metaPrimary = document.getElementById('metaPrimary');
+  const metaPrimaryHex = document.getElementById('metaPrimaryHex');
+  const metaRadius = document.getElementById('metaRadius');
+  const metaFont = document.getElementById('metaFont');
+  const metaDensity = document.getElementById('metaDensity');
+  const metaFeeling = document.getElementById('metaFeeling');
+  const cardTitle = document.getElementById('thCardTitle');
+  const cardDesc = document.getElementById('thCardDesc');
+  const cardBtn = document.getElementById('thCardBtn');
+
+  function pick(key) {
+    const t = themes[key];
+    if (!t) return;
+    btns.forEach(b => b.classList.toggle('is-active', b.dataset.theme === key));
+    canvas.style.setProperty('--th-primary', t.primary);
+    canvas.style.setProperty('--th-primary-fg', t.primaryFg);
+    canvas.style.setProperty('--th-bg', t.bg);
+    canvas.style.setProperty('--th-card', t.card);
+    canvas.style.setProperty('--th-text', t.text);
+    canvas.style.setProperty('--th-text-soft', t.textSoft);
+    canvas.style.setProperty('--th-border', t.border);
+    canvas.style.setProperty('--th-radius', t.radius);
+    canvas.style.setProperty('--th-font', t.font);
+    canvas.style.setProperty('--th-density-x', t.densityX);
+    canvas.style.setProperty('--th-density-y', t.densityY);
+    canvas.style.setProperty('--th-shadow', t.shadow);
+
+    metaPrimary.style.background = t.meta.primary;
+    metaPrimaryHex.textContent = t.meta.primary;
+    metaRadius.textContent = t.meta.radius;
+    metaFont.textContent = t.meta.font;
+    metaDensity.textContent = t.meta.density;
+    metaFeeling.textContent = t.meta.feeling;
+
+    cardTitle.textContent = t.copy.title;
+    cardDesc.textContent = t.copy.desc;
+    cardBtn.textContent = t.copy.btn;
+  }
+
+  btns.forEach(b => b.addEventListener('click', () => pick(b.dataset.theme)));
+  pick('default');
+})();
+
+// ==========================================================
+//  Roadmap modal
+// ==========================================================
+(function(){
+  var modal = document.getElementById('rm-modal');
+  if (!modal) return;
+  var openBtns = document.querySelectorAll('[data-rm-open]');
+  var closeBtns = modal.querySelectorAll('[data-rm-close]');
+  function open() { modal.hidden = false; document.body.style.overflow = 'hidden'; }
+  function close() { modal.hidden = true; document.body.style.overflow = ''; }
+  openBtns.forEach(function(b){ b.addEventListener('click', function(e){ e.preventDefault(); open(); }); });
+  closeBtns.forEach(function(b){ b.addEventListener('click', close); });
+  document.addEventListener('keydown', function(e){ if (e.key === 'Escape' && !modal.hidden) close(); });
+})();
+</script>
+
+<!-- 路线图弹窗 -->
+<div class="rm-modal" id="rm-modal" hidden>
+  <div class="rm-backdrop" data-rm-close></div>
+  <div class="rm-dialog" role="dialog" aria-label="完整路线图">
+    <button class="rm-close" data-rm-close aria-label="关闭">✕</button>
+    <div class="rm-header">
+      <div class="rm-tag">完整路线图 · ROADMAP</div>
+      <h3 class="rm-title">9 模块 <span class="rm-em">·</span> 28 篇</h3>
+      <p class="rm-sub">设计篇 4 模块 / 13 篇 + 工程篇 4 系列 / 13 篇 + K 选型 / 2 篇</p>
+    </div>
+    <div class="rm-body">
+      <div class="rm-mod">
+        <div class="rm-mod-key" style="color:var(--accent);">K · 生态选型 (NEW)</div>
+        <div class="rm-mod-list">
+          <a href="k1-ui-library-figma.html" class="rm-cell"><span class="rm-cell-code">K1</span><span class="rm-cell-name">UI 库 · shadcn vs Antd</span><span class="rm-cell-tier">基础</span></a>
+          <a href="k2-shadcn-customize-figma.html" class="rm-cell rm-cell-current"><span class="rm-cell-code">K2</span><span class="rm-cell-name">shadcn 改造 · 变成你家的</span><span class="rm-cell-tier rm-tier-current">基础</span></a>
+        </div>
+      </div>
+      <div class="rm-mod">
+        <div class="rm-mod-key">A · 单元素与组件</div>
+        <div class="rm-mod-list">
+          <a href="basics-figma.html" class="rm-cell"><span class="rm-cell-code">A0</span><span class="rm-cell-name">三件套 · HTML / CSS / JS</span><span class="rm-cell-tier">入门</span></a>
+          <a href="box-figma.html" class="rm-cell"><span class="rm-cell-code">A1</span><span class="rm-cell-name">盒子 · Auto Layout</span><span class="rm-cell-tier">基础</span></a>
+          <a href="components-figma.html" class="rm-cell"><span class="rm-cell-code">A2</span><span class="rm-cell-name">组件 · Variants &amp; Props</span><span class="rm-cell-tier">基础</span></a>
+          <a href="button-system-figma.html" class="rm-cell"><span class="rm-cell-code">A3</span><span class="rm-cell-name">Button System · 组件演化</span><span class="rm-cell-tier">进阶</span></a>
+        </div>
+      </div>
+      <div class="rm-mod">
+        <div class="rm-mod-key">B · 多组件协作</div>
+        <div class="rm-mod-list">
+          <a href="page-figma.html" class="rm-cell"><span class="rm-cell-code">B0</span><span class="rm-cell-name">拼页面 · 组件嵌套</span><span class="rm-cell-tier">入门</span></a>
+          <a href="data-flow-figma.html" class="rm-cell"><span class="rm-cell-code">B1</span><span class="rm-cell-name">数据流 · 概念</span><span class="rm-cell-tier">基础</span></a>
+          <a href="data-flow-cases-figma.html" class="rm-cell"><span class="rm-cell-code">B2</span><span class="rm-cell-name">数据流 · 实战 5 案例</span><span class="rm-cell-tier">进阶</span></a>
+        </div>
+      </div>
+      <div class="rm-mod">
+        <div class="rm-mod-key">C · 视觉系统</div>
+        <div class="rm-mod-list">
+          <a href="tokens-figma.html" class="rm-cell"><span class="rm-cell-code">C0</span><span class="rm-cell-name">Variables / Tokens 入门</span><span class="rm-cell-tier">入门</span></a>
+          <a href="colors-type-figma.html" class="rm-cell"><span class="rm-cell-code">C1</span><span class="rm-cell-name">Colors / Type / Spacing</span><span class="rm-cell-tier">基础</span></a>
+          <a href="theme-switch-figma.html" class="rm-cell"><span class="rm-cell-code">C2</span><span class="rm-cell-name">Theme 切换实战</span><span class="rm-cell-tier">进阶</span></a>
+        </div>
+      </div>
+      <div class="rm-mod">
+        <div class="rm-mod-key">D · 状态与交互</div>
+        <div class="rm-mod-list">
+          <a href="states-figma.html" class="rm-cell"><span class="rm-cell-code">D0</span><span class="rm-cell-name">视觉态 · 看得见的状态</span><span class="rm-cell-tier">入门</span></a>
+          <a href="interactive-figma.html" class="rm-cell"><span class="rm-cell-code">D1</span><span class="rm-cell-name">Interactive Component</span><span class="rm-cell-tier">基础</span></a>
+          <a href="transition-figma.html" class="rm-cell"><span class="rm-cell-code">D2</span><span class="rm-cell-name">动画 · Transition</span><span class="rm-cell-tier">进阶</span></a>
+        </div>
+      </div>
+      <div class="rm-mod">
+        <div class="rm-mod-key">F · 工程入门</div>
+        <div class="rm-mod-list">
+          <a href="f1-npm-figma.html" class="rm-cell"><span class="rm-cell-code">F1</span><span class="rm-cell-name">npm 是什么</span><span class="rm-cell-tier">入门</span></a>
+          <a href="f2-import-figma.html" class="rm-cell"><span class="rm-cell-code">F2</span><span class="rm-cell-name">import 与路径</span><span class="rm-cell-tier">入门</span></a>
+          <a href="f3-dev-build-figma.html" class="rm-cell"><span class="rm-cell-code">F3</span><span class="rm-cell-name">dev vs build</span><span class="rm-cell-tier">基础</span></a>
+          <a href="f4-hidden-files-figma.html" class="rm-cell"><span class="rm-cell-code">F4</span><span class="rm-cell-name">看不见的文件</span><span class="rm-cell-tier">基础</span></a>
+        </div>
+      </div>
+      <div class="rm-mod">
+        <div class="rm-mod-key">G · 版本控制</div>
+        <div class="rm-mod-list">
+          <a href="g1-commit-branch-figma.html" class="rm-cell"><span class="rm-cell-code">G1</span><span class="rm-cell-name">commit / branch</span><span class="rm-cell-tier">入门</span></a>
+          <a href="g2-conflict-figma.html" class="rm-cell"><span class="rm-cell-code">G2</span><span class="rm-cell-name">冲突怎么解</span><span class="rm-cell-tier">基础</span></a>
+          <a href="g3-pr-review-figma.html" class="rm-cell"><span class="rm-cell-code">G3</span><span class="rm-cell-name">PR / Review</span><span class="rm-cell-tier">进阶</span></a>
+        </div>
+      </div>
+      <div class="rm-mod">
+        <div class="rm-mod-key">H · 浏览器调试</div>
+        <div class="rm-mod-list">
+          <a href="h1-devtools-elements-figma.html" class="rm-cell"><span class="rm-cell-code">H1</span><span class="rm-cell-name">DevTools Elements</span><span class="rm-cell-tier">入门</span></a>
+          <a href="h2-console-error-figma.html" class="rm-cell"><span class="rm-cell-code">H2</span><span class="rm-cell-name">Console 报错</span><span class="rm-cell-tier">基础</span></a>
+          <a href="h3-network-figma.html" class="rm-cell"><span class="rm-cell-code">H3</span><span class="rm-cell-name">Network 面板</span><span class="rm-cell-tier">进阶</span></a>
+        </div>
+      </div>
+      <div class="rm-mod">
+        <div class="rm-mod-key">J · 上线</div>
+        <div class="rm-mod-list">
+          <a href="j1-dns-figma.html" class="rm-cell"><span class="rm-cell-code">J1</span><span class="rm-cell-name">DNS / 域名</span><span class="rm-cell-tier">基础</span></a>
+          <a href="j2-vercel-figma.html" class="rm-cell"><span class="rm-cell-code">J2</span><span class="rm-cell-name">Vercel 部署</span><span class="rm-cell-tier">基础</span></a>
+          <a href="j3-cache-cdn-figma.html" class="rm-cell"><span class="rm-cell-code">J3</span><span class="rm-cell-name">缓存 / CDN</span><span class="rm-cell-tier">进阶</span></a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

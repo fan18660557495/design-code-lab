@@ -1,0 +1,1202 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MCP 到底读了什么 — AI 看到的设计稿是啥</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,300..900&family=Geist:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Noto+Sans+SC:wght@300;400;500;700;900&family=Noto+Serif+SC:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f3eee5;
+    --bg-2: #ebe4d4;
+    --ink: #16161d;
+    --ink-soft: #4a4a55;
+    --ink-mute: #8a8a92;
+    --line: #d5cdba;
+    --line-soft: #e3dcca;
+    --accent: #ff4d2e;
+    --accent-soft: #ffe4dc;
+    --blue: #1677ff;
+    --blue-soft: #e6f0ff;
+    --green: #1f6b3a;
+    --green-soft: #d4ecdb;
+    --yellow: #ffcf3d;
+    --paper: #faf7f0;
+    /* JSON theme */
+    --code-bg: #16161d;
+    --code-fg: #d8d8e0;
+    --code-key: #ff8a6e;
+    --code-str: #a8e6a3;
+    --code-num: #8ec5ff;
+    --code-punc: #6e6e7a;
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'Geist', 'Noto Sans SC', system-ui, -apple-system, sans-serif;
+    font-size: 16px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    background-image: radial-gradient(circle at 1px 1px, rgba(22,22,29,0.05) 1px, transparent 0);
+    background-size: 24px 24px;
+  }
+
+  .display-cn { font-family: 'Noto Serif SC', 'Fraunces', serif; font-weight: 900; letter-spacing: -0.01em; }
+  .display-en { font-family: 'Fraunces', 'Noto Serif SC', serif; font-weight: 600; font-style: italic; letter-spacing: -0.02em; }
+  .mono { font-family: 'JetBrains Mono', monospace; }
+  .label { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-mute); }
+
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 0 32px; }
+
+  /* topbar */
+  .topbar { border-bottom: 1px dashed var(--line); padding: 16px 0; background: var(--bg); position: sticky; top: 0; z-index: 100; }
+  .topbar-inner { display: flex; justify-content: space-between; align-items: center; gap: 24px; flex-wrap: wrap; }
+  .brand { font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 600; }
+  .brand .dot { display: inline-block; width: 8px; height: 8px; background: var(--accent); border-radius: 50%; margin-right: 8px; vertical-align: middle; animation: pulse 2s ease-in-out infinite; }
+  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+  .nav-links { display: flex; gap: 18px; font-size: 13px; flex-wrap: wrap; }
+  .nav-links a { color: var(--ink-soft); text-decoration: none; transition: color 0.2s; }
+  .nav-links a:hover { color: var(--accent); }
+  a.brand { text-decoration: none; color: inherit; transition: color 0.2s; cursor: pointer; }
+  a.brand:hover { color: var(--accent); }
+  .brand-block { display: flex; align-items: center; min-width: 0; flex: 1; }
+  .brand-arrow { margin-right: 6px; color: var(--ink-mute); display: inline-block; transition: transform 0.2s, color 0.2s; }
+  .brand:hover .brand-arrow { color: var(--accent); transform: translateX(-2px); }
+  .brand-sep { margin: 0 10px; color: var(--ink-mute); font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 300; }
+  .brand-current { font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 500; color: var(--ink-soft); letter-spacing: 0.02em; }
+  @media (max-width: 760px) { .brand-sep, .brand-current { display: none; } }
+
+  /* hero */
+  .hero { padding: 100px 0 80px; position: relative; overflow: hidden; }
+  .hero-meta { display: flex; gap: 24px; margin-bottom: 32px; align-items: center; flex-wrap: wrap; }
+  .hero-meta .pill { padding: 6px 12px; border: 1px solid var(--ink); border-radius: 100px; font-size: 11px; font-family: 'JetBrains Mono', monospace; letter-spacing: 0.05em; }
+  .hero-meta .pill.fill { background: var(--ink); color: var(--bg); }
+  .hero h1 { font-family: 'Noto Serif SC', 'Fraunces', serif; font-weight: 900; font-size: clamp(46px, 6.5vw, 86px); line-height: 0.98; letter-spacing: -0.03em; margin: 0 0 24px; }
+  .hero h1 .em { font-family: 'Noto Serif SC', serif; font-weight: 500; color: var(--accent); }
+  .hero h1 .x { display: inline-block; transform: translateY(-0.05em); margin: 0 0.08em; color: var(--ink-mute); font-weight: 300; }
+  .hero p.lede { font-size: 20px; line-height: 1.5; max-width: 640px; color: var(--ink-soft); margin: 0 0 40px; }
+  .hero p.lede .em { font-family: 'Noto Serif SC', serif; color: var(--accent); font-weight: 500; }
+  .hero-grid { display: grid; grid-template-columns: 1.4fr 1fr; gap: 48px; align-items: end; }
+  @media (max-width: 880px) { .hero-grid { grid-template-columns: 1fr; } }
+  .hero-side { border-left: 1px dashed var(--line); padding-left: 24px; font-size: 13px; color: var(--ink-soft); }
+  .hero-side .row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px dashed var(--line); }
+  .hero-side .row:last-child { border-bottom: none; }
+  .hero-side .row .k { color: var(--ink-mute); font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.05em; text-transform: uppercase; }
+  .hero-side .row .v { font-weight: 500; }
+
+  /* section */
+  section { padding: 80px 0; border-top: 1px solid var(--line); position: relative; animation: fadeIn 0.6s ease-out backwards; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+  .section-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 48px; flex-wrap: wrap; gap: 16px; }
+  .section-num { font-family: 'JetBrains Mono', monospace; font-size: 13px; color: var(--ink-mute); letter-spacing: 0.1em; }
+  .section-num strong { color: var(--accent); }
+  .section-title { font-family: 'Noto Serif SC', serif; font-weight: 900; font-size: clamp(32px, 4.5vw, 52px); line-height: 1.05; letter-spacing: -0.02em; margin: 0; max-width: 18ch; }
+  .section-title .em { font-family: 'Noto Serif SC', serif; font-weight: 500; color: var(--accent); }
+  .section-sub { color: var(--ink-soft); font-size: 17px; max-width: 38ch; line-height: 1.55; margin: 0; }
+
+  .em { font-family: 'Noto Serif SC', serif; font-weight: 500; color: var(--accent); }
+
+  .hint-strip { margin-top: 16px; padding: 14px 18px; background: var(--accent-soft); border-left: 3px solid var(--accent); border-radius: 4px; font-size: 13px; color: var(--ink); line-height: 1.55; }
+  .hint-strip .hint-tag { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--accent); letter-spacing: 0.12em; margin-right: 10px; text-transform: uppercase; }
+
+  .quote-box { margin: 32px 0 0; padding: 24px 28px; background: var(--paper); border-left: 3px solid var(--ink); border-radius: 0 6px 6px 0; font-family: 'Noto Serif SC', serif; font-size: 18px; line-height: 1.55; color: var(--ink); font-weight: 500; }
+  .quote-box .quote-mark { font-family: 'Noto Serif SC', serif; color: var(--accent); font-size: 28px; line-height: 1; margin-right: 8px; font-weight: 500; }
+  .quote-box .quote-attr { display: block; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ink-mute); margin-top: 12px; letter-spacing: 0.05em; font-weight: 400; }
+
+  /* glossary */
+  .glossary { margin-top: 12px; background: var(--paper); border: 1px solid var(--line); border-radius: 8px; padding: 20px 24px; }
+  .glossary-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 14px; padding-bottom: 12px; border-bottom: 1px dashed var(--line); flex-wrap: wrap; gap: 8px; }
+  .glossary-tag { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--accent); letter-spacing: 0.12em; text-transform: uppercase; }
+  .glossary-title { font-family: 'Noto Serif SC', serif; font-size: 18px; font-weight: 700; margin: 0; }
+  .glossary-title .em { color: var(--accent); font-weight: 500; }
+  .glossary-sub { font-size: 12px; color: var(--ink-mute); font-family: 'JetBrains Mono', monospace; letter-spacing: 0.04em; }
+  .glossary-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+  @media (max-width: 880px) { .glossary-grid { grid-template-columns: 1fr 1fr; } }
+  @media (max-width: 600px) { .glossary-grid { grid-template-columns: 1fr; } }
+  .gl-item { border: 1px dashed var(--line); border-radius: 5px; padding: 12px 14px; background: var(--bg); transition: all 0.18s; }
+  .gl-item:hover { border-color: var(--accent); border-style: solid; background: var(--accent-soft); }
+  .gl-term { font-family: 'JetBrains Mono', monospace; font-size: 12.5px; font-weight: 600; color: var(--ink); margin-bottom: 4px; }
+  .gl-fig { font-size: 12.5px; color: var(--ink-soft); line-height: 1.5; }
+  .gl-fig strong { color: var(--ink); font-weight: 600; }
+  .gl-arrow { color: var(--accent); font-weight: 600; margin: 0 4px; }
+
+  /* §01 you-think vs actual (2-card compare) */
+  .think-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-top: 24px; }
+  @media (max-width: 880px) { .think-grid { grid-template-columns: 1fr; } }
+  .think-card {
+    background: var(--paper);
+    border: 1.5px solid var(--line);
+    border-radius: 8px;
+    padding: 28px 28px 24px;
+    position: relative;
+  }
+  .think-card.you { border-color: var(--ink-soft); background: #f7f4ec; }
+  .think-card.real { border-color: var(--accent); background: var(--accent-soft); }
+  .think-tag {
+    position: absolute; top: -12px; left: 24px;
+    background: var(--bg); padding: 2px 10px;
+    font-family: 'JetBrains Mono', monospace; font-size: 11px;
+    letter-spacing: 0.1em;
+  }
+  .think-card.you  .think-tag { color: var(--ink-soft); border: 1px solid var(--ink-soft); }
+  .think-card.real .think-tag { color: var(--accent); border: 1px solid var(--accent); }
+  .think-card h3 {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 20px;
+    font-weight: 800;
+    margin: 0 0 14px;
+    line-height: 1.3;
+  }
+  /* Mini Figma render of Login card */
+  .mini-figma {
+    margin: 14px 0;
+    padding: 24px 22px 26px;
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    width: 100%;
+    max-width: 280px;
+  }
+  .mini-figma .mf-title { font-family: 'Geist', sans-serif; font-size: 16px; font-weight: 700; color: #0a0a0a; margin: 0 0 4px; }
+  .mini-figma .mf-sub { font-size: 11.5px; color: #71717a; margin: 0 0 14px; }
+  .mini-figma .mf-label { font-size: 11px; color: #0a0a0a; font-weight: 500; margin-bottom: 4px; font-family: 'Geist', sans-serif; }
+  .mini-figma .mf-input {
+    border: 1px solid #e5e7eb;
+    border-radius: 6px;
+    padding: 6px 10px;
+    font-size: 11.5px;
+    color: #a1a1aa;
+    margin-bottom: 10px;
+    background: white;
+  }
+  .mini-figma .mf-btn {
+    background: #5B47FB;
+    color: white;
+    padding: 8px 14px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 500;
+    font-family: 'Geist', sans-serif;
+    text-align: center;
+    margin-top: 4px;
+  }
+  /* JSON preview (raw) */
+  .json-preview {
+    margin: 14px 0;
+    background: var(--code-bg);
+    color: var(--code-fg);
+    border-radius: 8px;
+    padding: 18px 20px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    line-height: 1.7;
+    max-width: 100%;
+    overflow-x: auto;
+    white-space: pre;
+  }
+  .json-preview .k { color: var(--code-key); }
+  .json-preview .s { color: var(--code-str); }
+  .json-preview .n { color: var(--code-num); }
+  .json-preview .p { color: var(--code-punc); }
+
+  .think-card p {
+    margin: 0;
+    font-size: 13.5px;
+    color: var(--ink-soft);
+    line-height: 1.6;
+  }
+  .think-card p strong { color: var(--ink); font-weight: 600; }
+
+  /* §02 JSON dissection (core, interactive) */
+  .ds-stage {
+    margin-top: 24px;
+    background: var(--paper);
+    border: 1.5px solid var(--ink);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  .ds-head {
+    padding: 18px 24px;
+    background: var(--bg-2);
+    border-bottom: 1px dashed var(--line);
+    display: flex; justify-content: space-between; align-items: baseline;
+    flex-wrap: wrap; gap: 12px;
+  }
+  .ds-head-title {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 17px;
+    font-weight: 800;
+    margin: 0;
+  }
+  .ds-head-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    color: var(--accent);
+    text-transform: uppercase;
+  }
+  .ds-body {
+    display: grid;
+    grid-template-columns: 1fr 1.3fr;
+    min-height: 560px;
+  }
+  @media (max-width: 980px) { .ds-body { grid-template-columns: 1fr; } }
+
+  .ds-figma {
+    padding: 32px 28px;
+    background: var(--bg);
+    border-right: 1px solid var(--line);
+    display: flex; align-items: center; justify-content: center;
+    position: relative;
+  }
+  @media (max-width: 980px) { .ds-figma { border-right: none; border-bottom: 1px solid var(--line); } }
+  .ds-figma-tag {
+    position: absolute; top: 16px; left: 24px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--ink-mute);
+    letter-spacing: 0.08em;
+  }
+  .ds-card {
+    width: 100%;
+    max-width: 320px;
+    background: white;
+    border: 1.5px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 28px 26px 30px;
+    transition: box-shadow 0.3s;
+  }
+  .ds-region {
+    border: 2px solid transparent;
+    border-radius: 6px;
+    padding: 4px 8px;
+    margin: -4px -8px;
+    transition: all 0.2s;
+    cursor: pointer;
+    position: relative;
+  }
+  .ds-region:hover { background: rgba(255,77,46,0.06); }
+  .ds-region.is-active {
+    border-color: var(--accent);
+    background: rgba(255,77,46,0.1);
+    box-shadow: 0 0 0 3px rgba(255,77,46,0.1);
+  }
+  .ds-region.is-active::after {
+    content: attr(data-anno);
+    position: absolute;
+    top: -8px; left: 100%;
+    transform: translate(8px, -100%);
+    background: var(--ink);
+    color: white;
+    padding: 8px 12px;
+    border-radius: 5px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10.5px;
+    white-space: nowrap;
+    z-index: 5;
+  }
+  .dsc-title { font-family: 'Geist', sans-serif; font-size: 22px; font-weight: 700; color: #0a0a0a; margin: 0 0 6px; line-height: 1.2; }
+  .dsc-sub { font-size: 13px; color: #71717a; margin: 0 0 22px; }
+  .dsc-field { margin-bottom: 14px; }
+  .dsc-field-label { font-size: 12px; color: #0a0a0a; font-weight: 500; margin-bottom: 6px; font-family: 'Geist', sans-serif; }
+  .dsc-input {
+    border: 1px solid #e5e7eb;
+    border-radius: 6px;
+    padding: 9px 12px;
+    font-size: 13px;
+    color: #a1a1aa;
+    background: white;
+  }
+  .dsc-btn {
+    background: #5B47FB;
+    color: white;
+    padding: 11px 16px;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 500;
+    font-family: 'Geist', sans-serif;
+    text-align: center;
+    margin-top: 8px;
+  }
+
+  .ds-code {
+    background: var(--code-bg);
+    color: var(--code-fg);
+    padding: 28px 24px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12.5px;
+    line-height: 1.85;
+    overflow-x: auto;
+    position: relative;
+  }
+  .ds-code-tag {
+    position: absolute;
+    top: 12px; right: 16px;
+    font-size: 9.5px;
+    color: rgba(255,255,255,0.4);
+    letter-spacing: 0.1em;
+  }
+  .ds-line {
+    display: block;
+    padding: 0 8px;
+    margin: 0 -8px;
+    border-radius: 3px;
+    cursor: pointer;
+    transition: background 0.18s;
+    border-left: 2px solid transparent;
+  }
+  .ds-line:hover { background: rgba(255,138,110,0.08); }
+  .ds-line.is-active {
+    background: rgba(255,138,110,0.18);
+    border-left-color: var(--code-key);
+  }
+  .ds-code .k { color: var(--code-key); }
+  .ds-code .s { color: var(--code-str); }
+  .ds-code .n { color: var(--code-num); }
+  .ds-code .p { color: var(--code-punc); }
+  .ds-code .c { color: #6e6e7a; font-style: italic; }
+
+  .ds-anno {
+    padding: 20px 24px;
+    background: var(--paper);
+    border-top: 1px dashed var(--line);
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 16px;
+    align-items: start;
+  }
+  @media (max-width: 600px) { .ds-anno { grid-template-columns: 1fr; } }
+  .ds-anno-key {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--accent);
+    font-weight: 600;
+    padding: 4px 10px;
+    background: var(--accent-soft);
+    border-radius: 4px;
+    letter-spacing: 0.04em;
+    align-self: start;
+    white-space: nowrap;
+  }
+  .ds-anno-body {
+    font-size: 13.5px;
+    color: var(--ink-soft);
+    line-height: 1.65;
+  }
+  .ds-anno-body strong { color: var(--ink); font-weight: 600; }
+  .ds-anno-body .designer-says {
+    color: var(--accent);
+    font-family: 'Noto Serif SC', serif;
+    font-weight: 500;
+    font-style: italic;
+  }
+
+  /* §03 three Button paintings */
+  .btn3-grid { margin-top: 24px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+  @media (max-width: 1000px) { .btn3-grid { grid-template-columns: 1fr; } }
+  .btn3-card {
+    background: var(--paper);
+    border: 1.5px solid var(--line);
+    border-radius: 8px;
+    overflow: hidden;
+    display: flex; flex-direction: column;
+    position: relative;
+  }
+  .btn3-card.a { border-color: var(--green); }
+  .btn3-card.b { border-color: var(--yellow); }
+  .btn3-card.c { border-color: var(--accent); }
+  .btn3-head {
+    padding: 16px 20px;
+    border-bottom: 1px dashed rgba(0,0,0,0.1);
+    background: rgba(255,255,255,0.4);
+  }
+  .btn3-head-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    margin-bottom: 4px;
+  }
+  .btn3-card.a .btn3-head-tag { color: var(--green); }
+  .btn3-card.b .btn3-head-tag { color: #c5970b; }
+  .btn3-card.c .btn3-head-tag { color: var(--accent); }
+  .btn3-title {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 17px;
+    font-weight: 800;
+    color: var(--ink);
+    margin: 0;
+    line-height: 1.3;
+  }
+
+  .btn3-render {
+    padding: 32px 24px;
+    background: white;
+    display: flex; align-items: center; justify-content: center;
+    border-bottom: 1px solid var(--line);
+  }
+  .btn3-render .demo-btn {
+    background: #5B47FB;
+    color: white;
+    padding: 10px 24px;
+    border-radius: 12px;
+    font-family: 'Geist', sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+  }
+
+  .btn3-json {
+    background: var(--code-bg);
+    color: var(--code-fg);
+    padding: 18px 20px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    line-height: 1.7;
+    flex: 1;
+    overflow-x: auto;
+    white-space: pre;
+  }
+  .btn3-json .k { color: var(--code-key); }
+  .btn3-json .s { color: var(--code-str); }
+  .btn3-json .n { color: var(--code-num); }
+  .btn3-json .p { color: var(--code-punc); }
+  .btn3-json .c { color: #6e6e7a; font-style: italic; }
+
+  .btn3-result {
+    padding: 16px 20px;
+    background: var(--paper);
+    border-top: 1px dashed var(--line);
+  }
+  .btn3-acc {
+    display: flex; justify-content: space-between; align-items: baseline;
+    margin-bottom: 8px;
+  }
+  .btn3-acc-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    color: var(--ink-mute);
+    text-transform: uppercase;
+  }
+  .btn3-acc-num {
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    font-size: 26px;
+    font-weight: 500;
+    line-height: 1;
+  }
+  .btn3-card.a .btn3-acc-num { color: var(--green); }
+  .btn3-card.b .btn3-acc-num { color: #c5970b; }
+  .btn3-card.c .btn3-acc-num { color: var(--accent); }
+  .btn3-bar {
+    height: 6px;
+    background: rgba(0,0,0,0.06);
+    border-radius: 100px;
+    overflow: hidden;
+    margin-bottom: 12px;
+  }
+  .btn3-bar-fill {
+    height: 100%;
+    border-radius: 100px;
+  }
+  .btn3-card.a .btn3-bar-fill { background: var(--green); }
+  .btn3-card.b .btn3-bar-fill { background: var(--yellow); }
+  .btn3-card.c .btn3-bar-fill { background: var(--accent); }
+  .btn3-note {
+    font-size: 12.5px;
+    color: var(--ink-soft);
+    line-height: 1.55;
+  }
+  .btn3-note strong { color: var(--ink); }
+
+  /* §04 cheatsheet */
+  .see-stage { margin-top: 24px; }
+  .see-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  .see-table th, .see-table td {
+    text-align: left;
+    padding: 14px 18px;
+    border-bottom: 1px dashed var(--line);
+    vertical-align: top;
+    font-size: 13.5px;
+  }
+  .see-table tr:last-child td { border-bottom: none; }
+  .see-table thead th {
+    background: var(--ink);
+    color: white;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    font-weight: 500;
+  }
+  .see-table .item { font-weight: 600; color: var(--ink); width: 30%; }
+  .see-table .mark { width: 14%; text-align: center; }
+  .see-table .desc { color: var(--ink-soft); line-height: 1.55; }
+  .see-table .desc strong { color: var(--ink); }
+  .see-pill {
+    display: inline-block;
+    padding: 2px 10px;
+    border-radius: 100px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    font-weight: 600;
+  }
+  .see-pill.yes  { background: var(--green-soft); color: var(--green); }
+  .see-pill.no   { background: var(--accent-soft); color: var(--accent); }
+  .see-pill.part { background: #fff3c4; color: #8a6500; }
+
+  .habits-grid {
+    margin-top: 24px;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 14px;
+  }
+  @media (max-width: 980px) { .habits-grid { grid-template-columns: 1fr 1fr; } }
+  @media (max-width: 600px) { .habits-grid { grid-template-columns: 1fr; } }
+  .habit-card {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 20px 20px 22px;
+    transition: all 0.2s;
+  }
+  .habit-card:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(22,22,29,0.06); border-color: var(--accent); }
+  .habit-num {
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    font-size: 26px;
+    color: var(--accent);
+    font-weight: 500;
+    line-height: 1;
+    margin-bottom: 10px;
+  }
+  .habit-title {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 15px;
+    font-weight: 700;
+    margin: 0 0 8px;
+    line-height: 1.4;
+  }
+  .habit-title .em { color: var(--accent); font-weight: 500; }
+  .habit-text {
+    font-size: 12.5px;
+    color: var(--ink-soft);
+    line-height: 1.55;
+    margin: 0;
+  }
+  .habit-text strong { color: var(--ink); font-weight: 600; }
+
+  /* Next post */
+  .next-post { margin-top: 48px; padding: 32px 36px; background: var(--ink); color: var(--bg); border-radius: 8px; display: grid; grid-template-columns: 1fr auto; gap: 32px; align-items: center; text-decoration: none; transition: transform 0.2s ease, box-shadow 0.2s ease; position: relative; overflow: hidden; }
+  .next-post::before { content: ''; position: absolute; inset: 0; background: radial-gradient(circle at 100% 0%, rgba(255,77,46,0.12), transparent 55%); pointer-events: none; }
+  .next-post:hover { transform: translateY(-2px); box-shadow: 0 14px 36px rgba(22,22,29,0.22); }
+  @media (max-width: 720px) { .next-post { grid-template-columns: 1fr; padding: 24px; gap: 20px; } }
+  .next-post .np-tag { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--accent); letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 12px; display: inline-block; }
+  .next-post h4 { font-family: 'Noto Serif SC', serif; font-size: 26px; margin: 0 0 10px; font-weight: 700; color: white; line-height: 1.25; letter-spacing: -0.01em; }
+  .next-post h4 .em { font-family: 'Noto Serif SC', serif; font-weight: 500; color: var(--accent); }
+  .next-post p { margin: 0; color: rgba(255,255,255,0.72); font-size: 14px; line-height: 1.65; max-width: 560px; }
+  .next-post p strong { color: white; font-weight: 600; }
+  .next-post .np-cta { display: inline-flex; align-items: center; gap: 10px; padding: 14px 24px; background: var(--accent); color: white; border-radius: 4px; font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 500; letter-spacing: 0.04em; white-space: nowrap; transition: background 0.18s, color 0.18s, transform 0.18s; position: relative; z-index: 1; }
+  .next-post:hover .np-cta { background: white; color: var(--ink); transform: translateX(2px); }
+  .next-post .np-cta .arr { font-family: 'Fraunces', serif; font-style: italic; font-size: 18px; font-weight: 500; }
+
+  /* footer */
+  footer { border-top: 1px solid var(--line); padding: 56px 0 64px; background: var(--bg); }
+  .byline-wrap { position: relative; }
+  .byline { display: flex; gap: 28px; align-items: center; padding-bottom: 32px; border-bottom: 1px dashed var(--line); margin-bottom: 24px; position: relative; }
+  .byline::before { content: ''; position: absolute; top: -56px; left: 0; width: 32px; height: 1px; background: var(--accent); }
+  .byline .avatar { width: 96px; height: 96px; border-radius: 50%; object-fit: cover; flex-shrink: 0; border: 3px solid var(--paper); box-shadow: 0 0 0 1px var(--line), 0 6px 20px rgba(22,22,29,0.10); background: var(--paper); }
+  .byline-label { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ink-mute); letter-spacing: 0.18em; margin-bottom: 8px; }
+  .byline-label .dot { display: inline-block; width: 6px; height: 6px; background: var(--accent); border-radius: 50%; margin-right: 6px; vertical-align: 1px; }
+  .byline-name { font-family: 'Noto Serif SC', 'Fraunces', serif; font-size: clamp(28px, 4vw, 40px); font-weight: 700; line-height: 1.05; letter-spacing: -0.01em; margin: 0 0 8px; }
+  .byline-name .em { font-family: 'Noto Serif SC', serif; font-weight: 500; color: var(--accent); }
+  .byline-tag { font-size: 14px; color: var(--ink-soft); line-height: 1.55; margin: 0; max-width: 52ch; }
+  .footer-meta { text-align: center; font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--ink-mute); letter-spacing: 0.05em; }
+  .footer-meta .heart { color: var(--accent); }
+  .footer-meta .mono { color: var(--ink-soft); font-weight: 500; }
+  @media (max-width: 600px) { .byline { flex-direction: column; text-align: center; align-items: center; gap: 16px; } }
+  .byline-group, .byline-wrap.byline-group { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 28px; }
+  .byline-group .byline { display: flex; gap: 16px; align-items: flex-start; margin: 0; min-width: 0; padding-bottom: 0; border-bottom: none; }
+  .byline-group .avatar { width: 56px; height: 56px; flex-shrink: 0; }
+  .byline-group .byline-meta { min-width: 0; }
+  .byline-group .byline-name { font-size: 18px; }
+  .byline-group .byline-tag { font-size: 12px; line-height: 1.55; }
+  @media (max-width: 700px) {
+    .byline-group, .byline-wrap.byline-group { grid-template-columns: 1fr; gap: 18px; }
+    .byline-group .byline + .byline { padding-top: 18px; border-top: 1px dashed var(--line); }
+  }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="wrap topbar-inner">
+    <div class="brand-block"><a href="index.html" class="brand"><span class="brand-arrow">←</span><span class="dot"></span>AI LABBOOK</a><span class="brand-sep">/</span><span class="brand-current">K4 · MCP 读了什么</span></div>
+    <nav class="nav-links">
+      <a href="k3-granularity-figma.html">← K3</a>
+      <a href="book.html#vol-3">路线图</a>
+    </nav>
+  </div>
+</div>
+
+<header class="hero">
+  <div class="wrap">
+    <div class="hero-meta">
+      <span class="pill fill">实验互动 · INTERACTIVE</span>
+      <span class="pill">2026 · 设计 × 代码</span>
+      <span class="pill">K4 · 基础 · AI 协作</span>
+      <span class="label">阅读时长 ≈ 10 分钟</span>
+    </div>
+    <div class="hero-grid">
+      <div>
+        <h1>
+          <span class="display-cn">AI 通过 MCP</span><br>
+          <span class="display-cn">读你 Figma ——</span><br>
+          <span class="display-cn">到底<span class="em">读了啥</span>?</span>
+        </h1>
+        <p class="lede">
+          你以为它看到一张漂亮卡片 ——
+          实际它看到的是<span class="em">一坨 JSON</span>。<br>
+          搞清楚 AI 拿到什么数据,<strong style="color:var(--ink);">你才知道为啥还原不准</strong>。
+        </p>
+      </div>
+      <div class="hero-side">
+        <div class="row"><span class="k">本页讲什么</span><span class="v">MCP 读到的真实 JSON</span></div>
+        <div class="row"><span class="k">含互动</span><span class="v">JSON 拆解 / 三种画法</span></div>
+        <div class="row"><span class="k">面向</span><span class="v">设计师 · 给 AI 喂稿</span></div>
+        <div class="row"><span class="k">前置知识</span><span class="v">K3 · 颗粒度</span></div>
+      </div>
+    </div>
+
+    <div class="glossary" style="margin-top:40px;">
+      <div class="glossary-head">
+        <div>
+          <div class="glossary-tag">GLOSSARY · 词汇表</div>
+          <h3 class="glossary-title">先翻几个<span class="em">字段名</span></h3>
+        </div>
+        <span class="glossary-sub">6 个词 · §02 会反复看到</span>
+      </div>
+      <div class="glossary-grid">
+        <div class="gl-item">
+          <div class="gl-term">node / 节点</div>
+          <div class="gl-fig">JSON 里的<strong>一个图层</strong> <span class="gl-arrow">≈</span> Figma 里的一个 Frame / Text / Component instance</div>
+        </div>
+        <div class="gl-item">
+          <div class="gl-term">type</div>
+          <div class="gl-fig">节点类型:<strong>FRAME / TEXT / INSTANCE / RECTANGLE</strong> —— AI 用这个分辨"这是什么"</div>
+        </div>
+        <div class="gl-item">
+          <div class="gl-term">fills</div>
+          <div class="gl-fig">填充数组:你画的<strong>颜色 / 渐变 / 图</strong>都在这</div>
+        </div>
+        <div class="gl-item">
+          <div class="gl-term">characters</div>
+          <div class="gl-fig">文本节点的<strong>字面内容</strong> —— "登录账号" 这种</div>
+        </div>
+        <div class="gl-item">
+          <div class="gl-term">boundVariables</div>
+          <div class="gl-fig"><strong>绑了哪个 variable</strong>(token)—— 最值钱的字段</div>
+        </div>
+        <div class="gl-item">
+          <div class="gl-term">mainComponent</div>
+          <div class="gl-fig"><strong>引用的主组件</strong>是哪一个 —— 区分 instance 和手画</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- §01 you-think vs actual -->
+<section id="think">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>01</strong> / 你以为</div>
+        <h2 class="section-title">你以为<br>vs <span class="em">实际</span>。</h2>
+      </div>
+      <p class="section-sub">
+        设计师扔 Figma 链接给 AI —— 你以为它看到的跟你眼睛看到的一样。
+        <strong>差太远了</strong>。
+      </p>
+    </div>
+
+    <div class="think-grid">
+      <div class="think-card you">
+        <span class="think-tag">YOU THINK · 你以为</span>
+        <h3>AI 看到一张<br>漂亮的登录卡片</h3>
+        <div class="mini-figma">
+          <div class="mf-title">登录账号</div>
+          <div class="mf-sub">欢迎回来</div>
+          <div class="mf-label">Email</div>
+          <div class="mf-input">you@example.com</div>
+          <div class="mf-label">密码</div>
+          <div class="mf-input">••••••••</div>
+          <div class="mf-btn">继续</div>
+        </div>
+        <p><strong>就像你眼睛看到的</strong> —— 留白合理、颜色和谐、按钮显眼。AI 看一眼就懂"这是登录页,紫色按钮,圆角"。</p>
+      </div>
+
+      <div class="think-card real">
+        <span class="think-tag">ACTUALLY · 实际</span>
+        <h3>AI 拿到的是<br>一坨 <span class="em" style="color:var(--accent);">JSON</span></h3>
+        <div class="json-preview"><span class="p">{</span>
+  <span class="k">"type"</span><span class="p">:</span> <span class="s">"FRAME"</span><span class="p">,</span>
+  <span class="k">"name"</span><span class="p">:</span> <span class="s">"LoginCard"</span><span class="p">,</span>
+  <span class="k">"width"</span><span class="p">:</span> <span class="n">320</span><span class="p">,</span> <span class="k">"height"</span><span class="p">:</span> <span class="n">420</span><span class="p">,</span>
+  <span class="k">"fills"</span><span class="p">:</span> <span class="p">[{</span> <span class="k">"color"</span><span class="p">:</span> <span class="p">{...}</span> <span class="p">}],</span>
+  <span class="k">"cornerRadius"</span><span class="p">:</span> <span class="n">12</span><span class="p">,</span>
+  <span class="k">"children"</span><span class="p">:</span> <span class="p">[{</span>
+    <span class="k">"type"</span><span class="p">:</span> <span class="s">"TEXT"</span><span class="p">,</span>
+    <span class="k">"characters"</span><span class="p">:</span> <span class="s">"登录账号"</span>
+  <span class="p">},</span> <span class="p">{</span>
+    <span class="k">"type"</span><span class="p">:</span> <span class="s">"INSTANCE"</span><span class="p">,</span>
+    <span class="k">"mainComponent"</span><span class="p">:</span> <span class="p">{...}</span>
+  <span class="p">},</span> <span class="p">...</span> <span class="p">]</span>
+<span class="p">}</span></div>
+        <p><strong>没有"美感"概念</strong>。AI 拿到的就是字段。它靠这些字段<strong>推理</strong>"这看起来像登录页"。<br>稿子里的每一个图层,都是 JSON 里的一个节点。</p>
+      </div>
+    </div>
+
+    <div class="quote-box">
+      <span class="quote-mark">"</span>
+      AI 的眼睛 = <span class="em">解析 JSON 的眼睛</span>。
+      <strong style="color:var(--ink);">你怎么画</strong>,JSON 就怎么写;JSON 怎么写,AI 就怎么读。
+    </div>
+  </div>
+</section>
+
+<!-- §02 JSON dissection (CORE) -->
+<section id="dissect">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>02</strong> / 拆 JSON</div>
+        <h2 class="section-title">一个登录卡 ·<br><span class="em">逐字段</span>拆开看。</h2>
+      </div>
+      <p class="section-sub">
+        左边是真实 Figma 渲染,右边是 AI 通过 MCP 读到的 JSON。
+        <strong>点 JSON 任意一行</strong>,左边对应位置高亮 + 弹注释。
+      </p>
+    </div>
+
+    <div class="hint-strip">
+      <span class="hint-tag">⭐⭐⭐ 互动</span>点右边任意一段 JSON,看看那段在 Figma 里<strong>对应你画的什么</strong>。
+    </div>
+
+    <div class="ds-stage">
+      <div class="ds-head">
+        <h3 class="ds-head-title">LoginCard · 真实 frame · 真实 JSON</h3>
+        <span class="ds-head-tag">CLICK ANY LINE · 点 JSON 行</span>
+      </div>
+
+      <div class="ds-body">
+        <!-- left: Figma render -->
+        <div class="ds-figma">
+          <span class="ds-figma-tag">FIGMA · 渲染图</span>
+          <div class="ds-card" id="dsCard">
+            <div class="ds-region" data-region="frame" data-anno="← frame · 整个登录卡">
+              <div class="ds-region" data-region="title" data-anno="← TEXT 节点 · '登录账号'">
+                <h3 class="dsc-title">登录账号</h3>
+                <p class="dsc-sub">欢迎回来</p>
+              </div>
+              <div class="ds-region" data-region="input1" data-anno="← INSTANCE · Input/default">
+                <div class="dsc-field">
+                  <div class="dsc-field-label">Email</div>
+                  <div class="dsc-input">you@example.com</div>
+                </div>
+              </div>
+              <div class="ds-region" data-region="input2" data-anno="← INSTANCE · Input/default">
+                <div class="dsc-field">
+                  <div class="dsc-field-label">密码</div>
+                  <div class="dsc-input">••••••••</div>
+                </div>
+              </div>
+              <div class="ds-region" data-region="button" data-anno="← INSTANCE · Button/primary · 绑了 --primary">
+                <div class="dsc-btn">继续</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- right: JSON -->
+        <div class="ds-code">
+          <span class="ds-code-tag">application/json</span>
+<pre><span class="ds-line" data-region="frame"><span class="p">{</span> <span class="c">// LoginCard frame</span></span>
+<span class="ds-line" data-region="frame">  <span class="k">"type"</span><span class="p">:</span> <span class="s">"FRAME"</span><span class="p">,</span></span>
+<span class="ds-line" data-region="frame">  <span class="k">"name"</span><span class="p">:</span> <span class="s">"LoginCard"</span><span class="p">,</span></span>
+<span class="ds-line" data-region="frame">  <span class="k">"absoluteBoundingBox"</span><span class="p">:</span> <span class="p">{</span> <span class="k">"x"</span><span class="p">:</span> <span class="n">0</span><span class="p">,</span> <span class="k">"y"</span><span class="p">:</span> <span class="n">0</span><span class="p">,</span> <span class="k">"width"</span><span class="p">:</span> <span class="n">320</span><span class="p">,</span> <span class="k">"height"</span><span class="p">:</span> <span class="n">420</span> <span class="p">},</span></span>
+<span class="ds-line" data-region="frame">  <span class="k">"fills"</span><span class="p">:</span> <span class="p">[{</span> <span class="k">"type"</span><span class="p">:</span> <span class="s">"SOLID"</span><span class="p">,</span> <span class="k">"color"</span><span class="p">:</span> <span class="p">{</span> <span class="k">"r"</span><span class="p">:</span> <span class="n">1</span><span class="p">,</span> <span class="k">"g"</span><span class="p">:</span> <span class="n">1</span><span class="p">,</span> <span class="k">"b"</span><span class="p">:</span> <span class="n">1</span> <span class="p">}</span> <span class="p">}],</span></span>
+<span class="ds-line" data-region="frame">  <span class="k">"cornerRadius"</span><span class="p">:</span> <span class="n">12</span><span class="p">,</span></span>
+<span class="ds-line" data-region="frame">  <span class="k">"children"</span><span class="p">:</span> <span class="p">[</span></span>
+<span class="ds-line" data-region="title">    <span class="p">{</span> <span class="k">"type"</span><span class="p">:</span> <span class="s">"TEXT"</span><span class="p">,</span> <span class="k">"name"</span><span class="p">:</span> <span class="s">"Title"</span><span class="p">,</span></span>
+<span class="ds-line" data-region="title">      <span class="k">"characters"</span><span class="p">:</span> <span class="s">"登录账号"</span><span class="p">,</span></span>
+<span class="ds-line" data-region="title">      <span class="k">"style"</span><span class="p">:</span> <span class="p">{</span> <span class="k">"fontFamily"</span><span class="p">:</span> <span class="s">"Geist"</span><span class="p">,</span> <span class="k">"fontSize"</span><span class="p">:</span> <span class="n">22</span><span class="p">,</span> <span class="k">"fontWeight"</span><span class="p">:</span> <span class="n">700</span> <span class="p">}</span> <span class="p">},</span></span>
+<span class="ds-line" data-region="input1">    <span class="p">{</span> <span class="k">"type"</span><span class="p">:</span> <span class="s">"INSTANCE"</span><span class="p">,</span> <span class="k">"name"</span><span class="p">:</span> <span class="s">"Email Input"</span><span class="p">,</span></span>
+<span class="ds-line" data-region="input1">      <span class="k">"mainComponent"</span><span class="p">:</span> <span class="p">{</span> <span class="k">"id"</span><span class="p">:</span> <span class="s">"Input/default"</span> <span class="p">},</span></span>
+<span class="ds-line" data-region="input1">      <span class="k">"componentProperties"</span><span class="p">:</span> <span class="p">{</span> <span class="k">"Label"</span><span class="p">:</span> <span class="s">"Email"</span><span class="p">,</span> <span class="k">"Placeholder"</span><span class="p">:</span> <span class="s">"you@..."</span> <span class="p">}</span> <span class="p">},</span></span>
+<span class="ds-line" data-region="input2">    <span class="p">{</span> <span class="k">"type"</span><span class="p">:</span> <span class="s">"INSTANCE"</span><span class="p">,</span> <span class="k">"name"</span><span class="p">:</span> <span class="s">"Password Input"</span><span class="p">,</span></span>
+<span class="ds-line" data-region="input2">      <span class="k">"mainComponent"</span><span class="p">:</span> <span class="p">{</span> <span class="k">"id"</span><span class="p">:</span> <span class="s">"Input/default"</span> <span class="p">},</span></span>
+<span class="ds-line" data-region="input2">      <span class="k">"componentProperties"</span><span class="p">:</span> <span class="p">{</span> <span class="k">"Label"</span><span class="p">:</span> <span class="s">"密码"</span><span class="p">,</span> <span class="k">"Type"</span><span class="p">:</span> <span class="s">"password"</span> <span class="p">}</span> <span class="p">},</span></span>
+<span class="ds-line" data-region="button">    <span class="p">{</span> <span class="k">"type"</span><span class="p">:</span> <span class="s">"INSTANCE"</span><span class="p">,</span> <span class="k">"name"</span><span class="p">:</span> <span class="s">"Submit Button"</span><span class="p">,</span></span>
+<span class="ds-line" data-region="button">      <span class="k">"mainComponent"</span><span class="p">:</span> <span class="p">{</span> <span class="k">"id"</span><span class="p">:</span> <span class="s">"Button/primary"</span> <span class="p">},</span></span>
+<span class="ds-line" data-region="button">      <span class="k">"boundVariables"</span><span class="p">:</span> <span class="p">{</span> <span class="k">"fills"</span><span class="p">:</span> <span class="p">[{</span> <span class="k">"id"</span><span class="p">:</span> <span class="s">"VariableID:--primary"</span> <span class="p">}]</span> <span class="p">},</span></span>
+<span class="ds-line" data-region="button">      <span class="k">"componentProperties"</span><span class="p">:</span> <span class="p">{</span> <span class="k">"Label"</span><span class="p">:</span> <span class="s">"继续"</span> <span class="p">}</span> <span class="p">}</span></span>
+<span class="ds-line" data-region="frame">  <span class="p">]</span></span>
+<span class="ds-line" data-region="frame"><span class="p">}</span></span></pre>
+        </div>
+      </div>
+
+      <div class="ds-anno">
+        <span class="ds-anno-key" id="dsKey">frame</span>
+        <div class="ds-anno-body" id="dsBody">
+          <strong>这是整张卡片的 frame</strong> —— AI 看到 type 是 "FRAME",于是知道这是个"容器";看到 cornerRadius=12,知道有圆角;看到 width=320, height=420,知道大小。
+          <br><span class="designer-says">设计师视角:</span>你在 Figma 里点这个 frame 看到的属性 = AI 看到的字段。<strong>所以图层命名很重要</strong> —— AI 也读得到 "LoginCard" 这个名字。
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- §03 three Button paintings -->
+<section id="three-btn">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>03</strong> / 三种画法</div>
+        <h2 class="section-title">同一个按钮 ·<br>AI 读到<span class="em">天差地别</span>。</h2>
+      </div>
+      <p class="section-sub">
+        视觉上完全一样的紫色"继续"按钮 ——
+        三种画法在 JSON 里<strong>暴露的信息完全不同</strong>。
+        AI 拿到多少 context,直接决定还原度。
+      </p>
+    </div>
+
+    <div class="btn3-grid">
+      <div class="btn3-card a">
+        <div class="btn3-head">
+          <div class="btn3-head-tag">A · 推荐</div>
+          <h3 class="btn3-title">主组件 + variant + variable</h3>
+        </div>
+        <div class="btn3-render">
+          <div class="demo-btn">继续</div>
+        </div>
+        <div class="btn3-json"><span class="p">{</span>
+  <span class="k">"type"</span><span class="p">:</span> <span class="s">"INSTANCE"</span><span class="p">,</span>
+  <span class="k">"name"</span><span class="p">:</span> <span class="s">"Button/primary"</span><span class="p">,</span>
+  <span class="k">"mainComponent"</span><span class="p">:</span> <span class="p">{</span>
+    <span class="k">"id"</span><span class="p">:</span> <span class="s">"Btn:1:5"</span>
+  <span class="p">},</span>
+  <span class="k">"componentProperties"</span><span class="p">:</span> <span class="p">{</span>
+    <span class="k">"Variant"</span><span class="p">:</span> <span class="s">"primary"</span><span class="p">,</span>
+    <span class="k">"Size"</span><span class="p">:</span> <span class="s">"md"</span>
+  <span class="p">},</span>
+  <span class="k">"boundVariables"</span><span class="p">:</span> <span class="p">{</span>
+    <span class="k">"fills"</span><span class="p">:</span> <span class="p">[{</span>
+      <span class="k">"id"</span><span class="p">:</span> <span class="s">"--primary"</span>
+    <span class="p">}]</span>
+  <span class="p">}</span>
+<span class="p">}</span></div>
+        <div class="btn3-result">
+          <div class="btn3-acc">
+            <span class="btn3-acc-label">还原度</span>
+            <span class="btn3-acc-num">~95%</span>
+          </div>
+          <div class="btn3-bar"><div class="btn3-bar-fill" style="width:95%;"></div></div>
+          <p class="btn3-note">AI 知道这是 <strong>Button 组件的 primary variant</strong>,绑了 <strong>--primary token</strong>。<strong>三层信息全有</strong>:类型 / 变体 / 主题绑定。</p>
+        </div>
+      </div>
+
+      <div class="btn3-card b">
+        <div class="btn3-head">
+          <div class="btn3-head-tag">B · 凑合</div>
+          <h3 class="btn3-title">主组件 instance + 硬色值</h3>
+        </div>
+        <div class="btn3-render">
+          <div class="demo-btn">继续</div>
+        </div>
+        <div class="btn3-json"><span class="p">{</span>
+  <span class="k">"type"</span><span class="p">:</span> <span class="s">"INSTANCE"</span><span class="p">,</span>
+  <span class="k">"name"</span><span class="p">:</span> <span class="s">"Button"</span><span class="p">,</span>
+  <span class="k">"mainComponent"</span><span class="p">:</span> <span class="p">{</span>
+    <span class="k">"id"</span><span class="p">:</span> <span class="s">"Btn:1:5"</span>
+  <span class="p">},</span>
+  <span class="c">// 没绑 variable, override 硬色值</span>
+  <span class="k">"fills"</span><span class="p">:</span> <span class="p">[{</span>
+    <span class="k">"type"</span><span class="p">:</span> <span class="s">"SOLID"</span><span class="p">,</span>
+    <span class="k">"color"</span><span class="p">:</span> <span class="p">{</span>
+      <span class="k">"r"</span><span class="p">:</span> <span class="n">0.36</span><span class="p">,</span>
+      <span class="k">"g"</span><span class="p">:</span> <span class="n">0.28</span><span class="p">,</span>
+      <span class="k">"b"</span><span class="p">:</span> <span class="n">0.98</span>
+    <span class="p">}</span>
+  <span class="p">}]</span>
+<span class="p">}</span></div>
+        <div class="btn3-result">
+          <div class="btn3-acc">
+            <span class="btn3-acc-label">还原度</span>
+            <span class="btn3-acc-num">~70%</span>
+          </div>
+          <div class="btn3-bar"><div class="btn3-bar-fill" style="width:70%;"></div></div>
+          <p class="btn3-note">AI 知道是 Button 组件,<strong>但不知道这个紫色叫 "primary"</strong> —— 它只看到 #5B47FB。<strong>主题切换时它接不住</strong>。</p>
+        </div>
+      </div>
+
+      <div class="btn3-card c">
+        <div class="btn3-head">
+          <div class="btn3-head-tag">C · 翻车</div>
+          <h3 class="btn3-title">自由画 · rectangle + text</h3>
+        </div>
+        <div class="btn3-render">
+          <div class="demo-btn">继续</div>
+        </div>
+        <div class="btn3-json"><span class="p">{</span>
+  <span class="k">"type"</span><span class="p">:</span> <span class="s">"RECTANGLE"</span><span class="p">,</span>
+  <span class="k">"name"</span><span class="p">:</span> <span class="s">"Rectangle 23"</span><span class="p">,</span>
+  <span class="c">// 不是 INSTANCE !</span>
+  <span class="k">"fills"</span><span class="p">:</span> <span class="p">[{</span>
+    <span class="k">"color"</span><span class="p">:</span> <span class="p">{</span>
+      <span class="k">"r"</span><span class="p">:</span> <span class="n">0.36</span><span class="p">,</span>
+      <span class="k">"g"</span><span class="p">:</span> <span class="n">0.28</span><span class="p">,</span>
+      <span class="k">"b"</span><span class="p">:</span> <span class="n">0.98</span>
+    <span class="p">}</span>
+  <span class="p">}],</span>
+  <span class="k">"cornerRadius"</span><span class="p">:</span> <span class="n">12</span><span class="p">,</span>
+  <span class="c">// 旁边浮一个独立 TEXT 节点 "继续"</span>
+<span class="p">}</span></div>
+        <div class="btn3-result">
+          <div class="btn3-acc">
+            <span class="btn3-acc-label">还原度</span>
+            <span class="btn3-acc-num">~30%</span>
+          </div>
+          <div class="btn3-bar"><div class="btn3-bar-fill" style="width:30%;"></div></div>
+          <p class="btn3-note">AI 看到一个紫色矩形 + 一个文字 ——<strong>它不知道这是按钮</strong>。它要靠猜:"长得像按钮吧?"经常猜偏。</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="quote-box" style="margin-top:32px;">
+      <span class="quote-mark">"</span>
+      视觉一样,JSON 不一样,AI 拿到的<span class="em">上下文量天差地别</span>。
+      <strong style="color:var(--ink);">"画法选择"就是"给 AI 的 context 选择"</strong>。
+    </div>
+  </div>
+</section>
+
+<!-- §04 cheatsheet + habits -->
+<section id="cheat">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>04</strong> / 看不到的</div>
+        <h2 class="section-title">AI 看到 / 看不到<br>的<span class="em">清单</span>。</h2>
+      </div>
+      <p class="section-sub">
+        以下是 AI 通过 Figma MCP 真实能读 / 读不到的所有东西。
+        <strong>知道它的盲区</strong>,你就能给它补齐信息。
+      </p>
+    </div>
+
+    <div class="see-stage">
+      <table class="see-table">
+        <thead>
+          <tr>
+            <th class="item">字段 / 信息</th>
+            <th class="mark">AI 看到?</th>
+            <th class="desc">备注</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="item">图层名字</td>
+            <td class="mark"><span class="see-pill yes">✓ 看到</span></td>
+            <td class="desc">"LoginCard" / "Button/primary" —— <strong>你怎么命名它就怎么读</strong>。乱命名 = 自己挖坑。</td>
+          </tr>
+          <tr>
+            <td class="item">尺寸 / 坐标</td>
+            <td class="mark"><span class="see-pill yes">✓ 看到</span></td>
+            <td class="desc">width / height / x / y 全有。AI 能精确还原布局。</td>
+          </tr>
+          <tr>
+            <td class="item">颜色(硬色值)</td>
+            <td class="mark"><span class="see-pill yes">✓ 看到</span></td>
+            <td class="desc">RGB 值。<strong>但不知道这色叫"主色"还是"警告色"</strong>。</td>
+          </tr>
+          <tr>
+            <td class="item">Variable 引用</td>
+            <td class="mark"><span class="see-pill yes">✓ 看到</span></td>
+            <td class="desc"><strong>核心信号</strong>。boundVariables 字段告诉 AI "这是 --primary token,不是普通紫色"。</td>
+          </tr>
+          <tr>
+            <td class="item">组件 instance + variant</td>
+            <td class="mark"><span class="see-pill yes">✓ 看到</span></td>
+            <td class="desc"><strong>另一个核心</strong>。mainComponent + componentProperties 让 AI 知道"这是 Button 的 primary 变体"。</td>
+          </tr>
+          <tr>
+            <td class="item">文本内容 + 字号字重</td>
+            <td class="mark"><span class="see-pill yes">✓ 看到</span></td>
+            <td class="desc">characters + style.fontSize 等。文本内容 1:1 拿到。</td>
+          </tr>
+          <tr>
+            <td class="item">图标(SVG 形式)</td>
+            <td class="mark"><span class="see-pill part">⚠ 部分</span></td>
+            <td class="desc">SVG 路径 AI 读得到;但<strong>一堆图层堆出来的图标</strong> AI 没法识别它是个 logo。</td>
+          </tr>
+          <tr>
+            <td class="item">设计稿 comment 评论</td>
+            <td class="mark"><span class="see-pill part">⚠ 部分</span></td>
+            <td class="desc">看 MCP server 实现。<strong>大多数情况读不到</strong>(不在 MCP 协议默认暴露范围)。</td>
+          </tr>
+          <tr>
+            <td class="item">你脑里的 design intent</td>
+            <td class="mark"><span class="see-pill no">✗ 看不到</span></td>
+            <td class="desc">"这一块要给用户惊喜感" / "这是品牌一致性" —— <strong>除非你写进 Dev Mode annotation</strong>。</td>
+          </tr>
+          <tr>
+            <td class="item">隔壁页面的"风格语言"</td>
+            <td class="mark"><span class="see-pill no">✗ 看不到</span></td>
+            <td class="desc">AI 只读你指给它的那个 frame。<strong>不知道隔壁页面用了什么风格</strong>。</td>
+          </tr>
+          <tr>
+            <td class="item">动效 / prototype 交互</td>
+            <td class="mark"><span class="see-pill no">✗ 看不到</span></td>
+            <td class="desc">Figma prototype 的跳转、转场、interactive component —— 当前 MCP <strong>几乎全部丢失</strong>。</td>
+          </tr>
+          <tr>
+            <td class="item">你的"试错过程"</td>
+            <td class="mark"><span class="see-pill no">✗ 看不到</span></td>
+            <td class="desc">那 30 分钟你纠结的 5 个版本、回滚的、被砍掉的 —— AI 只看到最终结果。</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="habits-grid">
+      <div class="habit-card">
+        <div class="habit-num">01</div>
+        <h3 class="habit-title">用 <span class="em">main component</span></h3>
+        <p class="habit-text">不要自由画。每个按钮 / 输入框 / 卡片都用 <strong>主组件 instance</strong>。AI 才能识别这是"按钮",而不是"紫色矩形"。</p>
+      </div>
+      <div class="habit-card">
+        <div class="habit-num">02</div>
+        <h3 class="habit-title">绑 <span class="em">variables</span>,不写死</h3>
+        <p class="habit-text">主色、间距、圆角全部用 Variables 绑。AI 能读到 <strong>boundVariables 字段</strong>,知道这是"主题色"而不是"某个 RGB 值"。</p>
+      </div>
+      <div class="habit-card">
+        <div class="habit-num">03</div>
+        <h3 class="habit-title">图层<span class="em">语义命名</span></h3>
+        <p class="habit-text">"Submit Button" 好过 "Rectangle 23"。"LoginCard" 好过 "Frame 5"。<strong>AI 把 name 字段也当线索读</strong>。</p>
+      </div>
+      <div class="habit-card">
+        <div class="habit-num">04</div>
+        <h3 class="habit-title">写 <span class="em">annotation</span></h3>
+        <p class="habit-text">Dev Mode 里可以加注释。把<strong>设计意图</strong>("这是用户首次登录的引导") 写进去 —— 这是 AI 唯一能读到的 intent。</p>
+      </div>
+    </div>
+
+    <a href="book.html#vol-3" class="next-post">
+      <div>
+        <div class="np-tag">回到 · ROADMAP</div>
+        <h4>K 模块 · <span class="em">4 篇</span>全部看完</h4>
+        <p>K1 (选 shadcn) · K2 (改造) · K3 (颗粒度) · K4 (MCP 读到啥) —— <strong>从选库到 AI 真正读懂你设计稿的完整链路</strong>。下一站可以是设计篇 (A/B/C/D),或者工程篇 (F/G/H/J)。</p>
+      </div>
+      <span class="np-cta">回到路线图 <span class="arr">→</span></span>
+    </a>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div class="byline-wrap byline-group">
+      <div class="byline">
+        <img class="avatar" src="author.jpg" alt="范米花儿">
+        <div class="byline-meta">
+          <div class="byline-label"><span class="dot"></span>作者 · WRITTEN BY</div>
+          <h3 class="byline-name">嗨,我是 <span class="em">范米花儿</span></h3>
+          <p class="byline-tag">设计工程师 ——<br>设计 × 代码,两边都做。</p>
+        </div>
+      </div>
+      <div class="byline">
+        <img class="avatar" src="avatar-ce.jpg" alt="CE 青年">
+        <div class="byline-meta">
+          <div class="byline-label"><span class="dot"></span>合作者 · CO-AUTHOR</div>
+          <h3 class="byline-name">还有 <span class="em">CE 青年</span></h3>
+          <p class="byline-tag">B 端交互 / AI 产品 ——<br>把体验落进产品里。</p>
+        </div>
+      </div>
+    </div>
+    <div class="footer-meta">
+      做于 <span class="mono">2026</span> · 用 <span class="heart">●</span> 写给 <span class="mono">DESIGNERS &amp; DEVELOPERS</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+// ==========================================================
+// §02 JSON dissection · cross-highlight
+// ==========================================================
+(function () {
+  const dict = {
+    frame: {
+      key: 'frame · 整个卡片',
+      body: '<strong>这是整张卡片的 frame</strong> —— AI 看到 type 是 "FRAME",于是知道这是个"容器";看到 cornerRadius=12,知道有圆角;看到 width=320, height=420,知道大小。<br><span class="designer-says">设计师视角:</span>你在 Figma 里点这个 frame 看到的属性 = AI 看到的字段。<strong>所以图层命名很重要</strong> —— AI 把 "LoginCard" 这个名字也当作线索读。'
+    },
+    title: {
+      key: 'TEXT · 标题',
+      body: '<strong>type=TEXT,characters="登录账号"</strong> —— AI 拿到的是<strong>文字内容</strong>,还包括 fontSize / fontWeight / fontFamily。<br><span class="designer-says">设计师视角:</span>你打的字 AI 一字不差读到,字号字重也读到。但<strong>它读不到"这个标题为什么这么写"</strong>(intent 隐藏在你脑子里)。'
+    },
+    input1: {
+      key: 'INSTANCE · Email 输入框',
+      body: '<strong>type=INSTANCE,mainComponent.id="Input/default"</strong> —— AI 知道这是<strong>引用了 Input 主组件</strong>,不是手画的输入框。<br>componentProperties 还告诉它:Label="Email", Placeholder="you@..."。<br><span class="designer-says">设计师视角:</span>如果你这里是手画的 rectangle + text,AI 就<strong>不知道这是输入框</strong>了。'
+    },
+    input2: {
+      key: 'INSTANCE · 密码输入框',
+      body: '同样是 Input/default 主组件 instance,只是 <strong>componentProperties</strong> 不同:Label="密码", Type="password"。<br><span class="designer-says">设计师视角:</span><strong>同一个主组件的两个 instance</strong>,AI 一看就懂它们是"同类东西、不同实例"。这种结构 AI 一秒还原。'
+    },
+    button: {
+      key: 'INSTANCE · 按钮 · ⭐ 三层信息',
+      body: '<strong>三层信息全有的"完美字段"</strong>:<br>① mainComponent.id="Button/primary" —— 是 Button 组件<br>② componentProperties.Label="继续" —— 文字<br>③ boundVariables.fills=[{id:"--primary"}] —— <strong>绑了 token!</strong><br><span class="designer-says">设计师视角:</span>这是 K2 讲的"token 绑定"在 JSON 里的体现。AI 不仅知道颜色,还知道<strong>"这色叫主色"</strong>—— 切主题时就能跟着变。'
+    }
+  };
+
+  const lines = document.querySelectorAll('.ds-line');
+  const regions = document.querySelectorAll('.ds-region');
+  const keyEl = document.getElementById('dsKey');
+  const bodyEl = document.getElementById('dsBody');
+
+  function setActive(key) {
+    if (!key) return;
+    lines.forEach(l => l.classList.toggle('is-active', l.dataset.region === key));
+    regions.forEach(r => r.classList.toggle('is-active', r.dataset.region === key));
+    const d = dict[key];
+    if (d) {
+      keyEl.textContent = d.key;
+      bodyEl.innerHTML = d.body;
+    }
+  }
+
+  lines.forEach(l => {
+    l.addEventListener('click', () => setActive(l.dataset.region));
+    l.addEventListener('mouseenter', () => setActive(l.dataset.region));
+  });
+  regions.forEach(r => {
+    r.addEventListener('click', e => { e.stopPropagation(); setActive(r.dataset.region); });
+    r.addEventListener('mouseenter', e => { e.stopPropagation(); setActive(r.dataset.region); });
+  });
+
+  setActive('frame');
+})();
+</script>
+
+</body>
+</html>
