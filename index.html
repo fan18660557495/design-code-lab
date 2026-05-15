@@ -155,6 +155,89 @@
     display: flex; flex-direction: column;
   }
 
+  /* === 复古胶片倒计时 leader (开机前 3 秒) ===
+     像 35mm 电影开场前的 academy leader: 黑底 + 圆环 + 十字准星 + 大数字 + 时钟扫针 */
+  .tv-countdown {
+    position: absolute; inset: 0; z-index: 8;
+    background: radial-gradient(ellipse at center, #1a1612 0%, #0a0806 70%, #050403 100%);
+    display: flex; align-items: center; justify-content: center;
+    pointer-events: none;
+    transition: opacity 0.4s ease, visibility 0s linear 0.4s;
+    border-radius: inherit;
+    overflow: hidden;
+  }
+  /* 信号到位 → 倒计时遮罩淡出, 海报显示 */
+  body.is-tv-on-init .tv-countdown {
+    opacity: 0;
+    visibility: hidden;
+  }
+  /* 圆环 */
+  .cd-circle {
+    position: absolute;
+    width: 60%; aspect-ratio: 1;
+    max-width: 60%; max-height: 80%;
+    border: 2px solid rgba(212, 200, 168, 0.55);
+    border-radius: 50%;
+  }
+  /* 内圈 (双圆) */
+  .cd-circle::after {
+    content: ''; position: absolute; inset: 8px;
+    border: 1px solid rgba(212, 200, 168, 0.3);
+    border-radius: 50%;
+  }
+  /* 十字准星 */
+  .cd-cross-h, .cd-cross-v {
+    position: absolute;
+    background: rgba(212, 200, 168, 0.4);
+  }
+  .cd-cross-h { top: 50%; left: 8%; right: 8%; height: 1px; transform: translateY(-50%); }
+  .cd-cross-v { left: 50%; top: 8%; bottom: 8%; width: 1px; transform: translateX(-50%); }
+  /* 时钟扫针: conic-gradient 模拟电影 leader 的转动指针 */
+  .cd-sweep {
+    position: absolute;
+    width: 60%; aspect-ratio: 1;
+    max-width: 60%; max-height: 80%;
+    border-radius: 50%;
+    background: conic-gradient(
+      from 0deg,
+      rgba(212, 200, 168, 0.32) 0deg,
+      rgba(212, 200, 168, 0.0) 60deg,
+      transparent 360deg
+    );
+    animation: cd-sweep-rotate 1s linear infinite;
+    mix-blend-mode: screen;
+  }
+  @keyframes cd-sweep-rotate {
+    from { transform: rotate(0deg); }
+    to   { transform: rotate(360deg); }
+  }
+  /* 大数字 */
+  .cd-num {
+    font-family: 'Fraunces', serif;
+    font-style: italic; font-weight: 700;
+    font-size: clamp(70px, 15vw, 140px);
+    color: #f3eee5;
+    line-height: 1;
+    position: relative; z-index: 2;
+    animation: cd-num-pop 1s ease-out infinite;
+    text-shadow: 0 0 30px rgba(255, 235, 200, 0.15);
+  }
+  @keyframes cd-num-pop {
+    0%   { transform: scale(1.18); opacity: 1; filter: brightness(1.4); }
+    25%  { transform: scale(1); opacity: 1; filter: brightness(1); }
+    100% { transform: scale(1); opacity: 0.9; filter: brightness(1); }
+  }
+  /* 海报上场时, 整体过曝一下再回到正常 */
+  body.is-tv-on-init .tv-poster {
+    animation:
+      tv-warm-on 0.5s cubic-bezier(0.2, 0.8, 0.2, 1),
+      tv-flicker 5s steps(1) 0.5s infinite;
+  }
+  @keyframes tv-warm-on {
+    0%   { opacity: 0; filter: brightness(2.6) blur(2px); transform: scaleY(0.94); }
+    100% { opacity: 1; filter: brightness(1) blur(0); transform: scaleY(1); }
+  }
+
   /* TV channel badge — 小角标 */
   .tv-channel-label {
     position: absolute;
@@ -1597,6 +1680,14 @@
   <div class="tv">
     <div class="tv-bezel">
       <div class="tv-screen">
+        <!-- 复古胶片倒计时 leader (开机前) -->
+        <div class="tv-countdown" aria-hidden="true">
+          <div class="cd-cross-h"></div>
+          <div class="cd-cross-v"></div>
+          <div class="cd-circle"></div>
+          <div class="cd-sweep"></div>
+          <div class="cd-num" id="cd-num">3</div>
+        </div>
         <div class="tv-channel-label">CH.01</div>
         <div class="tv-content">
           <div class="tv-poster">
@@ -1629,7 +1720,7 @@
       </div>
       <div class="tv-controls">
         <div class="tv-channel-knob" aria-hidden="true"></div>
-        <div class="tv-brand-plate">LABBOOK · MODEL CE-01</div>
+        <div class="tv-brand-plate"></div>
         <button class="tv-power" id="tv-power" aria-label="开机">PWR</button>
       </div>
     </div>
@@ -2632,6 +2723,23 @@
   Array.prototype.slice.call(playerModal.querySelectorAll('[data-player-close]')).forEach(function(b){
     b.addEventListener('click', closePlayer);
   });
+
+  /* ===== TV initial 倒计时 leader (3 → 2 → 1 → 信号到位) ===== */
+  (function runCountdown(){
+    var cdNum = document.getElementById('cd-num');
+    if (!cdNum) return;
+    var n = 3;
+    cdNum.textContent = String(n);
+    var tick = setInterval(function(){
+      n--;
+      if (n > 0) {
+        cdNum.textContent = String(n);
+      } else {
+        clearInterval(tick);
+        document.body.classList.add('is-tv-on-init');
+      }
+    }, 700);
+  })();
 
   /* ===== Power on / off ===== */
   var POWER_DUR = 580; /* ~ matches CRT keyframes */
