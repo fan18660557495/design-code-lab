@@ -49,17 +49,16 @@
 
   .wrap { max-width: 1180px; margin: 0 auto; padding: 0 32px; }
 
-  /* Top bar — 跟 index.html (cinema) 完全一致：边到边 + 14px 24px padding + 固定 */
+  /* Top bar — 跟 index.html 完全一致: sticky + 1180px wrap + 16px 0 padding */
   .topbar {
-    position: fixed; top: 0; left: 0; right: 0;
-    z-index: 100;
-    padding: 14px 24px;
-    display: flex; justify-content: space-between; align-items: center;
-    background: var(--bg);
     border-bottom: 1px dashed var(--line);
+    padding: 16px 0;
+    background: var(--bg);
+    position: sticky;
+    top: 0;
+    z-index: 100;
   }
-  .topbar-inner { display: contents; }  /* 历史包装层不再起作用, 让 brand+vol-tabs 直接作为 .topbar 的 flex item */
-  body { padding-top: 56px; }            /* 给固定 topbar 留位 */
+  .topbar-inner { display: flex; justify-content: space-between; align-items: center; gap: 24px; flex-wrap: wrap; }
   .brand { font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 600; }
   .brand .dot { display: inline-block; width: 8px; height: 8px; background: var(--accent); border-radius: 50%; margin-right: 8px; vertical-align: middle; animation: pulse 2s ease-in-out infinite; }
   @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
@@ -1491,6 +1490,137 @@
   .j-cluster-tbd .j-cluster-banner { opacity: 0.55; }
   .j-cluster-tbd .j-cluster-banner-text { opacity: 0.65; }
   .j-path-tbd { opacity: 0.4; stroke-dasharray: 6 5; }
+
+  /* === VOL.I · 设计师 AI 难题 + 课程大纲 === */
+  .pain-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 18px;
+    margin-top: 24px;
+  }
+  @media (max-width: 760px) { .pain-grid { grid-template-columns: 1fr; } }
+  .pain-card {
+    background: var(--paper);
+    border: 1.5px solid var(--line);
+    border-radius: 8px;
+    padding: 24px 26px;
+    transition: all 0.2s;
+  }
+  .pain-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(22,22,29,0.06);
+    border-color: var(--accent);
+  }
+  .pain-emoji {
+    font-size: 26px;
+    line-height: 1;
+    margin-bottom: 12px;
+  }
+  .pain-q {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 17px;
+    font-weight: 800;
+    color: var(--ink);
+    margin: 0 0 8px;
+    line-height: 1.4;
+  }
+  .pain-a {
+    font-size: 13.5px;
+    color: var(--ink-soft);
+    line-height: 1.6;
+    margin: 0;
+  }
+  .pain-a strong { color: var(--ink); font-weight: 600; }
+
+  .syllabus-list {
+    margin-top: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  .chap {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    overflow: hidden;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  .chap:hover { border-color: var(--ink-soft); box-shadow: 0 4px 12px rgba(22,22,29,0.04); }
+  .chap-head {
+    padding: 16px 24px;
+    background: var(--bg-2);
+    border-bottom: 1px dashed var(--line);
+    display: flex;
+    align-items: baseline;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+  .chap-num {
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    font-size: 24px;
+    font-weight: 500;
+    color: var(--accent);
+    line-height: 1;
+    flex-shrink: 0;
+  }
+  .chap-title {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 18px;
+    font-weight: 800;
+    color: var(--ink);
+    margin: 0;
+    flex: 1;
+    line-height: 1.3;
+  }
+  .chap-count {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--ink-mute);
+    letter-spacing: 0.06em;
+    padding: 3px 9px;
+    border: 1px solid var(--line);
+    border-radius: 100px;
+    background: var(--paper);
+  }
+  .chap-items {
+    list-style: none;
+    padding: 10px 16px 14px;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .chap-items li {
+    font-size: 14px;
+    color: var(--ink-soft);
+    padding: 9px 12px 9px 56px;
+    border-radius: 4px;
+    transition: background 0.15s, color 0.15s;
+    position: relative;
+    line-height: 1.55;
+  }
+  .chap-items li:hover { background: var(--bg); color: var(--ink); }
+  .chap-items li::before {
+    content: '';
+    position: absolute;
+    left: 44px;
+    top: 50%;
+    width: 6px;
+    height: 1px;
+    background: var(--line);
+  }
+  .chap-items .li-num {
+    position: absolute;
+    left: 12px;
+    top: 9px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11.5px;
+    color: var(--accent);
+    font-weight: 600;
+    letter-spacing: 0.02em;
+  }
+
 </style>
 </head>
 <body>
@@ -1499,7 +1629,7 @@
   <div class="wrap topbar-inner">
     <a href="index.html" class="brand"><span class="dot"></span>AI LABBOOK</a>
     <nav class="vol-tabs" role="tablist" aria-label="三卷切换">
-      <!-- VOL.I 已经迁到 cinema (index.html), 在 book.html 上点 VOL.I 直接跳走 -->
+      <!-- VOL.I 在 index.html (独立页), 在 book.html 上点 VOL.I 直接跳走 -->
       <a class="vol-tab" href="index.html" role="tab">
         <span class="vol-tab-num">VOL. I</span>
         <span class="vol-tab-name">给设计师的零基础 AI 课</span>
@@ -1516,57 +1646,15 @@
   </div>
 </div>
 
-<!-- VOL. I · 给设计师的零基础 AI 课 -->
-<section class="vol-panel vol-panel--book" data-vol="1" role="tabpanel" aria-labelledby="vol-1">
-
-<section id="curriculum" class="curriculum--book-only">
-  <div class="wrap wrap--book">
-    <!-- 真书容器 -->
-    <div class="book-shell" id="book-vol1">
-      <div class="book-progress" aria-hidden="true">
-        <span class="book-progress-label">READING</span>
-        <div class="book-progress-bar"><div class="book-progress-fill" id="book-prog-fill"></div></div>
-        <span class="book-progress-text" id="book-prog-text">0 / 0</span>
-      </div>
-
-      <div class="book-stage">
-        <!-- 主书体 (cover 现在是 spread idx 0, 由 JS 生成, 跟内页用同一套翻页动画) -->
-        <div class="book-vol" id="book-vol-3d">
-          <!-- spread 容器 (idx 0 = 封面 spread) -->
-          <div class="book-spreads" id="book-spreads"></div>
-
-          <!-- 右侧 thumb index 章节标签（贴书 right edge） -->
-          <nav class="book-thumb-index" id="book-thumb" aria-label="章节"></nav>
-        </div>
-      </div>
-
-      <!-- 翻页控件 -->
-      <div class="book-controls" id="book-controls" hidden>
-        <button class="book-btn book-cover-btn" id="book-back-cover" aria-label="返回封面" title="返回封面">↺ 封面</button>
-        <button class="book-btn book-prev" id="book-prev" aria-label="上一页">←</button>
-        <span class="book-page-info" id="book-page-info">0 / 0</span>
-        <button class="book-btn book-next" id="book-next" aria-label="下一页">→</button>
-        <span class="book-controls-sep">/</span>
-        <button class="book-btn book-overview-toggle" id="book-overview-btn" aria-label="鸟瞰目录" title="鸟瞰 (O)">⊞</button>
-        <button class="book-btn book-close-btn" id="book-close" aria-label="合上书" title="合上 (ESC)">合上</button>
-      </div>
-
-      <!-- 鸟瞰目录 modal -->
-      <div class="book-overview" id="book-overview" hidden>
-        <div class="book-overview-backdrop" data-overview-close></div>
-        <div class="book-overview-panel">
-          <button class="book-overview-close" data-overview-close aria-label="关闭">✕</button>
-          <div class="book-overview-header">
-            <div class="book-overview-tag">OVERVIEW · 鸟瞰目录</div>
-            <h3 class="book-overview-title">所有 <span class="rm-em">spreads</span></h3>
-          </div>
-          <div class="book-overview-grid" id="book-overview-grid"></div>
-        </div>
-      </div>
+<!-- VOL. I · 给设计师的零基础 AI 课 (内容在 index.html, 这里只占位) -->
+<section class="vol-panel" data-vol="1" role="tabpanel" aria-labelledby="vol-1">
+  <header class="hero">
+    <div class="wrap">
+      <p style="text-align:center; padding:80px 20px; color:var(--ink-mute);">
+        VOL.I 内容在 <a href="index.html" style="color:var(--accent);">index.html</a> —— 点上面的 VOL.I tab 会跳过去。
+      </p>
     </div>
-  </div>
-</section>
-
+  </header>
 </section>
 
 <!-- VOL. II · AI × Design (hero + manifesto + dual-track roadmap) -->

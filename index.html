@@ -3,85 +3,68 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>AI LABBOOK · CINEMA · 放映厅</title>
+<title>VOL. I · 给设计师的零基础 AI 课</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,300..900&family=Geist:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&family=Noto+Sans+SC:wght@300;400;500;700;900&family=Noto+Serif+SC:wght@400;500;700;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,300..900&family=Geist:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Noto+Sans+SC:wght@300;400;500;700;900&family=Noto+Serif+SC:wght@400;500;700;900&display=swap" rel="stylesheet">
 <style>
   :root {
-    /* 主调 cream / paper, 跟整站一致 */
+    --bg: #f3eee5;
+    --bg-2: #ebe4d4;
     --ink: #16161d;
     --ink-soft: #4a4a55;
     --ink-mute: #8a8a92;
-    --bg: #f3eee5;
-    --bg-2: #ebe4d4;
-    --paper: #faf7f0;
     --line: #d5cdba;
     --line-soft: #e3dcca;
     --accent: #ff4d2e;
     --accent-soft: #ffe4dc;
-    /* 暗色: 仅 TV 屏幕内 / 胶片用 */
-    --film-dark: #1c1812;     /* film strip backing */
-    --film-edge: #0e0b07;     /* sprocket holes */
-    --tv-cabinet: #2a2218;    /* TV 木框 */
-    --tv-cabinet-2: #1a140e;
-    --screen-dark: #0a0908;   /* projection interior */
-    --screen-ink: #f3eee5;    /* light text on dark screen */
-    --screen-ink-soft: #c0b8a8;
-    --screen-ink-mute: #807868;
+    --paper: #faf7f0;
+    --green: #1f6b3a;
+    --green-soft: #d4ecdb;
+    --yellow: #ffcf3d;
   }
+
   * { box-sizing: border-box; }
   html, body { margin: 0; padding: 0; }
   body {
     background: var(--bg);
-    background-image:
-      radial-gradient(circle at 1px 1px, rgba(22,22,29,0.05) 1px, transparent 0);
-    background-size: 24px 24px;
     color: var(--ink);
     font-family: 'Geist', 'Noto Sans SC', system-ui, -apple-system, sans-serif;
     font-size: 16px;
     line-height: 1.6;
     -webkit-font-smoothing: antialiased;
-    min-height: 100vh;
-    overflow: hidden;
+    background-image: radial-gradient(circle at 1px 1px, rgba(22,22,29,0.05) 1px, transparent 0);
+    background-size: 24px 24px;
   }
 
-  /* ============ TOPBAR ============ */
-  .topbar {
-    position: fixed; top: 0; left: 0; right: 0;
-    z-index: 100;
-    padding: 14px 24px;
-    display: flex; justify-content: space-between; align-items: center;
-    background: var(--bg);
-    border-bottom: 1px dashed var(--line);
-  }
-  .brand {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 13px; font-weight: 600;
-    color: var(--ink); text-decoration: none;
-  }
+  .display-cn { font-family: 'Noto Serif SC', 'Fraunces', serif; font-weight: 900; letter-spacing: -0.01em; }
+  .display-en { font-family: 'Fraunces', 'Noto Serif SC', serif; font-weight: 600; font-style: italic; letter-spacing: -0.02em; }
+  .mono { font-family: 'JetBrains Mono', monospace; }
+  .label { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-mute); }
+
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 0 32px; }
+
+  /* === topbar with VOL tabs === */
+  .topbar { border-bottom: 1px dashed var(--line); padding: 16px 0; background: var(--bg); position: sticky; top: 0; z-index: 100; }
+  .topbar-inner { display: flex; justify-content: space-between; align-items: center; gap: 24px; flex-wrap: wrap; }
+  .brand { font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 600; text-decoration: none; color: var(--ink); transition: color 0.2s; }
+  .brand:hover { color: var(--accent); }
   .brand .dot { display: inline-block; width: 8px; height: 8px; background: var(--accent); border-radius: 50%; margin-right: 8px; vertical-align: middle; animation: pulse 2s ease-in-out infinite; }
   @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
-  .topbar-meta {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 11px; letter-spacing: 0.18em;
-    color: var(--ink-mute); text-transform: uppercase;
-  }
-  /* VOL switcher tabs (cinema topbar 复用 book 的样式) */
+
   .vol-tabs { display: flex; gap: 6px; align-items: center; }
   .vol-tab {
     display: inline-flex; align-items: baseline; gap: 8px;
-    background: var(--paper); border: 1px solid var(--line);
+    background: transparent; border: 1px solid var(--line);
     padding: 6px 14px; border-radius: 4px;
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 10.5px; color: var(--ink-mute);
-    text-decoration: none; cursor: pointer;
-    transition: all 0.2s ease; position: relative;
-    letter-spacing: 0.04em;
+    font-family: 'JetBrains Mono', monospace; font-size: 10.5px;
+    color: var(--ink-mute);
+    cursor: pointer; transition: all 0.2s ease; position: relative;
+    letter-spacing: 0.04em; text-decoration: none;
   }
   .vol-tab:hover { border-color: var(--ink-soft); color: var(--ink); background: var(--bg-2); transform: translateY(-1px); }
-  .vol-tab--active { background: var(--ink); border-color: var(--ink); color: var(--bg); font-weight: 700; }
-  .vol-tab--active::after {
+  .vol-tab.is-active { background: var(--ink); border-color: var(--ink); color: var(--bg); font-weight: 700; }
+  .vol-tab.is-active::after {
     content: ''; position: absolute;
     left: 50%; bottom: -6px;
     width: 6px; height: 6px; background: var(--accent);
@@ -93,2731 +76,480 @@
   .vol-tab-name { font-family: 'Noto Serif SC', serif; font-size: 13px; font-weight: 500; letter-spacing: 0; }
   @media (max-width: 760px) { .vol-tab-name { display: none; } .vol-tab { padding: 6px 10px; } }
 
-  /* ============ STAGE 1 — TV (closed state) ============ */
-  .cinema-stage {
-    position: fixed; inset: 0;
-    display: flex; align-items: center; justify-content: center;
-    transition: opacity 0.45s ease, visibility 0.45s ease;
-  }
-  body.is-tv-on .cinema-stage { opacity: 0; visibility: hidden; pointer-events: none; }
+  /* === hero === */
+  .hero { padding: 100px 0 80px; position: relative; overflow: hidden; }
+  .hero-meta { display: flex; gap: 24px; margin-bottom: 32px; align-items: center; flex-wrap: wrap; }
+  .hero-meta .pill { padding: 6px 12px; border: 1px solid var(--ink); border-radius: 100px; font-size: 11px; font-family: 'JetBrains Mono', monospace; letter-spacing: 0.05em; }
+  .hero-meta .pill.fill { background: var(--ink); color: var(--bg); }
+  .hero h1 { font-family: 'Noto Serif SC', 'Fraunces', serif; font-weight: 900; font-size: clamp(46px, 7vw, 92px); line-height: 0.98; letter-spacing: -0.03em; margin: 0 0 24px; }
+  .hero h1 .em { font-family: 'Noto Serif SC', serif; font-weight: 500; color: var(--accent); }
+  .hero h1 .x { display: inline-block; transform: translateY(-0.05em); margin: 0 0.08em; color: var(--ink-mute); font-weight: 300; }
+  .hero p.lede { font-size: 20px; line-height: 1.5; max-width: 640px; color: var(--ink-soft); margin: 0 0 40px; }
+  .hero p.lede .em { font-family: 'Noto Serif SC', serif; color: var(--accent); font-weight: 500; }
+  .hero-grid { display: grid; grid-template-columns: 1.4fr 1fr; gap: 48px; align-items: end; }
+  @media (max-width: 880px) { .hero-grid { grid-template-columns: 1fr; } }
+  .hero-side { border-left: 1px dashed var(--line); padding-left: 24px; font-size: 13px; color: var(--ink-soft); }
+  .hero-side .row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px dashed var(--line); }
+  .hero-side .row:last-child { border-bottom: none; }
+  .hero-side .row .k { color: var(--ink-mute); font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.05em; text-transform: uppercase; }
+  .hero-side .row .v { font-weight: 500; }
 
-  .tv {
-    perspective: 1400px;
-    transform: translateY(-30px);
-  }
-  .tv-bezel {
-    position: relative;
-    width: min(560px, 90vw);
-    background: linear-gradient(180deg, #3a2f24 0%, var(--tv-cabinet) 50%, var(--tv-cabinet-2) 100%);
-    border-radius: 38px;
-    padding: 36px 36px 26px;
-    box-shadow:
-      inset 0 2px 0 rgba(255,235,200,0.1),
-      inset 0 -8px 22px rgba(0,0,0,0.5),
-      0 30px 80px rgba(22,22,29,0.25),
-      0 6px 0 rgba(22,22,29,0.15);
-    border: 1px solid rgba(0,0,0,0.3);
-  }
-  .tv-screen {
-    width: 100%;
-    aspect-ratio: 4 / 3;
-    background: var(--screen-dark);
-    border-radius: 22px / 32px;
-    position: relative;
-    overflow: hidden;
-    box-shadow:
-      inset 0 0 0 4px #050504,
-      inset 0 0 60px rgba(0,0,0,0.7),
-      inset 0 0 16px rgba(20,18,14,0.4);
-  }
-  /* Scanlines */
-  .tv-screen::before {
-    content: '';
-    position: absolute; inset: 0;
-    background: repeating-linear-gradient(0deg, transparent 0 2px, rgba(0,0,0,0.18) 2px 3px);
-    pointer-events: none; z-index: 5;
-    border-radius: inherit;
-  }
-  /* Vignette / glass curvature */
-  .tv-screen::after {
-    content: '';
-    position: absolute; inset: 0;
-    background:
-      radial-gradient(ellipse at 50% 50%, transparent 55%, rgba(0,0,0,0.55) 100%),
-      radial-gradient(ellipse at 30% 20%, rgba(255,255,255,0.04), transparent 50%);
-    pointer-events: none; z-index: 6;
-    border-radius: inherit;
-  }
+  /* === section === */
+  section { padding: 80px 0; border-top: 1px solid var(--line); position: relative; animation: fadeIn 0.6s ease-out backwards; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+  .section-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 48px; flex-wrap: wrap; gap: 16px; }
+  .section-num { font-family: 'JetBrains Mono', monospace; font-size: 13px; color: var(--ink-mute); letter-spacing: 0.1em; }
+  .section-num strong { color: var(--accent); }
+  .section-title { font-family: 'Noto Serif SC', serif; font-weight: 900; font-size: clamp(32px, 4.5vw, 52px); line-height: 1.05; letter-spacing: -0.02em; margin: 0; max-width: 18ch; }
+  .section-title .em { font-family: 'Noto Serif SC', serif; font-weight: 500; color: var(--accent); }
+  .section-sub { color: var(--ink-soft); font-size: 17px; max-width: 38ch; line-height: 1.55; margin: 0; }
+  .em { font-family: 'Noto Serif SC', serif; font-weight: 500; color: var(--accent); }
 
-  .tv-content {
-    position: absolute; inset: 0;
-    z-index: 1;
-    display: flex; flex-direction: column;
-  }
+  .hint-strip { margin-top: 16px; padding: 14px 18px; background: var(--accent-soft); border-left: 3px solid var(--accent); border-radius: 4px; font-size: 13px; color: var(--ink); line-height: 1.55; }
+  .hint-strip .hint-tag { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--accent); letter-spacing: 0.12em; margin-right: 10px; text-transform: uppercase; }
+  .hint-strip strong { color: var(--ink); font-weight: 600; }
 
-  /* === 复古胶片倒计时 leader (开机前 3 秒) ===
-     像 35mm 电影开场前的 academy leader: 黑底 + 圆环 + 十字准星 + 大数字 + 时钟扫针 */
-  .tv-countdown {
-    position: absolute; inset: 0; z-index: 8;
-    background: radial-gradient(ellipse at center, #1a1612 0%, #0a0806 70%, #050403 100%);
-    display: flex; align-items: center; justify-content: center;
-    pointer-events: none;
-    transition: opacity 0.4s ease, visibility 0s linear 0.4s;
-    border-radius: inherit;
-    overflow: hidden;
+  /* === pain-grid (§00) === */
+  .pain-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 18px;
+    margin-top: 24px;
   }
-  /* 信号到位 → 倒计时遮罩淡出, 海报显示 */
-  body.is-tv-on-init .tv-countdown {
-    opacity: 0;
-    visibility: hidden;
+  @media (max-width: 760px) { .pain-grid { grid-template-columns: 1fr; } }
+  .pain-card {
+    background: var(--paper);
+    border: 1.5px solid var(--line);
+    border-radius: 8px;
+    padding: 24px 26px;
+    transition: all 0.2s;
   }
-  /* 圆环 */
-  .cd-circle {
-    position: absolute;
-    width: 60%; aspect-ratio: 1;
-    max-width: 60%; max-height: 80%;
-    border: 2px solid rgba(212, 200, 168, 0.55);
-    border-radius: 50%;
+  .pain-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(22,22,29,0.06);
+    border-color: var(--accent);
   }
-  /* 内圈 (双圆) */
-  .cd-circle::after {
-    content: ''; position: absolute; inset: 8px;
-    border: 1px solid rgba(212, 200, 168, 0.3);
-    border-radius: 50%;
-  }
-  /* 十字准星 */
-  .cd-cross-h, .cd-cross-v {
-    position: absolute;
-    background: rgba(212, 200, 168, 0.4);
-  }
-  .cd-cross-h { top: 50%; left: 8%; right: 8%; height: 1px; transform: translateY(-50%); }
-  .cd-cross-v { left: 50%; top: 8%; bottom: 8%; width: 1px; transform: translateX(-50%); }
-  /* 时钟扫针: conic-gradient 模拟电影 leader 的转动指针 */
-  .cd-sweep {
-    position: absolute;
-    width: 60%; aspect-ratio: 1;
-    max-width: 60%; max-height: 80%;
-    border-radius: 50%;
-    background: conic-gradient(
-      from 0deg,
-      rgba(212, 200, 168, 0.32) 0deg,
-      rgba(212, 200, 168, 0.0) 60deg,
-      transparent 360deg
-    );
-    animation: cd-sweep-rotate 1s linear infinite;
-    mix-blend-mode: screen;
-  }
-  @keyframes cd-sweep-rotate {
-    from { transform: rotate(0deg); }
-    to   { transform: rotate(360deg); }
-  }
-  /* 大数字 */
-  .cd-num {
-    font-family: 'Fraunces', serif;
-    font-style: italic; font-weight: 700;
-    font-size: clamp(70px, 15vw, 140px);
-    color: #f3eee5;
-    line-height: 1;
-    position: relative; z-index: 2;
-    animation: cd-num-pop 1s ease-out infinite;
-    text-shadow: 0 0 30px rgba(255, 235, 200, 0.15);
-  }
-  @keyframes cd-num-pop {
-    0%   { transform: scale(1.18); opacity: 1; filter: brightness(1.4); }
-    25%  { transform: scale(1); opacity: 1; filter: brightness(1); }
-    100% { transform: scale(1); opacity: 0.9; filter: brightness(1); }
-  }
-  /* 海报上场时, 整体过曝一下再回到正常 */
-  body.is-tv-on-init .tv-poster {
-    animation:
-      tv-warm-on 0.5s cubic-bezier(0.2, 0.8, 0.2, 1),
-      tv-flicker 5s steps(1) 0.5s infinite;
-  }
-  @keyframes tv-warm-on {
-    0%   { opacity: 0; filter: brightness(2.6) blur(2px); transform: scaleY(0.94); }
-    100% { opacity: 1; filter: brightness(1) blur(0); transform: scaleY(1); }
-  }
-
-  /* TV channel badge — 小角标 */
-  .tv-channel-label {
-    position: absolute;
-    top: 14px; left: 16px;
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 11px; font-weight: 700;
-    color: #e8d8b8;
-    letter-spacing: 0.12em;
-    z-index: 3;
-    background: rgba(0,0,0,0.45);
-    padding: 3px 8px;
-    border: 1px solid rgba(232,216,184,0.35);
-    border-radius: 2px;
-  }
-
-  /* === 电影海报 / 老电影字幕卡 — 占满整个屏幕 === */
-  .tv-poster {
-    position: absolute; inset: 0;
-    background:
-      radial-gradient(ellipse at 50% 35%, #2a1f15 0%, #18110a 60%, #0a0604 100%);
-    color: #e8d8b8;
-    display: flex; align-items: center; justify-content: center;
-    padding: 14px;  /* small inset from CRT bezel for the inner frame border */
-    overflow: hidden;
-    animation: tv-flicker 5s steps(1) infinite;
-  }
-  /* subtle paper grain on top */
-  .tv-poster::before {
-    content: ''; position: absolute; inset: 0;
-    background-image: radial-gradient(circle at 1px 1px, rgba(255,255,255,0.04) 1px, transparent 0);
-    background-size: 3px 3px;
-    pointer-events: none; opacity: 0.55;
-    mix-blend-mode: overlay;
-  }
-
-  .poster-frame {
-    position: relative;
-    border: 1.5px solid rgba(232,216,184,0.55);
-    padding: 28px 40px 24px;
-    text-align: center;
-    display: flex; flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 10px;
-    width: 100%; height: 100%;
-    background: linear-gradient(180deg, transparent 0%, rgba(232,216,184,0.02) 100%);
-    box-sizing: border-box;
-  }
-  /* inner double-line border */
-  .poster-frame::before {
-    content: ''; position: absolute;
-    inset: 6px;
-    border: 0.5px solid rgba(232,216,184,0.3);
-    pointer-events: none;
-  }
-  /* corner ornaments */
-  .poster-frame::after {
-    content: ''; position: absolute;
-    inset: -1px;
-    background:
-      /* top-left */
-      linear-gradient(to right, #e8d8b8 0, #e8d8b8 12px, transparent 12px) top left / 12px 1.5px no-repeat,
-      linear-gradient(to bottom, #e8d8b8 0, #e8d8b8 12px, transparent 12px) top left / 1.5px 12px no-repeat,
-      /* top-right */
-      linear-gradient(to left, #e8d8b8 0, #e8d8b8 12px, transparent 12px) top right / 12px 1.5px no-repeat,
-      linear-gradient(to bottom, #e8d8b8 0, #e8d8b8 12px, transparent 12px) top right / 1.5px 12px no-repeat,
-      /* bottom-left */
-      linear-gradient(to right, #e8d8b8 0, #e8d8b8 12px, transparent 12px) bottom left / 12px 1.5px no-repeat,
-      linear-gradient(to top, #e8d8b8 0, #e8d8b8 12px, transparent 12px) bottom left / 1.5px 12px no-repeat,
-      /* bottom-right */
-      linear-gradient(to left, #e8d8b8 0, #e8d8b8 12px, transparent 12px) bottom right / 12px 1.5px no-repeat,
-      linear-gradient(to top, #e8d8b8 0, #e8d8b8 12px, transparent 12px) bottom right / 1.5px 12px no-repeat;
-    pointer-events: none;
-  }
-
-  .poster-meta-top {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 9px; letter-spacing: 0.28em;
-    color: rgba(232,216,184,0.65);
-    text-transform: uppercase;
-  }
-  .poster-presents {
-    font-family: 'Fraunces', serif; font-style: italic;
-    font-size: 11px; letter-spacing: 0.18em;
-    color: rgba(232,216,184,0.55);
-    text-transform: uppercase;
-    margin-top: 2px;
-  }
-  .poster-title {
-    display: flex; flex-direction: column; align-items: center;
-    line-height: 0.95;
-    margin: 6px 0 2px;
-  }
-  .poster-en {
-    font-family: 'Fraunces', serif; font-style: italic;
-    font-weight: 600; font-size: clamp(28px, 5vw, 42px);
-    color: #f3eee5; letter-spacing: -0.025em;
-    line-height: 0.92;
-  }
-  .poster-en--accent {
-    color: #d97a3e;
-  }
-  .poster-cn {
+  .pain-emoji { font-size: 26px; line-height: 1; margin-bottom: 12px; }
+  .pain-q {
     font-family: 'Noto Serif SC', serif;
-    font-weight: 700; font-size: clamp(14px, 2vw, 17px);
-    color: #d4c8a8;
-    letter-spacing: 0.12em;
-    margin-top: 4px;
-  }
-  .poster-rule {
-    display: flex; align-items: center; gap: 6px;
-    color: rgba(232,216,184,0.5);
-    font-size: 10px;
-    margin: 4px 0;
-    width: 60%; max-width: 220px;
-  }
-  .poster-rule-line { flex: 1; height: 1px; background: rgba(232,216,184,0.4); }
-
-  .poster-cast {
-    display: flex; flex-direction: column; align-items: center;
-    gap: 6px;
-  }
-  .poster-cast-label {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 9px; letter-spacing: 0.28em;
-    color: rgba(232,216,184,0.6);
-  }
-  .poster-hosts {
-    display: flex; align-items: center; gap: 10px;
-  }
-  .poster-host {
-    display: flex; flex-direction: column; align-items: center; gap: 3px;
-  }
-  .poster-host img {
-    width: 38px; height: 38px;
-    border-radius: 1px;
-    object-fit: cover;
-    border: 1px solid rgba(232,216,184,0.55);
-    /* sepia / aged photo treatment */
-    filter: sepia(0.4) contrast(1.05) brightness(0.95);
-    background: #2a1f15;
-  }
-  .poster-host span {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 8px; letter-spacing: 0.06em;
-    color: rgba(232,216,184,0.85);
-  }
-  .poster-host-x {
-    font-family: 'Fraunces', serif; font-style: italic;
-    font-size: 16px; color: rgba(232,216,184,0.55);
-    align-self: flex-start; margin-top: 8px;
-    line-height: 1;
-  }
-
-  .poster-meta-bot {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 8px; letter-spacing: 0.2em;
-    color: rgba(232,216,184,0.5);
-    text-transform: uppercase;
-    margin-top: 4px;
-    max-width: 90%;
-    line-height: 1.5;
-  }
-
-  @keyframes tv-flicker {
-    0%, 96% { opacity: 1; }
-    97% { opacity: 0.88; }
-    98% { opacity: 1; }
-    99% { opacity: 0.94; }
-  }
-
-  /* Power-on collapse animation (when leaving the TV stage) */
-  body.is-powering-on .tv-content {
-    animation: crt-off 0.55s ease-in forwards;
-  }
-  @keyframes crt-off {
-    0%   { transform: scale(1); opacity: 1; filter: brightness(1); }
-    35%  { transform: scaleY(1) scaleX(1); opacity: 1; filter: brightness(2.2) contrast(1.6); }
-    55%  { transform: scaleY(0.005) scaleX(1); opacity: 1; filter: brightness(3); }
-    72%  { transform: scaleY(0.004) scaleX(0.4); opacity: 1; }
-    100% { transform: scale(0); opacity: 0; }
-  }
-  /* Power-off expand animation (when returning to TV stage) */
-  body.is-powering-off .tv-content {
-    animation: crt-on 0.55s ease-out forwards;
-  }
-  @keyframes crt-on {
-    0%   { transform: scale(0); opacity: 0; }
-    25%  { transform: scaleY(0.004) scaleX(0.4); opacity: 1; filter: brightness(3); }
-    45%  { transform: scaleY(0.005) scaleX(1); opacity: 1; filter: brightness(2.5); }
-    100% { transform: scale(1); opacity: 1; filter: brightness(1); }
-  }
-
-  /* TV bottom controls (knob + brand + power) */
-  .tv-controls {
-    margin-top: 22px;
-    display: flex; align-items: center; gap: 18px;
-    padding: 0 4px;
-  }
-  .tv-channel-knob {
-    width: 30px; height: 30px;
-    background: radial-gradient(circle at 30% 30%, #4a4036, #1c1812);
-    border-radius: 50%;
-    border: 1.5px solid rgba(255,235,200,0.18);
-    position: relative;
-    flex-shrink: 0;
-  }
-  .tv-channel-knob::after {
-    content: ''; position: absolute;
-    width: 2px; height: 11px;
-    background: rgba(255,235,200,0.7);
-    top: 4px; left: 50%; transform: translateX(-50%);
-    border-radius: 1px;
-  }
-  .tv-brand-plate {
-    flex: 1;
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 9.5px; letter-spacing: 0.22em;
-    color: rgba(255,235,200,0.45);
-    text-transform: uppercase;
-    text-align: center;
-  }
-  .tv-power {
-    cursor: pointer;
-    background: radial-gradient(circle at 30% 30%, #ff8866, #cc2211 60%, #661100);
-    width: 46px; height: 46px;
-    border-radius: 50%;
-    border: 2px solid rgba(255,180,150,0.3);
-    box-shadow:
-      0 2px 4px rgba(0,0,0,0.5),
-      inset 0 -2px 0 rgba(0,0,0,0.3),
-      0 0 14px rgba(255,77,46,0.4);
-    color: white;
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 9.5px; font-weight: 700;
-    letter-spacing: 0.06em;
-    display: flex; align-items: center; justify-content: center;
-    transition: transform 0.15s;
-    animation: power-glow 2.4s ease-in-out infinite;
-    flex-shrink: 0;
-  }
-  @keyframes power-glow {
-    0%, 100% { box-shadow: 0 2px 4px rgba(0,0,0,0.5), inset 0 -2px 0 rgba(0,0,0,0.3), 0 0 12px rgba(255,77,46,0.35); }
-    50%      { box-shadow: 0 2px 4px rgba(0,0,0,0.5), inset 0 -2px 0 rgba(0,0,0,0.3), 0 0 26px rgba(255,77,46,0.75); }
-  }
-  .tv-power:hover { transform: scale(1.06); animation-duration: 1.2s; }
-  .tv-power:active { transform: scale(0.94); }
-
-  .tv-stand {
-    width: 220px; height: 28px;
-    margin: 0 auto;
-    background: linear-gradient(to bottom, var(--tv-cabinet), var(--tv-cabinet-2));
-    border-radius: 0 0 14px 14px;
-    box-shadow: 0 10px 18px rgba(22,22,29,0.2);
-  }
-  .tv-stand::after {
-    content: '';
-    display: block;
-    width: 340px; max-width: 90vw;
-    height: 1px;
-    margin: 26px auto 0;
-    background: linear-gradient(to right, transparent, var(--line), transparent);
-  }
-
-  .tv-hint {
-    position: absolute;
-    bottom: -56px; left: 50%; transform: translateX(-50%);
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 11px; letter-spacing: 0.16em;
-    color: var(--ink-mute);
-    text-transform: uppercase;
-    white-space: nowrap;
-    animation: hint-bob 2s ease-in-out infinite;
-  }
-  @keyframes hint-bob {
-    0%, 100% { transform: translate(-50%, 0); }
-    50%      { transform: translate(-50%, -4px); }
-  }
-  .tv-hint .em { color: var(--accent); font-weight: 700; }
-
-  /* ============ STAGE 2 — CINEMA ROOM ============ */
-  .cinema-room {
-    position: fixed; inset: 0;
-    padding: 70px 32px 22px;
-    display: flex; flex-direction: column;
-    opacity: 0; visibility: hidden;
-    transition: opacity 0.45s ease 0.35s, visibility 0.45s ease 0.35s;
-  }
-  body.is-tv-on .cinema-room { opacity: 1; visibility: visible; }
-  .cinema-room[hidden] { display: none; }
-
-  /* Screen area (top) */
-  .screen-area {
-    flex: 1;
-    display: flex; align-items: center; justify-content: center;
-    margin-bottom: 14px;
-    min-height: 0;
-  }
-  /* 上区: 米色 paper "playbill" — 暗木框, 内部 cream */
-  .screen-frame {
-    width: 100%;
-    max-width: 1000px;
-    height: 100%;
-    max-height: 620px;
-    background: var(--paper);
-    border-radius: 8px;
-    position: relative;
-    overflow: hidden;
-    box-shadow:
-      inset 0 0 0 1px var(--line),
-      0 0 0 12px var(--tv-cabinet),
-      0 0 0 13px rgba(0,0,0,0.25),
-      0 30px 60px rgba(22,22,29,0.18);
-  }
-  /* 角标装饰 (像放映厅 program 的角标) */
-  .screen-frame::before {
-    content: '';
-    position: absolute; left: 16px; top: 16px;
-    width: 22px; height: 22px;
-    border-top: 1.5px solid var(--ink);
-    border-left: 1.5px solid var(--ink);
-    pointer-events: none; z-index: 10;
-  }
-  .screen-frame::after {
-    content: '';
-    position: absolute; right: 16px; bottom: 16px;
-    width: 22px; height: 22px;
-    border-bottom: 1.5px solid var(--ink);
-    border-right: 1.5px solid var(--ink);
-    pointer-events: none; z-index: 10;
-  }
-  .screen-content {
-    position: absolute; inset: 0;
-    padding: 36px 44px;
-    display: flex; flex-direction: column;
+    font-size: 17px; font-weight: 800;
     color: var(--ink);
-    overflow: auto;
-    z-index: 2;
+    margin: 0 0 8px;
+    line-height: 1.4;
   }
-  .screen-content::-webkit-scrollbar { width: 4px; }
-  .screen-content::-webkit-scrollbar-thumb { background: var(--line); border-radius: 2px; }
-
-  /* Content swap: no animation, content just changes */
-
-  /* Screen content — 暗字 on cream playbill */
-  .sc-head {
-    display: flex; justify-content: space-between; align-items: center;
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase;
-    color: var(--ink-mute);
-    margin-bottom: 16px;
-    padding-bottom: 12px;
-    border-bottom: 1px dashed var(--line);
-  }
-  .sc-head .sc-take { color: var(--accent); font-weight: 700; }
-  .sc-title {
-    font-family: 'Noto Serif SC', serif; font-weight: 900;
-    font-size: clamp(24px, 3.4vw, 34px);
-    line-height: 1.12; letter-spacing: -0.01em;
-    margin: 0 0 10px; color: var(--ink);
-  }
-  .sc-tagline {
-    font-size: 14.5px; line-height: 1.65;
+  .pain-a {
+    font-size: 13.5px;
     color: var(--ink-soft);
-    margin: 0 0 18px;
-    max-width: 60ch;
-  }
-  .sc-keys {
-    list-style: none; padding: 0; margin: 0 0 18px;
-    display: flex; flex-direction: column; gap: 5px;
-  }
-  .sc-keys li {
-    font-size: 13px; line-height: 1.6;
-    display: flex; gap: 10px;
-    color: var(--ink);
-  }
-  .sc-keys li::before { content: '▸'; color: var(--accent); font-weight: 700; }
-
-  .sc-practice {
-    margin-top: auto; margin-bottom: 16px;
-    padding: 14px 18px;
-    background: var(--accent-soft);
-    border: 1px dashed var(--accent);
-    border-radius: 5px;
-    position: relative;
-  }
-  .sc-practice::before {
-    content: 'PRACTICE'; position: absolute; top: -8px; left: 14px;
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 9px; font-weight: 700; letter-spacing: 0.18em;
-    color: var(--accent);
-    background: var(--paper);
-    padding: 1px 7px;
-    border: 1px dashed var(--accent);
-    border-radius: 3px;
-  }
-  .sc-practice h5 { font-family: 'Noto Serif SC', serif; font-weight: 700; font-size: 13.5px; margin: 4px 0 6px; color: var(--ink); }
-  .sc-practice p { font-size: 12px; line-height: 1.6; color: var(--ink-soft); margin: 0; }
-
-  .sc-play-row {
-    display: flex; align-items: center; justify-content: space-between;
-    padding-top: 12px;
-    border-top: 1px dashed var(--line);
-  }
-  .sc-play-meta {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 11px; letter-spacing: 0.1em;
-    color: var(--ink-mute);
-  }
-  .sc-play-btn {
-    background: var(--accent); color: white; border: none;
-    padding: 12px 22px; border-radius: 100px;
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 12.5px; font-weight: 700;
-    letter-spacing: 0.08em; cursor: pointer;
-    display: inline-flex; align-items: center; gap: 8px;
-    transition: all 0.15s;
-    box-shadow: 0 4px 14px rgba(255,77,46,0.32);
-  }
-  .sc-play-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 18px rgba(255,77,46,0.5); }
-  .sc-play-btn:active { transform: translateY(0); }
-
-  /* Chapter intro variant */
-  .sc-chapter-num {
-    font-family: 'Fraunces', serif; font-style: italic; font-weight: 600;
-    font-size: 60px; color: var(--accent); line-height: 1;
-    margin: 0 0 4px;
-  }
-  .sc-section { margin-bottom: 14px; }
-  .sc-section h4 {
-    font-family: 'JetBrains Mono', monospace; font-size: 10.5px;
-    letter-spacing: 0.16em; color: var(--accent);
-    text-transform: uppercase; margin: 0 0 6px;
-  }
-  .sc-section p { font-size: 13.5px; line-height: 1.7; color: var(--ink-soft); margin: 0; }
-  .sc-section p .em { font-family: 'Noto Serif SC', serif; color: var(--accent); font-weight: 500; }
-  .sc-section p strong { color: var(--ink); font-weight: 600; }
-  .sc-stats {
-    display: flex; gap: 22px;
-    padding: 14px 18px;
-    background: var(--bg-2);
-    border: 1px dashed var(--line);
-    border-radius: 5px;
-    margin-top: auto;
-  }
-  .sc-stats .s { display: flex; flex-direction: column; gap: 2px; }
-  .sc-stats .s .k {
-    font-family: 'JetBrains Mono', monospace; font-size: 9.5px;
-    letter-spacing: 0.14em; color: var(--ink-mute); text-transform: uppercase;
-  }
-  .sc-stats .s b {
-    font-family: 'Noto Serif SC', serif; font-weight: 700; font-size: 18px;
-    color: var(--ink);
-  }
-
-  /* Chapter cover — chapter num + title side-by-side */
-  .sc-chapter-row {
-    display: grid; grid-template-columns: auto 1fr; gap: 22px;
-    align-items: center;
-    margin-bottom: 14px;
-  }
-  .sc-chapter-row .sc-chapter-num { margin: 0; line-height: 0.9; }
-  .sc-chapter-row .sc-chapter-headline { display: flex; flex-direction: column; gap: 4px; }
-  .sc-chapter-row .sc-title { margin: 0; }
-  .sc-chapter-row .sc-tagline { margin: 0; }
-
-  /* Chapter cover — modules summary list */
-  .sc-ch-modules {
-    list-style: none; padding: 0; margin: 0;
-    display: flex; flex-direction: column; gap: 6px;
-  }
-  .sc-ch-modules li {
-    display: grid; grid-template-columns: 48px 1fr auto;
-    gap: 14px; align-items: center;
-    padding: 10px 12px;
-    background: var(--bg-2);
-    border: 1px dashed var(--line);
-    border-radius: 5px;
-  }
-  .sc-ch-modules li .cm-num {
-    font-family: 'Fraunces', serif; font-style: italic; font-weight: 600;
-    font-size: 22px; color: var(--accent); line-height: 1;
-    text-align: center;
-  }
-  .sc-ch-modules li .cm-body { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
-  .sc-ch-modules li .cm-title {
-    font-family: 'Noto Serif SC', serif; font-weight: 700;
-    font-size: 14px; color: var(--ink); letter-spacing: -0.005em;
-  }
-  .sc-ch-modules li .cm-intro {
-    font-size: 12px; color: var(--ink-soft); line-height: 1.55;
-  }
-  .sc-ch-modules li .cm-count {
-    font-family: 'JetBrains Mono', monospace; font-size: 10px;
-    color: var(--ink-mute); letter-spacing: 0.06em;
-    padding: 3px 8px; border: 1px solid var(--line); border-radius: 100px;
-    white-space: nowrap;
-  }
-
-  /* Module cover — lesson list */
-  .sc-mod-lessons {
-    list-style: none; padding: 0; margin: 0;
-    display: grid; grid-template-columns: 1fr 1fr; gap: 4px 18px;
-  }
-  .sc-mod-lessons li {
-    display: grid; grid-template-columns: auto 1fr auto;
-    gap: 10px; align-items: baseline;
-    padding: 6px 0;
-    border-bottom: 1px dashed var(--line);
-    font-size: 12.5px; color: var(--ink);
-  }
-  .sc-mod-lessons li .ml-num {
-    font-family: 'JetBrains Mono', monospace; font-size: 10px;
-    color: var(--accent); font-weight: 700;
-    letter-spacing: 0.04em;
-  }
-  .sc-mod-lessons li .ml-title { color: var(--ink); }
-  .sc-mod-lessons li .ml-dur {
-    font-family: 'JetBrains Mono', monospace; font-size: 9.5px;
-    color: var(--ink-mute); letter-spacing: 0.04em;
-  }
-
-  /* End / FIN variant */
-  .sc-end-wrap { margin: auto; text-align: center; padding: 20px; }
-  .sc-end-fin {
-    font-family: 'Fraunces', serif; font-style: italic; font-weight: 600;
-    font-size: 80px; color: var(--accent); line-height: 1; margin-bottom: 10px;
-  }
-  .sc-end-cap {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 11px; letter-spacing: 0.2em;
-    color: var(--ink-mute); text-transform: uppercase;
-  }
-
-  /* ============ REEL (bottom) — 缩小的胶卷 ============ */
-  .reel-area {
-    position: relative;
-    background: var(--film-dark);
-    border-radius: 4px;
-    padding: 12px 0;
-    overflow: hidden;
-    box-shadow: inset 0 0 0 1px rgba(0,0,0,0.4), 0 8px 22px rgba(22,22,29,0.18);
-  }
-  /* Sprocket holes top + bottom — cream so they "punch through" the dark film */
-  .reel-area::before, .reel-area::after {
-    content: '';
-    position: absolute; left: 0; right: 0;
-    height: 9px;
-    background-image: radial-gradient(circle, var(--bg) 36%, transparent 40%);
-    background-size: 18px 9px;
-    background-repeat: repeat-x;
-    pointer-events: none;
-    z-index: 2;
-  }
-  .reel-area::before { top: 2px; }
-  .reel-area::after { bottom: 2px; }
-
-  .reel-track {
-    display: flex; gap: 4px;
-    overflow-x: auto;
-    scroll-snap-type: x mandatory;
-    padding: 10px 50%;
-    scroll-padding: 0 50%;
-    scrollbar-width: none;
-  }
-  .reel-track::-webkit-scrollbar { display: none; }
-
-  /* Lesson frame — 紧凑版 lobby card */
-  .reel-frame {
-    flex-shrink: 0;
-    width: 140px;
-    aspect-ratio: 16 / 11;
-    background: var(--paper);
-    border: 1px solid var(--line);
-    border-radius: 2px;
-    scroll-snap-align: center;
-    cursor: pointer;
-    position: relative;
-    display: flex; flex-direction: column;
-    justify-content: space-between;
-    padding: 8px 10px;
-    overflow: hidden;
-    transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.25);
-  }
-  .reel-frame:hover { transform: translateY(-3px); box-shadow: 0 6px 14px rgba(0,0,0,0.35); }
-  .reel-frame.is-active {
-    border-color: var(--accent);
-    box-shadow: 0 0 0 2px var(--accent), 0 6px 26px rgba(255,77,46,0.35);
-    transform: translateY(-4px);
-  }
-  .reel-frame.is-active::after {
-    content: '▶';
-    position: absolute; top: 4px; right: 6px;
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 9px; font-weight: 700;
-    color: white;
-    background: var(--accent);
-    padding: 1px 5px;
-    border-radius: 2px;
-    z-index: 3;
-  }
-
-  .frame-take {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 8px; letter-spacing: 0.12em;
-    color: var(--ink-mute); text-transform: uppercase;
-  }
-  .frame-title {
-    font-family: 'Noto Serif SC', serif; font-weight: 700;
-    font-size: 12px; line-height: 1.25;
-    color: var(--ink);
-    margin: auto 0;
-    /* clamp 2 lines */
-    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
-    overflow: hidden;
-  }
-  .frame-meta {
-    display: flex; justify-content: space-between;
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 8px; color: var(--ink-mute);
-    letter-spacing: 0.04em;
-  }
-  .frame-duration { color: var(--accent); font-weight: 700; }
-  /* Watched check mark — top-left corner */
-  .reel-frame.is-watched::before {
-    content: '✓';
-    position: absolute; top: 4px; left: 6px;
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 10px; font-weight: 700;
-    color: var(--accent);
-    z-index: 4;
-  }
-  .reel-frame.frame--slate.is-watched::before { color: var(--accent); }
-
-  /* Slate frame (chapter / preface) — 黑底白字, 像默片字幕卡 */
-  .reel-frame.frame--slate {
-    background: #16161d;
-    border: 1.5px solid var(--ink);
-    color: #fff;
-    align-items: center;
-    justify-content: center;
-    text-align: center;
-    background-image: radial-gradient(ellipse at 50% 50%, rgba(255,255,255,0.05), transparent 70%);
-    box-shadow: 0 2px 4px rgba(0,0,0,0.4);
-  }
-  .reel-frame.frame--slate .frame-slate-label {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 8px; letter-spacing: 0.16em;
-    color: rgba(255,255,255,0.6); text-transform: uppercase;
-    margin-bottom: 4px;
-  }
-  .reel-frame.frame--slate .frame-slate-num {
-    font-family: 'Fraunces', serif; font-style: italic; font-weight: 600;
-    font-size: 28px; line-height: 1;
-    color: #fff;
-    margin-bottom: 2px;
-  }
-  .reel-frame.frame--slate .frame-slate-title {
-    font-family: 'Noto Serif SC', serif; font-weight: 700;
-    font-size: 11px;
-    color: #fff;
-    padding: 0 4px;
-  }
-  /* Module slate variant — 跟 chapter slate 同色, 但缩小一档 + 暖色 label, 不要橙边
-     (橙边会跟"正在播放"的 ▶ 状态视觉冲突) */
-  .reel-frame.frame--slate-module {
-    background: #16161d;
-    border: 1.5px solid rgba(255,235,200,0.55);
-  }
-  .reel-frame.frame--slate-module .frame-slate-label {
-    color: rgba(255,235,200,0.55);
-  }
-  .reel-frame.frame--slate-module .frame-slate-num {
-    font-size: 22px;
-    color: rgba(255,235,200,0.92);
-  }
-  .reel-frame.frame--slate-module .frame-slate-title {
-    font-size: 10px;
-    color: rgba(255,235,200,0.7);
-  }
-  /* When active (current playing), THEN show the orange */
-  .reel-frame.frame--slate-module.is-active {
-    border-color: var(--accent);
-    box-shadow: 0 0 0 2px var(--accent), 0 0 26px rgba(255,77,46,0.4);
-  }
-
-  .reel-frame.frame--end {
-    background: #16161d;
-    border: 1px solid var(--ink);
-    align-items: center; justify-content: center;
-    color: rgba(255,255,255,0.55); text-align: center;
-  }
-  .reel-frame.frame--end .frame-end-text {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 11px; letter-spacing: 0.18em;
-    text-transform: uppercase;
-  }
-
-  .reel-frame.frame--tbd {
-    background: repeating-linear-gradient(45deg, var(--bg-2) 0 6px, var(--bg) 6px 12px);
-    color: var(--ink-mute);
-    border: 1px dashed var(--ink-mute);
-    box-shadow: none;
-  }
-  .reel-frame.frame--tbd .frame-tbd-stamp {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 11px; letter-spacing: 0.18em;
-    color: var(--ink-mute); text-transform: uppercase;
-    border: 1.5px dashed var(--ink-mute);
-    padding: 4px 10px;
-    transform: rotate(-3deg);
-    align-self: center; margin: auto;
-  }
-
-  /* Reel side fade so frames fade off the dark film at the edges */
-  .reel-area::before, .reel-area::after { z-index: 4; }
-  .reel-fade {
-    position: absolute; top: 0; bottom: 0; width: 80px;
-    pointer-events: none; z-index: 3;
-  }
-  .reel-fade--l { left: 0; background: linear-gradient(to right, var(--film-dark), transparent); }
-  .reel-fade--r { right: 0; background: linear-gradient(to left, var(--film-dark), transparent); }
-
-  /* ============ CONTROLS — 浅色 ============ */
-  .cinema-controls {
-    display: flex; justify-content: center; align-items: center;
-    gap: 10px; margin-top: 14px;
-    font-family: 'JetBrains Mono', monospace;
-  }
-  .cinema-btn {
-    background: var(--paper);
-    border: 1px solid var(--line);
-    color: var(--ink);
-    padding: 8px 14px;
-    border-radius: 4px;
-    font-family: inherit; font-size: 12px;
-    cursor: pointer; transition: all 0.15s;
-    letter-spacing: 0.06em;
-  }
-  .cinema-btn:hover { border-color: var(--accent); color: var(--accent); transform: translateY(-1px); }
-  .cinema-btn:disabled { opacity: 0.3; cursor: not-allowed; }
-  .cinema-position {
-    font-size: 11px; color: var(--ink-mute);
-    letter-spacing: 0.1em;
-    min-width: 80px; text-align: center;
-  }
-  .cinema-power-off {
-    background: var(--accent-soft);
-    border-color: var(--accent);
-    color: var(--accent);
-    margin-left: 14px;
-  }
-
-  /* ============ PLAYER MODAL ============ */
-  .player-modal {
-    position: fixed; inset: 0;
-    z-index: 200;
-    display: flex; align-items: center; justify-content: center;
-    padding: 24px;
-  }
-  .player-modal[hidden] { display: none; }
-  .player-backdrop {
-    position: absolute; inset: 0;
-    background: rgba(22,22,29,0.7);
-    backdrop-filter: blur(8px);
-    animation: fade-in 0.2s;
-  }
-  @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
-  .player-content {
-    position: relative;
-    background: var(--paper);
-    border-radius: 8px;
-    width: 100%;
-    max-width: 820px;
-    box-shadow: 0 30px 80px rgba(0,0,0,0.4);
-    overflow: hidden;
-    animation: pop-in 0.25s cubic-bezier(0.3,1.4,0.5,1);
-    border: 1px solid var(--line);
-  }
-  @keyframes pop-in { from { transform: scale(0.94); opacity: 0; } to { transform: scale(1); opacity: 1; } }
-  /* Player "screen" still dark — it's a video viewport */
-  .player-screen {
-    aspect-ratio: 16 / 9;
-    background:
-      repeating-linear-gradient(0deg, transparent 0 2px, rgba(255,255,255,0.03) 2px 3px),
-      radial-gradient(ellipse at 50% 50%, #1a1a22 0%, var(--screen-dark) 100%);
-    display: flex; align-items: center; justify-content: center;
-    color: var(--screen-ink-mute);
-    font-family: 'JetBrains Mono', monospace;
-    flex-direction: column;
-    gap: 10px;
-    position: relative;
-    overflow: hidden;
-  }
-  .player-screen::before {
-    content: ''; position: absolute; inset: 0;
-    background: radial-gradient(ellipse at 50% 50%, transparent 60%, rgba(0,0,0,0.6));
-    pointer-events: none;
-  }
-  .player-screen .ps-title {
-    font-size: 18px; letter-spacing: 0.04em;
-    color: var(--screen-ink); font-weight: 700;
-  }
-  .player-screen .ps-em {
-    color: var(--accent); font-weight: 700;
-    font-size: 12px; letter-spacing: 0.2em;
-  }
-  .player-screen .ps-sub {
-    font-size: 11px; color: var(--screen-ink-mute); letter-spacing: 0.16em;
-    text-transform: uppercase;
-  }
-  .player-info {
-    padding: 16px 22px;
-    border-top: 1px dashed var(--line);
-    display: flex; justify-content: space-between; align-items: center;
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 12px; color: var(--ink-soft);
-    background: var(--paper);
-  }
-  .player-info .pi-take { color: var(--accent); font-weight: 700; margin-right: 8px; }
-  .player-close {
-    position: absolute; top: 12px; right: 14px;
-    z-index: 5;
-    background: rgba(0,0,0,0.5); color: white;
-    border: 1px solid rgba(255,255,255,0.2);
-    width: 36px; height: 36px;
-    border-radius: 50%; cursor: pointer;
-    font-size: 16px;
-    display: flex; align-items: center; justify-content: center;
-    transition: all 0.15s;
-  }
-  .player-close:hover { background: var(--accent); border-color: var(--accent); color: white; }
-
-  /* ============ ROADMAP MODAL (频道菜单) ============ */
-  .roadmap-modal {
-    position: fixed; inset: 0;
-    z-index: 220;
-    display: flex; align-items: center; justify-content: center;
-    padding: 24px;
-  }
-  .roadmap-modal[hidden] { display: none; }
-  .roadmap-backdrop {
-    position: absolute; inset: 0;
-    background: rgba(22,22,29,0.65);
-    backdrop-filter: blur(8px);
-    animation: fade-in 0.2s;
-  }
-  .roadmap-panel {
-    position: relative;
-    background: var(--bg);
-    border: 1.5px solid var(--ink);
-    border-radius: 8px;
-    width: 100%;
-    max-width: 1400px;
-    max-height: calc(100vh - 48px);
-    overflow-y: auto;
-    padding: 28px 32px 22px;
-    box-shadow: 0 30px 80px rgba(0,0,0,0.4);
-    animation: pop-in 0.25s cubic-bezier(0.3,1.4,0.5,1);
-  }
-  .roadmap-close {
-    position: absolute; top: 14px; right: 16px;
-    background: var(--paper); color: var(--ink);
-    border: 1px solid var(--line);
-    width: 32px; height: 32px;
-    border-radius: 50%; cursor: pointer;
-    font-size: 16px;
-    display: flex; align-items: center; justify-content: center;
-    transition: all 0.15s; z-index: 5;
-  }
-  .roadmap-close:hover { border-color: var(--accent); color: var(--accent); }
-  .roadmap-header {
-    margin-bottom: 18px;
-    padding-bottom: 14px;
-    border-bottom: 1px dashed var(--line);
-  }
-  .roadmap-tag {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 10px; letter-spacing: 0.18em;
-    color: var(--accent); text-transform: uppercase;
-    margin-bottom: 6px;
-  }
-  .roadmap-title {
-    font-family: 'Noto Serif SC', serif; font-weight: 900;
-    font-size: 26px; margin: 0 0 4px;
-    letter-spacing: -0.01em;
-  }
-  .roadmap-title .em { font-family: 'Noto Serif SC', serif; color: var(--accent); font-weight: 500; }
-  .roadmap-sub {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 11px; color: var(--ink-mute);
-    letter-spacing: 0.06em;
+    line-height: 1.6;
     margin: 0;
   }
-  .roadmap-svg-wrap {
-    position: relative;
-    background: var(--paper);
-    border: 1.5px solid var(--ink);
-    border-radius: 12px;
-    margin-bottom: 14px;
-    overflow: hidden;
-    height: min(70vh, 640px);
-    cursor: grab;
-    touch-action: none;
-    /* graph-paper grid (matches VOL.II 旅程图) */
-    background-image:
-      linear-gradient(rgba(22,22,29,0.04) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(22,22,29,0.04) 1px, transparent 1px);
-    background-size: 24px 24px;
-    background-position: -1px -1px;
-  }
-  .roadmap-svg-wrap.is-dragging { cursor: grabbing; }
-  /* corner ticks */
-  .roadmap-svg-wrap::before {
-    content: ''; position: absolute;
-    top: 10px; left: 10px;
-    width: 22px; height: 22px;
-    border-top: 1.5px solid var(--ink);
-    border-left: 1.5px solid var(--ink);
-    pointer-events: none; z-index: 5;
-  }
-  .roadmap-svg-wrap::after {
-    content: ''; position: absolute;
-    bottom: 10px; right: 10px;
-    width: 22px; height: 22px;
-    border-bottom: 1.5px solid var(--ink);
-    border-right: 1.5px solid var(--ink);
-    pointer-events: none; z-index: 5;
-  }
-  .roadmap-svg {
-    width: 100%; height: 100%; display: block;
-    overflow: visible;
-    transform-origin: 0 0;
-    transition: transform 0.06s linear;
-    user-select: none;
-    -webkit-user-select: none;
-  }
-  .roadmap-svg-wrap.is-dragging .roadmap-svg { transition: none; }
+  .pain-a strong { color: var(--ink); font-weight: 600; }
 
-  /* Zoom controls overlay (复用 VOL.II 样式) */
-  .zoom-ctrl {
-    position: absolute;
-    bottom: 14px; right: 14px;
-    display: flex; flex-direction: column; gap: 2px;
+  /* === syllabus (§01) · 章卡内部分栏 · 左 stamp / 右 list === */
+  .syllabus-list {
+    margin-top: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  .chap {
     background: var(--paper);
-    border: 1px solid var(--ink-soft);
+    border: 1px solid var(--line);
     border-radius: 8px;
-    padding: 4px;
-    box-shadow: 0 6px 18px rgba(22,22,29,0.12);
-    z-index: 10;
-    font-family: 'JetBrains Mono', monospace;
+    overflow: hidden;
+    transition: border-color 0.2s, box-shadow 0.2s, transform 0.2s;
+    display: grid;
+    grid-template-columns: 260px 1fr;
   }
-  .zoom-btn {
-    width: 30px; height: 30px;
-    background: transparent; border: none;
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 14px; font-weight: 700;
-    color: var(--ink); cursor: pointer;
-    border-radius: 4px;
-    transition: all 0.15s ease;
-    display: flex; align-items: center; justify-content: center;
-    line-height: 1;
+  @media (max-width: 760px) {
+    .chap { grid-template-columns: 1fr; }
   }
-  .zoom-btn:hover { background: var(--accent-soft); color: var(--accent); }
-  .zoom-btn:active { transform: scale(0.94); }
-  .zoom-level {
-    font-size: 9.5px; text-align: center;
-    color: var(--ink-mute); padding: 2px 0;
-    border-top: 1px dashed var(--line);
-    border-bottom: 1px dashed var(--line);
-    letter-spacing: 0.04em;
-    user-select: none;
+  .chap:hover {
+    border-color: var(--ink-soft);
+    box-shadow: 0 8px 20px rgba(22,22,29,0.06);
+    transform: translateY(-2px);
   }
-  .zoom-hint {
-    position: absolute;
-    bottom: 14px; left: 14px;
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 10.5px; color: var(--ink-mute);
-    background: var(--paper);
-    border: 1px solid var(--line);
-    border-radius: 6px;
-    padding: 6px 10px;
-    pointer-events: none; z-index: 10;
-    opacity: 0.85;
-    letter-spacing: 0.04em;
-  }
-  .zoom-hint .k {
-    color: var(--ink); font-weight: 700;
-    background: var(--accent-soft);
-    padding: 1px 5px;
-    border-radius: 3px;
-    margin: 0 2px;
-  }
-
-  /* === Gantt-style production schedule === */
-  /* Time axis */
-  .g-grid { stroke: var(--line); stroke-width: 1; }
-  .g-grid--major { stroke: var(--ink-mute); stroke-dasharray: 2 4; }
-  .g-grid:not(.g-grid--major) { stroke-dasharray: 1 5; opacity: 0.5; }
-  .g-axis { stroke: var(--ink); stroke-width: 1.5; }
-  .g-time-label {
-    font-family: 'JetBrains Mono', monospace; font-size: 11px;
-    fill: var(--ink-mute); letter-spacing: 0.06em;
-    text-anchor: middle;
-  }
-  .g-runtime {
-    font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700;
-    fill: var(--accent); letter-spacing: 0.16em;
-  }
-  /* Module swim lane background */
-  .g-lane {
-    fill: var(--bg-2);
-    stroke: var(--line);
-    stroke-width: 1;
-    stroke-dasharray: 4 3;
-  }
-  /* Module label box (left side, clickable) */
-  .g-mod-label-group { cursor: pointer; transition: transform 0.15s ease; transform-box: fill-box; transform-origin: center; }
-  .g-mod-label-group:hover { transform: translateX(-3px); }
-  .g-mod-label-group:hover .g-mod-label-bg { fill: var(--accent); stroke: var(--accent); }
-  .g-mod-label-group:hover .g-mod-num,
-  .g-mod-label-group:hover .g-mod-time,
-  .g-mod-label-group:hover .g-mod-title { fill: #fff; }
-  .g-mod-label-bg {
-    fill: var(--ink); stroke: var(--ink); stroke-width: 1; rx: 4;
-  }
-  .g-mod-num {
-    font-family: 'Fraunces', serif; font-style: italic; font-weight: 600;
-    font-size: 22px; fill: var(--accent); letter-spacing: -0.02em;
-  }
-  .g-mod-time {
-    font-family: 'JetBrains Mono', monospace; font-size: 10px;
-    fill: rgba(243,238,229,0.7); letter-spacing: 0.08em;
-  }
-  .g-mod-title {
-    font-family: 'Noto Serif SC', serif; font-weight: 700;
-    font-size: 12.5px; fill: rgba(243,238,229,0.95);
-    letter-spacing: -0.005em;
-  }
-  /* Lesson bar */
-  .g-bar { cursor: pointer; }
-  .g-bar rect {
-    fill: var(--paper); stroke: var(--line); stroke-width: 1;
-    transition: fill 0.15s ease, stroke 0.15s ease, filter 0.15s ease;
-  }
-  .g-bar:hover rect { fill: var(--accent-soft); stroke: var(--accent); filter: drop-shadow(0 4px 10px rgba(255,77,46,0.3)); }
-  .g-bar.read rect { fill: var(--accent-soft); stroke: var(--accent); }
-  .g-bar.read:hover rect { fill: var(--accent); stroke: var(--accent); }
-  .g-bar.current rect { fill: var(--accent); stroke: var(--accent); stroke-width: 2; filter: drop-shadow(0 4px 14px rgba(255,77,46,0.5)); }
-  .g-bar-take {
-    font-family: 'Fraunces', serif; font-style: italic; font-weight: 600;
-    font-size: 22px; fill: var(--ink); letter-spacing: -0.01em;
-    pointer-events: none; dominant-baseline: middle;
-  }
-  .g-bar.read .g-bar-take { fill: var(--accent); }
-  .g-bar:hover .g-bar-take, .g-bar.current .g-bar-take, .g-bar.read:hover .g-bar-take { fill: #fff; }
-  .g-bar-title {
-    font-family: 'Noto Serif SC', serif; font-weight: 700;
-    font-size: 10.5px; fill: var(--ink); letter-spacing: -0.005em;
-    pointer-events: none;
-  }
-  .g-bar.read .g-bar-title { fill: var(--accent); }
-  .g-bar:hover .g-bar-title, .g-bar.current .g-bar-title, .g-bar.read:hover .g-bar-title { fill: #fff; }
-  .g-bar-check { pointer-events: none; }
-  .g-bar-check circle { fill: var(--accent); stroke: var(--paper); stroke-width: 1.5; }
-  .g-bar.read:hover .g-bar-check circle, .g-bar.current .g-bar-check circle { stroke: rgba(255,255,255,0.5); }
-
-  /* "尽请期待" 占位条 — 虚线橙色, 不可点 */
-  .g-bar-tbd { pointer-events: none; }
-  .g-bar-tbd rect {
-    fill: var(--accent-soft);
-    stroke: var(--accent);
-    stroke-width: 1.5;
-    stroke-dasharray: 4 3;
-    opacity: 0.85;
-    animation: g-tbd-pulse 2.4s ease-in-out infinite;
-  }
-  @keyframes g-tbd-pulse {
-    0%, 100% { opacity: 0.85; }
-    50%      { opacity: 0.55; }
-  }
-  .g-bar-tbd-label {
-    font-family: 'JetBrains Mono', monospace;
-    font-weight: 700; font-size: 11px;
-    fill: var(--accent); letter-spacing: 0.1em;
-  }
-
-  /* Anchor chips (head + tail) */
-  .g-chip { cursor: pointer; transition: transform 0.15s ease; transform-box: fill-box; transform-origin: center; }
-  .g-chip:hover { transform: translateY(-2px); }
-  .g-chip rect {
-    fill: var(--paper); stroke: var(--ink); stroke-width: 1.5;
-    transition: fill 0.15s ease, stroke 0.15s ease;
-  }
-  .g-chip text {
-    font-family: 'JetBrains Mono', monospace; font-size: 10.5px;
-    font-weight: 700; fill: var(--ink); letter-spacing: 0.08em;
-    dominant-baseline: middle; pointer-events: none;
-  }
-  .g-chip--head rect { fill: var(--ink); stroke: var(--ink); }
-  .g-chip--head text { fill: var(--paper); }
-  .g-chip--end rect { fill: var(--accent); stroke: var(--accent); }
-  .g-chip--end text { fill: #fff; }
-  .g-chip--tbd rect { fill: transparent; stroke: var(--ink-mute); stroke-dasharray: 4 3; }
-  .g-chip--tbd text { fill: var(--ink-mute); }
-  .g-chip--fin rect { fill: var(--ink); stroke: var(--ink); }
-  .g-chip--fin text { fill: var(--accent); font-family: 'Fraunces', serif; font-style: italic; }
-  .g-chip:hover rect { fill: var(--accent); stroke: var(--accent); }
-  .g-chip:hover text { fill: #fff; }
-  .g-chip.current rect { fill: var(--accent); stroke: var(--accent); }
-  .g-chip.current text { fill: #fff; }
-
-  .roadmap-legend {
-    display: flex; flex-wrap: wrap; gap: 16px;
-    padding: 10px 4px 0;
-    border-top: 1px dashed var(--line);
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 11px; color: var(--ink-soft);
-    letter-spacing: 0.04em;
-  }
-  .leg-item { display: flex; align-items: center; gap: 8px; }
-  .leg-dot { width: 14px; height: 14px; border-radius: 50%; display: inline-block; border: 1.5px solid var(--ink); position: relative; }
-  .leg-dot--lesson { background: var(--paper); }
-  .leg-dot--slate { background: var(--ink); }
-  .leg-dot--end { background: transparent; border-style: dashed; border-color: var(--ink-mute); }
-  .leg-dot--current { background: var(--accent); border-color: var(--accent); }
-  .leg-dot--watched { background: var(--accent-soft); border-color: var(--accent); }
-  .leg-dot--watched::after { content: '✓'; position: absolute; right: -5px; top: -7px; font-size: 10px; font-weight: 700; color: var(--accent); }
-
-  /* ============ INTERACTIVE DEMO (lesson screen) ============ */
-  .sc-demo {
-    margin: 14px 0 16px;
-    padding: 14px 16px 16px;
+  /* 左 stamp 区: 大序号 + 标题 + count, 一列堆叠 */
+  .chap-head {
+    padding: 28px 28px;
     background: var(--bg-2);
-    border: 1px dashed var(--ink);
+    border-right: 1px dashed var(--line);
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    justify-content: flex-start;
+  }
+  @media (max-width: 760px) {
+    .chap-head { border-right: none; border-bottom: 1px dashed var(--line); padding: 24px 24px 22px; flex-direction: row; align-items: center; gap: 20px; }
+  }
+  .chap-num {
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    font-size: 64px;
+    font-weight: 500;
+    color: var(--accent);
+    line-height: 0.82;
+    letter-spacing: -0.04em;
+    flex-shrink: 0;
+  }
+  @media (max-width: 760px) {
+    .chap-num { font-size: 52px; }
+  }
+  .chap-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+  }
+  .chap-title {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 19px;
+    font-weight: 800;
+    color: var(--ink);
+    margin: 0;
+    line-height: 1.3;
+  }
+  .chap-count {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10.5px;
+    color: var(--ink-mute);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+  /* 右 list 区: 节列表竖直, 真实内容感 */
+  .chap-items {
+    list-style: none;
+    padding: 18px 14px;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+  }
+  .chap-items li {
+    font-size: 14px;
+    color: var(--ink-soft);
+    padding: 11px 14px 11px 56px;
     border-radius: 5px;
     position: relative;
-  }
-  .sc-demo::before {
-    content: 'TRY · 试一试';
-    position: absolute; top: -9px; left: 14px;
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 9px; font-weight: 700; letter-spacing: 0.18em;
-    color: var(--ink); background: var(--paper);
-    padding: 1px 8px;
-    border: 1px solid var(--ink); border-radius: 3px;
-  }
-  .sc-demo-body { margin-top: 4px; }
-
-  /* Demo: 颜色搭建 — Prompt → AI 写入 Figma variables */
-  .cdx-grid {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr);
-    gap: 12px;
-    align-items: stretch;
-  }
-  @media (max-width: 720px) { .cdx-grid { grid-template-columns: 1fr; } }
-
-  /* LEFT — prompt editor */
-  .cdx-prompt {
-    background: var(--paper);
-    border: 1px solid var(--line);
-    border-radius: 5px;
-    padding: 10px 12px;
-    display: flex; flex-direction: column;
-    gap: 8px;
-    min-width: 0;
-  }
-  .cdx-head { display: flex; align-items: baseline; gap: 8px; padding-bottom: 6px; border-bottom: 1px dashed var(--line); }
-  .cdx-tag {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 9.5px; font-weight: 700; letter-spacing: 0.18em;
-    color: var(--accent); padding: 2px 6px;
-    border: 1px solid var(--accent); border-radius: 2px;
-  }
-  .cdx-sub { font-family: 'JetBrains Mono', monospace; font-size: 9.5px; color: var(--ink-mute); letter-spacing: 0.08em; }
-  .cdx-body { font-family: 'JetBrains Mono', monospace; font-size: 11.5px; color: var(--ink); line-height: 1.6; flex: 1; }
-  .cdx-line { margin-bottom: 4px; }
-  .cdx-bullet { padding-left: 10px; color: var(--ink-soft); margin-bottom: 2px; }
-  .cdx-color {
-    width: 22px; height: 14px; padding: 0;
-    border: 1px solid var(--ink); border-radius: 2px;
-    cursor: pointer; vertical-align: middle;
-    -webkit-appearance: none; appearance: none;
-    background: transparent;
-  }
-  .cdx-color::-webkit-color-swatch-wrapper { padding: 0; }
-  .cdx-color::-webkit-color-swatch { border: none; border-radius: 1px; }
-  .cdx-hex {
-    font-weight: 700; color: var(--accent);
-    letter-spacing: 0.04em;
-  }
-  .cdx-select {
-    font-family: 'JetBrains Mono', monospace; font-size: 11px;
-    color: var(--ink); background: var(--bg-2);
-    border: 1px solid var(--line); border-radius: 3px;
-    padding: 1px 6px; cursor: pointer;
-  }
-  .cdx-run {
-    align-self: flex-start;
-    background: var(--accent); color: white; border: none;
-    padding: 8px 14px; border-radius: 100px;
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 11.5px; font-weight: 700; letter-spacing: 0.06em;
-    cursor: pointer;
+    line-height: 1.5;
     transition: all 0.15s;
-    box-shadow: 0 3px 10px rgba(255,77,46,0.3);
-    margin-top: 2px;
   }
-  .cdx-run:hover { transform: translateY(-1px); box-shadow: 0 5px 14px rgba(255,77,46,0.45); }
-  .cdx-run.is-running { animation: cdx-pulse 0.4s ease infinite alternate; }
-  @keyframes cdx-pulse { from { opacity: 0.7; } to { opacity: 1; } }
-
-  /* RIGHT — Figma variables panel mockup */
-  .cdx-figma {
-    background: #fefefe;
-    border: 1px solid var(--ink);
-    border-radius: 5px;
-    display: flex; flex-direction: column;
-    min-width: 0;
-    overflow: hidden;
-    box-shadow: 0 3px 10px rgba(22,22,29,0.06);
+  .chap-items li:hover {
+    background: var(--bg);
+    color: var(--ink);
   }
-  .cdx-figma-head {
-    background: var(--ink); color: var(--paper);
-    padding: 6px 10px;
-    display: flex; align-items: center; justify-content: space-between;
-    gap: 8px;
+  .chap-items li::before {
+    content: '';
+    position: absolute;
+    left: 44px;
+    top: 50%;
+    width: 6px;
+    height: 1px;
+    background: var(--line);
+    transition: background 0.15s, width 0.15s;
   }
-  .cdx-figma-tag {
+  .chap-items li:hover::before {
+    background: var(--accent);
+    width: 8px;
+  }
+  .chap-items .li-num {
+    position: absolute;
+    left: 14px;
+    top: 11px;
     font-family: 'JetBrains Mono', monospace;
-    font-size: 8.5px; font-weight: 700; letter-spacing: 0.16em;
-    color: rgba(255,255,255,0.65); text-transform: uppercase;
+    font-size: 11.5px;
+    color: var(--accent);
+    font-weight: 600;
+    letter-spacing: 0.02em;
   }
-  .cdx-figma-coll {
-    font-family: 'Noto Serif SC', serif; font-weight: 700;
-    font-size: 11.5px; color: var(--paper);
-    letter-spacing: 0.04em;
-  }
-  .cdx-figma-body {
-    padding: 4px 0;
-    overflow-y: auto;
-    max-height: 230px;
-    scrollbar-width: thin;
-  }
-  .cdx-figma-empty {
-    padding: 30px 14px; text-align: center;
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 10.5px; color: var(--ink-mute);
-    letter-spacing: 0.06em;
-  }
-  .cdx-figma-group {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 8.5px; font-weight: 700; letter-spacing: 0.18em;
-    color: var(--ink-mute); text-transform: uppercase;
-    padding: 6px 12px 3px;
-    border-top: 1px dashed var(--line);
-  }
-  .cdx-figma-group:first-child { border-top: none; }
-  .cdx-figma-row {
-    display: grid;
-    grid-template-columns: 18px 1fr auto;
-    gap: 8px; align-items: center;
-    padding: 3px 12px;
-    font-size: 11px;
-  }
-  .cdx-figma-row:hover { background: rgba(22,22,29,0.04); }
-  .cdx-figma-row.is-anim {
-    opacity: 0;
-    animation: cdx-row-in 0.28s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
-    animation-delay: calc(var(--anim-i, 0) * 22ms);
-  }
-  @keyframes cdx-row-in {
-    from { opacity: 0; transform: translateX(-6px); }
-    to { opacity: 1; transform: translateX(0); }
-  }
-  .cdx-row-swatch {
-    width: 14px; height: 14px;
-    border-radius: 3px;
-    border: 1px solid rgba(22,22,29,0.18);
-    box-shadow: inset 0 0 0 1px rgba(255,255,255,0.2);
-  }
-  .cdx-row-name {
-    font-family: 'JetBrains Mono', monospace;
-    color: var(--ink); font-weight: 500;
-    letter-spacing: -0.005em;
-    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-  }
-  .cdx-row-hex {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 9.5px; color: var(--ink-mute);
-    letter-spacing: 0.04em;
-  }
-
-  /* Input section (条件渲染区) */
-  .cdx-input-section { padding: 4px 0; }
-  /* 参考图选择器 — 真实小图 (Unsplash), 缩小尺寸 */
-  .cdx-refs-row {
-    display: grid; grid-template-columns: repeat(4, 1fr);
-    gap: 5px; margin: 4px 0;
-    max-width: 280px;  /* 整行更紧凑 */
-  }
-  .cdx-ref {
-    aspect-ratio: 4 / 3;
-    border: 1.5px solid var(--line); border-radius: 3px;
-    cursor: pointer; padding: 0; position: relative;
-    display: block;
-    overflow: hidden;
-    background: var(--bg-2);
-    transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
-  }
-  .cdx-ref-svg {
-    width: 100%; height: 100%;
-    display: block;
-    transition: transform 0.3s ease;
-  }
-  .cdx-ref:hover { transform: translateY(-1px); border-color: var(--ink); box-shadow: 0 3px 8px rgba(0,0,0,0.25); }
-  .cdx-ref:hover .cdx-ref-svg { transform: scale(1.06); }
-  .cdx-ref.is-on { border-color: var(--accent); border-width: 2px; box-shadow: 0 0 0 2px rgba(255,77,46,0.3), 0 4px 10px rgba(255,77,46,0.3); }
-  .cdx-ref.is-on::after {
-    content: '✓'; position: absolute; top: 2px; right: 4px;
-    font-size: 10px; font-weight: 700; color: white;
-    text-shadow: 0 1px 2px rgba(0,0,0,0.7);
-    z-index: 2;
-  }
-  .cdx-ref-label {
-    position: absolute; left: 0; right: 0; bottom: 0;
-    font-family: 'JetBrains Mono', monospace; font-size: 8.5px;
-    color: white; letter-spacing: 0.04em;
-    background: linear-gradient(transparent, rgba(0,0,0,0.7));
-    padding: 8px 4px 3px;
-    text-align: center;
-    text-shadow: 0 1px 2px rgba(0,0,0,0.8);
-  }
-  .cdx-extracted {
-    font-family: 'JetBrains Mono', monospace; font-size: 11px;
-    color: var(--ink-soft); display: flex; align-items: center; gap: 4px;
-  }
-  .cdx-color-chip {
-    display: inline-block; width: 14px; height: 14px;
-    border-radius: 2px; border: 1px solid rgba(0,0,0,0.18);
-    vertical-align: middle;
-  }
-  .cdx-hint { color: var(--ink-mute); font-style: italic; }
-  /* shake when user clicks Run without picking image */
-  .cdx-run.is-shake { animation: cdx-shake 0.4s ease; }
-  @keyframes cdx-shake {
-    0%, 100% { transform: translateX(0); }
-    25% { transform: translateX(-4px); }
-    50% { transform: translateX(4px); }
-    75% { transform: translateX(-2px); }
-  }
-
-  /* ============ MOBILE — 竖屏, 全部缩小适配 ============ */
   @media (max-width: 760px) {
-    .topbar-meta { display: none; }
-
-    /* TV closed state — 整机收小 */
-    .tv-bezel {
-      width: min(88vw, 360px);
-      padding: 16px 16px 12px;
-      border-radius: 22px;
-    }
-    .tv-stand { width: 180px; height: 22px; }
-    .tv-stand::after { width: 260px; margin-top: 18px; }
-    .tv-hint { bottom: -40px; font-size: 9.5px; }
-    .tv { transform: translateY(-16px); }
-
-    /* Poster 内边距收紧 */
-    .tv-poster { padding: 10px; }
-    .poster-frame { padding: 18px 22px 16px; gap: 6px; }
-    .poster-en { font-size: clamp(22px, 5.5vw, 30px); }
-    .poster-cn { font-size: clamp(12px, 3.2vw, 15px); }
-    .poster-host img { width: 30px; height: 30px; }
-    .poster-host span { font-size: 7.5px; }
-
-    /* Cinema room — 竖向, 一切都缩小 */
-    .cinema-room { padding: 56px 10px 10px; }
-    .screen-area { margin-bottom: 10px; }
-    .screen-frame {
-      max-height: calc(100vh - 260px);   /* 留位给 reel + controls */
-      box-shadow:
-        inset 0 0 0 1px var(--line),
-        0 0 0 8px var(--tv-cabinet),
-        0 0 0 9px rgba(0,0,0,0.25);
-    }
-    .screen-content { padding: 16px 18px; }
-    .sc-title { font-size: 20px; }
-    .sc-tagline { font-size: 13px; }
-    .sc-keys li { font-size: 12px; }
-
-    /* Reel 横向滚动, 卡片缩小 */
-    .reel-area { padding: 10px 0; }
-    .reel-frame {
-      width: 124px;
-      aspect-ratio: 16 / 11;
-      padding: 7px 9px;
-    }
-    .reel-frame .frame-title { font-size: 11px; line-height: 1.25; }
-    .reel-frame .frame-take, .reel-frame .frame-meta { font-size: 7.5px; }
-    .reel-frame.frame--slate .frame-slate-num { font-size: 22px; }
-    .reel-frame.frame--slate .frame-slate-title { font-size: 9.5px; }
-
-    /* Controls — 大一点适合手指点 */
-    .cinema-controls { flex-wrap: wrap; gap: 6px; padding: 4px 8px; }
-    .cinema-controls .cinema-btn {
-      font-size: 11px;
-      padding: 8px 12px;
-      min-height: 36px;
-    }
-    .cinema-controls-sep { display: none; }
-    .cinema-position { min-width: 64px; font-size: 10.5px; }
+    .chap-items { padding: 14px 14px 18px; }
   }
+
+  /* === footer (with byline) === */
+  footer { border-top: 1px solid var(--line); padding: 56px 0 64px; background: var(--bg); }
+  .byline-group { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 28px; }
+  .byline { display: flex; gap: 16px; align-items: flex-start; min-width: 0; position: relative; }
+  .byline::before {
+    content: ''; position: absolute;
+    top: -56px; left: 0;
+    width: 32px; height: 1px;
+    background: var(--accent);
+  }
+  .byline .avatar {
+    width: 56px; height: 56px;
+    border-radius: 50%;
+    object-fit: cover;
+    flex-shrink: 0;
+    border: 3px solid var(--paper);
+    box-shadow: 0 0 0 1px var(--line), 0 6px 20px rgba(22,22,29,0.10);
+    background: var(--paper);
+  }
+  .byline-meta { min-width: 0; }
+  .byline-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--ink-mute);
+    letter-spacing: 0.18em;
+    margin-bottom: 6px;
+  }
+  .byline-label .dot {
+    display: inline-block;
+    width: 6px; height: 6px;
+    background: var(--accent);
+    border-radius: 50%;
+    margin-right: 6px;
+    vertical-align: 1px;
+  }
+  .byline-name {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 18px;
+    font-weight: 700;
+    line-height: 1.2;
+    letter-spacing: -0.01em;
+    margin: 0 0 6px;
+  }
+  .byline-name .em { font-family: 'Noto Serif SC', serif; font-weight: 500; color: var(--accent); }
+  .byline-tag { font-size: 12px; color: var(--ink-soft); line-height: 1.55; margin: 0; }
+  .footer-meta {
+    text-align: center;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--ink-mute);
+    letter-spacing: 0.05em;
+  }
+  .footer-meta .heart { color: var(--accent); }
+  .footer-meta .mono { color: var(--ink-soft); font-weight: 500; }
+  @media (max-width: 700px) {
+    .byline-group { grid-template-columns: 1fr; gap: 18px; }
+    .byline + .byline { padding-top: 18px; border-top: 1px dashed var(--line); }
+  }
+
 </style>
 </head>
-<body class="is-tv-off">
+<body>
 
-<!-- TOPBAR -->
+<!-- Topbar with VOL tabs -->
 <div class="topbar">
-  <a href="index.html" class="brand"><span class="dot"></span>AI LABBOOK</a>
-  <nav class="vol-tabs" role="tablist" aria-label="三卷切换">
-    <a class="vol-tab vol-tab--active" href="index.html" aria-current="page">
-      <span class="vol-tab-num">VOL. I</span>
-      <span class="vol-tab-name">给设计师的零基础 AI 课</span>
-    </a>
-    <a class="vol-tab" href="book.html#vol-2">
-      <span class="vol-tab-num">VOL. II</span>
-      <span class="vol-tab-name">AI × Design</span>
-    </a>
-    <a class="vol-tab" href="book.html#vol-3">
-      <span class="vol-tab-num">VOL. III</span>
-      <span class="vol-tab-name">Code × Design</span>
-    </a>
-  </nav>
+  <div class="wrap topbar-inner">
+    <a href="index.html" class="brand"><span class="dot"></span>AI LABBOOK</a>
+    <nav class="vol-tabs" role="tablist" aria-label="三卷切换">
+      <a class="vol-tab is-active" href="index.html" aria-current="page">
+        <span class="vol-tab-num">VOL. I</span>
+        <span class="vol-tab-name">给设计师的零基础 AI 课</span>
+      </a>
+      <a class="vol-tab" href="book.html#vol-2">
+        <span class="vol-tab-num">VOL. II</span>
+        <span class="vol-tab-name">AI × Design</span>
+      </a>
+      <a class="vol-tab" href="book.html#vol-3">
+        <span class="vol-tab-num">VOL. III</span>
+        <span class="vol-tab-name">Code × Design</span>
+      </a>
+    </nav>
+  </div>
 </div>
 
-<!-- STAGE 1: TV closed -->
-<div class="cinema-stage" id="cinema-stage">
-  <div class="tv">
-    <div class="tv-bezel">
-      <div class="tv-screen">
-        <!-- 复古胶片倒计时 leader (开机前) -->
-        <div class="tv-countdown" aria-hidden="true">
-          <div class="cd-cross-h"></div>
-          <div class="cd-cross-v"></div>
-          <div class="cd-circle"></div>
-          <div class="cd-sweep"></div>
-          <div class="cd-num" id="cd-num">3</div>
-        </div>
-        <div class="tv-channel-label">CH.01</div>
-        <div class="tv-content">
-          <div class="tv-poster">
-            <div class="poster-frame">
-              <div class="poster-title">
-                <span class="poster-en">AI for</span>
-                <span class="poster-en poster-en--accent">Designers</span>
-              </div>
-              <div class="poster-cn">零基础课</div>
+<!-- Hero -->
+<header class="hero">
+  <div class="wrap">
+    <div class="hero-meta">
+      <span class="pill fill">教程合集 · COLLECTION</span>
+      <span class="pill">2026 · 设计师 × AI</span>
+      <span class="pill">5 章 · 23 节</span>
+      <span class="label">持续更新</span>
+    </div>
+    <div class="hero-grid">
+      <div>
+        <h1>
+          <span class="display-cn">给设计师的</span><br>
+          <span class="display-cn">零基础</span><span class="em">AI 课</span>
+        </h1>
+        <p class="lede">
+          从 <span class="em">AI 工具</span> 入门 → <span class="em">设计工作流</span> 改造 → <span class="em">Vibe Coding</span> 实战。<br>
+          设计师视角,从 0 到 1 把 AI 用进工作里。
+        </p>
+      </div>
+      <div class="hero-side">
+        <div class="row"><span class="k">主理人</span><span class="v">范米花儿 + CE 青年</span></div>
+        <div class="row"><span class="k">章节</span><span class="v">5 章 · 23 节</span></div>
+        <div class="row"><span class="k">面向</span><span class="v">设计师 · 零基础</span></div>
+        <div class="row"><span class="k">状态</span><span class="v">持续更新 →</span></div>
+      </div>
+    </div>
+  </div>
+</header>
 
-              <div class="poster-rule"><span>✦</span><span class="poster-rule-line"></span><span>✦</span></div>
+<!-- §00 设计师的 AI 难题 -->
+<section id="pain-points">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>00</strong> / 缘起</div>
+        <h2 class="section-title">设计师的<br><span class="em">AI 难题</span>。</h2>
+      </div>
+      <p class="section-sub">
+        这门课为什么开?因为这 4 个高频卡点 ——
+        市面上<strong>没人从设计师视角</strong>系统讲过。
+      </p>
+    </div>
 
-              <div class="poster-cast">
-                <div class="poster-cast-label">STARRING</div>
-                <div class="poster-hosts">
-                  <div class="poster-host">
-                    <img src="author.jpg" alt="范米花儿">
-                    <span>范米花儿</span>
-                  </div>
-                  <div class="poster-host-x">×</div>
-                  <div class="poster-host">
-                    <img src="avatar-ce.jpg" alt="CE 青年">
-                    <span>CE 青年</span>
-                  </div>
-                </div>
-              </div>
-            </div>
+    <div class="pain-grid">
+      <div class="pain-card">
+        <div class="pain-emoji">😅</div>
+        <h3 class="pain-q">AI 到底能干啥?</h3>
+        <p class="pain-a">不清楚 AI 的<strong>能力边界</strong>,不掌握 AI 设计工作流。</p>
+      </div>
+      <div class="pain-card">
+        <div class="pain-emoji">😵</div>
+        <h3 class="pain-q">教程怎么都在讲代码?</h3>
+        <p class="pain-a">技术向太重,<strong>没人从设计师视角</strong>拆解。</p>
+      </div>
+      <div class="pain-card">
+        <div class="pain-emoji">😢</div>
+        <h3 class="pain-q">设计方案难以落地…</h3>
+        <p class="pain-a">想用 AI 解决问题,<strong>结果落地全是坑</strong>。</p>
+      </div>
+      <div class="pain-card">
+        <div class="pain-emoji">😬</div>
+        <h3 class="pain-q">怕被 AI 替代?</h3>
+        <p class="pain-a">想用 AI 放大市场价值,<strong>却不知如何下手</strong>。</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- §01 课程大纲 -->
+<section id="syllabus">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>01</strong> / 大纲</div>
+        <h2 class="section-title">课程<br><span class="em">大纲</span>。</h2>
+      </div>
+      <p class="section-sub">
+        5 章 · 23 节 —— 从工具到工作流到落地。
+        <strong>每一节都是一个能直接用上的小实践</strong>。
+      </p>
+    </div>
+
+    <div class="syllabus-list">
+      <div class="chap">
+        <div class="chap-head">
+          <span class="chap-num">01</span>
+          <div class="chap-meta">
+            <h3 class="chap-title">AI 产品的基础运用</h3>
+            <span class="chap-count">7 节 · CHAPTER ONE</span>
           </div>
         </div>
+        <ol class="chap-items">
+          <li><span class="li-num">1.1</span>为什么要学习 Vibe Coding</li>
+          <li><span class="li-num">1.2</span>Vibe Coding 产品推荐</li>
+          <li><span class="li-num">1.3</span>Codex 安装与订阅</li>
+          <li><span class="li-num">1.4</span>Codex 设置</li>
+          <li><span class="li-num">1.5</span>Codex 基础使用</li>
+          <li><span class="li-num">1.6</span>MCP 配置</li>
+          <li><span class="li-num">1.7</span>Computer Use 插件</li>
+        </ol>
       </div>
-      <div class="tv-controls">
-        <div class="tv-channel-knob" aria-hidden="true"></div>
-        <div class="tv-brand-plate"></div>
-        <button class="tv-power" id="tv-power" aria-label="开机">PWR</button>
+
+      <div class="chap">
+        <div class="chap-head">
+          <span class="chap-num">02</span>
+          <div class="chap-meta">
+            <h3 class="chap-title">AI 产品的设计工作流</h3>
+            <span class="chap-count">4 节 · CHAPTER TWO</span>
+          </div>
+        </div>
+        <ol class="chap-items">
+          <li><span class="li-num">2.1</span>问卷调研 AI 工作流</li>
+          <li><span class="li-num">2.2</span>设计走查 AI 工作流</li>
+          <li><span class="li-num">2.3</span>竞品分析 AI 工作流</li>
+          <li><span class="li-num">2.4</span>如何节约 Token 设计流</li>
+        </ol>
+      </div>
+
+      <div class="chap">
+        <div class="chap-head">
+          <span class="chap-num">03</span>
+          <div class="chap-meta">
+            <h3 class="chap-title">0–1 搭建规范及组件</h3>
+            <span class="chap-count">4 节 · CHAPTER THREE</span>
+          </div>
+        </div>
+        <ol class="chap-items">
+          <li><span class="li-num">3.1</span>AI 基础内容搭建(颜色 / 字体 / 效果)</li>
+          <li><span class="li-num">3.2</span>组件搭建规范 / Design.md</li>
+          <li><span class="li-num">3.3</span>基础组件搭建</li>
+          <li><span class="li-num">3.4</span>组件搭建 Skills</li>
+        </ol>
+      </div>
+
+      <div class="chap">
+        <div class="chap-head">
+          <span class="chap-num">04</span>
+          <div class="chap-meta">
+            <h3 class="chap-title">设计稿 · 前端还原落地</h3>
+            <span class="chap-count">4 节 · CHAPTER FOUR</span>
+          </div>
+        </div>
+        <ol class="chap-items">
+          <li><span class="li-num">4.1</span>数据大屏整理篇</li>
+          <li><span class="li-num">4.2</span>数据大屏还原篇</li>
+          <li><span class="li-num">4.3</span>数据大屏交互动画篇</li>
+          <li><span class="li-num">4.4</span>移动端页面还原</li>
+        </ol>
+      </div>
+
+      <div class="chap">
+        <div class="chap-head">
+          <span class="chap-num">05</span>
+          <div class="chap-meta">
+            <h3 class="chap-title">Vibe Coding 落地前端页面</h3>
+            <span class="chap-count">4 节 · CHAPTER FIVE</span>
+          </div>
+        </div>
+        <ol class="chap-items">
+          <li><span class="li-num">5.1</span>基于现有组件规范落地</li>
+          <li><span class="li-num">5.2</span>基于 Image2 落地页面</li>
+          <li><span class="li-num">5.3</span>基于开源 UI 库落地页面</li>
+          <li><span class="li-num">5.4</span>快速原型与页面迭代</li>
+        </ol>
       </div>
     </div>
-    <div class="tv-stand"></div>
-    <div class="tv-hint">按 <span class="em">PWR</span> 开机 · 进入放映厅</div>
-  </div>
-</div>
 
-<!-- STAGE 2: Cinema room -->
-<div class="cinema-room" id="cinema-room" hidden>
-  <div class="screen-area">
-    <div class="screen-frame">
-      <div class="screen-content" id="screen-content"></div>
+    <div class="hint-strip" style="margin-top:32px;">
+      <span class="hint-tag">持续更新</span>
+      内容陆续上线 —— 想先看代码侧实践,可以跳到 <a href="book.html#vol-3" style="color:var(--accent);font-weight:600;">VOL. III · Code × Design</a> 看完整路线图。
     </div>
   </div>
+</section>
 
-  <div class="reel-area">
-    <div class="reel-fade reel-fade--l"></div>
-    <div class="reel-track" id="reel-track"></div>
-    <div class="reel-fade reel-fade--r"></div>
-  </div>
-
-  <div class="cinema-controls">
-    <button class="cinema-btn cinema-btn--menu" id="cinema-menu">⊞ 频道菜单</button>
-    <button class="cinema-btn" id="cinema-prev">◀ 上一格</button>
-    <span class="cinema-position" id="cinema-position">01 / 24</span>
-    <button class="cinema-btn" id="cinema-next">下一格 ▶</button>
-    <button class="cinema-btn cinema-power-off" id="cinema-power-off">⏻ 关机</button>
-  </div>
-</div>
-
-<!-- ROADMAP MODAL (channel menu / 频道菜单) -->
-<div class="roadmap-modal" id="roadmap-modal" hidden>
-  <div class="roadmap-backdrop" data-roadmap-close></div>
-  <div class="roadmap-panel">
-    <button class="roadmap-close" data-roadmap-close aria-label="关闭">✕</button>
-    <div class="roadmap-header">
-      <div class="roadmap-tag">PROGRAM GUIDE · 频道菜单</div>
-      <h3 class="roadmap-title">制片 <span class="em">排期</span></h3>
-      <p class="roadmap-sub">点击任一节点 · 跳到对应的 take。</p>
-    </div>
-    <div class="roadmap-svg-wrap" id="roadmap-svg-wrap">
-      <svg class="roadmap-svg" id="roadmap-svg" viewBox="0 0 1200 1100" preserveAspectRatio="xMidYMid meet"></svg>
-      <div class="zoom-ctrl" id="rm-zoom-ctrl">
-        <button class="zoom-btn" id="rm-zoom-in" aria-label="放大" title="放大 (+)">+</button>
-        <div class="zoom-level" id="rm-zoom-level">100%</div>
-        <button class="zoom-btn" id="rm-zoom-out" aria-label="缩小" title="缩小 (-)">−</button>
-        <button class="zoom-btn" id="rm-zoom-fit" aria-label="还原" title="还原 (0)">⌂</button>
+<footer>
+  <div class="wrap">
+    <div class="byline-group">
+      <div class="byline">
+        <img class="avatar" src="author.jpg" alt="范米花儿">
+        <div class="byline-meta">
+          <div class="byline-label"><span class="dot"></span>主理人 · CURATOR</div>
+          <h3 class="byline-name">范米花儿</h3>
+          <p class="byline-tag">设计工程师 ——<br>设计 × 代码,两边都做。</p>
+        </div>
       </div>
-      <div class="zoom-hint">滚轮 / 双指 缩放 · 拖拽 平移 · <span class="k">+ −</span> <span class="k">0</span></div>
+      <div class="byline">
+        <img class="avatar" src="avatar-ce.jpg" alt="CE 青年">
+        <div class="byline-meta">
+          <div class="byline-label"><span class="dot"></span>合作者 · CO-AUTHOR</div>
+          <h3 class="byline-name">CE 青年</h3>
+          <p class="byline-tag">B 端交互 / AI 产品 ——<br>把体验落进产品里。</p>
+        </div>
+      </div>
     </div>
-    <div class="roadmap-legend">
-      <span class="leg-item"><span class="leg-dot leg-dot--lesson"></span>未播</span>
-      <span class="leg-item"><span class="leg-dot leg-dot--watched"></span>已播</span>
-      <span class="leg-item"><span class="leg-dot leg-dot--current"></span>正在播放</span>
-      <span class="leg-item"><span class="leg-dot leg-dot--slate"></span>章节锚点</span>
-      <span class="leg-item"><span class="leg-dot leg-dot--end"></span>尽请期待</span>
-    </div>
-  </div>
-</div>
-
-<!-- PLAYER MODAL -->
-<div class="player-modal" id="player-modal" hidden>
-  <div class="player-backdrop" data-player-close></div>
-  <div class="player-content">
-    <button class="player-close" data-player-close aria-label="关闭">✕</button>
-    <div class="player-screen">
-      <div class="ps-em">▶ NOW PLAYING</div>
-      <div class="ps-title" id="player-screen-title">—</div>
-      <div class="ps-sub">视频开发中 · COMING SOON</div>
-    </div>
-    <div class="player-info">
-      <span><span class="pi-take" id="player-info-take">TAKE 00</span><span id="player-info-title">—</span></span>
-      <span id="player-info-meta">—</span>
+    <div class="footer-meta">
+      做于 <span class="mono">2026</span> · 用 <span class="heart">●</span> 写给 <span class="mono">DESIGNERS</span>
     </div>
   </div>
-</div>
+</footer>
 
-<script>
-/* ============================================================
-   AI LABBOOK · CINEMA · VOL.01
-   ============================================================ */
-(function(){
-
-  /* ===== Course data ===== */
-  var data = {
-    intro: {
-      title: '为什么为设计师做这门 AI 课？',
-      tagline: 'AI 不是替代设计师的，是放大设计师的 —— 前提是你得知道 AI 在干嘛、能干嘛、不能干嘛。',
-      paragraphs: [
-        '过去一年，大多数设计师面对 AI 都有这种感觉 —— <strong>能用，但用不好</strong>。这门课的目的不是让你成为"AI 专家" —— 是让你 <strong>建立一套用 AI 做设计的工作流</strong>。',
-        '课程结构跟着实战路径走 —— 从 <strong>0-1 搭建</strong> 到 <strong>设计稿/需求 转前端</strong>，再到 <strong>团队协作</strong>。每节都附带一个能玩的小练习。'
-      ]
-    },
-    chapters: [
-      {
-        num: 'I',
-        title: 'AI 设计工作流',
-        subtitle: '从规范到落地 —— 一套 AI 辅助的设计流程',
-        introH4: '为什么这一章',
-        introBody: '不教技巧，教 <span class="em">工作流</span> —— 设计师每天要做的事，怎么用 AI 把它们串起来。',
-        valueText: '用 AI 从零搭一套设计规范和组件库；把设计稿和需求 <strong>变成可跑的前端页面</strong>。',
-        who: '0 基础设计师 · 想用 AI 提效',
-        stats: { mod: 3, lsn: 19 },
-        modules: [
-          { num: 'M·1', title: '0-1 搭建规范及组件',
-            intro: '从零搭一套设计规范 —— 颜色 / 字体 / 间距 / 组件，开工前先把"标尺"立起来。',
-
-            lessons: [
-            { num: '01', title: '颜色搭建', tagline: '从主色到中性色，一次性把色板捋清楚。', keys: ['色板层级 4 层 · 主辅状中', '语义命名 vs 数值命名', '色板生成的 3 种姿势'], practice: '给你一张品牌主视觉，让 AI 推导一整套色板。' },
-            { num: '02', title: '字体搭建', tagline: '字号阶梯 + 行高 + 字重 = 字体规范三大支柱。', keys: ['字号阶梯：从 12 到 64', '行高 1.4-1.7 是黄金区间', '字重 3-4 档够用了'], practice: '让 AI 根据你的产品类型推荐字号阶梯。' },
-            { num: '03', title: '圆角间距搭建', tagline: '间距系统 + 圆角规范，让设计有节奏感。', keys: ['4 / 8 base 系统', 'spacing token 命名', 'radius 3 档：sm / md / lg'], practice: '让 AI 把你的现有页面间距规范化。' },
-            { num: '04', title: '效果搭建', tagline: 'Shadow / Blur / Stroke —— 容易被忽视的视觉效果。', keys: ['shadow 3-4 级深度', '不同表面对应不同 shadow', 'stroke 的语义化'], practice: '生成一套 Material 风格的 shadow 体系。' },
-            { num: '05', title: '规范文档内容', tagline: '一份合格的规范文档，应该写些什么？', keys: ['原则在前、变量在后', '每个 token 都要有 use case', "Do/Don't 比定义有用"], practice: '让 AI 帮你写一节规范文档的草稿。' },
-            { num: '06', title: '规范文档排版一', tagline: '基础版式 —— 让文档好读不只是好看。', keys: ['每段不超过 4 行', '关键字加粗优于斜体', '左对齐 + 适度留白'], practice: '用 AI 给你的旧文档做"可读性体检"。' },
-            { num: '07', title: '规范文档排版二', tagline: '进阶版式 —— 图文混排、代码块、对照表。', keys: ['组件演示图布局', '代码块的命名 + 注释', '对照表 vs 列表怎么选'], practice: '把一段散文式的规范改成对照表。' },
-            { num: '08', title: '按钮组件搭建', tagline: '从一个 Button 开始 —— 组件搭建的 0-1 实例。', keys: ['variant 3-5 个就够', 'state 5 态', 'size 3 档'], practice: '用 AI 帮你列出一个完整 Button 的所有变体。' },
-            { num: '09', title: '按钮组件规范', tagline: '组件文档怎么写 —— Button 的最佳实践。', keys: ['先写"用法"再写"参数"', '可访问性 a11y 必须有', "Do/Don't 配示例"], practice: '让 AI 帮你写一份完整的 Button 文档。' },
-            { num: '10', title: '图标组件', tagline: '图标系统怎么建：风格 / 网格 / 命名 / 替换。', keys: ['24x24 网格 + 1.5 stroke', '风格统一比好看重要', '命名：动作-对象'], practice: '让 AI 评估你现有图标库的一致性。' },
-            { num: '11', title: '组件搭建 Skills', tagline: '11 节回顾 —— 组件搭建的可复用 Skill。', keys: ['Skill = 触发 + 步骤 + 产出', 'SKILL.md 怎么写', '团队共享 Skill 的方式'], practice: '把 M.1 学到的工作流封装成一个 SKILL.md。' }
-          ]},
-          { num: 'M·2', title: '设计稿 → 前端页面',
-            intro: 'Figma 稿子怎么 1:1 变成前端能跑的页面 —— 5 个真实场景拆解。',
-
-            lessons: [
-            { num: '01', title: '数据大屏整理篇', tagline: '大屏前的"打地基"：图层、命名、组件化。', keys: ['图层结构 3 层够了', '命名带 prefix', '可复用的元素先组件化'], practice: '用 AI 给你的大屏稿做"整洁度体检"。' },
-            { num: '02', title: '数据大屏还原篇', tagline: 'AI 看图 → 前端代码，怎么还原得像？', keys: ['先还原结构，再还原细节', '色板和字体作为 token 输入', 'AI 不擅长精确像素值'], practice: '让 AI 把一个简单 widget 变成 HTML/CSS。' },
-            { num: '03', title: '数据大屏动画交互篇', tagline: '动画怎么交付：从描述到实现。', keys: ['用动作动词描述', '时长 200-400ms 是黄金', 'cubic-bezier 比 ease 准确'], practice: 'AI 帮你写一段 transition 描述给前端。' },
-            { num: '04', title: '数据大屏切图 Skills', tagline: '切图自动化：从手工导出到批量 Skill。', keys: ['SVG > PNG > JPG', '命名：模块_组件_状态', '批量导出比手工快 10 倍'], practice: '封装一个"一键切图"的 SKILL.md。' },
-            { num: '05', title: '移动端页面还原', tagline: '响应式 + 触屏 —— 移动端还原的特殊点。', keys: ['断点 3 档：375 / 768 / 1024', 'touch target 最小 44px', 'AI 不擅长真机调试'], practice: '让 AI 给你的移动端稿生成响应式断点方案。' }
-          ]},
-          { num: 'M·3', title: '需求 → 前端页面',
-            intro: '没有设计稿，直接从需求生成页面 —— 3 种实战路径。',
-
-            lessons: [
-            { num: '01', title: '基于现有组件规范', tagline: '有规范的情况：拼装即生成。', keys: ['先列组件清单，再拼布局', '规范是 AI 的"词典"', '复杂交互不依赖 AI'], practice: '从一份 PRD 直接拼出页面骨架。' },
-            { num: '02', title: '基于 Image2', tagline: '靠"参考图"驱动 —— Image2 的实战姿势。', keys: ['参考图比 prompt 重要', '同一系列截 3 张更稳', '风格关键词要先提炼'], practice: '用 3 张参考图生成一个 dashboard。' },
-            { num: '03', title: '基于开源 UI 库', tagline: '不重复造轮子 —— 用 shadcn/ui 等开源库。', keys: ['shadcn = 复制粘贴式组件', '主题在 tailwind config 改', '复杂业务还得自己拼'], practice: '用 shadcn + AI 搭一个登录页。' }
-          ]}
-        ]
-      },
-      { num: 'II', tbd: true, title: '章节整理中', subtitle: '更多主题正在规划，持续补充 ——' }
-    ]
-  };
-
-  /* ===== Build flat frame array ===== */
-  var frames = [];
-  /* Preface */
-  frames.push({ kind: 'preface', take: '00', label: 'PREFACE', data: data.intro });
-
-  data.chapters.forEach(function(ch){
-    if (ch.tbd) {
-      frames.push({ kind: 'tbd', label: 'CH.' + ch.num, data: ch });
-      return;
-    }
-    /* Chapter slate */
-    frames.push({ kind: 'chapter', label: 'CH.' + ch.num, data: ch });
-    /* Lessons (each module gets its own slate before its lessons) */
-    var lessonIdx = 0;
-    ch.modules.forEach(function(m){
-      /* Module slate (cover) */
-      frames.push({ kind: 'module', chapter: ch.num, data: m });
-      m.lessons.forEach(function(l){
-        lessonIdx++;
-        frames.push({
-          kind: 'lesson',
-          take: lessonIdx,
-          chapter: ch.num,
-          module: m,
-          data: l
-        });
-      });
-    });
-    /* End of chapter */
-    frames.push({ kind: 'end-chapter', label: 'CH.' + ch.num + ' END', data: ch });
-  });
-  /* Final */
-  frames.push({ kind: 'end-reel', label: 'FIN' });
-
-  /* ===== DOM refs ===== */
-  var reelTrack = document.getElementById('reel-track');
-  var screenContent = document.getElementById('screen-content');
-  var positionEl = document.getElementById('cinema-position');
-  var playerModal = document.getElementById('player-modal');
-  var playerScreenTitle = document.getElementById('player-screen-title');
-  var playerInfoTitle = document.getElementById('player-info-title');
-  var playerInfoTake = document.getElementById('player-info-take');
-  var playerInfoMeta = document.getElementById('player-info-meta');
-
-  function escapeHtml(s) {
-    return s ? String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;') : '';
-  }
-  function pad2(n) { return String(n).padStart(2, '0'); }
-
-  /* ===== Watched tracking (persisted) — defined early so other code can use ===== */
-  var WATCHED_KEY = 'cinema-vol1-watched';
-  var watched = new Set();
-  try {
-    var _raw = localStorage.getItem(WATCHED_KEY);
-    if (_raw) JSON.parse(_raw).forEach(function(i){ watched.add(parseInt(i)); });
-  } catch (e) {}
-
-  function markWatched(idx) {
-    if (watched.has(idx)) return;
-    watched.add(idx);
-    try { localStorage.setItem(WATCHED_KEY, JSON.stringify(Array.from(watched))); } catch(e) {}
-    var el = reelTrack.children[idx];
-    if (el) el.classList.add('is-watched');
-  }
-  function applyWatched() {
-    Array.prototype.slice.call(reelTrack.children).forEach(function(el, i){
-      el.classList.toggle('is-watched', watched.has(i));
-    });
-  }
-
-  /* ===== Render reel ===== */
-  frames.forEach(function(f, idx){
-    var el = document.createElement('button');
-    el.className = 'reel-frame';
-    el.dataset.idx = idx;
-    el.type = 'button';
-    var html = '';
-    if (f.kind === 'lesson') {
-      html =
-        '<div class="frame-take">TAKE ' + pad2(f.take) + ' · ' + f.module.num + '</div>' +
-        '<div class="frame-title">' + escapeHtml(f.data.title) + '</div>' +
-        '<div class="frame-meta"><span>CH.' + f.chapter + '</span><span class="frame-take-num">TAKE ' + pad2(f.take) + '</span></div>';
-    } else if (f.kind === 'chapter') {
-      el.classList.add('frame--slate');
-      html =
-        '<div class="frame-slate-label">CHAPTER</div>' +
-        '<div class="frame-slate-num">' + f.data.num + '</div>' +
-        '<div class="frame-slate-title">' + escapeHtml(f.data.title) + '</div>';
-    } else if (f.kind === 'preface') {
-      el.classList.add('frame--slate');
-      html =
-        '<div class="frame-slate-label">PREFACE</div>' +
-        '<div class="frame-slate-num">00</div>' +
-        '<div class="frame-slate-title">关于这门课</div>';
-    } else if (f.kind === 'module') {
-      el.classList.add('frame--slate', 'frame--slate-module');
-      html =
-        '<div class="frame-slate-label">MODULE</div>' +
-        '<div class="frame-slate-num">' + f.data.num + '</div>' +
-        '<div class="frame-slate-title">' + escapeHtml(f.data.title) + '</div>';
-    } else if (f.kind === 'tbd') {
-      el.classList.add('frame--tbd');
-      html = '<div class="frame-tbd-stamp">CH.' + f.data.num + ' · 尽请期待</div>';
-    } else if (f.kind === 'end-chapter') {
-      el.classList.add('frame--end');
-      html = '<div class="frame-end-text">END · CH.' + f.data.num + '</div>';
-    } else if (f.kind === 'end-reel') {
-      el.classList.add('frame--end');
-      html = '<div class="frame-end-text">— FIN —</div>';
-    }
-    el.innerHTML = html;
-    el.addEventListener('click', function(){ selectFrame(idx, { smooth: true }); });
-    reelTrack.appendChild(el);
-  });
-
-  /* Apply persisted watched markers to the reel */
-  applyWatched();
-
-  /* ===== Selection ===== */
-  var current = 0;
-
-  function selectFrame(idx, opts) {
-    if (idx < 0 || idx >= frames.length) return;
-    opts = opts || {};
-    current = idx;
-    markWatched(idx);
-    /* Active class on reel */
-    Array.prototype.slice.call(reelTrack.children).forEach(function(el, i){
-      el.classList.toggle('is-active', i === idx);
-    });
-    /* Center the active frame in the reel — uses scrollIntoView since manual
-       calc + smooth scroll fights with scroll-snap-type: x mandatory. */
-    var activeEl = reelTrack.children[idx];
-    if (activeEl) {
-      try {
-        activeEl.scrollIntoView({ inline: 'center', block: 'nearest', behavior: opts.smooth ? 'smooth' : 'instant' });
-      } catch (e) {
-        /* fallback for older browsers */
-        var trackRect = reelTrack.getBoundingClientRect();
-        var elRect = activeEl.getBoundingClientRect();
-        reelTrack.scrollLeft += (elRect.left + elRect.width/2) - (trackRect.left + trackRect.width/2);
-      }
-    }
-    /* Update screen content */
-    renderScreen(frames[idx]);
-    /* Position label */
-    positionEl.textContent = pad2(idx + 1) + ' / ' + pad2(frames.length);
-  }
-
-  function renderScreen(f) {
-    var html = '';
-    if (f.kind === 'lesson') {
-      var l = f.data, m = f.module;
-      var demoKey = f.chapter + '-' + m.num + '-' + l.num;
-      var hasDemo = !!demos[demoKey];
-      html =
-        '<div class="sc-head">' +
-          '<span><span class="sc-take">TAKE ' + pad2(f.take) + '</span> · ' + m.num + ' · ' + escapeHtml(m.title) + '</span>' +
-          '<span>CHAPTER · ' + f.chapter + '</span>' +
-        '</div>' +
-        '<h2 class="sc-title">' + escapeHtml(l.title) + '</h2>' +
-        '<p class="sc-tagline">' + escapeHtml(l.tagline) + '</p>' +
-        '<ul class="sc-keys">' + l.keys.map(function(k){ return '<li>' + escapeHtml(k) + '</li>'; }).join('') + '</ul>' +
-        (hasDemo ? '<div class="sc-demo" data-demo="' + demoKey + '"><div class="sc-demo-body" data-demo-host></div></div>' : '');
-    } else if (f.kind === 'chapter') {
-      var ch = f.data;
-      var modulesHTML = (ch.modules || []).map(function(m){
-        return '<li>' +
-          '<span class="cm-num">' + m.num + '</span>' +
-          '<span class="cm-body"><b class="cm-title">' + escapeHtml(m.title) + '</b><span class="cm-intro">' + escapeHtml(m.intro || '') + '</span></span>' +
-          '<span class="cm-count">' + m.lessons.length + ' 节</span>' +
-          '</li>';
-      }).join('');
-      html =
-        '<div class="sc-head">' +
-          '<span><span class="sc-take">CHAPTER ' + ch.num + '</span> · ' + ch.stats.mod + ' 模块 · ' + ch.stats.lsn + ' 节</span>' +
-          '<span>VOL. 01 · 2026</span>' +
-        '</div>' +
-        '<div class="sc-chapter-row">' +
-          '<div class="sc-chapter-num">' + ch.num + '</div>' +
-          '<div class="sc-chapter-headline">' +
-            '<h2 class="sc-title">' + escapeHtml(ch.title) + '</h2>' +
-            '<p class="sc-tagline">' + escapeHtml(ch.subtitle) + '</p>' +
-          '</div>' +
-        '</div>' +
-        '<div class="sc-section"><h4>' + escapeHtml(ch.introH4) + '</h4><p>' + ch.introBody + '</p></div>' +
-        '<div class="sc-section"><h4>学完能做什么</h4><p>' + ch.valueText + '</p></div>' +
-        '<div class="sc-section"><h4>本章 · 模块导览</h4></div>' +
-        '<ul class="sc-ch-modules">' + modulesHTML + '</ul>';
-    } else if (f.kind === 'preface') {
-      html =
-        '<div class="sc-head"><span><span class="sc-take">PREFACE</span> · 引言</span><span>00</span></div>' +
-        '<h2 class="sc-title">' + escapeHtml(f.data.title) + '</h2>' +
-        '<p class="sc-tagline">' + escapeHtml(f.data.tagline) + '</p>' +
-        f.data.paragraphs.map(function(p){ return '<div class="sc-section"><p>' + p + '</p></div>'; }).join('');
-    } else if (f.kind === 'module') {
-      var mm = f.data;
-      var lessonsListHTML = mm.lessons.map(function(l, i){
-        return '<li><span class="ml-num">' + l.num + '</span><span class="ml-title">' + escapeHtml(l.title) + '</span></li>';
-      }).join('');
-      html =
-        '<div class="sc-head">' +
-          '<span><span class="sc-take">MODULE ' + mm.num + '</span> · CH.' + f.chapter + '</span>' +
-          '<span>' + mm.lessons.length + ' 节</span>' +
-        '</div>' +
-        '<div class="sc-chapter-num">' + mm.num + '</div>' +
-        '<h2 class="sc-title">' + escapeHtml(mm.title) + '</h2>' +
-        '<p class="sc-tagline">' + escapeHtml(mm.intro) + '</p>' +
-        '<div class="sc-section"><h4>本模块 · 小节列表</h4></div>' +
-        '<ul class="sc-mod-lessons">' + lessonsListHTML + '</ul>';
-    } else if (f.kind === 'tbd') {
-      html =
-        '<div class="sc-head"><span><span class="sc-take">CHAPTER ' + f.data.num + '</span></span><span>尽请期待</span></div>' +
-        '<div class="sc-chapter-num" style="opacity:0.4">' + f.data.num + '</div>' +
-        '<h2 class="sc-title" style="color:var(--ink-soft)">' + escapeHtml(f.data.title) + '</h2>' +
-        '<p class="sc-tagline">' + escapeHtml(f.data.subtitle) + '</p>' +
-        '<div class="sc-section" style="margin-top:auto;text-align:center;padding:24px;border:1.5px dashed var(--accent);border-radius:6px;color:var(--accent);background:var(--accent-soft)"><h4 style="color:var(--accent);margin:0">✦ 尽请期待 · COMING SOON</h4></div>';
-    } else if (f.kind === 'end-chapter') {
-      html =
-        '<div class="sc-head"><span><span class="sc-take">END</span></span><span>CH.' + f.data.num + ' · END</span></div>' +
-        '<div class="sc-end-wrap">' +
-          '<div class="sc-end-fin">END</div>' +
-          '<div class="sc-end-cap">CHAPTER ' + f.data.num + ' · COMPLETE</div>' +
-          '<p class="sc-tagline" style="margin:18px auto 0;max-width:32ch;">读完一卷 · 给自己鼓个掌。</p>' +
-        '</div>';
-    } else if (f.kind === 'end-reel') {
-      html =
-        '<div class="sc-end-wrap">' +
-          '<div class="sc-end-fin">FIN</div>' +
-          '<div class="sc-end-cap">END OF REEL · CH.01</div>' +
-          '<p class="sc-tagline" style="margin:18px auto 0;max-width:32ch;">这一卷放完了 · 下一卷还在拍 ——</p>' +
-        '</div>';
-    }
-    screenContent.innerHTML = html;
-
-    /* Wire play button if present */
-    var playBtn = screenContent.querySelector('[data-play]');
-    if (playBtn) playBtn.addEventListener('click', function(){ openPlayer(f); });
-
-    /* Mount interactive demo if registered */
-    var demoWrap = screenContent.querySelector('[data-demo]');
-    if (demoWrap) {
-      var key = demoWrap.getAttribute('data-demo');
-      var def = demos[key];
-      if (def) {
-        var host = demoWrap.querySelector('[data-demo-host]');
-        try { def.render(host); } catch(e) { console.error('demo render failed', e); }
-      }
-    }
-  }
-
-  /* ===== Roadmap (channel guide) modal — uses VOL.II j-* journey-map style ===== */
-  var roadmapModal = document.getElementById('roadmap-modal');
-  var roadmapSvg = document.getElementById('roadmap-svg');
-
-  function buildRoadmap() {
-    /* === 路线图 ===
-       三个 module 分三条 swim lane, 每节课 = 等宽方块 (没真实时长数据, 不假装).
-       lane 长度 = 课节数, 一眼能看出 M·1 比 M·3 大很多.
-       PREFACE / CHAPTER I / END·CHI / CHII (WIP) / FIN 是首尾 milestone chip. */
-    var BAR_W = 92;            /* 每节课方块宽 (容得下 6-7 个中文字标题, 长标题 hover tooltip) */
-    var BAR_GAP = 6;
-    var LEFT_PAD = 160;        /* 左边 module 标签列 */
-    var RIGHT_PAD = 60;
-    var Y_HEAD = 60;
-    var LANE_H = 92;
-    var LANE_GAP = 14;
-    var Y_M1 = 130;
-    var Y_M2 = Y_M1 + LANE_H + LANE_GAP;
-    var Y_M3 = Y_M2 + LANE_H + LANE_GAP;
-    var Y_TAIL = Y_M3 + LANE_H + 38;
-    var H = Y_TAIL + 60;
-
-    var ch = data.chapters[0];
-    var modules = ch.modules;
-    var moduleY = {}; moduleY['M·1'] = Y_M1; moduleY['M·2'] = Y_M2; moduleY['M·3'] = Y_M3;
-
-    /* 视图宽 = 最长 lane 的长度 + padding */
-    /* +1 留给 "尽请期待" 占位条 (每个 module 末尾) */
-    var maxLessons = Math.max.apply(null, modules.map(function(m){ return m.lessons.length; })) + 1;
-    var laneW = maxLessons * (BAR_W + BAR_GAP) - BAR_GAP;
-    var W = LEFT_PAD + laneW + RIGHT_PAD;
-
-    /* 找每个 module slate 的帧索引 (左边 module 标签可点跳转) */
-    var moduleSlateIdx = {};
-    frames.forEach(function(f, i){ if (f.kind === 'module') moduleSlateIdx[f.data.num] = i; });
-
-    /* 给每节课分配位置 (每个 module 内从 x=0 开始, 不连续) */
-    var nodePositions = {};
-    var moduleSlot = { 'M·1': 0, 'M·2': 0, 'M·3': 0 };
-    var anchorIdx = { preface: -1, chapter: -1, endChapter: -1, tbd: -1, endReel: -1 };
-    frames.forEach(function(f, idx){
-      if (f.kind === 'preface') anchorIdx.preface = idx;
-      else if (f.kind === 'chapter') anchorIdx.chapter = idx;
-      else if (f.kind === 'end-chapter') anchorIdx.endChapter = idx;
-      else if (f.kind === 'tbd') anchorIdx.tbd = idx;
-      else if (f.kind === 'end-reel') anchorIdx.endReel = idx;
-      else if (f.kind === 'lesson') {
-        var slot = moduleSlot[f.module.num]++;
-        var x = LEFT_PAD + slot * (BAR_W + BAR_GAP);
-        nodePositions[idx] = {
-          kind: 'lesson', x: x, y: moduleY[f.module.num],
-          w: BAR_W, h: LANE_H, take: f.take, title: f.data.title, mod: f.module.num
-        };
-      }
-    });
-
-    var svg = '';
-
-    /* === Module swim lanes === */
-    modules.forEach(function(m){
-      var y = moduleY[m.num];
-      /* 每个 module lane 比已有 lessons 再多一格, 留给"尽请期待"占位条 */
-      var modLaneW = (m.lessons.length + 1) * (BAR_W + BAR_GAP) - BAR_GAP;
-      /* lane bg */
-      svg += '<rect class="g-lane" x="' + LEFT_PAD + '" y="' + y + '" width="' + modLaneW + '" height="' + LANE_H + '" />';
-      /* "尽请期待" 占位条: 紧接在最后一节 lesson 之后, 虚线橙色 */
-      var tbdX = LEFT_PAD + m.lessons.length * (BAR_W + BAR_GAP);
-      svg += '<g class="g-bar-tbd" aria-hidden="true">' +
-        '<rect x="' + tbdX + '" y="' + (y + 6) + '" width="' + BAR_W + '" height="' + (LANE_H - 12) + '" rx="3" />' +
-        '<text class="g-bar-tbd-label" x="' + (tbdX + BAR_W/2) + '" y="' + (y + LANE_H/2 - 4) + '" text-anchor="middle">尽请</text>' +
-        '<text class="g-bar-tbd-label" x="' + (tbdX + BAR_W/2) + '" y="' + (y + LANE_H/2 + 14) + '" text-anchor="middle">期待</text>' +
-        '</g>';
-      /* clickable module label group on the left */
-      var jumpIdx = moduleSlateIdx[m.num];
-      svg += '<g class="g-mod-label-group"' + (jumpIdx != null ? ' data-jump-idx="' + jumpIdx + '"' : '') + '>';
-      svg += '<rect x="' + (LEFT_PAD - 144) + '" y="' + y + '" width="138" height="' + LANE_H + '" class="g-mod-label-bg" />';
-      svg += '<text class="g-mod-num" x="' + (LEFT_PAD - 132) + '" y="' + (y + 28) + '">' + m.num + '</text>';
-      svg += '<text class="g-mod-time" x="' + (LEFT_PAD - 132) + '" y="' + (y + 48) + '">' + m.lessons.length + ' 节 + 更新中</text>';
-      svg += '<text class="g-mod-title" x="' + (LEFT_PAD - 132) + '" y="' + (y + 72) + '">' + escapeHtml(m.title) + '</text>';
-      svg += '</g>';
-    });
-
-    /* === Lesson bars — 等宽方块: TAKE 号 + 课名 居中堆叠, 已看 ✓ 底部 === */
-    Object.keys(nodePositions).forEach(function(idxKey){
-      var idx = parseInt(idxKey);
-      var p = nodePositions[idx];
-      if (p.kind !== 'lesson') return;
-      var isWatched = watched.has(idx);
-      var isCurrent = idx === current;
-      var classes = 'g-bar' + (isWatched ? ' read' : '') + (isCurrent ? ' current' : '');
-      var midX = p.x + p.w / 2;
-      svg += '<g class="' + classes + '" data-jump-idx="' + idx + '">';
-      svg += '<title>TAKE ' + pad2(p.take) + ' · ' + escapeHtml(p.title) + '</title>';
-      svg += '<rect x="' + p.x + '" y="' + (p.y + 6) + '" width="' + p.w + '" height="' + (p.h - 12) + '" rx="3" />';
-      /* take number — top center, large italic */
-      svg += '<text class="g-bar-take" x="' + midX + '" y="' + (p.y + 30) + '" text-anchor="middle">' + pad2(p.take) + '</text>';
-      /* lesson title — middle, serif, 2-line clamp via SVG: split words */
-      svg += '<text class="g-bar-title" x="' + midX + '" y="' + (p.y + 56) + '" text-anchor="middle">' + escapeHtml(p.title) + '</text>';
-      /* watched check — bottom center */
-      if (isWatched) {
-        svg += '<g class="g-bar-check" transform="translate(' + midX + ',' + (p.y + p.h - 18) + ')">' +
-               '<circle r="6" />' +
-               '<polyline points="-3,0 -0.5,2.5 3,-2.5" fill="none" stroke="#fff" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" />' +
-               '</g>';
-      }
-      svg += '</g>';
-    });
-
-    /* === Anchor chips at top-row (PREFACE / CHAPTER) and tail (END / WIP / FIN) === */
-    /* Top row: PREFACE 00 + CHAPTER I, both at the start (x = LEFT_PAD), stacked side by side */
-    var headChips = [];
-    if (anchorIdx.preface >= 0) headChips.push({ idx: anchorIdx.preface, label: '00 · 引言', kind: 'preface' });
-    if (anchorIdx.chapter >= 0) headChips.push({ idx: anchorIdx.chapter, label: 'CHAPTER I · ' + escapeHtml(ch.title), kind: 'chapter' });
-    var hx = LEFT_PAD;
-    headChips.forEach(function(c){
-      var w = c.kind === 'chapter' ? 240 : 110;
-      var isCurrent = c.idx === current;
-      svg += '<g class="g-chip g-chip--head' + (isCurrent ? ' current' : '') + '" data-jump-idx="' + c.idx + '">';
-      svg += '<rect x="' + hx + '" y="' + Y_HEAD + '" width="' + w + '" height="32" rx="16" />';
-      svg += '<text x="' + (hx + w/2) + '" y="' + (Y_HEAD + 21) + '" text-anchor="middle">' + c.label + '</text>';
-      svg += '</g>';
-      hx += w + 8;
-    });
-
-    /* Tail row: END · CH I, then CH II (WIP), then FIN */
-    var tailChips = [];
-    if (anchorIdx.endChapter >= 0) tailChips.push({ idx: anchorIdx.endChapter, label: 'END · CH I', kind: 'end' });
-    if (anchorIdx.tbd >= 0) tailChips.push({ idx: anchorIdx.tbd, label: 'CH II · 尽请期待', kind: 'tbd' });
-    if (anchorIdx.endReel >= 0) tailChips.push({ idx: anchorIdx.endReel, label: '— FIN —', kind: 'fin' });
-    var txStart = LEFT_PAD;
-    tailChips.forEach(function(c){
-      var w = c.label.length > 8 ? 130 : 100;
-      var isCurrent = c.idx === current;
-      svg += '<g class="g-chip g-chip--' + c.kind + (isCurrent ? ' current' : '') + '" data-jump-idx="' + c.idx + '">';
-      svg += '<rect x="' + txStart + '" y="' + Y_TAIL + '" width="' + w + '" height="30" rx="15" />';
-      svg += '<text x="' + (txStart + w/2) + '" y="' + (Y_TAIL + 20) + '" text-anchor="middle">' + c.label + '</text>';
-      svg += '</g>';
-      txStart += w + 10;
-    });
-
-    roadmapSvg.setAttribute('viewBox', '0 0 ' + W + ' ' + H);
-    roadmapSvg.innerHTML = '<g class="rm-pan-zoom" transform="translate(0,0) scale(1)">' + svg + '</g>';
-    /* wire all clickable groups */
-    Array.prototype.slice.call(roadmapSvg.querySelectorAll('[data-jump-idx]')).forEach(function(g){
-      g.addEventListener('click', function(){
-        var idx = parseInt(g.getAttribute('data-jump-idx'));
-        toggleRoadmap(false);
-        selectFrame(idx, { smooth: true });
-      });
-    });
-  }
-  function toggleRoadmap(show) {
-    if (show) {
-      buildRoadmap();
-      roadmapModal.hidden = false;
-      document.body.style.overflow = 'hidden';
-      /* fit-to-view on every open so the user sees the whole map first */
-      requestAnimationFrame(function(){ rmFitToView(); });
-    } else {
-      roadmapModal.hidden = true;
-      document.body.style.overflow = '';
-    }
-  }
-  document.getElementById('cinema-menu').addEventListener('click', function(){ toggleRoadmap(true); });
-  Array.prototype.slice.call(roadmapModal.querySelectorAll('[data-roadmap-close]')).forEach(function(b){
-    b.addEventListener('click', function(){ toggleRoadmap(false); });
-  });
-
-  /* ===== Roadmap pan + zoom (operates on inner <g class="rm-pan-zoom">) =====
-     We work in viewBox coordinate space: panX/panY/zoom transform the inner
-     group so the visible window of the viewBox shifts. The mouse-anchor math
-     converts pointer pixels → viewBox units before computing new pan. */
-  var rmHost = document.getElementById('roadmap-svg-wrap');
-  var rmSvg = roadmapSvg;
-  var rmLevel = document.getElementById('rm-zoom-level');
-  var rmZoom = 1, rmPanX = 0, rmPanY = 0;
-  var RM_MIN = 0.4, RM_MAX = 3.5;
-  var RM_VBW = 1200, RM_VBH = 1100;
-
-  function rmGroup() { return rmSvg.querySelector('.rm-pan-zoom'); }
-  function rmApply() {
-    var g = rmGroup();
-    if (g) g.setAttribute('transform', 'translate(' + rmPanX + ',' + rmPanY + ') scale(' + rmZoom + ')');
-    if (rmLevel) rmLevel.textContent = Math.round(rmZoom * 100) + '%';
-  }
-  function rmReset() { rmZoom = 1; rmPanX = 0; rmPanY = 0; rmApply(); }
-  /* "fit to view" — scale so the whole viewBox content fits the visible host */
-  function rmFitToView() {
-    var hw = rmHost.clientWidth, hh = rmHost.clientHeight;
-    if (!hw || !hh) { rmReset(); return; }
-    /* The SVG itself maps its viewBox to its pixel size via preserveAspectRatio.
-       So 1 viewBox unit = (hw/RM_VBW) or (hh/RM_VBH) pixels — whichever is smaller. */
-    rmZoom = 1; rmPanX = 0; rmPanY = 0;
-    rmApply();
-  }
-
-  /* Convert a pixel point in host into viewBox units */
-  function rmPxToVb(px, py) {
-    var rect = rmHost.getBoundingClientRect();
-    /* SVG fits viewBox into its rect using preserveAspectRatio xMidYMid meet
-       — find effective scale + offset */
-    var hw = rect.width, hh = rect.height;
-    var s = Math.min(hw / RM_VBW, hh / RM_VBH);
-    var ox = (hw - RM_VBW * s) / 2;
-    var oy = (hh - RM_VBH * s) / 2;
-    return { x: (px - ox) / s, y: (py - oy) / s };
-  }
-
-  /* wheel zoom (anchor at cursor in viewBox coords) */
-  rmHost.addEventListener('wheel', function(e){
-    e.preventDefault();
-    var rect = rmHost.getBoundingClientRect();
-    var pt = rmPxToVb(e.clientX - rect.left, e.clientY - rect.top);
-    var delta = -e.deltaY * 0.0015;
-    var nz = Math.max(RM_MIN, Math.min(RM_MAX, rmZoom + delta * rmZoom));
-    if (nz === rmZoom) return;
-    rmPanX = pt.x - (pt.x - rmPanX) * (nz / rmZoom);
-    rmPanY = pt.y - (pt.y - rmPanY) * (nz / rmZoom);
-    rmZoom = nz;
-    rmApply();
-  }, { passive: false });
-
-  /* drag pan — convert pixel deltas to viewBox units */
-  var rmDragging = false, rmStartX = 0, rmStartY = 0, rmPStartX = 0, rmPStartY = 0, rmPxToVbScale = 1;
-  rmHost.addEventListener('pointerdown', function(e){
-    if (e.target.closest('.j-node')) return;
-    if (e.target.closest('.zoom-ctrl')) return;
-    if (e.target.closest('.zoom-hint')) return;
-    rmDragging = true;
-    rmHost.classList.add('is-dragging');
-    rmStartX = e.clientX; rmStartY = e.clientY;
-    rmPStartX = rmPanX; rmPStartY = rmPanY;
-    var rect = rmHost.getBoundingClientRect();
-    rmPxToVbScale = 1 / Math.min(rect.width / RM_VBW, rect.height / RM_VBH);
-    if (rmHost.setPointerCapture) try { rmHost.setPointerCapture(e.pointerId); } catch(_) {}
-    e.preventDefault();
-  });
-  rmHost.addEventListener('pointermove', function(e){
-    if (!rmDragging) return;
-    rmPanX = rmPStartX + (e.clientX - rmStartX) * rmPxToVbScale;
-    rmPanY = rmPStartY + (e.clientY - rmStartY) * rmPxToVbScale;
-    rmApply();
-  });
-  function rmEndDrag(e){
-    if (!rmDragging) return;
-    rmDragging = false;
-    rmHost.classList.remove('is-dragging');
-    if (rmHost.releasePointerCapture && e && e.pointerId != null) {
-      try { rmHost.releasePointerCapture(e.pointerId); } catch(_) {}
-    }
-  }
-  rmHost.addEventListener('pointerup', rmEndDrag);
-  rmHost.addEventListener('pointercancel', rmEndDrag);
-
-  /* buttons — zoom toward viewBox center */
-  function rmZoomBy(factor) {
-    var nz = Math.max(RM_MIN, Math.min(RM_MAX, rmZoom * factor));
-    var pt = rmPxToVb(rmHost.clientWidth / 2, rmHost.clientHeight / 2);
-    rmPanX = pt.x - (pt.x - rmPanX) * (nz / rmZoom);
-    rmPanY = pt.y - (pt.y - rmPanY) * (nz / rmZoom);
-    rmZoom = nz;
-    rmApply();
-  }
-  document.getElementById('rm-zoom-in').addEventListener('click',  function(){ rmZoomBy(1.25); });
-  document.getElementById('rm-zoom-out').addEventListener('click', function(){ rmZoomBy(1/1.25); });
-  document.getElementById('rm-zoom-fit').addEventListener('click', rmFitToView);
-
-  /* keyboard +/-/0 — only when roadmap modal is open */
-  document.addEventListener('keydown', function(e){
-    if (roadmapModal.hidden) return;
-    if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA')) return;
-    if (e.key === '+' || e.key === '=') { e.preventDefault(); rmZoomBy(1.25); }
-    else if (e.key === '-' || e.key === '_') { e.preventDefault(); rmZoomBy(1/1.25); }
-    else if (e.key === '0') { e.preventDefault(); rmFitToView(); }
-  });
-
-  /* pinch zoom (two fingers) */
-  var rmPointers = new Map();
-  var rmPinchStart = 0, rmPinchZoom = 1;
-  rmHost.addEventListener('pointerdown', function(e){
-    if (e.pointerType !== 'touch') return;
-    rmPointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
-    if (rmPointers.size === 2) {
-      var pts = Array.from(rmPointers.values());
-      rmPinchStart = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y);
-      rmPinchZoom = rmZoom;
-    }
-  });
-  rmHost.addEventListener('pointermove', function(e){
-    if (e.pointerType !== 'touch' || !rmPointers.has(e.pointerId)) return;
-    rmPointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
-    if (rmPointers.size === 2 && rmPinchStart > 0) {
-      var pts = Array.from(rmPointers.values());
-      var dist = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y);
-      var nz = Math.max(RM_MIN, Math.min(RM_MAX, rmPinchZoom * dist / rmPinchStart));
-      var rect = rmHost.getBoundingClientRect();
-      var pt = rmPxToVb((pts[0].x + pts[1].x) / 2 - rect.left, (pts[0].y + pts[1].y) / 2 - rect.top);
-      rmPanX = pt.x - (pt.x - rmPanX) * (nz / rmZoom);
-      rmPanY = pt.y - (pt.y - rmPanY) * (nz / rmZoom);
-      rmZoom = nz;
-      rmApply();
-    }
-  });
-  function rmClearTouch(e){ if (e.pointerType === 'touch') rmPointers.delete(e.pointerId); }
-  rmHost.addEventListener('pointerup', rmClearTouch);
-  rmHost.addEventListener('pointercancel', rmClearTouch);
-
-  /* ===== Interactive demo registry (lesson-level small demos) ===== */
-  /* === Color helpers (used by demo) === */
-  function _hexToHsl(hex) {
-    hex = hex.replace('#','');
-    var r = parseInt(hex.substr(0,2),16)/255;
-    var g = parseInt(hex.substr(2,2),16)/255;
-    var b = parseInt(hex.substr(4,2),16)/255;
-    var max = Math.max(r,g,b), min = Math.min(r,g,b);
-    var h, s, l = (max+min)/2;
-    if (max === min) { h = 0; s = 0; }
-    else {
-      var d = max-min;
-      s = l > 0.5 ? d/(2-max-min) : d/(max+min);
-      if (max === r) h = (g-b)/d + (g<b ? 6 : 0);
-      else if (max === g) h = (b-r)/d + 2;
-      else h = (r-g)/d + 4;
-      h = h * 60;
-    }
-    return [h, s*100, l*100];
-  }
-  function _hslToHex(h, s, l) {
-    s = s/100; l = Math.max(0, Math.min(100, l))/100;
-    var c = (1 - Math.abs(2*l-1))*s;
-    var x = c * (1 - Math.abs((h/60)%2 - 1));
-    var m = l - c/2;
-    var r=0, g=0, b=0;
-    if (h < 60)      { r=c; g=x; }
-    else if (h<120)  { r=x; g=c; }
-    else if (h<180)  { g=c; b=x; }
-    else if (h<240)  { g=x; b=c; }
-    else if (h<300)  { r=x; b=c; }
-    else             { r=c; b=x; }
-    function hx(v){ var s = Math.round((v+m)*255).toString(16); return s.length<2 ? '0'+s : s; }
-    return '#' + hx(r) + hx(g) + hx(b);
-  }
-
-  /* 4 张界面参考图 (内联 SVG 模拟 UI/Web 设计稿, AI 从其中取主色) */
-  var CDX_REFS = [
-    { id: 'minimal', label: '极简 · Light',
-      dominant: '#3b6bff',
-      svg:
-        '<rect width="80" height="60" fill="#f5f6f8"/>' +
-        '<rect x="0" y="0" width="80" height="9" fill="#ffffff"/>' +
-        '<circle cx="6" cy="4.5" r="1.4" fill="#3b6bff"/>' +
-        '<rect x="11" y="3.5" width="14" height="2" rx="0.5" fill="#1f2937"/>' +
-        '<rect x="64" y="3" width="10" height="3" rx="1.5" fill="#3b6bff"/>' +
-        '<rect x="8" y="14" width="48" height="3.5" rx="0.8" fill="#1f2937"/>' +
-        '<rect x="8" y="20" width="36" height="2" rx="0.5" fill="#9ca3af"/>' +
-        '<rect x="8" y="23.5" width="42" height="2" rx="0.5" fill="#9ca3af"/>' +
-        '<rect x="8" y="34" width="30" height="18" rx="1.5" fill="#ffffff" stroke="#e5e7eb" stroke-width="0.4"/>' +
-        '<rect x="11" y="37" width="8" height="8" rx="1" fill="#3b6bff" opacity="0.15"/>' +
-        '<rect x="11" y="47" width="14" height="1.4" rx="0.4" fill="#1f2937"/>' +
-        '<rect x="42" y="34" width="30" height="18" rx="1.5" fill="#ffffff" stroke="#e5e7eb" stroke-width="0.4"/>' +
-        '<rect x="45" y="37" width="8" height="8" rx="1" fill="#3b6bff" opacity="0.15"/>' +
-        '<rect x="45" y="47" width="14" height="1.4" rx="0.4" fill="#1f2937"/>' },
-    { id: 'dashboard', label: '暗色 · Dashboard',
-      dominant: '#10b981',
-      svg:
-        '<rect width="80" height="60" fill="#0f172a"/>' +
-        '<rect x="0" y="0" width="80" height="8" fill="#1e293b"/>' +
-        '<rect x="4" y="3" width="14" height="2" rx="0.5" fill="#10b981"/>' +
-        '<rect x="62" y="2.5" width="12" height="3" rx="1.5" fill="#10b981"/>' +
-        '<rect x="5" y="13" width="34" height="20" rx="1.5" fill="#1e293b"/>' +
-        '<polyline points="8,28 14,24 20,26 26,20 32,22 36,18" stroke="#10b981" stroke-width="0.8" fill="none"/>' +
-        '<circle cx="36" cy="18" r="1" fill="#10b981"/>' +
-        '<rect x="41" y="13" width="34" height="20" rx="1.5" fill="#1e293b"/>' +
-        '<rect x="44" y="28" width="2.5" height="4" rx="0.3" fill="#22d3ee"/>' +
-        '<rect x="48" y="25" width="2.5" height="7" rx="0.3" fill="#22d3ee"/>' +
-        '<rect x="52" y="22" width="2.5" height="10" rx="0.3" fill="#22d3ee"/>' +
-        '<rect x="56" y="19" width="2.5" height="13" rx="0.3" fill="#22d3ee"/>' +
-        '<rect x="60" y="16" width="2.5" height="16" rx="0.3" fill="#10b981"/>' +
-        '<rect x="64" y="20" width="2.5" height="12" rx="0.3" fill="#22d3ee"/>' +
-        '<rect x="68" y="24" width="2.5" height="8" rx="0.3" fill="#22d3ee"/>' +
-        '<rect x="5" y="37" width="70" height="3" rx="0.5" fill="#1e293b"/>' +
-        '<rect x="5" y="42" width="70" height="3" rx="0.5" fill="#1e293b"/>' +
-        '<rect x="5" y="47" width="70" height="3" rx="0.5" fill="#1e293b"/>' },
-    { id: 'gradient', label: '渐变 · Landing',
-      dominant: '#a855f7',
-      svg:
-        '<defs><linearGradient id="cdxg1" x1="0" y1="0" x2="1" y2="1">' +
-          '<stop offset="0" stop-color="#7c3aed"/>' +
-          '<stop offset="0.5" stop-color="#c026d3"/>' +
-          '<stop offset="1" stop-color="#f43f5e"/>' +
-        '</linearGradient></defs>' +
-        '<rect width="80" height="60" fill="url(#cdxg1)"/>' +
-        '<circle cx="14" cy="46" r="14" fill="#ffffff" opacity="0.06"/>' +
-        '<circle cx="66" cy="14" r="10" fill="#ffffff" opacity="0.08"/>' +
-        '<rect x="4" y="4" width="10" height="1.6" rx="0.4" fill="#ffffff" opacity="0.92"/>' +
-        '<rect x="60" y="3.5" width="16" height="3" rx="1.5" fill="#ffffff" opacity="0.18"/>' +
-        '<rect x="10" y="20" width="60" height="4" rx="0.6" fill="#ffffff" opacity="0.96"/>' +
-        '<rect x="10" y="27" width="48" height="2.2" rx="0.5" fill="#ffffff" opacity="0.7"/>' +
-        '<rect x="10" y="31" width="44" height="2.2" rx="0.5" fill="#ffffff" opacity="0.7"/>' +
-        '<rect x="10" y="42" width="20" height="6" rx="3" fill="#ffffff"/>' +
-        '<rect x="34" y="42" width="20" height="6" rx="3" fill="#ffffff" opacity="0.2" stroke="#ffffff" stroke-width="0.4"/>' },
-    { id: 'editorial', label: '编辑 · Magazine',
-      dominant: '#c2410c',
-      svg:
-        '<rect width="80" height="60" fill="#fef9f1"/>' +
-        '<rect x="0" y="0" width="80" height="6" fill="#fef9f1"/>' +
-        '<rect x="4" y="2" width="10" height="2" rx="0.4" fill="#c2410c"/>' +
-        '<rect x="32" y="2.4" width="6" height="1.2" rx="0.3" fill="#1c1917"/>' +
-        '<rect x="40" y="2.4" width="6" height="1.2" rx="0.3" fill="#1c1917"/>' +
-        '<rect x="48" y="2.4" width="6" height="1.2" rx="0.3" fill="#1c1917"/>' +
-        '<rect x="4" y="10" width="36" height="42" fill="#c2410c"/>' +
-        '<rect x="8" y="18" width="28" height="2.5" rx="0.4" fill="#ffffff" opacity="0.95"/>' +
-        '<rect x="8" y="22" width="22" height="2.5" rx="0.4" fill="#ffffff" opacity="0.95"/>' +
-        '<rect x="8" y="40" width="10" height="6" rx="3" fill="#ffffff"/>' +
-        '<rect x="44" y="10" width="32" height="3" rx="0.5" fill="#1c1917"/>' +
-        '<rect x="44" y="16" width="32" height="1.6" rx="0.4" fill="#78716c"/>' +
-        '<rect x="44" y="20" width="28" height="1.6" rx="0.4" fill="#78716c"/>' +
-        '<rect x="44" y="24" width="30" height="1.6" rx="0.4" fill="#78716c"/>' +
-        '<rect x="44" y="30" width="32" height="1.6" rx="0.4" fill="#78716c"/>' +
-        '<rect x="44" y="34" width="26" height="1.6" rx="0.4" fill="#78716c"/>' +
-        '<rect x="44" y="42" width="14" height="6" rx="0" fill="#1c1917"/>' +
-        '<rect x="62" y="42" width="14" height="6" rx="0" fill="#fbbf24"/>' }
-  ];
-
-  var demos = {
-    /* Lesson 01 颜色搭建 — Codex/AI prompt → 直接写入 Figma variables */
-    'I-M·1-01': {
-      label: 'Prompt → AI 写入 Figma 变量',
-      render: function(host) {
-        host.innerHTML =
-          '<div class="cdx-grid">' +
-            /* LEFT — prompt editor */
-            '<div class="cdx-prompt">' +
-              '<div class="cdx-head"><span class="cdx-tag">PROMPT</span> <span class="cdx-sub">你给 Codex / Claude 的指令</span></div>' +
-              '<div class="cdx-body">' +
-                '<div class="cdx-line">输入方式: <select class="cdx-select" id="cdx-mode">' +
-                  '<option value="brand">主题色</option>' +
-                  '<option value="image">参考图 (AI 取色)</option>' +
-                '</select></div>' +
-                '<div class="cdx-input-section" id="cdx-input"></div>' +
-                '<div class="cdx-line">在 Figma 里建立 <strong>color variables</strong>:</div>' +
-                '<div class="cdx-bullet">· 主色 6 档</div>' +
-                '<div class="cdx-bullet">· 状态色 (success / warning / error)</div>' +
-                '<div class="cdx-bullet">· 中性色 6 档</div>' +
-              '</div>' +
-              '<button class="cdx-run" id="cdx-run">▶ 让 AI 写入 Figma</button>' +
-            '</div>' +
-            /* RIGHT — figma variables panel (默认空, 点 run 才填) */
-            '<div class="cdx-figma">' +
-              '<div class="cdx-figma-head">' +
-                '<span class="cdx-figma-tag">FIGMA · LOCAL VARIABLES</span>' +
-                '<span class="cdx-figma-coll" id="cdx-coll">Brand Colors</span>' +
-              '</div>' +
-              '<div class="cdx-figma-body" id="cdx-body">' +
-                '<div class="cdx-figma-empty">点 ▶ 让 AI 直接把变量写进来 →</div>' +
-              '</div>' +
-            '</div>' +
-          '</div>';
-
-        var modeSel = host.querySelector('#cdx-mode');
-        var inputSection = host.querySelector('#cdx-input');
-        var runBtn = host.querySelector('#cdx-run');
-        var figmaBody = host.querySelector('#cdx-body');
-        var collLabel = host.querySelector('#cdx-coll');
-
-        var brandColor = '#ff4d2e';
-        var pickedRefId = null;
-
-        function activeColor() {
-          if (modeSel.value === 'image' && pickedRefId) {
-            var r = CDX_REFS.find(function(x){ return x.id === pickedRefId; });
-            return r ? r.dominant : brandColor;
-          }
-          return brandColor;
-        }
-
-        function renderInputSection() {
-          if (modeSel.value === 'brand') {
-            inputSection.innerHTML =
-              '<div class="cdx-line">基于品牌色 <input type="color" class="cdx-color" id="cdx-brand" value="' + brandColor + '"> <span class="cdx-hex" id="cdx-hex">' + brandColor.toUpperCase() + '</span></div>';
-            var brand = inputSection.querySelector('#cdx-brand');
-            var hexEl = inputSection.querySelector('#cdx-hex');
-            brand.addEventListener('input', function(){
-              brandColor = this.value;
-              hexEl.textContent = this.value.toUpperCase();
-              resetEmpty();
-            });
-          } else {
-            var refsHTML = CDX_REFS.map(function(r){
-              return '<button type="button" class="cdx-ref' + (pickedRefId === r.id ? ' is-on' : '') + '" data-id="' + r.id + '" title="' + r.label + '">' +
-                '<svg class="cdx-ref-svg" viewBox="0 0 80 60" preserveAspectRatio="xMidYMid slice" aria-hidden="true">' + r.svg + '</svg>' +
-                '<span class="cdx-ref-label">' + r.label + '</span>' +
-              '</button>';
-            }).join('');
-            var picked = pickedRefId ? CDX_REFS.find(function(x){ return x.id === pickedRefId; }) : null;
-            var extractedHTML = picked
-              ? '提取主色 <span class="cdx-color-chip" style="background:' + picked.dominant + '"></span> <span class="cdx-hex">' + picked.dominant.toUpperCase() + '</span>'
-              : '<span class="cdx-hint">↑ 选一张图, AI 会从中取色</span>';
-            inputSection.innerHTML =
-              '<div class="cdx-line">基于参考图 (AI 分析):</div>' +
-              '<div class="cdx-refs-row">' + refsHTML + '</div>' +
-              '<div class="cdx-line cdx-extracted">' + extractedHTML + '</div>';
-            inputSection.querySelectorAll('.cdx-ref').forEach(function(btn){
-              btn.addEventListener('click', function(){
-                pickedRefId = btn.getAttribute('data-id');
-                renderInputSection();
-                resetEmpty();
-              });
-            });
-          }
-        }
-
-        function build() {
-          var hex = activeColor();
-          var hsl = _hexToHsl(hex);
-          var H = hsl[0], S = hsl[1];
-
-          var pNames = ['subtle', 'soft', 'muted', 'default', 'bold', 'deep'];
-          var pLights = [94, 84, 68, 56, 35, 18];
-          var gNames = ['surface', 'border', 'mute', 'subdued', 'body', 'ink'];
-          var gLights = [97, 92, 78, 55, 32, 14];
-
-          var rows = [];
-          pNames.forEach(function(nm, i){
-            rows.push({ group: 'primary', name: nm, color: _hslToHex(H, S, pLights[i]) });
-          });
-          rows.push({ group: 'status', name: 'success', color: _hslToHex(140, 50, 35) });
-          rows.push({ group: 'status', name: 'warning', color: _hslToHex(40, 90, 50) });
-          rows.push({ group: 'status', name: 'error',   color: _hslToHex(0,  70, 50) });
-          gNames.forEach(function(nm, i){
-            rows.push({ group: 'grey', name: nm, color: _hslToHex(H, 6, gLights[i]) });
-          });
-
-          figmaBody.innerHTML = '';
-          var lastGroup = '';
-          rows.forEach(function(r, i){
-            if (r.group !== lastGroup) {
-              var gh = document.createElement('div');
-              gh.className = 'cdx-figma-group';
-              gh.textContent = r.group;
-              figmaBody.appendChild(gh);
-              lastGroup = r.group;
-            }
-            var row = document.createElement('div');
-            row.className = 'cdx-figma-row is-anim';
-            row.style.setProperty('--anim-i', i);
-            row.innerHTML =
-              '<span class="cdx-row-swatch" style="background:' + r.color + '"></span>' +
-              '<span class="cdx-row-name">' + r.group + '/' + r.name + '</span>' +
-              '<span class="cdx-row-hex">' + r.color.toUpperCase() + '</span>';
-            figmaBody.appendChild(row);
-          });
-          var srcLabel = modeSel.value === 'image' && pickedRefId ? '从 ' + CDX_REFS.find(function(x){return x.id===pickedRefId;}).label + ' 取色' : 'Brand Colors';
-          collLabel.textContent = srcLabel;
-        }
-
-        function resetEmpty() {
-          figmaBody.innerHTML = '<div class="cdx-figma-empty">点 ▶ 让 AI 直接把变量写进来 →</div>';
-          collLabel.textContent = 'Brand Colors';
-          runBtn.textContent = '▶ 让 AI 写入 Figma';
-        }
-
-        modeSel.addEventListener('change', function(){
-          renderInputSection();
-          resetEmpty();
-        });
-
-        runBtn.addEventListener('click', function(){
-          /* 在参考图模式下, 必须先选一张图 */
-          if (modeSel.value === 'image' && !pickedRefId) {
-            runBtn.classList.add('is-shake');
-            setTimeout(function(){ runBtn.classList.remove('is-shake'); }, 400);
-            return;
-          }
-          runBtn.classList.add('is-running');
-          runBtn.textContent = '✦ AI 写入中…';
-          setTimeout(function(){
-            build();
-            runBtn.classList.remove('is-running');
-            runBtn.textContent = '▶ 让 AI 重新写入';
-          }, 380);
-        });
-
-        /* initial — brand mode by default, right side empty */
-        renderInputSection();
-      }
-    }
-  };
-
-  /* ===== Player modal ===== */
-  function openPlayer(f) {
-    if (f.kind !== 'lesson') return;
-    playerScreenTitle.textContent = f.data.title;
-    playerInfoTake.textContent = 'TAKE ' + pad2(f.take);
-    playerInfoTitle.textContent = ' · ' + f.module.num + ' · ' + f.data.title;
-    playerInfoMeta.textContent = 'CH.' + f.chapter + ' · ' + f.module.num;
-    playerModal.hidden = false;
-    document.body.style.overflow = 'hidden';
-  }
-  function closePlayer() {
-    playerModal.hidden = true;
-    document.body.style.overflow = '';
-  }
-  Array.prototype.slice.call(playerModal.querySelectorAll('[data-player-close]')).forEach(function(b){
-    b.addEventListener('click', closePlayer);
-  });
-
-  /* ===== TV initial 倒计时 leader (3 → 2 → 1 → 信号到位) ===== */
-  (function runCountdown(){
-    var cdNum = document.getElementById('cd-num');
-    if (!cdNum) return;
-    var n = 3;
-    cdNum.textContent = String(n);
-    var tick = setInterval(function(){
-      n--;
-      if (n > 0) {
-        cdNum.textContent = String(n);
-      } else {
-        clearInterval(tick);
-        document.body.classList.add('is-tv-on-init');
-      }
-    }, 700);
-  })();
-
-  /* ===== Power on / off ===== */
-  var POWER_DUR = 580; /* ~ matches CRT keyframes */
-  var tvPower = document.getElementById('tv-power');
-  var cinemaRoom = document.getElementById('cinema-room');
-
-  tvPower.addEventListener('click', function(){
-    if (document.body.classList.contains('is-tv-on')) return;
-    document.body.classList.add('is-powering-on');
-    setTimeout(function(){
-      document.body.classList.remove('is-powering-on');
-      document.body.classList.add('is-tv-on');
-      cinemaRoom.hidden = false;
-      /* Always start at frame 0 (preface) on power-on. Use a tiny setTimeout
-         so layout has settled — rAF turned out to be unreliable in some browsers
-         when called from inside setTimeout. */
-      setTimeout(function(){ selectFrame(0); }, 30);
-    }, POWER_DUR);
-  });
-
-  document.getElementById('cinema-power-off').addEventListener('click', function(){
-    document.body.classList.remove('is-tv-on');
-    document.body.classList.add('is-powering-off');
-    setTimeout(function(){
-      document.body.classList.remove('is-powering-off');
-      cinemaRoom.hidden = true;
-    }, POWER_DUR);
-  });
-
-  /* ===== Prev / next ===== */
-  document.getElementById('cinema-prev').addEventListener('click', function(){
-    if (current > 0) selectFrame(current - 1, { smooth: true });
-  });
-  document.getElementById('cinema-next').addEventListener('click', function(){
-    if (current < frames.length - 1) selectFrame(current + 1, { smooth: true });
-  });
-
-  /* ===== Keyboard ===== */
-  document.addEventListener('keydown', function(e){
-    if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA')) return;
-    if (!document.body.classList.contains('is-tv-on')) {
-      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); tvPower.click(); }
-      return;
-    }
-    if (!playerModal.hidden) {
-      if (e.key === 'Escape') closePlayer();
-      return;
-    }
-    if (!roadmapModal.hidden) {
-      if (e.key === 'Escape' || e.key === 'm' || e.key === 'M') { toggleRoadmap(false); e.preventDefault(); }
-      return;
-    }
-    if (e.key === 'ArrowRight')      { e.preventDefault(); document.getElementById('cinema-next').click(); }
-    else if (e.key === 'ArrowLeft')  { e.preventDefault(); document.getElementById('cinema-prev').click(); }
-    else if (e.key === 'Escape')     { e.preventDefault(); document.getElementById('cinema-power-off').click(); }
-    else if (e.key === 'm' || e.key === 'M') { e.preventDefault(); toggleRoadmap(true); }
-    else if (e.key === ' ' || e.key === 'Enter') {
-      var f = frames[current];
-      if (f && f.kind === 'lesson') { e.preventDefault(); openPlayer(f); }
-    }
-  });
-
-  /* === URL hash handler — `#menu` arrives from article pages === */
-  function handleHash() {
-    if (location.hash !== '#menu') return;
-    if (!document.body.classList.contains('is-tv-on')) {
-      tvPower.click();
-      setTimeout(function(){ toggleRoadmap(true); }, POWER_DUR + 100);
-    } else {
-      toggleRoadmap(true);
-    }
-  }
-  window.addEventListener('hashchange', handleHash);
-  /* on initial load, after DOM is settled */
-  if (location.hash === '#menu') {
-    setTimeout(handleHash, 60);
-  }
-})();
-</script>
 </body>
 </html>
