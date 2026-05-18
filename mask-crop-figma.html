@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>遮罩 / 裁切 · Mask & Clip — 设计样式如何翻译成 CSS</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,300..900&family=Geist:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&family=Noto+Sans+SC:wght@300;400;500;700;900&family=Noto+Serif+SC:wght@400;500;700;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style-translation.css">
+</head>
+<body class="page-mask">
+<div class="topbar">
+  <div class="wrap topbar-inner">
+    <a class="brand" href="book.html#vol-3"><span class="dot"></span>AI LABBOOK</a>
+    <div class="nav-links">
+      <a href="book.html#vol-3">路线图</a>
+      <button type="button" data-rm-open>完整目录</button>
+    </div>
+  </div>
+</div>
+
+<header class="hero">
+  <div class="wrap">
+    <div class="hero-meta">
+      <span class="pill fill">S4 · STYLE TRANSLATION</span>
+      <span class="pill">Visible Region → CSS</span>
+      <span class="pill accent">INTERACTIVE</span>
+    </div>
+    <div class="hero-grid">
+      <div>
+        <h1>
+          <span class="display-cn">遮罩 / 裁切</span><br>
+          <span class="display-en">Mask & Clip</span>
+        </h1>
+        <p class="lede">
+          设计稿里“只显示这一块”可能对应三种完全不同的代码：图片比例裁切、容器溢出隐藏、或者按形状遮罩。
+          这篇先把它们分清，再决定用 object-fit、overflow、clip-path 还是 mask。
+        </p>
+      </div>
+      <div class="hero-side">
+        <div class="row"><span class="k">目标</span><span class="v">可见区域</span></div>
+        <div class="row"><span class="k">心智模型</span><span class="v">Viewport over content</span></div>
+        <div class="row"><span class="k">CSS 属性</span><span class="v">object-fit / clip / mask</span></div>
+        <div class="row"><span class="k">结论</span><span class="v">先判断裁谁</span></div>
+      </div>
+    </div>
+
+    <div class="hero-demo" aria-label="三种遮罩裁切效果预览">
+      <div class="mini-card mask-crop">
+        <div class="tag">crop</div>
+        <h3>裁图片比例</h3>
+        <p>内容是图片，容器比例固定，优先想 object-fit。</p>
+      </div>
+      <div class="mini-card mask-shape">
+        <div class="tag">clip-path</div>
+        <h3>裁元素轮廓</h3>
+        <p>元素整体要变成斜切、多边形、圆形时，用 clip-path 更直接。</p>
+      </div>
+      <div class="mini-card mask-alpha">
+        <div class="tag">mask</div>
+        <h3>按透明度挖掉</h3>
+        <p>需要渐隐、挖洞、票券缺口时，mask 更接近设计语言。</p>
+      </div>
+    </div>
+  </div>
+</header>
+
+<section>
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>01</strong> / 先拆设计语言</div>
+        <h2 class="section-title">先问一句：<br>你在 <span class="em">裁谁</span>？</h2>
+      </div>
+      <p class="section-sub">
+        裁图片、裁容器、裁可见像素是三件事。看起来都是“遮住一部分”，但对应的 CSS 模型不同。
+      </p>
+    </div>
+
+    <div class="explain-grid">
+      <div class="explain-card bad">
+        <span class="stamp">WRONG MODEL</span>
+        <h3>所有裁切都上 <span class="mono">overflow: hidden</span></h3>
+        <p>overflow 只能处理超出盒子的内容。它不能把元素本身变成斜切形，也不能做半透明渐隐。</p>
+        <code class="code-inline">.shape {
+  <span class="bad">overflow: hidden;</span>
+  /* 只能藏溢出，不能定义形状 */
+}</code>
+      </div>
+      <div class="explain-card good">
+        <span class="stamp">RIGHT MODEL</span>
+        <h3>按目标选择属性</h3>
+        <p>图片比例用 object-fit；几何轮廓用 clip-path；透明度和挖洞用 mask。先分类，代码就会稳定很多。</p>
+        <code class="code-inline">.media { <span class="good">object-fit: cover;</span> }
+.shape { <span class="good">clip-path: polygon(...);</span> }
+.fade { <span class="good">mask-image: linear-gradient(...);</span> }</code>
+      </div>
+    </div>
+
+    <div class="model-strip" aria-label="遮罩裁切翻译步骤">
+      <div class="model-step"><span class="k">01</span><strong>裁图片</strong><span>只是不想图片变形，先用 object-fit 和 object-position。</span></div>
+      <div class="model-step"><span class="k">02</span><strong>裁溢出</strong><span>内容超出圆角容器，用 overflow hidden。</span></div>
+      <div class="model-step"><span class="k">03</span><strong>裁轮廓</strong><span>元素要变成特殊几何形，用 clip-path。</span></div>
+      <div class="model-step"><span class="k">04</span><strong>裁透明度</strong><span>渐隐、挖洞、复杂 alpha，用 mask。</span></div>
+    </div>
+  </div>
+</section>
+
+<section id="lab">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>02</strong> / 样式拆解台</div>
+        <h2 class="section-title">同一张图，<br>换 <span class="em">不同可见区域</span>。</h2>
+      </div>
+      <p class="section-sub">
+        这里把图片裁切、形状裁切和 mask 挖洞放在一个实验台里。重点看属性负责的层级：内容、盒子、轮廓、透明度。
+      </p>
+    </div>
+
+    <div class="lab-shell">
+      <div class="lab-toolbar">
+        <div class="lab-title">STYLE LAB / MASK & CLIP</div>
+        <div class="status-chip"><span class="status-dot"></span><span>choose by visible region</span></div>
+      </div>
+      <div class="lab-grid">
+        <div class="playground">
+          <div class="preview-stage mask-stage">
+            <div class="stage-label">visible area preview</div>
+            <div class="mask-frame">
+              <div class="mask-subject" id="maskSubject" data-shape="rounded">
+                <span class="mask-guides" aria-hidden="true"></span>
+              </div>
+            </div>
+          </div>
+
+          <div class="lab-readout">
+            <div class="readout-card">
+              <div class="r-label">观察点</div>
+              <p id="maskObserve">clip-path 改的是元素可见轮廓；如果只是裁图片比例，先用 object-fit。</p>
+            </div>
+            <div class="readout-card">
+              <div class="r-label">当前组合</div>
+              <p id="maskCombo">shape rounded，radius 28px，object-fit cover。</p>
+            </div>
+          </div>
+
+          <div class="code-panel">
+            <div class="code-head"><span>visible-region.css</span><span>shape aware</span></div>
+            <pre id="maskCode"></pre>
+          </div>
+        </div>
+
+        <aside class="controls" aria-label="遮罩裁切参数">
+          <div class="control-group">
+            <div class="control-label"><span>shape mode</span><output id="maskShapeOut">rounded</output></div>
+            <div class="seg four" id="maskShapeSeg">
+              <button class="active" data-shape="rounded">round</button>
+              <button data-shape="circle">circle</button>
+              <button data-shape="diagonal">diag</button>
+              <button data-shape="ticket">ticket</button>
+            </div>
+          </div>
+          <div class="control-group">
+            <label class="control-label" for="maskRadius"><span>radius</span><output id="maskRadiusOut">28px</output></label>
+            <input id="maskRadius" type="range" min="0" max="64" value="28" step="2">
+          </div>
+          <div class="control-group">
+            <label class="control-label" for="maskReveal"><span>overlay reveal</span><output id="maskRevealOut">62%</output></label>
+            <input id="maskReveal" type="range" min="20" max="88" value="62" step="2">
+          </div>
+          <div class="control-group">
+            <div class="control-label"><span>object fit</span><output id="maskFitOut">cover</output></div>
+            <div class="seg" id="maskFitSeg">
+              <button class="active" data-fit="cover">cover</button>
+              <button data-fit="contain">contain</button>
+            </div>
+          </div>
+          <div class="note-panel" id="maskNote">cover 保证容器填满，适合封面图；重要内容要检查是否被裁掉。</div>
+        </aside>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>03</strong> / 设计到代码的对照</div>
+        <h2 class="section-title">四个属性，<br>别 <span class="em">混着用</span>。</h2>
+      </div>
+      <p class="section-sub">
+        能用最简单的属性解决，就不要上最复杂的属性。复杂不是问题，混乱才是问题。
+      </p>
+    </div>
+
+    <table class="decision-table">
+      <thead>
+        <tr><th>你要达到的效果</th><th>首选属性</th><th>注意点</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><strong>图片填满固定比例卡片</strong><br>不能被压扁</td><td><span class="mono">object-fit: cover</span></td><td>检查主体是否被裁，必要时加 object-position。</td></tr>
+        <tr><td><strong>内容超出圆角容器</strong><br>不要溢出来</td><td><span class="mono">overflow: hidden</span></td><td>会影响浮层、tooltip 和 sticky 子元素。</td></tr>
+        <tr><td><strong>元素变成几何形</strong><br>斜切、多边形、圆形</td><td><span class="mono">clip-path</span></td><td>普通 border 和 box-shadow 可能不会按轮廓走。</td></tr>
+        <tr><td><strong>渐隐或挖洞</strong><br>按 alpha 控制可见性</td><td><span class="mono">mask-image</span></td><td>注意浏览器前缀和组合模式差异。</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>04</strong> / 交付口径</div>
+        <h2 class="section-title">把裁切说成<br><span class="em">可见区域规则</span>。</h2>
+      </div>
+      <p class="section-sub">
+        给前端或 AI 的描述要避免“这里裁一下”。应该说清楚裁的是图片内容、容器溢出、元素轮廓，还是透明度。
+      </p>
+    </div>
+
+    <div class="principle-grid three">
+      <article class="principle-card">
+        <span class="num">01 / CONTENT</span>
+        <h3>说明主体位置</h3>
+        <p>封面图裁切要写 object-position，尤其是人物、产品和关键图标。</p>
+        <ul><li>center top</li><li>left 40%</li><li>保留主体完整</li></ul>
+      </article>
+      <article class="principle-card">
+        <span class="num">02 / SHAPE</span>
+        <h3>给出轮廓来源</h3>
+        <p>如果是特殊形状，最好给 SVG path、polygon 点位或可复用变量。</p>
+        <ul><li>clip-path polygon</li><li>SVG clipPath</li><li>mask gradient</li></ul>
+      </article>
+      <article class="principle-card">
+        <span class="num">03 / HIT AREA</span>
+        <h3>检查点击区域</h3>
+        <p>视觉上被裁掉，不代表交互区域一定同步改变。异形按钮尤其要测。</p>
+        <ul><li>hover 是否一致</li><li>focus ring 是否可见</li><li>点击热区是否合理</li></ul>
+      </article>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <a href="q1-mcp-figma.html" class="next-post">
+      <div>
+        <div class="np-tag">下一篇 · NEXT · Q1 · 工具</div>
+        <h4>MCP <span class="em">·</span> AI 的 USB 接口</h4>
+        <p>样式翻译告一段落。接下来进入 AI 怎么参与实现：先讲 MCP 为什么像 AI 连接工具和文件的接口。</p>
+      </div>
+      <span class="np-cta">继续阅读 <span class="arr">→</span></span>
+    </a>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div class="label">REFERENCES</div>
+    <div class="source-list">
+      <a href="https://developer.mozilla.org/en-US/docs/Web/CSS/object-fit" target="_blank" rel="noreferrer">MDN object-fit</a>
+      <a href="https://developer.mozilla.org/en-US/docs/Web/CSS/clip-path" target="_blank" rel="noreferrer">MDN clip-path</a>
+      <a href="https://developer.mozilla.org/en-US/docs/Web/CSS/mask-image" target="_blank" rel="noreferrer">MDN mask-image</a>
+    </div>
+  </div>
+</footer>
+
+<!-- 路线图弹窗 (11 分类) -->
+<div class="rm-modal" id="rm-modal" hidden>
+  <div class="rm-backdrop" data-rm-close></div>
+  <div class="rm-dialog" role="dialog" aria-label="完整路线图">
+    <button class="rm-close" data-rm-close aria-label="关闭">✕</button>
+    <div class="rm-header">
+      <div class="rm-tag">阅读顺序 · ROADMAP</div>
+      <h3 class="rm-title">START → 11 分类 <span class="rm-em">·</span> 41 篇</h3>
+      <p class="rm-sub">01 界面拆解 5 · 02 视觉系统 3 · 03 状态动作 3 · 04 样式翻译 4 · 05 AI 实现 4 · 06 组件材料 3 · 07 项目启动 4 · 08 调试 3 · 09 协作 3 · 10 上线 3 · 11 高阶 6</p>
+    </div>
+    <div class="rm-body">
+      <div class="rm-mod">
+        <div class="rm-mod-key">01 · 界面怎么被代码拆开</div>
+        <div class="rm-mod-list">
+          <a href="basics-figma.html" class="rm-cell"><span class="rm-cell-code">A0</span><span class="rm-cell-name">三件套 · HTML / CSS / JS</span><span class="rm-cell-tier">入门</span></a>
+          <a href="box-figma.html" class="rm-cell"><span class="rm-cell-code">A1</span><span class="rm-cell-name">盒子 · Auto Layout</span><span class="rm-cell-tier">基础</span></a>
+          <a href="components-figma.html" class="rm-cell"><span class="rm-cell-code">A2</span><span class="rm-cell-name">组件 · Variants &amp; Props</span><span class="rm-cell-tier">基础</span></a>
+          <a href="button-system-figma.html" class="rm-cell"><span class="rm-cell-code">A3</span><span class="rm-cell-name">Button System · 组件演化</span><span class="rm-cell-tier">进阶</span></a>
+          <a href="page-figma.html" class="rm-cell"><span class="rm-cell-code">B0</span><span class="rm-cell-name">拼页面 · 组件嵌套</span><span class="rm-cell-tier">入门</span></a>
+        </div>
+      </div>
+      <div class="rm-mod">
+        <div class="rm-mod-key">02 · 视觉规则怎么变成系统</div>
+        <div class="rm-mod-list">
+          <a href="tokens-figma.html" class="rm-cell"><span class="rm-cell-code">C0</span><span class="rm-cell-name">Variables / Tokens 入门</span><span class="rm-cell-tier">入门</span></a>
+          <a href="colors-type-figma.html" class="rm-cell"><span class="rm-cell-code">C1</span><span class="rm-cell-name">Colors / Type / Spacing</span><span class="rm-cell-tier">基础</span></a>
+          <a href="theme-switch-figma.html" class="rm-cell"><span class="rm-cell-code">C2</span><span class="rm-cell-name">Theme 切换实战</span><span class="rm-cell-tier">进阶</span></a>
+        </div>
+      </div>
+      <div class="rm-mod">
+        <div class="rm-mod-key">03 · 界面怎么有状态和动作</div>
+        <div class="rm-mod-list">
+          <a href="states-figma.html" class="rm-cell"><span class="rm-cell-code">D0</span><span class="rm-cell-name">视觉态 · 看得见的状态</span><span class="rm-cell-tier">入门</span></a>
+          <a href="interactive-figma.html" class="rm-cell"><span class="rm-cell-code">D1</span><span class="rm-cell-name">Interactive Component</span><span class="rm-cell-tier">基础</span></a>
+          <a href="transition-figma.html" class="rm-cell"><span class="rm-cell-code">D2</span><span class="rm-cell-name">动画 · Transition</span><span class="rm-cell-tier">进阶</span></a>
+        </div>
+      </div>
+      <div class="rm-mod">
+        <div class="rm-mod-key">04 · 设计样式怎么翻译成 CSS</div>
+        <div class="rm-mod-list">
+          <a href="inverted-radius-figma.html" class="rm-cell"><span class="rm-cell-code">S1</span><span class="rm-cell-name">内翻圆角 · Inverted Border Radius</span><span class="rm-cell-tier">样式</span></a>
+          <a href="shadow-layer-figma.html" class="rm-cell"><span class="rm-cell-code">S2</span><span class="rm-cell-name">阴影 / 层级 · Shadow &amp; Elevation</span><span class="rm-cell-tier">样式</span></a>
+          <a href="glass-blur-figma.html" class="rm-cell"><span class="rm-cell-code">S3</span><span class="rm-cell-name">毛玻璃 / 背景模糊 · Backdrop Blur</span><span class="rm-cell-tier">样式</span></a>
+          <a href="mask-crop-figma.html" class="rm-cell"><span class="rm-cell-code">S4</span><span class="rm-cell-name">遮罩 / 裁切 · Mask &amp; Clip</span><span class="rm-cell-tier">样式</span></a>
+        </div>
+      </div>
+      <div class="rm-mod">
+        <div class="rm-mod-key" style="color:var(--accent);">05 · AI 怎么参与实现</div>
+        <div class="rm-mod-list">
+          <a href="q1-mcp-figma.html" class="rm-cell"><span class="rm-cell-code">Q1</span><span class="rm-cell-name">MCP · AI 的 USB 接口</span><span class="rm-cell-tier">工具</span></a>
+          <a href="q2-skills-figma.html" class="rm-cell"><span class="rm-cell-code">Q2</span><span class="rm-cell-name">Skills · SKILL.md 拆解</span><span class="rm-cell-tier">工具</span></a>
+          <a href="q3-agent-figma.html" class="rm-cell"><span class="rm-cell-code">Q3</span><span class="rm-cell-name">Agent · 团队式 AI</span><span class="rm-cell-tier">工具</span></a>
+          <a href="k4-mcp-reads-figma.html" class="rm-cell"><span class="rm-cell-code">K4</span><span class="rm-cell-name">MCP 读了啥 · AI 看到的设计稿</span><span class="rm-cell-tier">基础</span></a>
+        </div>
+      </div>
+      <div class="rm-mod">
+        <div class="rm-mod-key">06 · 用什么材料搭界面</div>
+        <div class="rm-mod-list">
+          <a href="k1-ui-library-figma.html" class="rm-cell"><span class="rm-cell-code">K1</span><span class="rm-cell-name">UI 库 · shadcn vs Antd</span><span class="rm-cell-tier">基础</span></a>
+          <a href="k2-shadcn-customize-figma.html" class="rm-cell"><span class="rm-cell-code">K2</span><span class="rm-cell-name">shadcn 改造 · 变成你家的</span><span class="rm-cell-tier">基础</span></a>
+          <a href="k3-granularity-figma.html" class="rm-cell"><span class="rm-cell-code">K3</span><span class="rm-cell-name">颗粒度的代价 · AI 拼不准的根因</span><span class="rm-cell-tier">基础</span></a>
+        </div>
+      </div>
+      <div class="rm-mod">
+        <div class="rm-mod-key">07 · 项目怎么跑起来</div>
+        <div class="rm-mod-list">
+          <a href="f1-npm-figma.html" class="rm-cell"><span class="rm-cell-code">F1</span><span class="rm-cell-name">npm 是什么</span><span class="rm-cell-tier">工程</span></a>
+          <a href="f2-import-figma.html" class="rm-cell"><span class="rm-cell-code">F2</span><span class="rm-cell-name">import 与路径</span><span class="rm-cell-tier">工程</span></a>
+          <a href="f3-dev-build-figma.html" class="rm-cell"><span class="rm-cell-code">F3</span><span class="rm-cell-name">dev vs build</span><span class="rm-cell-tier">工程</span></a>
+          <a href="f4-hidden-files-figma.html" class="rm-cell"><span class="rm-cell-code">F4</span><span class="rm-cell-name">看不见的文件</span><span class="rm-cell-tier">工程</span></a>
+        </div>
+      </div>
+      <div class="rm-mod">
+        <div class="rm-mod-key">08 · 坏了怎么查</div>
+        <div class="rm-mod-list">
+          <a href="h1-devtools-elements-figma.html" class="rm-cell"><span class="rm-cell-code">H1</span><span class="rm-cell-name">DevTools Elements</span><span class="rm-cell-tier">工程</span></a>
+          <a href="h2-console-error-figma.html" class="rm-cell"><span class="rm-cell-code">H2</span><span class="rm-cell-name">Console 报错</span><span class="rm-cell-tier">工程</span></a>
+          <a href="h3-network-figma.html" class="rm-cell"><span class="rm-cell-code">H3</span><span class="rm-cell-name">Network 面板</span><span class="rm-cell-tier">工程</span></a>
+        </div>
+      </div>
+      <div class="rm-mod">
+        <div class="rm-mod-key">09 · 怎么协作</div>
+        <div class="rm-mod-list">
+          <a href="g1-commit-branch-figma.html" class="rm-cell"><span class="rm-cell-code">G1</span><span class="rm-cell-name">commit / branch</span><span class="rm-cell-tier">工程</span></a>
+          <a href="g2-conflict-figma.html" class="rm-cell"><span class="rm-cell-code">G2</span><span class="rm-cell-name">冲突怎么解</span><span class="rm-cell-tier">工程</span></a>
+          <a href="g3-pr-review-figma.html" class="rm-cell"><span class="rm-cell-code">G3</span><span class="rm-cell-name">PR / Review</span><span class="rm-cell-tier">工程</span></a>
+        </div>
+      </div>
+      <div class="rm-mod">
+        <div class="rm-mod-key">10 · 怎么上线</div>
+        <div class="rm-mod-list">
+          <a href="j1-dns-figma.html" class="rm-cell"><span class="rm-cell-code">J1</span><span class="rm-cell-name">DNS / 域名</span><span class="rm-cell-tier">工程</span></a>
+          <a href="j2-vercel-figma.html" class="rm-cell"><span class="rm-cell-code">J2</span><span class="rm-cell-name">Vercel 部署</span><span class="rm-cell-tier">工程</span></a>
+          <a href="j3-cache-cdn-figma.html" class="rm-cell"><span class="rm-cell-code">J3</span><span class="rm-cell-name">缓存 / CDN</span><span class="rm-cell-tier">工程</span></a>
+        </div>
+      </div>
+      <div class="rm-mod">
+        <div class="rm-mod-key" style="color:var(--accent);">11 · 高阶 · 状态管理 / 组件通信 / 数据来源</div>
+        <div class="rm-mod-list">
+          <a href="data-flow-figma.html" class="rm-cell"><span class="rm-cell-code">B1</span><span class="rm-cell-name">信息归属 · 组件之间怎么传话</span><span class="rm-cell-tier">高阶</span></a>
+          <a href="data-flow-cases-figma.html" class="rm-cell"><span class="rm-cell-code">B2</span><span class="rm-cell-name">信息归属实战 · 5 个场景</span><span class="rm-cell-tier">高阶</span></a>
+          <a href="state-placement-figma.html" class="rm-cell"><span class="rm-cell-code">B3</span><span class="rm-cell-name">状态放在哪里</span><span class="rm-cell-tier">高阶</span></a>
+          <a href="component-communication-figma.html" class="rm-cell"><span class="rm-cell-code">B4</span><span class="rm-cell-name">组件怎么通信</span><span class="rm-cell-tier">高阶</span></a>
+          <a href="data-source-figma.html" class="rm-cell"><span class="rm-cell-code">B5</span><span class="rm-cell-name">数据从哪里来</span><span class="rm-cell-tier">高阶</span></a>
+          <a href="async-states-figma.html" class="rm-cell"><span class="rm-cell-code">B6</span><span class="rm-cell-name">数据没回来时怎么办</span><span class="rm-cell-tier">高阶</span></a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="style-translation.js"></script>
+</body>
+</html>
