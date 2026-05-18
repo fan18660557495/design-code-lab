@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>AI LABBOOK — 给设计师的 AI 课</title>
+<title>AI LABBOOK — Code × Design</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,300..900&family=Geist:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Noto+Sans+SC:wght@300;400;500;700;900&family=Noto+Serif+SC:wght@400;500;700;900&display=swap" rel="stylesheet">
@@ -472,6 +472,10 @@
   .j-node.read .j-node-text {
     fill: var(--accent);
   }
+  .j-node.read:hover .j-node-text,
+  .j-node.read:focus .j-node-text {
+    fill: #fff;
+  }
   .j-node-check {
     fill: var(--accent);
     stroke: var(--paper);
@@ -519,7 +523,7 @@
     dominant-baseline: central;
   }
 
-  /* Branch labels: 设计篇 / 工程篇 */
+  /* Legacy branch label styles kept for route annotations and older static maps */
   .j-branch-label-bg {
     fill: var(--bg);
     stroke: var(--ink);
@@ -969,7 +973,7 @@
   .rm-wechat { font-family: 'JetBrains Mono', monospace; background: var(--accent-soft); color: var(--ink); padding: 3px 10px; border-radius: 3px; font-weight: 600; letter-spacing: 0.02em; }
   .nav-links a[data-rm-open] { cursor: pointer; }
 
-  /* === Volume tabs (3-tab nav: 课程 / AI 应用 / 代码) === */
+  /* === Module tab (Code × Design only) === */
   .vol-tabs { display: flex; gap: 6px; align-items: center; }
   .vol-tab { display: inline-flex; align-items: baseline; gap: 8px; background: transparent; border: 1px solid var(--line); padding: 6px 14px; border-radius: 4px; font-family: 'JetBrains Mono', monospace; font-size: 10.5px; color: var(--ink-mute); cursor: pointer; transition: all 0.2s ease; position: relative; letter-spacing: 0.04em; }
   .vol-tab:hover { border-color: var(--ink-soft); color: var(--ink); background: var(--bg-2); transform: translateY(-1px); }
@@ -981,7 +985,11 @@
 
   /* === Volume panel switching === */
   .vol-panel { display: none; }
+  .vol-panel[data-vol="1"],
+  .vol-panel[data-vol="2"] { display: none !important; }
   .vol-panel.is-active { display: block; animation: vol-fade-in 0.4s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; }
+  .vol-panel--merged { padding-top: 0; }
+  .vol-panel[data-vol="3"] { padding-top: 0; }
   @keyframes vol-fade-in {
     from { opacity: 0; transform: translateY(10px); }
     to { opacity: 1; transform: translateY(0); }
@@ -1627,19 +1635,10 @@
 
 <div class="topbar">
   <div class="wrap topbar-inner">
-    <a href="index.html" class="brand"><span class="dot"></span>AI LABBOOK</a>
-    <nav class="vol-tabs" role="tablist" aria-label="三卷切换">
-      <!-- VOL.I 在 index.html (独立页), 在 book.html 上点 VOL.I 直接跳走 -->
-      <a class="vol-tab" href="index.html" role="tab">
-        <span class="vol-tab-num">VOL. I</span>
-        <span class="vol-tab-name">给设计师的零基础 AI 课</span>
-      </a>
-      <button class="vol-tab" data-vol="2" role="tab" aria-selected="false">
-        <span class="vol-tab-num">VOL. II</span>
-        <span class="vol-tab-name">AI × Design</span>
-      </button>
-      <button class="vol-tab" data-vol="3" role="tab" aria-selected="false">
-        <span class="vol-tab-num">VOL. III</span>
+    <a href="book.html#vol-3" class="brand"><span class="dot"></span>AI LABBOOK</a>
+    <nav class="vol-tabs" role="tablist" aria-label="模块切换">
+      <button class="vol-tab" data-vol="3" role="tab" aria-selected="true">
+        <span class="vol-tab-num">HOME</span>
         <span class="vol-tab-name">Code × Design</span>
       </button>
     </nav>
@@ -1651,255 +1650,38 @@
   <header class="hero">
     <div class="wrap">
       <p style="text-align:center; padding:80px 20px; color:var(--ink-mute);">
-        VOL.I 内容在 <a href="index.html" style="color:var(--accent);">index.html</a> —— 点上面的 VOL.I tab 会跳过去。
+        VOL.I 内容在 <a href="book.html#vol-3" style="color:var(--accent);">index.html</a> —— 点上面的 VOL.I tab 会跳过去。
       </p>
     </div>
   </header>
 </section>
 
-<!-- VOL. II · AI × Design (hero + manifesto + dual-track roadmap) -->
-<section class="vol-panel" data-vol="2" role="tabpanel" aria-labelledby="vol-2">
-
-<header class="hero">
-  <div class="wrap">
-    <div class="hero-meta">
-      <span class="pill fill">笔记 · NOTES</span>
-      <span class="pill">2026 · 实验室</span>
-      <span class="pill">2 章 · 3 篇上线</span>
-      <span class="label">设计师 × AI</span>
-    </div>
-    <div class="hero-grid">
-      <div>
-        <h1>
-          <span class="display-en">AI</span>
-          <span class="x">×</span>
-          <span class="display-en">Design</span><br>
-          <span class="display-cn">笔记</span>
-        </h1>
-        <p class="lede">
-          这一卷专门聊 <span class="em">AI</span> ——<br>
-          从底层原理到设计协作，<span class="em">把"黑盒"拆开看</span>。
+<!-- VOL. II · AI content merged into VOL. III -->
+<section class="vol-panel vol-panel--merged" data-vol="2" role="tabpanel" aria-labelledby="vol-2">
+  <div class="wip-wrap">
+    <div class="wrap">
+      <div class="wip-card">
+        <div class="wip-stamp"><span class="dot-pulse"></span>MERGED</div>
+        <div class="wip-meta">VOL. II <span class="sep">/</span> AI MODULE</div>
+        <h2 class="wip-title">AI 文章已并入<br><span class="wip-em">Code 模块</span></h2>
+        <p class="wip-lede">
+          Q1 / Q2 / Q3 不再单独作为 AI 卷维护，已经移动到
+          <span class="em">VOL. III · Code × Design</span> 的完整路线图里。
+          后续会和 K 模块一起作为「AI 工具与协作」部分整理。
         </p>
-      </div>
-      <div class="hero-side">
-        <div class="row"><span class="k">已上线</span><span class="v">3 篇 · Q 系列</span></div>
-        <div class="row"><span class="k">主理人</span><span class="v">范米花儿 + CE 青年</span></div>
-        <div class="row"><span class="k">分支</span><span class="v">原理篇 / 协作篇</span></div>
-        <div class="row"><span class="k">状态</span><span class="v">整理中 →</span></div>
+        <div class="wip-tags">
+          <span class="wip-tag">Q1 MCP</span>
+          <span class="wip-tag">Q2 Skills</span>
+          <span class="wip-tag">Q3 Agent</span>
+          <span class="wip-tag">Code Module</span>
+        </div>
+        <div class="wip-foot">
+          <span class="wip-foot-hint">3 篇已迁移 · Code 模块现在共 34 篇</span>
+          <a href="#vol-3" class="wip-foot-jump" data-vol-jump="3">去 Code 模块 <span class="arrow">→</span></a>
+        </div>
       </div>
     </div>
   </div>
-</header>
-
-<section>
-  <div class="wrap">
-    <div class="section-head">
-      <div>
-        <div class="section-num"><strong>00</strong> / 缘起</div>
-        <h2 class="section-title">为什么<br>把 <span class="em">AI</span> 单独一卷？</h2>
-      </div>
-      <p class="section-sub">
-        AI 有自己的一套语言 ——
-        设计师不写代码，也得知道 AI 在干嘛。
-      </p>
-    </div>
-
-    <div class="manifesto">
-      <h3>这一卷是 <span class="em">AI 的拆解</span>。</h3>
-      <p>
-        AI 不是一个黑盒。它有<strong>协议（MCP）</strong>、<strong>技能（Skills）</strong>、<strong>团队结构（Agent）</strong>。
-        这些概念背后，是 AI 怎么"长出手"、怎么"被调度"、怎么和人协作的逻辑。
-      </p>
-      <p>
-        这一卷的目的不是让你写代码 ——
-        是让你<strong>能跟 AI 说人话</strong>、<strong>能看懂 AI 在干啥</strong>、
-        <span class="em">知道 AI 的边界在哪</span>。
-      </p>
-      <p>
-        内容会沿两条线走 ——
-        <strong>原理篇</strong>（Q 系列，AI 自己怎么工作）+
-        <strong>协作篇</strong>（K 系列，设计师怎么和 AI 一起做事）。
-        边整理边补。
-      </p>
-      <p style="margin-top:24px;font-size:14px;color:var(--ink-mute);">
-        本质上，这是给设计师的<strong style="color:var(--ink);">AI 拆解手册</strong>。
-      </p>
-    </div>
-  </div>
-</section>
-
-<section>
-  <div class="wrap">
-    <div class="section-head">
-      <div>
-        <div class="section-num"><strong>01</strong> / AI 地图</div>
-        <h2 class="section-title">一张图<br>看完 <span class="em">这一卷</span>。</h2>
-      </div>
-      <p class="section-sub">
-        从底部「你在这里」出发，分两路 —— 左边原理篇 (Q 系列 · 已上线)，右边协作篇 (K 系列 · 整理中)。
-        <strong>点节点进文章，灰节点是待补充。</strong>
-      </p>
-    </div>
-
-    <div class="journey-wrap">
-      <div class="journey-meta">
-        <div class="nb-card">
-          <div class="nb-h">LAB NOTEBOOK</div>
-          <div>VOL. 02 / 2026</div>
-          <div class="nb-s">— AI × Design —</div>
-        </div>
-        <div class="fig-cap">
-          <span class="compass" aria-hidden="true"></span>
-          <span class="v">FIG. 02</span> · AI 地图
-          <small>v 0.1 · 3 nodes · 2 clusters</small>
-        </div>
-      </div>
-
-      <div class="journey-stage">
-        <div class="journey-svg-host" id="j-host-2" style="height: min(72vh, 640px);">
-
-          <!-- Zoom hint label (bottom-left) -->
-          <div class="zoom-hint">
-            <span class="k">滚轮</span>缩放 · <span class="k">拖拽</span>平移 · <span class="k">点节点</span>进入文章
-          </div>
-
-          <!-- Zoom controls (bottom-right) -->
-          <div class="zoom-ctrl">
-            <button class="zoom-btn" id="zoom-in-2" aria-label="放大" title="放大 (+)">+</button>
-            <div class="zoom-level" id="zoom-level-2">100%</div>
-            <button class="zoom-btn" id="zoom-out-2" aria-label="缩小" title="缩小 (-)">−</button>
-            <button class="zoom-btn zoom-fit" id="zoom-fit-2" aria-label="适应" title="复位 (0)">⌖</button>
-          </div>
-
-          <svg class="journey-svg" id="journey-svg-2" viewBox="0 0 720 540"
-               preserveAspectRatio="xMidYMid meet"
-               xmlns="http://www.w3.org/2000/svg" role="img"
-               aria-label="VOL.II AI × Design 路线图：从你在这里出发，左侧原理篇 Q1/Q2/Q3，右侧协作篇 K 系列待补充">
-
-            <defs>
-              <pattern id="grid-vol2" x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse">
-                <circle cx="1" cy="1" r="0.7" fill="#d5cdba" opacity="0.45"/>
-              </pattern>
-            </defs>
-            <rect width="720" height="540" fill="url(#grid-vol2)"/>
-
-            <!-- Paths -->
-            <path id="p-vol2-Q" d="M 360 450 C 300 400 220 360 200 270" class="j-path"/>
-            <path d="M 360 450 C 420 400 500 360 520 270" class="j-path j-path-tbd"/>
-
-            <!-- Top placeholder -->
-            <g transform="translate(360 90)">
-              <rect x="-78" y="-18" width="156" height="36" rx="18" fill="var(--bg)" stroke="#d5cdba" stroke-dasharray="3 3"/>
-              <text x="0" y="5" text-anchor="middle" font-family="'JetBrains Mono', monospace" font-size="10.5" letter-spacing="0.14em" fill="var(--ink-mute)">更多 · COMING</text>
-            </g>
-
-            <!-- START -->
-            <g transform="translate(360 470)">
-              <circle r="40" fill="var(--ink)"/>
-              <text y="-2" text-anchor="middle" font-family="'Noto Serif SC', serif" font-weight="700" font-size="15" fill="var(--bg)">你在这里</text>
-              <text y="16" text-anchor="middle" font-family="'JetBrains Mono', monospace" font-size="9" letter-spacing="0.14em" fill="var(--bg)" opacity="0.7">START</text>
-            </g>
-
-            <!-- Branch labels -->
-            <text x="200" y="400" text-anchor="middle" font-family="'JetBrains Mono', monospace" font-size="11" font-weight="700" letter-spacing="0.08em" fill="var(--ink-mute)">原 理 篇</text>
-            <text x="200" y="418" text-anchor="middle" font-family="'JetBrains Mono', monospace" font-size="10" letter-spacing="0.05em" fill="var(--ink-mute)" opacity="0.7">3 篇 · Q 系列 →</text>
-            <text x="520" y="400" text-anchor="middle" font-family="'JetBrains Mono', monospace" font-size="11" font-weight="700" letter-spacing="0.08em" fill="var(--ink-mute)" opacity="0.55">协 作 篇</text>
-            <text x="520" y="418" text-anchor="middle" font-family="'JetBrains Mono', monospace" font-size="10" letter-spacing="0.05em" fill="var(--ink-mute)" opacity="0.55">待补充 · K 系列</text>
-
-            <!-- Q · 原理篇 cluster -->
-            <g class="j-cluster" data-mod="Q" transform="translate(200 230)">
-              <rect class="j-cluster-bg" x="-108" y="-46" width="216" height="92" rx="46"></rect>
-              <g transform="translate(-108 -64) rotate(-1.5)">
-                <rect class="j-cluster-banner" x="0" y="0" width="184" height="26" rx="13"></rect>
-                <text class="j-cluster-banner-text" x="14" y="17"><tspan class="j-cluster-banner-key">Q</tspan> · AI 工具与协议</text>
-              </g>
-              <g class="j-node" data-code="Q1" data-href="q1-mcp-figma.html" data-title="MCP · AI 的 USB 接口" data-tier="工具" transform="translate(-64 0)">
-                <g class="j-node-inner">
-                  <circle class="j-node-circle" r="28"></circle>
-                  <text class="j-node-text">Q1</text>
-                  <circle class="j-node-check" cx="20" cy="18" r="7"></circle>
-                  <path class="j-node-check-tick" d="M 17 18 L 19.5 20.5 L 23 17"></path>
-                </g>
-              </g>
-              <g class="j-node" data-code="Q2" data-href="q2-skills-figma.html" data-title="Skills · SKILL.md 拆解" data-tier="工具" transform="translate(0 0)">
-                <g class="j-node-inner">
-                  <circle class="j-node-circle" r="28"></circle>
-                  <text class="j-node-text">Q2</text>
-                  <circle class="j-node-check" cx="20" cy="18" r="7"></circle>
-                  <path class="j-node-check-tick" d="M 17 18 L 19.5 20.5 L 23 17"></path>
-                </g>
-              </g>
-              <g class="j-node" data-code="Q3" data-href="q3-agent-figma.html" data-title="Agent · 团队式 AI" data-tier="工具" transform="translate(64 0)">
-                <g class="j-node-inner">
-                  <circle class="j-node-circle" r="28"></circle>
-                  <text class="j-node-text">Q3</text>
-                  <circle class="j-node-check" cx="20" cy="18" r="7"></circle>
-                  <path class="j-node-check-tick" d="M 17 18 L 19.5 20.5 L 23 17"></path>
-                </g>
-              </g>
-            </g>
-
-            <!-- K · 协作篇 cluster (placeholder) -->
-            <g class="j-cluster j-cluster-tbd" data-mod="K" transform="translate(520 230)">
-              <rect class="j-cluster-bg" x="-108" y="-46" width="216" height="92" rx="46"></rect>
-              <g transform="translate(-108 -64) rotate(1.5)">
-                <rect class="j-cluster-banner" x="0" y="0" width="196" height="26" rx="13"></rect>
-                <text class="j-cluster-banner-text" x="14" y="17"><tspan class="j-cluster-banner-key">K</tspan> · 设计 × AI 协作</text>
-              </g>
-              <g class="j-node j-node-tbd" data-code="K1" transform="translate(-64 0)">
-                <g class="j-node-inner">
-                  <circle class="j-node-circle" r="28"></circle>
-                  <text class="j-node-text">K1</text>
-                </g>
-              </g>
-              <g class="j-node j-node-tbd" data-code="K2" transform="translate(0 0)">
-                <g class="j-node-inner">
-                  <circle class="j-node-circle" r="28"></circle>
-                  <text class="j-node-text">K2</text>
-                </g>
-              </g>
-              <g class="j-node j-node-tbd" data-code="K3" transform="translate(64 0)">
-                <g class="j-node-inner">
-                  <circle class="j-node-circle" r="28"></circle>
-                  <text class="j-node-text">K3</text>
-                </g>
-              </g>
-            </g>
-          </svg>
-        </div>
-
-        <aside class="journey-panel" aria-label="进度与筛选">
-          <div class="jp-block">
-            <div class="jp-label">PROGRESS</div>
-            <div class="jp-progress-num">
-              <span class="jp-cur" id="jp-cur-2">0</span><span class="jp-tot"> / 3</span>
-            </div>
-            <div class="jp-bar" id="jp-bar-2"></div>
-          </div>
-
-          <div class="jp-block jp-filters" role="group" aria-label="过滤">
-            <button class="jp-filter active" data-filter-2="all">[ ALL ]<span class="jp-fnum" id="jp-n-all-2">3</span></button>
-            <button class="jp-filter" data-filter-2="read">[ 已读 ]<span class="jp-fnum" id="jp-n-read-2">0</span></button>
-            <button class="jp-filter" data-filter-2="unread">[ 未读 ]<span class="jp-fnum" id="jp-n-unread-2">3</span></button>
-          </div>
-
-          <div class="jp-block">
-            <button class="jp-reset" id="jp-reset-2">↺ 清空已读记录</button>
-          </div>
-
-          <div class="jp-block">
-            <div class="jp-label">LEGEND</div>
-            <div class="jp-legend">
-              <div class="ld"><span class="ld-dot"></span><span>未读节点</span></div>
-              <div class="ld"><span class="ld-dot read"></span><span>已读节点</span></div>
-              <div class="ld" style="margin-top:4px;color:var(--ink-mute);font-size:10px;">点击进文章 · K 系列待补充</div>
-            </div>
-          </div>
-        </aside>
-      </div>
-    </div>
-  </div>
-</section>
 
 </section>
 
@@ -1910,7 +1692,7 @@
     <div class="hero-meta">
       <span class="pill fill">合集 · COLLECTION</span>
       <span class="pill">2026 · 实验室</span>
-      <span class="pill">9 模块 · 30 篇</span>
+      <span class="pill">10 分类 · 34 篇</span>
       <span class="label">设计师 × 前端</span>
     </div>
     <div class="hero-grid">
@@ -1922,15 +1704,15 @@
           <span class="display-cn">实验室</span>
         </h1>
         <p class="lede">
-          完整路线图 <span class="em">·</span> 30 篇 <span class="em">·</span> 9 模块。<br>
+          完整路线图 <span class="em">·</span> 34 篇 <span class="em">·</span> 10 分类。<br>
           下面这张图就是全部 —— 从「你在这里」一路爬到「撒花」，<br>
           点节点进文章，<span class="em">已读会自动标记</span>。
         </p>
       </div>
       <div class="hero-side">
-        <div class="row"><span class="k">主线</span><span class="v">30 篇 · 全部上线</span></div>
+        <div class="row"><span class="k">主线</span><span class="v">34 篇 · 全部上线</span></div>
         <div class="row"><span class="k">主理人</span><span class="v">范米花儿</span></div>
-        <div class="row"><span class="k">分支</span><span class="v">设计篇 / 工程篇</span></div>
+        <div class="row"><span class="k">分支</span><span class="v">界面 / 系统 / 样式 / AI / 工程</span></div>
         <div class="row"><span class="k">状态</span><span class="v">未完待续 →</span></div>
       </div>
     </div>
@@ -1984,8 +1766,8 @@
         <h2 class="section-title">一张图<br>看完 <span class="em">全部</span>。</h2>
       </div>
       <p class="section-sub">
-        从底部「你在这里」出发，分两路 —— 左边设计篇 4 模块 13 篇，右边工程篇 4 系列 13 篇，中间 K 模块 4 篇生态选型 / AI 协作。
-        一路向上经过 9 个聚落，顶上汇合到「撒花」。
+        从顶部 START 出发，按阅读顺序经过 10 个站点：界面拆解、视觉系统、状态动作、样式翻译、AI 实现、组件材料、项目启动、调试、协作、上线。
+        路线图和弹窗目录使用同一套顺序。
         <strong>hover 看简介，点击进文章，已读自动标记。</strong>
       </p>
     </div>
@@ -2000,7 +1782,7 @@
         <div class="fig-cap">
           <span class="compass" aria-hidden="true"></span>
           <span class="v">FIG. 01</span> · 完整路线图
-          <small>v 1.4 · 30 nodes · 9 clusters</small>
+          <small>v 1.8 · 34 nodes · reading order</small>
         </div>
       </div>
 
@@ -2022,460 +1804,283 @@
 
           <!--
             Journey SVG.
-            ViewBox: 1200 × 1900.
+            ViewBox: 1200 × 2060.
             Layout (top -> bottom):
-              y = 180   START (你在这里) circle
-              y = 400   branch labels
-              y = 680   A · F   (第 1 行)
-              y = 930   B · G
-              y = 1180  C · H
-              y = 1430  D · J   (工程篇到此)
-              y = 1680  E       (设计篇独有)
-              y = 1840  END (撒花) circle
-            Design column anchored around x = 360
-            Engineering column anchored around x = 840
+              y = 150   START (你在这里) circle
+              y = 300   01 · 界面拆解
+              y = 480   02 · 视觉系统
+              y = 660   03 · 状态动作
+              y = 840   04 · 样式翻译
+              y = 1020  05 · AI 实现
+              y = 1200  06 · 组件材料
+              y = 1380  07 · 项目启动
+              y = 1540  08 · 调试
+              y = 1700  09 · 协作
+              y = 1860  10 · 上线
+              y = 2000  END (撒花) circle
           -->
           <svg class="journey-svg" id="journey-svg"
-               viewBox="0 0 1200 1900"
+               viewBox="0 0 1200 2060"
                preserveAspectRatio="xMidYMid meet"
                role="img"
-               aria-label="完整旅程路径图：从你在这里出发，左侧设计篇 4 模块、右侧工程篇 4 系列，顶部撒花。">
-
-            <!-- ===== background paths (drawn first, behind everything) ===== -->
-            <g id="paths">
-              <!-- main trunk: START up-and-fork -->
-              <path class="j-path" id="p-start-design"
-                    d="M 600 200 C 600 260, 360 280, 360 400"></path>
-              <path class="j-path" id="p-start-eng"
-                    d="M 600 200 C 600 260, 840 280, 840 400"></path>
-
-              <!-- design left column: A -> B -> C -> D -> E -->
-              <path class="j-path" id="p-A-B"
-                    d="M 360 680 C 320 770, 400 820, 360 930"></path>
-              <path class="j-path" id="p-B-C"
-                    d="M 360 930 C 410 1020, 320 1070, 360 1180"></path>
-              <path class="j-path" id="p-C-D"
-                    d="M 360 1180 C 320 1270, 400 1320, 360 1430"></path>
-              <path class="j-path" id="p-D-E"
-                    d="M 360 1430 C 410 1520, 320 1570, 360 1680"></path>
-
-              <!-- engineering right column: F -> G -> H -> J (aligned with A B C D) -->
-              <path class="j-path" id="p-F-G"
-                    d="M 840 680 C 880 770, 800 820, 840 930"></path>
-              <path class="j-path" id="p-G-H"
-                    d="M 840 930 C 800 1020, 880 1070, 840 1180"></path>
-              <path class="j-path" id="p-H-J"
-                    d="M 840 1180 C 880 1270, 800 1320, 840 1430"></path>
-
-              <!-- branch label connectors to first cluster -->
-              <path class="j-path" id="p-branch-A"
-                    d="M 360 400 C 360 470, 360 560, 360 680"></path>
-              <path class="j-path" id="p-branch-F"
-                    d="M 840 400 C 840 470, 840 560, 840 680"></path>
-
-              <!-- bottom merge: D and J both flow into K, then K converges to END (撒花) -->
-              <path class="j-path" id="p-E-end"
-                    d="M 360 1430 C 360 1540, 460 1600, 540 1640"></path>
-              <path class="j-path" id="p-J-end"
-                    d="M 840 1430 C 840 1540, 740 1600, 660 1640"></path>
-              <path class="j-path" id="p-K-end"
-                    d="M 600 1680 L 600 1796"></path>
-            </g>
-
-            <!-- ===== top END (撒花) ===== -->
-            <g id="end">
-              <circle class="j-anchor j-anchor-end" cx="600" cy="1840" r="44"></circle>
-              <text class="j-anchor-cn" x="600" y="1826">撒 花</text>
-              <text class="j-anchor-text" x="600" y="1848">FINISH ✨</text>
-            </g>
-
-            <!-- ===== branch labels at y=1500 ===== -->
-            <g id="branch-design">
-              <rect class="j-branch-label-bg" x="270" y="426" width="180" height="52" rx="6"></rect>
-              <text class="j-branch-label" x="360" y="407">设 计 篇</text>
-              <text class="j-branch-label" x="360" y="387" style="font-size:11px;font-family:'JetBrains Mono',monospace;font-weight:600;letter-spacing:.06em;fill:var(--ink-mute);">13 篇 · A → D <tspan class="j-arrow">→</tspan></text>
-            </g>
-            <g id="branch-eng">
-              <rect class="j-branch-label-bg" x="750" y="426" width="180" height="52" rx="6"></rect>
-              <text class="j-branch-label" x="840" y="407">工 程 篇</text>
-              <text class="j-branch-label" x="840" y="387" style="font-size:11px;font-family:'JetBrains Mono',monospace;font-weight:600;letter-spacing:.06em;fill:var(--ink-mute);">13 篇 · F → J <tspan class="j-arrow">→</tspan></text>
-            </g>
-
-            <!-- ===== START anchor ===== -->
-            <g id="start">
-              <circle class="j-anchor" cx="600" cy="180" r="48"></circle>
-              <text class="j-anchor-cn" x="600" y="165">你在这里</text>
-              <text class="j-anchor-text" x="600" y="188">START · 00</text>
-            </g>
-
-            <!-- ============================================
-                 CLUSTER GROUPS
-                 each cluster: dashed capsule + banner + nodes
-                 =========================================== -->
-
-            <!-- A · 单元素与组件 (4 nodes, design column) -->
-            <g class="j-cluster" data-mod="A" transform="translate(360 680)">
-              <rect class="j-cluster-bg" x="-200" y="-50" width="400" height="100" rx="48"></rect>
-              <!-- banner pill -->
-              <g transform="translate(-200 -68) rotate(-1.5)">
-                <rect class="j-cluster-banner" x="0" y="0" width="220" height="26" rx="13"></rect>
-                <text class="j-cluster-banner-text" x="14" y="17"><tspan class="j-cluster-banner-key">A</tspan> · 单元素与组件</text>
-              </g>
-              <!-- nodes: A0 A1 A2 A3 spaced ~84px -->
-              <g class="j-node" data-code="A0" data-href="basics-figma.html" data-title="三件套 · HTML / CSS / JS" data-tier="入门" data-recommend="1" transform="translate(-126 0)">
-                <g class="j-node-inner">
-                  <circle class="j-node-circle" r="28"></circle>
-                  <text class="j-node-text">A0</text>
-                  <circle class="j-node-check" cx="20" cy="18" r="7"></circle>
-                  <path class="j-node-check-tick" d="M 17 18 L 19.5 20.5 L 23 17"></path>
-                </g>
-              </g>
-              <g class="j-node" data-code="A1" data-href="box-figma.html" data-title="盒子 · Auto Layout" data-tier="基础" transform="translate(-42 0)">
-                <g class="j-node-inner">
-                  <circle class="j-node-circle" r="28"></circle>
-                  <text class="j-node-text">A1</text>
-                  <circle class="j-node-check" cx="20" cy="18" r="7"></circle>
-                  <path class="j-node-check-tick" d="M 17 18 L 19.5 20.5 L 23 17"></path>
-                </g>
-              </g>
-              <g class="j-node" data-code="A2" data-href="components-figma.html" data-title="组件 · Variants & Props" data-tier="基础" transform="translate(42 0)">
-                <g class="j-node-inner">
-                  <circle class="j-node-circle" r="28"></circle>
-                  <text class="j-node-text">A2</text>
-                  <circle class="j-node-check" cx="20" cy="18" r="7"></circle>
-                  <path class="j-node-check-tick" d="M 17 18 L 19.5 20.5 L 23 17"></path>
-                </g>
-              </g>
-              <g class="j-node" data-code="A3" data-href="button-system-figma.html" data-title="Button System · 组件演化" data-tier="进阶" transform="translate(126 0)">
-                <g class="j-node-inner">
-                  <circle class="j-node-circle" r="28"></circle>
-                  <text class="j-node-text">A3</text>
-                  <circle class="j-node-check" cx="20" cy="18" r="7"></circle>
-                  <path class="j-node-check-tick" d="M 17 18 L 19.5 20.5 L 23 17"></path>
-                </g>
-              </g>
-            </g>
-
-            <!-- B · 多组件协作 (3 nodes) -->
-            <g class="j-cluster" data-mod="B" transform="translate(360 930)">
-              <rect class="j-cluster-bg" x="-160" y="-50" width="320" height="100" rx="48"></rect>
-              <g transform="translate(-160 -68) rotate(1.2)">
-                <rect class="j-cluster-banner" x="0" y="0" width="206" height="26" rx="13"></rect>
-                <text class="j-cluster-banner-text" x="14" y="17"><tspan class="j-cluster-banner-key">B</tspan> · 多组件协作</text>
-              </g>
-              <g class="j-node" data-code="B0" data-href="page-figma.html" data-title="拼页面 · 组件嵌套" data-tier="入门" transform="translate(-84 0)">
-                <g class="j-node-inner">
-                  <circle class="j-node-circle" r="28"></circle>
-                  <text class="j-node-text">B0</text>
-                  <circle class="j-node-check" cx="20" cy="18" r="7"></circle>
-                  <path class="j-node-check-tick" d="M 17 18 L 19.5 20.5 L 23 17"></path>
-                </g>
-              </g>
-              <g class="j-node" data-code="B1" data-href="data-flow-figma.html" data-title="数据流 · 概念" data-tier="基础" data-recommend="1" transform="translate(0 0)">
-                <g class="j-node-inner">
-                  <circle class="j-node-circle" r="28"></circle>
-                  <text class="j-node-text">B1</text>
-                  <circle class="j-node-check" cx="20" cy="18" r="7"></circle>
-                  <path class="j-node-check-tick" d="M 17 18 L 19.5 20.5 L 23 17"></path>
-                </g>
-              </g>
-              <g class="j-node" data-code="B2" data-href="data-flow-cases-figma.html" data-title="数据流 · 实战 5 案例" data-tier="进阶" transform="translate(84 0)">
-                <g class="j-node-inner">
-                  <circle class="j-node-circle" r="28"></circle>
-                  <text class="j-node-text">B2</text>
-                  <circle class="j-node-check" cx="20" cy="18" r="7"></circle>
-                  <path class="j-node-check-tick" d="M 17 18 L 19.5 20.5 L 23 17"></path>
-                </g>
-              </g>
-            </g>
-
-            <!-- C · 视觉系统 (3 nodes) -->
-            <g class="j-cluster" data-mod="C" transform="translate(360 1180)">
-              <rect class="j-cluster-bg" x="-160" y="-50" width="320" height="100" rx="48"></rect>
-              <g transform="translate(-160 -68) rotate(-1)">
-                <rect class="j-cluster-banner" x="0" y="0" width="180" height="26" rx="13"></rect>
-                <text class="j-cluster-banner-text" x="14" y="17"><tspan class="j-cluster-banner-key">C</tspan> · 视觉系统</text>
-              </g>
-              <g class="j-node" data-code="C0" data-href="tokens-figma.html" data-title="Variables / Tokens 入门" data-tier="入门" transform="translate(-84 0)">
-                <g class="j-node-inner">
-                  <circle class="j-node-circle" r="28"></circle>
-                  <text class="j-node-text">C0</text>
-                  <circle class="j-node-check" cx="20" cy="18" r="7"></circle>
-                  <path class="j-node-check-tick" d="M 17 18 L 19.5 20.5 L 23 17"></path>
-                </g>
-              </g>
-              <g class="j-node" data-code="C1" data-href="colors-type-figma.html" data-title="Colors / Type / Spacing" data-tier="基础" transform="translate(0 0)">
-                <g class="j-node-inner">
-                  <circle class="j-node-circle" r="28"></circle>
-                  <text class="j-node-text">C1</text>
-                  <circle class="j-node-check" cx="20" cy="18" r="7"></circle>
-                  <path class="j-node-check-tick" d="M 17 18 L 19.5 20.5 L 23 17"></path>
-                </g>
-              </g>
-              <g class="j-node" data-code="C2" data-href="theme-switch-figma.html" data-title="Theme 切换实战" data-tier="进阶" transform="translate(84 0)">
-                <g class="j-node-inner">
-                  <circle class="j-node-circle" r="28"></circle>
-                  <text class="j-node-text">C2</text>
-                  <circle class="j-node-check" cx="20" cy="18" r="7"></circle>
-                  <path class="j-node-check-tick" d="M 17 18 L 19.5 20.5 L 23 17"></path>
-                </g>
-              </g>
-            </g>
-
-            <!-- D · 状态与交互 (3 nodes) -->
-            <g class="j-cluster" data-mod="D" transform="translate(360 1430)">
-              <rect class="j-cluster-bg" x="-160" y="-50" width="320" height="100" rx="48"></rect>
-              <g transform="translate(-160 -68) rotate(1.5)">
-                <rect class="j-cluster-banner" x="0" y="0" width="200" height="26" rx="13"></rect>
-                <text class="j-cluster-banner-text" x="14" y="17"><tspan class="j-cluster-banner-key">D</tspan> · 状态与交互</text>
-              </g>
-              <g class="j-node" data-code="D0" data-href="states-figma.html" data-title="视觉态 · 看得见的状态" data-tier="入门" transform="translate(-84 0)">
-                <g class="j-node-inner">
-                  <circle class="j-node-circle" r="28"></circle>
-                  <text class="j-node-text">D0</text>
-                  <circle class="j-node-check" cx="20" cy="18" r="7"></circle>
-                  <path class="j-node-check-tick" d="M 17 18 L 19.5 20.5 L 23 17"></path>
-                </g>
-              </g>
-              <g class="j-node" data-code="D1" data-href="interactive-figma.html" data-title="Interactive Component" data-tier="基础" transform="translate(0 0)">
-                <g class="j-node-inner">
-                  <circle class="j-node-circle" r="28"></circle>
-                  <text class="j-node-text">D1</text>
-                  <circle class="j-node-check" cx="20" cy="18" r="7"></circle>
-                  <path class="j-node-check-tick" d="M 17 18 L 19.5 20.5 L 23 17"></path>
-                </g>
-              </g>
-              <g class="j-node" data-code="D2" data-href="transition-figma.html" data-title="动画 · Transition" data-tier="进阶" transform="translate(84 0)">
-                <g class="j-node-inner">
-                  <circle class="j-node-circle" r="28"></circle>
-                  <text class="j-node-text">D2</text>
-                  <circle class="j-node-check" cx="20" cy="18" r="7"></circle>
-                  <path class="j-node-check-tick" d="M 17 18 L 19.5 20.5 L 23 17"></path>
-                </g>
-              </g>
-            </g>
-
-            <!-- F · 工程入门 (4 nodes, eng column) -->
-            <g class="j-cluster" data-mod="F" transform="translate(840 680)">
-              <rect class="j-cluster-bg" x="-200" y="-50" width="400" height="100" rx="48"></rect>
-              <g transform="translate(-200 -68) rotate(1)">
-                <rect class="j-cluster-banner" x="0" y="0" width="216" height="26" rx="13"></rect>
-                <text class="j-cluster-banner-text" x="14" y="17"><tspan class="j-cluster-banner-key">F</tspan> · 工程入门 · 跑不起来</text>
-              </g>
-              <g class="j-node" data-code="F1" data-href="f1-npm-figma.html" data-title="npm 是什么" data-tier="工程" transform="translate(-126 0)">
-                <g class="j-node-inner">
-                  <circle class="j-node-circle" r="28"></circle>
-                  <text class="j-node-text">F1</text>
-                  <circle class="j-node-check" cx="20" cy="18" r="7"></circle>
-                  <path class="j-node-check-tick" d="M 17 18 L 19.5 20.5 L 23 17"></path>
-                </g>
-              </g>
-              <g class="j-node" data-code="F2" data-href="f2-import-figma.html" data-title="import 与路径" data-tier="工程" transform="translate(-42 0)">
-                <g class="j-node-inner">
-                  <circle class="j-node-circle" r="28"></circle>
-                  <text class="j-node-text">F2</text>
-                  <circle class="j-node-check" cx="20" cy="18" r="7"></circle>
-                  <path class="j-node-check-tick" d="M 17 18 L 19.5 20.5 L 23 17"></path>
-                </g>
-              </g>
-              <g class="j-node" data-code="F3" data-href="f3-dev-build-figma.html" data-title="dev vs build" data-tier="工程" transform="translate(42 0)">
-                <g class="j-node-inner">
-                  <circle class="j-node-circle" r="28"></circle>
-                  <text class="j-node-text">F3</text>
-                  <circle class="j-node-check" cx="20" cy="18" r="7"></circle>
-                  <path class="j-node-check-tick" d="M 17 18 L 19.5 20.5 L 23 17"></path>
-                </g>
-              </g>
-              <g class="j-node" data-code="F4" data-href="f4-hidden-files-figma.html" data-title="看不见的文件" data-tier="工程" transform="translate(126 0)">
-                <g class="j-node-inner">
-                  <circle class="j-node-circle" r="28"></circle>
-                  <text class="j-node-text">F4</text>
-                  <circle class="j-node-check" cx="20" cy="18" r="7"></circle>
-                  <path class="j-node-check-tick" d="M 17 18 L 19.5 20.5 L 23 17"></path>
-                </g>
-              </g>
-            </g>
-
-            <!-- G · 版本控制 (3 nodes) -->
-            <g class="j-cluster" data-mod="G" transform="translate(840 930)">
-              <rect class="j-cluster-bg" x="-160" y="-50" width="320" height="100" rx="48"></rect>
-              <g transform="translate(-160 -68) rotate(-1.4)">
-                <rect class="j-cluster-banner" x="0" y="0" width="226" height="26" rx="13"></rect>
-                <text class="j-cluster-banner-text" x="14" y="17"><tspan class="j-cluster-banner-key">G</tspan> · 版本控制 · AI 写完之后</text>
-              </g>
-              <g class="j-node" data-code="G1" data-href="g1-commit-branch-figma.html" data-title="commit / branch" data-tier="工程" transform="translate(-84 0)">
-                <g class="j-node-inner">
-                  <circle class="j-node-circle" r="28"></circle>
-                  <text class="j-node-text">G1</text>
-                  <circle class="j-node-check" cx="20" cy="18" r="7"></circle>
-                  <path class="j-node-check-tick" d="M 17 18 L 19.5 20.5 L 23 17"></path>
-                </g>
-              </g>
-              <g class="j-node" data-code="G2" data-href="g2-conflict-figma.html" data-title="冲突怎么解" data-tier="工程" transform="translate(0 0)">
-                <g class="j-node-inner">
-                  <circle class="j-node-circle" r="28"></circle>
-                  <text class="j-node-text">G2</text>
-                  <circle class="j-node-check" cx="20" cy="18" r="7"></circle>
-                  <path class="j-node-check-tick" d="M 17 18 L 19.5 20.5 L 23 17"></path>
-                </g>
-              </g>
-              <g class="j-node" data-code="G3" data-href="g3-pr-review-figma.html" data-title="PR / Review" data-tier="工程" transform="translate(84 0)">
-                <g class="j-node-inner">
-                  <circle class="j-node-circle" r="28"></circle>
-                  <text class="j-node-text">G3</text>
-                  <circle class="j-node-check" cx="20" cy="18" r="7"></circle>
-                  <path class="j-node-check-tick" d="M 17 18 L 19.5 20.5 L 23 17"></path>
-                </g>
-              </g>
-            </g>
-
-            <!-- H · 浏览器调试 (3 nodes) -->
-            <g class="j-cluster" data-mod="H" transform="translate(840 1180)">
-              <rect class="j-cluster-bg" x="-160" y="-50" width="320" height="100" rx="48"></rect>
-              <g transform="translate(-160 -68) rotate(1.4)">
-                <rect class="j-cluster-banner" x="0" y="0" width="240" height="26" rx="13"></rect>
-                <text class="j-cluster-banner-text" x="14" y="17"><tspan class="j-cluster-banner-key">H</tspan> · 浏览器调试 · 不长那样</text>
-              </g>
-              <g class="j-node" data-code="H1" data-href="h1-devtools-elements-figma.html" data-title="DevTools Elements" data-tier="工程" transform="translate(-84 0)">
-                <g class="j-node-inner">
-                  <circle class="j-node-circle" r="28"></circle>
-                  <text class="j-node-text">H1</text>
-                  <circle class="j-node-check" cx="20" cy="18" r="7"></circle>
-                  <path class="j-node-check-tick" d="M 17 18 L 19.5 20.5 L 23 17"></path>
-                </g>
-              </g>
-              <g class="j-node" data-code="H2" data-href="h2-console-error-figma.html" data-title="Console 报错" data-tier="工程" transform="translate(0 0)">
-                <g class="j-node-inner">
-                  <circle class="j-node-circle" r="28"></circle>
-                  <text class="j-node-text">H2</text>
-                  <circle class="j-node-check" cx="20" cy="18" r="7"></circle>
-                  <path class="j-node-check-tick" d="M 17 18 L 19.5 20.5 L 23 17"></path>
-                </g>
-              </g>
-              <g class="j-node" data-code="H3" data-href="h3-network-figma.html" data-title="Network 面板" data-tier="工程" transform="translate(84 0)">
-                <g class="j-node-inner">
-                  <circle class="j-node-circle" r="28"></circle>
-                  <text class="j-node-text">H3</text>
-                  <circle class="j-node-check" cx="20" cy="18" r="7"></circle>
-                  <path class="j-node-check-tick" d="M 17 18 L 19.5 20.5 L 23 17"></path>
-                </g>
-              </g>
-            </g>
-
-            <!-- J · 上线 (3 nodes) -->
-            <g class="j-cluster" data-mod="J" transform="translate(840 1430)">
-              <rect class="j-cluster-bg" x="-160" y="-50" width="320" height="100" rx="48"></rect>
-              <g transform="translate(-160 -68) rotate(-1)">
-                <rect class="j-cluster-banner" x="0" y="0" width="200" height="26" rx="13"></rect>
-                <text class="j-cluster-banner-text" x="14" y="17"><tspan class="j-cluster-banner-key">J</tspan> · 上线 · 让别人看到</text>
-              </g>
-              <g class="j-node" data-code="J1" data-href="j1-dns-figma.html" data-title="DNS / 域名" data-tier="工程" transform="translate(-84 0)">
-                <g class="j-node-inner">
-                  <circle class="j-node-circle" r="28"></circle>
-                  <text class="j-node-text">J1</text>
-                  <circle class="j-node-check" cx="20" cy="18" r="7"></circle>
-                  <path class="j-node-check-tick" d="M 17 18 L 19.5 20.5 L 23 17"></path>
-                </g>
-              </g>
-              <g class="j-node" data-code="J2" data-href="j2-vercel-figma.html" data-title="Vercel 部署" data-tier="工程" transform="translate(0 0)">
-                <g class="j-node-inner">
-                  <circle class="j-node-circle" r="28"></circle>
-                  <text class="j-node-text">J2</text>
-                  <circle class="j-node-check" cx="20" cy="18" r="7"></circle>
-                  <path class="j-node-check-tick" d="M 17 18 L 19.5 20.5 L 23 17"></path>
-                </g>
-              </g>
-              <g class="j-node" data-code="J3" data-href="j3-cache-cdn-figma.html" data-title="缓存 / CDN" data-tier="工程" transform="translate(84 0)">
-                <g class="j-node-inner">
-                  <circle class="j-node-circle" r="28"></circle>
-                  <text class="j-node-text">J3</text>
-                  <circle class="j-node-check" cx="20" cy="18" r="7"></circle>
-                  <path class="j-node-check-tick" d="M 17 18 L 19.5 20.5 L 23 17"></path>
-                </g>
-              </g>
-            </g>
-
-            <!-- K · 生态选型 / AI 协作 (4 nodes, center column, joins design+eng before END) -->
-            <g class="j-cluster" data-mod="K" transform="translate(600 1640)">
-              <rect class="j-cluster-bg" x="-200" y="-44" width="400" height="88" rx="44"></rect>
-              <g transform="translate(-198 -60) rotate(-0.8)">
-                <rect class="j-cluster-banner" x="0" y="0" width="230" height="26" rx="13"></rect>
-                <text class="j-cluster-banner-text" x="14" y="17"><tspan class="j-cluster-banner-key">K</tspan> · 生态选型 / AI 协作 · NEW</text>
-              </g>
-              <g class="j-node" data-code="K1" data-href="k1-ui-library-figma.html" data-title="UI 库 · shadcn vs Antd" data-tier="基础" data-recommend="1" transform="translate(-126 0)">
-                <g class="j-node-inner">
-                  <circle class="j-node-circle" r="28"></circle>
-                  <text class="j-node-text">K1</text>
-                  <circle class="j-node-check" cx="20" cy="18" r="7"></circle>
-                  <path class="j-node-check-tick" d="M 17 18 L 19.5 20.5 L 23 17"></path>
-                </g>
-              </g>
-              <g class="j-node" data-code="K2" data-href="k2-shadcn-customize-figma.html" data-title="shadcn 改造 · 变成你家的" data-tier="基础" transform="translate(-42 0)">
-                <g class="j-node-inner">
-                  <circle class="j-node-circle" r="28"></circle>
-                  <text class="j-node-text">K2</text>
-                  <circle class="j-node-check" cx="20" cy="18" r="7"></circle>
-                  <path class="j-node-check-tick" d="M 17 18 L 19.5 20.5 L 23 17"></path>
-                </g>
-              </g>
-              <g class="j-node" data-code="K3" data-href="k3-granularity-figma.html" data-title="颗粒度的代价 · AI 拼不准的根因" data-tier="基础" transform="translate(42 0)">
-                <g class="j-node-inner">
-                  <circle class="j-node-circle" r="28"></circle>
-                  <text class="j-node-text">K3</text>
-                  <circle class="j-node-check" cx="20" cy="18" r="7"></circle>
-                  <path class="j-node-check-tick" d="M 17 18 L 19.5 20.5 L 23 17"></path>
-                </g>
-              </g>
-              <g class="j-node" data-code="K4" data-href="k4-mcp-reads-figma.html" data-title="MCP 到底读了什么 · AI 看到的设计稿" data-tier="基础" transform="translate(126 0)">
-                <g class="j-node-inner">
-                  <circle class="j-node-circle" r="28"></circle>
-                  <text class="j-node-text">K4</text>
-                  <circle class="j-node-check" cx="20" cy="18" r="7"></circle>
-                  <path class="j-node-check-tick" d="M 17 18 L 19.5 20.5 L 23 17"></path>
-                </g>
-              </g>
-            </g>
-
-            <!-- ===== Hand-drawn annotations ===== -->
-            <!-- 你在这里 → START (cy=180, cx=600) -->
-            <g id="anno-start">
-              <text class="j-anno-text" x="780" y="156" transform="rotate(-2 780 156)">↙ 你在这里</text>
-              <text class="j-anno-en" x="780" y="174" transform="rotate(-2 780 174)">YOU ARE HERE</text>
-              <path class="j-anno-line" d="M 770 168 C 730 174, 690 178, 660 180"></path>
-              <!-- arrowhead pointing left toward START circle -->
-              <path d="M 660 180 L 668 174 M 660 180 L 668 186" stroke="var(--accent)" stroke-width="1.4" fill="none" stroke-linecap="round"></path>
-            </g>
-
-            <!-- 推荐起点 → A0 (cluster A at 360,680, A0 at translate(-126,0) → absolute (234,680)) -->
-            <g id="anno-recommend">
-              <text class="j-anno-text" x="80" y="624" transform="rotate(-3 80 624)">★ 推荐起点</text>
-              <text class="j-anno-en" x="80" y="642" transform="rotate(-3 80 642)">SUGGESTED · A0</text>
-              <path class="j-anno-line" d="M 184 632 C 200 644, 210 656, 216 668"></path>
-              <!-- arrowhead pointing toward A0 (absolute 234, 680) — top edge ~ (234, 658) -->
-              <path d="M 216 668 L 224 664 M 216 668 L 218 676" stroke="var(--accent)" stroke-width="1.4" fill="none" stroke-linecap="round"></path>
-            </g>
-
-            <!-- 上线撒花 → END (cy=1840, cx=600) -->
-            <g id="anno-end">
-              <text class="j-anno-text" x="900" y="1830" transform="rotate(2 900 1830)">→ 上线撒花！</text>
-              <text class="j-anno-en" x="900" y="1848" transform="rotate(2 900 1848)">SHIPPED</text>
-              <path class="j-anno-line" d="M 890 1838 C 820 1844, 740 1844, 650 1840"></path>
-              <path d="M 650 1840 L 660 1834 M 650 1840 L 658 1846" stroke="var(--accent)" stroke-width="1.4" fill="none" stroke-linecap="round"></path>
-            </g>
-
-            <!-- Module count side notes (subtle) -->
-            <text x="100" y="500" class="j-anno-en" transform="rotate(-90 100 500)" style="fill:var(--ink-mute);">DESIGN ⟶  A · B · C · D</text>
-            <text x="1100" y="500" class="j-anno-en" transform="rotate(90 1100 500)" style="fill:var(--ink-mute);">ENGINEERING ⟶  F · G · H · J · K</text>
-
-            <!-- bottom faint figure scale -->
-            <g transform="translate(50 1840)">
-              <line x1="0" y1="0" x2="80" y2="0" stroke="var(--ink-mute)" stroke-width="1"></line>
-              <line x1="0" y1="-4" x2="0" y2="4" stroke="var(--ink-mute)" stroke-width="1"></line>
-              <line x1="80" y1="-4" x2="80" y2="4" stroke="var(--ink-mute)" stroke-width="1"></line>
-              <text x="40" y="20" text-anchor="middle" class="j-anno-en" style="fill:var(--ink-mute);">~ 1 NODE</text>
-            </g>
-            <text x="1150" y="1856" text-anchor="end" class="j-anno-en" style="fill:var(--ink-mute);">DCL · MAP v1.4 · 2026 · ƒ</text>
+               aria-label="完整旅程路径图：从你在这里出发，经过界面基础、视觉系统、状态动作、样式翻译、AI 实现、组件材料、项目启动、调试、协作、上线十个分类，最后撒花。">
+            <!-- Reading-order route is rendered by the script below. -->
           </svg>
+
+          <script>
+          (function(){
+            var svg = document.getElementById('journey-svg');
+            if (!svg) return;
+
+            function articleNode(n) {
+              var rec = n.recommend ? ' data-recommend="1"' : '';
+              var y = n.y || 0;
+              return ''
+                + '<g class="j-node" data-code="' + n.code + '" data-href="' + n.href + '" data-title="' + n.title + '" data-tier="' + n.tier + '"' + rec + ' transform="translate(' + n.x + ' ' + y + ')">'
+                +   '<g class="j-node-inner">'
+                +     '<circle class="j-node-circle" r="28"></circle>'
+                +     '<text class="j-node-text">' + n.code + '</text>'
+                +     '<circle class="j-node-check" cx="20" cy="18" r="7"></circle>'
+                +     '<path class="j-node-check-tick" d="M 17 18 L 19.5 20.5 L 23 17"></path>'
+                +   '</g>'
+                + '</g>';
+            }
+
+            function stage(s) {
+              var bannerX = -s.w / 2 + 14;
+              var bannerY = -s.h / 2 - 30;
+              var countText = s.count + ' ARTICLES';
+              return ''
+                + '<g class="j-cluster" data-mod="' + s.id + '" transform="translate(600 ' + s.y + ')">'
+                +   '<rect class="j-cluster-bg" x="' + (-s.w / 2) + '" y="' + (-s.h / 2) + '" width="' + s.w + '" height="' + s.h + '" rx="' + s.rx + '"></rect>'
+                +   '<g transform="translate(' + bannerX + ' ' + bannerY + ') rotate(' + (s.rotate || 0) + ')">'
+                +     '<rect class="j-cluster-banner" x="0" y="0" width="' + s.bannerW + '" height="26" rx="13"></rect>'
+                +     '<text class="j-cluster-banner-text" x="14" y="17"><tspan class="j-cluster-banner-key">' + s.id + '</tspan> · ' + s.title + '</text>'
+                +   '</g>'
+                +   '<text class="j-anno-en" x="' + (s.w / 2 - 22) + '" y="' + (bannerY + 17) + '" text-anchor="end" style="fill:var(--ink-mute);">' + countText + '</text>'
+                +   s.nodes.map(articleNode).join('')
+                + '</g>';
+            }
+
+            var stages = [
+              {
+                id: '01',
+                title: '界面怎么被代码拆开',
+                y: 300,
+                w: 760,
+                h: 128,
+                rx: 38,
+                bannerW: 250,
+                rotate: -0.8,
+                count: 7,
+                nodes: [
+                  { code: 'A0', href: 'basics-figma.html', title: '三件套 · HTML / CSS / JS', tier: '入门', recommend: true, x: -252, y: 8 },
+                  { code: 'A1', href: 'box-figma.html', title: '盒子 · Auto Layout', tier: '基础', x: -168, y: 8 },
+                  { code: 'A2', href: 'components-figma.html', title: '组件 · Variants & Props', tier: '基础', x: -84, y: 8 },
+                  { code: 'A3', href: 'button-system-figma.html', title: 'Button System · 组件演化', tier: '进阶', x: 0, y: 8 },
+                  { code: 'B0', href: 'page-figma.html', title: '拼页面 · 组件嵌套', tier: '入门', x: 84, y: 8 },
+                  { code: 'B1', href: 'data-flow-figma.html', title: '数据流 · 概念', tier: '基础', recommend: true, x: 168, y: 8 },
+                  { code: 'B2', href: 'data-flow-cases-figma.html', title: '数据流 · 实战 5 案例', tier: '进阶', x: 252, y: 8 }
+                ]
+              },
+              {
+                id: '02',
+                title: '视觉规则怎么变成系统',
+                y: 480,
+                w: 460,
+                h: 118,
+                rx: 38,
+                bannerW: 260,
+                rotate: 0.7,
+                count: 3,
+                nodes: [
+                  { code: 'C0', href: 'tokens-figma.html', title: 'Variables / Tokens 入门', tier: '入门', x: -84, y: 8 },
+                  { code: 'C1', href: 'colors-type-figma.html', title: 'Colors / Type / Spacing', tier: '基础', x: 0, y: 8 },
+                  { code: 'C2', href: 'theme-switch-figma.html', title: 'Theme 切换实战', tier: '进阶', x: 84, y: 8 }
+                ]
+              },
+              {
+                id: '03',
+                title: '界面怎么有状态和动作',
+                y: 660,
+                w: 460,
+                h: 118,
+                rx: 38,
+                bannerW: 258,
+                rotate: -0.9,
+                count: 3,
+                nodes: [
+                  { code: 'D0', href: 'states-figma.html', title: '视觉态 · 看得见的状态', tier: '入门', x: -84, y: 8 },
+                  { code: 'D1', href: 'interactive-figma.html', title: 'Interactive Component', tier: '基础', x: 0, y: 8 },
+                  { code: 'D2', href: 'transition-figma.html', title: '动画 · Transition', tier: '进阶', x: 84, y: 8 }
+                ]
+              },
+              {
+                id: '04',
+                title: '设计样式怎么翻译成 CSS',
+                y: 840,
+                w: 420,
+                h: 118,
+                rx: 38,
+                bannerW: 282,
+                rotate: 0.8,
+                count: 1,
+                nodes: [
+                  { code: 'S1', href: 'inverted-radius-figma.html', title: '内翻圆角 · Inverted Border Radius', tier: '样式', recommend: true, x: 0, y: 8 }
+                ]
+              },
+              {
+                id: '05',
+                title: 'AI 怎么参与实现',
+                y: 1020,
+                w: 520,
+                h: 118,
+                rx: 38,
+                bannerW: 230,
+                rotate: 0.8,
+                count: 4,
+                nodes: [
+                  { code: 'Q1', href: 'q1-mcp-figma.html', title: 'MCP · AI 的 USB 接口', tier: '工具', recommend: true, x: -126, y: 8 },
+                  { code: 'Q2', href: 'q2-skills-figma.html', title: 'Skills · SKILL.md 拆解', tier: '工具', x: -42, y: 8 },
+                  { code: 'Q3', href: 'q3-agent-figma.html', title: 'Agent · 团队式 AI', tier: '工具', x: 42, y: 8 },
+                  { code: 'K4', href: 'k4-mcp-reads-figma.html', title: 'MCP 到底读了什么 · AI 看到的设计稿', tier: '基础', x: 126, y: 8 }
+                ]
+              },
+              {
+                id: '06',
+                title: '用什么材料搭界面',
+                y: 1200,
+                w: 460,
+                h: 118,
+                rx: 38,
+                bannerW: 238,
+                rotate: -0.7,
+                count: 3,
+                nodes: [
+                  { code: 'K1', href: 'k1-ui-library-figma.html', title: 'UI 库 · shadcn vs Antd', tier: '基础', recommend: true, x: -84, y: 8 },
+                  { code: 'K2', href: 'k2-shadcn-customize-figma.html', title: 'shadcn 改造 · 变成你家的', tier: '基础', x: 0, y: 8 },
+                  { code: 'K3', href: 'k3-granularity-figma.html', title: '颗粒度的代价 · AI 拼不准的根因', tier: '基础', x: 84, y: 8 }
+                ]
+              },
+              {
+                id: '07',
+                title: '项目怎么跑起来',
+                y: 1380,
+                w: 520,
+                h: 118,
+                rx: 38,
+                bannerW: 214,
+                rotate: 0.7,
+                count: 4,
+                nodes: [
+                  { code: 'F1', href: 'f1-npm-figma.html', title: 'npm 是什么', tier: '工程', x: -126, y: 8 },
+                  { code: 'F2', href: 'f2-import-figma.html', title: 'import 与路径', tier: '工程', x: -42, y: 8 },
+                  { code: 'F3', href: 'f3-dev-build-figma.html', title: 'dev vs build', tier: '工程', x: 42, y: 8 },
+                  { code: 'F4', href: 'f4-hidden-files-figma.html', title: '看不见的文件', tier: '工程', x: 126, y: 8 }
+                ]
+              },
+              {
+                id: '08',
+                title: '坏了怎么查',
+                y: 1540,
+                w: 460,
+                h: 118,
+                rx: 38,
+                bannerW: 190,
+                rotate: -0.7,
+                count: 3,
+                nodes: [
+                  { code: 'H1', href: 'h1-devtools-elements-figma.html', title: 'DevTools Elements', tier: '工程', x: -84, y: 8 },
+                  { code: 'H2', href: 'h2-console-error-figma.html', title: 'Console 报错', tier: '工程', x: 0, y: 8 },
+                  { code: 'H3', href: 'h3-network-figma.html', title: 'Network 面板', tier: '工程', x: 84, y: 8 }
+                ]
+              },
+              {
+                id: '09',
+                title: '怎么协作',
+                y: 1700,
+                w: 460,
+                h: 118,
+                rx: 38,
+                bannerW: 166,
+                rotate: 0.8,
+                count: 3,
+                nodes: [
+                  { code: 'G1', href: 'g1-commit-branch-figma.html', title: 'commit / branch', tier: '工程', x: -84, y: 8 },
+                  { code: 'G2', href: 'g2-conflict-figma.html', title: '冲突怎么解', tier: '工程', x: 0, y: 8 },
+                  { code: 'G3', href: 'g3-pr-review-figma.html', title: 'PR / Review', tier: '工程', x: 84, y: 8 }
+                ]
+              },
+              {
+                id: '10',
+                title: '怎么上线',
+                y: 1860,
+                w: 460,
+                h: 118,
+                rx: 38,
+                bannerW: 166,
+                rotate: -0.8,
+                count: 3,
+                nodes: [
+                  { code: 'J1', href: 'j1-dns-figma.html', title: 'DNS / 域名', tier: '工程', x: -84, y: 8 },
+                  { code: 'J2', href: 'j2-vercel-figma.html', title: 'Vercel 部署', tier: '工程', x: 0, y: 8 },
+                  { code: 'J3', href: 'j3-cache-cdn-figma.html', title: '缓存 / CDN', tier: '工程', x: 84, y: 8 }
+                ]
+              }
+            ];
+
+            var paths = [
+              ['p-start-01', 'M 600 198 C 600 214, 600 224, 600 236'],
+              ['p-01-02', 'M 600 364 C 600 384, 600 402, 600 421'],
+              ['p-02-03', 'M 600 539 C 600 560, 600 582, 600 601'],
+              ['p-03-04', 'M 600 719 C 600 738, 600 760, 600 781'],
+              ['p-04-05', 'M 600 899 C 600 920, 600 940, 600 961'],
+              ['p-05-06', 'M 600 1079 C 600 1100, 600 1120, 600 1141'],
+              ['p-06-07', 'M 600 1259 C 600 1280, 600 1300, 600 1321'],
+              ['p-07-08', 'M 600 1439 C 600 1458, 600 1470, 600 1481'],
+              ['p-08-09', 'M 600 1599 C 600 1618, 600 1630, 600 1641'],
+              ['p-09-10', 'M 600 1759 C 600 1778, 600 1786, 600 1801'],
+              ['p-10-end', 'M 600 1919 C 600 1932, 600 1942, 600 1956']
+            ].map(function(p){
+              return '<path class="j-path" id="' + p[0] + '" d="' + p[1] + '"></path>';
+            }).join('');
+
+            svg.innerHTML = ''
+              + '<g id="paths">' + paths + '</g>'
+              + '<g id="start">'
+              +   '<circle class="j-anchor" cx="600" cy="150" r="48"></circle>'
+              +   '<text class="j-anchor-cn" x="600" y="135">你在这里</text>'
+              +   '<text class="j-anchor-text" x="600" y="158">START · 00</text>'
+              + '</g>'
+              + stages.map(stage).join('')
+              + '<g id="end">'
+              +   '<circle class="j-anchor j-anchor-end" cx="600" cy="2000" r="44"></circle>'
+              +   '<text class="j-anchor-cn" x="600" y="1986">撒 花</text>'
+              +   '<text class="j-anchor-text" x="600" y="2008">FINISH</text>'
+              + '</g>'
+              + '<g id="anno-start">'
+              +   '<text class="j-anno-text" x="760" y="126" transform="rotate(-2 760 126)">↙ 你在这里</text>'
+              +   '<text class="j-anno-en" x="760" y="144" transform="rotate(-2 760 144)">READ FROM TOP</text>'
+              +   '<path class="j-anno-line" d="M 748 140 C 715 146, 680 150, 654 150"></path>'
+              +   '<path d="M 654 150 L 662 144 M 654 150 L 662 156" stroke="var(--accent)" stroke-width="1.4" fill="none" stroke-linecap="round"></path>'
+              + '</g>'
+              + '<g id="anno-recommend">'
+              +   '<text class="j-anno-text" x="104" y="288" transform="rotate(-3 104 288)">★ 推荐起点</text>'
+              +   '<text class="j-anno-en" x="104" y="306" transform="rotate(-3 104 306)">SUGGESTED · A0</text>'
+              +   '<path class="j-anno-line" d="M 208 304 C 246 316, 310 328, 362 336"></path>'
+              +   '<path d="M 362 336 L 352 330 M 362 336 L 352 342" stroke="var(--accent)" stroke-width="1.4" fill="none" stroke-linecap="round"></path>'
+              + '</g>'
+              + '<g id="anno-end">'
+              +   '<text class="j-anno-text" x="890" y="1990" transform="rotate(2 890 1990)">→ 上线撒花！</text>'
+              +   '<text class="j-anno-en" x="890" y="2008" transform="rotate(2 890 2008)">SHIPPED</text>'
+              +   '<path class="j-anno-line" d="M 880 1998 C 812 2004, 736 2004, 650 2000"></path>'
+              +   '<path d="M 650 2000 L 660 1994 M 650 2000 L 658 2006" stroke="var(--accent)" stroke-width="1.4" fill="none" stroke-linecap="round"></path>'
+              + '</g>'
+              + '<text x="100" y="1110" class="j-anno-en" transform="rotate(-90 100 1110)" style="fill:var(--ink-mute);">READING ORDER · 01 → 10</text>'
+              + '<text x="1100" y="1110" class="j-anno-en" transform="rotate(90 1100 1110)" style="fill:var(--ink-mute);">34 ARTICLES · 10 GROUPS</text>'
+              + '<text x="1150" y="2016" text-anchor="end" class="j-anno-en" style="fill:var(--ink-mute);">DCL · MAP v1.8 · 2026</text>';
+          })();
+          </script>
 
           <!-- HTML tooltip (overlay) -->
           <div class="j-tooltip" id="j-tip" role="tooltip" aria-hidden="true">
@@ -2492,15 +2097,15 @@
           <div class="jp-block">
             <div class="jp-label">PROGRESS</div>
             <div class="jp-progress-num">
-              <span class="jp-cur" id="jp-cur">0</span><span class="jp-tot"> / 30</span>
+              <span class="jp-cur" id="jp-cur">0</span><span class="jp-tot"> / 34</span>
             </div>
-            <div class="jp-bar" id="jp-bar"><!-- 28 ticks injected by JS --></div>
+            <div class="jp-bar" id="jp-bar"><!-- ticks injected by JS --></div>
           </div>
 
           <div class="jp-block jp-filters" role="group" aria-label="过滤">
-            <button class="jp-filter active" data-filter="all">[ ALL ]<span class="jp-fnum" id="jp-n-all">30</span></button>
+            <button class="jp-filter active" data-filter="all">[ ALL ]<span class="jp-fnum" id="jp-n-all">34</span></button>
             <button class="jp-filter" data-filter="read">[ 已读 ]<span class="jp-fnum" id="jp-n-read">0</span></button>
-            <button class="jp-filter" data-filter="unread">[ 未读 ]<span class="jp-fnum" id="jp-n-unread">30</span></button>
+            <button class="jp-filter" data-filter="unread">[ 未读 ]<span class="jp-fnum" id="jp-n-unread">34</span></button>
           </div>
 
           <div class="jp-block">
@@ -2550,45 +2155,31 @@
 </footer>
 
 
-<!-- 路线图弹窗 (9 模块) -->
+<!-- 路线图弹窗 (10 分类) -->
 <div class="rm-modal" id="rm-modal" hidden>
   <div class="rm-backdrop" data-rm-close></div>
   <div class="rm-dialog" role="dialog" aria-label="完整路线图">
     <button class="rm-close" data-rm-close aria-label="关闭">✕</button>
     <div class="rm-header">
-      <div class="rm-tag">完整路线图 · ROADMAP</div>
-      <h3 class="rm-title">9 模块 <span class="rm-em">·</span> 28 篇</h3>
-      <p class="rm-sub">设计篇 13 · 工程篇 13 · 生态选型 / AI 协作 4</p>
+      <div class="rm-tag">阅读顺序 · ROADMAP</div>
+      <h3 class="rm-title">START → 10 分类 <span class="rm-em">·</span> 34 篇</h3>
+      <p class="rm-sub">01 界面拆解 7 · 02 视觉系统 3 · 03 状态动作 3 · 04 样式翻译 1 · 05 AI 实现 4 · 06 组件材料 3 · 07 项目启动 4 · 08 调试 3 · 09 协作 3 · 10 上线 3</p>
     </div>
     <div class="rm-body">
       <div class="rm-mod">
-        <div class="rm-mod-key" style="color:var(--accent);">K · 生态选型 / AI 协作 (NEW)</div>
-        <div class="rm-mod-list">
-          <a href="k1-ui-library-figma.html" class="rm-cell"><span class="rm-cell-code">K1</span><span class="rm-cell-name">UI 库 · shadcn vs Antd</span><span class="rm-cell-tier">基础</span></a>
-          <a href="k2-shadcn-customize-figma.html" class="rm-cell"><span class="rm-cell-code">K2</span><span class="rm-cell-name">shadcn 改造 · 变成你家的</span><span class="rm-cell-tier">基础</span></a>
-          <a href="k3-granularity-figma.html" class="rm-cell"><span class="rm-cell-code">K3</span><span class="rm-cell-name">颗粒度的代价 · AI 拼不准的根因</span><span class="rm-cell-tier">基础</span></a>
-          <a href="k4-mcp-reads-figma.html" class="rm-cell"><span class="rm-cell-code">K4</span><span class="rm-cell-name">MCP 读了啥 · AI 看到的设计稿</span><span class="rm-cell-tier">基础</span></a>
-        </div>
-      </div>
-      <div class="rm-mod">
-        <div class="rm-mod-key">A · 单元素与组件</div>
+        <div class="rm-mod-key">01 · 界面怎么被代码拆开</div>
         <div class="rm-mod-list">
           <a href="basics-figma.html" class="rm-cell"><span class="rm-cell-code">A0</span><span class="rm-cell-name">三件套 · HTML / CSS / JS</span><span class="rm-cell-tier">入门</span></a>
           <a href="box-figma.html" class="rm-cell"><span class="rm-cell-code">A1</span><span class="rm-cell-name">盒子 · Auto Layout</span><span class="rm-cell-tier">基础</span></a>
           <a href="components-figma.html" class="rm-cell"><span class="rm-cell-code">A2</span><span class="rm-cell-name">组件 · Variants &amp; Props</span><span class="rm-cell-tier">基础</span></a>
           <a href="button-system-figma.html" class="rm-cell"><span class="rm-cell-code">A3</span><span class="rm-cell-name">Button System · 组件演化</span><span class="rm-cell-tier">进阶</span></a>
-        </div>
-      </div>
-      <div class="rm-mod">
-        <div class="rm-mod-key">B · 多组件协作</div>
-        <div class="rm-mod-list">
           <a href="page-figma.html" class="rm-cell"><span class="rm-cell-code">B0</span><span class="rm-cell-name">拼页面 · 组件嵌套</span><span class="rm-cell-tier">入门</span></a>
           <a href="data-flow-figma.html" class="rm-cell"><span class="rm-cell-code">B1</span><span class="rm-cell-name">数据流 · 概念</span><span class="rm-cell-tier">基础</span></a>
           <a href="data-flow-cases-figma.html" class="rm-cell"><span class="rm-cell-code">B2</span><span class="rm-cell-name">数据流 · 实战 5 案例</span><span class="rm-cell-tier">进阶</span></a>
         </div>
       </div>
       <div class="rm-mod">
-        <div class="rm-mod-key">C · 视觉系统</div>
+        <div class="rm-mod-key">02 · 视觉规则怎么变成系统</div>
         <div class="rm-mod-list">
           <a href="tokens-figma.html" class="rm-cell"><span class="rm-cell-code">C0</span><span class="rm-cell-name">Variables / Tokens 入门</span><span class="rm-cell-tier">入门</span></a>
           <a href="colors-type-figma.html" class="rm-cell"><span class="rm-cell-code">C1</span><span class="rm-cell-name">Colors / Type / Spacing</span><span class="rm-cell-tier">基础</span></a>
@@ -2596,7 +2187,7 @@
         </div>
       </div>
       <div class="rm-mod">
-        <div class="rm-mod-key">D · 状态与交互</div>
+        <div class="rm-mod-key">03 · 界面怎么有状态和动作</div>
         <div class="rm-mod-list">
           <a href="states-figma.html" class="rm-cell"><span class="rm-cell-code">D0</span><span class="rm-cell-name">视觉态 · 看得见的状态</span><span class="rm-cell-tier">入门</span></a>
           <a href="interactive-figma.html" class="rm-cell"><span class="rm-cell-code">D1</span><span class="rm-cell-name">Interactive Component</span><span class="rm-cell-tier">基础</span></a>
@@ -2604,7 +2195,30 @@
         </div>
       </div>
       <div class="rm-mod">
-        <div class="rm-mod-key">F · 工程入门 · 跑不起来</div>
+        <div class="rm-mod-key">04 · 设计样式怎么翻译成 CSS</div>
+        <div class="rm-mod-list">
+          <a href="inverted-radius-figma.html" class="rm-cell"><span class="rm-cell-code">S1</span><span class="rm-cell-name">内翻圆角 · Inverted Border Radius</span><span class="rm-cell-tier">样式</span></a>
+        </div>
+      </div>
+      <div class="rm-mod">
+        <div class="rm-mod-key" style="color:var(--accent);">05 · AI 怎么参与实现</div>
+        <div class="rm-mod-list">
+          <a href="q1-mcp-figma.html" class="rm-cell"><span class="rm-cell-code">Q1</span><span class="rm-cell-name">MCP · AI 的 USB 接口</span><span class="rm-cell-tier">工具</span></a>
+          <a href="q2-skills-figma.html" class="rm-cell"><span class="rm-cell-code">Q2</span><span class="rm-cell-name">Skills · SKILL.md 拆解</span><span class="rm-cell-tier">工具</span></a>
+          <a href="q3-agent-figma.html" class="rm-cell"><span class="rm-cell-code">Q3</span><span class="rm-cell-name">Agent · 团队式 AI</span><span class="rm-cell-tier">工具</span></a>
+          <a href="k4-mcp-reads-figma.html" class="rm-cell"><span class="rm-cell-code">K4</span><span class="rm-cell-name">MCP 读了啥 · AI 看到的设计稿</span><span class="rm-cell-tier">基础</span></a>
+        </div>
+      </div>
+      <div class="rm-mod">
+        <div class="rm-mod-key">06 · 用什么材料搭界面</div>
+        <div class="rm-mod-list">
+          <a href="k1-ui-library-figma.html" class="rm-cell"><span class="rm-cell-code">K1</span><span class="rm-cell-name">UI 库 · shadcn vs Antd</span><span class="rm-cell-tier">基础</span></a>
+          <a href="k2-shadcn-customize-figma.html" class="rm-cell"><span class="rm-cell-code">K2</span><span class="rm-cell-name">shadcn 改造 · 变成你家的</span><span class="rm-cell-tier">基础</span></a>
+          <a href="k3-granularity-figma.html" class="rm-cell"><span class="rm-cell-code">K3</span><span class="rm-cell-name">颗粒度的代价 · AI 拼不准的根因</span><span class="rm-cell-tier">基础</span></a>
+        </div>
+      </div>
+      <div class="rm-mod">
+        <div class="rm-mod-key">07 · 项目怎么跑起来</div>
         <div class="rm-mod-list">
           <a href="f1-npm-figma.html" class="rm-cell"><span class="rm-cell-code">F1</span><span class="rm-cell-name">npm 是什么</span><span class="rm-cell-tier">工程</span></a>
           <a href="f2-import-figma.html" class="rm-cell"><span class="rm-cell-code">F2</span><span class="rm-cell-name">import 与路径</span><span class="rm-cell-tier">工程</span></a>
@@ -2613,15 +2227,7 @@
         </div>
       </div>
       <div class="rm-mod">
-        <div class="rm-mod-key">G · 版本控制 · AI 写完之后</div>
-        <div class="rm-mod-list">
-          <a href="g1-commit-branch-figma.html" class="rm-cell"><span class="rm-cell-code">G1</span><span class="rm-cell-name">commit / branch</span><span class="rm-cell-tier">工程</span></a>
-          <a href="g2-conflict-figma.html" class="rm-cell"><span class="rm-cell-code">G2</span><span class="rm-cell-name">冲突怎么解</span><span class="rm-cell-tier">工程</span></a>
-          <a href="g3-pr-review-figma.html" class="rm-cell"><span class="rm-cell-code">G3</span><span class="rm-cell-name">PR / Review</span><span class="rm-cell-tier">工程</span></a>
-        </div>
-      </div>
-      <div class="rm-mod">
-        <div class="rm-mod-key">H · 浏览器调试 · 不长那样</div>
+        <div class="rm-mod-key">08 · 坏了怎么查</div>
         <div class="rm-mod-list">
           <a href="h1-devtools-elements-figma.html" class="rm-cell"><span class="rm-cell-code">H1</span><span class="rm-cell-name">DevTools Elements</span><span class="rm-cell-tier">工程</span></a>
           <a href="h2-console-error-figma.html" class="rm-cell"><span class="rm-cell-code">H2</span><span class="rm-cell-name">Console 报错</span><span class="rm-cell-tier">工程</span></a>
@@ -2629,7 +2235,15 @@
         </div>
       </div>
       <div class="rm-mod">
-        <div class="rm-mod-key">J · 上线 · 让别人看到</div>
+        <div class="rm-mod-key">09 · 怎么协作</div>
+        <div class="rm-mod-list">
+          <a href="g1-commit-branch-figma.html" class="rm-cell"><span class="rm-cell-code">G1</span><span class="rm-cell-name">commit / branch</span><span class="rm-cell-tier">工程</span></a>
+          <a href="g2-conflict-figma.html" class="rm-cell"><span class="rm-cell-code">G2</span><span class="rm-cell-name">冲突怎么解</span><span class="rm-cell-tier">工程</span></a>
+          <a href="g3-pr-review-figma.html" class="rm-cell"><span class="rm-cell-code">G3</span><span class="rm-cell-name">PR / Review</span><span class="rm-cell-tier">工程</span></a>
+        </div>
+      </div>
+      <div class="rm-mod">
+        <div class="rm-mod-key">10 · 怎么上线</div>
         <div class="rm-mod-list">
           <a href="j1-dns-figma.html" class="rm-cell"><span class="rm-cell-code">J1</span><span class="rm-cell-name">DNS / 域名</span><span class="rm-cell-tier">工程</span></a>
           <a href="j2-vercel-figma.html" class="rm-cell"><span class="rm-cell-code">J2</span><span class="rm-cell-name">Vercel 部署</span><span class="rm-cell-tier">工程</span></a>
@@ -2642,7 +2256,7 @@
 
 <script>
 /* ========================================================
-   Volume tabs (3 panels: 课程 / AI 应用 / 代码)
+   Module activation (Code × Design only)
    ======================================================== */
 (function(){
   var tabs = document.querySelectorAll('.vol-tab');
@@ -2650,11 +2264,9 @@
   if (!tabs.length || !panels.length) return;
 
   function activate(vol, opts){
-    if (!vol) return;  /* skip anchor tabs (VOL.I → cinema) */
+    vol = '3';
     opts = opts || {};
     tabs.forEach(function(t){
-      /* Skip <a> tabs — they navigate away, never highlighted on book.html */
-      if (t.tagName === 'A') return;
       t.setAttribute('aria-selected', t.dataset.vol === vol ? 'true' : 'false');
     });
     panels.forEach(function(p){
@@ -2679,13 +2291,12 @@
     }
   }
 
-  // Wire up tab clicks (anchor tabs let the browser navigate)
+  // Wire up the single visible module tab.
   tabs.forEach(function(t){
-    if (t.tagName === 'A') return;
     t.addEventListener('click', function(){ activate(t.dataset.vol); });
   });
 
-  // Wire up in-page jump links (e.g. "翻到 VOL. III" buttons in WIP placeholders)
+  // Old hidden-module jump links are kept harmless and route back to Code × Design.
   document.querySelectorAll('[data-vol-jump]').forEach(function(a){
     a.addEventListener('click', function(e){
       e.preventDefault();
@@ -2693,16 +2304,18 @@
     });
   });
 
-  // Initial activation from URL hash, default = VOL. I
-  var initial = '1';
-  var m = location.hash.match(/^#vol-(\d)/);
-  if (m) initial = m[1];
-  activate(initial, { silent: true });
+  // Initial activation: Code × Design is the homepage/default module.
+  activate('3', { silent: true });
+  if (location.hash !== '#vol-3') {
+    history.replaceState(null, '', '#vol-3');
+  }
 
-  // React to hash changes (back/forward, external links)
+  // React to old hash links by keeping users on Code × Design.
   window.addEventListener('hashchange', function(){
-    var m2 = location.hash.match(/^#vol-(\d)/);
-    if (m2) activate(m2[1], { silent: true });
+    activate('3', { silent: true });
+    if (location.hash !== '#vol-3') {
+      history.replaceState(null, '', '#vol-3');
+    }
   });
 })();
 
@@ -2726,7 +2339,6 @@
    ======================================================== */
 (function(){
   var STORAGE_KEY = 'dcl-read-articles';
-  var TOTAL = 30;
 
   var svg = document.getElementById('journey-svg');
   var host = document.getElementById('j-host');
@@ -2737,25 +2349,26 @@
   if (!svg || !host || !tip) return;
 
   var nodes = Array.prototype.slice.call(svg.querySelectorAll('.j-node'));
+  var nodeCodes = {};
+  nodes.forEach(function(n){
+    nodeCodes[n.getAttribute('data-code')] = true;
+  });
+  var TOTAL = nodes.length;
 
-  /* relationships: which path turns "read" when which clusters fully visited */
-  // simpler: each path becomes "read" when at least one node in the *next* cluster up the chain has been read
-  // path id -> cluster code that triggers it
+  /* relationships: which path turns "read" when the next reading group has been visited */
+  // path id -> article-code prefix (or prefixes) that triggers it
   var pathTrigger = {
-    'p-start-design': 'A',
-    'p-start-eng':    'F',
-    'p-branch-A':     'A',
-    'p-branch-F':     'F',
-    'p-A-B':          'B',
-    'p-B-C':          'C',
-    'p-C-D':          'D',
-    'p-D-E':          'E',
-    'p-F-G':          'G',
-    'p-G-H':          'H',
-    'p-H-J':          'J',
-    'p-E-end':        'K',
-    'p-J-end':        'K',
-    'p-K-end':        'K'
+    'p-start-01': ['A', 'B'],
+    'p-01-02':    'C',
+    'p-02-03':    'D',
+    'p-03-04':    'S',
+    'p-04-05':    ['Q', 'K'],
+    'p-05-06':    'K',
+    'p-06-07':    'F',
+    'p-07-08':    'H',
+    'p-08-09':    'G',
+    'p-09-10':    'J',
+    'p-10-end':   'J'
   };
 
   /* ---------- read-state storage ---------- */
@@ -2780,7 +2393,9 @@
 
   /* ---------- render state to DOM ---------- */
   function render() {
-    var read = loadRead();
+    var storedRead = loadRead();
+    var read = storedRead.filter(function(code){ return nodeCodes[code]; });
+    if (read.length !== storedRead.length) saveRead(read);
     var readSet = {};
     read.forEach(function(c){ readSet[c] = true; });
 
@@ -2791,12 +2406,14 @@
       else n.classList.remove('read');
     });
 
-    /* paths: read if at least one node downstream/upstream ish */
-    // for a path triggered by cluster X, mark read if any node with code starting with X is read
+    /* paths: read if at least one node in the next reading group has been read */
     Object.keys(pathTrigger).forEach(function(pid){
       var trigger = pathTrigger[pid];
+      var prefixes = Array.isArray(trigger) ? trigger : [trigger];
       var hit = false;
-      for (var k in readSet) { if (readSet[k] && k.charAt(0) === trigger) { hit = true; break; } }
+      for (var k in readSet) {
+        if (readSet[k] && prefixes.indexOf(k.charAt(0)) !== -1) { hit = true; break; }
+      }
       var p = document.getElementById(pid);
       if (p) p.classList.toggle('read', hit);
     });
@@ -3055,222 +2672,6 @@
   host.addEventListener('pointercancel', clearTouch);
 
   /* initial */
-  apply();
-})();
-
-/* ========================================================
-   VOL.II AI map: zoom & pan + node click + read-state (shares VOL.III storage)
-   ======================================================== */
-(function(){
-  var host = document.getElementById('j-host-2');
-  var svg  = document.getElementById('journey-svg-2');
-  var levelEl = document.getElementById('zoom-level-2');
-  if (!host || !svg) return;
-
-  var STORAGE_KEY = 'dcl-read-articles';
-
-  function loadRead() {
-    try {
-      var raw = localStorage.getItem(STORAGE_KEY);
-      if (!raw) return [];
-      var arr = JSON.parse(raw);
-      return Array.isArray(arr) ? arr : [];
-    } catch (e) { return []; }
-  }
-  function saveRead(arr) {
-    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(arr)); } catch (e) {}
-  }
-  function markRead(code) {
-    var arr = loadRead();
-    if (arr.indexOf(code) === -1) { arr.push(code); saveRead(arr); }
-  }
-  var TOTAL_Q = 3; // Q1/Q2/Q3 (K series excluded as they're placeholders)
-
-  function renderRead() {
-    var read = loadRead();
-    var rs = {}; read.forEach(function(c){ rs[c] = true; });
-    svg.querySelectorAll('.j-node[data-code]').forEach(function(n){
-      n.classList.toggle('read', !!rs[n.getAttribute('data-code')]);
-    });
-    /* Q path lights up if any Q node is read */
-    var anyQ = false;
-    for (var k in rs) { if (rs[k] && k.charAt(0) === 'Q') { anyQ = true; break; } }
-    var pQ = document.getElementById('p-vol2-Q');
-    if (pQ) pQ.classList.toggle('read', anyQ);
-
-    /* Panel: count Q reads only (K placeholders aren't counted) */
-    var qReadCount = 0;
-    ['Q1','Q2','Q3'].forEach(function(c){ if (rs[c]) qReadCount++; });
-    var cur = document.getElementById('jp-cur-2'); if (cur) cur.textContent = String(qReadCount);
-    var nAll = document.getElementById('jp-n-all-2'); if (nAll) nAll.textContent = String(TOTAL_Q);
-    var nRd = document.getElementById('jp-n-read-2'); if (nRd) nRd.textContent = String(qReadCount);
-    var nUn = document.getElementById('jp-n-unread-2'); if (nUn) nUn.textContent = String(TOTAL_Q - qReadCount);
-    renderBar(qReadCount);
-  }
-
-  function renderBar(n) {
-    var bar = document.getElementById('jp-bar-2');
-    if (!bar) return;
-    if (bar.childElementCount !== TOTAL_Q) {
-      bar.innerHTML = '';
-      for (var i = 0; i < TOTAL_Q; i++) {
-        var t = document.createElement('span');
-        t.className = 'jp-tick';
-        bar.appendChild(t);
-      }
-    }
-    var ticks = bar.children;
-    for (var j = 0; j < ticks.length; j++) {
-      ticks[j].classList.toggle('on', j < n);
-    }
-  }
-
-  /* Filters: highlight/dim nodes by read state */
-  var filterBtns = Array.prototype.slice.call(document.querySelectorAll('[data-filter-2]'));
-  function setFilter(mode) {
-    svg.classList.remove('filter-all', 'filter-read', 'filter-unread');
-    if (mode === 'read') svg.classList.add('filter-read');
-    else if (mode === 'unread') svg.classList.add('filter-unread');
-    filterBtns.forEach(function(b){ b.classList.toggle('active', b.getAttribute('data-filter-2') === mode); });
-  }
-  filterBtns.forEach(function(b){
-    b.addEventListener('click', function(){ setFilter(b.getAttribute('data-filter-2')); });
-  });
-
-  /* Reset */
-  var resetBtn = document.getElementById('jp-reset-2');
-  if (resetBtn) {
-    resetBtn.addEventListener('click', function(){
-      if (confirm('清空所有已读记录？(含 VOL.III)')) {
-        saveRead([]);
-        renderRead();
-        /* Also re-render VOL.III if visible */
-        var event = new Event('storage'); window.dispatchEvent(event);
-      }
-    });
-  }
-
-  /* node click: mark read + navigate */
-  svg.querySelectorAll('.j-node[data-href]').forEach(function(n){
-    n.style.cursor = 'pointer';
-    var code = n.getAttribute('data-code');
-    n.addEventListener('click', function(){
-      var href = n.getAttribute('data-href');
-      if (code) markRead(code);
-      if (href) setTimeout(function(){ window.location.href = href; }, 30);
-    });
-  });
-
-  /* initial read-state render */
-  renderRead();
-  /* re-render when this panel becomes visible (tab switch) */
-  window.addEventListener('hashchange', function(){
-    if (location.hash === '#vol-2') renderRead();
-  });
-
-  var zoom = 1, panX = 0, panY = 0;
-  var MIN_ZOOM = 0.4, MAX_ZOOM = 3.5;
-
-  function apply() {
-    svg.style.transform = 'translate(' + panX + 'px,' + panY + 'px) scale(' + zoom + ')';
-    if (levelEl) levelEl.textContent = Math.round(zoom * 100) + '%';
-  }
-  function reset() { zoom = 1; panX = 0; panY = 0; apply(); }
-
-  host.addEventListener('wheel', function(e){
-    e.preventDefault();
-    var rect = host.getBoundingClientRect();
-    var mx = e.clientX - rect.left;
-    var my = e.clientY - rect.top;
-    var delta = -e.deltaY * 0.0015;
-    var newZoom = Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, zoom + delta * zoom));
-    if (newZoom === zoom) return;
-    panX = mx - (mx - panX) * (newZoom / zoom);
-    panY = my - (my - panY) * (newZoom / zoom);
-    zoom = newZoom;
-    apply();
-  }, { passive: false });
-
-  var isDragging = false, startX = 0, startY = 0, pStartX = 0, pStartY = 0;
-  host.addEventListener('pointerdown', function(e){
-    if (e.target.closest('.j-node')) return;
-    if (e.target.closest('.zoom-ctrl')) return;
-    if (e.target.closest('.zoom-hint')) return;
-    isDragging = true;
-    host.classList.add('is-dragging');
-    startX = e.clientX; startY = e.clientY;
-    pStartX = panX; pStartY = panY;
-    host.setPointerCapture && host.setPointerCapture(e.pointerId);
-    e.preventDefault();
-  });
-  host.addEventListener('pointermove', function(e){
-    if (!isDragging) return;
-    panX = pStartX + (e.clientX - startX);
-    panY = pStartY + (e.clientY - startY);
-    apply();
-  });
-  function endDrag(e){
-    if (!isDragging) return;
-    isDragging = false;
-    host.classList.remove('is-dragging');
-    if (host.releasePointerCapture && e && e.pointerId != null) {
-      try { host.releasePointerCapture(e.pointerId); } catch(_) {}
-    }
-  }
-  host.addEventListener('pointerup', endDrag);
-  host.addEventListener('pointercancel', endDrag);
-
-  var btnIn = document.getElementById('zoom-in-2');
-  var btnOut = document.getElementById('zoom-out-2');
-  var btnFit = document.getElementById('zoom-fit-2');
-  function zoomBy(factor) {
-    var newZoom = Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, zoom * factor));
-    var cx = host.clientWidth / 2;
-    var cy = host.clientHeight / 2;
-    panX = cx - (cx - panX) * (newZoom / zoom);
-    panY = cy - (cy - panY) * (newZoom / zoom);
-    zoom = newZoom;
-    apply();
-  }
-  btnIn  && btnIn.addEventListener('click',  function(){ zoomBy(1.25); });
-  btnOut && btnOut.addEventListener('click', function(){ zoomBy(1/1.25); });
-  btnFit && btnFit.addEventListener('click', reset);
-
-  /* pinch zoom on touch */
-  var pointers = new Map();
-  var pinchStartDist = 0, pinchStartZoom = 1;
-  host.addEventListener('pointerdown', function(e){
-    if (e.pointerType === 'touch') {
-      pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
-      if (pointers.size === 2) {
-        var pts = Array.from(pointers.values());
-        pinchStartDist = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y);
-        pinchStartZoom = zoom;
-      }
-    }
-  });
-  host.addEventListener('pointermove', function(e){
-    if (e.pointerType === 'touch' && pointers.has(e.pointerId)) {
-      pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
-      if (pointers.size === 2) {
-        var pts = Array.from(pointers.values());
-        var dist = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y);
-        if (pinchStartDist > 0) {
-          var newZoom = Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, pinchStartZoom * dist / pinchStartDist));
-          var cx = (pts[0].x + pts[1].x) / 2 - host.getBoundingClientRect().left;
-          var cy = (pts[0].y + pts[1].y) / 2 - host.getBoundingClientRect().top;
-          panX = cx - (cx - panX) * (newZoom / zoom);
-          panY = cy - (cy - panY) * (newZoom / zoom);
-          zoom = newZoom;
-          apply();
-        }
-      }
-    }
-  });
-  function clearTouch(e){ if (e.pointerType === 'touch') pointers.delete(e.pointerId); }
-  host.addEventListener('pointerup', clearTouch);
-  host.addEventListener('pointercancel', clearTouch);
-
   apply();
 })();
 
