@@ -309,6 +309,87 @@
   .test3-foot .yes { color: var(--accent); font-weight: 600; }
   .test3-foot .no { color: #5dd39e; font-weight: 600; }
 
+  /* ====== Visual-first opening: full mockup + pins + 3-place compare ====== */
+  .viz-stage { background: var(--paper); border: 1px solid var(--line); border-radius: 12px; padding: 28px; margin-top: 16px; position: relative; }
+  .viz-hint { text-align: center; font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--ink-mute); margin: 18px 0 0; letter-spacing: 0.04em; }
+  .viz-hint strong { color: var(--obj-color); }
+
+  /* Full customer detail mockup */
+  .main-mock { background: white; border: 1px solid var(--line); border-radius: 10px; box-shadow: 0 8px 32px rgba(22,22,29,0.08); position: relative; }
+  .main-mock-browser { display: flex; align-items: center; gap: 10px; padding: 10px 14px; background: var(--bg-2); border-bottom: 1px solid var(--line); border-radius: 10px 10px 0 0; }
+  .mm-dots { display: flex; gap: 5px; }
+  .mm-dots span { width: 10px; height: 10px; border-radius: 50%; }
+  .mm-dots span:nth-child(1) { background: #ff5f57; }
+  .mm-dots span:nth-child(2) { background: #ffbd2e; }
+  .mm-dots span:nth-child(3) { background: #28c840; }
+  .mm-url { flex: 1; background: white; border: 1px solid var(--line); border-radius: 5px; padding: 5px 12px; font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--ink); }
+  .mm-url .host { color: var(--ink-mute); }
+  .main-mock-body { padding: 22px 24px 26px; }
+  .mm-head { display: flex; align-items: center; gap: 14px; padding-bottom: 18px; border-bottom: 1px solid var(--line); margin-bottom: 22px; }
+  .mm-avatar { width: 52px; height: 52px; border-radius: 50%; background: var(--obj-color); color: white; display: flex; align-items: center; justify-content: center; font-family: 'Noto Serif SC', serif; font-weight: 700; font-size: 22px; }
+  .mm-name { font-family: 'Noto Serif SC', serif; font-size: 22px; font-weight: 700; line-height: 1.2; }
+  .mm-sub { font-size: 12px; color: var(--ink-mute); margin-top: 2px; letter-spacing: 0.02em; }
+  .mm-tags { margin-left: auto; display: flex; gap: 6px; }
+  .mm-tags span { padding: 3px 9px; background: var(--bg-2); border: 1px solid var(--line); border-radius: 100px; font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--ink-soft); }
+  .mm-grid { display: grid; grid-template-columns: 1fr 1.05fr; gap: 18px; }
+  @media (max-width: 820px) { .mm-grid { grid-template-columns: 1fr; } }
+  .mm-panel { background: var(--bg-2); border: 1px solid var(--line); border-radius: 8px; padding: 16px 18px; position: relative; }
+  .mm-panel-spot { background: var(--obj-soft); border-color: var(--obj-color); border-width: 2px; padding: 18px 50px 18px 18px; }
+  .mm-panel-h { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ink-mute); letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 12px; }
+  .mm-panel-spot .mm-panel-h { color: var(--obj-color); font-weight: 700; }
+  .mm-fields { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 14px; }
+  .mm-field { display: flex; justify-content: space-between; align-items: baseline; padding: 6px 0; border-bottom: 1px dashed var(--line); font-size: 12px; gap: 8px; }
+  .mm-field span { color: var(--ink-mute); font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.04em; text-transform: uppercase; }
+  .mm-field strong { color: var(--ink); font-weight: 600; font-size: 12px; }
+  .mm-contracts { display: flex; flex-direction: column; gap: 8px; }
+  .mm-contract { background: white; border: 1px solid var(--line); border-radius: 6px; padding: 10px 12px; display: grid; grid-template-columns: 64px 1fr auto; gap: 12px; align-items: center; font-size: 12px; transition: all 0.2s; }
+  .mm-contract:hover { border-color: var(--obj-color); transform: translateX(2px); }
+  .mm-contract .cn { font-family: 'JetBrains Mono', monospace; font-weight: 700; color: var(--obj-color); font-size: 13px; }
+  .mm-contract .cm { font-weight: 500; color: var(--ink); }
+  .mm-contract .cs { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ink-soft); white-space: nowrap; }
+
+  /* Annotation pins on the spot panel */
+  .pin { position: absolute; width: 30px; height: 30px; border-radius: 50%; background: var(--accent); color: white; border: 2px solid white; cursor: pointer; box-shadow: 0 4px 14px rgba(255,77,46,0.55); display: flex; align-items: center; justify-content: center; transition: transform 0.2s, box-shadow 0.2s; padding: 0; outline: none; z-index: 5; animation: pinPulse 2.4s ease-in-out infinite; }
+  @keyframes pinPulse { 0%, 100% { box-shadow: 0 4px 14px rgba(255,77,46,0.55), 0 0 0 0 rgba(255,77,46,0.4); } 50% { box-shadow: 0 4px 14px rgba(255,77,46,0.55), 0 0 0 8px rgba(255,77,46,0); } }
+  .pin:hover, .pin:focus { transform: scale(1.18); z-index: 30; animation: none; }
+  .pin-num { font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 700; }
+  .pin-tip { position: absolute; right: calc(100% + 14px); top: 50%; transform: translateY(-50%) translateX(6px); width: 260px; background: var(--ink); color: var(--bg); padding: 13px 14px 14px; border-radius: 8px; opacity: 0; pointer-events: none; transition: opacity 0.2s, transform 0.2s; box-shadow: 0 12px 36px rgba(0,0,0,0.28); z-index: 40; text-align: left; }
+  .pin-tip::after { content: ''; position: absolute; left: 100%; top: 50%; transform: translateY(-50%); border: 7px solid transparent; border-left-color: var(--ink); }
+  .pin:hover .pin-tip, .pin:focus .pin-tip { opacity: 1; pointer-events: auto; transform: translateY(-50%) translateX(0); }
+  .pin-q { display: block; font-family: 'Noto Serif SC', serif; font-weight: 700; font-size: 14px; color: white; margin-bottom: 7px; line-height: 1.35; }
+  .pin-a { display: block; font-size: 12.5px; color: #d8d8e0; line-height: 1.65; }
+  .pin-a strong { color: var(--accent); }
+  .pin-1 { top: 14px; right: 10px; }
+  .pin-2 { top: 66px; right: 10px; }
+  .pin-3 { top: 134px; right: 10px; }
+  .pin-4 { top: 202px; right: 10px; }
+  @media (max-width: 600px) { .pin-tip { width: 220px; left: auto; right: 0; transform: translateX(0) translateY(4px); } .pin-tip::after { left: auto; right: 14px; transform: translateX(0); } .pin:hover .pin-tip, .pin:focus .pin-tip { transform: translateX(0) translateY(0); } }
+
+  /* 3-place compare */
+  .three-place-stage { margin-top: 36px; padding: 30px 28px; background: var(--bg-2); border: 1px solid var(--line); border-radius: 12px; }
+  .tps-h { font-family: 'Noto Serif SC', serif; font-size: 24px; font-weight: 700; margin: 0 0 8px; line-height: 1.35; }
+  .tps-h .c-mark { display: inline-block; padding: 1px 9px; background: var(--obj-color); color: white; border-radius: 4px; font-family: 'JetBrains Mono', monospace; font-size: 18px; font-weight: 700; }
+  .tps-sub { font-size: 14px; color: var(--ink-soft); line-height: 1.6; margin: 0 0 22px; }
+  .tps-sub strong { color: var(--ink); }
+  .three-mocks { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; align-items: stretch; }
+  @media (max-width: 820px) { .three-mocks { grid-template-columns: 1fr; } }
+  .mini-mock { background: white; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; box-shadow: 0 4px 14px rgba(22,22,29,0.05); }
+  .mini-mock .mini-url { background: var(--bg-2); padding: 6px 12px; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ink-soft); border-bottom: 1px solid var(--line); }
+  .mini-mock .mini-h { padding: 12px 14px 6px; font-family: 'Noto Serif SC', serif; font-size: 15px; font-weight: 700; color: var(--ink); }
+  .mini-mock .mini-h.hl-h { color: var(--obj-color); }
+  .mini-mock .mini-tag { padding: 0 14px 8px; font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--ink-mute); letter-spacing: 0.06em; text-transform: uppercase; }
+  .mini-mock .mini-row { padding: 8px 14px; border-top: 1px dashed var(--line-soft); font-size: 12px; color: var(--ink-soft); display: flex; gap: 10px; align-items: baseline; }
+  .mini-mock .mini-row span { color: var(--ink-mute); font-family: 'JetBrains Mono', monospace; font-size: 10px; min-width: 36px; text-transform: uppercase; }
+  .mini-mock .mini-row.hl { background: var(--obj-soft); color: var(--obj-color); font-weight: 700; font-family: 'JetBrains Mono', monospace; font-size: 12px; border-left: 3px solid var(--obj-color); padding-left: 11px; }
+
+  /* Sticky note */
+  .sticky-wrap { margin-top: 26px; display: flex; gap: 22px; align-items: center; flex-wrap: wrap; justify-content: center; }
+  .sticky { background: #fff8c4; border: 1px solid #e5d98a; border-radius: 3px; padding: 16px 22px 18px; position: relative; transform: rotate(-1.5deg); box-shadow: 0 6px 14px rgba(22,22,29,0.12), 0 1px 3px rgba(22,22,29,0.08); font-size: 14px; color: var(--ink); line-height: 1.65; max-width: 360px; }
+  .sticky-pin { position: absolute; top: -8px; left: 50%; transform: translateX(-50%); width: 14px; height: 14px; background: var(--accent); border-radius: 50%; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+  .sticky strong { display: block; margin-top: 4px; font-family: 'Noto Serif SC', serif; font-size: 15px; color: var(--accent); line-height: 1.5; }
+  .sticky-after { font-family: 'Noto Serif SC', serif; font-size: 17px; color: var(--ink); margin: 0; line-height: 1.4; }
+  .sticky-after strong { color: var(--obj-color); }
+
   /* GAME 3: builder */
   .builder-stage { background: var(--paper); border: 1px solid var(--line); border-radius: 8px; padding: 32px; margin-top: 24px; }
   .builder-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 28px; flex-wrap: wrap; gap: 16px; }
@@ -483,18 +564,18 @@
     <div class="hero-grid">
       <div>
         <h1>
-          对象不是孤岛，<br>
-          它们<span class="purple">互相引用</span>。
+          「相关合同」<br>
+          那一块，<br>
+          其实是<span class="purple">另一张表</span>。
         </h1>
         <p class="lede">
-          客户详情页里的"合同列表"？那不是详情页里的一块。<br>
-          那是另一个对象（合同）通过引用指向了客户。<br>
-          整张引用图，才是工程师真正在搭建的东西。
+          下面这张客户详情页，<strong>你天天画</strong>。<br>
+          其中那一块"相关合同"——拆给你看。
         </p>
       </div>
       <div class="hero-side">
-        <div class="row"><span class="k">本页讲什么</span><span class="v">对象 → 引用图</span></div>
-        <div class="row"><span class="k">三幕</span><span class="v">看见 · 拆开 · 再做</span></div>
+        <div class="row"><span class="k">你的常见时刻</span><span class="v">画"相关 / 列表 / 子级"</span></div>
+        <div class="row"><span class="k">学完能做</span><span class="v">稿子多写一句话，省 4 次追问</span></div>
         <div class="row"><span class="k">面向</span><span class="v">B 端 / 后台设计师</span></div>
         <div class="row"><span class="k">前置</span><span class="v">X1 · 不是页面，是对象</span></div>
       </div>
@@ -507,30 +588,142 @@
   <div class="wrap">
     <div class="section-head">
       <div>
-        <div class="section-num"><strong>01</strong> / 问题</div>
-        <h2 class="section-title">"详情页里的一块"，<br>其实是<span class="em">另一个对象</span>。</h2>
+        <div class="section-num"><strong>01</strong> / 看见</div>
+        <h2 class="section-title">先看图。</h2>
       </div>
       <p class="section-sub">
-        客户详情页里那个"相关合同 section"——你画稿时把它当成详情页的一部分。
-        工程师看到这一块的瞬间想的是：<strong>这是哪个对象，怎么挂回来的，删了会同步删吗？</strong>
+        鼠标移到 <strong style="color:var(--accent)">4 个红 pin</strong> 上看工程师在想什么。
+        没字要读，全在图里。
       </p>
     </div>
 
-    <div class="problem-grid">
-      <div class="problem-card bad">
-        <span class="tag">页面思维 · PAGE</span>
-        <h3>"我在详情页里加了'相关合同'"</h3>
-        <p>稿子上画了一个 section：3 行合同，每行有金额、状态、日期。看起来挺完整。</p>
-        <p><strong>工程师追问：</strong>这"合同"是什么？是把字段复制一份过来？还是引用 Contract 对象？删一个合同会不会同步把客户上的引用也删掉？合同列表页的同一行 UI 要不要复用？</p>
-        <p style="color:var(--accent)"><strong>你：</strong>呃……我没想这么细。</p>
+    <!-- Big annotated mockup -->
+    <div class="viz-stage">
+      <div class="main-mock">
+        <div class="main-mock-browser">
+          <span class="mm-dots"><span></span><span></span><span></span></span>
+          <div class="mm-url"><span class="host">app.crm.com</span>/customers/123</div>
+        </div>
+        <div class="main-mock-body">
+          <div class="mm-head">
+            <div class="mm-avatar">张</div>
+            <div>
+              <div class="mm-name">张明</div>
+              <div class="mm-sub">星河科技 · CTO · 跟进中</div>
+            </div>
+            <div class="mm-tags">
+              <span>S 级</span>
+              <span>2 年合作</span>
+            </div>
+          </div>
+
+          <div class="mm-grid">
+            <div class="mm-panel">
+              <div class="mm-panel-h">客户信息 · CUSTOMER</div>
+              <div class="mm-fields">
+                <div class="mm-field"><span>电话</span><strong>138 1234 5678</strong></div>
+                <div class="mm-field"><span>邮箱</span><strong>zhang@xinghe.cn</strong></div>
+                <div class="mm-field"><span>行业</span><strong>SaaS</strong></div>
+                <div class="mm-field"><span>规模</span><strong>200-500</strong></div>
+                <div class="mm-field"><span>跟进人</span><strong>李华</strong></div>
+                <div class="mm-field"><span>注册日</span><strong>2024-03-12</strong></div>
+              </div>
+            </div>
+
+            <div class="mm-panel mm-panel-spot">
+              <div class="mm-panel-h">相关合同 (3)</div>
+              <div class="mm-contracts">
+                <div class="mm-contract">
+                  <div class="cn">C-2401</div>
+                  <div class="cm">企业 SaaS 年度授权</div>
+                  <div class="cs">¥ 480k · 履约中</div>
+                </div>
+                <div class="mm-contract">
+                  <div class="cn">C-2402</div>
+                  <div class="cm">技术支持包</div>
+                  <div class="cs">¥ 120k · 履约中</div>
+                </div>
+                <div class="mm-contract">
+                  <div class="cn">C-2403</div>
+                  <div class="cm">定制开发</div>
+                  <div class="cs">¥ 240k · 草签</div>
+                </div>
+              </div>
+
+              <button class="pin pin-1" type="button" aria-label="第 1 个 pin">
+                <span class="pin-num">1</span>
+                <span class="pin-tip">
+                  <span class="pin-q">这"合同"是什么？</span>
+                  <span class="pin-a">不是详情页的字段——是 <strong>另一张表（合同表）</strong> 的几条记录，被反查到这里。</span>
+                </span>
+              </button>
+              <button class="pin pin-2" type="button" aria-label="第 2 个 pin">
+                <span class="pin-num">2</span>
+                <span class="pin-tip">
+                  <span class="pin-q">怎么挂上来的？</span>
+                  <span class="pin-a">合同表里每条合同都记着<strong>"我属于谁"</strong>。详情页查"客户 = 张明"——就是这 3 条。</span>
+                </span>
+              </button>
+              <button class="pin pin-3" type="button" aria-label="第 3 个 pin">
+                <span class="pin-num">3</span>
+                <span class="pin-tip">
+                  <span class="pin-q">UI 复用吗？</span>
+                  <span class="pin-a">这一行 UI 在 <strong>合同列表 / 跟进面板 / 工作台</strong> 都会出现。同一个组件，多处显示。</span>
+                </span>
+              </button>
+              <button class="pin pin-4" type="button" aria-label="第 4 个 pin">
+                <span class="pin-num">4</span>
+                <span class="pin-tip">
+                  <span class="pin-q">删合同会怎样？</span>
+                  <span class="pin-a">删合同 → 这里少一行（自动）。<strong>删客户</strong> → 合同怎么办？这是<strong>另一个独立决策</strong>。</span>
+                </span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <p class="viz-hint">悬停 <strong>4 个 pin</strong> · 工程师看到这块时同时在想这 4 件事</p>
+    </div>
+
+    <!-- 3-place compare -->
+    <div class="three-place-stage">
+      <h3 class="tps-h">同一个 <span class="c-mark">C-2401</span>，3 张稿都有它。</h3>
+      <p class="tps-sub">它<strong>不在任何一张稿里</strong>——它在「合同」那张表里。3 张稿只是把它"挂出来"看。</p>
+
+      <div class="three-mocks">
+        <div class="mini-mock">
+          <div class="mini-url">/customers/123</div>
+          <div class="mini-h">张明 · 星河科技</div>
+          <div class="mini-tag">相关合同 (3)</div>
+          <div class="mini-row hl">C-2401 · 480k</div>
+          <div class="mini-row" style="font-family:'JetBrains Mono',monospace">C-2402 · 120k</div>
+          <div class="mini-row" style="font-family:'JetBrains Mono',monospace">C-2403 · 240k</div>
+        </div>
+        <div class="mini-mock">
+          <div class="mini-url">/contracts/C-2401</div>
+          <div class="mini-h hl-h">C-2401</div>
+          <div class="mini-tag">合同详情</div>
+          <div class="mini-row"><span>客户</span> 张明</div>
+          <div class="mini-row"><span>金额</span> ¥ 480k</div>
+          <div class="mini-row"><span>状态</span> 履约中</div>
+        </div>
+        <div class="mini-mock">
+          <div class="mini-url">/contracts</div>
+          <div class="mini-h">所有合同 (128)</div>
+          <div class="mini-tag">合同号 · 金额 · 客户</div>
+          <div class="mini-row hl">C-2401 · 480k · 张明</div>
+          <div class="mini-row" style="font-family:'JetBrains Mono',monospace">C-2399 · 60k · 李四</div>
+          <div class="mini-row" style="font-family:'JetBrains Mono',monospace">C-2398 · 90k · 王五</div>
+        </div>
       </div>
 
-      <div class="problem-card good">
-        <span class="tag">对象思维 · OBJECT</span>
-        <h3>"客户 has-many 合同，反向引用挂回来"</h3>
-        <p>稿子配一句话：<strong>Customer has-many Contract</strong>，通过 <code class="mono" style="background:white;padding:1px 5px;border-radius:3px;color:var(--obj-color)">Contract.customer_id</code> 反向引用。</p>
-        <p><strong>工程师收到：</strong>schema 直接落——一张 contracts 表带外键，详情页 section 只是 <code class="mono" style="background:white;padding:1px 5px;border-radius:3px;color:var(--obj-color)">Contract.where(customer_id=X)</code> 渲染。删客户的级联策略是另一道决策。</p>
-        <p style="color:var(--obj-color)"><strong>结果：</strong>追问 → 0 次，外加你赢得了"懂数据模型"的标签。</p>
+      <div class="sticky-wrap">
+        <div class="sticky">
+          <div class="sticky-pin"></div>
+          稿子上多写一句：<br>
+          <strong>「3 行合同来自合同表，<br>通过'客户 = 张明'反查到」</strong>
+        </div>
+        <p class="sticky-after">→ 工程师 4 个追问<br><strong>同时消失</strong>。</p>
       </div>
     </div>
   </div>
@@ -921,99 +1114,127 @@
   </div>
 </section>
 
-<!-- Section 04: 幕三 · 再做 -->
+<!-- Section 04: 幕三 · 看更多 -->
 <section id="make">
   <div class="wrap">
     <div class="section-head">
       <div>
-        <span class="act-tag make">幕三 · 再做</span>
-        <div class="section-num"><strong>04</strong> / 再做</div>
-        <h2 class="section-title">轮到你——<br>给「项目」对象，<br><span class="em">设计它的引用</span>。</h2>
+        <span class="act-tag make">幕三 · 看更多</span>
+        <div class="section-num"><strong>04</strong> / 看更多</div>
+        <h2 class="section-title">新需求来了——<br>给「项目」对象，<br><span class="em">看人家怎么配引用</span>。</h2>
       </div>
       <p class="section-sub">
-        新需求来了，CRM 要加"项目"对象。它会引用什么？以什么 cardinality？
-        候选里有几个陷阱——<strong>不是所有看起来像引用的都是引用</strong>。
+        9 个候选字段。<strong style="color:var(--obj-color)">6 个是真引用</strong>（指向另一张表），<strong style="color:var(--accent)">3 个是陷阱</strong>（看着像引用其实不是）。
+        下面直接给你 <strong>哪 6 个真、cardinality 选啥、为什么</strong> + 那 3 个为啥不算。
       </p>
     </div>
 
-    <div class="builder-stage">
-      <div class="builder-head">
-        <h3 class="builder-title">给"项目 Project"配引用</h3>
-        <div class="builder-progress">已配置 <span class="done" id="builderDone">0</span> 个候选</div>
-      </div>
+    <div style="display:grid;grid-template-columns:1.3fr 1fr;gap:22px;margin-top:24px" class="x2-demo-split">
 
-      <div class="builder-grid">
-        <div class="builder-pool">
-          <h5>候选池 · 9 项</h5>
-          <p class="builder-pool-hint">点一个候选 → 选 cardinality（或"不是引用"）→ 加进项目卡。9 个里有 3 个陷阱。</p>
-          <div class="builder-pool-list" id="builderPool">
-            <div class="builder-chip" data-field="customer" data-type="ref"><span>Customer</span><span class="chip-cn">客户</span><span class="chip-add">+</span></div>
-            <div class="builder-chip" data-field="owner" data-type="ref"><span>User</span><span class="chip-cn">主负责人</span><span class="chip-add">+</span></div>
-            <div class="builder-chip" data-field="team" data-type="ref"><span>Users[]</span><span class="chip-cn">团队成员</span><span class="chip-add">+</span></div>
-            <div class="builder-chip" data-field="opportunity" data-type="ref"><span>Opportunity</span><span class="chip-cn">关联商机</span><span class="chip-add">+</span></div>
-            <div class="builder-chip" data-field="parent" data-type="ref"><span>Project</span><span class="chip-cn">上游项目</span><span class="chip-add">+</span></div>
-            <div class="builder-chip" data-field="contract" data-type="ref"><span>Contract[]</span><span class="chip-cn">关联合同</span><span class="chip-add">+</span></div>
-            <div class="builder-chip is-trap" data-field="stage" data-type="trap"><span>Stage</span><span class="chip-cn">阶段</span><span class="chip-add">+</span></div>
-            <div class="builder-chip is-trap" data-field="tags" data-type="trap"><span>Tags</span><span class="chip-cn">标签</span><span class="chip-add">+</span></div>
-            <div class="builder-chip is-trap" data-field="status_color" data-type="trap"><span>StatusColor</span><span class="chip-cn">状态颜色</span><span class="chip-add">+</span></div>
-          </div>
-        </div>
+      <!-- LEFT: the 6 real references -->
+      <div style="background:var(--paper);border:1px solid var(--line);border-left:3px solid var(--obj-color);border-radius:10px;padding:24px 26px">
+        <div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--obj-color);letter-spacing:0.08em;margin-bottom:4px;font-weight:700">✓ 6 个真引用 · TRUE REFERENCES</div>
+        <h3 style="font-family:'Noto Serif SC',serif;font-size:20px;font-weight:700;margin:0 0 18px;color:var(--ink)">项目 Project · 引用配置</h3>
 
-        <div class="builder-canvas">
-          <div class="builder-canvas-head">
-            <div class="builder-canvas-name">项目 Project <span class="lbl">PROJECT · OBJECT</span></div>
-            <div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--ink-mute)">
-              引用 <span style="color:var(--obj-color);font-weight:700" id="canvasRefCount">0</span> 个 · 排除 <span style="color:var(--green);font-weight:700" id="canvasTrapCount">0</span> 个
+        <div style="display:flex;flex-direction:column;gap:12px">
+          <div style="background:white;border:1px solid var(--line);border-radius:6px;padding:12px 14px">
+            <div style="display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin-bottom:4px">
+              <span style="font-family:'JetBrains Mono',monospace;font-weight:700;color:var(--ink);font-size:13px">customer</span>
+              <span style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--ink-mute)">→ Customer</span>
+              <span style="margin-left:auto;font-family:'JetBrains Mono',monospace;font-size:10px;background:var(--obj-color);color:white;padding:2px 8px;border-radius:100px;font-weight:700">N : 1</span>
             </div>
+            <p style="font-size:12px;color:var(--ink-soft);margin:0;line-height:1.55">多个项目可以属于同一个客户；一个项目只服务一个客户。<strong>客户是上下文</strong>，删客户级联归档项目。</p>
           </div>
 
-          <div class="builder-refs-list" id="builderRefsList">
-            <div class="builder-refs-empty" id="builderRefsEmpty">空着——从左边点候选配置引用</div>
+          <div style="background:white;border:1px solid var(--line);border-radius:6px;padding:12px 14px">
+            <div style="display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin-bottom:4px">
+              <span style="font-family:'JetBrains Mono',monospace;font-weight:700;color:var(--ink);font-size:13px">owner</span>
+              <span style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--ink-mute)">→ User</span>
+              <span style="margin-left:auto;font-family:'JetBrains Mono',monospace;font-size:10px;background:var(--obj-color);color:white;padding:2px 8px;border-radius:100px;font-weight:700">N : 1</span>
+            </div>
+            <p style="font-size:12px;color:var(--ink-soft);margin:0;line-height:1.55">一个项目一个主负责人；一个人可以负责多个项目。<strong>换 owner = 触发权限迁移</strong>。</p>
+          </div>
+
+          <div style="background:white;border:1px solid var(--line);border-radius:6px;padding:12px 14px">
+            <div style="display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin-bottom:4px">
+              <span style="font-family:'JetBrains Mono',monospace;font-weight:700;color:var(--ink);font-size:13px">team</span>
+              <span style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--ink-mute)">→ User[]</span>
+              <span style="margin-left:auto;font-family:'JetBrains Mono',monospace;font-size:10px;background:var(--obj-color);color:white;padding:2px 8px;border-radius:100px;font-weight:700">M : N</span>
+            </div>
+            <p style="font-size:12px;color:var(--ink-soft);margin:0;line-height:1.55">项目有多个成员；一个人可以在多个项目里。<strong>UI 表现：多选 + 角色</strong>（普通成员/管理员）。</p>
+          </div>
+
+          <div style="background:white;border:1px solid var(--line);border-radius:6px;padding:12px 14px">
+            <div style="display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin-bottom:4px">
+              <span style="font-family:'JetBrains Mono',monospace;font-weight:700;color:var(--ink);font-size:13px">opportunity</span>
+              <span style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--ink-mute)">→ Opportunity</span>
+              <span style="margin-left:auto;font-family:'JetBrains Mono',monospace;font-size:10px;background:var(--obj-color);color:white;padding:2px 8px;border-radius:100px;font-weight:700">N : 1</span>
+            </div>
+            <p style="font-size:12px;color:var(--ink-soft);margin:0;line-height:1.55">项目通常由一个商机演变而来；一个商机也可能拆成多个项目。<strong>选填</strong>——有的项目没有前置商机。</p>
+          </div>
+
+          <div style="background:white;border:1px solid var(--line);border-radius:6px;padding:12px 14px">
+            <div style="display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin-bottom:4px">
+              <span style="font-family:'JetBrains Mono',monospace;font-weight:700;color:var(--ink);font-size:13px">parent</span>
+              <span style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--ink-mute)">→ Project (self)</span>
+              <span style="margin-left:auto;font-family:'JetBrains Mono',monospace;font-size:10px;background:var(--obj-color);color:white;padding:2px 8px;border-radius:100px;font-weight:700">N : 1</span>
+            </div>
+            <p style="font-size:12px;color:var(--ink-soft);margin:0;line-height:1.55"><strong>自引用</strong>——大项目可以拆成子项目。UI 要画 tree。注意挡循环依赖。</p>
+          </div>
+
+          <div style="background:white;border:1px solid var(--line);border-radius:6px;padding:12px 14px">
+            <div style="display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin-bottom:4px">
+              <span style="font-family:'JetBrains Mono',monospace;font-weight:700;color:var(--ink);font-size:13px">contracts</span>
+              <span style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--ink-mute)">→ Contract[]</span>
+              <span style="margin-left:auto;font-family:'JetBrains Mono',monospace;font-size:10px;background:var(--obj-color);color:white;padding:2px 8px;border-radius:100px;font-weight:700">1 : N</span>
+            </div>
+            <p style="font-size:12px;color:var(--ink-soft);margin:0;line-height:1.55">项目有多个合同（主合同 + 续约 + 变更）；每个合同属于一个项目。<strong>弱引用</strong>——合同可独立列出。</p>
           </div>
         </div>
       </div>
 
-      <div class="builder-actions">
-        <button class="builder-btn primary" id="builderSubmit">提交判分</button>
-        <button class="builder-btn" id="builderReset">清空重来</button>
+      <!-- RIGHT: the 3 traps -->
+      <div style="background:var(--paper);border:1px solid var(--line);border-left:3px solid var(--accent);border-radius:10px;padding:24px 26px">
+        <div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--accent);letter-spacing:0.08em;margin-bottom:4px;font-weight:700">✗ 3 个陷阱 · NOT REFERENCES</div>
+        <h3 style="font-family:'Noto Serif SC',serif;font-size:20px;font-weight:700;margin:0 0 18px;color:var(--ink)">看着像引用，其实不是</h3>
+
+        <div style="display:flex;flex-direction:column;gap:12px">
+          <div style="background:white;border:1px solid var(--line);border-radius:6px;padding:12px 14px">
+            <div style="display:flex;align-items:baseline;gap:10px;margin-bottom:4px">
+              <span style="font-family:'JetBrains Mono',monospace;font-weight:700;color:var(--accent);font-size:13px">stage</span>
+              <span style="margin-left:auto;font-family:'JetBrains Mono',monospace;font-size:10px;background:var(--accent-soft);color:var(--accent);padding:2px 8px;border-radius:100px;font-weight:700">enum</span>
+            </div>
+            <p style="font-size:12px;color:var(--ink-soft);margin:0;line-height:1.55"><strong>阶段</strong>：planning / executing / done。是一个 <strong>枚举字段</strong>，不是另一张表的引用——没有"Stage 表"被指向。</p>
+          </div>
+
+          <div style="background:white;border:1px solid var(--line);border-radius:6px;padding:12px 14px">
+            <div style="display:flex;align-items:baseline;gap:10px;margin-bottom:4px">
+              <span style="font-family:'JetBrains Mono',monospace;font-weight:700;color:var(--accent);font-size:13px">tags</span>
+              <span style="margin-left:auto;font-family:'JetBrains Mono',monospace;font-size:10px;background:var(--accent-soft);color:var(--accent);padding:2px 8px;border-radius:100px;font-weight:700">string[]</span>
+            </div>
+            <p style="font-size:12px;color:var(--ink-soft);margin:0;line-height:1.55"><strong>标签</strong>：自由字符串数组。<em>不一定不是</em>——如果你有"Tag 对象"（有 owner、颜色、可被搜索），那就是引用；如果只是字符串数组，就不是。<strong>取决于业务</strong>。</p>
+          </div>
+
+          <div style="background:white;border:1px solid var(--line);border-radius:6px;padding:12px 14px">
+            <div style="display:flex;align-items:baseline;gap:10px;margin-bottom:4px">
+              <span style="font-family:'JetBrains Mono',monospace;font-weight:700;color:var(--accent);font-size:13px">status_color</span>
+              <span style="margin-left:auto;font-family:'JetBrains Mono',monospace;font-size:10px;background:var(--accent-soft);color:var(--accent);padding:2px 8px;border-radius:100px;font-weight:700">computed</span>
+            </div>
+            <p style="font-size:12px;color:var(--ink-soft);margin:0;line-height:1.55"><strong>状态颜色</strong>：由 stage + deadline 计算出来。<strong>派生字段</strong>，前端实时算或后端预算，但永远不存——也就没引用。</p>
+          </div>
+        </div>
       </div>
 
-      <div class="builder-judge" id="builderJudge"></div>
+    </div>
+
+    <div style="margin-top:24px;padding:20px 24px;background:var(--ink);color:var(--bg);border-radius:8px;font-size:14px;line-height:1.75">
+      <strong style="color:white">判断"是不是引用"的 3 个问题</strong>——<br>
+      ① 它指向<strong style="color:var(--accent)">另一张独立的表</strong>吗？(stage、status_color 没有) →<br>
+      ② 它有<strong style="color:var(--accent)">自己的详情页 / 列表页</strong>吗？(tags 通常没有，但项目级 Tag 对象有) →<br>
+      ③ 删除它影响其他记录吗？(枚举值改名不影响数据，引用对象删除会级联或留 null)
     </div>
   </div>
 </section>
-
-<!-- Card modal -->
-<div class="card-modal" id="cardModal">
-  <div class="card-modal-inner">
-    <div class="card-modal-q">配 CARDINALITY · 选关系基数</div>
-    <h4 id="cardModalTitle">客户 Customer</h4>
-    <p class="card-modal-sub" id="cardModalSub">一个<strong>项目</strong>和这个对象的关系是什么？</p>
-    <div class="card-options">
-      <button class="card-opt" data-card="1:1">
-        <div class="card-opt-code">1 : 1</div>
-        <div class="card-opt-desc">一对一——每个项目最多一个，每个那个最多一个项目</div>
-      </button>
-      <button class="card-opt" data-card="1:N">
-        <div class="card-opt-code">1 : N</div>
-        <div class="card-opt-desc">一对多——一个项目挂多个，但每个那个只属于这一个项目</div>
-      </button>
-      <button class="card-opt" data-card="N:1">
-        <div class="card-opt-code">N : 1</div>
-        <div class="card-opt-desc">多对一——多个项目共享一个，但每个项目只挂一个</div>
-      </button>
-      <button class="card-opt" data-card="M:N">
-        <div class="card-opt-code">M : N</div>
-        <div class="card-opt-desc">多对多——一个项目可以挂多个，每个也可以属于多个项目</div>
-      </button>
-      <button class="card-opt not-ref" data-card="not-ref">
-        <div class="card-opt-code">✗ 不是引用 · NOT A REFERENCE</div>
-        <div class="card-opt-desc">这其实不是一个独立对象——它是 enum / 字符串数组 / 派生值 / 内嵌字段</div>
-      </button>
-    </div>
-    <button class="card-modal-cancel" id="cardModalCancel">取消</button>
-  </div>
-</div>
 
 <!-- Section 05: closing -->
 <section id="closing">
@@ -1209,245 +1430,6 @@
   document.querySelector('.gnode[data-node="customer"]').classList.add('is-active');
 })();
 
-// ===== Game 3: builder =====
-(function(){
-  const FIELD_META = {
-    customer:    { code: 'Customer',    cn: '客户',     type: 'ref',  ideal: 'N:1' },
-    owner:       { code: 'User',        cn: '主负责人', type: 'ref',  ideal: 'N:1' },
-    team:        { code: 'Users[]',     cn: '团队成员', type: 'ref',  ideal: 'M:N' },
-    opportunity: { code: 'Opportunity', cn: '关联商机', type: 'ref',  ideal: 'N:1' },
-    parent:      { code: 'Project',     cn: '上游项目', type: 'ref',  ideal: 'N:1', self: true },
-    contract:    { code: 'Contract[]',  cn: '关联合同', type: 'ref',  ideal: '1:N' },
-    stage:       { code: 'Stage',       cn: '阶段',     type: 'trap', ideal: 'not-ref', trapWhy: 'Stage 没有自己的详情页和生命周期。它只是项目对象上的一个 enum 字段。问自己"点 Stage 能跳走吗？"不能就不是引用。' },
-    tags:        { code: 'Tags',        cn: '标签',     type: 'trap', ideal: 'not-ref', trapWhy: 'Tags 是字符串数组（或者最多是个 Label 表的关联），不是独立对象。标签不会有自己的详情页、负责人、生命周期。' },
-    status_color:{ code: 'StatusColor', cn: '状态颜色', type: 'trap', ideal: 'not-ref', trapWhy: 'StatusColor 是从 status 派生出来的——红 = 落后、绿 = 正常。它是计算字段，不是引用。引用了它，工程师会一脸问号。' }
-  };
-
-  const CARD_EXPLAIN = {
-    customer: {
-      'N:1': '对：一个项目属于一个客户；一个客户可以挂多个项目。',
-      '1:N': '反了——一个项目能属于多家客户吗？业务上一般不能。挑 N:1。',
-      'M:N': '太松——这会允许"一个项目同时属于 3 家客户"，业务上不合理。挑 N:1。',
-      '1:1': '太紧——一家客户只能有一个项目？显然不对。挑 N:1。'
-    },
-    owner:    { 'N:1': '对：每个项目只有一个主负责人；一个人可以负责多个项目。', 'M:N': '太松——这变成"多人共同负责"，那是团队成员，不是"主负责人"。挑 N:1。' },
-    team:     { 'M:N': '对：一个项目多个成员；一个人也可以在多个项目里。', 'N:1': '反了——团队成员是多人，不是一人。挑 M:N。' },
-    opportunity: {
-      'N:1': '对（默认）：一个项目对应一个商机；同一商机可以拆出多个项目交付。M:N 在某些业务也合理，但默认 N:1 更紧。',
-      'M:N': '可以接受——某些业务里一个项目跨多个商机交付。如果不确定，先选 N:1 更安全。',
-      '1:N': '反了——商机是源头，项目是后续交付物。挑 N:1。'
-    },
-    parent: {
-      'N:1': '对：项目可以有一个上游项目（依赖关系）；一个上游可以有多个下游。Self-reference 经典 N:1。',
-      'M:N': '太松——一个项目同时是多个上游的下游，会让依赖图变成 DAG，复杂度激增。先选 N:1。',
-      '1:1': '太紧——上游下游只能一对一会让"分叉的依赖"画不出来。挑 N:1。'
-    },
-    contract: {
-      '1:N': '对：项目可以产出多个合同（主合同 + 补充）；合同只属于一个项目。这是反向关系。',
-      'N:1': '反了——一个项目挂多个合同，不是一个合同挂多个项目。挑 1:N。',
-      'M:N': '太松——合同对应单一项目，不要让它变成 M:N。'
-    },
-    stage: {
-      'not-ref': '对！Stage 是 enum，不是独立对象——没有详情页、没有生命周期。',
-      'N:1': '陷阱：把 enum 当成引用。Stage 选 N:1 → 工程师会建一张 stages 表，但表里只有 5 行死数据。这是过度建模。',
-      '1:N': '陷阱：把 enum 当成引用。Stage 没有"下属对象"，它是一个单选枚举值。',
-      'M:N': '陷阱：把 enum 当成引用。', '1:1': '陷阱：把 enum 当成引用。'
-    },
-    tags: {
-      'not-ref': '对！Tags 是 string[]（或最多一张 join 表的轻关联），不需要当成独立对象建模。',
-      'N:1': '陷阱：Tags 不是单选，是多选——选 N:1 也不对。',
-      '1:N': '陷阱：Tags 没有自己的属性、负责人、生命周期。它就是几个字符串。',
-      'M:N': '陷阱：虽然结构上像 M:N，但 Tags 没有独立详情页——它是分类，不是对象。识别成"不是引用"更合适。',
-      '1:1': '陷阱：Tags 是多选。'
-    },
-    status_color: {
-      'not-ref': '对！StatusColor 是从 status 派生出来的——红 = 落后、绿 = 正常。它是计算字段。',
-      'N:1': '陷阱：颜色是显示规则，不是对象。', '1:N': '陷阱：颜色是显示规则，不是对象。',
-      'M:N': '陷阱：颜色是显示规则，不是对象。', '1:1': '陷阱：颜色是显示规则，不是对象。'
-    }
-  };
-
-  let selections = {}; // field -> {card, ts}
-  let pendingField = null;
-
-  const pool = document.getElementById('builderPool');
-  const refsList = document.getElementById('builderRefsList');
-  const refsEmpty = document.getElementById('builderRefsEmpty');
-  const modal = document.getElementById('cardModal');
-  const modalTitle = document.getElementById('cardModalTitle');
-  const modalSub = document.getElementById('cardModalSub');
-  const modalCancel = document.getElementById('cardModalCancel');
-  const cardOpts = document.querySelectorAll('.card-opt');
-  const judge = document.getElementById('builderJudge');
-
-  function openModal(field) {
-    pendingField = field;
-    const m = FIELD_META[field];
-    modalTitle.textContent = `${m.code} · ${m.cn}`;
-    modalSub.innerHTML = `一个<strong>项目</strong>和「${m.cn}」的关系是什么？<br><span style="color:var(--ink-mute);font-size:12px">提示：先问自己"${m.cn}是一个独立对象吗？有自己的详情页吗？"</span>`;
-    modal.classList.add('show');
-  }
-
-  function closeModal() {
-    pendingField = null;
-    modal.classList.remove('show');
-  }
-
-  function renderRefs() {
-    const keys = Object.keys(selections);
-    if (keys.length === 0) {
-      refsList.innerHTML = '<div class="builder-refs-empty" id="builderRefsEmpty">空着——从左边点候选配置引用</div>';
-    } else {
-      refsList.innerHTML = keys.map(f => {
-        const m = FIELD_META[f];
-        const sel = selections[f];
-        const isNotRef = sel.card === 'not-ref';
-        const isTrap = m.type === 'trap';
-        // visual: if trap correctly identified as not-ref → green; if trap incorrectly given a card → red
-        let cls = '';
-        if (isTrap && isNotRef) cls = ' is-trap-claimed';
-        if (isTrap && !isNotRef) cls = ' is-trap-as-ref';
-        const cardLbl = isNotRef ? '不是引用' : sel.card;
-        const arrow = isNotRef ? '✗' : (m.self ? '↻' : '→');
-        return `<div class="builder-ref-row${cls}" data-row="${f}">
-          <span class="ref-arrow">${arrow}</span>
-          <span class="ref-name">${m.code}</span>
-          <span class="ref-cn">${m.cn}${m.self ? ' · self' : ''}</span>
-          <span class="ref-card">${cardLbl}</span>
-          <button class="ref-remove" data-rm="${f}" aria-label="移除">×</button>
-        </div>`;
-      }).join('');
-    }
-    // count
-    const refsCount = keys.filter(f => selections[f].card !== 'not-ref').length;
-    const trapsExcluded = keys.filter(f => selections[f].card === 'not-ref').length;
-    document.getElementById('canvasRefCount').textContent = refsCount;
-    document.getElementById('canvasTrapCount').textContent = trapsExcluded;
-    document.getElementById('builderDone').textContent = keys.length;
-    // update chip used state
-    document.querySelectorAll('.builder-chip').forEach(c => {
-      c.classList.toggle('is-used', !!selections[c.dataset.field]);
-    });
-  }
-
-  pool.addEventListener('click', e => {
-    const chip = e.target.closest('.builder-chip');
-    if (!chip) return;
-    if (selections[chip.dataset.field]) return; // already used
-    openModal(chip.dataset.field);
-  });
-
-  cardOpts.forEach(opt => {
-    opt.addEventListener('click', () => {
-      if (!pendingField) return;
-      selections[pendingField] = { card: opt.dataset.card };
-      renderRefs();
-      closeModal();
-    });
-  });
-
-  modalCancel.addEventListener('click', closeModal);
-  modal.addEventListener('click', e => {
-    if (e.target === modal) closeModal();
-  });
-
-  refsList.addEventListener('click', e => {
-    const rm = e.target.closest('button[data-rm]');
-    if (rm) {
-      delete selections[rm.dataset.rm];
-      renderRefs();
-    }
-  });
-
-  document.addEventListener('keydown', e => {
-    if (e.key === 'Escape' && modal.classList.contains('show')) closeModal();
-  });
-
-  document.getElementById('builderSubmit').addEventListener('click', () => {
-    const lines = [];
-    let perfectRefs = 0;     // ref correctly identified AND correct cardinality
-    let okRefs = 0;          // ref identified as ref (any card)
-    let trapsRight = 0;      // trap correctly identified as not-ref
-    let trapsWrong = 0;      // trap incorrectly given a card
-    let refsMisCard = 0;     // ref identified as ref but wrong card
-    let refsAsNotRef = 0;    // ref incorrectly marked as not-ref
-    let missing = [];        // not selected at all
-
-    Object.keys(FIELD_META).forEach(f => {
-      const m = FIELD_META[f];
-      const sel = selections[f];
-      if (!sel) {
-        missing.push(f);
-        return;
-      }
-      const isTrap = m.type === 'trap';
-      const idealCard = m.ideal;
-      if (isTrap) {
-        if (sel.card === 'not-ref') {
-          trapsRight++;
-          lines.push(`<li>✓ <strong>${m.code} · ${m.cn}</strong>：识别为"不是引用" — 对！<span class="why">↳ ${m.trapWhy}</span></li>`);
-        } else {
-          trapsWrong++;
-          lines.push(`<li>✗ <strong>${m.code} · ${m.cn}</strong>：你选了 <code>${sel.card}</code>，但这是<strong>陷阱</strong>。<span class="why">↳ ${m.trapWhy}</span></li>`);
-        }
-      } else {
-        if (sel.card === idealCard) {
-          perfectRefs++;
-          okRefs++;
-          const sub = CARD_EXPLAIN[f][sel.card] || '';
-          lines.push(`<li>✓ <strong>${m.code} · ${m.cn}</strong>：<code>${sel.card}</code> — 对！<span class="why">↳ ${sub}</span></li>`);
-        } else if (sel.card === 'not-ref') {
-          refsAsNotRef++;
-          lines.push(`<li>✗ <strong>${m.code} · ${m.cn}</strong>：你选了"不是引用"，但 ${m.cn} 确实是独立对象（有自己的详情页和生命周期）。<span class="why">↳ 应选 <code>${idealCard}</code>。</span></li>`);
-        } else {
-          okRefs++;
-          refsMisCard++;
-          const sub = CARD_EXPLAIN[f][sel.card] || `应选 ${idealCard}。`;
-          lines.push(`<li>~ <strong>${m.code} · ${m.cn}</strong>：你选了 <code>${sel.card}</code>，识别为引用方向对，但 cardinality 偏了。<span class="why">↳ ${sub}</span></li>`);
-        }
-      }
-    });
-
-    if (missing.length > 0) {
-      const labels = missing.map(f => FIELD_META[f].cn).join(' / ');
-      lines.unshift(`<li><strong>还没判过：</strong>${labels} — 每一项都要给一个答案（包括"不是引用"）。</li>`);
-    }
-
-    const totalRefs = Object.values(FIELD_META).filter(m => m.type === 'ref').length; // 6
-    const totalTraps = Object.values(FIELD_META).filter(m => m.type === 'trap').length; // 3
-
-    let verdictClass, verdictLabel, headline;
-    if (perfectRefs === totalRefs && trapsRight === totalTraps) {
-      verdictClass = 'win';
-      verdictLabel = '完美';
-      headline = '你已经会把对象图当成设计的起点了。';
-    } else if (okRefs >= totalRefs - 1 && trapsRight >= totalTraps - 1 && missing.length === 0) {
-      verdictClass = 'win';
-      verdictLabel = '基本对了';
-      headline = '识别引用的判断都对——cardinality 是细活，再过一遍就稳了。';
-    } else if (missing.length > 0) {
-      verdictClass = 'partial';
-      verdictLabel = '还没完';
-      headline = '把候选都判一遍——9 个里没有一个能跳过。';
-    } else {
-      verdictClass = 'miss';
-      verdictLabel = '还差一点';
-      headline = '重申一下"什么是引用"：一个对象指向另一个，被指的对象有自己的详情页和生命周期。';
-    }
-
-    judge.innerHTML = `<span class="verdict ${verdictClass}">${verdictLabel}</span><h4>${headline}</h4><ul>${lines.join('')}</ul>`;
-    judge.classList.add('show');
-    judge.scrollIntoView({ behavior: 'smooth', block: 'center' });
-  });
-
-  document.getElementById('builderReset').addEventListener('click', () => {
-    selections = {};
-    renderRefs();
-    judge.classList.remove('show');
-  });
-
-  renderRefs();
-})();
 </script>
 
 </body>
