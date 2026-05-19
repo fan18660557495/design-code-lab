@@ -149,6 +149,32 @@
   .problem-card .quoted { background: white; border: 1px dashed var(--line); border-radius: 4px; padding: 10px 12px; margin-top: 10px; font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--ink); line-height: 1.55; }
   .problem-card.good .quoted { border-style: solid; border-color: var(--obj-color); background: white; }
 
+  /* ====== Visual-first opening: dropdown deconstruction ====== */
+  .viz-stage { background: var(--paper); border: 1px solid var(--line); border-radius: 12px; padding: 28px; margin-top: 16px; position: relative; }
+  .viz-hint { text-align: center; font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--ink-mute); margin: 18px 0 0; letter-spacing: 0.04em; }
+  .viz-hint strong { color: var(--obj-color); }
+  .x10-split { display: grid; grid-template-columns: 1fr 1.6fr; gap: 22px; align-items: stretch; }
+  @media (max-width: 880px) { .x10-split { grid-template-columns: 1fr; } }
+  .x10-input { background: white; border: 1.5px solid var(--accent); border-radius: 8px; padding: 18px 20px; display: flex; flex-direction: column; gap: 10px; }
+  .x10-input .tag { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--accent); letter-spacing: 0.08em; font-weight: 700; }
+  .x10-input .field-label { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ink-mute); letter-spacing: 0.04em; text-transform: uppercase; }
+  .x10-input .field { background: var(--bg-2); border: 1px solid var(--line); border-radius: 5px; padding: 10px 14px; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: var(--ink); display: flex; justify-content: space-between; }
+  .x10-input .field .caret { color: var(--ink-mute); }
+  .x10-input .miss { font-family: 'Noto Serif SC', serif; font-size: 13px; color: var(--accent); padding-top: 8px; border-top: 1px dashed var(--line); margin-top: auto; line-height: 1.5; }
+
+  .x10-dims { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
+  @media (max-width: 720px) { .x10-dims { grid-template-columns: repeat(2, 1fr); } }
+  .x10-dim { background: white; border: 1.5px solid var(--obj-color); border-radius: 7px; padding: 10px 11px 11px; display: flex; flex-direction: column; gap: 4px; min-height: 110px; }
+  .x10-dim .num { font-family: 'Fraunces', serif; font-style: italic; font-weight: 600; color: var(--obj-color); font-size: 13px; }
+  .x10-dim .nm { font-family: 'Noto Serif SC', serif; font-size: 13px; font-weight: 700; }
+  .x10-dim .q { font-size: 10px; color: var(--ink-soft); line-height: 1.5; }
+  .x10-dim .ex { margin-top: auto; padding-top: 6px; border-top: 1px dashed var(--line); font-family: 'JetBrains Mono', monospace; font-size: 9px; color: var(--obj-color); letter-spacing: 0.04em; }
+
+  .sticky-wrap { margin-top: 28px; display: flex; gap: 22px; align-items: center; flex-wrap: wrap; justify-content: center; }
+  .sticky { background: #fff8c4; border: 1px solid #e5d98a; border-radius: 3px; padding: 16px 22px 18px; position: relative; transform: rotate(-1.5deg); box-shadow: 0 6px 14px rgba(22,22,29,0.12), 0 1px 3px rgba(22,22,29,0.08); font-size: 14px; color: var(--ink); line-height: 1.65; max-width: 380px; text-align: center; }
+  .sticky-pin { position: absolute; top: -8px; left: 50%; transform: translateX(-50%); width: 14px; height: 14px; background: var(--accent); border-radius: 50%; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+  .sticky strong { display: block; margin-top: 4px; font-family: 'Noto Serif SC', serif; font-size: 17px; color: var(--accent); line-height: 1.4; }
+
   /* === GAME 1 · field form === */
   .form-stage { background: var(--paper); border: 1px solid var(--line); border-radius: 8px; padding: 36px 32px; position: relative; overflow: hidden; }
   .form-stage::before { content: ''; position: absolute; inset: 0; background-image: linear-gradient(to right, var(--line-soft) 1px, transparent 1px), linear-gradient(to bottom, var(--line-soft) 1px, transparent 1px); background-size: 24px 24px; opacity: 0.4; pointer-events: none; }
@@ -397,13 +423,13 @@
     <div class="hero-grid">
       <div>
         <h1>
-          字段不是<br>
-          <span class="display-cn">一个值</span>——<br>
-          是<span class="purple">5 件事</span>。
+          稿子上是<br>
+          <span class="display-cn">1 个下拉框</span>，<br>
+          工程师看到 <span class="purple">5 维规则</span>。
         </h1>
         <p class="lede">
-          必填、空值、枚举、只读、计算——同一个"状态"字段，<br>
-          5 种规则中的不同组合决定它的 UI、校验和工程实现完全不同。
+          画 1 个输入框 = 5 个隐藏决策——<strong style="color:var(--obj-color)">必填? · 空值 · 值域 · 可改性 · 计算</strong>。
+          少标一维，工程师猜一次。
         </p>
       </div>
       <div class="hero-side">
@@ -416,39 +442,75 @@
   </div>
 </header>
 
-<!-- Section 01: 问题 -->
+<!-- Section 01: 看见 -->
 <section id="problem">
   <div class="wrap">
     <div class="section-head">
       <div>
-        <div class="section-num"><strong>01</strong> / 问题</div>
-        <h2 class="section-title">"加个下拉框"<br>背后藏着<span class="em">5 个问题</span>。</h2>
+        <div class="section-num"><strong>01</strong> / 看见</div>
+        <h2 class="section-title">先看图。</h2>
       </div>
       <p class="section-sub">
-        设计师以为字段 = "一个输入框 + 一个标签"。其实字段 = <strong>必填? + 空值含义 + 取值范围 + 可改性 + 是否派生</strong> 5 维度。
-        少标一维 = 工程师猜 1 次。
+        左边是<strong style="color:var(--accent)">你画的 1 个下拉</strong>。右边是工程师同时在想的 <strong style="color:var(--obj-color)">5 个问题</strong>——稿子上少标一个，他猜一次。
       </p>
     </div>
 
-    <div class="problem-grid">
-      <div class="problem-card bad">
-        <span class="tag">字段当输入 · INPUT</span>
-        <h3>"稿子里有个'状态'下拉框"</h3>
-        <p>设计稿画了一个 dropdown，4 个选项。看起来清楚。</p>
-        <div class="quoted">
-          <strong style="color:var(--accent)">工程师：</strong>必填吗？null 时显示啥？这 4 个选项是写死还是从后端取？运营能加新选项吗？status 能改吗（已发货还能改回未支付吗）？是计算字段（从其它字段派生）吗？
-        </div>
-        <p style="color:var(--accent);margin-top:12px"><strong>设计师：</strong>呃……我再回去问下产品。</p>
-      </div>
+    <div class="viz-stage">
+      <div class="x10-split">
 
-      <div class="problem-card good">
-        <span class="tag">字段当 SCHEMA</span>
-        <h3>"状态字段，规则如下"</h3>
-        <p>5 维度全部标清楚——工程师直接落 schema。</p>
-        <div class="quoted">
-          状态 status: <strong>enum</strong> (4 选项 + 1 个 not-set) · <strong>必填</strong> · 空值显示"未设置" · 运营可加但要后台 · <strong>只读</strong>（只能通过状态机迁移）· <strong>不是计算</strong>。
+        <div class="x10-input">
+          <span class="tag">✗ 稿子现状</span>
+          <span class="field-label">状态 · STATUS</span>
+          <div class="field"><span>请选择</span><span class="caret">▾</span></div>
+          <div class="field-label" style="margin-top:8px">取值</div>
+          <div style="background:var(--bg-2);border-radius:5px;padding:8px 12px;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--ink-soft);line-height:1.7">未支付<br>已支付<br>已发货<br>已完成</div>
+          <div class="miss">"4 个选项就够了"——<strong>背后 5 件事，你标了几件？</strong></div>
         </div>
-        <p style="color:var(--obj-color);margin-top:12px"><strong>结果：</strong>追问 → 0 次。</p>
+
+        <div>
+          <div class="x10-dims">
+            <div class="x10-dim">
+              <span class="num">i</span>
+              <div class="nm">必填?</div>
+              <div class="q">必填还是选填？空着能不能提交？</div>
+              <div class="ex">required · bool</div>
+            </div>
+            <div class="x10-dim">
+              <span class="num">ii</span>
+              <div class="nm">空值含义</div>
+              <div class="q">空 = "—" / 空 = "0" / 空 = "未设置"？null vs 零值差别巨大。</div>
+              <div class="ex">null vs zero</div>
+            </div>
+            <div class="x10-dim">
+              <span class="num">iii</span>
+              <div class="nm">取值范围</div>
+              <div class="q">静态枚举？字典表？还是指向另一张表？</div>
+              <div class="ex">enum / lookup / ref</div>
+            </div>
+            <div class="x10-dim">
+              <span class="num">iv</span>
+              <div class="nm">可改性</div>
+              <div class="q">谁能改？什么时候能改？已发货还能改回未支付吗？</div>
+              <div class="ex">mutability</div>
+            </div>
+            <div class="x10-dim">
+              <span class="num">v</span>
+              <div class="nm">是否计算</div>
+              <div class="q">用户填的，还是系统从其他字段派生的？</div>
+              <div class="ex">computed</div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+      <p class="viz-hint">1 个下拉 = <strong>5 维规则</strong> · Section 02 在真实 form 上演示</p>
+    </div>
+
+    <div class="sticky-wrap">
+      <div class="sticky">
+        <div class="sticky-pin"></div>
+        画 1 个字段 = 答 5 个问题。<br>
+        <strong>5 件事 × 8 个字段 = 40 个隐藏决策</strong>
       </div>
     </div>
   </div>
@@ -632,50 +694,64 @@
   </div>
 </section>
 
-<!-- Section 04: 幕三 · 再做 -->
+<!-- Section 04: 幕三 · 看更多 -->
 <section id="make">
   <div class="wrap">
     <div class="section-head">
       <div>
-        <span class="act-tag make">幕三 · 再做</span>
-        <div class="section-num"><strong>04</strong> / 再做</div>
-        <h2 class="section-title">轮到你——<br>给「<span class="em">项目对象</span>」<br>8 字段填规则。</h2>
+        <span class="act-tag make">幕三 · 看更多</span>
+        <div class="section-num"><strong>04</strong> / 看更多</div>
+        <h2 class="section-title">「<span class="em">项目对象</span>」8 字段——<br>看人家填的 schema。</h2>
       </div>
       <p class="section-sub">
-        下面 8 个字段。每个有 5 维度——你按 dropdown 选。
-        某些维度有最佳实践，你看看自己有没有"想错"。
+        每行 5 个维度全部填好——重点看 <strong style="color:var(--accent)">⚠ 标的那几个</strong>，是最容易踩的坑。
       </p>
     </div>
 
-    <div class="qz-stage">
-      <div class="qz-head">
-        <h3 class="qz-title">项目 / Project · schema 填空</h3>
-        <div class="qz-progress">已填 <span class="done" id="qzDone">0</span> / 40 维度</div>
-      </div>
+    <div style="background:var(--paper);border:1px solid var(--line);border-left:3px solid var(--obj-color);border-radius:10px;padding:24px 26px;margin-top:24px;overflow-x:auto">
+      <table style="width:100%;border-collapse:separate;border-spacing:3px;min-width:680px">
+        <thead>
+          <tr style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:0.06em;color:var(--ink-mute);text-transform:uppercase">
+            <th style="padding:8px 10px;background:var(--bg-2);border-radius:4px;text-align:left">字段</th>
+            <th style="padding:8px 10px;background:var(--bg-2);border-radius:4px;text-align:left">必填</th>
+            <th style="padding:8px 10px;background:var(--bg-2);border-radius:4px;text-align:left">空值</th>
+            <th style="padding:8px 10px;background:var(--bg-2);border-radius:4px;text-align:left">值域</th>
+            <th style="padding:8px 10px;background:var(--bg-2);border-radius:4px;text-align:left">可改</th>
+            <th style="padding:8px 10px;background:var(--bg-2);border-radius:4px;text-align:left">计算</th>
+          </tr>
+        </thead>
+        <tbody style="font-size:11px;color:var(--ink-soft);font-family:'JetBrains Mono',monospace">
+          <tr><td style="padding:8px 10px;background:white;border:1px solid var(--line);border-radius:4px"><strong style="color:var(--ink)">name</strong> · string</td><td style="padding:8px 10px;background:white;border:1px solid var(--line);border-radius:4px">必填</td><td style="padding:8px 10px;background:white;border:1px solid var(--line);border-radius:4px">禁止</td><td style="padding:8px 10px;background:white;border:1px solid var(--line);border-radius:4px">自由</td><td style="padding:8px 10px;background:white;border:1px solid var(--line);border-radius:4px">永远可改</td><td style="padding:8px 10px;background:white;border:1px solid var(--line);border-radius:4px">非计算</td></tr>
+          <tr><td style="padding:8px 10px;background:white;border:1px solid var(--line);border-radius:4px"><strong style="color:var(--ink)">customer</strong> · ref</td><td style="padding:8px 10px;background:white;border:1px solid var(--line);border-radius:4px">必填</td><td style="padding:8px 10px;background:white;border:1px solid var(--line);border-radius:4px">禁止</td><td style="padding:8px 10px;background:white;border:1px solid var(--line);border-radius:4px">引用 Customer</td><td style="padding:8px 10px;background:white;border:1px solid var(--accent);border-radius:4px;color:var(--accent)"><strong>⚠ 只读</strong></td><td style="padding:8px 10px;background:white;border:1px solid var(--line);border-radius:4px">非计算</td></tr>
+          <tr><td style="padding:8px 10px;background:white;border:1px solid var(--line);border-radius:4px"><strong style="color:var(--ink)">budget</strong> · money</td><td style="padding:8px 10px;background:white;border:1px solid var(--line);border-radius:4px">选填</td><td style="padding:8px 10px;background:white;border:1px solid var(--line);border-radius:4px">显示"未定"</td><td style="padding:8px 10px;background:white;border:1px solid var(--line);border-radius:4px">money ≥ 0</td><td style="padding:8px 10px;background:white;border:1px solid var(--line);border-radius:4px">永远可改</td><td style="padding:8px 10px;background:white;border:1px solid var(--line);border-radius:4px">非计算</td></tr>
+          <tr><td style="padding:8px 10px;background:white;border:1px solid var(--line);border-radius:4px"><strong style="color:var(--ink)">start_date</strong> · date</td><td style="padding:8px 10px;background:white;border:1px solid var(--line);border-radius:4px">必填</td><td style="padding:8px 10px;background:white;border:1px solid var(--line);border-radius:4px">禁止</td><td style="padding:8px 10px;background:white;border:1px solid var(--line);border-radius:4px">date</td><td style="padding:8px 10px;background:white;border:1px solid var(--accent);border-radius:4px;color:var(--accent)"><strong>⚠ 条件可改</strong></td><td style="padding:8px 10px;background:white;border:1px solid var(--line);border-radius:4px">非计算</td></tr>
+          <tr><td style="padding:8px 10px;background:white;border:1px solid var(--line);border-radius:4px"><strong style="color:var(--ink)">end_date</strong> · date</td><td style="padding:8px 10px;background:white;border:1px solid var(--line);border-radius:4px">选填</td><td style="padding:8px 10px;background:white;border:1px solid var(--accent);border-radius:4px;color:var(--accent)"><strong>⚠ "进行中"</strong></td><td style="padding:8px 10px;background:white;border:1px solid var(--line);border-radius:4px">date</td><td style="padding:8px 10px;background:white;border:1px solid var(--line);border-radius:4px">永远可改</td><td style="padding:8px 10px;background:white;border:1px solid var(--line);border-radius:4px">非计算</td></tr>
+          <tr><td style="padding:8px 10px;background:white;border:1px solid var(--line);border-radius:4px"><strong style="color:var(--ink)">status</strong> · enum</td><td style="padding:8px 10px;background:white;border:1px solid var(--line);border-radius:4px">自动</td><td style="padding:8px 10px;background:white;border:1px solid var(--line);border-radius:4px">默认 draft</td><td style="padding:8px 10px;background:white;border:1px solid var(--line);border-radius:4px">enum (5 个)</td><td style="padding:8px 10px;background:white;border:1px solid var(--accent);border-radius:4px;color:var(--accent)"><strong>⚠ 只通过状态机</strong></td><td style="padding:8px 10px;background:white;border:1px solid var(--line);border-radius:4px">非计算</td></tr>
+          <tr><td style="padding:8px 10px;background:white;border:1px solid var(--line);border-radius:4px"><strong style="color:var(--ink)">spend</strong> · money</td><td style="padding:8px 10px;background:white;border:1px solid var(--line);border-radius:4px">自动</td><td style="padding:8px 10px;background:white;border:1px solid var(--line);border-radius:4px">显示 0</td><td style="padding:8px 10px;background:white;border:1px solid var(--line);border-radius:4px">money ≥ 0</td><td style="padding:8px 10px;background:white;border:1px solid var(--line);border-radius:4px">只读</td><td style="padding:8px 10px;background:white;border:1px solid var(--accent);border-radius:4px;color:var(--accent)"><strong>⚠ 计算 (SUM 费用单)</strong></td></tr>
+          <tr><td style="padding:8px 10px;background:white;border:1px solid var(--line);border-radius:4px"><strong style="color:var(--ink)">health</strong> · enum</td><td style="padding:8px 10px;background:white;border:1px solid var(--line);border-radius:4px">自动</td><td style="padding:8px 10px;background:white;border:1px solid var(--line);border-radius:4px">显示"未评估"</td><td style="padding:8px 10px;background:white;border:1px solid var(--line);border-radius:4px">enum (5 等级)</td><td style="padding:8px 10px;background:white;border:1px solid var(--line);border-radius:4px">只读</td><td style="padding:8px 10px;background:white;border:1px solid var(--accent);border-radius:4px;color:var(--accent)"><strong>⚠ 多字段派生</strong></td></tr>
+        </tbody>
+      </table>
 
-      <div class="qz-table-wrap">
-        <table class="qz-table" id="qzTable">
-          <thead>
-            <tr>
-              <th>#</th>
-              <th>字段</th>
-              <th><span class="dim-marker d1"></span>必填</th>
-              <th><span class="dim-marker d2"></span>空值</th>
-              <th><span class="dim-marker d3"></span>范围</th>
-              <th><span class="dim-marker d4"></span>可改</th>
-              <th><span class="dim-marker d5"></span>计算</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody id="qzBody"></tbody>
-        </table>
+      <div style="margin-top:18px;display:grid;grid-template-columns:1fr 1fr;gap:14px" class="x10-pits-grid">
+        <div style="background:var(--accent-soft);border-left:3px solid var(--accent);border-radius:4px;padding:14px 18px;font-size:13px;color:var(--ink-soft);line-height:1.7">
+          <strong style="color:var(--accent)">⚠ customer 改不改</strong>——很多人选"可改"。但项目归属一旦定下来就<strong>不该改</strong>（否则 owner 历史、报表全错位）。<strong>创建后只读</strong>。
+        </div>
+        <div style="background:var(--accent-soft);border-left:3px solid var(--accent);border-radius:4px;padding:14px 18px;font-size:13px;color:var(--ink-soft);line-height:1.7">
+          <strong style="color:var(--accent)">⚠ end_date 空</strong>——空 = "未填"还是"进行中"？是两件事。"进行中"是<strong>明确状态</strong>，不是"还没填"。
+        </div>
+        <div style="background:var(--accent-soft);border-left:3px solid var(--accent);border-radius:4px;padding:14px 18px;font-size:13px;color:var(--ink-soft);line-height:1.7">
+          <strong style="color:var(--accent)">⚠ status 可改</strong>——只能通过状态机迁移，不能直接修改下拉值。否则审计日志一团乱。
+        </div>
+        <div style="background:var(--accent-soft);border-left:3px solid var(--accent);border-radius:4px;padding:14px 18px;font-size:13px;color:var(--ink-soft);line-height:1.7">
+          <strong style="color:var(--accent)">⚠ spend / health 计算</strong>——很多人画成手填 input。<strong>计算字段不该出现在 form 里</strong>——前端写了用户也填不进去（下次刷新被覆盖）。
+        </div>
       </div>
+    </div>
 
-      <div class="qz-actions">
-        <button class="qz-btn primary" id="qzSubmit">提交打分</button>
-        <button class="qz-btn" id="qzReset">清空</button>
-      </div>
-
+    <div style="display:none" class="qz-stage">
+      <div class="qz-head"><h3 class="qz-title">obsolete</h3><div class="qz-progress">obsolete <span class="done" id="qzDone">0</span></div></div>
+      <div class="qz-table-wrap"><table class="qz-table" id="qzTable"><thead><tr><th>#</th><th>字段</th><th>必填</th><th>空值</th><th>范围</th><th>可改</th><th>计算</th><th></th></tr></thead><tbody id="qzBody"></tbody></table></div>
+      <div class="qz-actions"><button class="qz-btn primary" id="qzSubmit">提交</button><button class="qz-btn" id="qzReset">清空</button></div>
       <div class="qz-judge" id="qzJudge"></div>
     </div>
   </div>
@@ -906,233 +982,6 @@
   });
 })();
 
-// ===== Game 3: project field quiz =====
-(function(){
-  const ROWS = [
-    {
-      key: 'name', label: '项目名', en: 'name · string',
-      ideal: { req: 'required', nul: 'forbidden', rng: 'free', mut: 'always', cmp: 'no' }
-    },
-    {
-      key: 'customer', label: '客户', en: 'customer_id · ref',
-      ideal: { req: 'required', nul: 'forbidden', rng: 'ref', mut: 'never', cmp: 'no' },
-      pitfall: '陷阱：很多人选"可改"——但<strong>项目归属一旦定下来</strong>就不该改（否则 owner 历史、报表都错位）。常见模式是创建后只读。'
-    },
-    {
-      key: 'budget', label: '预算', en: 'budget · money',
-      ideal: { req: 'optional', nul: 'unset', rng: 'money', mut: 'always', cmp: 'no' }
-    },
-    {
-      key: 'start_date', label: '开始日期', en: 'start_date · date',
-      ideal: { req: 'required', nul: 'forbidden', rng: 'date', mut: 'cond', cmp: 'no' },
-      pitfall: '可改 = "项目未开始才可改"——已开始的项目改 start_date 会让历史报表瞬间错位。<strong>条件可改</strong>比"永远可改"更安全。'
-    },
-    {
-      key: 'end_date', label: '结束日期', en: 'end_date · date',
-      ideal: { req: 'optional', nul: 'ongoing', rng: 'date', mut: 'always', cmp: 'no' },
-      pitfall: '空值意义是关键——"未填" vs "进行中" 是两件事。"未填"是疏忽，"进行中"是<strong>明确的项目状态</strong>。这里选"进行中"语义更准。'
-    },
-    {
-      key: 'status', label: '状态', en: 'status · enum',
-      ideal: { req: 'auto', nul: 'draft', rng: 'enum', mut: 'sm', cmp: 'no' }
-    },
-    {
-      key: 'spend', label: '实际支出', en: 'spend · money',
-      ideal: { req: 'auto', nul: 'zero', rng: 'money', mut: 'never', cmp: 'yes' },
-      pitfall: '常见错误：以为支出"手填"。<strong>实际支出 = SUM(费用单)</strong>，是计算字段。如果做成 input 用户填了之后下次刷新被覆盖。'
-    },
-    {
-      key: 'health', label: '健康度', en: 'health · enum',
-      ideal: { req: 'auto', nul: 'na', rng: 'enum', mut: 'never', cmp: 'yes' },
-      pitfall: '健康度看似简单 enum，其实是<strong>多字段派生</strong>——进度延期 + 预算超支 + 风险事件触发。如果做成手填，没人会去更新，永远绿色。'
-    }
-  ];
-
-  const OPTIONS = {
-    req: [
-      ['', '—'],
-      ['required', '必填'],
-      ['optional', '选填'],
-      ['auto', '系统自动']
-    ],
-    nul: [
-      ['', '—'],
-      ['forbidden', '不允许 (报错)'],
-      ['unset', '显示 "未定"'],
-      ['ongoing', '显示 "进行中"'],
-      ['zero', '显示 "0"'],
-      ['draft', '默认 draft'],
-      ['na', '显示 "未评估"']
-    ],
-    rng: [
-      ['', '—'],
-      ['free', '自由文本'],
-      ['date', 'date'],
-      ['money', 'money ≥ 0'],
-      ['enum', 'enum (固定)'],
-      ['ref', '引用 (ref)']
-    ],
-    mut: [
-      ['', '—'],
-      ['always', '永远可改'],
-      ['cond', '条件可改'],
-      ['sm', '只通过状态机'],
-      ['never', '只读 / 创建后不可改']
-    ],
-    cmp: [
-      ['', '—'],
-      ['no', '非计算 (用户填)'],
-      ['yes', '计算 (派生)']
-    ]
-  };
-
-  const DIM_LABEL = {
-    req: '必填',
-    nul: '空值',
-    rng: '范围',
-    mut: '可改',
-    cmp: '计算'
-  };
-
-  const tbody = document.getElementById('qzBody');
-  const doneEl = document.getElementById('qzDone');
-  const judge = document.getElementById('qzJudge');
-
-  const state = {};
-  ROWS.forEach(r => { state[r.key] = { req: '', nul: '', rng: '', mut: '', cmp: '' }; });
-
-  function buildSelect(rowKey, dimKey) {
-    const opts = OPTIONS[dimKey];
-    return `<select data-row="${rowKey}" data-dim="${dimKey}" class="empty-ans">${opts.map(o => `<option value="${o[0]}">${o[1]}</option>`).join('')}</select>`;
-  }
-
-  function buildRow(r, idx) {
-    return `<tr data-row="${r.key}">
-      <td class="row-num">${String(idx+1).padStart(2,'0')}</td>
-      <td class="row-name">${r.label}<span class="en">${r.en}</span></td>
-      <td>${buildSelect(r.key, 'req')}</td>
-      <td>${buildSelect(r.key, 'nul')}</td>
-      <td>${buildSelect(r.key, 'rng')}</td>
-      <td>${buildSelect(r.key, 'mut')}</td>
-      <td>${buildSelect(r.key, 'cmp')}</td>
-      <td class="qz-rowscore" id="rs-${r.key}">—</td>
-    </tr>`;
-  }
-
-  tbody.innerHTML = ROWS.map(buildRow).join('');
-
-  function updateDone() {
-    let filled = 0;
-    Object.values(state).forEach(s => {
-      ['req','nul','rng','mut','cmp'].forEach(k => { if (s[k]) filled++; });
-    });
-    doneEl.textContent = filled;
-  }
-
-  tbody.querySelectorAll('select').forEach(sel => {
-    sel.addEventListener('change', e => {
-      const row = e.target.dataset.row;
-      const dim = e.target.dataset.dim;
-      state[row][dim] = e.target.value;
-      e.target.classList.remove('right','wrong');
-      e.target.classList.add('empty-ans');
-      document.getElementById('rs-' + row).innerHTML = '—';
-      updateDone();
-    });
-  });
-
-  document.getElementById('qzSubmit').addEventListener('click', () => {
-    let totalHits = 0;
-    const lines = [];
-    const total = ROWS.length * 5;
-
-    ROWS.forEach(r => {
-      let hits = 0;
-      const wrongs = [];
-      ['req','nul','rng','mut','cmp'].forEach(dim => {
-        const sel = tbody.querySelector(`select[data-row="${r.key}"][data-dim="${dim}"]`);
-        const ans = state[r.key][dim];
-        sel.classList.remove('right','wrong','empty-ans');
-        if (ans === r.ideal[dim]) {
-          sel.classList.add('right');
-          hits++;
-        } else if (ans === '') {
-          sel.classList.add('empty-ans');
-          wrongs.push({ dim, want: r.ideal[dim], got: '(未填)' });
-        } else {
-          sel.classList.add('wrong');
-          wrongs.push({ dim, want: r.ideal[dim], got: ans });
-        }
-      });
-      totalHits += hits;
-      const rs = document.getElementById('rs-' + r.key);
-      if (hits === 5) rs.innerHTML = '<span class="full">5</span>';
-      else if (hits >= 3) rs.innerHTML = `<span class="partial">${hits}</span>`;
-      else rs.innerHTML = `<span class="zero">${hits}</span>`;
-
-      // build line for judge
-      if (hits === 5) {
-        lines.push(`<li>✓ <strong>${r.label}</strong>：5/5 完美 — ${optLabel('req', r.ideal.req)} · ${optLabel('nul', r.ideal.nul)} · ${optLabel('rng', r.ideal.rng)} · ${optLabel('mut', r.ideal.mut)} · ${optLabel('cmp', r.ideal.cmp)}</li>`);
-      } else {
-        const wrongHtml = wrongs.map(w => `<code class="wrong">${DIM_LABEL[w.dim]}</code>=应选 <code class="right">${optLabel(w.dim, w.want)}</code>`).join('；');
-        let line = `<strong>${r.label}</strong> · ${hits}/5：${wrongHtml}`;
-        if (r.pitfall) line += `<br><span class="why">↳ ${r.pitfall}</span>`;
-        lines.push(`<li>${line}</li>`);
-      }
-    });
-
-    let verdictClass, verdictLabel, headline;
-    if (totalHits === total) {
-      verdictClass = 'win';
-      verdictLabel = '完美';
-      headline = '你已经把字段当 schema 来设计了。';
-    } else if (totalHits >= total - 5) {
-      verdictClass = 'win';
-      verdictLabel = '基本对了';
-      headline = '差几个 — 但判断方向是对的。看下面错的几处，多在<strong>"可改性"和"是否计算"</strong>这两栏。';
-    } else if (totalHits >= total / 2) {
-      verdictClass = 'partial';
-      verdictLabel = '还差一点';
-      headline = '一半左右——大部分人在"<strong>空值含义</strong>"和"<strong>计算字段</strong>"这两栏踩坑。看 pitfall 说明。';
-    } else {
-      verdictClass = 'miss';
-      verdictLabel = '再来一次';
-      headline = '换个角度——字段不是"用户填什么"，是<strong>"系统要保证什么"</strong>。从必填和计算开始问，会顺很多。';
-    }
-
-    judge.innerHTML = `<span class="verdict ${verdictClass}">${verdictLabel}</span><h4>${headline}</h4>
-      <div class="score-line">
-        <div class="sk"><div class="lk">总分</div><div class="vk">${totalHits}<span class="of"> / ${total}</span></div></div>
-        <div class="sk"><div class="lk">满分字段</div><div class="vk">${ROWS.filter(r => allCorrect(r)).length}<span class="of"> / ${ROWS.length}</span></div></div>
-        <div class="sk"><div class="lk">准确率</div><div class="vk">${Math.round(totalHits/total*100)}<span class="of"> %</span></div></div>
-      </div>
-      <ul>${lines.join('')}</ul>`;
-    judge.classList.add('show');
-    judge.scrollIntoView({ behavior: 'smooth', block: 'center' });
-  });
-
-  function allCorrect(r) {
-    return ['req','nul','rng','mut','cmp'].every(d => state[r.key][d] === r.ideal[d]);
-  }
-
-  function optLabel(dim, val) {
-    const opt = OPTIONS[dim].find(o => o[0] === val);
-    return opt ? opt[1] : val;
-  }
-
-  document.getElementById('qzReset').addEventListener('click', () => {
-    ROWS.forEach(r => { state[r.key] = { req: '', nul: '', rng: '', mut: '', cmp: '' }; });
-    tbody.querySelectorAll('select').forEach(sel => {
-      sel.value = '';
-      sel.classList.remove('right','wrong');
-      sel.classList.add('empty-ans');
-    });
-    ROWS.forEach(r => { document.getElementById('rs-' + r.key).innerHTML = '—'; });
-    judge.classList.remove('show');
-    judge.innerHTML = '';
-    updateDone();
-  });
-})();
 </script>
 
 </body>

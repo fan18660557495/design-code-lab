@@ -148,6 +148,32 @@
   .problem-card p { margin: 0; color: var(--ink-soft); font-size: 14px; line-height: 1.55; }
   .problem-card p + p { margin-top: 10px; }
 
+  /* ====== Visual-first opening: dashboard teaser ====== */
+  .viz-stage { background: var(--paper); border: 1px solid var(--line); border-radius: 12px; padding: 28px; margin-top: 16px; position: relative; }
+  .viz-hint { text-align: center; font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--ink-mute); margin: 18px 0 0; letter-spacing: 0.04em; }
+  .viz-hint strong { color: var(--obj-color); }
+  .src-tags { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin-top: 20px; }
+  @media (max-width: 880px) { .src-tags { grid-template-columns: repeat(2, 1fr); } }
+  .src-tag { background: white; border-left: 3px solid var(--line); border-radius: 6px; padding: 12px 14px; display: flex; flex-direction: column; gap: 4px; }
+  .src-tag.local { border-left-color: var(--src-local); }
+  .src-tag.api { border-left-color: var(--src-api); }
+  .src-tag.push { border-left-color: var(--src-push); }
+  .src-tag.third { border-left-color: var(--src-third); }
+  .src-tag.build { border-left-color: var(--src-build); }
+  .src-tag .lbl { font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.08em; font-weight: 700; }
+  .src-tag.local .lbl { color: var(--src-local); }
+  .src-tag.api .lbl { color: var(--src-api); }
+  .src-tag.push .lbl { color: var(--src-push); }
+  .src-tag.third .lbl { color: #8a6a13; }
+  .src-tag.build .lbl { color: var(--src-build); }
+  .src-tag .ex { font-size: 11px; color: var(--ink-soft); line-height: 1.55; }
+  .src-tag .fail { font-size: 10px; color: var(--ink-mute); font-family: 'JetBrains Mono', monospace; padding-top: 4px; border-top: 1px dashed var(--line); margin-top: 4px; }
+
+  .sticky-wrap { margin-top: 28px; display: flex; gap: 22px; align-items: center; flex-wrap: wrap; justify-content: center; }
+  .sticky { background: #fff8c4; border: 1px solid #e5d98a; border-radius: 3px; padding: 16px 22px 18px; position: relative; transform: rotate(-1.5deg); box-shadow: 0 6px 14px rgba(22,22,29,0.12), 0 1px 3px rgba(22,22,29,0.08); font-size: 14px; color: var(--ink); line-height: 1.65; max-width: 380px; text-align: center; }
+  .sticky-pin { position: absolute; top: -8px; left: 50%; transform: translateX(-50%); width: 14px; height: 14px; background: var(--accent); border-radius: 50%; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+  .sticky strong { display: block; margin-top: 4px; font-family: 'Noto Serif SC', serif; font-size: 17px; color: var(--accent); line-height: 1.4; }
+
   /* GAME 1: dashboard */
   .dash-stage {
     background: var(--paper);
@@ -837,13 +863,13 @@
     <div class="hero-grid">
       <div>
         <h1>
-          <span class="display-cn">同一个页面</span>，<br>
-          10 块数据，<br>
-          <span class="purple">4 种来源</span>。
+          一块 dashboard，<br>
+          11 个数据来自<br>
+          <span class="purple">5 个不同地方</span>。
         </h1>
         <p class="lede">
-          看起来都是字段——其实每一块的数据来自不同的地方。<br>
-          谁是真相、什么时候可以过期、断网后还能不能用——决定它属于哪一类。
+          你画的都是字段。<br>
+          但每一格<strong style="color:var(--obj-color)">挂掉的样子完全不同</strong>——稿子里没说"挂了显示什么"，工程师就猜。
         </p>
       </div>
       <div class="hero-side">
@@ -856,35 +882,61 @@
   </div>
 </header>
 
-<!-- Section 01: 问题 -->
+<!-- Section 01: 看见 -->
 <section id="problem">
   <div class="wrap">
     <div class="section-head">
       <div>
-        <div class="section-num"><strong>01</strong> / 问题</div>
-        <h2 class="section-title">为什么稿子里画的字段，<br>工程师总要<span class="em">挨个追问</span>？</h2>
+        <div class="section-num"><strong>01</strong> / 看见</div>
+        <h2 class="section-title">先看图。</h2>
       </div>
       <p class="section-sub">
-        因为你画的是<strong>一锅煮出来的数据</strong>。工程师拿到要落 schema——每一格都要追问：刷一次 / 推一次 / 缓存 / 第三方？
-        语言对不上，每个字段都要 ping 你。
+        稿子里画的每个字段，其实都来自 <strong>5 种不同地方</strong>之一——每种<strong style="color:var(--accent)">挂掉的样子完全不一样</strong>。
       </p>
     </div>
 
-    <div class="problem-grid">
-      <div class="problem-card bad">
-        <span class="tag">把数据当背景 · BAD</span>
-        <h3>"我把字段都画进 mock 了"</h3>
-        <p>稿子里所有字段都画在 mock 里——好像一锅煮出来的。看起来完整。</p>
-        <p><strong>工程师追问：</strong>这个值刷新一次拿吗？还是 push？这个是缓存吗？过期了显示啥？第三方接口挂了显示啥？……</p>
-        <p style="color:var(--accent)"><strong>你：</strong>呃……我没想过这些。</p>
-      </div>
+    <div class="viz-stage">
+      <div class="src-tags">
 
-      <div class="problem-card good">
-        <span class="tag">把数据当资源 · GOOD</span>
-        <h3>"我标了每个字段的来源 + 失败兜底"</h3>
-        <p>每个字段标记来源（<strong>local / API / server-push / 3rd-party</strong>）+ stale 行为 + 失败兜底。</p>
-        <p><strong>工程师收到：</strong>一份 data spec。直接对着接口契约写代码，不用追问。</p>
-        <p style="color:var(--obj-color)"><strong>结果：</strong>追问 → 0 次。</p>
+        <div class="src-tag local">
+          <span class="lbl">LOCAL · 本地</span>
+          <span class="ex">浏览器自己存的——主题、收藏、设置偏好</span>
+          <span class="fail">挂了 → fallback 默认值</span>
+        </div>
+
+        <div class="src-tag api">
+          <span class="lbl">API · 接口拉</span>
+          <span class="ex">前端主动调一次——列表、详情、搜索</span>
+          <span class="fail">挂了 → 错误态 + 重试</span>
+        </div>
+
+        <div class="src-tag push">
+          <span class="lbl">PUSH · 服务推</span>
+          <span class="ex">WS 实时推过来——消息、上线状态、协作</span>
+          <span class="fail">挂了 → 标"离线"+重连</span>
+        </div>
+
+        <div class="src-tag third">
+          <span class="lbl">3RD · 第三方</span>
+          <span class="ex">别人家服务——天气、汇率、地图、支付</span>
+          <span class="fail">挂了 → 必须有降级，否则全站挂</span>
+        </div>
+
+        <div class="src-tag build">
+          <span class="lbl">BUILD · 构建期</span>
+          <span class="ex">部署时写死——logo、品牌色、版本号、配置</span>
+          <span class="fail">没有"挂"的概念，但改动要发版</span>
+        </div>
+
+      </div>
+      <p class="viz-hint">下面 Section 02 在真实 dashboard 上标这 5 种色 · <strong>11 个数据点</strong> 一眼看完</p>
+    </div>
+
+    <div class="sticky-wrap">
+      <div class="sticky">
+        <div class="sticky-pin"></div>
+        每个字段角落标个色，<br>
+        <strong>工程师就知道每种挂掉怎么兜</strong>
       </div>
     </div>
   </div>
@@ -1329,37 +1381,54 @@
   </div>
 </section>
 
-<!-- Section 04: 幕三 · 再做 -->
+<!-- Section 04: 幕三 · 看更多 -->
 <section id="make">
   <div class="wrap">
     <div class="section-head">
       <div>
-        <span class="act-tag make">幕三 · 再做</span>
-        <div class="section-num"><strong>04</strong> / 再做</div>
-        <h2 class="section-title">轮到你——<br>给新页面 <span class="em">10 个数据点</span> 标来源。</h2>
+        <span class="act-tag make">幕三 · 看更多</span>
+        <div class="section-num"><strong>04</strong> / 看更多</div>
+        <h2 class="section-title">SaaS 首页 <span class="em">10 个数据点</span>——<br>看人家标的色。</h2>
       </div>
       <p class="section-sub">
-        下面 10 个数据点（来自一个 SaaS 产品的首页）。每个有 4 个候选 + 一个 fallback 选项。
-        <strong>你来选</strong>——提交后会逐条判分。
+        每个数据点配 <strong>来源色 + fallback 策略</strong>。下面表格直接给你 10 行答案，每个为什么这么标。
       </p>
     </div>
 
-    <div class="builder3-stage">
-      <div class="builder3-head">
-        <h3 class="builder3-title">SaaS 产品首页 · 10 个数据点的来源</h3>
-        <div class="builder3-progress">已填写 <span class="done" id="b3Done">0</span> / 10 项</div>
-      </div>
+    <div style="background:var(--paper);border:1px solid var(--line);border-left:3px solid var(--obj-color);border-radius:10px;padding:26px 28px;margin-top:24px">
+      <table style="width:100%;border-collapse:separate;border-spacing:4px">
+        <thead>
+          <tr>
+            <th style="padding:10px 12px;text-align:left;background:var(--bg-2);border-radius:5px;font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:0.06em;color:var(--ink-mute);text-transform:uppercase">数据点</th>
+            <th style="padding:10px 12px;text-align:left;background:var(--bg-2);border-radius:5px;font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:0.06em;color:var(--ink-mute);text-transform:uppercase">来源 + fallback</th>
+            <th style="padding:10px 12px;text-align:left;background:var(--bg-2);border-radius:5px;font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:0.06em;color:var(--ink-mute);text-transform:uppercase">为什么</th>
+          </tr>
+        </thead>
+        <tbody style="font-size:12px;color:var(--ink-soft);line-height:1.55">
+          <tr><td style="background:white;border:1px solid var(--line);border-radius:5px;padding:9px 12px;font-weight:600;color:var(--ink)">用户头像</td><td style="background:white;border:1px solid var(--line);border-radius:5px;padding:9px 12px"><span style="color:var(--src-local);font-weight:700">LOCAL</span> · 拿不到 = 显示首字母色块</td><td style="background:white;border:1px solid var(--line);border-radius:5px;padding:9px 12px">登录时已存浏览器，刷新不变。第三方 CDN 挂了也有 fallback。</td></tr>
+          <tr><td style="background:white;border:1px solid var(--line);border-radius:5px;padding:9px 12px;font-weight:600;color:var(--ink)">今日任务列表</td><td style="background:white;border:1px solid var(--line);border-radius:5px;padding:9px 12px"><span style="color:var(--src-api);font-weight:700">API</span> · 挂了 = 错误态 + 重试</td><td style="background:white;border:1px solid var(--line);border-radius:5px;padding:9px 12px">每次进首页 GET 一次，按用户筛过滤。<strong>不要默认显示空</strong>——会让用户以为真的没任务。</td></tr>
+          <tr><td style="background:white;border:1px solid var(--line);border-radius:5px;padding:9px 12px;font-weight:600;color:var(--ink)">在线成员数</td><td style="background:white;border:1px solid var(--line);border-radius:5px;padding:9px 12px"><span style="color:var(--src-push);font-weight:700">PUSH</span> · 断连 = 显示"离线" + 灰色</td><td style="background:white;border:1px solid var(--line);border-radius:5px;padding:9px 12px">WebSocket 实时推。<strong>断了不要显示 0</strong>——会被误读。</td></tr>
+          <tr><td style="background:white;border:1px solid var(--line);border-radius:5px;padding:9px 12px;font-weight:600;color:var(--ink)">今日天气</td><td style="background:white;border:1px solid var(--line);border-radius:5px;padding:9px 12px"><span style="color:#8a6a13;font-weight:700">3RD</span> · 挂了 = 整块不显示</td><td style="background:white;border:1px solid var(--line);border-radius:5px;padding:9px 12px">和风/OpenWeather 第三方。<strong>必须有降级</strong>——他们挂了你也得能用。</td></tr>
+          <tr><td style="background:white;border:1px solid var(--line);border-radius:5px;padding:9px 12px;font-weight:600;color:var(--ink)">侧栏折叠状态</td><td style="background:white;border:1px solid var(--line);border-radius:5px;padding:9px 12px"><span style="color:var(--src-local);font-weight:700">LOCAL</span> · 拿不到 = 默认展开</td><td style="background:white;border:1px solid var(--line);border-radius:5px;padding:9px 12px">写 localStorage 即可——不需要服务端存。换设备从展开开始没问题。</td></tr>
+          <tr><td style="background:white;border:1px solid var(--line);border-radius:5px;padding:9px 12px;font-weight:600;color:var(--ink)">未读消息数</td><td style="background:white;border:1px solid var(--line);border-radius:5px;padding:9px 12px"><span style="color:var(--src-push);font-weight:700">PUSH</span> · 断了 = 保留旧数</td><td style="background:white;border:1px solid var(--line);border-radius:5px;padding:9px 12px">推送优于 polling——省电省流量。断线保留上次数字，加个"已断开"小标。</td></tr>
+          <tr><td style="background:white;border:1px solid var(--line);border-radius:5px;padding:9px 12px;font-weight:600;color:var(--ink)">日历事件</td><td style="background:white;border:1px solid var(--line);border-radius:5px;padding:9px 12px"><span style="color:var(--src-api);font-weight:700">API</span> · 挂了 = 缓存 + "数据可能不新"</td><td style="background:white;border:1px solid var(--line);border-radius:5px;padding:9px 12px">SWR 模式：先显示缓存，后台 revalidate。挂了用旧数据 + 顶部 banner。</td></tr>
+          <tr><td style="background:white;border:1px solid var(--line);border-radius:5px;padding:9px 12px;font-weight:600;color:var(--ink)">本月 KPI</td><td style="background:white;border:1px solid var(--line);border-radius:5px;padding:9px 12px"><span style="color:var(--src-api);font-weight:700">API</span> · 挂了 = 显示上次值 + 时间戳</td><td style="background:white;border:1px solid var(--line);border-radius:5px;padding:9px 12px">汇总数据慢——5 分钟手动 refetch 就够。挂了显示"上次 09:32 的数据"，不要骗用户。</td></tr>
+          <tr><td style="background:white;border:1px solid var(--line);border-radius:5px;padding:9px 12px;font-weight:600;color:var(--ink)">产品 logo</td><td style="background:white;border:1px solid var(--line);border-radius:5px;padding:9px 12px"><span style="color:var(--src-build);font-weight:700">BUILD</span> · 不可能挂</td><td style="background:white;border:1px solid var(--line);border-radius:5px;padding:9px 12px">部署时打进 bundle。永远在。改 logo 要发版——这是合理代价。</td></tr>
+          <tr><td style="background:white;border:1px solid var(--line);border-radius:5px;padding:9px 12px;font-weight:600;color:var(--ink)">汇率 (报价里用)</td><td style="background:white;border:1px solid var(--line);border-radius:5px;padding:9px 12px"><span style="color:#8a6a13;font-weight:700">3RD</span> · 自家 CDN 缓存兜底</td><td style="background:white;border:1px solid var(--line);border-radius:5px;padding:9px 12px">exchangerate-api。<strong>不直接调，每小时同步到自家 CDN</strong>——他们挂了我们还能用 1 小时的旧汇率。</td></tr>
+        </tbody>
+      </table>
 
-      <div class="builder3-grid" id="b3Grid">
-        <!-- 10 items inserted by JS -->
+      <div style="margin-top:18px;padding:14px 18px;background:var(--accent-soft);border-left:3px solid var(--accent);border-radius:4px;font-size:13px;color:var(--ink-soft);line-height:1.7">
+        <strong style="color:var(--accent)">⚠ 最容易踩的 2 个坑：</strong><br>
+        ① 第三方 <strong>没 fallback</strong>——别人挂你也挂。汇率 / 天气 / 地图 这种<strong>必须自己缓存</strong>。<br>
+        ② API 挂了显示 <strong>"暂无数据"</strong>——用户分不清"真的没"和"接口挂了"。<strong>错误态要明确区分</strong>。
       </div>
+    </div>
 
-      <div class="builder3-actions">
-        <button class="builder3-btn primary" id="b3Submit">提交打分</button>
-        <button class="builder3-btn" id="b3Reset">清空重来</button>
-        <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--ink-mute);margin-left:auto">每题 1 分 来源 · 0.5 分 fallback</span>
-      </div>
-
+    <div style="display:none" class="builder3-stage">
+      <div class="builder3-head"><h3 class="builder3-title">obsolete</h3><div class="builder3-progress">obsolete <span class="done" id="b3Done">0</span></div></div>
+      <div class="builder3-grid" id="b3Grid"></div>
+      <div class="builder3-actions"><button class="builder3-btn primary" id="b3Submit">提交</button><button class="builder3-btn" id="b3Reset">清空</button></div>
       <div class="builder3-score" id="b3Score"></div>
     </div>
   </div>
@@ -1570,264 +1639,6 @@
   });
 })();
 
-// ===== Game 3: 10 data points builder =====
-(function(){
-  const ITEMS = [
-    {
-      id: 1,
-      desc: '顶部 "项目数" 总计',
-      hint: '页面进入时拉一次，刷新才会变',
-      correct: 'api',
-      fallback_correct: 'last',
-      explain_src: '项目总数变化不频繁，进入页面拉一次就够——这是典型的 API pull。',
-      explain_fb: '错误时显示上次的值，让用户感觉不到接口波动；用错误态会让人焦虑（数字变 ?）。'
-    },
-    {
-      id: 2,
-      desc: '实时 "团队聊天未读" 红点',
-      hint: '消息到达 0.1 秒内要更新',
-      correct: 'push',
-      fallback_correct: 'last',
-      explain_src: '消息要"瞬间显示"，必须 WebSocket 推送。轮询（polling）会有延迟，用户感受不到实时。',
-      explain_fb: '断线后保留上次的数字，比让红点消失更安全——避免用户以为"消息已读了"。'
-    },
-    {
-      id: 3,
-      desc: '用户头像',
-      hint: '登录后基本不变',
-      correct: 'local',
-      fallback_correct: 'default',
-      explain_src: '头像登录后塞进 localStorage，下次直接读；每次访问都拉是浪费带宽。',
-      explain_fb: '读不到头像 → 显示默认头像（首字母 / 灰色圆）。"看不到头像"会让人觉得账号挂了。'
-    },
-    {
-      id: 4,
-      desc: '公司 logo',
-      hint: '部署时已经决定',
-      correct: 'local',
-      fallback_correct: 'default',
-      explain_src: 'logo 跟主题色一样，可以在 build-time 打进 bundle，也可以登录后存 LOCAL。都不该走 API。',
-      explain_fb: 'logo 加载失败 → 显示默认 logo 或文字 placeholder，不能让品牌位空白。'
-    },
-    {
-      id: 5,
-      desc: '"今日订单金额" 数字',
-      hint: '今天才有意义，明天又是新的',
-      correct: 'api',
-      fallback_correct: 'error',
-      explain_src: '金额数字是业务关键数据，必须从服务端拉真实快照——LOCAL 缓存会误导用户。',
-      explain_fb: '金额拉不到时显示错误态（"加载失败 · 重试"），不能用默认值——0 元和"拉不到"语义完全不同。'
-    },
-    {
-      id: 6,
-      desc: '"实时在线人数" 计数',
-      hint: '应该跟着真实在线变化',
-      correct: 'push',
-      fallback_correct: 'hide',
-      explain_src: '"实时"两个字就决定了——必须 server-push。用 API 轮询的话，"实时"二字就是假的。',
-      explain_fb: '断线时显示"--"或直接不显示，比显示"0"或"上次的值"安全——错的数字比没数字更糟。'
-    },
-    {
-      id: 7,
-      desc: '"今日天气提示"',
-      hint: '不是你家的数据，是和风/OpenWeather 的',
-      correct: 'third',
-      fallback_correct: 'hide',
-      explain_src: '天气是典型 3rd-party——你只能等他们返回，不能左右他们的稳定性。',
-      explain_fb: '第三方挂了直接不显示这一格——天气是 nice-to-have，不显示比显示"加载失败"更优雅。'
-    },
-    {
-      id: 8,
-      desc: '"本月汇率换算"',
-      hint: '汇率从 exchangerate-api 来的',
-      correct: 'third',
-      fallback_correct: 'last',
-      explain_src: '汇率是 3rd-party 数据。你应该自己缓存（CDN / 本地）昨日值，不要每次都打他们。',
-      explain_fb: '汇率挂了显示昨日缓存的值——汇率短时间波动小，"上次的值"够用；不显示反而影响业务决策。'
-    },
-    {
-      id: 9,
-      desc: '"上次访问时间"',
-      hint: '退出登录时浏览器自己记的',
-      correct: 'local',
-      fallback_correct: 'hide',
-      explain_src: '只有这个浏览器知道——LOCAL（cookie / localStorage）。打接口拿"我自己上次访问"是绕远路。',
-      explain_fb: '清缓存的用户读不到 → 干脆不显示这一行，不是 critical 信息。'
-    },
-    {
-      id: 10,
-      desc: '仪表盘配置（哪些卡片显示）',
-      hint: '用户在"设置"里调过的偏好',
-      correct: 'api',
-      fallback_correct: 'default',
-      explain_src: '用户偏好要跨设备同步——必须落到服务端 DB，从 API 拉。LOCAL 会导致换设备就丢配置。',
-      explain_fb: '拉不到时显示默认布局，让用户至少能用——而不是空白页或错误态。'
-    }
-  ];
-
-  const FB_LABELS = {
-    default: '默认值',
-    last: '上次的值',
-    error: '错误态',
-    hide: '不显示'
-  };
-
-  const grid = document.getElementById('b3Grid');
-  const state = {};
-
-  ITEMS.forEach(item => {
-    state[item.id] = { src: null, fb: null };
-    const itemEl = document.createElement('div');
-    itemEl.className = 'b3-item';
-    itemEl.dataset.id = item.id;
-    itemEl.innerHTML = `
-      <div class="b3-item-head">
-        <span class="b3-item-num">${String(item.id).padStart(2,'0')}</span>
-        <div>
-          <div class="b3-item-desc">${item.desc}</div>
-          <div class="b3-item-hint">${item.hint}</div>
-        </div>
-      </div>
-      <div class="b3-row" data-row="src">
-        <span class="b3-row-lbl">来源</span>
-        <button class="b3-radio" data-val="local"><span class="dot"></span>LOCAL</button>
-        <button class="b3-radio" data-val="api"><span class="dot"></span>API</button>
-        <button class="b3-radio" data-val="push"><span class="dot"></span>PUSH</button>
-        <button class="b3-radio" data-val="third"><span class="dot"></span>3RD</button>
-      </div>
-      <div class="b3-row" data-row="fb">
-        <span class="b3-row-lbl">Fallback</span>
-        <select class="b3-select" data-fb="${item.id}">
-          <option value="">— 选 fallback —</option>
-          <option value="default">默认值</option>
-          <option value="last">上次的值</option>
-          <option value="error">错误态</option>
-          <option value="hide">不显示</option>
-        </select>
-      </div>
-      <div class="b3-feedback" data-feedback="${item.id}"></div>
-    `;
-    grid.appendChild(itemEl);
-  });
-
-  const doneEl = document.getElementById('b3Done');
-  const scoreEl = document.getElementById('b3Score');
-
-  function updateDone() {
-    const done = Object.values(state).filter(s => s.src && s.fb).length;
-    doneEl.textContent = done;
-  }
-
-  grid.querySelectorAll('.b3-radio').forEach(radio => {
-    radio.addEventListener('click', () => {
-      const item = radio.closest('.b3-item');
-      const id = parseInt(item.dataset.id, 10);
-      const val = radio.dataset.val;
-      state[id].src = val;
-      item.querySelectorAll('.b3-radio').forEach(r => r.classList.toggle('selected', r.dataset.val === val));
-      item.classList.remove('is-correct', 'is-wrong');
-      item.querySelector('[data-feedback]').classList.remove('show');
-      updateDone();
-    });
-  });
-
-  grid.querySelectorAll('.b3-select').forEach(sel => {
-    sel.addEventListener('change', () => {
-      const id = parseInt(sel.dataset.fb, 10);
-      state[id].fb = sel.value || null;
-      const item = sel.closest('.b3-item');
-      item.classList.remove('is-correct', 'is-wrong');
-      item.querySelector('[data-feedback]').classList.remove('show');
-      updateDone();
-    });
-  });
-
-  document.getElementById('b3Submit').addEventListener('click', () => {
-    let srcHits = 0, fbHits = 0, total = ITEMS.length;
-    const wrongSummary = [];
-
-    ITEMS.forEach(item => {
-      const s = state[item.id];
-      const itemEl = grid.querySelector(`.b3-item[data-id="${item.id}"]`);
-      const fbEl = itemEl.querySelector('[data-feedback]');
-      if (!s.src || !s.fb) {
-        fbEl.className = 'b3-feedback show lose';
-        fbEl.innerHTML = `<strong>未填写</strong> · 这一题没选择，跳过。`;
-        itemEl.classList.add('is-wrong');
-        return;
-      }
-      const srcOk = s.src === item.correct;
-      const fbOk = s.fb === item.fallback_correct;
-      if (srcOk) srcHits++;
-      if (fbOk) fbHits++;
-
-      if (srcOk && fbOk) {
-        itemEl.classList.add('is-correct');
-        fbEl.className = 'b3-feedback show win';
-        fbEl.innerHTML = `<strong>✓ 完美</strong> · 来源 = ${item.correct.toUpperCase()} · fallback = ${FB_LABELS[item.fallback_correct]}<br><span class="why">${item.explain_src}</span>`;
-      } else {
-        itemEl.classList.add('is-wrong');
-        fbEl.className = 'b3-feedback show lose';
-        let msg = '';
-        if (!srcOk) msg += `<strong>来源错</strong> · 你选了 ${s.src.toUpperCase()}，正确是 <strong>${item.correct.toUpperCase()}</strong>。`;
-        if (!srcOk && !fbOk) msg += '<br>';
-        if (!fbOk) msg += `<strong>Fallback 错</strong> · 你选了 ${FB_LABELS[s.fb]}，正确是 <strong>${FB_LABELS[item.fallback_correct]}</strong>。`;
-        msg += `<span class="why">${!srcOk ? item.explain_src : item.explain_fb}</span>`;
-        fbEl.innerHTML = msg;
-        wrongSummary.push({ id: item.id, desc: item.desc, srcOk, fbOk });
-      }
-    });
-
-    const points = srcHits + fbHits * 0.5;
-    const maxPoints = total + total * 0.5;
-    const pct = Math.round(points / maxPoints * 100);
-
-    let verdictClass, verdictLabel, headline;
-    if (srcHits === total && fbHits === total) {
-      verdictClass = 'win';
-      verdictLabel = '满分';
-      headline = '10/10 来源 + 10/10 fallback —— 你已经在用 data spec 思维。';
-    } else if (pct >= 80) {
-      verdictClass = 'win';
-      verdictLabel = '基本对了';
-      headline = '大部分对了——细节上还有 1-2 个 fallback 没拿捏住。';
-    } else if (pct >= 50) {
-      verdictClass = 'partial';
-      verdictLabel = '过半';
-      headline = '一半对一半错——回看每个红色卡片，重点是"来源"和"fallback 语义"。';
-    } else {
-      verdictClass = 'lose';
-      verdictLabel = '还差很多';
-      headline = '别灰心——这一题刚好就是要让你"意识到字段不是统一的"。重新试一遍。';
-    }
-
-    scoreEl.innerHTML = `
-      <span class="verdict ${verdictClass}">${verdictLabel}</span>
-      <h4>${headline}</h4>
-      <div class="score-row">
-        <div class="score-cell"><strong>${srcHits}/${total}</strong>来源正确</div>
-        <div class="score-cell"><strong>${fbHits}/${total}</strong>Fallback 正确</div>
-        <div class="score-cell"><strong>${pct}%</strong>总分（来源权重 2x）</div>
-      </div>
-      <div style="color:#c8c8d0;font-size:13px;line-height:1.7">
-        每一题下面有具体解释，绿色卡片 = 完全对，红色卡片 = 至少一项错。
-        ${wrongSummary.length > 0 ? '<br>下次画稿子时——把这 10 个判断变成肌肉记忆：<strong style="color:white">看到字段，先问"它在哪生"，再问"它挂了显示啥"</strong>。' : ''}
-      </div>
-    `;
-    scoreEl.classList.add('show');
-    scoreEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
-  });
-
-  document.getElementById('b3Reset').addEventListener('click', () => {
-    ITEMS.forEach(item => { state[item.id] = { src: null, fb: null }; });
-    grid.querySelectorAll('.b3-radio').forEach(r => r.classList.remove('selected'));
-    grid.querySelectorAll('.b3-select').forEach(s => s.value = '');
-    grid.querySelectorAll('.b3-item').forEach(i => i.classList.remove('is-correct', 'is-wrong'));
-    grid.querySelectorAll('.b3-feedback').forEach(f => f.classList.remove('show'));
-    scoreEl.classList.remove('show');
-    updateDone();
-  });
-})();
 </script>
 
 </body>
