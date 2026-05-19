@@ -132,6 +132,39 @@
   .reveal-bar .counter { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ink-mute); letter-spacing: 0.05em; }
   .reveal-bar .counter strong { color: var(--accent); font-size: 14px; }
 
+  /* ====== Visual-first opening: same-highlight, different home ====== */
+  .viz-stage { background: var(--paper); border: 1px solid var(--line); border-radius: 12px; padding: 28px; margin-top: 16px; position: relative; }
+  .viz-hint { text-align: center; font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--ink-mute); margin: 18px 0 0; letter-spacing: 0.04em; }
+  .viz-hint strong { color: var(--obj-color); }
+  .x12-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; }
+  @media (max-width: 720px) { .x12-grid { grid-template-columns: 1fr; } }
+  .x12-mock { background: white; border: 1.5px solid var(--line); border-radius: 9px; padding: 14px 16px 16px; display: flex; flex-direction: column; gap: 10px; }
+  .x12-mock .tag { font-family: 'JetBrains Mono', monospace; font-size: 10px; padding: 4px 9px; border-radius: 100px; align-self: flex-start; letter-spacing: 0.06em; font-weight: 700; }
+  .x12-mock.url { border-color: var(--blue); }
+  .x12-mock.url .tag { background: var(--blue-soft); color: var(--blue); }
+  .x12-mock.comp { border-color: var(--accent); }
+  .x12-mock.comp .tag { background: var(--accent-soft); color: var(--accent); }
+  .x12-mock.page { border-color: var(--obj-color); }
+  .x12-mock.page .tag { background: var(--obj-soft); color: var(--obj-color); }
+  .x12-mock.server { border-color: var(--green); }
+  .x12-mock.server .tag { background: var(--green-soft); color: var(--green); }
+  .x12-mock .ttl { font-family: 'Noto Serif SC', serif; font-size: 14px; font-weight: 700; color: var(--ink); }
+  .x12-mock .ui { background: var(--bg-2); border-radius: 5px; padding: 8px 10px; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ink); }
+  .x12-mock .ui .hl { background: white; padding: 2px 7px; border-radius: 4px; border: 1px solid currentColor; }
+  .x12-mock.url .ui .hl { color: var(--blue); }
+  .x12-mock.comp .ui .hl { color: var(--accent); }
+  .x12-mock.page .ui .hl { color: var(--obj-color); }
+  .x12-mock.server .ui .hl { color: var(--green); }
+  .x12-mock .behav { font-size: 11px; color: var(--ink-soft); line-height: 1.55; padding-top: 8px; border-top: 1px dashed var(--line); }
+  .x12-mock .behav strong { color: var(--ink); }
+  .x12-mock .behav .yes { color: var(--green); font-weight: 600; }
+  .x12-mock .behav .no { color: var(--accent); font-weight: 600; }
+
+  .sticky-wrap { margin-top: 28px; display: flex; gap: 22px; align-items: center; flex-wrap: wrap; justify-content: center; }
+  .sticky { background: #fff8c4; border: 1px solid #e5d98a; border-radius: 3px; padding: 16px 22px 18px; position: relative; transform: rotate(-1.5deg); box-shadow: 0 6px 14px rgba(22,22,29,0.12), 0 1px 3px rgba(22,22,29,0.08); font-size: 14px; color: var(--ink); line-height: 1.65; max-width: 380px; text-align: center; }
+  .sticky-pin { position: absolute; top: -8px; left: 50%; transform: translateX(-50%); width: 14px; height: 14px; background: var(--accent); border-radius: 50%; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+  .sticky strong { display: block; margin-top: 4px; font-family: 'Noto Serif SC', serif; font-size: 17px; color: var(--accent); line-height: 1.4; }
+
   /* ===== Game 1: Action probe ===== */
   .probe-stage { background: var(--paper); border: 1px solid var(--line); border-radius: 8px; padding: 32px 28px; position: relative; overflow: hidden; }
   .probe-stage::before { content: ''; position: absolute; inset: 0; background-image: linear-gradient(to right, var(--line-soft) 1px, transparent 1px), linear-gradient(to bottom, var(--line-soft) 1px, transparent 1px); background-size: 24px 24px; opacity: 0.4; pointer-events: none; }
@@ -442,13 +475,13 @@
     <div class="hero-grid">
       <div>
         <h1>
-          状态<br>
-          <span class="display-cn">住的地方</span><br>
-          决定它的<span class="purple">命运</span>。
+          同一个高亮，<br>
+          <span class="display-cn">住址</span>不同 = <br>
+          <span class="purple">行为完全不同</span>。
         </h1>
         <p class="lede">
-          刷新会丢吗？分享链接给同事能复现吗？多标签页能同步吗？换设备能续上吗？<br>
-          4 个答案 → 4 种住址。<strong>住错了 = 用户行为出 bug。</strong>
+          稿子上画"筛选选中"——但<strong style="color:var(--obj-color)">刷新会丢吗？分享 URL 同事看得到吗？</strong>
+          住址不写清楚 = 行为靠工程师猜。
         </p>
       </div>
       <div class="hero-side">
@@ -461,35 +494,71 @@
   </div>
 </header>
 
-<!-- Section 01: 问题 -->
+<!-- Section 01: 看见 -->
 <section id="problem">
   <div class="wrap">
     <div class="section-head">
       <div>
-        <div class="section-num"><strong>01</strong> / 问题</div>
-        <h2 class="section-title">设计稿里"状态都标了"，<br>但<span class="em">没人知道</span>它住在哪。</h2>
+        <div class="section-num"><strong>01</strong> / 看见</div>
+        <h2 class="section-title">先看图。</h2>
       </div>
       <p class="section-sub">
-        设计师以为状态就是"按钮高亮/不高亮"。其实<strong>状态有 4 种住址</strong>——住址决定它在刷新、分享、跨设备、关 tab 时怎么表现。
-        住址不写清楚 = 行为靠工程师猜。
+        4 个看起来一样的高亮——<strong style="color:var(--accent)">住址不同 = 行为天差地别</strong>。刷新、分享、跨设备、关页面的反应全都不一样。
       </p>
     </div>
 
-    <div class="problem-grid">
-      <div class="problem-card bad">
-        <span class="tag">把状态当装饰 · BAD</span>
-        <h3>"筛选 / 弹窗 / tab 都标了高亮"</h3>
-        <p>稿子里这三件状态都画了——筛选条选中态、弹窗打开态、当前 tab 高亮态。看起来完整。</p>
-        <p><strong>工程师追问：</strong>刷新页面，筛选会保留吗？把当前 URL 发给同事，他打开能看到一样的 tab 吗？关掉弹窗下次再开，是新的还是上次那个？</p>
-        <p style="color:var(--accent)"><strong>你：</strong>呃……我没想。</p>
-      </div>
+    <div class="viz-stage">
+      <div class="x12-grid">
 
-      <div class="problem-card good">
-        <span class="tag">状态有住址 · GOOD</span>
-        <h3>"筛选住 URL，弹窗住组件，tab 住本页"</h3>
-        <p>稿子里每个状态都标了住址——<strong>筛选住 URL</strong>（可分享 + 刷新保留）/ <strong>弹窗住组件</strong>（关掉就重置）/ <strong>tab 住本页</strong>（页内共享，刷新还原）。</p>
-        <p><strong>工程师收到：</strong>三件状态各有明确"住址 + 行为"，直接落 router + state schema。</p>
-        <p style="color:var(--obj-color)"><strong>结果：</strong>追问 → 0 次。</p>
+        <div class="x12-mock url">
+          <span class="tag">住 URL</span>
+          <div class="ttl">列表筛选条件</div>
+          <div class="ui"><span class="hl">status=active</span> <span class="hl">owner=lh</span></div>
+          <div class="behav">
+            刷新 <span class="yes">保留 ✓</span> · 分享 URL 同事看 <span class="yes">一致 ✓</span> · 跨设备 <span class="yes">能复现 ✓</span><br>
+            <strong>典型：</strong> 列表筛选、tab 选中、详情页 ID
+          </div>
+        </div>
+
+        <div class="x12-mock comp">
+          <span class="tag">住组件</span>
+          <div class="ttl">模态框开 / 关</div>
+          <div class="ui"><span class="hl">isOpen = true</span></div>
+          <div class="behav">
+            刷新 <span class="no">丢 ✗</span> · 分享 URL <span class="no">不传递 ✗</span> · 关组件 <span class="no">就忘 ✗</span><br>
+            <strong>典型：</strong> 模态框、toast、tooltip、hover 卡片
+          </div>
+        </div>
+
+        <div class="x12-mock page">
+          <span class="tag">住本页</span>
+          <div class="ttl">侧栏折叠状态</div>
+          <div class="ui"><span class="hl">localStorage.sidebar=collapsed</span></div>
+          <div class="behav">
+            刷新 <span class="yes">保留 ✓</span> · 跨设备 <span class="no">丢 ✗</span> · 浏览器清缓存 <span class="no">丢 ✗</span><br>
+            <strong>典型：</strong> 主题、字号、侧栏折叠、最近搜索
+          </div>
+        </div>
+
+        <div class="x12-mock server">
+          <span class="tag">住服务端</span>
+          <div class="ttl">草稿内容</div>
+          <div class="ui"><span class="hl">autosave → DB</span></div>
+          <div class="behav">
+            关 tab <span class="yes">保留 ✓</span> · 跨设备 <span class="yes">续上 ✓</span> · 永久 <span class="yes">不丢 ✓</span><br>
+            <strong>典型：</strong> 编辑器草稿、用户偏好、提交中数据
+          </div>
+        </div>
+
+      </div>
+      <p class="viz-hint">"高亮 / 选中" 看着相同 · <strong>住址决定它能不能被分享、能不能跨设备、能不能后退</strong></p>
+    </div>
+
+    <div class="sticky-wrap">
+      <div class="sticky">
+        <div class="sticky-pin"></div>
+        每个状态先问"住哪"，<br>
+        <strong>再问"长啥样"</strong>
       </div>
     </div>
   </div>
@@ -851,22 +920,37 @@
   </div>
 </section>
 
-<!-- Section 04: 幕三 · 再做 -->
+<!-- Section 04: 幕三 · 看更多 -->
 <section id="make">
   <div class="wrap">
     <div class="section-head">
       <div>
-        <span class="act-tag make">幕三 · 再做</span>
-        <div class="section-num"><strong>04</strong> / 再做</div>
-        <h2 class="section-title">轮到你——<br>给 8 个状态<br><span class="em">选住址</span>。</h2>
+        <span class="act-tag make">幕三 · 看更多</span>
+        <div class="section-num"><strong>04</strong> / 看更多</div>
+        <h2 class="section-title">8 个状态 → 看人家选的住址。</h2>
       </div>
       <p class="section-sub">
-        下面 8 个状态。每个有 4 个住址 radio——组件 / 本页 / URL / 服务端。
-        <strong>提交后看你有没有"住对"</strong>——每错一项给具体反例。
+        每行：状态名 → 正解住址 → 为什么。<strong style="color:var(--accent)">注意标"反直觉"的几个</strong>。
       </p>
     </div>
 
-    <div class="quiz-stage">
+    <div style="background:var(--paper);border:1px solid var(--line);border-left:3px solid var(--obj-color);border-radius:10px;padding:24px 26px;margin-top:24px">
+      <table style="width:100%;border-collapse:separate;border-spacing:4px">
+        <thead><tr style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:0.06em;color:var(--ink-mute);text-transform:uppercase"><th style="padding:9px 12px;background:var(--bg-2);border-radius:4px;text-align:left">状态</th><th style="padding:9px 12px;background:var(--bg-2);border-radius:4px;text-align:left">住址</th><th style="padding:9px 12px;background:var(--bg-2);border-radius:4px;text-align:left">为什么</th></tr></thead>
+        <tbody style="font-size:12px;color:var(--ink-soft);line-height:1.6">
+          <tr><td style="padding:10px 12px;background:white;border:1px solid var(--line);border-radius:4px;font-weight:600;color:var(--ink)">当前 tab</td><td style="padding:10px 12px;background:white;border:1px solid var(--line);border-radius:4px"><strong style="color:var(--blue)">URL</strong></td><td style="padding:10px 12px;background:white;border:1px solid var(--line);border-radius:4px">同事打开你分享的链接要看到一样的 tab。<code style="font-family:'JetBrains Mono',monospace;font-size:11px;background:var(--bg-2);padding:1px 5px;border-radius:3px">?tab=mine</code></td></tr>
+          <tr><td style="padding:10px 12px;background:white;border:1px solid var(--line);border-radius:4px;font-weight:600;color:var(--ink)">搜索关键词</td><td style="padding:10px 12px;background:white;border:1px solid var(--line);border-radius:4px"><strong style="color:var(--blue)">URL</strong></td><td style="padding:10px 12px;background:white;border:1px solid var(--line);border-radius:4px">刷新不丢 + 后退能回到上次搜索 + 分享 URL 同事看到一样的结果。</td></tr>
+          <tr><td style="padding:10px 12px;background:white;border:1px solid var(--line);border-radius:4px;font-weight:600;color:var(--ink)">侧栏折叠</td><td style="padding:10px 12px;background:white;border:1px solid var(--accent);border-radius:4px"><strong style="color:var(--obj-color)">本页 localStorage</strong></td><td style="padding:10px 12px;background:white;border:1px solid var(--accent);border-radius:4px"><strong style="color:var(--accent)">⚠ 不放 URL</strong>——折叠是个人偏好，分享给同事不该带过去。<strong>不放服务端</strong>——跨设备没意义，本地存就行。</td></tr>
+          <tr><td style="padding:10px 12px;background:white;border:1px solid var(--line);border-radius:4px;font-weight:600;color:var(--ink)">已读 / 未读消息</td><td style="padding:10px 12px;background:white;border:1px solid var(--line);border-radius:4px"><strong style="color:var(--green)">服务端</strong></td><td style="padding:10px 12px;background:white;border:1px solid var(--line);border-radius:4px">手机标已读 → 电脑也得是已读。<strong>必须跨设备同步</strong>。</td></tr>
+          <tr><td style="padding:10px 12px;background:white;border:1px solid var(--line);border-radius:4px;font-weight:600;color:var(--ink)">模态框开/关</td><td style="padding:10px 12px;background:white;border:1px solid var(--line);border-radius:4px"><strong style="color:var(--accent)">组件 useState</strong></td><td style="padding:10px 12px;background:white;border:1px solid var(--line);border-radius:4px">瞬态 UI，关掉就忘。<strong>放 URL 会让后退按钮变成"开关弹窗的日志"</strong>。</td></tr>
+          <tr><td style="padding:10px 12px;background:white;border:1px solid var(--line);border-radius:4px;font-weight:600;color:var(--ink)">主题色 (dark/light)</td><td style="padding:10px 12px;background:white;border:1px solid var(--accent);border-radius:4px"><strong style="color:var(--obj-color)">本页 + 服务端同步</strong></td><td style="padding:10px 12px;background:white;border:1px solid var(--accent);border-radius:4px"><strong style="color:var(--accent)">⚠ 渐进式</strong>——未登录用 localStorage（不强迫注册）；登录后 sync 到服务端（换设备保留）。两个层叠。</td></tr>
+          <tr><td style="padding:10px 12px;background:white;border:1px solid var(--line);border-radius:4px;font-weight:600;color:var(--ink)">表单草稿</td><td style="padding:10px 12px;background:white;border:1px solid var(--line);border-radius:4px"><strong style="color:var(--green)">服务端 autosave</strong></td><td style="padding:10px 12px;background:white;border:1px solid var(--line);border-radius:4px">关 tab 不能丢；跨设备能续上。如果是个人/本地写作工具，<code style="font-family:'JetBrains Mono',monospace;font-size:11px;background:var(--bg-2);padding:1px 5px;border-radius:3px">本页 localStorage</code> 也行。</td></tr>
+          <tr><td style="padding:10px 12px;background:white;border:1px solid var(--line);border-radius:4px;font-weight:600;color:var(--ink)">滚动位置</td><td style="padding:10px 12px;background:white;border:1px solid var(--accent);border-radius:4px"><strong style="color:var(--accent)">组件 useState</strong></td><td style="padding:10px 12px;background:white;border:1px solid var(--accent);border-radius:4px"><strong style="color:var(--accent)">⚠ 反直觉</strong>——很多人想存 URL（"分享时能滚到那里"）。但 URL 写入太频繁会污染历史。<strong>用 hash anchor</strong> 比 query 好。</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div style="display:none" class="quiz-stage">
       <div class="quiz-head">
         <h3 class="quiz-title">状态归属判断 · 8 题</h3>
         <div class="quiz-progress">已选 <span class="done" id="quizDone">0</span> / 8 题</div>
@@ -1207,194 +1291,6 @@
   });
 })();
 
-// ===== Game 3: quiz =====
-(function(){
-  // Each q: correct = primary right answer; alt = also-acceptable; bad = anti-pattern reply
-  const QUIZ = {
-    tab: {
-      correct: 'url',
-      alt: null,
-      good: '✓ <strong>tab 住 URL</strong>——刷新还原、分享同事能看到一样的 tab、后退能回。这是经典 URL 用例。',
-      bad: {
-        component: '<strong>tab 住组件</strong> → 刷新页面跳回第一个 tab，用户傻眼。也分享不出去。',
-        page:      '<strong>tab 住本页 / localStorage</strong> → 别人打开你的链接看到的是他自己上次的 tab，不是你的。',
-        server:    '<strong>tab 住服务端</strong> → 杀鸡用牛刀——每次切 tab 调一次接口写 DB，未登录直接没法用。'
-      }
-    },
-    search: {
-      correct: 'url',
-      alt: null,
-      good: '✓ <strong>搜索词住 URL</strong>——边搜边写进 query，可分享、可刷新、可后退。Google、Notion、GitHub 都这么干。',
-      bad: {
-        component: '<strong>搜索词住组件</strong> → 链接传不出搜索词，刷新就空。这正是"分享传不出去"反例。',
-        page:      '<strong>住本页</strong> → 跨用户分享失败。同事打开看到的是空搜索框。',
-        server:    '<strong>住服务端</strong> → 每次按键写一次 DB，性能灾难。'
-      }
-    },
-    sidebar: {
-      correct: 'page',
-      alt: null,
-      good: '✓ <strong>侧栏住 localStorage</strong>——个人偏好、跨页保留、不要分享、不要跨设备。完美匹配本页住址。',
-      bad: {
-        component: '<strong>住组件</strong> → 切到下一页就重置——每页都要手动折叠一次，烦。',
-        url:       '<strong>住 URL</strong> → 每个链接都带 <code>?sidebar=collapsed</code>，分享给同事强制改了他的布局，不友好。',
-        server:    '<strong>住服务端</strong> → 接口 / 同步成本，但收益微弱（这种轻偏好不必跨设备）。可接受但 overkill。'
-      }
-    },
-    unread: {
-      correct: 'server',
-      alt: null,
-      good: '✓ <strong>未读住服务端</strong>——必须跨设备同步。手机读过电脑要消失，电脑读过手机要消失。典型服务端状态。',
-      bad: {
-        component: '<strong>住组件</strong> → 关掉就忘，永远显示所有消息未读。',
-        page:      '<strong>住 localStorage</strong> → 换台设备所有红点都回来——用户："我不是已经读过了吗？"',
-        url:       '<strong>住 URL</strong> → 把未读列表塞链接里？URL 长到爆且毫无意义。'
-      }
-    },
-    draft: {
-      correct: 'server',
-      alt: 'page',
-      good: '✓ <strong>草稿住服务端 autosave</strong>——核心要求是"<strong>不能丢一个字</strong>"+ 换设备能接着写。Google Docs、Notion 都这模式。',
-      partial: '<strong>住 localStorage</strong> 也可以接受——胜在快、离线能用。但用户换设备就接不上。理想是"localStorage 起 + 服务端 sync"双层。',
-      bad: {
-        component: '<strong>住组件</strong> → 不小心关了 tab 全没了。这是最经典的"用户骂街"反例。',
-        url:       '<strong>住 URL</strong> → 用户输入每个字符 URL 就变 → 历史污染 + URL 超长，且别人能看到。'
-      }
-    },
-    dropdown: {
-      correct: 'component',
-      alt: null,
-      good: '✓ <strong>dropdown 住组件</strong>——瞬态 UI、私有、关掉就该忘。<code>useState</code> 一行搞定。',
-      bad: {
-        page:   '<strong>住本页</strong> → 多余。dropdown 不需要跨组件共享。',
-        url:    '<strong>住 URL</strong> → 一开一关就在浏览器历史里加一条，后退一次先打开 dropdown，再后退才离开页面——诡异。',
-        server: '<strong>住服务端</strong> → 每点一次 dropdown 调接口写 DB？工程师当场离职。'
-      }
-    },
-    theme: {
-      correct: 'page',
-      alt: 'server',
-      good: '✓ <strong>主题住本页 localStorage</strong>——快、离线可用、未登录也能用。绝大多数产品的首选。',
-      partial: '✓ <strong>主题住服务端</strong> 也合理——如果你的产品定位是"偏好跟人走，多设备同步"（比如 Notion、Linear）。<br>权衡：服务端代价 = 接口 + 未登录怎么办。理想方案：先 localStorage 起，登录后 sync 到服务端，做"渐进式持久"。',
-      bad: {
-        component: '<strong>住组件</strong> → 一刷新就回默认。用户："我不是切了暗色吗？"',
-        url:       '<strong>住 URL</strong> → 每个链接都带 <code>?theme=dark</code>，传给同事强制改他的主题。荒谬。'
-      }
-    },
-    page: {
-      correct: 'url',
-      alt: null,
-      good: '✓ <strong>页码住 URL</strong>——<code>?page=3</code> 可分享、可刷新、可后退。同事打开链接直接到第 3 页。',
-      bad: {
-        component: '<strong>页码住组件</strong> → 刷新跳回第 1 页，用户："我刚才在第 3 页啊？"',
-        page:      '<strong>住本页 / localStorage</strong> → 分享链接没用，别人打开还是从他上次的页码起。',
-        server:    '<strong>住服务端</strong> → 每翻一页写一次 DB，过分。'
-      }
-    }
-  };
-
-  const picks = {};
-  const cards = document.querySelectorAll('.quiz-card');
-  const done = document.getElementById('quizDone');
-  const judge = document.getElementById('quizJudge');
-
-  function updateDone() {
-    done.textContent = Object.keys(picks).length;
-  }
-
-  document.querySelectorAll('.quiz-opt').forEach(opt => {
-    opt.addEventListener('click', () => {
-      const card = opt.closest('.quiz-card');
-      const qid = card.dataset.q;
-      const home = opt.dataset.h;
-      card.querySelectorAll('.quiz-opt').forEach(o => o.classList.remove('is-picked'));
-      opt.classList.add('is-picked');
-      picks[qid] = home;
-      card.classList.remove('is-correct', 'is-wrong', 'is-partial');
-      const fb = card.querySelector('.quiz-fb');
-      fb.classList.remove('show');
-      fb.innerHTML = '';
-      updateDone();
-    });
-  });
-
-  document.getElementById('quizSubmit').addEventListener('click', () => {
-    let perfect = 0, partial = 0, wrong = 0;
-    cards.forEach(card => {
-      const qid = card.dataset.q;
-      const def = QUIZ[qid];
-      const pick = picks[qid];
-      const fb = card.querySelector('.quiz-fb');
-      card.classList.remove('is-correct', 'is-wrong', 'is-partial');
-      fb.classList.remove('show');
-
-      if (!pick) {
-        fb.innerHTML = '<strong>没选——</strong>每题都有最优解，回头补上。';
-        fb.classList.add('show');
-        wrong++;
-        return;
-      }
-      if (pick === def.correct) {
-        card.classList.add('is-correct');
-        fb.innerHTML = def.good;
-        fb.classList.add('show');
-        perfect++;
-      } else if (def.alt && pick === def.alt) {
-        card.classList.add('is-partial');
-        fb.innerHTML = def.partial || def.good;
-        fb.classList.add('show');
-        partial++;
-      } else {
-        card.classList.add('is-wrong');
-        const explain = (def.bad && def.bad[pick]) || '——这个住址在这个场景下不合适。';
-        fb.innerHTML = `${explain}<br><br>更好的住址：<strong>${pick === def.correct ? pick : ({component:'组件',page:'本页',url:'URL',server:'服务端'})[def.correct]}</strong>。${def.good}`;
-        fb.classList.add('show');
-        wrong++;
-      }
-    });
-
-    const totalRight = perfect + partial;
-    let verdictClass, verdictLabel, headline, body;
-    if (perfect === 8) {
-      verdictClass = 'win';
-      verdictLabel = '完美 · 8/8';
-      headline = '你已经会按行为选住址了。';
-      body = '这是状态架构的基本功——下次评审，每个状态都先问"住哪"，工程师会感谢你。';
-    } else if (totalRight >= 7) {
-      verdictClass = 'win';
-      verdictLabel = '基本对了 · ' + totalRight + '/8';
-      headline = '一两题差点意思，但判断方向对了。';
-      body = '把错的那一两题看一下反例——通常是"瞬态 vs 持久"或"私有 vs 共享"边界没分清。';
-    } else if (totalRight >= 5) {
-      verdictClass = 'partial';
-      verdictLabel = '过半 · ' + totalRight + '/8';
-      headline = '一半对了——但还没形成稳定直觉。';
-      body = '记一个口诀：<strong>能分享 → URL；能跨设备 → 服务端；只本机 → 本页；瞬态 → 组件</strong>。回头按这个再做一遍。';
-    } else {
-      verdictClass = 'fail';
-      verdictLabel = '需重做 · ' + totalRight + '/8';
-      headline = '别急——这是一种新思维，第一次容易混。';
-      body = '看每道题的反例，再回头读一遍幕二的对比表。这个能力一旦形成，会让你以后所有的需求评审都少 10 次追问。';
-    }
-
-    judge.innerHTML = `<span class="verdict ${verdictClass}">${verdictLabel}</span><h4>${headline}</h4><p>${body}</p><div class="score-line">完美 <span class="num">${perfect}</span> · 部分 <span class="num">${partial}</span> · 错 <span class="num">${wrong}</span></div>`;
-    judge.classList.add('show');
-    judge.scrollIntoView({ behavior: 'smooth', block: 'center' });
-  });
-
-  document.getElementById('quizReset').addEventListener('click', () => {
-    Object.keys(picks).forEach(k => delete picks[k]);
-    document.querySelectorAll('.quiz-opt').forEach(o => o.classList.remove('is-picked'));
-    cards.forEach(card => {
-      card.classList.remove('is-correct', 'is-wrong', 'is-partial');
-      const fb = card.querySelector('.quiz-fb');
-      fb.classList.remove('show');
-      fb.innerHTML = '';
-    });
-    judge.classList.remove('show');
-    updateDone();
-  });
-})();
 </script>
 
 </body>

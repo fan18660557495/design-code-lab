@@ -137,6 +137,29 @@
   .problem-card ul { margin: 10px 0 0; padding-left: 18px; color: var(--ink-soft); font-size: 14px; line-height: 1.6; }
   .problem-card ul li + li { margin-top: 4px; }
 
+  /* ====== Visual-first opening (small) ====== */
+  .viz-stage { background: var(--paper); border: 1px solid var(--line); border-radius: 12px; padding: 28px; margin-top: 16px; position: relative; }
+  .viz-hint { text-align: center; font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--ink-mute); margin: 18px 0 0; letter-spacing: 0.04em; }
+  .viz-hint strong { color: var(--obj-color); }
+  .x11-strip { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; }
+  @media (max-width: 880px) { .x11-strip { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 480px) { .x11-strip { grid-template-columns: 1fr; } }
+  .x11-mini { background: white; border: 1.5px solid var(--obj-color); border-radius: 8px; padding: 14px; display: flex; flex-direction: column; gap: 6px; min-height: 140px; }
+  .x11-mini.happy { border-style: solid; }
+  .x11-mini.miss { border-style: dashed; border-color: var(--accent); }
+  .x11-mini .num { font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.08em; font-weight: 700; }
+  .x11-mini.happy .num { color: var(--obj-color); }
+  .x11-mini.miss .num { color: var(--accent); }
+  .x11-mini .nm { font-family: 'Noto Serif SC', serif; font-size: 14px; font-weight: 700; }
+  .x11-mini .preview { background: var(--bg-2); border-radius: 5px; padding: 8px 10px; font-size: 10px; color: var(--ink-soft); line-height: 1.5; flex: 1; min-height: 50px; }
+  .x11-mini .what { font-family: 'JetBrains Mono', monospace; font-size: 9px; color: var(--ink-mute); }
+  .x11-mini.miss .what { color: var(--accent); }
+
+  .sticky-wrap { margin-top: 28px; display: flex; gap: 22px; align-items: center; flex-wrap: wrap; justify-content: center; }
+  .sticky { background: #fff8c4; border: 1px solid #e5d98a; border-radius: 3px; padding: 16px 22px 18px; position: relative; transform: rotate(-1.5deg); box-shadow: 0 6px 14px rgba(22,22,29,0.12), 0 1px 3px rgba(22,22,29,0.08); font-size: 14px; color: var(--ink); line-height: 1.65; max-width: 380px; text-align: center; }
+  .sticky-pin { position: absolute; top: -8px; left: 50%; transform: translateX(-50%); width: 14px; height: 14px; background: var(--accent); border-radius: 50%; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+  .sticky strong { display: block; margin-top: 4px; font-family: 'Noto Serif SC', serif; font-size: 17px; color: var(--accent); line-height: 1.4; }
+
   /* GAME 1: state switcher */
   .states-stage {
     background: var(--paper);
@@ -888,13 +911,12 @@
     <div class="hero-grid">
       <div>
         <h1>
-          页面不是<br>
-          <span class="display-cn">一张稿</span>——<br>
-          是<span class="purple">5 张</span>。
+          你画了 <span class="display-cn">1 张</span>，<br>
+          工程师要做 <span class="purple">5 张</span>。
         </h1>
         <p class="lede">
-          加载中、空、报错、过期、无权限——同一张页面在不同状态下是 5 张完全不同的稿。<br>
-          稿子里只画 happy path，等于把其它 4 张交给工程师瞎猜。
+          列表页有 <strong style="color:var(--obj-color)">5 个常驻状态</strong>——加载中 / 空 / 报错 / 过期 / 无权限。
+          稿子里只画 happy path = 把其余 4 张交给工程师瞎猜。
         </p>
       </div>
       <div class="hero-side">
@@ -907,46 +929,66 @@
   </div>
 </header>
 
-<!-- Section 01: 问题 -->
+<!-- Section 01: 看见 -->
 <section id="problem">
   <div class="wrap">
     <div class="section-head">
       <div>
-        <div class="section-num"><strong>01</strong> / 问题</div>
-        <h2 class="section-title">为什么稿子画完，<br>线上还是<span class="em">一堆空白和报错</span>？</h2>
+        <div class="section-num"><strong>01</strong> / 看见</div>
+        <h2 class="section-title">先看图。</h2>
       </div>
       <p class="section-sub">
-        因为你画的是<strong>有数据 · 网好 · 用户有权限</strong>的那张稿。
-        真实世界里，用户大部分时间都不在这条 happy path 上。
+        橙色实线 = <strong style="color:var(--obj-color)">你画的</strong> happy path。红色虚线 = <strong style="color:var(--accent)">还要画的</strong>——用户大部分时间都不在 happy path 上。
       </p>
     </div>
 
-    <div class="problem-grid">
-      <div class="problem-card bad">
-        <span class="tag">一张稿 · HAPPY PATH</span>
-        <h3>"稿子画了一张任务列表页"</h3>
-        <p>有 10 条任务、3 个筛选、操作按钮。看起来完整。</p>
-        <p><strong>工程师追问：</strong></p>
-        <ul>
-          <li>首次加载长啥样？</li>
-          <li>用户一个任务都没有呢？</li>
-          <li>接口挂了呢？</li>
-          <li>这个用户没权限看呢？</li>
-          <li>数据有 1 周没刷新了呢？</li>
-        </ul>
-        <p style="color:var(--accent);margin-top:10px"><strong>你：</strong>呃……要再画 4 张？</p>
-      </div>
+    <div class="viz-stage">
+      <div class="x11-strip">
 
-      <div class="problem-card good">
-        <span class="tag">5 张稿 · STATES</span>
-        <h3>"任务列表 · 5 态完整"</h3>
-        <p><strong>(1) loading</strong> · skeleton 占位<br>
-        <strong>(2) empty</strong> · "去创建第一个" CTA<br>
-        <strong>(3) error</strong> · 错误 + 重试<br>
-        <strong>(4) stale</strong> · 上次缓存 + 红点<br>
-        <strong>(5) no-perm</strong> · "你没权限" + 申请入口</p>
-        <p><strong>工程师收到：</strong>5 张稿 + 状态切换条件。能直接落代码。</p>
-        <p style="color:var(--obj-color)"><strong>结果：</strong>线上空白和报错 → 0 个。</p>
+        <div class="x11-mini happy">
+          <span class="num">✓ 已画</span>
+          <div class="nm">happy</div>
+          <div class="preview">10 条任务 + 筛选 + 操作按钮</div>
+          <div class="what">就是你画的那张</div>
+        </div>
+
+        <div class="x11-mini miss">
+          <span class="num">✗ 漏画 01</span>
+          <div class="nm">loading</div>
+          <div class="preview"><span style="display:block;height:8px;background:var(--line);border-radius:3px;margin-bottom:4px;width:80%"></span><span style="display:block;height:8px;background:var(--line);border-radius:3px;margin-bottom:4px;width:60%"></span><span style="display:block;height:8px;background:var(--line);border-radius:3px;width:70%"></span></div>
+          <div class="what">skeleton 不是 spinner</div>
+        </div>
+
+        <div class="x11-mini miss">
+          <span class="num">✗ 漏画 02</span>
+          <div class="nm">empty</div>
+          <div class="preview"><strong>还没有任务</strong><br>"去创建第一个" CTA</div>
+          <div class="what">"暂无数据" 是错答案</div>
+        </div>
+
+        <div class="x11-mini miss">
+          <span class="num">✗ 漏画 03</span>
+          <div class="nm">error</div>
+          <div class="preview"><strong style="color:var(--accent)">加载失败</strong><br>错误码 + 重试按钮</div>
+          <div class="what">不要直接 500 错误页</div>
+        </div>
+
+        <div class="x11-mini miss">
+          <span class="num">✗ 漏画 04</span>
+          <div class="nm">no-perm</div>
+          <div class="preview"><strong>🔒 你没权限</strong><br>申请访问 + 当前角色</div>
+          <div class="what">不要 403 跳错误页</div>
+        </div>
+
+      </div>
+      <p class="viz-hint">1 张 happy + <strong>4 张漏画</strong> · stale 态还没画进去（Section 02 会讲）</p>
+    </div>
+
+    <div class="sticky-wrap">
+      <div class="sticky">
+        <div class="sticky-pin"></div>
+        每张列表页都要画 5 态。<br>
+        <strong>5 态 × 4 维度 = 20 个隐藏决策</strong>
       </div>
     </div>
   </div>
@@ -1469,22 +1511,35 @@
   </div>
 </section>
 
-<!-- Section 04: 幕三 · 再做 -->
+<!-- Section 04: 幕三 · 看更多 -->
 <section id="make">
   <div class="wrap">
     <div class="section-head">
       <div>
-        <span class="act-tag make">幕三 · 再做</span>
-        <div class="section-num"><strong>04</strong> / 再做</div>
-        <h2 class="section-title">轮到你——<br>给「<span class="em">设置中心</span>」<br>配 5 张稿。</h2>
+        <span class="act-tag make">幕三 · 看更多</span>
+        <div class="section-num"><strong>04</strong> / 看更多</div>
+        <h2 class="section-title">「<span class="em">设置中心</span>」5 张稿——<br>看人家怎么配。</h2>
       </div>
       <p class="section-sub">
-        下面 5 个状态。每个有 3 个候选（版式 + 文案 + CTA 各 1 选）。
-        选完按"提交打分"——错一个会解释为什么。
+        下面 5 个状态都有正解 + 为什么。重点在<strong style="color:var(--accent)">"反直觉"的那几个</strong>。
       </p>
     </div>
 
-    <div class="quiz-stage">
+    <div style="background:var(--paper);border:1px solid var(--line);border-left:3px solid var(--obj-color);border-radius:10px;padding:24px 26px;margin-top:24px">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px" class="x11-demo-grid">
+        <div style="background:white;border:1px solid var(--line);border-radius:8px;padding:16px 18px"><div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--obj-color);letter-spacing:0.06em;font-weight:700;margin-bottom:4px">01 · EMPTY</div><h4 style="font-family:'Noto Serif SC',serif;font-size:16px;margin:0 0 8px">新用户首次进入</h4><p style="font-size:12px;color:var(--ink-soft);margin:0 0 8px;line-height:1.6"><strong>问"这页真的会空吗?"</strong>——设置中心通常默认有内容（账号信息、安全等）。<strong>大多数情况下 empty 根本不存在</strong>。如果真有空态，文案应该是<strong>"还没填什么"</strong>，不是<strong style="color:var(--accent)">"暂无设置项"</strong>。</p><div style="font-size:11px;color:var(--ink-mute);font-family:'JetBrains Mono',monospace;padding-top:8px;border-top:1px dashed var(--line)">⚠ "暂无数据"是技术语言，不是用户语言</div></div>
+
+        <div style="background:white;border:1px solid var(--line);border-radius:8px;padding:16px 18px"><div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--obj-color);letter-spacing:0.06em;font-weight:700;margin-bottom:4px">02 · LOADING</div><h4 style="font-family:'Noto Serif SC',serif;font-size:16px;margin:0 0 8px">首次加载 600ms</h4><p style="font-size:12px;color:var(--ink-soft);margin:0 0 8px;line-height:1.6"><strong>skeleton 占位</strong>——而不是居中 spinner。<strong>"让用户看到即将到来的内容"</strong>比"挡住用户"更专业。skeleton 复刻最终布局，用户能预判。</p><div style="font-size:11px;color:var(--ink-mute);font-family:'JetBrains Mono',monospace;padding-top:8px;border-top:1px dashed var(--line)">⚠ spinner 是"挡住用户"的反模式</div></div>
+
+        <div style="background:white;border:1px solid var(--line);border-radius:8px;padding:16px 18px"><div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--obj-color);letter-spacing:0.06em;font-weight:700;margin-bottom:4px">03 · ERROR</div><h4 style="font-family:'Noto Serif SC',serif;font-size:16px;margin:0 0 8px">头像上传接口挂</h4><p style="font-size:12px;color:var(--ink-soft);margin:0 0 8px;line-height:1.6"><strong>错误局部化</strong>——头像那一块红边 + 重试，<strong style="color:var(--accent)">不要让整页跳错误页</strong>。其他设置项还能用。"出错的是数据，不是页面"。</p><div style="font-size:11px;color:var(--ink-mute);font-family:'JetBrains Mono',monospace;padding-top:8px;border-top:1px dashed var(--line)">⚠ 整页错误 = 用户什么都不能做</div></div>
+
+        <div style="background:white;border:1px solid var(--line);border-radius:8px;padding:16px 18px"><div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--obj-color);letter-spacing:0.06em;font-weight:700;margin-bottom:4px">04 · STALE</div><h4 style="font-family:'Noto Serif SC',serif;font-size:16px;margin:0 0 8px">网络断 30 秒</h4><p style="font-size:12px;color:var(--ink-soft);margin:0 0 8px;line-height:1.6"><strong>顶部 banner 标"上次更新 09:32"</strong>，<strong>内容降饱和度</strong>——保持可读但视觉提示"不新鲜"。stale = "诚实但不阻断"。用户可以继续看，但知道可能过时。</p><div style="font-size:11px;color:var(--ink-mute);font-family:'JetBrains Mono',monospace;padding-top:8px;border-top:1px dashed var(--line)">⚠ 弹"网络异常"模态 = 阻断用户</div></div>
+
+        <div style="background:white;border:1px solid var(--line);border-radius:8px;padding:16px 18px;grid-column:span 2"><div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--obj-color);letter-spacing:0.06em;font-weight:700;margin-bottom:4px">05 · NO-PERM</div><h4 style="font-family:'Noto Serif SC',serif;font-size:16px;margin:0 0 8px">普通员工尝试进入"组织设置"</h4><p style="font-size:12px;color:var(--ink-soft);margin:0 0 8px;line-height:1.6"><strong>显示锁图标 + 解释 + "申请访问" CTA</strong>——告诉用户为什么进不去 + 给出路。<strong style="color:var(--accent)">不要直接跳 403 / 重定向回首页</strong>——用户不知道是 bug 还是真的没权限，会去找客服。</p><div style="font-size:11px;color:var(--ink-mute);font-family:'JetBrains Mono',monospace;padding-top:8px;border-top:1px dashed var(--line)">⚠ 403 是技术语言；"你的角色无法访问，<strong>申请升级 →</strong>" 是用户语言</div></div>
+      </div>
+    </div>
+
+    <div style="display:none" class="quiz-stage">
       <div class="quiz-head">
         <h3 class="quiz-title">设置中心 · 5 状态选择题</h3>
         <div class="quiz-progress">已作答 <span class="done" id="quizDone">0</span> / 5</div>
@@ -1804,110 +1859,6 @@
   counter.textContent = opened.size;
 })();
 
-// ===== Game 3: state quiz =====
-(function(){
-  const ANSWERS = {
-    empty:   { correct: ['B'],      explain: 'empty' },
-    loading: { correct: ['B', 'C'], explain: 'loading' },
-    error:   { correct: ['B'],      explain: 'error' },
-    stale:   { correct: ['B'],      explain: 'stale' },
-    noperm:  { correct: ['B', 'C'], explain: 'noperm' }
-  };
-
-  const cards = document.querySelectorAll('.quiz-card');
-  const selected = {};
-  const submitBtn = document.getElementById('quizSubmit');
-  const resetBtn = document.getElementById('quizReset');
-  const judge = document.getElementById('quizJudge');
-  const doneEl = document.getElementById('quizDone');
-
-  function updateDone() {
-    doneEl.textContent = Object.keys(selected).length;
-  }
-
-  cards.forEach(card => {
-    const q = card.dataset.q;
-    const opts = card.querySelectorAll('.quiz-option');
-    opts.forEach(opt => {
-      opt.addEventListener('click', e => {
-        if (card.classList.contains('answered')) return;
-        opts.forEach(o => o.classList.remove('selected'));
-        opt.classList.add('selected');
-        selected[q] = opt.dataset.opt;
-        updateDone();
-      });
-    });
-  });
-
-  submitBtn.addEventListener('click', () => {
-    let hits = 0;
-    let answered = 0;
-    cards.forEach(card => {
-      const q = card.dataset.q;
-      const userChoice = selected[q];
-      if (!userChoice) return;
-      answered++;
-      const correct = ANSWERS[q].correct;
-      const isHit = correct.includes(userChoice);
-      if (isHit) hits++;
-      card.classList.add('answered');
-      if (!isHit) card.classList.add('wrong');
-      // mark correct options
-      card.querySelectorAll('.quiz-option').forEach(opt => {
-        if (correct.includes(opt.dataset.opt)) opt.classList.add('correct');
-        if (opt.dataset.opt === userChoice && !isHit) opt.classList.add('wrong');
-      });
-      // show explanation
-      card.querySelector('.quiz-explain').classList.add('show');
-    });
-
-    // verdict
-    let verdictClass, verdictLabel, headline, body;
-    if (answered === 0) {
-      verdictClass = 'fail';
-      verdictLabel = '还没作答';
-      headline = '5 道题一道都没选。';
-      body = '上面 5 个状态卡片各选一个选项，再来试一次。';
-    } else if (hits === 5) {
-      verdictClass = 'win';
-      verdictLabel = '满分';
-      headline = '你已经在用"状态思维"设计了。';
-      body = '5 道全对——下次需求评审，你就是那个第一句问"这页有几态"的人。';
-    } else if (hits >= 3) {
-      verdictClass = 'win';
-      verdictLabel = '基本对了';
-      headline = `${hits} / 5 ——方向对，差几个判断。`;
-      body = '看一下错的题的解释——尤其是"原则"那行。下次画稿前先问自己一遍。';
-    } else if (hits >= 1) {
-      verdictClass = 'partial';
-      verdictLabel = '还差一点';
-      headline = `${hits} / 5 ——大部分还在"画 happy path"。`;
-      body = '5 态思维需要一段时间。回去看每道题的"原则"——把它们当 checklist 用，画稿时一条一条过。';
-    } else {
-      verdictClass = 'fail';
-      verdictLabel = '0 分';
-      headline = '一道都没对——但这才是该读这篇文章的人。';
-      body = '把这页存了，下次画稿前打开它，对照"5 态 × 4 维"清单一遍。一周后再回来重做。';
-    }
-
-    judge.innerHTML = `<span class="verdict ${verdictClass}">${verdictLabel}</span><h4>${headline}</h4><p>${body}</p>`;
-    judge.classList.add('show');
-    judge.scrollIntoView({ behavior: 'smooth', block: 'center' });
-  });
-
-  resetBtn.addEventListener('click', () => {
-    Object.keys(selected).forEach(k => delete selected[k]);
-    updateDone();
-    cards.forEach(card => {
-      card.classList.remove('answered', 'wrong');
-      card.querySelectorAll('.quiz-option').forEach(opt => {
-        opt.classList.remove('selected', 'correct', 'wrong');
-      });
-      card.querySelector('.quiz-explain').classList.remove('show');
-    });
-    judge.classList.remove('show');
-  });
-})();
 </script>
 
 </body>
