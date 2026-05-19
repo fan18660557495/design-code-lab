@@ -8,8 +8,353 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,300..900&family=Geist:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&family=Noto+Sans+SC:wght@300;400;500;700;900&family=Noto+Serif+SC:wght@400;500;700;900&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style-translation.css">
+<style>
+  /* Quiet hero demos */
+  .hero-demo .mini-card.demo-mask-crop {
+    background: var(--ink);
+    color: #fff;
+    border: 1px solid var(--ink);
+    min-height: 138px;
+    overflow: hidden;
+    position: relative;
+  }
+  .hero-demo .mini-card.demo-mask-crop .photo-thumb {
+    position: absolute;
+    right: -10px;
+    top: -10px;
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: var(--accent);
+    opacity: .9;
+    z-index: 0;
+  }
+  .hero-demo .mini-card.demo-mask-crop > * { position: relative; z-index: 1; }
+  .hero-demo .mini-card.demo-mask-crop .tag { color: var(--accent); }
+  .hero-demo .mini-card.demo-mask-crop h3 { color: #fff; }
+  .hero-demo .mini-card.demo-mask-crop p { color: rgba(255,255,255,.7); }
+
+  .hero-demo .mini-card.demo-mask-shape {
+    background: var(--ink);
+    color: #fff;
+    clip-path: polygon(0 0, 100% 0, 90% 100%, 0 100%);
+    min-height: 138px;
+  }
+  .hero-demo .mini-card.demo-mask-shape .tag { color: var(--accent); }
+
+  .hero-demo .mini-card.demo-mask-alpha {
+    background: var(--ink);
+    color: #fff;
+    -webkit-mask:
+      radial-gradient(circle 18px at 100% 30%, transparent 98%, #000 101%),
+      radial-gradient(circle 18px at 100% 70%, transparent 98%, #000 101%),
+      linear-gradient(#000 0 0);
+    -webkit-mask-composite: source-out;
+    mask:
+      radial-gradient(circle 18px at 100% 30%, transparent 98%, #000 101%),
+      radial-gradient(circle 18px at 100% 70%, transparent 98%, #000 101%),
+      linear-gradient(#000 0 0);
+    mask-composite: exclude;
+    min-height: 138px;
+  }
+  .hero-demo .mini-card.demo-mask-alpha .tag { color: var(--accent); }
+
+  /* === Lab === */
+  .lab {
+    margin-top: 8px;
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    overflow: hidden;
+  }
+  .lab-tabs {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    border-bottom: 1px dashed var(--line);
+  }
+  @media (max-width: 640px) { .lab-tabs { grid-template-columns: repeat(2, 1fr); } }
+  .lab-tab {
+    border: 0;
+    border-right: 1px dashed var(--line);
+    background: transparent;
+    padding: 12px 14px;
+    text-align: left;
+    cursor: pointer;
+    font: inherit;
+    color: var(--ink-soft);
+    transition: color .14s, background .14s;
+  }
+  .lab-tab:last-child { border-right: 0; }
+  .lab-tab:hover { color: var(--accent); }
+  .lab-tab.active {
+    color: var(--ink);
+    box-shadow: inset 0 -2px 0 var(--accent);
+  }
+  .lab-tab .name {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 14px;
+    font-weight: 700;
+    display: block;
+  }
+  .lab-tab .css {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10.5px;
+    letter-spacing: .04em;
+    color: var(--ink-mute);
+  }
+  .lab-tab.active .css { color: var(--accent); }
+
+  .lab-meta {
+    display: flex;
+    gap: 22px;
+    flex-wrap: wrap;
+    padding: 12px 18px;
+    border-bottom: 1px dashed var(--line);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: .08em;
+    color: var(--ink-mute);
+    text-transform: uppercase;
+  }
+  .lab-meta strong { color: var(--ink); font-weight: 700; text-transform: none; letter-spacing: 0; }
+  .lab-meta .wrong-tool {
+    margin-left: auto;
+    background: transparent;
+    border: 1px solid var(--line);
+    color: var(--ink-soft);
+    padding: 4px 10px;
+    border-radius: 3px;
+    cursor: pointer;
+    font: inherit;
+    letter-spacing: .04em;
+    text-transform: none;
+  }
+  .lab-meta .wrong-tool:hover { border-color: var(--accent); color: var(--accent); }
+  .lab-meta .wrong-tool.active { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
+
+  .lab-body {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 240px;
+    gap: 20px;
+    padding: 20px;
+  }
+  @media (max-width: 880px) { .lab-body { grid-template-columns: 1fr; } }
+
+  .mask-stage {
+    position: relative;
+    min-height: 320px;
+    border: 1px solid var(--line-soft);
+    border-radius: 6px;
+    background: var(--bg);
+    padding: 32px;
+    display: grid;
+    place-items: center;
+  }
+
+  /* Subjects — quieter palette */
+  .subject { display: none; }
+  .mask-stage[data-scenario="photo"] .subject-photo,
+  .mask-stage[data-scenario="banner"] .subject-banner,
+  .mask-stage[data-scenario="ticket"] .subject-ticket,
+  .mask-stage[data-scenario="fade"] .subject-fade { display: grid; }
+
+  /* PHOTO */
+  .subject-photo {
+    --p-fit: cover;
+    --p-x: 50%;
+    --p-y: 50%;
+    position: relative;
+    width: min(380px, 90%);
+    height: 220px;
+    border-radius: 4px;
+    overflow: hidden;
+    background: rgba(22,22,29,.04);
+  }
+  .photo-fake {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: var(--p-fit);
+    object-position: var(--p-x) var(--p-y);
+    display: block;
+  }
+
+  /* BANNER */
+  .subject-banner {
+    --b-angle: 14%;
+    width: min(420px, 92%);
+    min-height: 180px;
+    padding: 28px 24px;
+    color: #fff;
+    background: var(--ink);
+    clip-path: polygon(0 0, 100% 0, calc(100% - var(--b-angle)) 100%, 0 100%);
+    -webkit-clip-path: polygon(0 0, 100% 0, calc(100% - var(--b-angle)) 100%, 0 100%);
+    align-items: center;
+    transition: clip-path .2s ease, -webkit-clip-path .2s ease;
+  }
+  .subject-banner h3 {
+    margin: 0 0 4px;
+    font-family: 'Noto Serif SC', serif;
+    font-size: 24px;
+    line-height: 1.15;
+  }
+  .subject-banner p {
+    margin: 0;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: rgba(255,255,255,.66);
+    letter-spacing: .08em;
+  }
+
+  /* TICKET */
+  .subject-ticket {
+    --t-notch: 22px;
+    width: min(400px, 92%);
+    min-height: 160px;
+    padding: 24px;
+    color: #fff;
+    background: var(--ink);
+    align-items: center;
+    -webkit-mask:
+      radial-gradient(circle var(--t-notch) at 0 50%, transparent 98%, #000 101%),
+      radial-gradient(circle var(--t-notch) at 100% 50%, transparent 98%, #000 101%),
+      linear-gradient(#000 0 0);
+    -webkit-mask-composite: source-out;
+    mask:
+      radial-gradient(circle var(--t-notch) at 0 50%, transparent 98%, #000 101%),
+      radial-gradient(circle var(--t-notch) at 100% 50%, transparent 98%, #000 101%),
+      linear-gradient(#000 0 0);
+    mask-composite: exclude;
+  }
+  .subject-ticket .label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: .14em;
+    color: rgba(255,255,255,.5);
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+  .subject-ticket h3 {
+    margin: 0 0 4px;
+    font-family: 'Noto Serif SC', serif;
+    font-size: 22px;
+  }
+  .subject-ticket p {
+    margin: 0;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: rgba(255,255,255,.6);
+  }
+
+  /* FADE */
+  .subject-fade {
+    --f-width: 38%;
+    width: min(380px, 92%);
+    min-height: 220px;
+    padding: 22px 24px;
+    color: var(--ink);
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    -webkit-mask-image: linear-gradient(180deg, #000 0%, #000 calc(100% - var(--f-width)), transparent 100%);
+    mask-image: linear-gradient(180deg, #000 0%, #000 calc(100% - var(--f-width)), transparent 100%);
+  }
+  .subject-fade h3 {
+    margin: 0 0 4px;
+    font-family: 'Noto Serif SC', serif;
+    font-size: 20px;
+  }
+  .subject-fade .meta {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10.5px;
+    color: var(--ink-mute);
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+  .subject-fade p { margin: 0 0 8px; font-size: 13px; color: var(--ink-soft); line-height: 1.55; }
+  .subject-fade .lines { display: grid; gap: 6px; margin-top: 6px; }
+  .subject-fade .line { height: 8px; border-radius: 3px; background: rgba(22,22,29,.16); }
+  .subject-fade .line.short { width: 60%; }
+  .subject-fade .line.shorter { width: 42%; }
+
+  /* Wrong-tool transformations */
+  .mask-stage.wrong[data-scenario="photo"] .photo-fake { object-fit: fill; }
+  .mask-stage.wrong[data-scenario="banner"] .subject-banner { clip-path: none; -webkit-clip-path: none; }
+  .mask-stage.wrong[data-scenario="ticket"] .subject-ticket {
+    -webkit-mask: none; mask: none; border-radius: 22px;
+  }
+  .mask-stage.wrong[data-scenario="fade"] .subject-fade {
+    -webkit-mask-image: none; mask-image: none; opacity: .4;
+  }
+
+  /* Controls */
+  .controls { display: grid; gap: 16px; align-content: start; }
+  .ctrl { display: grid; gap: 6px; }
+  .ctrl-label {
+    display: flex;
+    justify-content: space-between;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10.5px;
+    letter-spacing: .08em;
+    color: var(--ink-mute);
+    text-transform: uppercase;
+  }
+  .ctrl-label output { color: var(--ink); font-weight: 700; letter-spacing: 0; text-transform: none; }
+  input[type="range"] { width: 100%; accent-color: var(--accent); }
+  .seg { display: flex; gap: 6px; flex-wrap: wrap; }
+  .seg button {
+    flex: 1;
+    border: 1px solid var(--line);
+    background: transparent;
+    color: var(--ink-soft);
+    padding: 6px 8px;
+    border-radius: 3px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10.5px;
+    cursor: pointer;
+    transition: color .14s, border-color .14s;
+  }
+  .seg button:hover { color: var(--accent); border-color: var(--accent); }
+  .seg button.active { color: var(--ink); border-color: var(--ink); background: var(--bg); }
+
+  /* Hide non-active scenario controls */
+  .ctrl-pack { display: none; }
+  .controls[data-active="photo"] .ctrl-pack[data-for="photo"],
+  .controls[data-active="banner"] .ctrl-pack[data-for="banner"],
+  .controls[data-active="ticket"] .ctrl-pack[data-for="ticket"],
+  .controls[data-active="fade"] .ctrl-pack[data-for="fade"] { display: grid; gap: 16px; }
+
+  .lab-readout {
+    padding: 14px 20px;
+    border-top: 1px dashed var(--line);
+    font-size: 13.5px;
+    line-height: 1.65;
+    color: var(--ink-soft);
+  }
+  .lab-readout strong { color: var(--ink); }
+  .lab-readout.warn strong { color: var(--accent); }
+
+  .lab-code {
+    margin: 0;
+    padding: 14px 20px;
+    border-top: 1px dashed var(--line);
+    background: var(--code-bg);
+    color: #f5f5f7;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    line-height: 1.6;
+    overflow: auto;
+    white-space: pre;
+  }
+  .lab-code .prop { color: #c4c6ff; }
+  .lab-code .val { color: #9ce0a8; }
+  .lab-code .com { color: #6c7088; font-style: italic; }
+  .lab-code .bad { color: #ff8a6e; }
+</style>
 </head>
-<body class="page-mask">
+<body>
 <div class="topbar">
   <div class="wrap topbar-inner">
     <a class="brand" href="book.html#vol-3"><span class="dot"></span>AI LABBOOK</a>
@@ -25,17 +370,15 @@
     <div class="hero-meta">
       <span class="pill fill">S4 · STYLE TRANSLATION</span>
       <span class="pill">Visible Region → CSS</span>
-      <span class="pill accent">INTERACTIVE</span>
     </div>
     <div class="hero-grid">
       <div>
         <h1>
           <span class="display-cn">遮罩 / 裁切</span><br>
-          <span class="display-en">Mask & Clip</span>
+          <span class="display-en">Mask &amp; Clip</span>
         </h1>
         <p class="lede">
-          设计稿里“只显示这一块”可能对应三种完全不同的代码：图片比例裁切、容器溢出隐藏、或者按形状遮罩。
-          这篇先把它们分清，再决定用 object-fit、overflow、clip-path 还是 mask。
+          设计稿里"只显示这一块"可能对应三种完全不同的代码：图片比例裁切、容器溢出隐藏、按形状遮罩。先把它们分清楚，再决定用 object-fit、overflow、clip-path 还是 mask。
         </p>
       </div>
       <div class="hero-side">
@@ -47,20 +390,21 @@
     </div>
 
     <div class="hero-demo" aria-label="三种遮罩裁切效果预览">
-      <div class="mini-card mask-crop">
+      <div class="mini-card demo-mask-crop">
+        <div class="photo-thumb"></div>
         <div class="tag">crop</div>
         <h3>裁图片比例</h3>
         <p>内容是图片，容器比例固定，优先想 object-fit。</p>
       </div>
-      <div class="mini-card mask-shape">
+      <div class="mini-card demo-mask-shape">
         <div class="tag">clip-path</div>
         <h3>裁元素轮廓</h3>
         <p>元素整体要变成斜切、多边形、圆形时，用 clip-path 更直接。</p>
       </div>
-      <div class="mini-card mask-alpha">
+      <div class="mini-card demo-mask-alpha">
         <div class="tag">mask</div>
         <h3>按透明度挖掉</h3>
-        <p>需要渐隐、挖洞、票券缺口时，mask 更接近设计语言。</p>
+        <p>需要渐隐、挖洞、票券缺口时，mask 接近设计语言。</p>
       </div>
     </div>
   </div>
@@ -74,7 +418,7 @@
         <h2 class="section-title">先问一句：<br>你在 <span class="em">裁谁</span>？</h2>
       </div>
       <p class="section-sub">
-        裁图片、裁容器、裁可见像素是三件事。看起来都是“遮住一部分”，但对应的 CSS 模型不同。
+        裁图片、裁容器、裁可见像素是三件事。看起来都是"遮住一部分"，但对应的 CSS 模型不同。
       </p>
     </div>
 
@@ -91,18 +435,18 @@
       <div class="explain-card good">
         <span class="stamp">RIGHT MODEL</span>
         <h3>按目标选择属性</h3>
-        <p>图片比例用 object-fit；几何轮廓用 clip-path；透明度和挖洞用 mask。先分类，代码就会稳定很多。</p>
+        <p>图片比例用 object-fit；几何轮廓用 clip-path；透明度和挖洞用 mask。先分类，代码就稳定。</p>
         <code class="code-inline">.media { <span class="good">object-fit: cover;</span> }
 .shape { <span class="good">clip-path: polygon(...);</span> }
-.fade { <span class="good">mask-image: linear-gradient(...);</span> }</code>
+.fade  { <span class="good">mask-image: linear-gradient(...);</span> }</code>
       </div>
     </div>
 
     <div class="model-strip" aria-label="遮罩裁切翻译步骤">
-      <div class="model-step"><span class="k">01</span><strong>裁图片</strong><span>只是不想图片变形，先用 object-fit 和 object-position。</span></div>
-      <div class="model-step"><span class="k">02</span><strong>裁溢出</strong><span>内容超出圆角容器，用 overflow hidden。</span></div>
-      <div class="model-step"><span class="k">03</span><strong>裁轮廓</strong><span>元素要变成特殊几何形，用 clip-path。</span></div>
-      <div class="model-step"><span class="k">04</span><strong>裁透明度</strong><span>渐隐、挖洞、复杂 alpha，用 mask。</span></div>
+      <div class="model-step"><span class="k">01</span><strong>裁图片</strong><span>不想图片变形 — 先用 object-fit 和 object-position。</span></div>
+      <div class="model-step"><span class="k">02</span><strong>裁溢出</strong><span>内容超出圆角容器 — 用 overflow hidden。</span></div>
+      <div class="model-step"><span class="k">03</span><strong>裁轮廓</strong><span>元素要变成特殊几何形 — 用 clip-path。</span></div>
+      <div class="model-step"><span class="k">04</span><strong>裁透明度</strong><span>渐隐、挖洞、复杂 alpha — 用 mask。</span></div>
     </div>
   </div>
 </section>
@@ -112,74 +456,132 @@
     <div class="section-head">
       <div>
         <div class="section-num"><strong>02</strong> / 样式拆解台</div>
-        <h2 class="section-title">同一张图，<br>换 <span class="em">不同可见区域</span>。</h2>
+        <h2 class="section-title">四个真实场景，<br>看 <span class="em">该用什么工具</span>。</h2>
       </div>
       <p class="section-sub">
-        这里把图片裁切、形状裁切和 mask 挖洞放在一个实验台里。重点看属性负责的层级：内容、盒子、轮廓、透明度。
+        上方 4 个 tab 切换场景，每个场景默认展示"对的工具"。点右上角按钮可以临时换成"错的工具"，立刻看到效果坏掉。
       </p>
     </div>
 
-    <div class="lab-shell">
-      <div class="lab-toolbar">
-        <div class="lab-title">STYLE LAB / MASK & CLIP</div>
-        <div class="status-chip"><span class="status-dot"></span><span>choose by visible region</span></div>
+    <div class="lab">
+      <div class="lab-tabs" id="scenarioTabs">
+        <button class="lab-tab active" data-scenario="photo">
+          <span class="name">封面图</span>
+          <span class="css">object-fit</span>
+        </button>
+        <button class="lab-tab" data-scenario="banner">
+          <span class="name">斜切横幅</span>
+          <span class="css">clip-path</span>
+        </button>
+        <button class="lab-tab" data-scenario="ticket">
+          <span class="name">票券缺口</span>
+          <span class="css">mask · radial</span>
+        </button>
+        <button class="lab-tab" data-scenario="fade">
+          <span class="name">渐隐淡出</span>
+          <span class="css">mask · linear</span>
+        </button>
       </div>
-      <div class="lab-grid">
-        <div class="playground">
-          <div class="preview-stage mask-stage">
-            <div class="stage-label">visible area preview</div>
-            <div class="mask-frame">
-              <div class="mask-subject" id="maskSubject" data-shape="rounded">
-                <span class="mask-guides" aria-hidden="true"></span>
-              </div>
-            </div>
+
+      <div class="lab-meta">
+        <span>scenario · <strong id="scenarioStatus">photo</strong></span>
+        <span>tool · <strong id="toolStatus">object-fit</strong></span>
+        <button class="wrong-tool" id="wrongToolBtn" type="button">尝试错的工具</button>
+      </div>
+
+      <div class="lab-body">
+        <div class="mask-stage" id="maskStage" data-scenario="photo">
+          <!-- PHOTO — img src is swapped between tall/wide so both axes can be demonstrated -->
+          <div class="subject subject-photo" id="subjectPhoto">
+            <img class="photo-fake" id="photoFake" alt="placeholder">
           </div>
 
-          <div class="lab-readout">
-            <div class="readout-card">
-              <div class="r-label">观察点</div>
-              <p id="maskObserve">clip-path 改的是元素可见轮廓；如果只是裁图片比例，先用 object-fit。</p>
-            </div>
-            <div class="readout-card">
-              <div class="r-label">当前组合</div>
-              <p id="maskCombo">shape rounded，radius 28px，object-fit cover。</p>
-            </div>
+          <!-- BANNER -->
+          <div class="subject subject-banner" id="subjectBanner">
+            <h3>季度发布会<br>预告</h3>
+            <p>BANNER · CLIP-PATH POLYGON</p>
           </div>
 
-          <div class="code-panel">
-            <div class="code-head"><span>visible-region.css</span><span>shape aware</span></div>
-            <pre id="maskCode"></pre>
+          <!-- TICKET -->
+          <div class="subject subject-ticket" id="subjectTicket">
+            <div class="label">VIP · ZONE A</div>
+            <h3>设计科普 · 第 04 期</h3>
+            <p>seat · 12A / 2026-06-12</p>
+          </div>
+
+          <!-- FADE -->
+          <div class="subject subject-fade" id="subjectFade">
+            <h3>设计科普日报</h3>
+            <div class="meta">2026-05-18 / 04 期 · 样式</div>
+            <p>这是一段需要被柔和裁掉的内容。下面的文字像逐渐消失在纸上，不是直接被裁断，也不是整张变淡。</p>
+            <div class="lines">
+              <div class="line"></div>
+              <div class="line short"></div>
+              <div class="line"></div>
+              <div class="line shorter"></div>
+              <div class="line short"></div>
+              <div class="line"></div>
+            </div>
           </div>
         </div>
 
-        <aside class="controls" aria-label="遮罩裁切参数">
-          <div class="control-group">
-            <div class="control-label"><span>shape mode</span><output id="maskShapeOut">rounded</output></div>
-            <div class="seg four" id="maskShapeSeg">
-              <button class="active" data-shape="rounded">round</button>
-              <button data-shape="circle">circle</button>
-              <button data-shape="diagonal">diag</button>
-              <button data-shape="ticket">ticket</button>
+        <div class="controls" id="controls" data-active="photo">
+          <!-- PHOTO -->
+          <div class="ctrl-pack" data-for="photo">
+            <div class="ctrl">
+              <div class="ctrl-label"><span>image aspect</span></div>
+              <div class="seg" id="photoAspectSeg">
+                <button class="active" data-aspect="tall">tall</button>
+                <button data-aspect="wide">wide</button>
+              </div>
+            </div>
+            <div class="ctrl">
+              <div class="ctrl-label"><span>object-fit</span></div>
+              <div class="seg" id="photoFitSeg">
+                <button class="active" data-fit="cover">cover</button>
+                <button data-fit="contain">contain</button>
+              </div>
+            </div>
+            <div class="ctrl" id="photoCtrlX">
+              <label class="ctrl-label" for="photoPosX"><span>position x</span><output id="photoPosXOut">50%</output></label>
+              <input id="photoPosX" type="range" min="0" max="100" value="50" step="5">
+            </div>
+            <div class="ctrl" id="photoCtrlY">
+              <label class="ctrl-label" for="photoPosY"><span>position y</span><output id="photoPosYOut">50%</output></label>
+              <input id="photoPosY" type="range" min="0" max="100" value="50" step="5">
             </div>
           </div>
-          <div class="control-group">
-            <label class="control-label" for="maskRadius"><span>radius</span><output id="maskRadiusOut">28px</output></label>
-            <input id="maskRadius" type="range" min="0" max="64" value="28" step="2">
-          </div>
-          <div class="control-group">
-            <label class="control-label" for="maskReveal"><span>overlay reveal</span><output id="maskRevealOut">62%</output></label>
-            <input id="maskReveal" type="range" min="20" max="88" value="62" step="2">
-          </div>
-          <div class="control-group">
-            <div class="control-label"><span>object fit</span><output id="maskFitOut">cover</output></div>
-            <div class="seg" id="maskFitSeg">
-              <button class="active" data-fit="cover">cover</button>
-              <button data-fit="contain">contain</button>
+
+          <!-- BANNER -->
+          <div class="ctrl-pack" data-for="banner">
+            <div class="ctrl">
+              <label class="ctrl-label" for="bannerAngle"><span>diagonal cut</span><output id="bannerAngleOut">14%</output></label>
+              <input id="bannerAngle" type="range" min="4" max="32" value="14" step="2">
             </div>
           </div>
-          <div class="note-panel" id="maskNote">cover 保证容器填满，适合封面图；重要内容要检查是否被裁掉。</div>
-        </aside>
+
+          <!-- TICKET -->
+          <div class="ctrl-pack" data-for="ticket">
+            <div class="ctrl">
+              <label class="ctrl-label" for="ticketNotch"><span>notch radius</span><output id="ticketNotchOut">22px</output></label>
+              <input id="ticketNotch" type="range" min="14" max="40" value="22" step="2">
+            </div>
+          </div>
+
+          <!-- FADE -->
+          <div class="ctrl-pack" data-for="fade">
+            <div class="ctrl">
+              <label class="ctrl-label" for="fadeWidth"><span>fade width</span><output id="fadeWidthOut">38%</output></label>
+              <input id="fadeWidth" type="range" min="10" max="70" value="38" step="2">
+            </div>
+          </div>
+        </div>
       </div>
+
+      <div class="lab-readout" id="labReadout">
+        <strong>cover</strong> 保证容器填满，主体可能被裁。<strong>contain</strong> 保证内容完整，会留出空白。
+      </div>
+      <pre class="lab-code" id="codeOut"></pre>
     </div>
   </div>
 </section>
@@ -188,7 +590,7 @@
   <div class="wrap">
     <div class="section-head">
       <div>
-        <div class="section-num"><strong>03</strong> / 设计到代码的对照</div>
+        <div class="section-num"><strong>03</strong> / 设计到代码对照</div>
         <h2 class="section-title">四个属性，<br>别 <span class="em">混着用</span>。</h2>
       </div>
       <p class="section-sub">
@@ -203,7 +605,7 @@
       <tbody>
         <tr><td><strong>图片填满固定比例卡片</strong><br>不能被压扁</td><td><span class="mono">object-fit: cover</span></td><td>检查主体是否被裁，必要时加 object-position。</td></tr>
         <tr><td><strong>内容超出圆角容器</strong><br>不要溢出来</td><td><span class="mono">overflow: hidden</span></td><td>会影响浮层、tooltip 和 sticky 子元素。</td></tr>
-        <tr><td><strong>元素变成几何形</strong><br>斜切、多边形、圆形</td><td><span class="mono">clip-path</span></td><td>普通 border 和 box-shadow 可能不会按轮廓走。</td></tr>
+        <tr><td><strong>元素变成几何形</strong><br>斜切、多边形、圆形</td><td><span class="mono">clip-path</span></td><td>普通 border 和 box-shadow 不会按轮廓走。</td></tr>
         <tr><td><strong>渐隐或挖洞</strong><br>按 alpha 控制可见性</td><td><span class="mono">mask-image</span></td><td>注意浏览器前缀和组合模式差异。</td></tr>
       </tbody>
     </table>
@@ -218,7 +620,7 @@
         <h2 class="section-title">把裁切说成<br><span class="em">可见区域规则</span>。</h2>
       </div>
       <p class="section-sub">
-        给前端或 AI 的描述要避免“这里裁一下”。应该说清楚裁的是图片内容、容器溢出、元素轮廓，还是透明度。
+        给前端或 AI 的描述要避免"这里裁一下"。说清楚裁的是图片内容、容器溢出、元素轮廓，还是透明度。
       </p>
     </div>
 
@@ -232,13 +634,13 @@
       <article class="principle-card">
         <span class="num">02 / SHAPE</span>
         <h3>给出轮廓来源</h3>
-        <p>如果是特殊形状，最好给 SVG path、polygon 点位或可复用变量。</p>
+        <p>特殊形状最好给 SVG path、polygon 点位或可复用变量。</p>
         <ul><li>clip-path polygon</li><li>SVG clipPath</li><li>mask gradient</li></ul>
       </article>
       <article class="principle-card">
         <span class="num">03 / HIT AREA</span>
         <h3>检查点击区域</h3>
-        <p>视觉上被裁掉，不代表交互区域一定同步改变。异形按钮尤其要测。</p>
+        <p>视觉上被裁掉，不代表交互区域跟着改变。异形按钮尤其要测。</p>
         <ul><li>hover 是否一致</li><li>focus ring 是否可见</li><li>点击热区是否合理</li></ul>
       </article>
     </div>
@@ -253,7 +655,7 @@
         <h4>MCP <span class="em">·</span> AI 的 USB 接口</h4>
         <p>样式翻译告一段落。接下来进入 AI 怎么参与实现：先讲 MCP 为什么像 AI 连接工具和文件的接口。</p>
       </div>
-      <span class="np-cta">继续阅读 <span class="arr">→</span></span>
+      <span class="np-cta">继续阅读 →</span>
     </a>
   </div>
 </section>
@@ -265,11 +667,12 @@
       <a href="https://developer.mozilla.org/en-US/docs/Web/CSS/object-fit" target="_blank" rel="noreferrer">MDN object-fit</a>
       <a href="https://developer.mozilla.org/en-US/docs/Web/CSS/clip-path" target="_blank" rel="noreferrer">MDN clip-path</a>
       <a href="https://developer.mozilla.org/en-US/docs/Web/CSS/mask-image" target="_blank" rel="noreferrer">MDN mask-image</a>
+      <a href="https://bennettfeely.com/clippy/" target="_blank" rel="noreferrer">Clippy · clip-path generator</a>
     </div>
   </div>
 </footer>
 
-<!-- 路线图弹窗 (11 分类) -->
+<!-- 路线图弹窗 -->
 <div class="rm-modal" id="rm-modal" hidden>
   <div class="rm-backdrop" data-rm-close></div>
   <div class="rm-dialog" role="dialog" aria-label="完整路线图">
@@ -307,7 +710,7 @@
         </div>
       </div>
       <div class="rm-mod">
-        <div class="rm-mod-key">04 · 设计样式怎么翻译成 CSS</div>
+        <div class="rm-mod-key" style="color:var(--accent);">04 · 设计样式怎么翻译成 CSS</div>
         <div class="rm-mod-list">
           <a href="inverted-radius-figma.html" class="rm-cell"><span class="rm-cell-code">S1</span><span class="rm-cell-name">内翻圆角 · Inverted Border Radius</span><span class="rm-cell-tier">样式</span></a>
           <a href="shadow-layer-figma.html" class="rm-cell"><span class="rm-cell-code">S2</span><span class="rm-cell-name">阴影 / 层级 · Shadow &amp; Elevation</span><span class="rm-cell-tier">样式</span></a>
@@ -316,7 +719,7 @@
         </div>
       </div>
       <div class="rm-mod">
-        <div class="rm-mod-key" style="color:var(--accent);">05 · AI 怎么参与实现</div>
+        <div class="rm-mod-key">05 · AI 怎么参与实现</div>
         <div class="rm-mod-list">
           <a href="q1-mcp-figma.html" class="rm-cell"><span class="rm-cell-code">Q1</span><span class="rm-cell-name">MCP · AI 的 USB 接口</span><span class="rm-cell-tier">工具</span></a>
           <a href="q2-skills-figma.html" class="rm-cell"><span class="rm-cell-code">Q2</span><span class="rm-cell-name">Skills · SKILL.md 拆解</span><span class="rm-cell-tier">工具</span></a>
@@ -380,5 +783,249 @@
   </div>
 </div>
 <script src="style-translation.js"></script>
+<script>
+(function(){
+  var state = {
+    scenario: 'photo',
+    wrong: false,
+    photo: { fit: 'cover', posX: 50, posY: 50, aspect: 'tall' },
+    banner: { angle: 14 },
+    ticket: { notch: 22 },
+    fade: { width: 38 }
+  };
+
+  var PHOTO_SRC = {
+    tall: "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 600 800' width='600' height='800'><rect width='600' height='800' fill='%231f2028'/><g stroke='white' stroke-opacity='0.12'><line x1='0' y1='200' x2='600' y2='200'/><line x1='0' y1='400' x2='600' y2='400'/><line x1='0' y1='600' x2='600' y2='600'/><line x1='200' y1='0' x2='200' y2='800'/><line x1='400' y1='0' x2='400' y2='800'/></g><circle cx='300' cy='300' r='58' fill='%23ff4d2e'/><text x='22' y='34' fill='white' fill-opacity='0.5' font-family='monospace' font-size='20'>TOP</text><text x='22' y='230' fill='white' fill-opacity='0.7' font-family='monospace' font-size='20'>MID-TOP SUBJECT</text><text x='22' y='430' fill='white' fill-opacity='0.32' font-family='monospace' font-size='20'>MID-BOTTOM</text><text x='22' y='634' fill='white' fill-opacity='0.32' font-family='monospace' font-size='20'>BOTTOM</text></svg>",
+    wide: "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1000 400' width='1000' height='400'><rect width='1000' height='400' fill='%231f2028'/><g stroke='white' stroke-opacity='0.12'><line x1='250' y1='0' x2='250' y2='400'/><line x1='500' y1='0' x2='500' y2='400'/><line x1='750' y1='0' x2='750' y2='400'/><line x1='0' y1='200' x2='1000' y2='200'/></g><circle cx='325' cy='200' r='58' fill='%23ff4d2e'/><text x='22' y='34' fill='white' fill-opacity='0.5' font-family='monospace' font-size='20'>LEFT</text><text x='270' y='34' fill='white' fill-opacity='0.7' font-family='monospace' font-size='20'>MID-LEFT SUBJECT</text><text x='520' y='34' fill='white' fill-opacity='0.32' font-family='monospace' font-size='20'>MID-RIGHT</text><text x='770' y='34' fill='white' fill-opacity='0.32' font-family='monospace' font-size='20'>RIGHT</text></svg>"
+  };
+
+  var TOOL = { photo: 'object-fit', banner: 'clip-path', ticket: 'mask · radial', fade: 'mask · linear' };
+  var WRONG_LABELS = { photo: 'object-fit: fill', banner: 'no clip-path', ticket: 'border-radius', fade: 'opacity' };
+
+  var stage = document.getElementById('maskStage');
+  var tabs = document.getElementById('scenarioTabs');
+  var controls = document.getElementById('controls');
+  var readout = document.getElementById('labReadout');
+  var codeOut = document.getElementById('codeOut');
+  var scenarioStatus = document.getElementById('scenarioStatus');
+  var toolStatus = document.getElementById('toolStatus');
+  var wrongBtn = document.getElementById('wrongToolBtn');
+
+  var subjectPhoto = document.getElementById('subjectPhoto');
+  var photoFake = document.getElementById('photoFake');
+  var subjectBanner = document.getElementById('subjectBanner');
+  var subjectTicket = document.getElementById('subjectTicket');
+  var subjectFade = document.getElementById('subjectFade');
+
+  var photoAspectSeg = document.getElementById('photoAspectSeg');
+  var photoFitSeg = document.getElementById('photoFitSeg');
+  var photoPosX = document.getElementById('photoPosX');
+  var photoPosXOut = document.getElementById('photoPosXOut');
+  var photoPosY = document.getElementById('photoPosY');
+  var photoPosYOut = document.getElementById('photoPosYOut');
+  var bannerAngle = document.getElementById('bannerAngle');
+  var bannerAngleOut = document.getElementById('bannerAngleOut');
+  var ticketNotch = document.getElementById('ticketNotch');
+  var ticketNotchOut = document.getElementById('ticketNotchOut');
+  var fadeWidth = document.getElementById('fadeWidth');
+  var fadeWidthOut = document.getElementById('fadeWidthOut');
+
+  function renderPhoto(){
+    subjectPhoto.style.setProperty('--p-x', state.photo.posX + '%');
+    subjectPhoto.style.setProperty('--p-y', state.photo.posY + '%');
+    subjectPhoto.style.setProperty('--p-fit', state.photo.fit);
+    if (photoFake.dataset.aspect !== state.photo.aspect) {
+      photoFake.src = PHOTO_SRC[state.photo.aspect];
+      photoFake.dataset.aspect = state.photo.aspect;
+    }
+    photoPosXOut.textContent = state.photo.posX + '%';
+    photoPosYOut.textContent = state.photo.posY + '%';
+    Array.prototype.slice.call(photoFitSeg.querySelectorAll('button')).forEach(function(b){
+      b.classList.toggle('active', b.dataset.fit === state.photo.fit);
+    });
+    Array.prototype.slice.call(photoAspectSeg.querySelectorAll('button')).forEach(function(b){
+      b.classList.toggle('active', b.dataset.aspect === state.photo.aspect);
+    });
+
+    // Show/hide slider for the axis that can actually move
+    var activeAxis = (state.photo.fit === 'cover'
+      ? (state.photo.aspect === 'tall' ? 'Y' : 'X')
+      : (state.photo.aspect === 'tall' ? 'X' : 'Y'));
+    document.getElementById('photoCtrlX').style.display = (activeAxis === 'X') ? '' : 'none';
+    document.getElementById('photoCtrlY').style.display = (activeAxis === 'Y') ? '' : 'none';
+  }
+  function renderBanner(){
+    subjectBanner.style.setProperty('--b-angle', state.banner.angle + '%');
+    bannerAngleOut.textContent = state.banner.angle + '%';
+  }
+  function renderTicket(){
+    subjectTicket.style.setProperty('--t-notch', state.ticket.notch + 'px');
+    ticketNotchOut.textContent = state.ticket.notch + 'px';
+  }
+  function renderFade(){
+    subjectFade.style.setProperty('--f-width', state.fade.width + '%');
+    fadeWidthOut.textContent = state.fade.width + '%';
+  }
+
+  function renderCode(){
+    var lines = [];
+    if (state.scenario === 'photo') {
+      if (state.wrong) {
+        lines.push('<span class="com">/* WRONG: object-fit: fill 把图压扁 */</span>');
+        lines.push('.cover-img {');
+        lines.push('  <span class="prop">width</span>: <span class="val">100%</span>;');
+        lines.push('  <span class="prop">height</span>: <span class="val">220px</span>;');
+        lines.push('  <span class="prop">object-fit</span>: <span class="bad">fill</span>;');
+        lines.push('}');
+      } else {
+        var p = state.photo;
+        lines.push('.cover-img {');
+        lines.push('  <span class="prop">object-fit</span>: <span class="val">' + p.fit + '</span>;');
+        lines.push('  <span class="prop">object-position</span>: <span class="val">' + p.posX + '% ' + p.posY + '%</span>;');
+        lines.push('}');
+      }
+    } else if (state.scenario === 'banner') {
+      if (state.wrong) {
+        lines.push('<span class="com">/* WRONG: 漏写 clip-path */</span>');
+        lines.push('.banner {');
+        lines.push('  <span class="bad">/* clip-path: omitted */</span>');
+        lines.push('  <span class="prop">background</span>: <span class="val">var(--ink)</span>;');
+        lines.push('}');
+      } else {
+        var a = state.banner.angle;
+        lines.push('.banner {');
+        lines.push('  <span class="prop">clip-path</span>: <span class="val">polygon(0 0, 100% 0, calc(100% - ' + a + '%) 100%, 0 100%)</span>;');
+        lines.push('  <span class="prop">background</span>: <span class="val">var(--ink)</span>;');
+        lines.push('}');
+      }
+    } else if (state.scenario === 'ticket') {
+      if (state.wrong) {
+        lines.push('<span class="com">/* WRONG: border-radius 不能做"内凹" */</span>');
+        lines.push('.ticket {');
+        lines.push('  <span class="prop">border-radius</span>: <span class="bad">22px</span>;');
+        lines.push('}');
+      } else {
+        var n = state.ticket.notch;
+        lines.push('.ticket {');
+        lines.push('  <span class="prop">-webkit-mask</span>:');
+        lines.push('    <span class="val">radial-gradient(circle ' + n + 'px at 0 50%, transparent 98%, #000 101%)</span>,');
+        lines.push('    <span class="val">radial-gradient(circle ' + n + 'px at 100% 50%, transparent 98%, #000 101%)</span>,');
+        lines.push('    <span class="val">linear-gradient(#000 0 0)</span>;');
+        lines.push('  <span class="prop">-webkit-mask-composite</span>: <span class="val">source-out</span>;');
+        lines.push('  <span class="prop">mask-composite</span>: <span class="val">exclude</span>;');
+        lines.push('}');
+      }
+    } else if (state.scenario === 'fade') {
+      if (state.wrong) {
+        lines.push('<span class="com">/* WRONG: opacity 让整张变淡 */</span>');
+        lines.push('.fade {');
+        lines.push('  <span class="prop">opacity</span>: <span class="bad">0.4</span>;');
+        lines.push('}');
+      } else {
+        var w = state.fade.width;
+        lines.push('.fade {');
+        lines.push('  <span class="prop">mask-image</span>: <span class="val">linear-gradient(180deg, #000 0%, #000 ' + (100 - w) + '%, transparent 100%)</span>;');
+        lines.push('}');
+      }
+    }
+    codeOut.innerHTML = lines.join('\n');
+  }
+
+  function renderReadout(){
+    var t = '';
+    if (state.scenario === 'photo') {
+      var fit = state.photo.fit;
+      var asp = state.photo.aspect;
+      var activeAxis = (fit === 'cover' ? (asp === 'tall' ? 'Y' : 'X') : (asp === 'tall' ? 'X' : 'Y'));
+
+      if (state.wrong) {
+        t = '<strong>object-fit: fill</strong> — 图片被强行压扁到容器比例。人物 / 产品照立刻变形。';
+        readout.classList.add('warn');
+      } else if (fit === 'cover') {
+        t = '<strong>cover</strong> 让图片填满容器，多出来的部分被裁。当前 ' + asp + ' 图在 <strong>' + activeAxis + ' 轴</strong>上有裁切空间，拖 POSITION ' + activeAxis + ' 选择保留哪一段。';
+        readout.classList.remove('warn');
+      } else {
+        t = '<strong>contain</strong> 保留完整比例，不够的方向留白。当前 ' + asp + ' 图在 <strong>' + activeAxis + ' 轴</strong>上有留白空间，拖 POSITION ' + activeAxis + ' 把图片靠左 / 中 / 右（或上 / 中 / 下）。';
+        readout.classList.remove('warn');
+      }
+    } else if (state.scenario === 'banner') {
+      if (state.wrong) {
+        t = '去掉 <strong>clip-path</strong> 后形状全丢 — 它本来就是一个矩形 div，斜切只是裁切的视觉效果。';
+        readout.classList.add('warn');
+      } else {
+        t = 'clip-path 把整张卡片裁成多边形。子元素布局不受影响，但 <strong>box-shadow</strong> 不会跟随多边形。';
+        readout.classList.remove('warn');
+      }
+    } else if (state.scenario === 'ticket') {
+      if (state.wrong) {
+        t = '只用 <strong>border-radius</strong> 撑不出"凹进去"的缺口 — radius 只能往内收，不能凿洞。';
+        readout.classList.add('warn');
+      } else {
+        t = 'mask 用两个透明圆 + 一层填充做出两侧缺口。<strong>border-radius</strong> 做不到这种内凹。';
+        readout.classList.remove('warn');
+      }
+    } else if (state.scenario === 'fade') {
+      if (state.wrong) {
+        t = '<strong>opacity</strong> 让整张卡片变淡 — 但这是渐隐，应该只让底部消失，上面保持清晰。';
+        readout.classList.add('warn');
+      } else {
+        t = '底部按 alpha 逐渐透明，上部 100% 可见。<strong>mask-image</strong> 接受任何渐变作为透明度图。';
+        readout.classList.remove('warn');
+      }
+    }
+    readout.innerHTML = t;
+  }
+
+  function render(){
+    stage.dataset.scenario = state.scenario;
+    stage.classList.toggle('wrong', state.wrong);
+    controls.dataset.active = state.scenario;
+    Array.prototype.slice.call(tabs.querySelectorAll('.lab-tab')).forEach(function(t){
+      t.classList.toggle('active', t.dataset.scenario === state.scenario);
+    });
+    scenarioStatus.textContent = state.scenario;
+    toolStatus.textContent = state.wrong ? WRONG_LABELS[state.scenario] + ' ✗' : TOOL[state.scenario];
+    wrongBtn.textContent = state.wrong ? '回到对的工具' : '尝试错的工具';
+    wrongBtn.classList.toggle('active', state.wrong);
+
+    renderPhoto();
+    renderBanner();
+    renderTicket();
+    renderFade();
+    renderReadout();
+    renderCode();
+  }
+
+  tabs.addEventListener('click', function(e){
+    var b = e.target.closest('.lab-tab');
+    if (!b) return;
+    state.scenario = b.dataset.scenario;
+    state.wrong = false;
+    render();
+  });
+
+  photoAspectSeg.addEventListener('click', function(e){
+    var b = e.target.closest('button[data-aspect]');
+    if (!b) return;
+    state.photo.aspect = b.dataset.aspect;
+    render();
+  });
+  photoFitSeg.addEventListener('click', function(e){
+    var b = e.target.closest('button[data-fit]');
+    if (!b) return;
+    state.photo.fit = b.dataset.fit;
+    render();
+  });
+  photoPosX.addEventListener('input', function(){ state.photo.posX = Number(photoPosX.value); render(); });
+  photoPosY.addEventListener('input', function(){ state.photo.posY = Number(photoPosY.value); render(); });
+  bannerAngle.addEventListener('input', function(){ state.banner.angle = Number(bannerAngle.value); render(); });
+  ticketNotch.addEventListener('input', function(){ state.ticket.notch = Number(ticketNotch.value); render(); });
+  fadeWidth.addEventListener('input', function(){ state.fade.width = Number(fadeWidth.value); render(); });
+
+  wrongBtn.addEventListener('click', function(){ state.wrong = !state.wrong; render(); });
+
+  render();
+})();
+</script>
 </body>
 </html>

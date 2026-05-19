@@ -1,0 +1,1174 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>任务流：从开始到完成 — AI LABBOOK · X5</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,300..900&family=Geist:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Noto+Sans+SC:wght@300;400;500;700;900&family=Noto+Serif+SC:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f3eee5; --bg-2: #ebe4d4; --ink: #16161d; --ink-soft: #4a4a55; --ink-mute: #8a8a92;
+    --line: #d5cdba; --line-soft: #e3dcca;
+    --accent: #ff4d2e; --accent-soft: #ffe4dc;
+    --blue: #0a4cff; --blue-soft: #dde6ff;
+    --green: #1f6b3a; --green-soft: #d4ecdb;
+    --yellow: #ffcf3d; --paper: #faf7f0;
+    --shadow: 0 1px 0 rgba(0,0,0,0.04), 0 8px 24px rgba(22,22,29,0.06);
+    --obj-color: #ff4d2e; --obj-soft: rgba(255,77,46,0.12);
+    --proj-color: #1f6b3a; --proj-soft: rgba(31,107,58,0.12);
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--ink); font-family: 'Geist', 'Noto Sans SC', system-ui, -apple-system, sans-serif; font-size: 16px; line-height: 1.6; -webkit-font-smoothing: antialiased; background-image: radial-gradient(circle at 1px 1px, rgba(22,22,29,0.05) 1px, transparent 0); background-size: 24px 24px; }
+  .display-cn { font-family: 'Noto Serif SC', 'Fraunces', serif; font-weight: 900; letter-spacing: -0.01em; }
+  .display-en { font-family: 'Fraunces', 'Noto Serif SC', serif; font-weight: 600; font-style: italic; letter-spacing: -0.02em; }
+  .mono { font-family: 'JetBrains Mono', monospace; }
+  .label { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-mute); }
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 0 32px; }
+
+  /* Topbar */
+  .topbar { border-bottom: 1px dashed var(--line); padding: 16px 0; background: var(--bg); position: sticky; top: 0; z-index: 100; }
+  .topbar-inner { display: flex; justify-content: space-between; align-items: center; gap: 24px; flex-wrap: wrap; }
+  .brand-block { display: flex; align-items: center; gap: 10px; font-family: 'JetBrains Mono', monospace; font-size: 13px; }
+  .brand { display: inline-flex; align-items: center; gap: 6px; color: var(--ink); text-decoration: none; font-weight: 600; }
+  .brand-arrow { color: var(--ink-mute); transition: transform .2s; }
+  .brand:hover .brand-arrow { transform: translateX(-3px); }
+  .brand .dot { display: inline-block; width: 8px; height: 8px; background: var(--accent); border-radius: 50%; vertical-align: middle; animation: pulse 2s ease-in-out infinite; margin-left: 4px; }
+  .brand-sep { color: var(--ink-mute); }
+  .brand-current { color: var(--ink-soft); }
+  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+  .nav-links { display: flex; gap: 18px; font-size: 13px; flex-wrap: wrap; }
+  .nav-links a { color: var(--ink-soft); text-decoration: none; transition: color 0.2s; }
+  .nav-links a:hover { color: var(--accent); }
+  .nav-links a.current { color: var(--accent); font-weight: 600; }
+
+  /* Hero */
+  .hero { padding: 100px 0 80px; position: relative; overflow: hidden; }
+  .hero-meta { display: flex; gap: 24px; margin-bottom: 32px; align-items: center; flex-wrap: wrap; }
+  .hero-meta .pill { padding: 6px 12px; border: 1px solid var(--ink); border-radius: 100px; font-size: 11px; font-family: 'JetBrains Mono', monospace; letter-spacing: 0.05em; }
+  .hero-meta .pill.fill { background: var(--ink); color: var(--bg); }
+  .hero-meta .pill.purple { background: var(--obj-color); color: white; border-color: var(--obj-color); }
+  .hero h1 { font-family: 'Noto Serif SC', 'Fraunces', serif; font-weight: 900; font-size: clamp(48px, 7vw, 92px); line-height: 0.95; letter-spacing: -0.03em; margin: 0 0 24px; }
+  .hero h1 .em { font-family: 'Noto Serif SC', serif; font-weight: 500; color: var(--accent); }
+  .hero h1 .purple { color: var(--obj-color); font-family: 'Noto Serif SC', serif; font-weight: 500; }
+  .hero p.lede { font-size: 20px; line-height: 1.5; max-width: 640px; color: var(--ink-soft); margin: 0 0 40px; }
+  .hero-grid { display: grid; grid-template-columns: 1.4fr 1fr; gap: 48px; align-items: end; }
+  @media (max-width: 880px) { .hero-grid { grid-template-columns: 1fr; } }
+  .hero-side { border-left: 1px dashed var(--line); padding-left: 24px; font-size: 13px; color: var(--ink-soft); }
+  .hero-side .row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px dashed var(--line); gap: 12px; }
+  .hero-side .row:last-child { border-bottom: none; }
+  .hero-side .row .k { color: var(--ink-mute); font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.05em; text-transform: uppercase; }
+  .hero-side .row .v { font-weight: 500; }
+
+  /* Sections */
+  section { padding: 80px 0; border-top: 1px solid var(--line); position: relative; }
+  .section-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 56px; flex-wrap: wrap; gap: 16px; }
+  .section-num { font-family: 'JetBrains Mono', monospace; font-size: 13px; color: var(--ink-mute); letter-spacing: 0.1em; margin-top: 6px; }
+  .section-num strong { color: var(--accent); }
+  .section-title { font-family: 'Noto Serif SC', serif; font-weight: 900; font-size: clamp(32px, 4.5vw, 52px); line-height: 1.05; letter-spacing: -0.02em; margin: 8px 0 0; max-width: 22ch; }
+  .section-title .em { font-family: 'Noto Serif SC', serif; font-weight: 500; color: var(--accent); }
+  .section-title .purple { color: var(--obj-color); font-family: 'Noto Serif SC', serif; font-weight: 500; }
+  .section-sub { color: var(--ink-soft); font-size: 17px; max-width: 38ch; line-height: 1.55; margin: 0; }
+
+  /* Act tag */
+  .act-tag { display: inline-block; padding: 4px 12px; font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; border-radius: 100px; }
+  .act-tag.look { background: var(--blue-soft); color: var(--blue); }
+  .act-tag.break { background: var(--obj-soft); color: var(--obj-color); }
+  .act-tag.make { background: var(--proj-soft); color: var(--proj-color); }
+
+  /* Problem cards */
+  .problem-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; margin-top: 24px; }
+  @media (max-width: 880px) { .problem-grid { grid-template-columns: 1fr; } }
+  .problem-card { background: var(--paper); border: 1px solid var(--line); border-radius: 6px; padding: 28px; position: relative; }
+  .problem-card.bad { border-color: var(--accent); background: var(--accent-soft); }
+  .problem-card.good { border-color: var(--obj-color); background: var(--obj-soft); }
+  .problem-card .tag { position: absolute; top: -12px; left: 24px; background: var(--bg); padding: 2px 10px; font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.1em; }
+  .problem-card.bad .tag { color: var(--accent); border: 1px solid var(--accent); }
+  .problem-card.good .tag { color: var(--obj-color); border: 1px solid var(--obj-color); }
+  .problem-card h3 { font-family: 'Noto Serif SC', serif; font-size: 22px; margin: 0 0 12px; font-weight: 700; }
+  .problem-card p { margin: 0; color: var(--ink-soft); font-size: 14px; line-height: 1.55; }
+  .problem-card p + p { margin-top: 10px; }
+
+  /* GAME 1: form factors */
+  .factor-stage { background: var(--paper); border: 1px solid var(--line); border-radius: 8px; padding: 32px 28px 28px; position: relative; overflow: hidden; }
+  .factor-stage::before { content: ''; position: absolute; inset: 0; background-image: linear-gradient(to right, var(--line-soft) 1px, transparent 1px), linear-gradient(to bottom, var(--line-soft) 1px, transparent 1px); background-size: 24px 24px; opacity: 0.4; pointer-events: none; }
+  .factor-tabs { position: relative; display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 24px; }
+  .factor-tab { padding: 8px 16px; background: white; border: 1px solid var(--line); border-radius: 100px; font-family: 'JetBrains Mono', monospace; font-size: 12px; letter-spacing: 0.04em; cursor: pointer; color: var(--ink-soft); transition: all 0.2s; user-select: none; }
+  .factor-tab:hover { border-color: var(--obj-color); color: var(--obj-color); }
+  .factor-tab.active { background: var(--obj-color); color: white; border-color: var(--obj-color); font-weight: 600; }
+  .factor-tab .factor-step-hint { opacity: 0.55; margin-left: 6px; font-size: 11px; }
+  .factor-mock-wrap { position: relative; min-height: 320px; background: var(--bg-2); border: 1px solid var(--line); border-radius: 8px; padding: 24px; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+  .factor-mock { display: none; width: 100%; }
+  .factor-mock.active { display: block; }
+
+  /* desktop wizard mock */
+  .mock-desktop { background: white; border: 1px solid var(--line); border-radius: 6px; overflow: hidden; box-shadow: 0 8px 24px rgba(22,22,29,0.08); max-width: 720px; margin: 0 auto; }
+  .mock-desktop-bar { background: var(--bg-2); padding: 8px 12px; display: flex; align-items: center; gap: 8px; border-bottom: 1px solid var(--line); }
+  .mock-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--line); }
+  .mock-dot:nth-child(1) { background: #ff5f56; }
+  .mock-dot:nth-child(2) { background: #ffbd2e; }
+  .mock-dot:nth-child(3) { background: #27c93f; }
+  .mock-desktop-url { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--ink-mute); margin-left: 8px; }
+  .wizard-steps { display: flex; background: var(--bg); border-bottom: 1px dashed var(--line); padding: 8px 16px; gap: 12px; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ink-mute); overflow-x: auto; }
+  .wizard-steps .wz { padding: 4px 8px; border-radius: 4px; white-space: nowrap; }
+  .wizard-steps .wz.active { background: var(--obj-color); color: white; }
+  .wizard-steps .wz.done { color: var(--proj-color); }
+  .wizard-body { padding: 20px; min-height: 180px; }
+  .wizard-body h5 { font-family: 'Noto Serif SC', serif; font-size: 18px; margin: 0 0 12px; font-weight: 700; }
+  .wizard-form { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 14px; }
+  .wf-row { display: flex; flex-direction: column; gap: 4px; font-size: 12px; }
+  .wf-row label { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--ink-mute); letter-spacing: 0.05em; text-transform: uppercase; }
+  .wf-row .wf-val { padding: 6px 8px; background: var(--bg); border: 1px solid var(--line); border-radius: 4px; font-size: 12px; color: var(--ink); }
+  .wizard-actions { display: flex; justify-content: space-between; align-items: center; padding: 12px 20px; background: var(--bg-2); border-top: 1px dashed var(--line); }
+  .wizard-btn { padding: 6px 14px; border-radius: 4px; font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.05em; cursor: pointer; border: 1px solid var(--line); background: white; }
+  .wizard-btn.primary { background: var(--obj-color); color: white; border-color: var(--obj-color); }
+
+  /* mobile modal mock */
+  .mock-mobile { background: var(--ink); border-radius: 28px; padding: 8px; width: 260px; margin: 0 auto; box-shadow: 0 8px 32px rgba(22,22,29,0.15); }
+  .mock-mobile-screen { background: white; border-radius: 20px; overflow: hidden; height: 380px; position: relative; display: flex; flex-direction: column; }
+  .mob-status { font-family: 'JetBrains Mono', monospace; font-size: 9px; color: var(--ink-mute); padding: 6px 12px 4px; display: flex; justify-content: space-between; }
+  .mob-body { padding: 8px 14px 0; flex: 1; opacity: 0.5; }
+  .mob-body .row { padding: 6px 0; border-bottom: 1px dashed var(--line); font-size: 11px; color: var(--ink-mute); }
+  .mob-sheet { background: white; border-top-left-radius: 20px; border-top-right-radius: 20px; box-shadow: 0 -8px 24px rgba(0,0,0,0.1); padding: 14px 14px 16px; border-top: 1px solid var(--line); }
+  .mob-handle { width: 36px; height: 4px; background: var(--line); border-radius: 2px; margin: 0 auto 12px; }
+  .mob-sheet h6 { font-family: 'Noto Serif SC', serif; font-size: 14px; margin: 0 0 8px; font-weight: 700; }
+  .mob-step-dots { display: flex; gap: 4px; margin-bottom: 10px; }
+  .mob-step-dots .dt { width: 5px; height: 5px; border-radius: 50%; background: var(--line); }
+  .mob-step-dots .dt.on { background: var(--obj-color); width: 14px; border-radius: 3px; }
+  .mob-fields { display: flex; flex-direction: column; gap: 6px; }
+  .mob-fld { padding: 6px 8px; background: var(--bg); border: 1px solid var(--line); border-radius: 4px; font-size: 11px; }
+  .mob-fld .lb { font-family: 'JetBrains Mono', monospace; font-size: 9px; color: var(--ink-mute); }
+  .mob-cta { margin-top: 10px; padding: 8px 12px; background: var(--obj-color); color: white; border-radius: 6px; text-align: center; font-size: 12px; font-family: 'JetBrains Mono', monospace; }
+
+  /* inline single-page mock */
+  .mock-inline { background: white; border: 1px solid var(--line); border-radius: 6px; overflow: hidden; max-width: 540px; margin: 0 auto; box-shadow: 0 8px 24px rgba(22,22,29,0.08); }
+  .inline-bar { background: var(--bg-2); padding: 10px 16px; border-bottom: 1px solid var(--line); font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ink-mute); display: flex; justify-content: space-between; align-items: center; }
+  .inline-bar .save-state { color: var(--green); }
+  .inline-blocks { padding: 18px 20px; }
+  .inline-block { padding: 10px 0; border-bottom: 1px dashed var(--line); display: grid; grid-template-columns: 100px 1fr 12px; gap: 12px; align-items: center; font-size: 12px; }
+  .inline-block:last-child { border-bottom: none; }
+  .inline-block .ib-lb { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--ink-mute); letter-spacing: 0.05em; text-transform: uppercase; }
+  .inline-block .ib-val { padding: 4px 8px; background: var(--bg); border-radius: 4px; }
+  .inline-block.checked .ib-check { color: var(--green); }
+  .inline-block .ib-check { color: var(--ink-mute); font-size: 13px; font-weight: 700; }
+  .inline-submit { padding: 12px 20px; background: var(--bg-2); border-top: 1px dashed var(--line); display: flex; justify-content: flex-end; gap: 8px; }
+  .inline-submit .wizard-btn { font-size: 11px; }
+
+  /* task flow strip */
+  .flow-strip { margin-top: 24px; background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 18px 20px 16px; position: relative; }
+  .flow-strip-tag { position: absolute; top: -10px; left: 16px; background: var(--obj-color); color: white; font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.1em; padding: 2px 10px; border-radius: 100px; }
+  .flow-strip-title { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ink-mute); letter-spacing: 0.05em; margin-bottom: 12px; }
+  .flow-nodes { display: flex; gap: 0; align-items: stretch; overflow-x: auto; padding-bottom: 4px; }
+  .flow-node { flex: 1; min-width: 90px; padding: 10px 12px; background: white; border: 1px solid var(--line); border-radius: 6px; cursor: pointer; text-align: center; transition: all 0.2s; position: relative; }
+  .flow-node + .flow-node { margin-left: -1px; }
+  .flow-node:hover { z-index: 2; border-color: var(--obj-color); }
+  .flow-node.active { background: var(--obj-color); color: white; border-color: var(--obj-color); z-index: 3; transform: translateY(-2px); box-shadow: 0 8px 16px rgba(255,77,46,0.2); }
+  .flow-node-num { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--ink-mute); display: block; }
+  .flow-node.active .flow-node-num { color: rgba(255,255,255,0.8); }
+  .flow-node-name { font-family: 'Noto Serif SC', serif; font-size: 13px; font-weight: 700; margin-top: 3px; }
+  .flow-node-arrow { display: inline-block; align-self: center; color: var(--ink-mute); font-family: 'JetBrains Mono', monospace; font-size: 14px; padding: 0 4px; }
+  .flow-callout { margin-top: 12px; padding: 10px 14px; background: var(--obj-soft); border-left: 3px solid var(--obj-color); border-radius: 4px; font-size: 13px; color: var(--ink-soft); display: none; }
+  .flow-callout.show { display: block; }
+  .flow-callout strong { color: var(--obj-color); }
+
+  /* Reveal bar */
+  .reveal-bar { margin-top: 32px; padding: 20px 28px; background: var(--ink); color: var(--bg); border-radius: 8px; display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap; }
+  .reveal-bar .msg { font-family: 'Noto Serif SC', serif; font-size: 17px; font-weight: 500; line-height: 1.55; }
+  .reveal-bar .msg .em { color: var(--accent); }
+  .reveal-bar .counter { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ink-mute); letter-spacing: 0.05em; }
+  .reveal-bar .counter strong { color: var(--accent); font-size: 14px; }
+
+  /* GAME 2: anatomy SVG flow */
+  .anatomy-stage { margin-top: 32px; background: var(--paper); border: 1px solid var(--line); border-radius: 8px; padding: 28px; }
+  .anatomy-svg-wrap { background: white; border: 1px solid var(--line); border-radius: 6px; padding: 20px; overflow-x: auto; }
+  .anatomy-svg { display: block; width: 100%; min-width: 720px; height: auto; }
+  .anatomy-node-bg { fill: white; stroke: var(--line); stroke-width: 1.5; transition: all 0.2s; cursor: pointer; }
+  .anatomy-node-g:hover .anatomy-node-bg { stroke: var(--obj-color); stroke-width: 2; }
+  .anatomy-node-g.is-active .anatomy-node-bg { fill: var(--obj-color); stroke: var(--obj-color); }
+  .anatomy-node-num { font-family: 'JetBrains Mono', monospace; font-size: 11px; fill: var(--ink-mute); }
+  .anatomy-node-g.is-active .anatomy-node-num { fill: rgba(255,255,255,0.8); }
+  .anatomy-node-label { font-family: 'Noto Serif SC', serif; font-size: 14px; font-weight: 700; fill: var(--ink); }
+  .anatomy-node-g.is-active .anatomy-node-label { fill: white; }
+  .anatomy-arrow { stroke: var(--ink-mute); stroke-width: 1.5; fill: none; }
+  .anatomy-arrow-head { fill: var(--ink-mute); }
+  .anatomy-card { margin-top: 24px; background: white; border: 1px solid var(--line); border-radius: 8px; padding: 22px 26px; position: relative; display: none; }
+  .anatomy-card.show { display: block; }
+  .anatomy-card::before { content: attr(data-step-label); position: absolute; top: -10px; left: 18px; background: var(--obj-color); color: white; font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.1em; padding: 2px 10px; border-radius: 100px; }
+  .anatomy-card h4 { font-family: 'Noto Serif SC', serif; font-size: 20px; margin: 8px 0 16px; font-weight: 700; }
+  .anatomy-slots { display: grid; grid-template-columns: 130px 1fr; gap: 8px 16px; font-size: 13px; }
+  .anatomy-slots .slot-k { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ink-mute); letter-spacing: 0.05em; text-transform: uppercase; padding: 6px 0; }
+  .anatomy-slots .slot-v { padding: 6px 10px; background: var(--bg); border-radius: 4px; font-size: 13px; color: var(--ink); line-height: 1.5; }
+  .anatomy-slots .slot-v .tx { color: var(--ink-soft); }
+  .anatomy-slots .slot-v .em { color: var(--accent); font-weight: 600; }
+  .anatomy-slots .slot-v .purple { color: var(--obj-color); font-weight: 600; }
+  .anatomy-card .anatomy-note { margin-top: 14px; padding: 10px 14px; background: var(--blue-soft); border-left: 3px solid var(--blue); border-radius: 4px; font-size: 12px; color: var(--ink-soft); line-height: 1.55; }
+  .anatomy-card .anatomy-note strong { color: var(--blue); }
+  .anatomy-empty { background: white; border: 1px dashed var(--line); border-radius: 8px; padding: 30px; text-align: center; color: var(--ink-mute); font-style: italic; font-size: 13px; margin-top: 24px; }
+  .anatomy-empty.hide { display: none; }
+  .side-effect-warn { margin-top: 24px; padding: 22px 26px; background: var(--accent-soft); border: 1px solid var(--accent); border-radius: 8px; position: relative; }
+  .side-effect-warn::before { content: 'SIDE EFFECT · 提醒'; position: absolute; top: -10px; left: 18px; background: var(--accent); color: white; font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.1em; padding: 2px 10px; border-radius: 100px; }
+  .side-effect-warn h5 { font-family: 'Noto Serif SC', serif; font-size: 17px; margin: 8px 0 12px; font-weight: 700; }
+  .side-effect-warn p { margin: 0 0 8px; color: var(--ink-soft); font-size: 13px; line-height: 1.6; }
+  .side-effect-warn p:last-child { margin-bottom: 0; }
+  .side-effect-warn strong { color: var(--accent); }
+  .side-effect-warn code { font-family: 'JetBrains Mono', monospace; font-size: 12px; background: white; padding: 1px 6px; border-radius: 3px; color: var(--accent); }
+  .anatomy-progress { margin-top: 18px; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ink-mute); text-align: right; }
+  .anatomy-progress strong { color: var(--obj-color); font-size: 13px; }
+
+  /* GAME 3: builder for onboarding flow */
+  .builder-stage { background: var(--paper); border: 1px solid var(--line); border-radius: 8px; padding: 32px; margin-top: 24px; }
+  .builder-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 28px; flex-wrap: wrap; gap: 16px; }
+  .builder-title { font-family: 'Noto Serif SC', serif; font-size: 22px; margin: 0; font-weight: 700; }
+  .builder-progress { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--ink-mute); }
+  .builder-progress .done { color: var(--proj-color); font-weight: 700; font-size: 14px; }
+  .builder-grid { display: grid; grid-template-columns: 1fr 1.7fr; gap: 28px; }
+  @media (max-width: 980px) { .builder-grid { grid-template-columns: 1fr; } }
+
+  .builder-pool { border: 1px dashed var(--obj-color); border-radius: 8px; padding: 18px; background: white; align-self: start; position: sticky; top: 80px; }
+  .builder-pool h5 { font-family: 'Noto Serif SC', serif; font-size: 15px; margin: 0 0 8px; color: var(--obj-color); font-weight: 700; }
+  .builder-pool-hint { font-size: 11px; color: var(--ink-mute); margin: 0 0 14px; line-height: 1.5; }
+  .builder-pool-list { display: flex; flex-direction: column; gap: 5px; }
+  .builder-chip { display: flex; align-items: center; gap: 8px; padding: 7px 12px; background: var(--obj-soft); border: 1px solid var(--obj-color); border-radius: 4px; font-family: 'JetBrains Mono', monospace; font-size: 11px; cursor: pointer; user-select: none; transition: all 0.15s; color: var(--ink); }
+  .builder-chip:hover { background: var(--obj-color); color: white; }
+  .builder-chip.is-active { background: var(--obj-color); color: white; box-shadow: 0 0 0 3px var(--obj-soft); }
+  .builder-chip.is-used { opacity: 0.35; pointer-events: none; background: var(--bg-2); color: var(--ink-mute); border-color: var(--line); }
+  .builder-chip .chip-add { margin-left: auto; opacity: 0.55; font-size: 14px; }
+  .builder-chip-trap { background: var(--bg); border: 1px solid var(--line); color: var(--ink-soft); }
+  .builder-chip-trap:hover { background: var(--accent-soft); color: var(--accent); border-color: var(--accent); }
+  .builder-flow { display: flex; flex-direction: column; gap: 14px; }
+  .builder-step { background: white; border: 1px solid var(--line); border-radius: 8px; padding: 16px 18px; position: relative; }
+  .builder-step::after { content: '↓'; position: absolute; bottom: -16px; left: 28px; font-family: 'JetBrains Mono', monospace; font-size: 14px; color: var(--ink-mute); z-index: 2; }
+  .builder-step:last-child::after { display: none; }
+  .builder-step-head { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+  .builder-step-num { width: 26px; height: 26px; border-radius: 50%; background: var(--obj-color); color: white; display: flex; align-items: center; justify-content: center; font-family: 'JetBrains Mono', monospace; font-weight: 700; font-size: 12px; flex-shrink: 0; }
+  .builder-step-name { font-family: 'Noto Serif SC', serif; font-weight: 700; font-size: 15px; flex: 1; }
+  .builder-step-status { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ink-mute); letter-spacing: 0.05em; }
+  .builder-step-status.ok { color: var(--proj-color); }
+  .builder-step-status.partial { color: var(--accent); }
+
+  .builder-slot-action { min-height: 42px; padding: 8px 12px; border: 1px dashed var(--line); border-radius: 6px; background: var(--bg); margin-bottom: 10px; transition: all 0.15s; display: flex; align-items: center; flex-wrap: wrap; gap: 6px; cursor: pointer; }
+  .builder-slot-action.is-target { outline: 2px dashed var(--obj-color); outline-offset: 3px; background: var(--obj-soft); }
+  .builder-slot-action .slot-label { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--ink-mute); letter-spacing: 0.05em; text-transform: uppercase; }
+  .builder-slot-action .builder-slot { display: inline-flex; align-items: center; gap: 6px; padding: 4px 6px 4px 10px; background: var(--proj-color); color: white; border-radius: 100px; font-family: 'JetBrains Mono', monospace; font-size: 11px; }
+  .builder-slot button { background: rgba(255,255,255,0.25); border: none; color: white; width: 16px; height: 16px; border-radius: 50%; font-size: 11px; line-height: 1; cursor: pointer; padding: 0; }
+  .builder-slot button:hover { background: rgba(255,255,255,0.5); }
+  .builder-quiz { padding: 10px 12px; background: var(--bg-2); border-radius: 6px; border: 1px solid var(--line); }
+  .builder-quiz-q { font-family: 'Noto Serif SC', serif; font-size: 13px; margin-bottom: 8px; color: var(--ink); }
+  .builder-quiz-q strong { color: var(--obj-color); }
+  .builder-quiz-opts { display: flex; gap: 6px; flex-wrap: wrap; }
+  .builder-quiz-opt { padding: 5px 12px; background: white; border: 1px solid var(--line); border-radius: 100px; font-size: 12px; cursor: pointer; user-select: none; transition: all 0.15s; color: var(--ink-soft); }
+  .builder-quiz-opt:hover { border-color: var(--obj-color); color: var(--obj-color); }
+  .builder-quiz-opt.selected { background: var(--obj-color); color: white; border-color: var(--obj-color); font-weight: 600; }
+  .builder-actions { display: flex; gap: 12px; margin-top: 24px; flex-wrap: wrap; }
+  .builder-btn { padding: 10px 22px; border-radius: 100px; font-family: 'JetBrains Mono', monospace; font-size: 12px; letter-spacing: 0.06em; text-transform: uppercase; cursor: pointer; font-weight: 600; border: 1px solid var(--ink); background: transparent; color: var(--ink); transition: all 0.15s; }
+  .builder-btn:hover { background: var(--ink); color: var(--bg); }
+  .builder-btn.primary { background: var(--accent); color: white; border-color: var(--accent); }
+  .builder-btn.primary:hover { background: #e8451f; }
+  .builder-judge { margin-top: 24px; padding: 24px 26px; border-radius: 8px; background: var(--ink); color: var(--bg); display: none; }
+  .builder-judge.show { display: block; }
+  .builder-judge .verdict { display: inline-block; font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; padding: 3px 10px; border-radius: 100px; }
+  .builder-judge .verdict.win { color: #1f6b3a; background: #d4ecdb; }
+  .builder-judge .verdict.partial { color: #c79f1e; background: #fff3cc; }
+  .builder-judge .verdict.trap { color: #ff8a6e; background: rgba(255,138,110,0.18); }
+  .builder-judge h4 { font-family: 'Noto Serif SC', serif; font-size: 22px; margin: 10px 0 14px; color: white; line-height: 1.3; }
+  .builder-judge ul { color: #c8c8d0; margin: 0; padding-left: 20px; font-size: 13px; line-height: 1.75; }
+  .builder-judge ul li + li { margin-top: 10px; }
+  .builder-judge ul strong { color: white; }
+  .builder-judge ul .why { color: #a0a0aa; font-size: 12px; }
+  .builder-judge ul .trap-tag { color: #ff8a6e; font-weight: 700; }
+
+  /* picker label (floating) */
+  .picker-label { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: var(--ink); color: var(--bg); padding: 12px 20px; border-radius: 100px; font-family: 'JetBrains Mono', monospace; font-size: 12px; letter-spacing: 0.05em; z-index: 200; box-shadow: 0 8px 32px rgba(0,0,0,0.2); display: none; align-items: center; gap: 10px; }
+  .picker-label.show { display: inline-flex; }
+  .picker-label .esc { background: rgba(255,255,255,0.15); padding: 2px 6px; border-radius: 3px; font-size: 10px; }
+
+  /* tips */
+  .tips-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 28px; margin-top: 24px; }
+  @media (max-width: 880px) { .tips-grid { grid-template-columns: 1fr; } }
+  .tip { background: var(--paper); border: 1px solid var(--line); border-radius: 6px; padding: 24px; position: relative; }
+  .tip-num { position: absolute; top: -14px; left: 16px; width: 32px; height: 32px; border-radius: 50%; background: var(--obj-color); color: white; display: flex; align-items: center; justify-content: center; font-family: 'Fraunces', serif; font-style: italic; font-weight: 600; font-size: 14px; }
+  .tip h4 { font-family: 'Noto Serif SC', serif; font-size: 18px; margin: 8px 0 10px; font-weight: 700; }
+  .tip p { color: var(--ink-soft); font-size: 14px; line-height: 1.6; margin: 0; }
+  .tip p + p { margin-top: 8px; }
+  .tip-outro { margin-top: 44px; padding: 30px 32px; background: var(--ink); color: var(--bg); border-radius: 8px; display: grid; grid-template-columns: auto 1fr; gap: 28px; align-items: flex-start; }
+  @media (max-width: 720px) { .tip-outro { grid-template-columns: 1fr; gap: 12px; } }
+  .outro-tag { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.1em; color: var(--accent); padding-top: 4px; }
+  .tip-outro p { margin: 0 0 12px; color: #c8c8d0; line-height: 1.65; font-size: 15px; }
+  .tip-outro p:last-child { margin-bottom: 0; }
+  .tip-outro strong { color: white; }
+
+  /* next post */
+  .next-post { display: flex; justify-content: space-between; align-items: center; margin-top: 56px; padding: 32px; background: var(--bg-2); border: 1px solid var(--line); border-radius: 8px; text-decoration: none; color: var(--ink); transition: all 0.2s; gap: 24px; flex-wrap: wrap; }
+  .next-post:hover { background: var(--ink); color: var(--bg); }
+  .next-post:hover .np-tag { color: var(--accent); }
+  .next-post:hover .em { color: var(--accent); }
+  .next-post:hover p { color: #c8c8d0; }
+  .np-tag { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.1em; color: var(--ink-mute); margin-bottom: 6px; }
+  .next-post h4 { font-family: 'Noto Serif SC', serif; font-size: 26px; margin: 0 0 8px; font-weight: 700; }
+  .next-post .em { color: var(--obj-color); font-weight: 500; }
+  .next-post p { margin: 0; color: var(--ink-soft); font-size: 14px; max-width: 56ch; }
+  .np-cta { font-family: 'JetBrains Mono', monospace; font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; white-space: nowrap; }
+  .np-cta .arr { display: inline-block; transition: transform .2s; }
+  .next-post:hover .arr { transform: translateX(4px); }
+
+  /* footer */
+  footer { padding: 56px 0 64px; background: var(--bg); color: var(--ink-soft); border-top: 1px solid var(--line); }
+  .byline-group { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; margin-bottom: 32px; padding-bottom: 32px; border-bottom: 1px dashed var(--line); }
+  @media (max-width: 880px) { .byline-group { grid-template-columns: 1fr; } }
+  .byline { display: flex; gap: 16px; align-items: center; }
+  .byline .avatar { width: 56px; height: 56px; border-radius: 50%; object-fit: cover; flex-shrink: 0; }
+  .byline-label { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--accent); letter-spacing: 0.1em; }
+  .byline-label .dot { display: inline-block; width: 6px; height: 6px; background: var(--accent); border-radius: 50%; margin-right: 4px; vertical-align: middle; animation: pulse 2s ease-in-out infinite; }
+  .byline-name { font-family: 'Noto Serif SC', serif; font-weight: 700; font-size: 18px; margin: 4px 0; color: var(--ink); }
+  .byline-name .em { color: var(--accent); font-weight: 500; }
+  .byline-tag { color: var(--ink-soft); font-size: 13px; margin: 0; line-height: 1.5; }
+  .footer-meta { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ink-mute); text-align: center; letter-spacing: 0.05em; }
+  .footer-meta .heart { color: var(--accent); }
+
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="wrap topbar-inner">
+    <div class="brand-block">
+      <a href="book.html#vol-3" class="brand"><span class="brand-arrow">←</span>AI LABBOOK <span class="dot"></span></a>
+      <span class="brand-sep">/</span>
+      <span class="brand-current">X5 · 任务流：从开始到完成</span>
+    </div>
+    <nav class="nav-links">
+      <a href="book.html#vol-3">路线图</a>
+    </nav>
+  </div>
+</div>
+
+<!-- Hero -->
+<header class="hero">
+  <div class="wrap">
+    <div class="hero-meta">
+      <span class="pill fill">高阶 · ADVANCED</span>
+      <span class="pill purple">STAGE 02 · 任务流</span>
+      <span class="pill">X5 · 任务流</span>
+      <span class="label">阅读 ≈ 17 分钟</span>
+    </div>
+    <div class="hero-grid">
+      <div>
+        <h1>
+          <span class="display-cn">不是页面跳转，</span><br>
+          是<span class="purple">任务流</span>。
+        </h1>
+        <p class="lede">
+          用户不是来浏览页面的。<br>
+          用户是来"完成一件事"——提交、查询、审批、退款……<br>
+          页面只是任务流里的取景框。
+        </p>
+      </div>
+      <div class="hero-side">
+        <div class="row"><span class="k">本页讲什么</span><span class="v">页面跳转 → 任务流</span></div>
+        <div class="row"><span class="k">三幕</span><span class="v">看见 · 拆开 · 再做</span></div>
+        <div class="row"><span class="k">面向</span><span class="v">B 端 / 流程设计师</span></div>
+        <div class="row"><span class="k">前置</span><span class="v">X1 · 对象关系</span></div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- Section 01: 问题 -->
+<section id="problem">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>01</strong> / 问题</div>
+        <h2 class="section-title">为什么"3 个页面"<br>变成"10 个<span class="em">边界情况</span>"？</h2>
+      </div>
+      <p class="section-sub">
+        因为你在用<strong>页面数量</strong>描述用户行为。
+        但工程师要的是：<strong>任务有几步、每步进入/退出的条件、按钮按下去后端做什么</strong>。
+        语言对不上，每个状态、每个回退都要来回 ping 你。
+      </p>
+    </div>
+
+    <div class="problem-grid">
+      <div class="problem-card bad">
+        <span class="tag">页面思维 · PAGE</span>
+        <h3>"提交申请要 3 个页面"</h3>
+        <p>稿子里画了 3 张：信息填写页、确认页、成功页。流程箭头从左往右拉到尾。</p>
+        <p><strong>工程师追问：</strong>如果用户回退会怎样？数据存哪？校验在哪一页做？什么时候真正生成记录？关掉浏览器再打开能续上吗？</p>
+        <p style="color:var(--accent)"><strong>你：</strong>呃……我只画了 3 张图。</p>
+      </div>
+
+      <div class="problem-card good">
+        <span class="tag">任务思维 · TASK</span>
+        <h3>"任务有 5 步"</h3>
+        <p>稿子里给的是：任务"提交申请"5 步——开始 → 填表 → 校验 → 提交 → 反馈。3 个页面只承载"填表 + 确认 + 成功"，校验是步骤不是页面，提交后存数据库才算真完成。</p>
+        <p><strong>工程师收到：</strong>任务流图 + 状态迁移图 + 每步的副作用清单。</p>
+        <p style="color:var(--obj-color)"><strong>结果：</strong>追问 → 0 次。</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Section 02: 幕一 · 看见 -->
+<section id="look">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <span class="act-tag look">幕一 · 看见</span>
+        <div class="section-num"><strong>02</strong> / 看见</div>
+        <h2 class="section-title">同一个任务，<br><span class="purple">3 种页面布局</span>都能承载。</h2>
+      </div>
+      <p class="section-sub">
+        看下面同一个"提交报销"任务，在桌面 wizard / 移动 modal / 单页 inline 表单 3 种形态下走完——
+        <strong>任务流不变，页面布局完全不一样</strong>。
+      </p>
+    </div>
+
+    <div class="factor-stage">
+      <div class="factor-tabs" id="factorTabs">
+        <div class="factor-tab active" data-factor="desktop">桌面 wizard <span class="factor-step-hint">3 屏 · 多页</span></div>
+        <div class="factor-tab" data-factor="mobile">移动 modal <span class="factor-step-hint">底部 sheet · 5 屏</span></div>
+        <div class="factor-tab" data-factor="inline">单页 inline <span class="factor-step-hint">滚动 · 单页</span></div>
+      </div>
+
+      <div class="factor-mock-wrap">
+
+        <!-- DESKTOP WIZARD -->
+        <div class="factor-mock active" data-mock="desktop">
+          <div class="mock-desktop">
+            <div class="mock-desktop-bar"><span class="mock-dot"></span><span class="mock-dot"></span><span class="mock-dot"></span><span class="mock-desktop-url">app.acme.com/expense/new</span></div>
+            <div class="wizard-steps" id="wizardSteps">
+              <span class="wz done" data-step="1">① 开始</span>
+              <span class="wz active" data-step="2">② 填表</span>
+              <span class="wz" data-step="3">③ 校验</span>
+              <span class="wz" data-step="4">④ 提交</span>
+              <span class="wz" data-step="5">⑤ 完成</span>
+            </div>
+            <div class="wizard-body" id="wizardBody">
+              <h5>填写报销信息</h5>
+              <div class="wizard-form">
+                <div class="wf-row"><label>类别</label><span class="wf-val">差旅 · 交通</span></div>
+                <div class="wf-row"><label>金额</label><span class="wf-val">¥ 1,280</span></div>
+                <div class="wf-row"><label>发生日期</label><span class="wf-val">2026-05-12</span></div>
+                <div class="wf-row"><label>项目</label><span class="wf-val">客户拜访 · 上海</span></div>
+                <div class="wf-row" style="grid-column:1/-1"><label>说明</label><span class="wf-val">高铁往返 · 含改签费</span></div>
+              </div>
+            </div>
+            <div class="wizard-actions"><button class="wizard-btn">← 上一步</button><button class="wizard-btn primary">下一步 →</button></div>
+          </div>
+        </div>
+
+        <!-- MOBILE MODAL -->
+        <div class="factor-mock" data-mock="mobile">
+          <div class="mock-mobile">
+            <div class="mock-mobile-screen">
+              <div class="mob-status"><span>9:41</span><span>5G · 88%</span></div>
+              <div class="mob-body">
+                <div class="row">报销列表</div>
+                <div class="row">2026-05-10 · 餐饮 · ¥ 86</div>
+                <div class="row">2026-05-08 · 交通 · ¥ 220</div>
+                <div class="row">2026-05-03 · 住宿 · ¥ 760</div>
+              </div>
+              <div class="mob-sheet">
+                <div class="mob-handle"></div>
+                <h6>新建报销 · 第 2 步</h6>
+                <div class="mob-step-dots"><span class="dt on"></span><span class="dt on"></span><span class="dt"></span><span class="dt"></span><span class="dt"></span></div>
+                <div class="mob-fields">
+                  <div class="mob-fld"><div class="lb">类别</div>差旅 · 交通</div>
+                  <div class="mob-fld"><div class="lb">金额</div>¥ 1,280</div>
+                  <div class="mob-fld"><div class="lb">日期</div>2026-05-12</div>
+                </div>
+                <div class="mob-cta">下一步</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- INLINE SINGLE PAGE -->
+        <div class="factor-mock" data-mock="inline">
+          <div class="mock-inline">
+            <div class="inline-bar">
+              <span>新建报销 · 单页表单</span>
+              <span class="save-state">● 草稿已自动保存</span>
+            </div>
+            <div class="inline-blocks">
+              <div class="inline-block checked"><span class="ib-lb">类别</span><span class="ib-val">差旅 · 交通</span><span class="ib-check">✓</span></div>
+              <div class="inline-block checked"><span class="ib-lb">金额</span><span class="ib-val">¥ 1,280</span><span class="ib-check">✓</span></div>
+              <div class="inline-block checked"><span class="ib-lb">日期</span><span class="ib-val">2026-05-12</span><span class="ib-check">✓</span></div>
+              <div class="inline-block"><span class="ib-lb">项目</span><span class="ib-val">客户拜访 · 上海</span><span class="ib-check">…</span></div>
+              <div class="inline-block"><span class="ib-lb">说明</span><span class="ib-val" style="color:var(--ink-mute);font-style:italic">填一下报销说明……</span><span class="ib-check" style="color:var(--accent)">!</span></div>
+            </div>
+            <div class="inline-submit">
+              <button class="wizard-btn">存为草稿</button>
+              <button class="wizard-btn primary">提交报销</button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="flow-strip">
+        <span class="flow-strip-tag">TASK FLOW · 任务流</span>
+        <div class="flow-strip-title">「提交报销」任务 · 5 步 · 切 form factor 不变</div>
+        <div class="flow-nodes" id="flowNodes">
+          <div class="flow-node" data-node="1"><span class="flow-node-num">STEP 01</span><span class="flow-node-name">开始</span></div>
+          <span class="flow-node-arrow">→</span>
+          <div class="flow-node" data-node="2"><span class="flow-node-num">STEP 02</span><span class="flow-node-name">填表</span></div>
+          <span class="flow-node-arrow">→</span>
+          <div class="flow-node" data-node="3"><span class="flow-node-num">STEP 03</span><span class="flow-node-name">校验</span></div>
+          <span class="flow-node-arrow">→</span>
+          <div class="flow-node" data-node="4"><span class="flow-node-num">STEP 04</span><span class="flow-node-name">提交</span></div>
+          <span class="flow-node-arrow">→</span>
+          <div class="flow-node" data-node="5"><span class="flow-node-num">STEP 05</span><span class="flow-node-name">完成</span></div>
+        </div>
+        <div class="flow-callout" id="flowCallout"></div>
+      </div>
+    </div>
+
+    <div class="reveal-bar">
+      <div class="msg">
+        页面只是任务流的<span class="em">取景框</span>。<br>
+        先决定任务，再决定页面怎么放。
+      </div>
+      <div class="counter">
+        已切 <strong id="factorCount">1</strong> / 3 形态 · 任务流不变
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Section 03: 幕二 · 拆开 -->
+<section id="break">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <span class="act-tag break">幕二 · 拆开</span>
+        <div class="section-num"><strong>03</strong> / 拆开</div>
+        <h2 class="section-title">任务流的<br><span class="purple">5 个解剖位</span>。</h2>
+      </div>
+      <p class="section-sub">
+        一步任务 = 进入条件 + 行动 + 副作用 + 退出条件 + 状态迁移。
+        把这 5 件事拉出来 —— 点下面流程图的任意一步看它的 5 个槽位。
+      </p>
+    </div>
+
+    <div class="anatomy-stage">
+      <div class="anatomy-svg-wrap">
+        <svg class="anatomy-svg" viewBox="0 0 780 130" xmlns="http://www.w3.org/2000/svg" aria-label="报销任务流图">
+          <defs>
+            <marker id="arrowhead" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto">
+              <polygon class="anatomy-arrow-head" points="0 0, 8 4, 0 8" />
+            </marker>
+          </defs>
+
+          <!-- arrows -->
+          <line class="anatomy-arrow" x1="130" y1="65" x2="160" y2="65" marker-end="url(#arrowhead)" />
+          <line class="anatomy-arrow" x1="280" y1="65" x2="310" y2="65" marker-end="url(#arrowhead)" />
+          <line class="anatomy-arrow" x1="430" y1="65" x2="460" y2="65" marker-end="url(#arrowhead)" />
+          <line class="anatomy-arrow" x1="580" y1="65" x2="610" y2="65" marker-end="url(#arrowhead)" />
+
+          <!-- nodes -->
+          <g class="anatomy-node-g" data-anatomy="1"><rect class="anatomy-node-bg" x="10" y="35" width="120" height="60" rx="6"/><text class="anatomy-node-num" x="22" y="55">STEP 01</text><text class="anatomy-node-label" x="22" y="80">开始</text></g>
+          <g class="anatomy-node-g" data-anatomy="2"><rect class="anatomy-node-bg" x="160" y="35" width="120" height="60" rx="6"/><text class="anatomy-node-num" x="172" y="55">STEP 02</text><text class="anatomy-node-label" x="172" y="80">填表</text></g>
+          <g class="anatomy-node-g" data-anatomy="3"><rect class="anatomy-node-bg" x="310" y="35" width="120" height="60" rx="6"/><text class="anatomy-node-num" x="322" y="55">STEP 03</text><text class="anatomy-node-label" x="322" y="80">校验</text></g>
+          <g class="anatomy-node-g" data-anatomy="4"><rect class="anatomy-node-bg" x="460" y="35" width="120" height="60" rx="6"/><text class="anatomy-node-num" x="472" y="55">STEP 04</text><text class="anatomy-node-label" x="472" y="80">提交</text></g>
+          <g class="anatomy-node-g" data-anatomy="5"><rect class="anatomy-node-bg" x="610" y="35" width="120" height="60" rx="6"/><text class="anatomy-node-num" x="622" y="55">STEP 05</text><text class="anatomy-node-label" x="622" y="80">完成</text></g>
+        </svg>
+      </div>
+
+      <div class="anatomy-empty" id="anatomyEmpty">点流程图任意一步 —— 弹出它的 5 个槽位：进入条件 / 行动 / 副作用 / 退出条件 / 状态迁移。</div>
+
+      <div class="anatomy-card" id="anatomyCard" data-step-label="STEP 03 · 校验">
+        <h4 id="anatomyCardTitle">STEP 03 · 校验</h4>
+        <div class="anatomy-slots" id="anatomySlots"></div>
+        <div class="anatomy-note" id="anatomyNote"></div>
+      </div>
+
+      <div class="anatomy-progress">已查看 <strong id="anatomyCount">0</strong> / 5 步 · 完整查看才能进入下一节</div>
+    </div>
+
+    <div class="side-effect-warn">
+      <h5>副作用最容易被忘掉</h5>
+      <p>很多设计稿只描述 UI——按钮长什么样、放哪、按下去跳到哪一页——<strong>但不描述"按了这个按钮后端发生什么"</strong>。</p>
+      <p>一句话 <code>提交后发送邮件给审批人 + 锁定金额 + 创建审批任务</code> 就避免一周返工。</p>
+      <p>副作用 = 用户看不见、系统在做的事。在设计稿里写出来，工程师才知道要不要起 background job、起几个。</p>
+    </div>
+
+    <div class="reveal-bar" style="margin-top:32px">
+      <div class="msg">
+        5 步 × 5 槽位 = <span class="em">25 个决策</span>。<br>
+        任何一格空着，工程师就要追问。
+      </div>
+      <div class="counter">点流程图任一节点查看槽位</div>
+    </div>
+  </div>
+</section>
+
+<!-- Section 04: 幕三 · 再做 -->
+<section id="make">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <span class="act-tag make">幕三 · 再做</span>
+        <div class="section-num"><strong>04</strong> / 再做</div>
+        <h2 class="section-title">轮到你——<br>给「<span class="em">新员工入职</span>」任务流，<br>填 5 个步骤。</h2>
+      </div>
+      <p class="section-sub">
+        HR 要做"新员工入职"流程。给你流程图骨架 + 候选行动池，你来选每一步的<strong>行动</strong>，
+        再回答两个关键的<strong>副作用 / 退出条件</strong>问题。
+      </p>
+    </div>
+
+    <div class="builder-stage">
+      <div class="builder-head">
+        <h3 class="builder-title">配置「新员工入职」任务流 · 5 步</h3>
+        <div class="builder-progress">已配置 <span class="done" id="builderDone">0</span> / 5 步</div>
+      </div>
+
+      <div class="builder-grid">
+        <div class="builder-pool">
+          <h5>候选行动池 · 12 个</h5>
+          <p class="builder-pool-hint">点一个行动 → 点目标步骤的"行动"槽位放进去。<br>注意有<strong style="color:var(--accent)">陷阱选项</strong>——副作用 ≠ 行动。Esc 取消选中。</p>
+          <div class="builder-pool-list" id="builderPool">
+            <div class="builder-chip" data-field="hr_create">HR 创建入职单 <span class="chip-add">+</span></div>
+            <div class="builder-chip" data-field="emp_fill">新员工填表 <span class="chip-add">+</span></div>
+            <div class="builder-chip" data-field="emp_upload">新员工上传证件 <span class="chip-add">+</span></div>
+            <div class="builder-chip" data-field="mgr_approve">主管审批 <span class="chip-add">+</span></div>
+            <div class="builder-chip" data-field="it_account">IT 自动建账号 <span class="chip-add">+</span></div>
+            <div class="builder-chip builder-chip-trap" data-field="hr_account">HR 自动建账号 <span class="chip-add">+</span></div>
+            <div class="builder-chip builder-chip-trap" data-field="emp_self_create">新员工自己创建入职单 <span class="chip-add">+</span></div>
+            <div class="builder-chip builder-chip-trap" data-field="mgr_create">主管创建入职单 <span class="chip-add">+</span></div>
+            <div class="builder-chip builder-chip-trap" data-field="upload_anytime">上传随时 <span class="chip-add">+</span></div>
+            <div class="builder-chip builder-chip-trap" data-field="check_date">校验入职日期 <span class="chip-add">+</span></div>
+            <div class="builder-chip builder-chip-trap" data-field="send_email">发送欢迎邮件 <span class="chip-add">+</span></div>
+            <div class="builder-chip builder-chip-trap" data-field="lock_id">锁定工号 <span class="chip-add">+</span></div>
+          </div>
+        </div>
+
+        <div class="builder-flow">
+
+          <div class="builder-step" data-step="1">
+            <div class="builder-step-head"><span class="builder-step-num">1</span><span class="builder-step-name">开始 · 创建入职单</span><span class="builder-step-status" id="status1">未配</span></div>
+            <div class="builder-slot-action" data-target="1"><span class="slot-label">行动 →</span></div>
+            <div class="builder-quiz" data-quiz="1">
+              <div class="builder-quiz-q">这一步的<strong>副作用</strong>是什么？</div>
+              <div class="builder-quiz-opts" data-quiz-opts="1">
+                <span class="builder-quiz-opt" data-opt="auto_account">自动建账号</span>
+                <span class="builder-quiz-opt" data-opt="welcome_email">自动发邀请邮件</span>
+                <span class="builder-quiz-opt" data-opt="none">不发任何东西</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="builder-step" data-step="2">
+            <div class="builder-step-head"><span class="builder-step-num">2</span><span class="builder-step-name">填写资料</span><span class="builder-step-status" id="status2">未配</span></div>
+            <div class="builder-slot-action" data-target="2"><span class="slot-label">行动 →</span></div>
+          </div>
+
+          <div class="builder-step" data-step="3">
+            <div class="builder-step-head"><span class="builder-step-num">3</span><span class="builder-step-name">上传材料</span><span class="builder-step-status" id="status3">未配</span></div>
+            <div class="builder-slot-action" data-target="3"><span class="slot-label">行动 →</span></div>
+          </div>
+
+          <div class="builder-step" data-step="4">
+            <div class="builder-step-head"><span class="builder-step-num">4</span><span class="builder-step-name">审批</span><span class="builder-step-status" id="status4">未配</span></div>
+            <div class="builder-slot-action" data-target="4"><span class="slot-label">行动 →</span></div>
+            <div class="builder-quiz" data-quiz="4">
+              <div class="builder-quiz-q">这一步的<strong>退出条件</strong>是什么？</div>
+              <div class="builder-quiz-opts" data-quiz-opts="4">
+                <span class="builder-quiz-opt" data-opt="mgr_click">主管点同意</span>
+                <span class="builder-quiz-opt" data-opt="received_email">收到邮件</span>
+                <span class="builder-quiz-opt" data-opt="date_reached">入职日期到了</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="builder-step" data-step="5">
+            <div class="builder-step-head"><span class="builder-step-num">5</span><span class="builder-step-name">完成 · 通知 IT 开权限</span><span class="builder-step-status" id="status5">未配</span></div>
+            <div class="builder-slot-action" data-target="5"><span class="slot-label">行动 →</span></div>
+          </div>
+
+        </div>
+      </div>
+
+      <div class="builder-actions">
+        <button class="builder-btn primary" id="builderSubmit">提交打分</button>
+        <button class="builder-btn" id="builderReset">清空</button>
+      </div>
+
+      <div class="builder-judge" id="builderJudge"></div>
+    </div>
+  </div>
+</section>
+
+<!-- Section 05: closing -->
+<section id="closing">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>05</strong> / 把这件事变成习惯</div>
+        <h2 class="section-title">下次接需求，<br>先画"<span class="em">流程条</span>"。</h2>
+      </div>
+      <p class="section-sub">
+        从这一篇开始，"页面思维"和"任务流思维"的差距会出现在你每一次需求评审的发言里。
+      </p>
+    </div>
+
+    <div class="tips-grid">
+      <div class="tip">
+        <div class="tip-num">i</div>
+        <h4>画稿子前先画"流程条"</h4>
+        <p>任务从哪开始、有几步、每步谁做、什么时候完成。</p>
+        <p><strong>一句话能说清的流程，page mockup 才有锚点。</strong></p>
+      </div>
+      <div class="tip">
+        <div class="tip-num">ii</div>
+        <h4>副作用 ≠ UI</h4>
+        <p>按钮按下去后端做什么、什么时候发邮件、什么时候锁定金额——这些不在 UI 里但必须在设计稿里。</p>
+        <p><strong>"副作用"是任务流的隐形车道。</strong></p>
+      </div>
+      <div class="tip">
+        <div class="tip-num">iii</div>
+        <h4>每一步都问"退出条件"</h4>
+        <p>这一步什么时候算完成？是用户点'下一步'？是后端校验过？是审批人同意？</p>
+        <p><strong>退出条件不清楚，每个团队会做出不一样的实现。</strong></p>
+      </div>
+    </div>
+
+    <div class="tip-outro">
+      <div class="outro-tag">划重点 · TL;DR</div>
+      <div>
+        <p>同一个任务可以全程一页（modal）、可以 5 页、可以全程零页（API 触发）。<strong>先设计任务，再决定页面承载方式</strong>——而不是反过来。</p>
+        <p>需求评审第一句不是"<strong>怎么画</strong>"，是"<strong>这是几步任务，每步谁做、做完什么时候算完</strong>"。语言一变，所有人都跟着变。</p>
+      </div>
+    </div>
+
+    <a href="x6-branches.html" class="next-post">
+      <div>
+        <div class="np-tag">下一站 · NEXT · X6 · 高阶</div>
+        <h4>分支：<span class="em">审批 / 撤回 / 驳回 / 重提</span></h4>
+        <p>任务流不是一条直线——审批可以驳回、用户可以撤回、状态可以重提。下一站讲：分支不是 if-else 加几句话，是流程图本身的结构。</p>
+      </div>
+      <span class="np-cta">继续 <span class="arr">→</span></span>
+    </a>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div class="byline-group">
+      <div class="byline">
+        <img class="avatar" src="author.jpg" alt="范米花儿">
+        <div class="byline-meta">
+          <div class="byline-label"><span class="dot"></span>作者 · WRITTEN BY</div>
+          <div class="byline-name">嗨，我是 <span class="em">范米花儿</span></div>
+          <p class="byline-tag">设计工程师 ——<br>设计 × 代码，两边都做。</p>
+        </div>
+      </div>
+</div>
+    <div class="footer-meta">
+      做于 <span class="mono">2026</span> · 用 <span class="heart">●</span> 写给 <span class="mono">DESIGNERS &amp; DEVELOPERS</span>
+    </div>
+  </div>
+</footer>
+
+<div class="picker-label" id="pickerLabel"></div>
+
+<script>
+// ===== Game 1: form factor switch + flow node detail =====
+(function(){
+  const tabs = document.querySelectorAll('.factor-tab');
+  const mocks = document.querySelectorAll('.factor-mock');
+  const factorCount = document.getElementById('factorCount');
+  const visited = new Set(['desktop']);
+
+  const wizardSteps = document.querySelectorAll('.wizard-steps .wz');
+  const wizardBody = document.getElementById('wizardBody');
+  const mobStepDots = document.querySelectorAll('.mob-step-dots .dt');
+  const inlineBlocks = document.querySelectorAll('.inline-block');
+
+  // wizard body content per step
+  const WIZARD_CONTENT = {
+    1: `<h5>新建报销</h5><p style="color:var(--ink-soft);font-size:13px;line-height:1.6;margin:0">欢迎进入报销流程。这里会带你完成 4 步——<strong>填表 → 校验 → 提交 → 完成</strong>。预计 3 分钟。任何时候点"存为草稿"可以中断。</p>`,
+    2: `<h5>填写报销信息</h5><div class="wizard-form"><div class="wf-row"><label>类别</label><span class="wf-val">差旅 · 交通</span></div><div class="wf-row"><label>金额</label><span class="wf-val">¥ 1,280</span></div><div class="wf-row"><label>发生日期</label><span class="wf-val">2026-05-12</span></div><div class="wf-row"><label>项目</label><span class="wf-val">客户拜访 · 上海</span></div><div class="wf-row" style="grid-column:1/-1"><label>说明</label><span class="wf-val">高铁往返 · 含改签费</span></div></div>`,
+    3: `<h5>校验中……</h5><p style="color:var(--ink-soft);font-size:13px;margin:0 0 12px">系统正在核对：金额是否在预算内、日期是否在报销窗口、项目是否还激活。</p><div style="display:flex;flex-direction:column;gap:6px;font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--green)"><div>✓ 金额 ¥1,280 在差旅 ¥3,000 预算内</div><div>✓ 日期 2026-05-12 在 30 天报销窗口</div><div>✓ 项目 「客户拜访 · 上海」 激活中</div></div>`,
+    4: `<h5>确认并提交</h5><p style="color:var(--ink-soft);font-size:13px;margin:0 0 12px">点提交后会：发送邮件给审批人 + 锁定金额 + 创建审批任务。</p><div style="background:var(--bg);border-radius:6px;padding:10px 14px;font-size:13px"><div><strong>差旅 · 交通</strong> · ¥ 1,280</div><div style="color:var(--ink-mute);font-size:12px">客户拜访 · 上海 · 2026-05-12</div></div>`,
+    5: `<h5>已提交 ✓</h5><p style="color:var(--green);font-size:14px;margin:0 0 8px"><strong>报销单 #EXP-20260512-0421 已创建</strong></p><p style="color:var(--ink-soft);font-size:13px;margin:0">已邮件通知审批人李华。预计 24 小时内有结果。</p>`
+  };
+
+  function switchFactor(factor) {
+    tabs.forEach(t => t.classList.toggle('active', t.dataset.factor === factor));
+    mocks.forEach(m => m.classList.toggle('active', m.dataset.mock === factor));
+    if (!visited.has(factor)) {
+      visited.add(factor);
+      factorCount.textContent = visited.size;
+    }
+  }
+
+  tabs.forEach(t => t.addEventListener('click', () => switchFactor(t.dataset.factor)));
+
+  // flow node strip
+  const flowNodes = document.querySelectorAll('.flow-node');
+  const flowCallout = document.getElementById('flowCallout');
+  const FLOW_NODE_DESC = {
+    1: '<strong>开始</strong> · 用户从入口点击"新建报销"。这一步几乎没有用户行动——只是一个"任务被发起"的瞬间。<em>它在桌面 wizard 是首屏说明、在移动 modal 是底部弹出动画、在单页 inline 是滚到表单顶部</em>。',
+    2: '<strong>填表</strong> · 用户填类别 / 金额 / 日期 / 项目 / 说明。这是任务里"用户出力最多"的一步。<em>桌面留 1 屏给它、移动用 sheet 滑出表单、单页就是顺序排列的 5 个 block</em>。',
+    3: '<strong>校验</strong> · 系统跑校验——金额预算、日期窗口、项目激活状态。<em>它不一定有 UI——可以是按钮 loading 0.5s，也可以是单页 inline 的实时小绿勾</em>。但任务流里它是独立一步。',
+    4: '<strong>提交</strong> · 用户点"提交"瞬间，后端做 4 件事：写库、发邮件、创建审批任务、锁定金额。<em>UI 上可能只是按钮 loading → 跳到下一屏</em>。但状态迁移是 draft → submitted。',
+    5: '<strong>完成</strong> · 给用户一个确认 + 下一步指引（看进度、回首页、新建另一单）。<em>3 种 form factor 都要保留这一步——少了它用户不知道任务到底有没有真的完成</em>。'
+  };
+  flowNodes.forEach(n => {
+    n.addEventListener('click', () => {
+      const id = n.dataset.node;
+      flowNodes.forEach(x => x.classList.toggle('active', x === n));
+      flowCallout.innerHTML = FLOW_NODE_DESC[id];
+      flowCallout.classList.add('show');
+
+      // also light up wizard step + mob dots + inline blocks in current factor
+      wizardSteps.forEach(s => {
+        const stepId = parseInt(s.dataset.step, 10);
+        s.classList.remove('active', 'done');
+        if (stepId < parseInt(id, 10)) s.classList.add('done');
+        else if (stepId === parseInt(id, 10)) s.classList.add('active');
+      });
+      wizardBody.innerHTML = WIZARD_CONTENT[id] || '';
+
+      mobStepDots.forEach((d, i) => {
+        d.classList.toggle('on', i < parseInt(id, 10));
+      });
+
+      inlineBlocks.forEach((b, i) => {
+        b.classList.toggle('checked', i < parseInt(id, 10) - 1);
+      });
+    });
+  });
+})();
+
+// ===== Game 2: SVG anatomy node click =====
+(function(){
+  const nodes = document.querySelectorAll('.anatomy-node-g');
+  const card = document.getElementById('anatomyCard');
+  const empty = document.getElementById('anatomyEmpty');
+  const slotsEl = document.getElementById('anatomySlots');
+  const noteEl = document.getElementById('anatomyNote');
+  const title = document.getElementById('anatomyCardTitle');
+  const countEl = document.getElementById('anatomyCount');
+  const visited = new Set();
+
+  const ANATOMY = {
+    1: {
+      label: 'STEP 01 · 开始',
+      enter: '用户在「我的报销」点了"新建报销"按钮',
+      action: '用户进入流程；UI 显示"开始页"或直接跳到表单',
+      effect: '<span class="purple">后端：创建一个 draft 记录</span>（user_id + created_at）',
+      exit: '页面加载完，第一个表单字段可见',
+      transition: '不存在 → <span class="em">draft</span>',
+      note: '很多设计稿跳过这一步，直接画填表页。但<strong>"draft 什么时候诞生"是工程师必须知道的问题</strong>。如果点了"新建报销"就建 draft，半天没填的草稿要不要清理？谁清理？'
+    },
+    2: {
+      label: 'STEP 02 · 填表',
+      enter: 'draft 已存在；表单已加载',
+      action: '用户填类别 / 金额 / 日期 / 项目 / 说明',
+      effect: '<span class="purple">每改一个字段自动 save 到 draft</span>；离开页面也能续上',
+      exit: '所有必填字段已填，"下一步"按钮变可点',
+      transition: '<span class="em">draft</span> → <span class="em">draft</span>（持续保存，状态不变）',
+      note: '"自动保存"是副作用，写在设计稿里能避免"用户关掉浏览器数据丢了"的事故。'
+    },
+    3: {
+      label: 'STEP 03 · 校验',
+      enter: '所有必填字段已填',
+      action: '用户点"提交"',
+      effect: '<span class="purple">后端跑校验</span>——预算 / 时间窗口 / 项目状态；UI 显示错误（如果有）',
+      exit: '所有校验通过；没有错误返回',
+      transition: '<span class="em">draft → validating</span>（UI 中转态，数据库不一定变）',
+      note: '校验是<strong>独立一步</strong>不是"提交按钮按下去顺便做的事"。如果校验失败要不要保留输入？要不要回到填表步？这些都要写清楚。'
+    },
+    4: {
+      label: 'STEP 04 · 提交',
+      enter: '校验通过',
+      action: '系统真正写库；UI 显示 loading',
+      effect: '<span class="purple">后端：状态写入数据库 + 发邮件给审批人 + 创建审批任务 + 锁定金额</span>',
+      exit: '数据库返回成功',
+      transition: '<span class="em">draft → submitted</span>（关键迁移，记入审计日志）',
+      note: '一行副作用 <code>发邮件 + 创建审批任务 + 锁定金额</code> 决定后端起几个 job。漏一项就是一周返工。'
+    },
+    5: {
+      label: 'STEP 05 · 完成',
+      enter: '数据库写入成功',
+      action: '系统显示成功页；用户看到报销单号 + 审批人',
+      effect: '<span class="purple">前端：清掉本地 draft 缓存；可选：发起一个"查看审批进度"的引导</span>',
+      exit: '用户关掉成功页或点"查看进度"',
+      transition: '<span class="em">submitted</span>（状态不变，已交给审批流）',
+      note: '"完成"≠"审批通过"。设计稿要写清楚：成功页上的"成功"指的是"提交成功"还是"审批成功"。这两个完全不同。'
+    }
+  };
+
+  function renderStep(id) {
+    const data = ANATOMY[id];
+    if (!data) return;
+    title.textContent = data.label;
+    card.dataset.stepLabel = data.label;
+    slotsEl.innerHTML = `
+      <div class="slot-k">进入条件</div><div class="slot-v"><span class="tx">${data.enter}</span></div>
+      <div class="slot-k">行动</div><div class="slot-v">${data.action}</div>
+      <div class="slot-k">副作用</div><div class="slot-v">${data.effect}</div>
+      <div class="slot-k">退出条件</div><div class="slot-v">${data.exit}</div>
+      <div class="slot-k">状态迁移</div><div class="slot-v">${data.transition}</div>
+    `;
+    noteEl.innerHTML = `<strong>↳ 注意</strong> · ${data.note}`;
+    card.classList.add('show');
+    empty.classList.add('hide');
+
+    if (!visited.has(id)) {
+      visited.add(id);
+      countEl.textContent = visited.size;
+    }
+  }
+
+  nodes.forEach(node => {
+    node.addEventListener('click', () => {
+      const id = node.dataset.anatomy;
+      nodes.forEach(n => n.classList.toggle('is-active', n === node));
+      renderStep(id);
+    });
+  });
+})();
+
+// ===== Game 3: builder (onboarding flow with traps + quizzes) =====
+(function(){
+  const ACTIONS = {
+    hr_create: 'HR 创建入职单', emp_fill: '新员工填表', emp_upload: '新员工上传证件',
+    mgr_approve: '主管审批', it_account: 'IT 自动建账号',
+    hr_account: 'HR 自动建账号', emp_self_create: '新员工自己创建入职单', mgr_create: '主管创建入职单',
+    upload_anytime: '上传随时', check_date: '校验入职日期', send_email: '发送欢迎邮件', lock_id: '锁定工号'
+  };
+  const STEP_IDEAL = { 1: 'hr_create', 2: 'emp_fill', 3: 'emp_upload', 4: 'mgr_approve', 5: 'it_account' };
+
+  const TRAPS = {
+    hr_account: { step: 5, reason: 'IT 系统是新账号的负责人；HR 系统通常只是发起方。' },
+    emp_self_create: { step: 1, reason: '在没有账号的情况下，新员工不可能登录系统建单。自助通常 HR 才能创建。' },
+    mgr_create: { step: 1, reason: '主管不是入职流程的发起人，只是审批者。' },
+    upload_anytime: { step: 3, reason: '上传材料是流程里的一步，不能"随时"——脱离序列会破坏审批前置条件。' },
+    check_date: { step: null, reason: '校验入职日期是副作用（系统自动跑），不是用户的行动。' },
+    send_email: { step: null, reason: '发邮件是副作用（系统自动发），不是用户的行动。' },
+    lock_id: { step: null, reason: '锁定工号是副作用（创建账号触发），不是用户的行动。' }
+  };
+
+  const QUIZ_IDEAL = { 1: 'welcome_email', 4: 'mgr_click' };
+  const QUIZ_EXPLAIN = {
+    1: {
+      welcome_email: '✓ 正确。HR 建单的副作用通常是给新员工发"准备入职"的邀请邮件 + 创建一份待填表单的链接。',
+      auto_account: '✗ 太早了。这时新员工还没填表 / 没传材料 / 没审批通过，账号不该建。',
+      none: '✗ 不发任何东西，新员工怎么知道下一步去哪填表？'
+    },
+    4: {
+      mgr_click: '✓ 正确。审批的退出条件是"审批人作出决策"——主管点同意（或驳回）。',
+      received_email: '✗ 收到邮件只是<strong>通知</strong>，不是退出条件。"收到"和"行动"是两件事。',
+      date_reached: '✗ 入职日期到了 ≠ 审批通过。日期是另一个分支（时间触发），和这一步无关。'
+    }
+  };
+
+  const slots = { 1: null, 2: null, 3: null, 4: null, 5: null };
+  const quizPicks = { 1: null, 4: null };
+  let picked = null;
+
+  const pickerLabel = document.getElementById('pickerLabel');
+  const slotEls = document.querySelectorAll('.builder-slot-action');
+  const chips = document.querySelectorAll('.builder-chip');
+  const quizOptEls = document.querySelectorAll('.builder-quiz-opt');
+  const judge = document.getElementById('builderJudge');
+
+  function renderSlot(t) {
+    const slotArea = document.querySelector(`.builder-slot-action[data-target="${t}"]`);
+    if (!slotArea) return;
+    slotArea.innerHTML = '<span class="slot-label">行动 →</span>';
+    if (slots[t]) {
+      const slot = document.createElement('span');
+      slot.className = 'builder-slot';
+      slot.innerHTML = `${ACTIONS[slots[t]]} <button data-target="${t}" aria-label="remove">×</button>`;
+      slotArea.appendChild(slot);
+    }
+
+    const status = document.getElementById('status' + t);
+    if (slots[t]) {
+      status.textContent = '已选';
+      status.className = 'builder-step-status ok';
+    } else {
+      status.textContent = '未配';
+      status.className = 'builder-step-status';
+    }
+  }
+
+  function renderAll() {
+    [1,2,3,4,5].forEach(t => renderSlot(t));
+    // update chips used state
+    chips.forEach(chip => {
+      const f = chip.dataset.field;
+      const used = Object.values(slots).includes(f);
+      chip.classList.toggle('is-used', used);
+    });
+    const done = [1,2,3,4,5].filter(t => slots[t]).length;
+    document.getElementById('builderDone').textContent = done;
+  }
+
+  function showPicker(field) {
+    picked = field;
+    pickerLabel.innerHTML = `已选 <strong style="color:var(--accent);margin:0 4px">${ACTIONS[field]}</strong>——点目标步骤的"行动"槽 <span class="esc">Esc</span> 取消`;
+    pickerLabel.classList.add('show');
+    chips.forEach(c => c.classList.toggle('is-active', c.dataset.field === field));
+    slotEls.forEach(el => {
+      const t = el.dataset.target;
+      const can = !slots[t];
+      el.classList.toggle('is-target', can);
+    });
+  }
+
+  function clearPicker() {
+    picked = null;
+    pickerLabel.classList.remove('show');
+    chips.forEach(c => c.classList.remove('is-active'));
+    slotEls.forEach(el => el.classList.remove('is-target'));
+  }
+
+  function setSlot(field, t) {
+    if (slots[t]) return false;
+    // remove field from any other slot (just in case)
+    Object.keys(slots).forEach(k => { if (slots[k] === field) slots[k] = null; });
+    slots[t] = field;
+    renderAll();
+    return true;
+  }
+
+  function removeSlot(t) {
+    slots[t] = null;
+    renderAll();
+  }
+
+  chips.forEach(chip => {
+    chip.addEventListener('click', e => {
+      e.stopPropagation();
+      if (chip.classList.contains('is-used')) return;
+      const field = chip.dataset.field;
+      if (picked === field) clearPicker();
+      else showPicker(field);
+    });
+  });
+
+  slotEls.forEach(slotArea => {
+    slotArea.addEventListener('click', e => {
+      const rm = e.target.closest('button[data-target]');
+      if (rm) {
+        removeSlot(rm.dataset.target);
+        return;
+      }
+      if (!picked) return;
+      const t = slotArea.dataset.target;
+      if (setSlot(picked, t)) clearPicker();
+    });
+  });
+
+  // quiz options
+  quizOptEls.forEach(opt => {
+    opt.addEventListener('click', () => {
+      const quizGroup = opt.closest('.builder-quiz-opts');
+      const quizId = quizGroup.dataset.quizOpts;
+      const optKey = opt.dataset.opt;
+      quizPicks[quizId] = optKey;
+      quizGroup.querySelectorAll('.builder-quiz-opt').forEach(o => {
+        o.classList.toggle('selected', o === opt);
+      });
+    });
+  });
+
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape' && picked) clearPicker();
+  });
+
+  document.getElementById('builderSubmit').addEventListener('click', () => {
+    const lines = [];
+    let perfect = 0;
+    let trapsHit = [];
+    let wrongs = [];
+    let missing = [];
+
+    [1,2,3,4,5].forEach(t => {
+      const f = slots[t];
+      if (!f) {
+        missing.push(t);
+        lines.push(`<li><strong>步骤 ${t}</strong>：还没选行动 — 试一下，每一步都有最优解。</li>`);
+        return;
+      }
+      if (f === STEP_IDEAL[t]) {
+        perfect++;
+        lines.push(`<li>✓ <strong>步骤 ${t} · ${ACTIONS[f]}</strong> — 完美。</li>`);
+      } else if (TRAPS[f]) {
+        trapsHit.push({ step: t, field: f });
+        lines.push(`<li><span class="trap-tag">陷阱命中 ·</span> <strong>步骤 ${t}</strong> 选了 <code style="color:#ff8a6e">${ACTIONS[f]}</code><br><span class="why">↳ ${TRAPS[f].reason}</span></li>`);
+      } else {
+        wrongs.push({ step: t, field: f });
+        const ideal = STEP_IDEAL[t];
+        lines.push(`<li><strong>步骤 ${t}</strong>：选了 <code style="color:#ffd166">${ACTIONS[f]}</code>，应该是 <strong>${ACTIONS[ideal]}</strong>。<br><span class="why">↳ 把"谁主动做"和"按谁的身份触发"分开看。</span></li>`);
+      }
+    });
+
+    // quizzes
+    [1, 4].forEach(q => {
+      const pick = quizPicks[q];
+      if (!pick) {
+        lines.push(`<li><strong>步骤 ${q} · ${q === 1 ? '副作用' : '退出条件'}</strong>：还没答 — 这两个题决定了你是不是真把任务流读透了。</li>`);
+        return;
+      }
+      const ideal = QUIZ_IDEAL[q];
+      const explain = QUIZ_EXPLAIN[q][pick];
+      if (pick === ideal) {
+        lines.push(`<li>✓ <strong>步骤 ${q} 的 ${q === 1 ? '副作用' : '退出条件'}</strong> — ${explain}</li>`);
+      } else {
+        lines.push(`<li><strong>步骤 ${q} 的 ${q === 1 ? '副作用' : '退出条件'}</strong>：<br><span class="why">↳ ${explain}</span></li>`);
+      }
+    });
+
+    // verdict
+    let verdictClass, verdictLabel, headline;
+    const quizOk = (quizPicks[1] === QUIZ_IDEAL[1] ? 1 : 0) + (quizPicks[4] === QUIZ_IDEAL[4] ? 1 : 0);
+
+    if (perfect === 5 && quizOk === 2 && trapsHit.length === 0) {
+      verdictClass = 'win';
+      verdictLabel = '完美';
+      headline = '你已经看到任务流 5 个槽位的样子了。';
+      lines.unshift(`<li style="list-style:none;margin-left:-20px;color:#d4ecdb"><strong>需求评审时直接问"每一步的副作用和退出条件是什么"</strong>——这一问能省下一周返工。</li>`);
+    } else if (trapsHit.length > 0) {
+      verdictClass = 'trap';
+      verdictLabel = '陷阱命中';
+      headline = '陷阱命中：副作用混进了行动。';
+      lines.unshift(`<li style="list-style:none;margin-left:-20px;color:#ff8a6e"><strong>关键问题：</strong>问自己——这件事是"<strong style="color:white">谁主动做</strong>"还是"<strong style="color:white">触发后系统自己做</strong>"？前者是行动、后者是副作用。</li>`);
+    } else if (perfect >= 3 && quizOk >= 1) {
+      verdictClass = 'win';
+      verdictLabel = '基本对了';
+      headline = '差一两个 — 但你已经在用任务流的语言思考了。';
+    } else {
+      verdictClass = 'partial';
+      verdictLabel = '再看一遍';
+      headline = '换个角度——任务流不是"页面跳转的顺序"，是"事情按什么顺序发生 + 谁在做"。';
+    }
+
+    judge.innerHTML = `<span class="verdict ${verdictClass}">${verdictLabel}</span><h4>${headline}</h4><ul>${lines.join('')}</ul>`;
+    judge.classList.add('show');
+    judge.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  });
+
+  document.getElementById('builderReset').addEventListener('click', () => {
+    [1,2,3,4,5].forEach(t => slots[t] = null);
+    quizPicks[1] = null; quizPicks[4] = null;
+    quizOptEls.forEach(o => o.classList.remove('selected'));
+    renderAll();
+    judge.classList.remove('show');
+    clearPicker();
+  });
+
+  renderAll();
+})();
+</script>
+
+</body>
+</html>

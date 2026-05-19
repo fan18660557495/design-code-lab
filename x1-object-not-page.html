@@ -1,0 +1,1318 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>不是页面，是对象 — AI LABBOOK · X1</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,300..900&family=Geist:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Noto+Sans+SC:wght@300;400;500;700;900&family=Noto+Serif+SC:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f3eee5;
+    --bg-2: #ebe4d4;
+    --ink: #16161d;
+    --ink-soft: #4a4a55;
+    --ink-mute: #8a8a92;
+    --line: #d5cdba;
+    --line-soft: #e3dcca;
+    --accent: #ff4d2e;
+    --accent-soft: #ffe4dc;
+    --blue: #0a4cff;
+    --blue-soft: #dde6ff;
+    --green: #1f6b3a;
+    --green-soft: #d4ecdb;
+    --yellow: #ffcf3d;
+    --paper: #faf7f0;
+    --shadow: 0 1px 0 rgba(0,0,0,0.04), 0 8px 24px rgba(22,22,29,0.06);
+
+    --obj-color: #ff4d2e;
+    --obj-soft: rgba(255,77,46,0.12);
+    --proj-color: #1f6b3a;
+    --proj-soft: rgba(31,107,58,0.12);
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'Geist', 'Noto Sans SC', system-ui, -apple-system, sans-serif;
+    font-size: 16px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    background-image: radial-gradient(circle at 1px 1px, rgba(22,22,29,0.05) 1px, transparent 0);
+    background-size: 24px 24px;
+  }
+
+  .display-cn { font-family: 'Noto Serif SC', 'Fraunces', serif; font-weight: 900; letter-spacing: -0.01em; }
+  .display-en { font-family: 'Fraunces', 'Noto Serif SC', serif; font-weight: 600; font-style: italic; letter-spacing: -0.02em; }
+  .mono { font-family: 'JetBrains Mono', monospace; }
+  .label { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-mute); }
+
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 0 32px; }
+
+  /* Topbar */
+  .topbar {
+    border-bottom: 1px dashed var(--line);
+    padding: 16px 0;
+    background: var(--bg);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .topbar-inner { display: flex; justify-content: space-between; align-items: center; gap: 24px; flex-wrap: wrap; }
+  .brand-block { display: flex; align-items: center; gap: 10px; font-family: 'JetBrains Mono', monospace; font-size: 13px; }
+  .brand { display: inline-flex; align-items: center; gap: 6px; color: var(--ink); text-decoration: none; font-weight: 600; }
+  .brand-arrow { color: var(--ink-mute); transition: transform .2s; }
+  .brand:hover .brand-arrow { transform: translateX(-3px); }
+  .brand .dot { display: inline-block; width: 8px; height: 8px; background: var(--accent); border-radius: 50%; vertical-align: middle; animation: pulse 2s ease-in-out infinite; margin-left: 4px; }
+  .brand-sep { color: var(--ink-mute); }
+  .brand-current { color: var(--ink-soft); }
+  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+  .nav-links { display: flex; gap: 18px; font-size: 13px; flex-wrap: wrap; }
+  .nav-links a { color: var(--ink-soft); text-decoration: none; transition: color 0.2s; }
+  .nav-links a:hover { color: var(--accent); }
+  .nav-links a.current { color: var(--accent); font-weight: 600; }
+
+  /* Hero */
+  .hero { padding: 100px 0 80px; position: relative; overflow: hidden; }
+  .hero-meta { display: flex; gap: 24px; margin-bottom: 32px; align-items: center; flex-wrap: wrap; }
+  .hero-meta .pill { padding: 6px 12px; border: 1px solid var(--ink); border-radius: 100px; font-size: 11px; font-family: 'JetBrains Mono', monospace; letter-spacing: 0.05em; }
+  .hero-meta .pill.fill { background: var(--ink); color: var(--bg); }
+  .hero-meta .pill.purple { background: var(--obj-color); color: white; border-color: var(--obj-color); }
+  .hero h1 {
+    font-family: 'Noto Serif SC', 'Fraunces', serif;
+    font-weight: 900;
+    font-size: clamp(48px, 7vw, 92px);
+    line-height: 0.95;
+    letter-spacing: -0.03em;
+    margin: 0 0 24px;
+  }
+  .hero h1 .em { font-family: 'Noto Serif SC', serif; font-weight: 500; color: var(--accent); }
+  .hero h1 .purple { color: var(--obj-color); font-family: 'Noto Serif SC', serif; font-weight: 500; }
+  .hero p.lede {
+    font-size: 20px;
+    line-height: 1.5;
+    max-width: 640px;
+    color: var(--ink-soft);
+    margin: 0 0 40px;
+  }
+  .hero-grid { display: grid; grid-template-columns: 1.4fr 1fr; gap: 48px; align-items: end; }
+  @media (max-width: 880px) { .hero-grid { grid-template-columns: 1fr; } }
+  .hero-side { border-left: 1px dashed var(--line); padding-left: 24px; font-size: 13px; color: var(--ink-soft); }
+  .hero-side .row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px dashed var(--line); gap: 12px; }
+  .hero-side .row:last-child { border-bottom: none; }
+  .hero-side .row .k { color: var(--ink-mute); font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.05em; text-transform: uppercase; }
+  .hero-side .row .v { font-weight: 500; }
+
+  /* Sections */
+  section { padding: 80px 0; border-top: 1px solid var(--line); position: relative; }
+  .section-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 56px; flex-wrap: wrap; gap: 16px; }
+  .section-num { font-family: 'JetBrains Mono', monospace; font-size: 13px; color: var(--ink-mute); letter-spacing: 0.1em; margin-top: 6px; }
+  .section-num strong { color: var(--accent); }
+  .section-title { font-family: 'Noto Serif SC', serif; font-weight: 900; font-size: clamp(32px, 4.5vw, 52px); line-height: 1.05; letter-spacing: -0.02em; margin: 8px 0 0; max-width: 22ch; }
+  .section-title .em { font-family: 'Noto Serif SC', serif; font-weight: 500; color: var(--accent); }
+  .section-title .purple { color: var(--obj-color); font-family: 'Noto Serif SC', serif; font-weight: 500; }
+  .section-sub { color: var(--ink-soft); font-size: 17px; max-width: 38ch; line-height: 1.55; margin: 0; }
+
+  /* Act tag */
+  .act-tag { display: inline-block; padding: 4px 12px; font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; border-radius: 100px; }
+  .act-tag.look { background: var(--blue-soft); color: var(--blue); }
+  .act-tag.break { background: var(--obj-soft); color: var(--obj-color); }
+  .act-tag.make { background: var(--proj-soft); color: var(--proj-color); }
+
+  /* Problem cards */
+  .problem-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; margin-top: 24px; }
+  @media (max-width: 880px) { .problem-grid { grid-template-columns: 1fr; } }
+  .problem-card { background: var(--paper); border: 1px solid var(--line); border-radius: 6px; padding: 28px; position: relative; }
+  .problem-card.bad { border-color: var(--accent); background: var(--accent-soft); }
+  .problem-card.good { border-color: var(--obj-color); background: var(--obj-soft); }
+  .problem-card .tag { position: absolute; top: -12px; left: 24px; background: var(--bg); padding: 2px 10px; font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.1em; }
+  .problem-card.bad .tag { color: var(--accent); border: 1px solid var(--accent); }
+  .problem-card.good .tag { color: var(--obj-color); border: 1px solid var(--obj-color); }
+  .problem-card h3 { font-family: 'Noto Serif SC', serif; font-size: 22px; margin: 0 0 12px; font-weight: 700; }
+  .problem-card p { margin: 0; color: var(--ink-soft); font-size: 14px; line-height: 1.55; }
+  .problem-card p + p { margin-top: 10px; }
+
+  /* GAME 1: surfaces */
+  .surfaces-stage {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 40px 28px;
+    position: relative;
+    overflow: hidden;
+  }
+  .surfaces-stage::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(to right, var(--line-soft) 1px, transparent 1px),
+      linear-gradient(to bottom, var(--line-soft) 1px, transparent 1px);
+    background-size: 24px 24px;
+    opacity: 0.4;
+    pointer-events: none;
+  }
+  .surfaces-grid {
+    position: relative;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 22px;
+  }
+  @media (max-width: 880px) { .surfaces-grid { grid-template-columns: 1fr; } }
+  .surface-card {
+    background: white;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 16px 16px 14px;
+    position: relative;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    cursor: pointer;
+    min-height: 130px;
+  }
+  .surface-card:hover { box-shadow: 0 8px 24px rgba(22,22,29,0.08); }
+  .surface-card.is-highlight {
+    border-color: var(--obj-color);
+    box-shadow: 0 0 0 2px var(--obj-soft), 0 8px 24px rgba(255,77,46,0.18);
+    transform: translateY(-3px);
+  }
+  .surface-tag {
+    position: absolute;
+    top: -10px;
+    left: 12px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    background: var(--ink);
+    color: var(--bg);
+    padding: 2px 8px;
+    border-radius: 100px;
+    transition: background 0.3s;
+  }
+  .surface-card.is-highlight .surface-tag { background: var(--obj-color); }
+
+  .surface-mini-avatar { width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, #ff8a4a, #ff4d2e); color: white; display: inline-flex; align-items: center; justify-content: center; font-weight: 700; font-size: 13px; flex-shrink: 0; }
+  .surface-mini-avatar.alt { background: linear-gradient(135deg, #6e9efb, #0a4cff); }
+  .surface-mini-avatar.alt2 { background: linear-gradient(135deg, #8e8e9a, #4a4a55); }
+  .surface-list-row { display: flex; align-items: center; gap: 10px; padding: 8px 0; font-size: 13px; }
+  .surface-name { font-weight: 600; color: var(--ink); font-size: 13px; }
+  .surface-meta { color: var(--ink-mute); font-size: 11px; }
+  .surface-chip { display: inline-flex; align-items: center; gap: 6px; background: var(--blue-soft); color: var(--blue); padding: 3px 9px; border-radius: 100px; font-size: 12px; font-weight: 500; }
+  .surface-chip .ch-avatar { width: 16px; height: 16px; border-radius: 50%; background: linear-gradient(135deg, #ff8a4a, #ff4d2e); color: white; font-size: 9px; display: inline-flex; align-items: center; justify-content: center; font-weight: 700; }
+  .surface-tag-pill { display: inline-block; padding: 2px 7px; background: var(--bg-2); color: var(--ink-soft); font-size: 11px; border-radius: 3px; margin-right: 3px; }
+  .surface-toast { display: flex; align-items: flex-start; gap: 10px; }
+  .surface-toast .icon { width: 20px; height: 20px; border-radius: 50%; background: var(--green); color: white; display: flex; align-items: center; justify-content: center; font-size: 12px; flex-shrink: 0; margin-top: 1px; }
+  .surface-search-hit { padding: 6px 0; border-bottom: 1px dashed var(--line-soft); }
+  .surface-search-hit:last-child { border-bottom: none; }
+  .surface-search-hit mark { background: var(--yellow); padding: 0 2px; border-radius: 2px; color: var(--ink); font-weight: 700; }
+  .surface-num { font-family: 'JetBrains Mono', monospace; font-weight: 700; color: var(--obj-color); line-height: 1; }
+  .detail-mini { padding: 4px 0 0; }
+  .detail-mini-head { display: flex; align-items: center; gap: 10px; padding-bottom: 10px; border-bottom: 1px dashed var(--line); margin-bottom: 10px; }
+  .detail-mini-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 14px; font-size: 11px; }
+  .detail-mini-lbl { font-family: 'JetBrains Mono', monospace; font-size: 9px; color: var(--ink-mute); letter-spacing: 0.06em; text-transform: uppercase; }
+  .detail-mini-val { font-size: 12px; font-weight: 500; margin-top: 1px; }
+
+  /* Reveal bar */
+  .reveal-bar {
+    margin-top: 32px;
+    padding: 20px 28px;
+    background: var(--ink);
+    color: var(--bg);
+    border-radius: 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+  .reveal-bar .msg { font-family: 'Noto Serif SC', serif; font-size: 17px; font-weight: 500; line-height: 1.55; }
+  .reveal-bar .msg .em { color: var(--accent); }
+  .reveal-bar .counter { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ink-mute); letter-spacing: 0.05em; }
+  .reveal-bar .counter strong { color: var(--accent); font-size: 14px; }
+
+  /* GAME 2: fields */
+  .fields-stage { display: grid; grid-template-columns: 1fr 1.4fr; gap: 32px; margin-top: 32px; }
+  @media (max-width: 980px) { .fields-stage { grid-template-columns: 1fr; } }
+
+  .fields-pool {
+    background: var(--paper);
+    border: 1px solid var(--obj-color);
+    border-radius: 8px;
+    padding: 28px 22px 22px;
+    position: relative;
+  }
+  .fields-pool::before {
+    content: 'CUSTOMER · OBJECT';
+    position: absolute;
+    top: -10px;
+    left: 16px;
+    background: var(--obj-color);
+    color: white;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    padding: 2px 10px;
+    border-radius: 100px;
+  }
+  .fields-pool h4 { font-family: 'Noto Serif SC', serif; font-size: 17px; margin: 0 0 16px; font-weight: 700; }
+  .fields-list { display: flex; flex-direction: column; gap: 5px; }
+  .field-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 7px 12px;
+    background: white;
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    transition: all 0.2s;
+  }
+  .field-row.is-used { border-color: var(--obj-color); background: var(--obj-soft); }
+  .field-name { font-weight: 600; color: var(--ink); flex: 1; }
+  .field-type { color: var(--ink-mute); font-size: 11px; }
+  .fields-foot { margin-top: 14px; padding-top: 14px; border-top: 1px dashed var(--line); font-size: 12px; color: var(--ink-mute); line-height: 1.55; }
+  .fields-foot strong { color: var(--obj-color); }
+
+  .proj-scenes { display: flex; flex-direction: column; gap: 14px; }
+  .proj-scene {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 18px 20px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .proj-scene:hover { border-color: var(--proj-color); transform: translateX(2px); }
+  .proj-scene.active { border-color: var(--proj-color); background: var(--proj-soft); }
+  .proj-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+  .proj-name { font-weight: 700; font-size: 15px; }
+  .proj-count { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ink-mute); letter-spacing: 0.05em; }
+  .proj-scene.active .proj-count { color: var(--proj-color); font-weight: 600; }
+  .proj-fields { display: flex; flex-wrap: wrap; gap: 4px; }
+  .proj-fields .ch { padding: 2px 7px; background: white; border: 1px solid var(--line); border-radius: 3px; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ink-soft); }
+  .proj-scene.active .ch { border-color: var(--proj-color); color: var(--proj-color); background: white; }
+
+  /* GAME 3: builder */
+  .builder-stage {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 32px;
+    margin-top: 24px;
+  }
+  .builder-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 28px; flex-wrap: wrap; gap: 16px; }
+  .builder-title { font-family: 'Noto Serif SC', serif; font-size: 22px; margin: 0; font-weight: 700; }
+  .builder-progress { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--ink-mute); }
+  .builder-progress .done { color: var(--proj-color); font-weight: 700; font-size: 14px; }
+
+  .builder-grid { display: grid; grid-template-columns: 1fr 1.6fr; gap: 28px; }
+  @media (max-width: 980px) { .builder-grid { grid-template-columns: 1fr; } }
+
+  .builder-pool {
+    border: 1px dashed var(--obj-color);
+    border-radius: 8px;
+    padding: 18px;
+    background: white;
+    align-self: start;
+    position: sticky;
+    top: 80px;
+  }
+  .builder-pool h5 { font-family: 'Noto Serif SC', serif; font-size: 15px; margin: 0 0 12px; color: var(--obj-color); font-weight: 700; }
+  .builder-pool-hint { font-size: 11px; color: var(--ink-mute); margin: 0 0 14px; line-height: 1.5; }
+  .builder-pool-list { display: flex; flex-direction: column; gap: 5px; }
+  .builder-chip {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 7px 12px;
+    background: var(--obj-soft);
+    border: 1px solid var(--obj-color);
+    border-radius: 4px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    cursor: pointer;
+    user-select: none;
+    transition: all 0.15s;
+    color: var(--ink);
+  }
+  .builder-chip:hover { background: var(--obj-color); color: white; }
+  .builder-chip.is-active { background: var(--obj-color); color: white; box-shadow: 0 0 0 3px var(--obj-soft); }
+  .builder-chip .chip-add { margin-left: auto; opacity: 0.55; font-size: 14px; }
+
+  .builder-scenes { display: flex; flex-direction: column; gap: 16px; }
+  .builder-scene {
+    background: white;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 18px;
+  }
+  .builder-scene-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 12px; flex-wrap: wrap; gap: 8px; }
+  .builder-scene-name { font-weight: 700; font-size: 15px; }
+  .builder-scene-max { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ink-mute); }
+  .builder-scene-max .lim { color: var(--accent); font-weight: 700; }
+  .builder-scene-max .now { color: var(--proj-color); font-weight: 700; }
+  .builder-slots {
+    min-height: 48px;
+    padding: 10px;
+    border: 1px dashed var(--line);
+    border-radius: 6px;
+    background: var(--bg);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    align-items: flex-start;
+    align-content: flex-start;
+    transition: all 0.15s;
+  }
+  .builder-slots.is-target { outline: 2px dashed var(--obj-color); outline-offset: 3px; background: var(--obj-soft); }
+  .builder-slots.is-full { border-style: solid; border-color: var(--proj-color); }
+  .slot-placeholder { color: var(--ink-mute); font-size: 12px; padding: 4px 0; font-style: italic; }
+  .builder-slot {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 6px 4px 10px;
+    background: var(--proj-color);
+    color: white;
+    border-radius: 100px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+  }
+  .builder-slot button {
+    background: rgba(255,255,255,0.25);
+    border: none;
+    color: white;
+    width: 16px; height: 16px;
+    border-radius: 50%;
+    font-size: 11px;
+    line-height: 1;
+    cursor: pointer;
+    padding: 0;
+  }
+  .builder-slot button:hover { background: rgba(255,255,255,0.5); }
+  .builder-preview { margin-top: 12px; padding: 12px; background: var(--bg-2); border-radius: 6px; min-height: 40px; font-size: 13px; }
+  .builder-preview-empty { color: var(--ink-mute); font-style: italic; font-size: 12px; }
+
+  .builder-actions { display: flex; gap: 12px; margin-top: 24px; flex-wrap: wrap; }
+  .builder-btn {
+    padding: 10px 22px;
+    border-radius: 100px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    cursor: pointer;
+    font-weight: 600;
+    border: 1px solid var(--ink);
+    background: transparent;
+    color: var(--ink);
+    transition: all 0.15s;
+  }
+  .builder-btn:hover { background: var(--ink); color: var(--bg); }
+  .builder-btn.primary { background: var(--accent); color: white; border-color: var(--accent); }
+  .builder-btn.primary:hover { background: #e8451f; }
+
+  .builder-judge {
+    margin-top: 24px;
+    padding: 24px 26px;
+    border-radius: 8px;
+    background: var(--ink);
+    color: var(--bg);
+    display: none;
+  }
+  .builder-judge.show { display: block; }
+  .builder-judge .verdict { display: inline-block; font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; padding: 3px 10px; border-radius: 100px; }
+  .builder-judge .verdict.win { color: #1f6b3a; background: #d4ecdb; }
+  .builder-judge .verdict.partial { color: #c79f1e; background: #fff3cc; }
+  .builder-judge h4 { font-family: 'Noto Serif SC', serif; font-size: 22px; margin: 10px 0 14px; color: white; line-height: 1.3; }
+  .builder-judge ul { color: #c8c8d0; margin: 0; padding-left: 20px; font-size: 13px; line-height: 1.75; }
+  .builder-judge ul li + li { margin-top: 10px; }
+  .builder-judge ul strong { color: white; }
+  .builder-judge ul .why { color: #a0a0aa; font-size: 12px; }
+
+  /* picker label (floating) */
+  .picker-label {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--ink);
+    color: var(--bg);
+    padding: 12px 20px;
+    border-radius: 100px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    letter-spacing: 0.05em;
+    z-index: 200;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+    display: none;
+    align-items: center;
+    gap: 10px;
+  }
+  .picker-label.show { display: inline-flex; }
+  .picker-label .esc { background: rgba(255,255,255,0.15); padding: 2px 6px; border-radius: 3px; font-size: 10px; }
+
+  /* tips */
+  .tips-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 28px; margin-top: 24px; }
+  @media (max-width: 880px) { .tips-grid { grid-template-columns: 1fr; } }
+  .tip { background: var(--paper); border: 1px solid var(--line); border-radius: 6px; padding: 24px; position: relative; }
+  .tip-num { position: absolute; top: -14px; left: 16px; width: 32px; height: 32px; border-radius: 50%; background: var(--obj-color); color: white; display: flex; align-items: center; justify-content: center; font-family: 'Fraunces', serif; font-style: italic; font-weight: 600; font-size: 14px; }
+  .tip h4 { font-family: 'Noto Serif SC', serif; font-size: 18px; margin: 8px 0 10px; font-weight: 700; }
+  .tip p { color: var(--ink-soft); font-size: 14px; line-height: 1.6; margin: 0; }
+  .tip p + p { margin-top: 8px; }
+  .tip-outro {
+    margin-top: 44px;
+    padding: 30px 32px;
+    background: var(--ink);
+    color: var(--bg);
+    border-radius: 8px;
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 28px;
+    align-items: flex-start;
+  }
+  @media (max-width: 720px) { .tip-outro { grid-template-columns: 1fr; gap: 12px; } }
+  .outro-tag { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.1em; color: var(--accent); padding-top: 4px; }
+  .tip-outro p { margin: 0 0 12px; color: #c8c8d0; line-height: 1.65; font-size: 15px; }
+  .tip-outro p:last-child { margin-bottom: 0; }
+  .tip-outro strong { color: white; }
+
+  /* next post */
+  .next-post {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 56px;
+    padding: 32px;
+    background: var(--bg-2);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    text-decoration: none;
+    color: var(--ink);
+    transition: all 0.2s;
+    gap: 24px;
+    flex-wrap: wrap;
+  }
+  .next-post:hover { background: var(--ink); color: var(--bg); }
+  .next-post:hover .np-tag { color: var(--accent); }
+  .next-post:hover .em { color: var(--accent); }
+  .next-post:hover p { color: #c8c8d0; }
+  .np-tag { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.1em; color: var(--ink-mute); margin-bottom: 6px; }
+  .next-post h4 { font-family: 'Noto Serif SC', serif; font-size: 26px; margin: 0 0 8px; font-weight: 700; }
+  .next-post .em { color: var(--obj-color); font-weight: 500; }
+  .next-post p { margin: 0; color: var(--ink-soft); font-size: 14px; max-width: 56ch; }
+  .np-cta { font-family: 'JetBrains Mono', monospace; font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; white-space: nowrap; }
+  .np-cta .arr { display: inline-block; transition: transform .2s; }
+  .next-post:hover .arr { transform: translateX(4px); }
+
+  /* footer */
+  footer { padding: 56px 0 64px; background: var(--bg); color: var(--ink-soft); border-top: 1px solid var(--line); }
+  .byline-group { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; margin-bottom: 32px; padding-bottom: 32px; border-bottom: 1px dashed var(--line); }
+  @media (max-width: 880px) { .byline-group { grid-template-columns: 1fr; } }
+  .byline { display: flex; gap: 16px; align-items: center; }
+  .byline .avatar { width: 56px; height: 56px; border-radius: 50%; object-fit: cover; flex-shrink: 0; }
+  .byline-label { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--accent); letter-spacing: 0.1em; }
+  .byline-label .dot { display: inline-block; width: 6px; height: 6px; background: var(--accent); border-radius: 50%; margin-right: 4px; vertical-align: middle; animation: pulse 2s ease-in-out infinite; }
+  .byline-name { font-family: 'Noto Serif SC', serif; font-weight: 700; font-size: 18px; margin: 4px 0; color: var(--ink); }
+  .byline-name .em { color: var(--accent); font-weight: 500; }
+  .byline-tag { color: var(--ink-soft); font-size: 13px; margin: 0; line-height: 1.5; }
+  .footer-meta { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ink-mute); text-align: center; letter-spacing: 0.05em; }
+  .footer-meta .heart { color: var(--accent); }
+
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="wrap topbar-inner">
+    <div class="brand-block">
+      <a href="book.html#vol-3" class="brand"><span class="brand-arrow">←</span>AI LABBOOK <span class="dot"></span></a>
+      <span class="brand-sep">/</span>
+      <span class="brand-current">X1 · 不是页面，是对象</span>
+    </div>
+    <nav class="nav-links">
+      <a href="book.html#vol-3">路线图</a>
+    </nav>
+  </div>
+</div>
+
+<!-- Hero -->
+<header class="hero">
+  <div class="wrap">
+    <div class="hero-meta">
+      <span class="pill fill">高阶 · ADVANCED</span>
+      <span class="pill purple">STAGE 01 · 对象关系</span>
+      <span class="pill">X1 · 样板章节</span>
+      <span class="label">阅读 ≈ 18 分钟 · 含 3 段互动</span>
+    </div>
+    <div class="hero-grid">
+      <div>
+        <h1>
+          不是<span class="display-cn">页面</span>，<br>
+          是<span class="purple">对象</span>。
+        </h1>
+        <p class="lede">
+          你以为自己在设计"客户详情页"。<br>
+          其实你在设计的是<strong>客户</strong>这个对象——它在 9 个地方反复出现。<br>
+          页面只是其中一个投影。
+        </p>
+      </div>
+      <div class="hero-side">
+        <div class="row"><span class="k">本页讲什么</span><span class="v">页面 → 对象</span></div>
+        <div class="row"><span class="k">三幕</span><span class="v">看见 · 拆开 · 再做</span></div>
+        <div class="row"><span class="k">面向</span><span class="v">B 端 / 后台设计师</span></div>
+        <div class="row"><span class="k">前置</span><span class="v">无</span></div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- Section 01: 问题 -->
+<section id="problem">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>01</strong> / 问题</div>
+        <h2 class="section-title">为什么你的稿子，<br>工程师总要<span class="em">来回追问</span>？</h2>
+      </div>
+      <p class="section-sub">
+        因为你交付的是<strong>一个页面</strong>。但工程师在搭建的是<strong>一个数据模型</strong>。
+        语言对不上，每个字段、状态、权限规则都要来回 ping 你。
+      </p>
+    </div>
+
+    <div class="problem-grid">
+      <div class="problem-card bad">
+        <span class="tag">页面思维 · PAGE</span>
+        <h3>"我设计了一个客户详情页"</h3>
+        <p>稿子里画了详情页布局——头像、姓名、公司、字段表、跟进时间线。看起来完整。</p>
+        <p><strong>工程师追问：</strong>列表里这个客户显示什么？@mention 时呢？通知里呢？搜索结果里呢？卡片里呢？仪表盘上呢？……</p>
+        <p style="color:var(--accent)"><strong>你：</strong>呃……要再画 6 张稿子？</p>
+      </div>
+
+      <div class="problem-card good">
+        <span class="tag">对象思维 · OBJECT</span>
+        <h3>"我设计了客户这个对象"</h3>
+        <p>稿子里有<strong>字段清单</strong>（含格式、权限、空态规则），加上一份<strong>投影清单</strong>——客户在 9 个地方出现时分别用哪几个字段。</p>
+        <p><strong>工程师收到：</strong>对象模型 + 9 个 view 的字段订阅清单。能直接落 schema。</p>
+        <p style="color:var(--obj-color)"><strong>结果：</strong>追问 → 0 次。</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Section 02: 幕一 · 看见 -->
+<section id="look">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <span class="act-tag look">幕一 · 看见</span>
+        <div class="section-num"><strong>02</strong> / 看见</div>
+        <h2 class="section-title">同一个客户，<br>出现在 <span class="purple">9 个地方</span>。</h2>
+      </div>
+      <p class="section-sub">
+        下面 9 个 UI 都来自同一个 CRM。你看到的不是 9 个不同的客户——是<strong>同一个客户"张明"在 9 个表面上的投影</strong>。
+        鼠标移到任意一个，所有"张明"会同时高亮。
+      </p>
+    </div>
+
+    <div class="surfaces-stage">
+      <div class="surfaces-grid" id="surfacesGrid">
+
+        <div class="surface-card" data-surface="detail">
+          <span class="surface-tag">01 · 详情页</span>
+          <div class="detail-mini">
+            <div class="detail-mini-head">
+              <div class="surface-mini-avatar" style="width:44px;height:44px;font-size:16px">张</div>
+              <div>
+                <div style="font-family:'Noto Serif SC',serif;font-size:16px;font-weight:700">张明</div>
+                <div style="color:var(--ink-mute);font-size:11px">星河科技 · CTO</div>
+              </div>
+            </div>
+            <div class="detail-mini-grid">
+              <div><div class="detail-mini-lbl">跟进人</div><div class="detail-mini-val">李华</div></div>
+              <div><div class="detail-mini-lbl">状态</div><div class="detail-mini-val" style="color:var(--green)">活跃</div></div>
+              <div><div class="detail-mini-lbl">最近联系</div><div class="detail-mini-val">3 天前</div></div>
+              <div><div class="detail-mini-lbl">合作金额</div><div class="detail-mini-val">¥ 480k</div></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="surface-card" data-surface="list">
+          <span class="surface-tag">02 · 列表行</span>
+          <div style="margin-top:6px">
+            <div class="surface-list-row" style="border-bottom:1px dashed var(--line);padding:7px 0">
+              <div class="surface-mini-avatar">张</div>
+              <div style="flex:1;min-width:0">
+                <div class="surface-name">张明</div>
+                <div class="surface-meta">星河科技 · 3 天前</div>
+              </div>
+              <span class="surface-tag-pill" style="color:var(--green);background:var(--green-soft)">活跃</span>
+            </div>
+            <div class="surface-list-row" style="border-bottom:1px dashed var(--line);padding:7px 0;opacity:0.45">
+              <div class="surface-mini-avatar alt">王</div>
+              <div style="flex:1;min-width:0">
+                <div class="surface-name">王芳</div>
+                <div class="surface-meta">辰宇集团 · 1 周前</div>
+              </div>
+              <span class="surface-tag-pill">休眠</span>
+            </div>
+            <div class="surface-list-row" style="padding:7px 0;opacity:0.45">
+              <div class="surface-mini-avatar alt2">陈</div>
+              <div style="flex:1;min-width:0">
+                <div class="surface-name">陈强</div>
+                <div class="surface-meta">长青资本 · 今天</div>
+              </div>
+              <span class="surface-tag-pill" style="color:var(--green);background:var(--green-soft)">活跃</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="surface-card" data-surface="mention">
+          <span class="surface-tag">03 · @ 提及</span>
+          <div style="margin-top:8px;padding:12px;background:var(--bg-2);border-radius:6px;font-size:13px;line-height:1.65">
+            <div style="color:var(--ink-mute);font-size:11px;margin-bottom:6px">李华 · 2 小时前</div>
+            提醒一下 <span class="surface-chip"><span class="ch-avatar">张</span>张明</span> 这周重新对一下合同时间表。
+          </div>
+        </div>
+
+        <div class="surface-card" data-surface="toast">
+          <span class="surface-tag">04 · 通知</span>
+          <div style="margin-top:8px;padding:12px 14px;background:var(--green-soft);border-left:3px solid var(--green);border-radius:4px">
+            <div class="surface-toast">
+              <div class="icon">✓</div>
+              <div style="font-size:13px;line-height:1.5">
+                <strong>张明</strong> 已确认下周二的会议。<br>
+                <span style="color:var(--ink-mute);font-size:11px">2 分钟前</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="surface-card" data-surface="search">
+          <span class="surface-tag">05 · 搜索</span>
+          <div style="margin-top:6px">
+            <div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--ink-mute);margin-bottom:8px">🔍 搜 "<mark style="background:var(--yellow);padding:0 3px">张</mark>"</div>
+            <div class="surface-search-hit">
+              <div style="font-weight:600;font-size:13px"><mark>张</mark>明</div>
+              <div style="color:var(--ink-mute);font-size:11px;margin-top:2px">星河科技 · CTO · 跟进 李华</div>
+            </div>
+            <div class="surface-search-hit" style="opacity:0.5">
+              <div style="font-weight:600;font-size:13px"><mark>张</mark>雅琪</div>
+              <div style="color:var(--ink-mute);font-size:11px;margin-top:2px">瀚海传媒 · 创始人</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="surface-card" data-surface="dashboard">
+          <span class="surface-tag">06 · 仪表盘</span>
+          <div style="margin-top:8px">
+            <div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--ink-mute);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:8px">本月最活跃</div>
+            <div style="display:flex;align-items:baseline;gap:10px">
+              <div class="surface-mini-avatar" style="width:28px;height:28px;font-size:11px">张</div>
+              <div style="font-weight:700;font-size:14px">张明</div>
+              <div class="surface-num" style="margin-left:auto;font-size:24px">12</div>
+            </div>
+            <div style="font-size:11px;color:var(--ink-mute);margin-top:4px;margin-left:38px">次互动 · 本月</div>
+          </div>
+        </div>
+
+        <div class="surface-card" data-surface="card">
+          <span class="surface-tag">07 · 卡片</span>
+          <div style="margin-top:8px">
+            <div style="display:flex;gap:10px;align-items:flex-start">
+              <div class="surface-mini-avatar" style="width:40px;height:40px;font-size:14px">张</div>
+              <div style="flex:1;min-width:0">
+                <div style="font-weight:700;font-size:13px">张明</div>
+                <div style="color:var(--ink-mute);font-size:11px">星河科技 · CTO</div>
+                <div style="margin-top:6px;display:flex;gap:4px;flex-wrap:wrap">
+                  <span class="surface-tag-pill">VIP</span>
+                  <span class="surface-tag-pill">技术决策</span>
+                </div>
+              </div>
+            </div>
+            <div style="margin-top:10px;padding-top:8px;border-top:1px dashed var(--line);font-size:11px;color:var(--ink-soft)">
+              💼 ¥480k · 📅 3 天前 · 👤 李华
+            </div>
+          </div>
+        </div>
+
+        <div class="surface-card" data-surface="email">
+          <span class="surface-tag">08 · 邮件引用</span>
+          <div style="margin-top:8px;font-size:13px;line-height:1.65;color:var(--ink-soft)">
+            <div>嗨李华，</div>
+            <div style="margin-top:6px">关于和 <strong style="color:var(--ink)">张明</strong>（星河科技 · CTO）的合同……</div>
+            <div style="margin-top:10px;padding-top:8px;border-top:1px dashed var(--line);font-size:10px;color:var(--ink-mute);font-family:'JetBrains Mono',monospace">
+              自动展开 · auto-expand
+            </div>
+          </div>
+        </div>
+
+        <div class="surface-card" data-surface="filter">
+          <span class="surface-tag">09 · 筛选标签</span>
+          <div style="margin-top:8px">
+            <div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--ink-mute);letter-spacing:0.08em;margin-bottom:8px">当前筛选</div>
+            <div style="display:flex;flex-wrap:wrap;gap:5px">
+              <span class="surface-chip" style="background:var(--accent-soft);color:var(--accent)"><span class="ch-avatar">张</span>张明 <span style="margin-left:2px;opacity:0.55">✕</span></span>
+              <span class="surface-chip" style="background:var(--bg-2);color:var(--ink-soft)">状态=活跃 <span style="margin-left:2px;opacity:0.55">✕</span></span>
+            </div>
+            <div style="margin-top:10px;font-size:11px;color:var(--ink-mute)">→ 28 条相关任务</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <div class="reveal-bar">
+      <div class="msg">
+        每一个地方都是"张明"，<span class="em">但每一个地方用的字段都不一样</span>。<br>
+        因为他们其实<strong>是同一个对象的不同投影</strong>。
+      </div>
+      <div class="counter">
+        已访问 <strong id="revealCount">0</strong> / 9 个表面
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Section 03: 幕二 · 拆开 -->
+<section id="break">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <span class="act-tag break">幕二 · 拆开</span>
+        <div class="section-num"><strong>03</strong> / 拆开</div>
+        <h2 class="section-title">每个表面，<br>只是对象的<br>一份<span class="purple">字段订阅</span>。</h2>
+      </div>
+      <p class="section-sub">
+        把"客户"这个对象拆开看——它有一池字段，每个出现的地方只挑其中几个用。
+        点下面的场景，看它<strong>订阅了哪些字段</strong>。
+      </p>
+    </div>
+
+    <div class="fields-stage">
+      <div class="fields-pool">
+        <h4>客户 · 12 个字段</h4>
+        <div class="fields-list" id="fieldsList">
+          <div class="field-row" data-field="name"><span class="field-name">name</span><span class="field-type">string</span></div>
+          <div class="field-row" data-field="avatar"><span class="field-name">avatar</span><span class="field-type">image</span></div>
+          <div class="field-row" data-field="company"><span class="field-name">company</span><span class="field-type">string</span></div>
+          <div class="field-row" data-field="title"><span class="field-name">title</span><span class="field-type">string</span></div>
+          <div class="field-row" data-field="owner"><span class="field-name">owner</span><span class="field-type">user</span></div>
+          <div class="field-row" data-field="status"><span class="field-name">status</span><span class="field-type">enum</span></div>
+          <div class="field-row" data-field="last_contact"><span class="field-name">last_contact</span><span class="field-type">date</span></div>
+          <div class="field-row" data-field="tags"><span class="field-name">tags</span><span class="field-type">string[]</span></div>
+          <div class="field-row" data-field="deal_value"><span class="field-name">deal_value</span><span class="field-type">money</span></div>
+          <div class="field-row" data-field="interactions"><span class="field-name">interactions</span><span class="field-type">number</span></div>
+          <div class="field-row" data-field="notes"><span class="field-name">notes</span><span class="field-type">text</span></div>
+          <div class="field-row" data-field="phone"><span class="field-name">phone</span><span class="field-type">string</span></div>
+        </div>
+        <div class="fields-foot">
+          字段定义、格式化规则、权限和空态<strong>都住在对象上</strong>——不是住在哪个页面里。
+        </div>
+      </div>
+
+      <div class="proj-scenes" id="projScenes">
+        <div class="proj-scene active" data-scene="detail" data-fields="name,avatar,company,title,owner,status,last_contact,tags,deal_value,interactions,notes,phone">
+          <div class="proj-head">
+            <span class="proj-name">详情页</span>
+            <span class="proj-count">12 / 12 字段</span>
+          </div>
+          <div class="proj-fields">
+            <span class="ch">name</span><span class="ch">avatar</span><span class="ch">company</span><span class="ch">title</span>
+            <span class="ch">owner</span><span class="ch">status</span><span class="ch">last_contact</span><span class="ch">tags</span>
+            <span class="ch">deal_value</span><span class="ch">interactions</span><span class="ch">notes</span><span class="ch">phone</span>
+          </div>
+        </div>
+        <div class="proj-scene" data-scene="list" data-fields="name,avatar,company,status,last_contact">
+          <div class="proj-head">
+            <span class="proj-name">列表行</span>
+            <span class="proj-count">5 / 12 字段</span>
+          </div>
+          <div class="proj-fields">
+            <span class="ch">name</span><span class="ch">avatar</span><span class="ch">company</span><span class="ch">status</span><span class="ch">last_contact</span>
+          </div>
+        </div>
+        <div class="proj-scene" data-scene="mention" data-fields="name,avatar">
+          <div class="proj-head">
+            <span class="proj-name">@ 提及</span>
+            <span class="proj-count">2 / 12 字段</span>
+          </div>
+          <div class="proj-fields">
+            <span class="ch">name</span><span class="ch">avatar</span>
+          </div>
+        </div>
+        <div class="proj-scene" data-scene="dashboard" data-fields="name,avatar,interactions">
+          <div class="proj-head">
+            <span class="proj-name">仪表盘 widget</span>
+            <span class="proj-count">3 / 12 字段</span>
+          </div>
+          <div class="proj-fields">
+            <span class="ch">name</span><span class="ch">avatar</span><span class="ch">interactions</span>
+          </div>
+        </div>
+        <div class="proj-scene" data-scene="card" data-fields="name,avatar,company,title,tags,deal_value,last_contact,owner">
+          <div class="proj-head">
+            <span class="proj-name">卡片</span>
+            <span class="proj-count">8 / 12 字段</span>
+          </div>
+          <div class="proj-fields">
+            <span class="ch">name</span><span class="ch">avatar</span><span class="ch">company</span><span class="ch">title</span>
+            <span class="ch">tags</span><span class="ch">deal_value</span><span class="ch">last_contact</span><span class="ch">owner</span>
+          </div>
+        </div>
+        <div class="proj-scene" data-scene="search" data-fields="name,avatar,company,title,owner">
+          <div class="proj-head">
+            <span class="proj-name">搜索结果</span>
+            <span class="proj-count">5 / 12 字段</span>
+          </div>
+          <div class="proj-fields">
+            <span class="ch">name</span><span class="ch">avatar</span><span class="ch">company</span><span class="ch">title</span><span class="ch">owner</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="reveal-bar" style="margin-top:32px">
+      <div class="msg">
+        看出来了吗？<span class="em">字段定义在对象里，表面只是订阅清单</span>。<br>
+        新增一个字段 → 所有订阅它的表面同时更新。
+      </div>
+      <div class="counter">点不同场景对比订阅</div>
+    </div>
+  </div>
+</section>
+
+<!-- Section 04: 幕三 · 再做 -->
+<section id="make">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <span class="act-tag make">幕三 · 再做</span>
+        <div class="section-num"><strong>04</strong> / 再做</div>
+        <h2 class="section-title">轮到你——<br>给 3 个新场景<br><span class="em">配字段订阅</span>。</h2>
+      </div>
+      <p class="section-sub">
+        从字段池点字段加进 3 个空场景。每个场景有<strong>字段数上限</strong>。
+        提交后会给你打分——不是看选了几个，看你<strong>选对了哪几个</strong>。
+      </p>
+    </div>
+
+    <div class="builder-stage">
+      <div class="builder-head">
+        <h3 class="builder-title">给客户对象配 3 个新表面</h3>
+        <div class="builder-progress">已配置 <span class="done" id="builderDone">0</span> / 3 个场景</div>
+      </div>
+
+      <div class="builder-grid">
+        <div class="builder-pool">
+          <h5>字段池 · 12 个</h5>
+          <p class="builder-pool-hint">点一个字段 → 点目标场景的槽位放进去。Esc 取消选中。</p>
+          <div class="builder-pool-list" id="builderPool">
+            <div class="builder-chip" data-field="name">name <span class="chip-add">+</span></div>
+            <div class="builder-chip" data-field="avatar">avatar <span class="chip-add">+</span></div>
+            <div class="builder-chip" data-field="company">company <span class="chip-add">+</span></div>
+            <div class="builder-chip" data-field="title">title <span class="chip-add">+</span></div>
+            <div class="builder-chip" data-field="owner">owner <span class="chip-add">+</span></div>
+            <div class="builder-chip" data-field="status">status <span class="chip-add">+</span></div>
+            <div class="builder-chip" data-field="last_contact">last_contact <span class="chip-add">+</span></div>
+            <div class="builder-chip" data-field="tags">tags <span class="chip-add">+</span></div>
+            <div class="builder-chip" data-field="deal_value">deal_value <span class="chip-add">+</span></div>
+            <div class="builder-chip" data-field="interactions">interactions <span class="chip-add">+</span></div>
+            <div class="builder-chip" data-field="notes">notes <span class="chip-add">+</span></div>
+            <div class="builder-chip" data-field="phone">phone <span class="chip-add">+</span></div>
+          </div>
+        </div>
+
+        <div class="builder-scenes">
+          <div class="builder-scene" data-scene="A">
+            <div class="builder-scene-head">
+              <span class="builder-scene-name">A · 移动端通知 toast</span>
+              <span class="builder-scene-max"><span class="now" id="cntA">0</span> / <span class="lim">2</span> 字段</span>
+            </div>
+            <div class="builder-slots" data-target="A"><span class="slot-placeholder">手机锁屏上一闪而过——只能 2 个字段</span></div>
+            <div class="builder-preview" id="previewA"><span class="builder-preview-empty">空着——加字段后会显示预览</span></div>
+          </div>
+
+          <div class="builder-scene" data-scene="B">
+            <div class="builder-scene-head">
+              <span class="builder-scene-name">B · 搜索下拉条目</span>
+              <span class="builder-scene-max"><span class="now" id="cntB">0</span> / <span class="lim">4</span> 字段</span>
+            </div>
+            <div class="builder-slots" data-target="B"><span class="slot-placeholder">用户在搜框里输入时，能一眼认出"是不是这个人"</span></div>
+            <div class="builder-preview" id="previewB"><span class="builder-preview-empty">空着——加字段后会显示预览</span></div>
+          </div>
+
+          <div class="builder-scene" data-scene="C">
+            <div class="builder-scene-head">
+              <span class="builder-scene-name">C · 邮件签名引用</span>
+              <span class="builder-scene-max"><span class="now" id="cntC">0</span> / <span class="lim">3</span> 字段</span>
+            </div>
+            <div class="builder-slots" data-target="C"><span class="slot-placeholder">邮件里"和 XX 的合同"自动展开成职业身份</span></div>
+            <div class="builder-preview" id="previewC"><span class="builder-preview-empty">空着——加字段后会显示预览</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="builder-actions">
+        <button class="builder-btn primary" id="builderSubmit">提交打分</button>
+        <button class="builder-btn" id="builderReset">清空</button>
+      </div>
+
+      <div class="builder-judge" id="builderJudge"></div>
+    </div>
+  </div>
+</section>
+
+<!-- Section 05: closing -->
+<section id="closing">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>05</strong> / 把这件事变成习惯</div>
+        <h2 class="section-title">下次接需求，<br>先<span class="em">问 3 个问题</span>。</h2>
+      </div>
+      <p class="section-sub">
+        从这一篇开始，"页面思维"和"对象思维"的差距会出现在你每一次需求评审的发言里。
+      </p>
+    </div>
+
+    <div class="tips-grid">
+      <div class="tip">
+        <div class="tip-num">i</div>
+        <h4>这是什么对象？</h4>
+        <p>需求里出现"客户详情页"——脑子里要立刻冒出：客户是一个对象，它有 N 个出现的地方，当前需求只是其中之一。</p>
+        <p><strong>先问对象，再画页面。</strong></p>
+      </div>
+      <div class="tip">
+        <div class="tip-num">ii</div>
+        <h4>它在别的地方什么样？</h4>
+        <p>设计任何一个出现位置之前，先列出这个对象<strong>已经出现在哪些表面</strong>。</p>
+        <p>新加的表面要和老的保持一致——头像规则、状态色、空态文案不能各画各的。</p>
+      </div>
+      <div class="tip">
+        <div class="tip-num">iii</div>
+        <h4>这次用哪几个字段？</h4>
+        <p>每个表面交付时带一份"字段订阅清单"。工程师不用追问，直接落 schema。</p>
+        <p><strong>设计稿不再是图，是规则。</strong></p>
+      </div>
+    </div>
+
+    <div class="tip-outro">
+      <div class="outro-tag">划重点 · TL;DR</div>
+      <div>
+        <p>页面是 <strong>对象 × 一个使用场景</strong> 的产物。从对象出发，页面是结果；从页面出发，对象就被肢解成 N 份不一致的副本。</p>
+        <p>下次需求评审，试一次——<strong>第一句不是"我打算这么画"，而是"这是个什么对象，它已经在哪些地方出现了"</strong>。整个会议的语言就变了。</p>
+      </div>
+    </div>
+
+    <a href="x2-fields-relations-references.html" class="next-post">
+      <div>
+        <div class="np-tag">下一站 · NEXT · X2 · 高阶</div>
+        <h4>对象的<span class="em">字段、关系、引用</span></h4>
+        <p>对象本身只是开始。对象之间会引用彼此——客户引用联系人，联系人引用商机，商机引用合同。下一站讲怎么设计这种"互相引用"的关系，避免把数据模型设计成一团乱麻。</p>
+      </div>
+      <span class="np-cta">继续 <span class="arr">→</span></span>
+    </a>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div class="byline-group">
+      <div class="byline">
+        <img class="avatar" src="author.jpg" alt="范米花儿">
+        <div class="byline-meta">
+          <div class="byline-label"><span class="dot"></span>作者 · WRITTEN BY</div>
+          <div class="byline-name">嗨，我是 <span class="em">范米花儿</span></div>
+          <p class="byline-tag">设计工程师 ——<br>设计 × 代码，两边都做。</p>
+        </div>
+      </div>
+</div>
+    <div class="footer-meta">
+      做于 <span class="mono">2026</span> · 用 <span class="heart">●</span> 写给 <span class="mono">DESIGNERS &amp; DEVELOPERS</span>
+    </div>
+  </div>
+</footer>
+
+<div class="picker-label" id="pickerLabel"></div>
+
+<script>
+// ===== Game 1: surfaces hover all =====
+(function(){
+  const surfaces = document.querySelectorAll('.surface-card');
+  const visited = new Set();
+  const counter = document.getElementById('revealCount');
+  surfaces.forEach(card => {
+    card.addEventListener('mouseenter', () => {
+      surfaces.forEach(s => s.classList.add('is-highlight'));
+      if (!visited.has(card.dataset.surface)) {
+        visited.add(card.dataset.surface);
+        counter.textContent = visited.size;
+      }
+    });
+    card.addEventListener('mouseleave', () => {
+      surfaces.forEach(s => s.classList.remove('is-highlight'));
+    });
+  });
+})();
+
+// ===== Game 2: scene -> fields =====
+(function(){
+  const projScenes = document.querySelectorAll('.proj-scene');
+  const fieldRows = document.querySelectorAll('.field-row');
+  function activate(scene) {
+    projScenes.forEach(s => s.classList.toggle('active', s === scene));
+    const used = (scene.dataset.fields || '').split(',');
+    fieldRows.forEach(row => row.classList.toggle('is-used', used.includes(row.dataset.field)));
+  }
+  projScenes.forEach(s => s.addEventListener('click', () => activate(s)));
+  activate(document.querySelector('.proj-scene.active'));
+})();
+
+// ===== Game 3: builder =====
+(function(){
+  const SCENE_MAX = { A: 2, B: 4, C: 3 };
+  const SCENE_IDEAL = {
+    A: new Set(['name', 'avatar']),
+    B: new Set(['name', 'avatar', 'company', 'status']),
+    C: new Set(['name', 'company', 'title'])
+  };
+  const SCENE_DESC = {
+    A: '移动端通知 toast',
+    B: '搜索下拉条目',
+    C: '邮件签名引用'
+  };
+  const SCENE_EXPLAIN = {
+    A: '手机锁屏上 0.3 秒认出"是谁"——头像是视觉锚点，名字补一行。多了来不及读。',
+    B: '搜索是在"快速辨认"。头像 + 名字（命中字段）+ 公司或状态（消歧义），4 个刚好。',
+    C: '邮件正文要"专业身份感"。name + company + title 就够了。金额、跟进人、状态属于内部信息，外发邮件不该出现。'
+  };
+  const SCENE_PLACEHOLDER = {
+    A: '手机锁屏上一闪而过——只能 2 个字段',
+    B: '用户在搜框里输入时，能一眼认出"是不是这个人"',
+    C: '邮件里"和 XX 的合同"自动展开成职业身份'
+  };
+  const FIELD_LABEL = {
+    name: '张明',
+    avatar: '👤',
+    company: '星河科技',
+    title: 'CTO',
+    owner: '李华',
+    status: '活跃',
+    last_contact: '3 天前',
+    tags: 'VIP',
+    deal_value: '¥480k',
+    interactions: '12 次',
+    notes: '…',
+    phone: '138****'
+  };
+
+  const slots = { A: [], B: [], C: [] };
+  let picked = null;
+
+  const pickerLabel = document.getElementById('pickerLabel');
+  const slotEls = document.querySelectorAll('.builder-slots');
+  const chips = document.querySelectorAll('.builder-chip');
+  const judge = document.getElementById('builderJudge');
+
+  function renderSlots(t) {
+    const container = document.querySelector(`.builder-slots[data-target="${t}"]`);
+    container.innerHTML = '';
+    if (slots[t].length === 0) {
+      container.innerHTML = `<span class="slot-placeholder">${SCENE_PLACEHOLDER[t]}</span>`;
+    } else {
+      slots[t].forEach((field, idx) => {
+        const slot = document.createElement('span');
+        slot.className = 'builder-slot';
+        slot.innerHTML = `${field} <button data-target="${t}" data-idx="${idx}" aria-label="remove">×</button>`;
+        container.appendChild(slot);
+      });
+    }
+    container.classList.toggle('is-full', slots[t].length >= SCENE_MAX[t]);
+    document.getElementById('cnt' + t).textContent = slots[t].length;
+  }
+
+  function renderPreview(t) {
+    const el = document.getElementById('preview' + t);
+    const f = slots[t];
+    if (f.length === 0) {
+      el.innerHTML = '<span class="builder-preview-empty">空着——加字段后会显示预览</span>';
+      return;
+    }
+    let html = '';
+    if (t === 'A') {
+      html = '<div style="background:white;border-radius:6px;padding:10px;display:flex;gap:8px;align-items:center;border:1px solid var(--line)">';
+      if (f.includes('avatar')) html += '<div style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#ff8a4a,#ff4d2e);color:white;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;flex-shrink:0">张</div>';
+      html += '<div style="font-size:12px;flex:1;min-width:0">';
+      const parts = f.filter(x => x !== 'avatar').map(x => x === 'name' ? '<strong>张明</strong>' : `<span style="color:var(--ink-mute)">${FIELD_LABEL[x]}</span>`);
+      html += parts.join(' · ');
+      html += '</div></div>';
+    } else if (t === 'B') {
+      html = '<div style="background:white;border-radius:6px;padding:8px 10px;border:1px solid var(--line);display:flex;gap:8px;align-items:center">';
+      if (f.includes('avatar')) html += '<div style="width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#ff8a4a,#ff4d2e);color:white;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:11px;flex-shrink:0">张</div>';
+      html += '<div style="font-size:12px;flex:1;min-width:0">';
+      if (f.includes('name')) html += '<mark style="background:var(--yellow);padding:0 2px"><strong>张</strong></mark><strong>明</strong>';
+      const sub = [];
+      if (f.includes('company')) sub.push('星河科技');
+      if (f.includes('title')) sub.push('CTO');
+      if (f.includes('status')) sub.push('<span style="color:var(--green)">● 活跃</span>');
+      if (f.includes('last_contact')) sub.push('3 天前');
+      if (f.includes('owner')) sub.push('LH 跟进');
+      if (f.includes('tags')) sub.push('VIP');
+      if (f.includes('deal_value')) sub.push('¥480k');
+      if (f.includes('interactions')) sub.push('12 次');
+      if (f.includes('phone')) sub.push('138****');
+      if (f.includes('notes')) sub.push('…');
+      if (sub.length) html += `<div style="font-size:11px;color:var(--ink-mute);margin-top:1px">${sub.join(' · ')}</div>`;
+      html += '</div></div>';
+    } else if (t === 'C') {
+      html = '<div style="background:white;border-radius:4px;padding:10px 12px;border:1px solid var(--line);font-size:12px;line-height:1.6;color:var(--ink-soft)">';
+      html += '嗨李华，<br>关于和 ';
+      const parens = [];
+      if (f.includes('company')) parens.push('星河科技');
+      if (f.includes('title')) parens.push('CTO');
+      if (f.includes('owner')) parens.push('李华跟进');
+      if (f.includes('status')) parens.push('活跃');
+      if (f.includes('last_contact')) parens.push('3 天前');
+      if (f.includes('tags')) parens.push('VIP');
+      if (f.includes('deal_value')) parens.push('¥480k');
+      if (f.includes('interactions')) parens.push('12 次互动');
+      if (f.includes('avatar')) parens.push('👤');
+      if (f.includes('notes')) parens.push('…');
+      if (f.includes('phone')) parens.push('138****');
+      const name = f.includes('name') ? '<strong style="color:var(--ink)">张明</strong>' : '<em style="color:var(--ink-mute)">（缺名字）</em>';
+      let line = name;
+      if (parens.length) line += `（<span style="color:var(--ink)">${parens.join(' · ')}</span>）`;
+      html += line + ' 的合同……';
+      html += '</div>';
+    }
+    el.innerHTML = html;
+  }
+
+  function renderAll() {
+    ['A','B','C'].forEach(t => { renderSlots(t); renderPreview(t); });
+    const done = ['A','B','C'].filter(t => slots[t].length > 0).length;
+    document.getElementById('builderDone').textContent = done;
+  }
+
+  function showPicker(field) {
+    picked = field;
+    pickerLabel.innerHTML = `已选 <strong style="color:var(--accent);margin:0 4px">${field}</strong>——点一个场景的空槽 <span class="esc">Esc</span> 取消`;
+    pickerLabel.classList.add('show');
+    chips.forEach(c => c.classList.toggle('is-active', c.dataset.field === field));
+    slotEls.forEach(el => {
+      const t = el.dataset.target;
+      const can = slots[t].length < SCENE_MAX[t] && !slots[t].includes(field);
+      el.classList.toggle('is-target', can);
+    });
+  }
+
+  function clearPicker() {
+    picked = null;
+    pickerLabel.classList.remove('show');
+    chips.forEach(c => c.classList.remove('is-active'));
+    slotEls.forEach(el => el.classList.remove('is-target'));
+  }
+
+  function addField(field, t) {
+    if (slots[t].length >= SCENE_MAX[t]) return false;
+    if (slots[t].includes(field)) return false;
+    slots[t].push(field);
+    renderAll();
+    return true;
+  }
+
+  function removeField(t, idx) {
+    slots[t].splice(idx, 1);
+    renderAll();
+  }
+
+  chips.forEach(chip => {
+    chip.addEventListener('click', e => {
+      e.stopPropagation();
+      const field = chip.dataset.field;
+      if (picked === field) clearPicker();
+      else showPicker(field);
+    });
+  });
+
+  slotEls.forEach(slotArea => {
+    slotArea.addEventListener('click', e => {
+      const rm = e.target.closest('button[data-target]');
+      if (rm) {
+        removeField(rm.dataset.target, parseInt(rm.dataset.idx, 10));
+        return;
+      }
+      if (!picked) return;
+      const t = slotArea.dataset.target;
+      if (addField(picked, t)) clearPicker();
+    });
+  });
+
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape' && picked) clearPicker();
+  });
+
+  document.getElementById('builderSubmit').addEventListener('click', () => {
+    let totalHits = 0, totalIdeal = 0, totalExtra = 0;
+    const lines = [];
+    ['A','B','C'].forEach(t => {
+      const sel = new Set(slots[t]);
+      const ideal = SCENE_IDEAL[t];
+      const hits = [...sel].filter(f => ideal.has(f)).length;
+      const misses = [...sel].filter(f => !ideal.has(f));
+      const missing = [...ideal].filter(f => !sel.has(f));
+      totalHits += hits;
+      totalIdeal += ideal.size;
+      totalExtra += misses.length;
+      if (sel.size === 0) {
+        lines.push(`<li><strong>${SCENE_DESC[t]}</strong>：还没配 — 试一下，每一题都有最优解。</li>`);
+      } else if (misses.length === 0 && missing.length === 0) {
+        lines.push(`<li>✓ <strong>${SCENE_DESC[t]}</strong>：完美命中 — ${[...ideal].join(' / ')}</li>`);
+      } else {
+        let line = `<strong>${SCENE_DESC[t]}</strong>：`;
+        if (missing.length > 0) line += `缺 <code style="color:#ffd166">${missing.join(' / ')}</code>；`;
+        if (misses.length > 0) line += `多了 <code style="color:#ff8a6e">${misses.join(' / ')}</code>；`;
+        line += `<br><span class="why">↳ ${SCENE_EXPLAIN[t]}</span>`;
+        lines.push(`<li>${line}</li>`);
+      }
+    });
+
+    let verdictClass, verdictLabel, headline;
+    if (totalHits === totalIdeal && totalExtra === 0) {
+      verdictClass = 'win';
+      verdictLabel = '完美';
+      headline = '你已经在用对象思维设计了。';
+    } else if (totalHits >= totalIdeal - 1 && totalExtra <= 1) {
+      verdictClass = 'win';
+      verdictLabel = '基本对了';
+      headline = '差一两个字段——但判断方向是对的。';
+    } else {
+      verdictClass = 'partial';
+      verdictLabel = '还差一点';
+      headline = '换个角度——字段是为"这个场景里要解决什么问题"服务的，不是为美观。';
+    }
+
+    judge.innerHTML = `<span class="verdict ${verdictClass}">${verdictLabel}</span><h4>${headline}</h4><ul>${lines.join('')}</ul>`;
+    judge.classList.add('show');
+    judge.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  });
+
+  document.getElementById('builderReset').addEventListener('click', () => {
+    slots.A = []; slots.B = []; slots.C = [];
+    renderAll();
+    judge.classList.remove('show');
+    clearPicker();
+  });
+
+  renderAll();
+})();
+</script>
+
+</body>
+</html>

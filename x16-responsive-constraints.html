@@ -1,0 +1,1282 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>响应式与约束：换布局 / 截断 / 溢出 — AI LABBOOK · X16</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,300..900&family=Geist:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Noto+Sans+SC:wght@300;400;500;700;900&family=Noto+Serif+SC:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+  :root { --bg: #f3eee5; --bg-2: #ebe4d4; --ink: #16161d; --ink-soft: #4a4a55; --ink-mute: #8a8a92; --line: #d5cdba; --line-soft: #e3dcca; --accent: #ff4d2e; --accent-soft: #ffe4dc; --blue: #0a4cff; --blue-soft: #dde6ff; --green: #1f6b3a; --green-soft: #d4ecdb; --yellow: #ffcf3d; --paper: #faf7f0; --shadow: 0 1px 0 rgba(0,0,0,0.04), 0 8px 24px rgba(22,22,29,0.06); --obj-color: #ff4d2e; --obj-soft: rgba(255,77,46,0.12); --proj-color: #1f6b3a; --proj-soft: rgba(31,107,58,0.12); }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--ink); font-family: 'Geist', 'Noto Sans SC', system-ui, -apple-system, sans-serif; font-size: 16px; line-height: 1.6; -webkit-font-smoothing: antialiased; background-image: radial-gradient(circle at 1px 1px, rgba(22,22,29,0.05) 1px, transparent 0); background-size: 24px 24px; }
+  .display-cn { font-family: 'Noto Serif SC', 'Fraunces', serif; font-weight: 900; letter-spacing: -0.01em; }
+  .display-en { font-family: 'Fraunces', 'Noto Serif SC', serif; font-weight: 600; font-style: italic; letter-spacing: -0.02em; }
+  .mono { font-family: 'JetBrains Mono', monospace; }
+  .label { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-mute); }
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 0 32px; }
+  /* Topbar */
+  .topbar { border-bottom: 1px dashed var(--line); padding: 16px 0; background: var(--bg); position: sticky; top: 0; z-index: 100; }
+  .topbar-inner { display: flex; justify-content: space-between; align-items: center; gap: 24px; flex-wrap: wrap; }
+  .brand-block { display: flex; align-items: center; gap: 10px; font-family: 'JetBrains Mono', monospace; font-size: 13px; }
+  .brand { display: inline-flex; align-items: center; gap: 6px; color: var(--ink); text-decoration: none; font-weight: 600; }
+  .brand-arrow { color: var(--ink-mute); transition: transform .2s; }
+  .brand:hover .brand-arrow { transform: translateX(-3px); }
+  .brand .dot { display: inline-block; width: 8px; height: 8px; background: var(--accent); border-radius: 50%; vertical-align: middle; animation: pulse 2s ease-in-out infinite; margin-left: 4px; }
+  .brand-sep { color: var(--ink-mute); }
+  .brand-current { color: var(--ink-soft); }
+  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+  .nav-links { display: flex; gap: 18px; font-size: 13px; flex-wrap: wrap; }
+  .nav-links a { color: var(--ink-soft); text-decoration: none; transition: color 0.2s; }
+  .nav-links a:hover { color: var(--accent); }
+  .nav-links a.current { color: var(--accent); font-weight: 600; }
+  /* Hero */
+  .hero { padding: 100px 0 80px; position: relative; overflow: hidden; }
+  .hero-meta { display: flex; gap: 24px; margin-bottom: 32px; align-items: center; flex-wrap: wrap; }
+  .hero-meta .pill { padding: 6px 12px; border: 1px solid var(--ink); border-radius: 100px; font-size: 11px; font-family: 'JetBrains Mono', monospace; letter-spacing: 0.05em; }
+  .hero-meta .pill.fill { background: var(--ink); color: var(--bg); }
+  .hero-meta .pill.purple { background: var(--obj-color); color: white; border-color: var(--obj-color); }
+  .hero h1 { font-family: 'Noto Serif SC', 'Fraunces', serif; font-weight: 900; font-size: clamp(48px, 7vw, 92px); line-height: 0.95; letter-spacing: -0.03em; margin: 0 0 24px; }
+  .hero h1 .em { font-family: 'Noto Serif SC', serif; font-weight: 500; color: var(--accent); }
+  .hero h1 .purple { color: var(--obj-color); font-family: 'Noto Serif SC', serif; font-weight: 500; }
+  .hero p.lede { font-size: 20px; line-height: 1.5; max-width: 640px; color: var(--ink-soft); margin: 0 0 40px; }
+  .hero-grid { display: grid; grid-template-columns: 1.4fr 1fr; gap: 48px; align-items: end; }
+  @media (max-width: 880px)  { .hero-grid { grid-template-columns: 1fr; } }
+  .hero-side { border-left: 1px dashed var(--line); padding-left: 24px; font-size: 13px; color: var(--ink-soft); }
+  .hero-side .row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px dashed var(--line); gap: 12px; }
+  .hero-side .row:last-child { border-bottom: none; }
+  .hero-side .row .k { color: var(--ink-mute); font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.05em; text-transform: uppercase; }
+  .hero-side .row .v { font-weight: 500; }
+  /* Sections */
+  section { padding: 80px 0; border-top: 1px solid var(--line); position: relative; }
+  .section-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 56px; flex-wrap: wrap; gap: 16px; }
+  .section-num { font-family: 'JetBrains Mono', monospace; font-size: 13px; color: var(--ink-mute); letter-spacing: 0.1em; margin-top: 6px; }
+  .section-num strong { color: var(--accent); }
+  .section-title { font-family: 'Noto Serif SC', serif; font-weight: 900; font-size: clamp(32px, 4.5vw, 52px); line-height: 1.05; letter-spacing: -0.02em; margin: 8px 0 0; max-width: 22ch; }
+  .section-title .em { font-family: 'Noto Serif SC', serif; font-weight: 500; color: var(--accent); }
+  .section-title .purple { color: var(--obj-color); font-family: 'Noto Serif SC', serif; font-weight: 500; }
+  .section-sub { color: var(--ink-soft); font-size: 17px; max-width: 38ch; line-height: 1.55; margin: 0; }
+  /* Act tag */
+  .act-tag { display: inline-block; padding: 4px 12px; font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; border-radius: 100px; }
+  .act-tag.look { background: var(--blue-soft); color: var(--blue); }
+  .act-tag.break { background: var(--obj-soft); color: var(--obj-color); }
+  .act-tag.make { background: var(--proj-soft); color: var(--proj-color); }
+  /* Problem cards */
+  .problem-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; margin-top: 24px; }
+  @media (max-width: 880px)  { .problem-grid { grid-template-columns: 1fr; } }
+  .problem-card { background: var(--paper); border: 1px solid var(--line); border-radius: 6px; padding: 28px; position: relative; }
+  .problem-card.bad { border-color: var(--accent); background: var(--accent-soft); }
+  .problem-card.good { border-color: var(--obj-color); background: var(--obj-soft); }
+  .problem-card .tag { position: absolute; top: -12px; left: 24px; background: var(--bg); padding: 2px 10px; font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.1em; }
+  .problem-card.bad .tag { color: var(--accent); border: 1px solid var(--accent); }
+  .problem-card.good .tag { color: var(--obj-color); border: 1px solid var(--obj-color); }
+  .problem-card h3 { font-family: 'Noto Serif SC', serif; font-size: 22px; margin: 0 0 12px; font-weight: 700; }
+  .problem-card p { margin: 0; color: var(--ink-soft); font-size: 14px; line-height: 1.55; }
+  .problem-card p + p { margin-top: 10px; }
+  /* GAME 1: viewport slider + responsive mock */
+  .vp-stage { background: var(--paper); border: 1px solid var(--line); border-radius: 8px; padding: 32px 28px; position: relative; overflow: hidden; }
+  .vp-stage::before { content: ''; position: absolute; inset: 0; background-image: linear-gradient(to right, var(--line-soft) 1px, transparent 1px), linear-gradient(to bottom, var(--line-soft) 1px, transparent 1px); background-size: 24px 24px; opacity: 0.4; pointer-events: none; }
+  .vp-controls { position: relative; display: flex; align-items: center; gap: 18px; margin-bottom: 22px; flex-wrap: wrap; background: white; border: 1px solid var(--line); border-radius: 100px; padding: 10px 18px; }
+  .vp-label { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ink-mute); letter-spacing: 0.08em; text-transform: uppercase; flex-shrink: 0; }
+  .vp-slider { -webkit-appearance: none; appearance: none; flex: 1; min-width: 180px; height: 4px; border-radius: 100px; background: linear-gradient(to right, var(--accent) 0%, var(--accent) var(--pct,40%), var(--line) var(--pct,40%), var(--line) 100%); outline: none; cursor: ew-resize; }
+  .vp-slider::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 18px; height: 18px; border-radius: 50%; background: var(--ink); cursor: ew-resize; border: 3px solid var(--accent); box-shadow: 0 2px 6px rgba(0,0,0,0.2); }
+  .vp-slider::-moz-range-thumb { width: 18px; height: 18px; border-radius: 50%; background: var(--ink); cursor: ew-resize; border: 3px solid var(--accent); }
+  .vp-readout { font-family: 'JetBrains Mono', monospace; font-size: 12px; background: var(--ink); color: var(--bg); padding: 4px 12px; border-radius: 100px; letter-spacing: 0.05em; flex-shrink: 0; }
+  .vp-readout strong { color: var(--accent); }
+  .vp-presets { display: flex; gap: 6px; flex-shrink: 0; }
+  .vp-preset { padding: 4px 12px; border: 1px solid var(--line); background: transparent; border-radius: 100px; font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.05em; cursor: pointer; color: var(--ink-soft); transition: all 0.15s; }
+  .vp-preset:hover { border-color: var(--ink); }
+  .vp-preset.active { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+  .vp-viewport { position: relative; margin: 0 auto; background: white; border: 1px solid var(--line); border-radius: 6px; box-shadow: 0 8px 24px rgba(22,22,29,0.08); overflow: hidden; transition: width 0.25s cubic-bezier(0.4,0,0.2,1); width: 100%; max-width: 1080px; }
+  .vp-viewport-inner { padding: 0; min-height: 540px; }
+  .vp-device-frame { position: absolute; top: -6px; bottom: -6px; left: -2px; right: -2px; border: 1px dashed var(--obj-color); border-radius: 8px; pointer-events: none; opacity: 0; transition: opacity 0.2s; }
+  .vp-viewport.is-shrinking .vp-device-frame { opacity: 0.4; }
+  /* mock window header */
+  .mock-topbar { display: flex; align-items: center; gap: 12px; padding: 10px 14px; border-bottom: 1px solid var(--line); background: var(--bg); flex-wrap: nowrap; }
+  .mock-logo { font-family: 'Noto Serif SC', serif; font-weight: 900; font-size: 14px; flex-shrink: 0; }
+  .mock-logo .dot { color: var(--accent); }
+  .mock-nav { display: flex; gap: 14px; font-size: 12px; color: var(--ink-soft); flex: 1; min-width: 0; overflow: hidden; }
+  .mock-nav a { color: inherit; text-decoration: none; white-space: nowrap; }
+  .mock-nav a.is-hidden { display: none; }
+  .mock-nav a.is-more { color: var(--obj-color); font-weight: 600; cursor: pointer; }
+  .mock-burger { display: none; width: 28px; height: 24px; border: 1px solid var(--line); border-radius: 4px; align-items: center; justify-content: center; color: var(--ink); cursor: pointer; font-size: 14px; flex-shrink: 0; }
+  .mock-burger.show { display: inline-flex; }
+  .mock-userblock { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+  .mock-userblock .avatar { width: 24px; height: 24px; border-radius: 50%; background: linear-gradient(135deg,#ff8a4a,#ff4d2e); color: white; display: inline-flex; align-items: center; justify-content: center; font-weight: 700; font-size: 11px; }
+  .mock-userblock .label { font-size: 11px; color: var(--ink-soft); }
+  .mock-userblock.compact .label { display: none; }
+  /* mock detail body */
+  .mock-body { padding: 14px; display: flex; flex-direction: column; gap: 14px; }
+  .mock-header-row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+  .mock-h1 { font-family: 'Noto Serif SC', serif; font-size: 19px; font-weight: 700; margin: 0; flex: 1; min-width: 120px; }
+  .mock-actionbar { display: flex; align-items: center; gap: 6px; flex-wrap: nowrap; }
+  .mock-btn { padding: 5px 11px; border: 1px solid var(--line); background: white; border-radius: 4px; font-size: 11px; cursor: pointer; white-space: nowrap; transition: all 0.15s; }
+  .mock-btn:hover { border-color: var(--ink); }
+  .mock-btn.primary { background: var(--accent); color: white; border-color: var(--accent); }
+  .mock-btn.is-hidden { display: none; }
+  .mock-btn.is-more { background: var(--obj-soft); color: var(--obj-color); border-color: var(--obj-color); }
+  .mock-fab { display: none; position: absolute; right: 14px; bottom: 14px; background: var(--accent); color: white; border: none; border-radius: 50%; width: 44px; height: 44px; font-size: 22px; cursor: pointer; box-shadow: 0 6px 18px rgba(255,77,46,0.4); z-index: 5; }
+  .mock-fab.show { display: inline-flex; align-items: center; justify-content: center; }
+  /* behaviour label */
+  .behav-label { display: inline-block; padding: 2px 8px; background: var(--obj-soft); color: var(--obj-color); font-family: 'JetBrains Mono', monospace; font-size: 9px; letter-spacing: 0.08em; text-transform: uppercase; border-radius: 100px; margin-left: 6px; }
+  .behav-label.blue { background: var(--blue-soft); color: var(--blue); }
+  .behav-label.green { background: var(--green-soft); color: var(--green); }
+  .behav-label.yellow { background: rgba(199,159,30,0.15); color: #8a6a1e; }
+  /* KPI grid */
+  .mock-section-head { display: flex; align-items: center; justify-content: space-between; padding: 0 2px; margin-bottom: 8px; }
+  .mock-section-name { font-size: 12px; color: var(--ink-soft); font-weight: 600; }
+  .mock-kpi-grid { display: grid; gap: 8px; }
+  .mock-kpi-grid.cols-4 { grid-template-columns: repeat(4, 1fr); }
+  .mock-kpi-grid.cols-2 { grid-template-columns: repeat(2, 1fr); }
+  .mock-kpi-grid.cols-1 { grid-template-columns: 1fr; }
+  .mock-kpi { background: var(--bg-2); border-radius: 4px; padding: 10px 12px; min-width: 0; }
+  .mock-kpi .k { font-size: 10px; color: var(--ink-mute); font-family: 'JetBrains Mono', monospace; letter-spacing: 0.05em; text-transform: uppercase; }
+  .mock-kpi .v { font-family: 'JetBrains Mono', monospace; font-size: 18px; font-weight: 700; color: var(--obj-color); }
+  .mock-kpi .d { font-size: 10px; color: var(--ink-soft); margin-top: 2px; }
+  /* table */
+  .mock-table-wrap { border: 1px solid var(--line); border-radius: 4px; overflow: hidden; background: white; }
+  .mock-table-wrap.scrollable { overflow-x: auto; }
+  .mock-table { width: 100%; border-collapse: collapse; font-size: 11px; min-width: 100%; }
+  .mock-table.fixed-wide { min-width: 720px; }
+  .mock-table th, .mock-table td { padding: 7px 8px; text-align: left; border-bottom: 1px dashed var(--line); white-space: nowrap; }
+  .mock-table th { background: var(--bg-2); font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--ink-soft); letter-spacing: 0.05em; text-transform: uppercase; font-weight: 600; }
+  .mock-table tr:last-child td { border-bottom: none; }
+  .mock-table .col-name { font-weight: 600; }
+  .mock-table .col-name .trunc { display: inline-block; max-width: 90px; overflow: hidden; text-overflow: ellipsis; vertical-align: bottom; }
+  .mock-table .is-trunc-hidden { display: none; }
+  .mock-table tag-status { display: inline-block; padding: 1px 6px; border-radius: 100px; font-size: 10px; }
+  /* mobile card list (when table morphs) */
+  .mock-list-mode { display: none; flex-direction: column; gap: 6px; }
+  .mock-list-mode.show { display: flex; }
+  .mock-list-item { border: 1px solid var(--line); border-radius: 4px; padding: 8px 10px; background: white; display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+  .mock-list-item .lt-name { font-weight: 600; font-size: 12px; }
+  .mock-list-item .lt-sub { font-size: 10px; color: var(--ink-mute); margin-top: 1px; }
+  .mock-list-item .lt-right { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--obj-color); font-weight: 600; flex-shrink: 0; }
+  /* detail field grid */
+  .mock-field-grid { display: grid; gap: 8px 14px; }
+  .mock-field-grid.cols-4 { grid-template-columns: repeat(4, 1fr); }
+  .mock-field-grid.cols-2 { grid-template-columns: repeat(2, 1fr); }
+  .mock-field-grid.cols-1 { grid-template-columns: 1fr; }
+  .mock-field { padding: 6px 8px; border-left: 2px solid var(--line-soft); min-width: 0; }
+  .mock-field .k { font-family: 'JetBrains Mono', monospace; font-size: 9px; color: var(--ink-mute); letter-spacing: 0.05em; text-transform: uppercase; }
+  .mock-field .v { font-size: 12px; font-weight: 500; margin-top: 1px; word-break: break-word; }
+  .mock-field.cols-1 { display: flex; align-items: baseline; gap: 10px; padding: 4px 0; border-left: none; border-bottom: 1px dashed var(--line-soft); }
+  .mock-field.cols-1 .k { flex: 0 0 90px; }
+  .mock-field.cols-1 .v { flex: 1; margin-top: 0; }
+  /* filter bar */
+  .mock-filterbar { display: flex; gap: 5px; align-items: center; flex-wrap: wrap; }
+  .mock-filter-chip { padding: 3px 9px; background: var(--bg-2); border: 1px solid var(--line); border-radius: 100px; font-size: 10px; color: var(--ink-soft); white-space: nowrap; }
+  .mock-filter-chip.active { background: var(--obj-soft); border-color: var(--obj-color); color: var(--obj-color); }
+  .mock-filter-chip.is-hidden { display: none; }
+  .mock-filter-trigger { display: none; padding: 3px 9px; background: var(--obj-color); color: white; border: none; border-radius: 100px; font-size: 10px; cursor: pointer; }
+  .mock-filter-trigger.show { display: inline-flex; align-items: center; gap: 4px; }
+  /* status bar */
+  .mock-statusbar { display: flex; align-items: center; gap: 12px; padding: 8px 12px; background: var(--bg); border-top: 1px solid var(--line); font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--ink-mute); flex-wrap: nowrap; overflow: hidden; }
+  .mock-statusbar .item { white-space: nowrap; }
+  .mock-statusbar .item.is-hidden { display: none; }
+  .mock-statusbar.compact { font-size: 9px; gap: 8px; }
+  /* charts */
+  .mock-charts { display: grid; gap: 10px; }
+  .mock-charts.cols-2 { grid-template-columns: 1fr 1fr; }
+  .mock-charts.cols-1 { grid-template-columns: 1fr; }
+  .mock-chart { background: var(--bg-2); border-radius: 4px; padding: 10px; height: 80px; position: relative; overflow: hidden; }
+  .mock-chart .ct { font-size: 10px; color: var(--ink-soft); font-weight: 600; margin-bottom: 4px; }
+  .mock-chart .bars { display: flex; align-items: flex-end; gap: 3px; height: 50px; }
+  .mock-chart .bars span { flex: 1; background: var(--obj-color); border-radius: 2px 2px 0 0; min-width: 4px; }
+  .mock-chart .bars span:nth-child(2n) { background: var(--accent); }
+  /* Reveal bar */
+  .reveal-bar { margin-top: 32px; padding: 20px 28px; background: var(--ink); color: var(--bg); border-radius: 8px; display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap; }
+  .reveal-bar .msg { font-family: 'Noto Serif SC', serif; font-size: 17px; font-weight: 500; line-height: 1.55; }
+  .reveal-bar .msg .em { color: var(--accent); }
+  .reveal-bar .counter { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ink-mute); letter-spacing: 0.05em; }
+  .reveal-bar .counter strong { color: var(--accent); font-size: 14px; }
+  /* GAME 2: decision tree */
+  .dt-stage { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; margin-top: 32px; }
+  @media (max-width: 880px)  { .dt-stage { grid-template-columns: 1fr; } }
+  .dt-card { background: var(--paper); border: 1px solid var(--line); border-radius: 8px; padding: 22px; cursor: pointer; transition: all 0.2s; position: relative; }
+  .dt-card:hover { border-color: var(--obj-color); transform: translateY(-2px); box-shadow: 0 8px 24px rgba(255,77,46,0.12); }
+  .dt-card.active { border-color: var(--obj-color); background: var(--obj-soft); box-shadow: 0 0 0 2px var(--obj-soft); }
+  .dt-card .dt-num { position: absolute; top: -14px; left: 18px; width: 30px; height: 30px; border-radius: 50%; background: var(--obj-color); color: white; display: flex; align-items: center; justify-content: center; font-family: 'Fraunces', serif; font-style: italic; font-weight: 600; font-size: 14px; }
+  .dt-card h4 { font-family: 'Noto Serif SC', serif; font-size: 18px; margin: 8px 0 6px; font-weight: 700; }
+  .dt-card .dt-en { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--ink-mute); letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 12px; }
+  .dt-card .dt-icon { height: 60px; display: flex; align-items: center; justify-content: center; background: white; border: 1px dashed var(--line); border-radius: 4px; margin-bottom: 12px; overflow: hidden; position: relative; }
+  .dt-card .dt-icon .demo-block { background: var(--obj-color); border-radius: 2px; flex-shrink: 0; }
+  .dt-card .dt-meta { font-size: 12px; color: var(--ink-soft); line-height: 1.55; }
+  .dt-card .dt-meta dt { font-weight: 600; color: var(--ink); margin-top: 6px; font-size: 11px; }
+  .dt-card .dt-meta dd { margin: 2px 0 6px; padding: 0; }
+  .dt-card .dt-meta dd.bad { color: var(--accent); }
+  .dt-card .dt-meta dd.good { color: var(--proj-color); }
+  /* Decision tree flow */
+  .dt-tree { margin-top: 36px; padding: 28px; background: var(--paper); border: 1px solid var(--line); border-radius: 8px; }
+  .dt-tree h4 { font-family: 'Noto Serif SC', serif; font-size: 17px; margin: 0 0 18px; }
+  .dt-tree-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; align-items: stretch; }
+  @media (max-width: 720px)  { .dt-tree-grid { grid-template-columns: 1fr; } }
+  .dt-branch { border: 1px dashed var(--line); border-radius: 6px; padding: 14px 16px; background: white; position: relative; }
+  .dt-branch::before { content: '→'; position: absolute; left: -16px; top: 50%; transform: translateY(-50%); color: var(--ink-mute); font-size: 14px; font-family: 'JetBrains Mono', monospace; }
+  @media (max-width: 720px)  { .dt-branch::before { left: 50%; top: -14px; transform: translateX(-50%) rotate(90deg); } }
+  .dt-branch:first-child::before { display: none; }
+  .dt-branch .q { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ink-mute); margin-bottom: 6px; letter-spacing: 0.05em; }
+  .dt-branch .a { font-family: 'Noto Serif SC', serif; font-weight: 700; font-size: 14px; color: var(--obj-color); }
+  /* Bad example */
+  .dt-bad-example { display: none; margin-top: 14px; padding: 10px 12px; background: var(--accent-soft); border: 1px solid var(--accent); border-radius: 4px; font-size: 12px; line-height: 1.55; color: var(--ink); }
+  .dt-card.active .dt-bad-example { display: block; }
+  .dt-bad-example strong { color: var(--accent); font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.1em; }
+  /* GAME 3: builder for 8 blocks */
+  .builder-stage { background: var(--paper); border: 1px solid var(--line); border-radius: 8px; padding: 32px; margin-top: 24px; }
+  .builder-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 28px; flex-wrap: wrap; gap: 16px; }
+  .builder-title { font-family: 'Noto Serif SC', serif; font-size: 22px; margin: 0; font-weight: 700; }
+  .builder-progress { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--ink-mute); }
+  .builder-progress .done { color: var(--proj-color); font-weight: 700; font-size: 14px; }
+  .builder-block-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  @media (max-width: 880px)  { .builder-block-grid { grid-template-columns: 1fr; } }
+  .builder-block { background: white; border: 1px solid var(--line); border-radius: 6px; padding: 16px 18px; transition: all 0.2s; }
+  .builder-block.is-set { border-color: var(--obj-color); box-shadow: 0 0 0 2px var(--obj-soft); }
+  .builder-block-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; gap: 10px; }
+  .builder-block-name { font-weight: 700; font-size: 14px; font-family: 'Noto Serif SC', serif; }
+  .builder-block-tag { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--ink-mute); letter-spacing: 0.05em; }
+  .builder-block.is-set .builder-block-tag { color: var(--obj-color); }
+  .builder-radios { display: flex; gap: 4px; margin-bottom: 10px; }
+  .builder-radio { flex: 1; padding: 6px 8px; border: 1px solid var(--line); background: white; border-radius: 4px; font-size: 11px; cursor: pointer; transition: all 0.15s; text-align: center; color: var(--ink-soft); font-family: 'JetBrains Mono', monospace; letter-spacing: 0.03em; user-select: none; }
+  .builder-radio:hover { border-color: var(--ink); }
+  .builder-radio.active { background: var(--obj-color); color: white; border-color: var(--obj-color); }
+  .builder-select { width: 100%; padding: 7px 10px; border: 1px solid var(--line); background: white; border-radius: 4px; font-size: 12px; color: var(--ink); font-family: 'Geist', 'Noto Sans SC', sans-serif; cursor: pointer; }
+  .builder-select:disabled { background: var(--bg-2); color: var(--ink-mute); cursor: not-allowed; }
+  .builder-explain { margin-top: 10px; padding: 10px 12px; background: var(--bg); border-radius: 4px; font-size: 11px; color: var(--ink-soft); line-height: 1.55; border-left: 2px solid var(--line); display: none; }
+  .builder-explain.show { display: block; }
+  .builder-explain.good { border-left-color: var(--proj-color); background: var(--proj-soft); color: var(--ink); }
+  .builder-explain.bad { border-left-color: var(--accent); background: var(--accent-soft); color: var(--ink); }
+  .builder-explain strong { color: var(--obj-color); font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.08em; }
+  .builder-actions { display: flex; gap: 12px; margin-top: 24px; flex-wrap: wrap; }
+  .builder-btn { padding: 10px 22px; border-radius: 100px; font-family: 'JetBrains Mono', monospace; font-size: 12px; letter-spacing: 0.06em; text-transform: uppercase; cursor: pointer; font-weight: 600; border: 1px solid var(--ink); background: transparent; color: var(--ink); transition: all 0.15s; }
+  .builder-btn:hover { background: var(--ink); color: var(--bg); }
+  .builder-btn.primary { background: var(--accent); color: white; border-color: var(--accent); }
+  .builder-btn.primary:hover { background: #e8451f; }
+  .builder-judge { margin-top: 24px; padding: 24px 26px; border-radius: 8px; background: var(--ink); color: var(--bg); display: none; }
+  .builder-judge.show { display: block; }
+  .builder-judge .verdict { display: inline-block; font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; padding: 3px 10px; border-radius: 100px; }
+  .builder-judge .verdict.win { color: #1f6b3a; background: #d4ecdb; }
+  .builder-judge .verdict.partial { color: #c79f1e; background: #fff3cc; }
+  .builder-judge h4 { font-family: 'Noto Serif SC', serif; font-size: 22px; margin: 10px 0 14px; color: white; line-height: 1.3; }
+  .builder-judge ul { color: #c8c8d0; margin: 0; padding-left: 20px; font-size: 13px; line-height: 1.75; }
+  .builder-judge ul li + li { margin-top: 10px; }
+  .builder-judge ul strong { color: white; }
+  .builder-judge ul .why { color: #a0a0aa; font-size: 12px; }
+  .builder-judge code { background: rgba(255,255,255,0.1); padding: 1px 5px; border-radius: 3px; font-size: 11px; }
+  /* tips */
+  .tips-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 28px; margin-top: 24px; }
+  @media (max-width: 880px)  { .tips-grid { grid-template-columns: 1fr; } }
+  .tip { background: var(--paper); border: 1px solid var(--line); border-radius: 6px; padding: 24px; position: relative; }
+  .tip-num { position: absolute; top: -14px; left: 16px; width: 32px; height: 32px; border-radius: 50%; background: var(--obj-color); color: white; display: flex; align-items: center; justify-content: center; font-family: 'Fraunces', serif; font-style: italic; font-weight: 600; font-size: 14px; }
+  .tip h4 { font-family: 'Noto Serif SC', serif; font-size: 18px; margin: 8px 0 10px; font-weight: 700; }
+  .tip p { color: var(--ink-soft); font-size: 14px; line-height: 1.6; margin: 0; }
+  .tip p + p { margin-top: 8px; }
+  .tip-outro { margin-top: 44px; padding: 30px 32px; background: var(--ink); color: var(--bg); border-radius: 8px; display: grid; grid-template-columns: auto 1fr; gap: 28px; align-items: flex-start; }
+  @media (max-width: 720px)  { .tip-outro { grid-template-columns: 1fr; gap: 12px; } }
+  .outro-tag { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.1em; color: var(--accent); padding-top: 4px; }
+  .tip-outro p { margin: 0 0 12px; color: #c8c8d0; line-height: 1.65; font-size: 15px; }
+  .tip-outro p:last-child { margin-bottom: 0; }
+  .tip-outro strong { color: white; }
+  /* next post */
+  .next-post { display: flex; justify-content: space-between; align-items: center; margin-top: 56px; padding: 32px; background: var(--bg-2); border: 1px solid var(--line); border-radius: 8px; text-decoration: none; color: var(--ink); transition: all 0.2s; gap: 24px; flex-wrap: wrap; }
+  .next-post:hover { background: var(--ink); color: var(--bg); }
+  .next-post:hover .np-tag { color: var(--accent); }
+  .next-post:hover .em { color: var(--accent); }
+  .next-post:hover p { color: #c8c8d0; }
+  .np-tag { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.1em; color: var(--ink-mute); margin-bottom: 6px; }
+  .next-post h4 { font-family: 'Noto Serif SC', serif; font-size: 26px; margin: 0 0 8px; font-weight: 700; }
+  .next-post .em { color: var(--obj-color); font-weight: 500; }
+  .next-post p { margin: 0; color: var(--ink-soft); font-size: 14px; max-width: 56ch; }
+  .np-cta { font-family: 'JetBrains Mono', monospace; font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; white-space: nowrap; }
+  .np-cta .arr { display: inline-block; transition: transform .2s; }
+  .next-post:hover .arr { transform: translateX(4px); }
+  /* footer */
+  footer { padding: 56px 0 64px; background: var(--bg); color: var(--ink-soft); border-top: 1px solid var(--line); }
+  .byline-group { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; margin-bottom: 32px; padding-bottom: 32px; border-bottom: 1px dashed var(--line); }
+  @media (max-width: 880px)  { .byline-group { grid-template-columns: 1fr; } }
+  .byline { display: flex; gap: 16px; align-items: center; }
+  .byline .avatar { width: 56px; height: 56px; border-radius: 50%; object-fit: cover; flex-shrink: 0; }
+  .byline-label { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--accent); letter-spacing: 0.1em; }
+  .byline-label .dot { display: inline-block; width: 6px; height: 6px; background: var(--accent); border-radius: 50%; margin-right: 4px; vertical-align: middle; animation: pulse 2s ease-in-out infinite; }
+  .byline-name { font-family: 'Noto Serif SC', serif; font-weight: 700; font-size: 18px; margin: 4px 0; color: var(--ink); }
+  .byline-name .em { color: var(--accent); font-weight: 500; }
+  .byline-tag { color: var(--ink-soft); font-size: 13px; margin: 0; line-height: 1.5; }
+  .footer-meta { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ink-mute); text-align: center; letter-spacing: 0.05em; }
+  .footer-meta .heart { color: var(--accent); }
+</style>
+</head>
+<body>
+<div class="topbar">
+  <div class="wrap topbar-inner">
+    <div class="brand-block">
+      <a href="book.html#vol-3" class="brand"><span class="brand-arrow">←</span>AI LABBOOK <span class="dot"></span></a>
+      <span class="brand-sep">/</span>
+      <span class="brand-current">X16 · 响应式与约束</span>
+    </div>
+    <nav class="nav-links">
+      <a href="book.html#vol-3">路线图</a>
+    </nav>
+  </div>
+</div>
+<!-- Hero -->
+<header class="hero">
+  <div class="wrap">
+    <div class="hero-meta">
+      <span class="pill fill">高阶 · ADVANCED</span>
+      <span class="pill purple">STAGE 04 · 组件契约</span>
+      <span class="pill">X16 · 响应式</span>
+      <span class="label">阅读 ≈ 15 分钟 · 含 3 段互动</span>
+    </div>
+    <div class="hero-grid">
+      <div>
+        <h1>
+          屏幕变小，<br>
+          <span class="display-cn">不是缩比例</span>——<br>
+          是<span class="purple">3 个决策</span>。
+        </h1>
+        <p class="lede">
+          换布局（4 列变 1 列）、截断（…）、溢出（更多菜单 / 横滚 / 抽屉）。<br>
+          每个内容块都要选其中一种——不选就是默认（坏体验）。
+        </p>
+      </div>
+      <div class="hero-side">
+        <div class="row"><span class="k">本页讲什么</span><span class="v">三选一框架</span></div>
+        <div class="row"><span class="k">三幕</span><span class="v">看见 · 拆开 · 再做</span></div>
+        <div class="row"><span class="k">面向</span><span class="v">B 端 / 后台设计师</span></div>
+        <div class="row"><span class="k">前置</span><span class="v">X13 · 组件契约</span></div>
+      </div>
+    </div>
+  </div>
+</header>
+<!-- Section 01: 问题 -->
+<section id="problem">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>01</strong> / 问题</div>
+        <h2 class="section-title">"按比例缩小"<br>不是响应式，<br>是<span class="em">默认坏体验</span>。</h2>
+      </div>
+      <p class="section-sub">
+        设计师以为响应式 = "桌面稿 + 移动稿"。其实响应式是<strong>每个组件 / 每个内容块的小屏行为决策</strong>——换布局、截断、溢出三选一。
+        不选就是浏览器默认（不可读 / 重叠 / 横滚条）。
+      </p>
+    </div>
+    <div class="problem-grid">
+      <div class="problem-card bad">
+        <span class="tag">缩小思维 · SHRINK</span>
+        <h3>"桌面稿做好了，<br>工程师按比例缩小"</h3>
+        <p>4 列卡片在 375 宽屏上挤成 4 列豆腐块，每个只剩 80px。表格的 12 列横滚到地平线。导航全收进 hamburger 后，主操作要点 3 下。</p>
+        <p><strong>结果：</strong>每个 card 文字断行 / 表格横滚 / 导航被折叠后看不见入口 / 主操作埋深。</p>
+        <p style="color:var(--accent)"><strong>用户：</strong>这页在手机上没法用，转去桌面再试。</p>
+      </div>
+      <div class="problem-card good">
+        <span class="tag">决策思维 · DECIDE</span>
+        <h3>"桌面 → 移动<br>每个区块单独决策"</h3>
+        <p>导航换 hamburger；多列卡片堆成单列；表格非主列截断 + … hover；ActionBar 收进 ⋯ 更多菜单。每个块都<strong>有意识地选了一种行为</strong>。</p>
+        <p><strong>工程师收到：</strong>每个区块的 mobile 行为标签——breakpoint 触发 reflow / truncate / overflow，明确边界。</p>
+        <p style="color:var(--obj-color)"><strong>结果：</strong>移动版每个区块都能用，没有"被压扁"的感觉。</p>
+      </div>
+    </div>
+  </div>
+</section>
+<!-- Section 02: 幕一 · 看见 -->
+<section id="look">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <span class="act-tag look">幕一 · 看见</span>
+        <div class="section-num"><strong>02</strong> / 看见</div>
+        <h2 class="section-title"><span class="purple">同一份内容</span>，<br>3 种屏幕，<br>3 种行为。</h2>
+      </div>
+      <p class="section-sub">
+        拖中央的尺寸滑块 → 看每个区块如何变化。<strong>注意：不是缩小，是 morphing</strong>——
+        每个区块到了 breakpoint 会切换行为，不是按比例。
+      </p>
+    </div>
+    <div class="vp-stage">
+      <div class="vp-controls">
+        <span class="vp-label">视口宽度</span>
+        <input type="range" min="320" max="1280" value="1080" step="10" class="vp-slider" id="vpSlider" style="--pct: 79%;">
+        <div class="vp-presets">
+          <button class="vp-preset" data-w="375">mobile</button>
+          <button class="vp-preset" data-w="768">tablet</button>
+          <button class="vp-preset active" data-w="1280">desktop</button>
+        </div>
+        <span class="vp-readout"><strong id="vpW">1080</strong> px</span>
+      </div>
+      <div class="vp-viewport" id="vpViewport" style="width: 1080px;">
+        <div class="vp-device-frame"></div>
+        <div class="vp-viewport-inner">
+          <!-- mock topbar nav -->
+          <div class="mock-topbar" id="mockTopbar">
+            <span class="mock-logo">CRM <span class="dot">●</span></span>
+            <div class="mock-nav" id="mockNav">
+              <a href="#" data-n="1">总览</a>
+              <a href="#" data-n="2">客户</a>
+              <a href="#" data-n="3">商机</a>
+              <a href="#" data-n="4">报表</a>
+              <a href="#" data-n="5">设置</a>
+              <a href="#" class="is-more" id="mockMore" style="display:none">⋯ 更多</a>
+            </div>
+            <span class="mock-burger" id="mockBurger">☰</span>
+            <span class="mock-userblock" id="mockUser">
+              <span class="avatar">L</span>
+              <span class="label">李华</span>
+            </span>
+          </div>
+          <div class="mock-body">
+            <!-- title + actionbar -->
+            <div class="mock-header-row">
+              <h3 class="mock-h1">客户管理 · 仪表盘</h3>
+              <div class="mock-actionbar" id="mockActionbar">
+                <button class="mock-btn primary">＋ 新建客户</button>
+                <button class="mock-btn" data-act="1">导出</button>
+                <button class="mock-btn" data-act="2">导入</button>
+                <button class="mock-btn" data-act="3">分配</button>
+                <button class="mock-btn" data-act="4">归档</button>
+                <button class="mock-btn is-more" id="mockActMore" style="display:none">⋯</button>
+              </div>
+            </div>
+            <!-- KPI grid -->
+            <div>
+              <div class="mock-section-head">
+                <span class="mock-section-name">核心指标</span>
+                <span class="behav-label" id="kpiBehav">4 列</span>
+              </div>
+              <div class="mock-kpi-grid cols-4" id="mockKpi">
+                <div class="mock-kpi"><div class="k">新增客户</div><div class="v">142</div><div class="d">+12% MoM</div></div>
+                <div class="mock-kpi"><div class="k">活跃数</div><div class="v">1.2k</div><div class="d">+3% MoM</div></div>
+                <div class="mock-kpi"><div class="k">转化率</div><div class="v">28%</div><div class="d">-2% MoM</div></div>
+                <div class="mock-kpi"><div class="k">流水</div><div class="v">¥4.8m</div><div class="d">+18% MoM</div></div>
+              </div>
+            </div>
+            <!-- Charts -->
+            <div>
+              <div class="mock-section-head">
+                <span class="mock-section-name">趋势</span>
+                <span class="behav-label blue" id="chartBehav">2 列并排</span>
+              </div>
+              <div class="mock-charts cols-2" id="mockCharts">
+                <div class="mock-chart">
+                  <div class="ct">月度新增</div>
+                  <div class="bars"><span style="height:40%"></span><span style="height:65%"></span><span style="height:55%"></span><span style="height:78%"></span><span style="height:62%"></span><span style="height:88%"></span></div>
+                </div>
+                <div class="mock-chart">
+                  <div class="ct">转化漏斗</div>
+                  <div class="bars"><span style="height:90%"></span><span style="height:70%"></span><span style="height:55%"></span><span style="height:40%"></span><span style="height:28%"></span></div>
+                </div>
+              </div>
+            </div>
+            <!-- Filter bar -->
+            <div>
+              <div class="mock-section-head">
+                <span class="mock-section-name">筛选</span>
+                <span class="behav-label yellow" id="filterBehav">全展开</span>
+              </div>
+              <div class="mock-filterbar" id="mockFilter">
+                <span class="mock-filter-chip active">全部</span>
+                <span class="mock-filter-chip">本周</span>
+                <span class="mock-filter-chip">活跃</span>
+                <span class="mock-filter-chip">VIP</span>
+                <span class="mock-filter-chip">A 城市</span>
+                <span class="mock-filter-chip">¥10w+</span>
+                <span class="mock-filter-chip">未跟进</span>
+                <span class="mock-filter-chip">技术决策</span>
+                <span class="mock-filter-chip">中小客户</span>
+                <span class="mock-filter-chip">归档</span>
+                <button class="mock-filter-trigger" id="mockFilterMore">筛选 · 10</button>
+              </div>
+            </div>
+            <!-- Table -->
+            <div>
+              <div class="mock-section-head">
+                <span class="mock-section-name">客户列表</span>
+                <span class="behav-label green" id="tableBehav">全列</span>
+              </div>
+              <div class="mock-table-wrap" id="mockTableWrap">
+                <table class="mock-table" id="mockTable">
+                  <thead><tr><th class="col-name">姓名</th> <th class="col-company">公司</th> <th class="col-title">职位</th> <th class="col-status">状态</th> <th class="col-owner">跟进人</th> <th class="col-last">最近联系</th> <th class="col-deal">合作金额</th> <th class="col-tags">标签</th></tr></thead>
+                  <tbody>
+                    <tr><td class="col-name"><span class="trunc">张明</span></td> <td class="col-company"><span class="trunc">星河科技有限公司</span></td> <td class="col-title"><span class="trunc">CTO / 技术负责人</span></td> <td class="col-status"><span style="color:var(--green)">● 活跃</span></td> <td class="col-owner">李华</td> <td class="col-last">3 天前</td> <td class="col-deal">¥480k</td> <td class="col-tags">VIP · 技术决策</td></tr>
+                    <tr><td class="col-name"><span class="trunc">王芳</span></td> <td class="col-company"><span class="trunc">辰宇集团</span></td> <td class="col-title"><span class="trunc">采购总监</span></td> <td class="col-status"><span style="color:var(--ink-mute)">● 休眠</span></td> <td class="col-owner">陈强</td> <td class="col-last">1 周前</td> <td class="col-deal">¥120k</td> <td class="col-tags">中型</td></tr>
+                    <tr><td class="col-name"><span class="trunc">陈强</span></td> <td class="col-company"><span class="trunc">长青资本管理</span></td> <td class="col-title"><span class="trunc">合伙人</span></td> <td class="col-status"><span style="color:var(--green)">● 活跃</span></td> <td class="col-owner">李华</td> <td class="col-last">今天</td> <td class="col-deal">¥2.4m</td> <td class="col-tags">VIP · 战略</td></tr>
+                  </tbody>
+                </table>
+              </div>
+              <div class="mock-list-mode" id="mockListMode">
+                <div class="mock-list-item">
+                  <div>
+                    <div class="lt-name">张明</div>
+                    <div class="lt-sub">星河科技 · 活跃 · 3 天前</div>
+                  </div>
+                  <span class="lt-right">¥480k</span>
+                </div>
+                <div class="mock-list-item">
+                  <div>
+                    <div class="lt-name">王芳</div>
+                    <div class="lt-sub">辰宇集团 · 休眠 · 1 周前</div>
+                  </div>
+                  <span class="lt-right">¥120k</span>
+                </div>
+                <div class="mock-list-item">
+                  <div>
+                    <div class="lt-name">陈强</div>
+                    <div class="lt-sub">长青资本 · 活跃 · 今天</div>
+                  </div>
+                  <span class="lt-right">¥2.4m</span>
+                </div>
+              </div>
+            </div>
+            <!-- Detail field grid -->
+            <div>
+              <div class="mock-section-head">
+                <span class="mock-section-name">详情字段</span>
+                <span class="behav-label" id="fieldBehav">4 列</span>
+              </div>
+              <div class="mock-field-grid cols-4" id="mockFieldGrid">
+                <div class="mock-field"><div class="k">所属公司</div><div class="v">星河科技有限公司</div></div>
+                <div class="mock-field"><div class="k">职位</div><div class="v">CTO / 技术负责人</div></div>
+                <div class="mock-field"><div class="k">跟进人</div><div class="v">李华</div></div>
+                <div class="mock-field"><div class="k">合作金额</div><div class="v">¥ 480,000</div></div>
+                <div class="mock-field"><div class="k">电话</div><div class="v">138-0000-1234</div></div>
+                <div class="mock-field"><div class="k">邮箱</div><div class="v">zhang@xinhe.com</div></div>
+                <div class="mock-field"><div class="k">地址</div><div class="v">上海市浦东新区</div></div>
+                <div class="mock-field"><div class="k">备注</div><div class="v">长期合作伙伴</div></div>
+              </div>
+            </div>
+          </div>
+          <!-- status bar -->
+          <div class="mock-statusbar" id="mockStatusbar">
+            <span class="item">v2.4.1</span>
+            <span class="item">已同步：2 分钟前</span>
+            <span class="item">在线：3 人</span>
+            <span class="item" style="margin-left:auto">服务器：cn-east-1</span>
+            <span class="item">2026-05-19 14:32</span>
+          </div>
+          <!-- FAB for mobile -->
+          <button class="mock-fab" id="mockFab">＋</button>
+        </div>
+      </div>
+    </div>
+    <div class="reveal-bar">
+      <div class="msg">
+        <span class="em">12 个区块在 mobile 上各有自己的行为</span>——<br>
+        不是缩小、不是隐藏，是 <strong>morph</strong>。
+      </div>
+      <div class="counter">
+        当前 <strong id="bpReadout">DESKTOP</strong> · 已切换 <strong id="bpCount">0</strong> 次断点
+      </div>
+    </div>
+  </div>
+</section>
+<!-- Section 03: 幕二 · 拆开 -->
+<section id="break">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <span class="act-tag break">幕二 · 拆开</span>
+        <div class="section-num"><strong>03</strong> / 拆开</div>
+        <h2 class="section-title"><span class="purple">3 种行为</span>的<br>决策树。</h2>
+      </div>
+      <p class="section-sub">
+        每个区块在小屏上只能选三种之一。<strong>怎么选？看内容性质</strong>——可重排 → 换布局；可截 → 截断；不能省 → 溢出。
+        点卡片看反例。
+      </p>
+    </div>
+    <div class="dt-stage" id="dtStage">
+      <div class="dt-card" data-dt="reflow">
+        <div class="dt-num">1</div>
+        <div class="dt-icon" aria-hidden="true"><div style="display:flex;gap:3px"><div class="demo-block" style="width:14px;height:14px"></div><div class="demo-block" style="width:14px;height:14px"></div><div class="demo-block" style="width:14px;height:14px"></div><div class="demo-block" style="width:14px;height:14px"></div></div><div style="margin:0 8px;color:var(--ink-mute);font-family:'JetBrains Mono',monospace;font-size:11px">→</div><div style="display:flex;flex-direction:column;gap:2px"><div class="demo-block" style="width:14px;height:6px"></div><div class="demo-block" style="width:14px;height:6px"></div><div class="demo-block" style="width:14px;height:6px"></div><div class="demo-block" style="width:14px;height:6px"></div></div></div>
+        <h4>换布局 · reflow</h4>
+        <div class="dt-en">REARRANGE</div>
+        <dl class="dt-meta">
+          <dt>适用</dt><dd>可重新排列且<strong>无信息丢失</strong>的内容（卡片、字段网格）</dd>
+          <dt>实现</dt><dd><code class="mono" style="font-size:11px;background:var(--bg-2);padding:1px 5px;border-radius:3px">grid → 1 列</code> / flex direction 改 column</dd>
+          <dt>风险</dt><dd class="bad">纵向滚很长</dd>
+          <dt>例</dt><dd class="good">KPI 4 列 → mobile 1 列</dd>
+        </dl>
+        <div class="dt-bad-example"><strong>反例</strong><br>12 列表格强行 reflow 成 1 列 → 每行变 12 个堆叠的 label/value，60 行表格变 720 屏的瀑布流。表格不是字段网格，不能 reflow。</div>
+      </div>
+      <div class="dt-card" data-dt="truncate">
+        <div class="dt-num">2</div>
+        <div class="dt-icon" aria-hidden="true"><div style="display:flex;flex-direction:column;gap:3px;width:80%"><div class="demo-block" style="height:6px;width:100%;background:var(--obj-color)"></div><div class="demo-block" style="height:6px;width:100%;background:var(--obj-color)"></div><div class="demo-block" style="height:6px;width:60%;background:var(--obj-color)"></div><div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--obj-color);text-align:right;margin-top:2px">…</div></div></div>
+        <h4>截断 · truncate</h4>
+        <div class="dt-en">CLIP</div>
+        <dl class="dt-meta">
+          <dt>适用</dt><dd>列表 / 表格的单行 / 单元格——只要内容能让用户<strong>识别"是不是这条"</strong></dd>
+          <dt>实现</dt><dd><code class="mono" style="font-size:11px;background:var(--bg-2);padding:1px 5px;border-radius:3px">text-overflow: ellipsis</code> / 单行 / multi-line clamp / hover 看全</dd>
+          <dt>风险</dt><dd class="bad">截掉关键信息 → 用户认错</dd>
+          <dt>例</dt><dd class="good">表格只显示 name + status，其它列截掉 + … 展开</dd>
+        </dl>
+        <div class="dt-bad-example"><strong>反例</strong><br>金额、状态这种"决策依据"也被截掉 → 用户看到 "¥48..." 不知道是 48 元还是 4800 万。可识别字段可截，决策字段不能截。</div>
+      </div>
+      <div class="dt-card" data-dt="overflow">
+        <div class="dt-num">3</div>
+        <div class="dt-icon" aria-hidden="true"><div style="display:flex;gap:3px;align-items:center"><div class="demo-block" style="width:14px;height:14px"></div><div class="demo-block" style="width:14px;height:14px"></div><div class="demo-block" style="width:14px;height:14px;background:var(--obj-color)"></div><div style="font-family:'JetBrains Mono',monospace;font-weight:700;color:var(--obj-color);font-size:14px;margin:0 2px">⋯</div><div class="demo-block" style="width:14px;height:14px;opacity:0.3"></div><div class="demo-block" style="width:14px;height:14px;opacity:0.3"></div></div></div>
+        <h4>溢出 · overflow</h4>
+        <div class="dt-en">DEFER</div>
+        <dl class="dt-meta">
+          <dt>适用</dt><dd>操作密集 / <strong>不能省略 / 不能重排</strong>（toolbar、tab 数量、表格全列）</dd>
+          <dt>实现</dt><dd>横滚 / 更多菜单 / 抽屉 / 模态</dd>
+          <dt>风险</dt><dd class="bad">用户看不到隐藏的入口</dd>
+          <dt>例</dt><dd class="good">ActionBar 主按钮显示 + ⋯收纳次要</dd>
+        </dl>
+        <div class="dt-bad-example"><strong>反例</strong><br>所有按钮都收进 ⋯ 菜单 → 用户找不到"新建"。溢出菜单是放<strong>次要</strong>操作的，<strong>主操作必须留在外面</strong>。</div>
+      </div>
+    </div>
+    <div class="dt-tree">
+      <h4>三选一决策树</h4>
+      <div class="dt-tree-grid">
+        <div class="dt-branch"><div class="q">内容可重排？</div><div class="a">→ 换布局</div></div>
+        <div class="dt-branch"><div class="q">内容能截、能识别？</div><div class="a">→ 截断</div></div>
+        <div class="dt-branch"><div class="q">不能省、不能重排？</div><div class="a">→ 溢出</div></div>
+      </div>
+    </div>
+    <div class="reveal-bar" style="margin-top:32px">
+      <div class="msg">
+        三选一<strong>不是绝对</strong>——但<span class="em">每个区块要主动选一个</span>，<br>
+        不能默认（浏览器会替你选，结果一定是坏体验）。
+      </div>
+      <div class="counter">点卡片 · 已展开 <strong id="dtCount">0</strong> / 3 个反例</div>
+    </div>
+  </div>
+</section>
+<!-- Section 04: 幕三 · 再做 -->
+<section id="make">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <span class="act-tag make">幕三 · 再做</span>
+        <div class="section-num"><strong>04</strong> / 再做</div>
+        <h2 class="section-title">轮到你——<br>给 <span class="em">仪表盘</span><br>定 8 区块的<br>移动行为。</h2>
+      </div>
+      <p class="section-sub">
+        下面 8 个区块。每个有 3 个 radio（换布局 / 截断 / 溢出）+ 1 个具体方案 dropdown。<strong>你来选</strong>。
+        提交后会给你打分——不是看选了几个，看判断方向对不对。
+      </p>
+    </div>
+    <div class="builder-stage">
+      <div class="builder-head">
+        <h3 class="builder-title">8 区块 · mobile 行为决策</h3>
+        <div class="builder-progress">已配置 <span class="done" id="builderDone">0</span> / 8 区块</div>
+      </div>
+      <div class="builder-block-grid" id="builderBlocks">
+        <div class="builder-block" data-block="nav" data-ideal-mode="overflow" data-ideal-plan="hamburger">
+          <div class="builder-block-head">
+            <span class="builder-block-name">1 · 顶部导航 (5 项)</span>
+            <span class="builder-block-tag">block-01</span>
+          </div>
+          <div class="builder-radios" data-radios>
+            <button class="builder-radio" data-mode="reflow">换布局</button>
+            <button class="builder-radio" data-mode="truncate">截断</button>
+            <button class="builder-radio" data-mode="overflow">溢出</button>
+          </div>
+          <select class="builder-select" data-plan disabled>
+            <option value="">先选行为方式</option>
+          </select>
+          <div class="builder-explain"></div>
+        </div>
+        <div class="builder-block" data-block="kpi" data-ideal-mode="reflow" data-ideal-plan="col1">
+          <div class="builder-block-head">
+            <span class="builder-block-name">2 · KPI 卡片 (6 个)</span>
+            <span class="builder-block-tag">block-02</span>
+          </div>
+          <div class="builder-radios" data-radios>
+            <button class="builder-radio" data-mode="reflow">换布局</button>
+            <button class="builder-radio" data-mode="truncate">截断</button>
+            <button class="builder-radio" data-mode="overflow">溢出</button>
+          </div>
+          <select class="builder-select" data-plan disabled>
+            <option value="">先选行为方式</option>
+          </select>
+          <div class="builder-explain"></div>
+        </div>
+        <div class="builder-block" data-block="chart" data-ideal-mode="reflow" data-ideal-plan="stack">
+          <div class="builder-block-head">
+            <span class="builder-block-name">3 · 图表区</span>
+            <span class="builder-block-tag">block-03</span>
+          </div>
+          <div class="builder-radios" data-radios>
+            <button class="builder-radio" data-mode="reflow">换布局</button>
+            <button class="builder-radio" data-mode="truncate">截断</button>
+            <button class="builder-radio" data-mode="overflow">溢出</button>
+          </div>
+          <select class="builder-select" data-plan disabled>
+            <option value="">先选行为方式</option>
+          </select>
+          <div class="builder-explain"></div>
+        </div>
+        <div class="builder-block" data-block="table" data-ideal-mode="truncate" data-ideal-plan="hide-cols">
+          <div class="builder-block-head">
+            <span class="builder-block-name">4 · 数据表格 (12 列)</span>
+            <span class="builder-block-tag">block-04</span>
+          </div>
+          <div class="builder-radios" data-radios>
+            <button class="builder-radio" data-mode="reflow">换布局</button>
+            <button class="builder-radio" data-mode="truncate">截断</button>
+            <button class="builder-radio" data-mode="overflow">溢出</button>
+          </div>
+          <select class="builder-select" data-plan disabled>
+            <option value="">先选行为方式</option>
+          </select>
+          <div class="builder-explain"></div>
+        </div>
+        <div class="builder-block" data-block="filter" data-ideal-mode="overflow" data-ideal-plan="drawer">
+          <div class="builder-block-head">
+            <span class="builder-block-name">5 · 筛选条 (10 项)</span>
+            <span class="builder-block-tag">block-05</span>
+          </div>
+          <div class="builder-radios" data-radios>
+            <button class="builder-radio" data-mode="reflow">换布局</button>
+            <button class="builder-radio" data-mode="truncate">截断</button>
+            <button class="builder-radio" data-mode="overflow">溢出</button>
+          </div>
+          <select class="builder-select" data-plan disabled>
+            <option value="">先选行为方式</option>
+          </select>
+          <div class="builder-explain"></div>
+        </div>
+        <div class="builder-block" data-block="sidenav" data-ideal-mode="overflow" data-ideal-plan="hamburger">
+          <div class="builder-block-head">
+            <span class="builder-block-name">6 · 侧边导航</span>
+            <span class="builder-block-tag">block-06</span>
+          </div>
+          <div class="builder-radios" data-radios>
+            <button class="builder-radio" data-mode="reflow">换布局</button>
+            <button class="builder-radio" data-mode="truncate">截断</button>
+            <button class="builder-radio" data-mode="overflow">溢出</button>
+          </div>
+          <select class="builder-select" data-plan disabled>
+            <option value="">先选行为方式</option>
+          </select>
+          <div class="builder-explain"></div>
+        </div>
+        <div class="builder-block" data-block="customer" data-ideal-mode="truncate" data-ideal-plan="single-line">
+          <div class="builder-block-head">
+            <span class="builder-block-name">7 · 客户列表项</span>
+            <span class="builder-block-tag">block-07</span>
+          </div>
+          <div class="builder-radios" data-radios>
+            <button class="builder-radio" data-mode="reflow">换布局</button>
+            <button class="builder-radio" data-mode="truncate">截断</button>
+            <button class="builder-radio" data-mode="overflow">溢出</button>
+          </div>
+          <select class="builder-select" data-plan disabled>
+            <option value="">先选行为方式</option>
+          </select>
+          <div class="builder-explain"></div>
+        </div>
+        <div class="builder-block" data-block="statusbar" data-ideal-mode="truncate" data-ideal-plan="hide-time">
+          <div class="builder-block-head">
+            <span class="builder-block-name">8 · 底部状态栏</span>
+            <span class="builder-block-tag">block-08</span>
+          </div>
+          <div class="builder-radios" data-radios>
+            <button class="builder-radio" data-mode="reflow">换布局</button>
+            <button class="builder-radio" data-mode="truncate">截断</button>
+            <button class="builder-radio" data-mode="overflow">溢出</button>
+          </div>
+          <select class="builder-select" data-plan disabled>
+            <option value="">先选行为方式</option>
+          </select>
+          <div class="builder-explain"></div>
+        </div>
+      </div>
+      <div class="builder-actions">
+        <button class="builder-btn primary" id="builderSubmit">提交打分</button>
+        <button class="builder-btn" id="builderReset">清空</button>
+      </div>
+      <div class="builder-judge" id="builderJudge"></div>
+    </div>
+  </div>
+</section>
+<!-- Section 05: closing -->
+<section id="closing">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>05</strong> / 把这件事变成习惯</div>
+        <h2 class="section-title">下次接响应式，<br>桌面稿旁边<br>画一张<span class="em">行为表</span>。</h2>
+      </div>
+      <p class="section-sub">
+        从这一篇开始，"响应式"不再是"再画一稿"，而是每个区块的"<strong>行为标签</strong>"——
+        交付时附在每个块上，工程师不用猜。
+      </p>
+    </div>
+    <div class="tips-grid">
+      <div class="tip">
+        <div class="tip-num">i</div>
+        <h4>每个区块单独选三选一</h4>
+        <p>不要"整页用一个规则"。导航、表格、卡片各有最优解——主导航和侧栏可能都用"溢出"，但表格用"截断"。</p>
+        <p><strong>按区块决策，不按页面决策。</strong></p>
+      </div>
+      <div class="tip">
+        <div class="tip-num">ii</div>
+        <h4>截断必须能 hover 看全</h4>
+        <p>截掉信息但留路径——用户能恢复就 OK。tooltip / 点开详情 / 长按展开都行，<strong>完全丢就是 bug</strong>。</p>
+        <p>把"截断"和"删除"分清楚：截断是视觉省略，数据还在。</p>
+      </div>
+      <div class="tip">
+        <div class="tip-num">iii</div>
+        <h4>溢出菜单的入口要看得见</h4>
+        <p>⋯ 按钮、hamburger、横滚条都要让用户知道"被收进哪了"。<strong>看不见的入口 = 不存在的功能</strong>。</p>
+        <p>横滚加 fade 渐变、⋯ 加角标数字、hamburger 用动画展开——都是给用户"还有东西"的信号。</p>
+      </div>
+    </div>
+    <div class="tip-outro">
+      <div class="outro-tag">划重点 · TL;DR</div>
+      <div>
+        <p>响应式不是"按比例缩小"，是 <strong>每个区块的小屏行为决策</strong>——换布局 / 截断 / 溢出三选一。可重排选换布局；可识别选截断；不能省、不能重排选溢出。</p>
+        <p>下次接到响应式需求，<strong>桌面稿旁边画一张"每个区块的移动行为"</strong>。每个块标一个 tag：reflow / truncate / overflow + 具体方案。工程师拿到不用猜，整页 morph 而不是 shrink。</p>
+      </div>
+    </div>
+    <a href="x17-extensibility.html" class="next-post">
+      <div>
+        <div class="np-tag">下一站 · NEXT · X17 · 高阶</div>
+        <h4>扩展性：<span class="em">新增字段 / 角色 / 流程</span></h4>
+        <p>组件契约 4 篇讲完了。下一阶段：系统演进——这版做完之后，未来 2 年还能不能扛住新需求？字段加上去会不会撑爆布局？角色加上去会不会权限错乱？流程改了会不会把老数据废掉？</p>
+      </div>
+      <span class="np-cta">继续阅读 <span class="arr">→</span></span>
+    </a>
+  </div>
+</section>
+<footer>
+  <div class="wrap">
+    <div class="byline-group">
+      <div class="byline">
+        <img class="avatar" src="author.jpg" alt="范米花儿">
+        <div class="byline-meta">
+          <div class="byline-label"><span class="dot"></span>作者 · WRITTEN BY</div>
+          <div class="byline-name">嗨，我是 <span class="em">范米花儿</span></div>
+          <p class="byline-tag">设计工程师 ——<br>设计 × 代码，两边都做。</p>
+        </div>
+      </div>
+</div>
+    <div class="footer-meta">
+      做于 <span class="mono">2026</span> · 用 <span class="heart">●</span> 写给 <span class="mono">DESIGNERS &amp; DEVELOPERS</span>
+    </div>
+  </div>
+</footer>
+<script>
+(function(){
+  const slider = document.getElementById('vpSlider');
+  const viewport = document.getElementById('vpViewport');
+  const readout = document.getElementById('vpW');
+  const bpReadout = document.getElementById('bpReadout');
+  const bpCount = document.getElementById('bpCount');
+  const presets = document.querySelectorAll('.vp-preset');
+  const navLinks = document.querySelectorAll('#mockNav a:not(.is-more)');
+  const mockMore = document.getElementById('mockMore');
+  const mockBurger = document.getElementById('mockBurger');
+  const mockUser = document.getElementById('mockUser');
+  const actBtns = document.querySelectorAll('#mockActionbar .mock-btn:not(.primary):not(.is-more)');
+  const mockActMore = document.getElementById('mockActMore');
+  const mockKpi = document.getElementById('mockKpi');
+  const mockCharts = document.getElementById('mockCharts');
+  const filterChips = document.querySelectorAll('#mockFilter .mock-filter-chip');
+  const mockFilterMore = document.getElementById('mockFilterMore');
+  const mockTable = document.getElementById('mockTable');
+  const mockTableWrap = document.getElementById('mockTableWrap');
+  const mockListMode = document.getElementById('mockListMode');
+  const mockFieldGrid = document.getElementById('mockFieldGrid');
+  const mockFields = document.querySelectorAll('#mockFieldGrid .mock-field');
+  const statusItems = document.querySelectorAll('#mockStatusbar .item');
+  const mockStatusbar = document.getElementById('mockStatusbar');
+  const mockFab = document.getElementById('mockFab');
+  const kpiBehav = document.getElementById('kpiBehav');
+  const chartBehav = document.getElementById('chartBehav');
+  const filterBehav = document.getElementById('filterBehav');
+  const tableBehav = document.getElementById('tableBehav');
+  const fieldBehav = document.getElementById('fieldBehav');
+  let lastBp = '';
+  let bpChanges = 0;
+  function getBp(w) {
+    if (w < 480) return 'MOBILE';
+    if (w < 880) return 'TABLET';
+    return 'DESKTOP';
+  }
+  function updateBehaviorLabel(el, text, cls) {
+    el.textContent = text;
+    el.className = 'behav-label ' + cls;
+  }
+  function applyWidth(w) {
+    w = Math.max(320, Math.min(1280, parseInt(w, 10)));
+    viewport.style.width = w + 'px';
+    readout.textContent = w;
+    const pct = Math.round(((w - 320) / (1280 - 320)) * 100);
+    slider.style.setProperty('--pct', pct + '%');
+    const bp = getBp(w);
+    if (bp !== lastBp) {
+      bpChanges++;
+      bpCount.textContent = bpChanges;
+      lastBp = bp;
+      bpReadout.textContent = bp;
+    }
+    viewport.classList.toggle('is-shrinking', w < 720);
+    if (bp === 'MOBILE') {
+      navLinks.forEach(a => a.classList.add('is-hidden'));
+      mockMore.style.display = 'none';
+      mockBurger.classList.add('show');
+      mockUser.classList.add('compact');
+    } else if (bp === 'TABLET') {
+      navLinks.forEach((a, i) => a.classList.toggle('is-hidden', i >= 3));
+      mockMore.style.display = 'inline-block';
+      mockBurger.classList.remove('show');
+      mockUser.classList.remove('compact');
+    } else {
+      navLinks.forEach(a => a.classList.remove('is-hidden'));
+      mockMore.style.display = 'none';
+      mockBurger.classList.remove('show');
+      mockUser.classList.remove('compact');
+    }
+    if (bp === 'MOBILE') {
+      actBtns.forEach(b => b.classList.add('is-hidden'));
+      mockActMore.style.display = 'inline-block';
+      mockFab.classList.add('show');
+    } else if (bp === 'TABLET') {
+      actBtns.forEach((b, i) => b.classList.toggle('is-hidden', i >= 2));
+      mockActMore.style.display = 'inline-block';
+      mockFab.classList.remove('show');
+    } else {
+      actBtns.forEach(b => b.classList.remove('is-hidden'));
+      mockActMore.style.display = 'none';
+      mockFab.classList.remove('show');
+    }
+    mockKpi.classList.remove('cols-4','cols-2','cols-1');
+    if (bp === 'MOBILE') {
+      mockKpi.classList.add('cols-1');
+      updateBehaviorLabel(kpiBehav, '换布局 · 1 列', '');
+    } else if (bp === 'TABLET') {
+      mockKpi.classList.add('cols-2');
+      updateBehaviorLabel(kpiBehav, '换布局 · 2 列', '');
+    } else {
+      mockKpi.classList.add('cols-4');
+      updateBehaviorLabel(kpiBehav, '4 列', '');
+    }
+    mockCharts.classList.remove('cols-2','cols-1');
+    if (bp === 'DESKTOP') {
+      mockCharts.classList.add('cols-2');
+      updateBehaviorLabel(chartBehav, '2 列并排', 'blue');
+    } else {
+      mockCharts.classList.add('cols-1');
+      updateBehaviorLabel(chartBehav, bp === 'MOBILE' ? '换布局 · 堆叠' : '堆叠 · 自适应高度', 'blue');
+    }
+    if (bp === 'MOBILE') {
+      filterChips.forEach(c => c.classList.add('is-hidden'));
+      mockFilterMore.classList.add('show');
+      updateBehaviorLabel(filterBehav, '溢出 · 抽屉', 'yellow');
+    } else if (bp === 'TABLET') {
+      filterChips.forEach((c, i) => c.classList.toggle('is-hidden', i >= 5));
+      mockFilterMore.classList.remove('show');
+      updateBehaviorLabel(filterBehav, '截断 · 显示 5', 'yellow');
+    } else {
+      filterChips.forEach(c => c.classList.remove('is-hidden'));
+      mockFilterMore.classList.remove('show');
+      updateBehaviorLabel(filterBehav, '全展开', 'yellow');
+    }
+    if (bp === 'MOBILE') {
+      mockTableWrap.style.display = 'none';
+      mockListMode.classList.add('show');
+      updateBehaviorLabel(tableBehav, '换布局 · 卡片化', 'green');
+    } else if (bp === 'TABLET') {
+      mockTableWrap.style.display = 'block';
+      mockListMode.classList.remove('show');
+      mockTableWrap.classList.add('scrollable');
+      mockTable.classList.add('fixed-wide');
+      mockTable.querySelectorAll('.col-owner, .col-tags, .col-title').forEach(el => el.classList.add('is-trunc-hidden'));
+      updateBehaviorLabel(tableBehav, '截断 · 隐藏 3 列', 'green');
+    } else {
+      mockTableWrap.style.display = 'block';
+      mockListMode.classList.remove('show');
+      mockTableWrap.classList.remove('scrollable');
+      mockTable.classList.remove('fixed-wide');
+      mockTable.querySelectorAll('.is-trunc-hidden').forEach(el => el.classList.remove('is-trunc-hidden'));
+      updateBehaviorLabel(tableBehav, '全列', 'green');
+    }
+    mockFieldGrid.classList.remove('cols-4','cols-2','cols-1');
+    mockFields.forEach(f => f.classList.remove('cols-1'));
+    if (bp === 'MOBILE') {
+      mockFieldGrid.classList.add('cols-1');
+      mockFields.forEach(f => f.classList.add('cols-1'));
+      updateBehaviorLabel(fieldBehav, '换布局 · label 上 value 下', '');
+    } else if (bp === 'TABLET') {
+      mockFieldGrid.classList.add('cols-2');
+      updateBehaviorLabel(fieldBehav, '换布局 · 2 列', '');
+    } else {
+      mockFieldGrid.classList.add('cols-4');
+      updateBehaviorLabel(fieldBehav, '4 列', '');
+    }
+    if (bp === 'MOBILE') {
+      statusItems.forEach((s, i) => s.classList.toggle('is-hidden', i >= 2));
+      mockStatusbar.classList.add('compact');
+    } else if (bp === 'TABLET') {
+      statusItems.forEach((s, i) => s.classList.toggle('is-hidden', i >= 4));
+      mockStatusbar.classList.remove('compact');
+    } else {
+      statusItems.forEach(s => s.classList.remove('is-hidden'));
+      mockStatusbar.classList.remove('compact');
+    }
+    presets.forEach(p => {
+      p.classList.remove('active');
+      if (parseInt(p.dataset.w, 10) === w) p.classList.add('active');
+    });
+  }
+  slider.addEventListener('input', e => applyWidth(e.target.value));
+  presets.forEach(p => {
+    p.addEventListener('click', () => {
+      const w = parseInt(p.dataset.w, 10);
+      slider.value = w;
+      applyWidth(w);
+    });
+  });
+  applyWidth(slider.value);
+  bpChanges = 0;
+  bpCount.textContent = '0';
+})();
+(function(){
+  const cards = document.querySelectorAll('.dt-card');
+  const counter = document.getElementById('dtCount');
+  const opened = new Set();
+  cards.forEach(card => {
+    card.addEventListener('click', () => {
+      const wasActive = card.classList.contains('active');
+      cards.forEach(c => c.classList.remove('active'));
+      if (!wasActive) {
+        card.classList.add('active');
+        opened.add(card.dataset.dt);
+        counter.textContent = opened.size;
+      }
+    });
+  });
+})();
+(function(){
+  const PLANS = {
+    reflow: [
+      { v: 'col1', l: '堆叠成 1 列' },
+      { v: 'col2', l: '改 2 列网格' },
+      { v: 'stack', l: '垂直堆叠 + 自适应高度' },
+      { v: 'label-stack', l: 'label 上 / value 下' },
+      { v: 'card', l: '改卡片形式' },
+    ],
+    truncate: [
+      { v: 'single-line', l: '单行 + 渐隐（…）' },
+      { v: 'clamp-2', l: '多行截断（2 行）' },
+      { v: 'hide-cols', l: '隐藏次要列 + 横滚' },
+      { v: 'hide-time', l: '字号缩 + 隐藏次要字段' },
+      { v: 'abbr', l: '缩写显示（hover 看全）' },
+    ],
+    overflow: [
+      { v: 'hamburger', l: '收成 hamburger 菜单' },
+      { v: 'more-menu', l: '主操作 + ⋯ 更多菜单' },
+      { v: 'drawer', l: '折叠成"筛选"按钮 + 抽屉' },
+      { v: 'horizontal-scroll', l: '横滚 + 锁列' },
+      { v: 'modal', l: '点开模态展开' },
+      { v: 'fab', l: '主操作浮于底部 FAB' },
+    ]
+  };
+  const EXPLAIN = {
+    nav: {
+      good: 'hamburger 是 5 项主导航在 mobile 的标配——一个汉堡入口收起全部，避免占顶部一整行。',
+      bad_reflow: '导航 5 项变 1 列堆顶部 = 永远占屏 5 行，正文被挤掉。',
+      bad_truncate: '导航不能截——用户找不到"客户"和"客戶..."一样无效。',
+      good_others: '主操作 FAB 也可以，但 5 项常规导航更适合 hamburger。'
+    },
+    kpi: {
+      good: 'KPI 卡片每个独立，可以无损重排——4 列 → 1 列堆叠就行。',
+      bad_truncate: 'KPI 是核心数字，不能截——"¥4..."看不出是 4 元还是 4 千万。',
+      bad_overflow: 'KPI 不能藏——这是用户来看的核心指标，不能放进"更多"菜单。',
+      good_others: '2 列也可以；但 6 个 KPI 在 375 宽上 2 列每个 < 160px，不如直接 1 列。'
+    },
+    chart: {
+      good: '图表是视觉密集型——重排成堆叠 + 每个独占一行，比横滚更易读。',
+      bad_truncate: '图表不能截——只看半张折线图等于没看。',
+      ok_overflow: '横滚 + 锁列也行，特别是多图比较场景。但常规仪表盘堆叠更直观。',
+      good_others: '换布局是首选，因为图表通常各自独立。'
+    },
+    table: {
+      good: '12 列表格在 mobile 上不能全摊，"隐藏次列 + 横滚"保留全列访问，主列锁定。',
+      good_card: '卡片化也可以——但 60 行表格卡片化 = 60 屏。仅适用于小数据量。',
+      bad_reflow_strict: '12 列 reflow 成 12 行堆叠 = 一行变 12 行，60 行表格变 720 屏瀑布。',
+      good_others: '截断（隐藏次列）+ 溢出（横滚）双重组合，是表格在 mobile 的经典方案。'
+    },
+    filter: {
+      good: '10 项筛选放外面占 2-3 行，"筛选"按钮 + 抽屉收纳是 mobile 标配——主路径不被干扰。',
+      bad_reflow: '10 项 reflow 成 1 列 = 占满整屏，正文消失。',
+      bad_truncate: '筛选项截断 → 用户看不清在筛什么，等于没筛。',
+      good_others: '溢出是唯一合理选择——10 项操作型 chip 不能省不能换布局。'
+    },
+    sidenav: {
+      good: '侧边导航在 mobile 没有"侧"——必须收成 hamburger，和顶部导航合并是常见做法。',
+      bad_reflow: '侧栏 reflow 到顶部 = 占整屏，正文被挤到最下。',
+      bad_truncate: '导航不能截——用户找不到入口。',
+      good_others: '溢出是侧导航在 mobile 的唯一答案。'
+    },
+    customer: {
+      good: '列表项内容是"识别用"——只要能认出"是不是这个客户"，截掉次要信息 OK。',
+      bad_reflow: '每个 list item 堆叠成 label/value = 一行变 N 行，列表变成无穷长。',
+      ok_reflow_card: 'reflow 成卡片也行，但增加纵向高度；单行 + 渐隐更紧凑。',
+      good_others: '截断（单行 + 渐隐）是列表项在 mobile 的常见方案。'
+    },
+    statusbar: {
+      good: '状态栏是次要信息——字号缩 + 隐藏不关键的（时间、版本号）是务实选择。',
+      bad_reflow: '状态栏 reflow 成多行 = 占满屏幕底部，本末倒置。',
+      ok_overflow: '溢出（收进"⋯"）也可以，但状态栏一般不交互，不需要展开入口。',
+      good_others: '截断是状态栏在 mobile 的最经济方案。'
+    }
+  };
+  const BLOCK_LABELS = {
+    nav: '顶部导航',
+    kpi: 'KPI 卡片',
+    chart: '图表区',
+    table: '数据表格',
+    filter: '筛选条',
+    sidenav: '侧边导航',
+    customer: '客户列表项',
+    statusbar: '底部状态栏'
+  };
+  const blocks = document.querySelectorAll('.builder-block');
+  const choices = {}; // block -> { mode, plan }
+  function updateProgress() {
+    let done = 0;
+    Object.keys(choices).forEach(k => {
+      if (choices[k] && choices[k].mode && choices[k].plan) done++;
+    });
+    document.getElementById('builderDone').textContent = done;
+  }
+  function getExplain(block, mode, plan) {
+    const ex = EXPLAIN[block];
+    const ideal = blocks[0]; // not used; we look up directly
+    const blockEl = document.querySelector(`.builder-block[data-block="${block}"]`);
+    const idealMode = blockEl.dataset.idealMode;
+    const idealPlan = blockEl.dataset.idealPlan;
+    if (mode === idealMode && plan === idealPlan) {
+      return { cls: 'good', text: '<strong>对了 · OPTIMAL</strong><br>' + ex.good };
+    }
+    if (mode === idealMode) {
+      return { cls: 'good', text: '<strong>方向对 · DIRECTION OK</strong><br>' + (ex.good_others || ex.good) };
+    }
+    if (mode === 'reflow' && ex.bad_reflow) return { cls: 'bad', text: '<strong>反例 · WRONG</strong><br>' + ex.bad_reflow };
+    if (mode === 'reflow' && ex.bad_reflow_strict) return { cls: 'bad', text: '<strong>反例 · WRONG</strong><br>' + ex.bad_reflow_strict };
+    if (mode === 'reflow' && ex.ok_reflow_card) return { cls: '', text: '<strong>勉强可行 · TRADEOFF</strong><br>' + ex.ok_reflow_card };
+    if (mode === 'truncate' && ex.bad_truncate) return { cls: 'bad', text: '<strong>反例 · WRONG</strong><br>' + ex.bad_truncate };
+    if (mode === 'overflow' && ex.bad_overflow) return { cls: 'bad', text: '<strong>反例 · WRONG</strong><br>' + ex.bad_overflow };
+    if (mode === 'overflow' && ex.ok_overflow) return { cls: '', text: '<strong>勉强可行 · TRADEOFF</strong><br>' + ex.ok_overflow };
+    if (mode === 'reflow' && ex.good_card) return { cls: '', text: '<strong>另一种方案 · ALT</strong><br>' + ex.good_card };
+    return { cls: '', text: '<strong>方向偏了 · OFF</strong><br>这个区块更适合"' + ({reflow:'换布局',truncate:'截断',overflow:'溢出'})[idealMode] + '"——想想内容性质：可重排？可截？还是不能省？' };
+  }
+  blocks.forEach(block => {
+    const blockKey = block.dataset.block;
+    const radios = block.querySelectorAll('.builder-radio');
+    const select = block.querySelector('[data-plan]');
+    const explainEl = block.querySelector('.builder-explain');
+    radios.forEach(r => {
+      r.addEventListener('click', () => {
+        radios.forEach(x => x.classList.remove('active'));
+        r.classList.add('active');
+        const mode = r.dataset.mode;
+        select.innerHTML = '<option value="">选具体方案</option>';
+        PLANS[mode].forEach(opt => {
+          const o = document.createElement('option');
+          o.value = opt.v;
+          o.textContent = opt.l;
+          select.appendChild(o);
+        });
+        select.disabled = false;
+        choices[blockKey] = { mode, plan: '' };
+        block.classList.remove('is-set');
+        explainEl.classList.remove('show', 'good', 'bad');
+        explainEl.innerHTML = '';
+        updateProgress();
+      });
+    });
+    select.addEventListener('change', () => {
+      const plan = select.value;
+      if (!choices[blockKey]) return;
+      choices[blockKey].plan = plan;
+      if (plan) {
+        block.classList.add('is-set');
+        const r = getExplain(blockKey, choices[blockKey].mode, plan);
+        explainEl.classList.remove('good','bad');
+        if (r.cls) explainEl.classList.add(r.cls);
+        explainEl.classList.add('show');
+        explainEl.innerHTML = r.text;
+      } else {
+        block.classList.remove('is-set');
+        explainEl.classList.remove('show');
+      }
+      updateProgress();
+    });
+  });
+  document.getElementById('builderSubmit').addEventListener('click', () => {
+    const lines = [];
+    let perfect = 0, modeRight = 0, wrong = 0, blank = 0;
+    blocks.forEach(block => {
+      const k = block.dataset.block;
+      const name = BLOCK_LABELS[k];
+      const c = choices[k];
+      const idealMode = block.dataset.idealMode;
+      const idealPlan = block.dataset.idealPlan;
+      const idealLabel = { reflow:'换布局', truncate:'截断', overflow:'溢出' }[idealMode];
+      const idealPlanLabel = (PLANS[idealMode].find(p => p.v === idealPlan) || {}).l || idealPlan;
+      if (!c || !c.mode) {
+        blank++;
+        lines.push(`<li><strong>${name}</strong>：还没选 — 最优：<code>${idealLabel}</code> · ${idealPlanLabel}</li>`);
+      } else if (!c.plan) {
+        blank++;
+        lines.push(`<li><strong>${name}</strong>：选了方向但没选具体方案 — 最优：<code>${idealLabel}</code> · ${idealPlanLabel}</li>`);
+      } else if (c.mode === idealMode && c.plan === idealPlan) {
+        perfect++;
+        lines.push(`<li>✓ <strong>${name}</strong>：完美命中 — <code>${idealLabel}</code> · ${idealPlanLabel}</li>`);
+      } else if (c.mode === idealMode) {
+        modeRight++;
+        lines.push(`<li><strong>${name}</strong>：方向对 — <code>${idealLabel}</code>；方案差一点 — 最优是 <code>${idealPlanLabel}</code><br><span class="why">↳ ${EXPLAIN[k].good}</span></li>`);
+      } else {
+        wrong++;
+        const yourLabel = { reflow:'换布局', truncate:'截断', overflow:'溢出' }[c.mode];
+        lines.push(`<li><strong>${name}</strong>：方向偏了 — 你选 <code>${yourLabel}</code>，最优 <code>${idealLabel}</code> · ${idealPlanLabel}<br><span class="why">↳ ${EXPLAIN[k].good}</span></li>`);
+      }
+    });
+    let verdictClass, verdictLabel, headline;
+    if (perfect === 8) {
+      verdictClass = 'win';
+      verdictLabel = '完美';
+      headline = '你已经在用"三选一"框架思考响应式了。';
+    } else if (perfect + modeRight >= 6 && wrong <= 1) {
+      verdictClass = 'win';
+      verdictLabel = '基本对了';
+      headline = '方向都判断对了——下一步是把具体方案也细化到位。';
+    } else if (perfect + modeRight >= 4) {
+      verdictClass = 'partial';
+      verdictLabel = '差一半';
+      headline = '回到三问：内容可重排？能截？不能省？挨个区块过一遍。';
+    } else {
+      verdictClass = 'partial';
+      verdictLabel = '还差一点';
+      headline = '别按区块名套答案——按"内容性质"判断。导航和侧栏都该溢出；表格几乎一定要截断。';
+    }
+    const judge = document.getElementById('builderJudge');
+    judge.innerHTML = `<span class="verdict ${verdictClass}">${verdictLabel}</span><h4>${headline}</h4><ul>${lines.join('')}</ul>`;
+    judge.classList.add('show');
+    judge.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  });
+  document.getElementById('builderReset').addEventListener('click', () => {
+    blocks.forEach(block => {
+      block.classList.remove('is-set');
+      block.querySelectorAll('.builder-radio').forEach(r => r.classList.remove('active'));
+      const sel = block.querySelector('[data-plan]');
+      sel.innerHTML = '<option value="">先选行为方式</option>';
+      sel.disabled = true;
+      sel.value = '';
+      const ex = block.querySelector('.builder-explain');
+      ex.classList.remove('show','good','bad');
+      ex.innerHTML = '';
+    });
+    Object.keys(choices).forEach(k => delete choices[k]);
+    updateProgress();
+    document.getElementById('builderJudge').classList.remove('show');
+  });
+})();
+</script>
+</body>
+</html>

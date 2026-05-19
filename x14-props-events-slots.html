@@ -1,0 +1,2311 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>props / events / slots / 状态边界 — AI LABBOOK · X14</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,300..900&family=Geist:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Noto+Sans+SC:wght@300;400;500;700;900&family=Noto+Serif+SC:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f3eee5;
+    --bg-2: #ebe4d4;
+    --ink: #16161d;
+    --ink-soft: #4a4a55;
+    --ink-mute: #8a8a92;
+    --line: #d5cdba;
+    --line-soft: #e3dcca;
+    --accent: #ff4d2e;
+    --accent-soft: #ffe4dc;
+    --blue: #0a4cff;
+    --blue-soft: #dde6ff;
+    --green: #1f6b3a;
+    --green-soft: #d4ecdb;
+    --yellow: #ffcf3d;
+    --paper: #faf7f0;
+    --shadow: 0 1px 0 rgba(0,0,0,0.04), 0 8px 24px rgba(22,22,29,0.06);
+
+    --obj-color: #ff4d2e;
+    --obj-soft: rgba(255,77,46,0.12);
+    --proj-color: #1f6b3a;
+    --proj-soft: rgba(31,107,58,0.12);
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'Geist', 'Noto Sans SC', system-ui, -apple-system, sans-serif;
+    font-size: 16px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    background-image: radial-gradient(circle at 1px 1px, rgba(22,22,29,0.05) 1px, transparent 0);
+    background-size: 24px 24px;
+  }
+
+  .display-cn { font-family: 'Noto Serif SC', 'Fraunces', serif; font-weight: 900; letter-spacing: -0.01em; }
+  .display-en { font-family: 'Fraunces', 'Noto Serif SC', serif; font-weight: 600; font-style: italic; letter-spacing: -0.02em; }
+  .mono { font-family: 'JetBrains Mono', monospace; }
+  .label { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-mute); }
+
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 0 32px; }
+
+  /* Topbar */
+  .topbar {
+    border-bottom: 1px dashed var(--line);
+    padding: 16px 0;
+    background: var(--bg);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .topbar-inner { display: flex; justify-content: space-between; align-items: center; gap: 24px; flex-wrap: wrap; }
+  .brand-block { display: flex; align-items: center; gap: 10px; font-family: 'JetBrains Mono', monospace; font-size: 13px; }
+  .brand { display: inline-flex; align-items: center; gap: 6px; color: var(--ink); text-decoration: none; font-weight: 600; }
+  .brand-arrow { color: var(--ink-mute); transition: transform .2s; }
+  .brand:hover .brand-arrow { transform: translateX(-3px); }
+  .brand .dot { display: inline-block; width: 8px; height: 8px; background: var(--accent); border-radius: 50%; vertical-align: middle; animation: pulse 2s ease-in-out infinite; margin-left: 4px; }
+  .brand-sep { color: var(--ink-mute); }
+  .brand-current { color: var(--ink-soft); }
+  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+  .nav-links { display: flex; gap: 18px; font-size: 13px; flex-wrap: wrap; }
+  .nav-links a { color: var(--ink-soft); text-decoration: none; transition: color 0.2s; }
+  .nav-links a:hover { color: var(--accent); }
+  .nav-links a.current { color: var(--accent); font-weight: 600; }
+
+  /* Hero */
+  .hero { padding: 100px 0 80px; position: relative; overflow: hidden; }
+  .hero-meta { display: flex; gap: 24px; margin-bottom: 32px; align-items: center; flex-wrap: wrap; }
+  .hero-meta .pill { padding: 6px 12px; border: 1px solid var(--ink); border-radius: 100px; font-size: 11px; font-family: 'JetBrains Mono', monospace; letter-spacing: 0.05em; }
+  .hero-meta .pill.fill { background: var(--ink); color: var(--bg); }
+  .hero-meta .pill.purple { background: var(--obj-color); color: white; border-color: var(--obj-color); }
+  .hero h1 {
+    font-family: 'Noto Serif SC', 'Fraunces', serif;
+    font-weight: 900;
+    font-size: clamp(48px, 7vw, 92px);
+    line-height: 0.95;
+    letter-spacing: -0.03em;
+    margin: 0 0 24px;
+  }
+  .hero h1 .em { font-family: 'Noto Serif SC', serif; font-weight: 500; color: var(--accent); }
+  .hero h1 .purple { color: var(--obj-color); font-family: 'Noto Serif SC', serif; font-weight: 500; }
+  .hero p.lede {
+    font-size: 20px;
+    line-height: 1.5;
+    max-width: 640px;
+    color: var(--ink-soft);
+    margin: 0 0 40px;
+  }
+  .hero-grid { display: grid; grid-template-columns: 1.4fr 1fr; gap: 48px; align-items: end; }
+  @media (max-width: 880px) { .hero-grid { grid-template-columns: 1fr; } }
+  .hero-side { border-left: 1px dashed var(--line); padding-left: 24px; font-size: 13px; color: var(--ink-soft); }
+  .hero-side .row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px dashed var(--line); gap: 12px; }
+  .hero-side .row:last-child { border-bottom: none; }
+  .hero-side .row .k { color: var(--ink-mute); font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.05em; text-transform: uppercase; }
+  .hero-side .row .v { font-weight: 500; }
+
+  /* Sections */
+  section { padding: 80px 0; border-top: 1px solid var(--line); position: relative; }
+  .section-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 56px; flex-wrap: wrap; gap: 16px; }
+  .section-num { font-family: 'JetBrains Mono', monospace; font-size: 13px; color: var(--ink-mute); letter-spacing: 0.1em; margin-top: 6px; }
+  .section-num strong { color: var(--accent); }
+  .section-title { font-family: 'Noto Serif SC', serif; font-weight: 900; font-size: clamp(32px, 4.5vw, 52px); line-height: 1.05; letter-spacing: -0.02em; margin: 8px 0 0; max-width: 22ch; }
+  .section-title .em { font-family: 'Noto Serif SC', serif; font-weight: 500; color: var(--accent); }
+  .section-title .purple { color: var(--obj-color); font-family: 'Noto Serif SC', serif; font-weight: 500; }
+  .section-sub { color: var(--ink-soft); font-size: 17px; max-width: 38ch; line-height: 1.55; margin: 0; }
+
+  /* Act tag */
+  .act-tag { display: inline-block; padding: 4px 12px; font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; border-radius: 100px; }
+  .act-tag.look { background: var(--blue-soft); color: var(--blue); }
+  .act-tag.break { background: var(--obj-soft); color: var(--obj-color); }
+  .act-tag.make { background: var(--proj-soft); color: var(--proj-color); }
+
+  /* Problem cards */
+  .problem-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; margin-top: 24px; }
+  @media (max-width: 880px) { .problem-grid { grid-template-columns: 1fr; } }
+  .problem-card { background: var(--paper); border: 1px solid var(--line); border-radius: 6px; padding: 28px; position: relative; }
+  .problem-card.bad { border-color: var(--accent); background: var(--accent-soft); }
+  .problem-card.good { border-color: var(--obj-color); background: var(--obj-soft); }
+  .problem-card .tag { position: absolute; top: -12px; left: 24px; background: var(--bg); padding: 2px 10px; font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.1em; }
+  .problem-card.bad .tag { color: var(--accent); border: 1px solid var(--accent); }
+  .problem-card.good .tag { color: var(--obj-color); border: 1px solid var(--obj-color); }
+  .problem-card h3 { font-family: 'Noto Serif SC', serif; font-size: 22px; margin: 0 0 12px; font-weight: 700; }
+  .problem-card p { margin: 0; color: var(--ink-soft); font-size: 14px; line-height: 1.55; }
+  .problem-card p + p { margin-top: 10px; }
+  .problem-card code { font-family: 'JetBrains Mono', monospace; font-size: 12px; background: rgba(22,22,29,0.06); padding: 1px 5px; border-radius: 3px; color: var(--ink); }
+
+  /* GAME 1: Modal Lab */
+  .modal-stage {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 32px;
+    position: relative;
+    overflow: hidden;
+  }
+  .modal-stage::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(to right, var(--line-soft) 1px, transparent 1px),
+      linear-gradient(to bottom, var(--line-soft) 1px, transparent 1px);
+    background-size: 24px 24px;
+    opacity: 0.4;
+    pointer-events: none;
+  }
+  .modal-stage-inner { position: relative; display: grid; grid-template-columns: 1fr 1fr; gap: 28px; }
+  @media (max-width: 980px) { .modal-stage-inner { grid-template-columns: 1fr; } }
+
+  .modal-preview-wrap {
+    background: linear-gradient(180deg, #2a2a35 0%, #1a1a23 100%);
+    border-radius: 8px;
+    padding: 24px;
+    min-height: 320px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .modal-preview-wrap::after {
+    content: 'PREVIEW';
+    position: absolute;
+    top: 8px;
+    left: 12px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 0.15em;
+    color: rgba(255,255,255,0.25);
+  }
+  .modal-mock {
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 24px 64px rgba(0,0,0,0.5);
+    width: 100%;
+    max-width: 320px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+  .modal-mock.size-sm { max-width: 240px; }
+  .modal-mock.size-md { max-width: 320px; }
+  .modal-mock.size-lg { max-width: 400px; }
+  .modal-mock.is-closed { transform: scale(0.85); opacity: 0; pointer-events: none; }
+  .modal-mock-header {
+    padding: 14px 18px;
+    border-bottom: 1px solid var(--line-soft);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+  }
+  .modal-mock-title { font-family: 'Noto Serif SC', serif; font-weight: 700; font-size: 15px; color: var(--ink); }
+  .modal-mock-close {
+    width: 22px; height: 22px; border-radius: 50%;
+    background: var(--bg-2);
+    color: var(--ink-soft);
+    border: none;
+    cursor: pointer;
+    font-size: 14px;
+    line-height: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s;
+  }
+  .modal-mock-close:hover { background: var(--accent); color: white; }
+  .modal-mock-close.hidden { display: none; }
+  .modal-mock-body {
+    padding: 18px;
+    font-size: 13px;
+    color: var(--ink-soft);
+    line-height: 1.6;
+    min-height: 60px;
+    white-space: pre-wrap;
+  }
+  .modal-mock-footer {
+    padding: 12px 18px;
+    border-top: 1px solid var(--line-soft);
+    background: var(--bg);
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    flex-wrap: wrap;
+    min-height: 50px;
+    align-items: center;
+  }
+  .modal-mock-footer .placeholder-text { color: var(--ink-mute); font-size: 11px; font-style: italic; }
+  .modal-mock-btn {
+    padding: 6px 14px;
+    border-radius: 4px;
+    font-size: 12px;
+    cursor: pointer;
+    border: 1px solid var(--line);
+    background: white;
+    color: var(--ink);
+    font-family: inherit;
+    transition: all 0.15s;
+  }
+  .modal-mock-btn:hover { background: var(--bg-2); }
+  .modal-mock-btn.primary { background: var(--obj-color); color: white; border-color: var(--obj-color); }
+  .modal-mock-btn.primary:hover { background: #d63818; }
+
+  .modal-open-btn {
+    padding: 10px 22px;
+    border-radius: 100px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    letter-spacing: 0.06em;
+    cursor: pointer;
+    border: 1px solid white;
+    background: transparent;
+    color: white;
+    transition: all 0.15s;
+  }
+  .modal-open-btn:hover { background: white; color: var(--ink); }
+
+  /* control panels */
+  .controls-tabs { display: flex; gap: 6px; margin-bottom: 14px; flex-wrap: wrap; }
+  .ctab {
+    padding: 6px 12px;
+    border-radius: 100px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.05em;
+    cursor: pointer;
+    border: 1px solid var(--line);
+    background: white;
+    color: var(--ink-soft);
+    transition: all 0.15s;
+  }
+  .ctab:hover { border-color: var(--obj-color); }
+  .ctab.active { background: var(--obj-color); color: white; border-color: var(--obj-color); }
+
+  .control-panel {
+    background: white;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 18px;
+    display: none;
+    min-height: 280px;
+  }
+  .control-panel.active { display: block; }
+  .control-panel h5 {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 14px;
+    margin: 0 0 14px;
+    color: var(--obj-color);
+    font-weight: 700;
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+  }
+  .control-panel h5 .hint {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--ink-mute);
+    font-weight: 400;
+    letter-spacing: 0.05em;
+  }
+
+  .ctl-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px dashed var(--line-soft);
+    gap: 10px;
+  }
+  .ctl-row:last-child { border-bottom: none; }
+  .ctl-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--ink);
+  }
+  .ctl-label .ctl-type {
+    color: var(--ink-mute);
+    font-size: 10px;
+    margin-left: 4px;
+  }
+  /* toggle */
+  .toggle {
+    position: relative;
+    width: 38px;
+    height: 22px;
+    background: var(--bg-2);
+    border-radius: 100px;
+    cursor: pointer;
+    transition: background 0.15s;
+    border: 1px solid var(--line);
+    flex-shrink: 0;
+  }
+  .toggle::after {
+    content: '';
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 16px;
+    height: 16px;
+    background: white;
+    border-radius: 50%;
+    transition: all 0.15s;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+  }
+  .toggle.on { background: var(--obj-color); border-color: var(--obj-color); }
+  .toggle.on::after { left: 18px; }
+  /* radio group */
+  .radio-group { display: flex; gap: 4px; }
+  .radio-pill {
+    padding: 4px 10px;
+    border-radius: 4px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    cursor: pointer;
+    border: 1px solid var(--line);
+    background: white;
+    color: var(--ink-soft);
+    transition: all 0.15s;
+  }
+  .radio-pill:hover { border-color: var(--obj-color); }
+  .radio-pill.on { background: var(--obj-color); color: white; border-color: var(--obj-color); }
+
+  /* slot textarea */
+  .slot-input-row { padding: 8px 0; border-bottom: 1px dashed var(--line-soft); }
+  .slot-input-row:last-child { border-bottom: none; }
+  .slot-input-row label {
+    display: block;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--ink-mute);
+    margin-bottom: 4px;
+    letter-spacing: 0.05em;
+  }
+  .slot-input-row textarea, .slot-input-row input {
+    width: 100%;
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    padding: 6px 9px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--ink);
+    resize: none;
+    background: var(--paper);
+    transition: border-color 0.15s;
+  }
+  .slot-input-row textarea:focus, .slot-input-row input:focus {
+    outline: none;
+    border-color: var(--obj-color);
+    background: white;
+  }
+  .slot-input-row textarea { min-height: 36px; }
+
+  /* state boundary visualizer */
+  .state-boundary { display: flex; flex-direction: column; gap: 10px; font-size: 12px; }
+  .state-bucket {
+    padding: 10px 12px;
+    border-radius: 6px;
+    border: 1px solid var(--line);
+  }
+  .state-bucket.outer { border-color: var(--obj-color); background: var(--obj-soft); }
+  .state-bucket.inner { background: var(--bg); }
+  .state-bucket-head {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--ink-mute);
+    margin-bottom: 6px;
+    display: flex;
+    justify-content: space-between;
+  }
+  .state-bucket.outer .state-bucket-head { color: var(--obj-color); }
+  .state-bucket .state-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 3px 8px;
+    background: white;
+    border: 1px solid var(--line);
+    border-radius: 100px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--ink);
+    margin: 2px 3px 2px 0;
+  }
+  .state-bucket.outer .state-chip { border-color: var(--obj-color); color: var(--obj-color); }
+  .state-bucket .state-chip.live::before {
+    content: '';
+    width: 6px;
+    height: 6px;
+    background: var(--green);
+    border-radius: 50%;
+    animation: pulse 1.5s ease-in-out infinite;
+  }
+  .state-bucket .state-chip.idle::before {
+    content: '';
+    width: 6px;
+    height: 6px;
+    background: var(--line);
+    border-radius: 50%;
+  }
+
+  /* event log */
+  .event-log {
+    background: #1a1a23;
+    color: #c8c8d0;
+    border-radius: 8px;
+    padding: 14px 16px;
+    margin-top: 16px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    line-height: 1.6;
+    max-height: 130px;
+    overflow-y: auto;
+  }
+  .event-log .log-head {
+    color: #888;
+    margin-bottom: 6px;
+    padding-bottom: 6px;
+    border-bottom: 1px dashed #333;
+    display: flex;
+    justify-content: space-between;
+    letter-spacing: 0.08em;
+  }
+  .event-log .log-head .clear-btn {
+    background: transparent;
+    border: 1px solid #444;
+    color: #888;
+    border-radius: 3px;
+    padding: 1px 7px;
+    font-family: inherit;
+    font-size: 10px;
+    cursor: pointer;
+  }
+  .event-log .log-head .clear-btn:hover { color: #fff; border-color: #888; }
+  .event-log .log-entry { padding: 2px 0; }
+  .event-log .log-entry .ts { color: #666; margin-right: 8px; }
+  .event-log .log-entry .ev { color: #ffcf3d; }
+  .event-log .log-entry .pl { color: #a0a0aa; }
+  .event-log .log-entry.flash { background: rgba(255,207,61,0.08); }
+
+  /* Reveal bar */
+  .reveal-bar {
+    margin-top: 32px;
+    padding: 20px 28px;
+    background: var(--ink);
+    color: var(--bg);
+    border-radius: 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+  .reveal-bar .msg { font-family: 'Noto Serif SC', serif; font-size: 17px; font-weight: 500; line-height: 1.55; }
+  .reveal-bar .msg .em { color: var(--accent); }
+  .reveal-bar .counter { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ink-mute); letter-spacing: 0.05em; }
+  .reveal-bar .counter strong { color: var(--accent); font-size: 14px; }
+
+  /* GAME 2: rules cards */
+  .rules-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 22px;
+    margin-top: 24px;
+  }
+  @media (max-width: 880px) { .rules-grid { grid-template-columns: 1fr; } }
+  .rule-card {
+    background: var(--paper);
+    border: 1px solid var(--obj-color);
+    border-radius: 8px;
+    padding: 22px;
+    position: relative;
+  }
+  .rule-card-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    padding-bottom: 14px;
+    border-bottom: 1px dashed var(--line);
+    margin-bottom: 12px;
+  }
+  .rule-card-name {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 19px;
+    font-weight: 700;
+    color: var(--obj-color);
+  }
+  .rule-card-count {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--ink-mute);
+    letter-spacing: 0.05em;
+  }
+  .rule-card-count strong { color: var(--obj-color); }
+
+  .rule-list { display: flex; flex-direction: column; gap: 8px; }
+  .rule-item {
+    background: white;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    overflow: hidden;
+    transition: all 0.2s;
+  }
+  .rule-item.is-open { border-color: var(--obj-color); box-shadow: 0 4px 16px rgba(255,77,46,0.08); }
+  .rule-item-head {
+    padding: 12px 16px;
+    cursor: pointer;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 10px;
+    user-select: none;
+    transition: background 0.15s;
+  }
+  .rule-item-head:hover { background: var(--bg); }
+  .rule-num {
+    flex-shrink: 0;
+    width: 24px;
+    height: 24px;
+    background: var(--obj-soft);
+    color: var(--obj-color);
+    border-radius: 50%;
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    font-weight: 600;
+    font-size: 12px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .rule-item.is-open .rule-num { background: var(--obj-color); color: white; }
+  .rule-text {
+    flex: 1;
+    font-size: 13px;
+    line-height: 1.5;
+    color: var(--ink);
+    font-weight: 500;
+  }
+  .rule-text .key { color: var(--obj-color); font-weight: 700; }
+  .rule-arrow {
+    color: var(--ink-mute);
+    transition: transform 0.2s;
+    flex-shrink: 0;
+    font-size: 14px;
+    padding-top: 2px;
+  }
+  .rule-item.is-open .rule-arrow { transform: rotate(90deg); color: var(--obj-color); }
+
+  .rule-body {
+    padding: 0 16px;
+    max-height: 0;
+    overflow: hidden;
+    transition: all 0.3s ease;
+    border-top: 0px solid var(--line);
+  }
+  .rule-item.is-open .rule-body {
+    padding: 14px 16px 16px;
+    max-height: 800px;
+    border-top: 1px dashed var(--line);
+  }
+
+  .rule-compare {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+  @media (max-width: 720px) { .rule-compare { grid-template-columns: 1fr; } }
+  .code-box {
+    border-radius: 6px;
+    padding: 10px 12px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    line-height: 1.55;
+    overflow-x: auto;
+    position: relative;
+  }
+  .code-box::before {
+    position: absolute;
+    top: 4px;
+    right: 8px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 0.1em;
+  }
+  .code-box.bad {
+    background: var(--accent-soft);
+    border: 1px solid var(--accent);
+    color: var(--ink);
+  }
+  .code-box.bad::before { content: '✗ BAD'; color: var(--accent); font-weight: 700; }
+  .code-box.good {
+    background: var(--green-soft);
+    border: 1px solid var(--green);
+    color: var(--ink);
+  }
+  .code-box.good::before { content: '✓ GOOD'; color: var(--green); font-weight: 700; }
+  .code-box .com { color: var(--ink-mute); }
+  .code-box .kw { color: var(--obj-color); font-weight: 700; }
+  .code-box .str { color: var(--green); }
+  .code-box .prop { color: var(--blue); }
+  .code-box pre { margin: 4px 0 0; white-space: pre-wrap; word-break: break-word; }
+
+  .rule-break {
+    background: var(--ink);
+    color: var(--bg-2);
+    border-radius: 6px;
+    padding: 10px 12px;
+    font-size: 12px;
+    line-height: 1.5;
+  }
+  .rule-break strong { color: var(--accent); }
+  .rule-break .lbl {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    color: var(--accent);
+    text-transform: uppercase;
+    display: block;
+    margin-bottom: 4px;
+  }
+
+  /* GAME 3: dropdown contract builder */
+  .contract-stage {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 32px;
+    margin-top: 24px;
+  }
+  .contract-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 24px; flex-wrap: wrap; gap: 16px; }
+  .contract-title { font-family: 'Noto Serif SC', serif; font-size: 22px; margin: 0; font-weight: 700; }
+  .contract-progress { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--ink-mute); }
+  .contract-progress .done { color: var(--proj-color); font-weight: 700; font-size: 14px; }
+
+  /* dropdown preview */
+  .dropdown-preview-wrap {
+    background: linear-gradient(180deg, #2a2a35 0%, #1a1a23 100%);
+    border-radius: 8px;
+    padding: 28px;
+    margin-bottom: 24px;
+    position: relative;
+  }
+  .dropdown-preview-wrap::before {
+    content: 'COMPONENT · DROPDOWN';
+    position: absolute;
+    top: 10px;
+    left: 14px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 0.15em;
+    color: rgba(255,255,255,0.3);
+  }
+  .dropdown-mock {
+    background: white;
+    border-radius: 6px;
+    padding: 8px 10px 8px 12px;
+    width: 220px;
+    margin: 14px auto 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+    font-size: 13px;
+    color: var(--ink-mute);
+    border: 1px solid var(--line);
+  }
+  .dropdown-mock .caret { transform: rotate(90deg); transition: transform 0.2s; color: var(--ink-mute); }
+  .dropdown-mock.is-open .caret { transform: rotate(-90deg); }
+  .dropdown-popover {
+    background: white;
+    border-radius: 6px;
+    width: 220px;
+    margin: 6px auto 0;
+    box-shadow: 0 12px 32px rgba(0,0,0,0.3);
+    border: 1px solid var(--line);
+    overflow: hidden;
+    display: none;
+  }
+  .dropdown-popover.is-open { display: block; }
+  .dropdown-popover .opt {
+    padding: 7px 12px;
+    font-size: 12px;
+    cursor: pointer;
+    border-bottom: 1px dashed var(--line-soft);
+    color: var(--ink);
+  }
+  .dropdown-popover .opt:last-child { border-bottom: none; }
+  .dropdown-popover .opt:hover { background: var(--obj-soft); color: var(--obj-color); }
+
+  .contract-tables {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+  }
+  @media (max-width: 880px) { .contract-tables { grid-template-columns: 1fr; } }
+  .contract-table {
+    background: white;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 18px;
+  }
+  .contract-table-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 14px;
+    padding-bottom: 10px;
+    border-bottom: 1px dashed var(--line);
+  }
+  .contract-table-name {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--obj-color);
+  }
+  .contract-table-info {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--ink-mute);
+  }
+  .contract-table-info .now { color: var(--proj-color); font-weight: 700; }
+  .candidate-list { display: flex; flex-direction: column; gap: 5px; }
+  .candidate {
+    padding: 8px 10px 8px 12px;
+    background: var(--bg);
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.15s;
+    user-select: none;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--ink);
+  }
+  .candidate:hover { border-color: var(--obj-color); background: var(--obj-soft); }
+  .candidate.selected {
+    background: var(--obj-color);
+    color: white;
+    border-color: var(--obj-color);
+  }
+  .candidate.selected .cand-sub { color: rgba(255,255,255,0.7); }
+  .candidate .cand-main { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+  .candidate .cand-name { font-weight: 600; }
+  .candidate .cand-sub { font-size: 10px; color: var(--ink-mute); font-family: 'JetBrains Mono', monospace; }
+  .candidate .cand-check {
+    width: 18px; height: 18px;
+    border-radius: 4px;
+    border: 1px solid var(--line);
+    background: white;
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+  }
+  .candidate.selected .cand-check {
+    background: white;
+    color: var(--obj-color);
+    border-color: white;
+  }
+  .candidate.selected .cand-check::before { content: '✓'; font-weight: 700; }
+
+  /* state boundary special: radio mode */
+  .state-options { display: flex; flex-direction: column; gap: 6px; }
+  .state-option {
+    padding: 9px 12px;
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: var(--bg);
+    font-size: 12px;
+    transition: all 0.15s;
+    user-select: none;
+  }
+  .state-option:hover { border-color: var(--obj-color); background: var(--obj-soft); }
+  .state-option.selected { background: var(--obj-color); color: white; border-color: var(--obj-color); }
+  .state-option .so-check {
+    width: 16px; height: 16px;
+    border-radius: 4px;
+    border: 1px solid var(--line);
+    background: white;
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+  }
+  .state-option.selected .so-check {
+    background: white;
+    color: var(--obj-color);
+    border-color: white;
+  }
+  .state-option.selected .so-check::before { content: '✓'; font-weight: 700; }
+  .state-option .so-text { line-height: 1.4; }
+  .state-option .so-sub { display: block; font-size: 10px; opacity: 0.7; margin-top: 2px; font-family: 'JetBrains Mono', monospace; }
+
+  /* contract actions */
+  .contract-actions { display: flex; gap: 12px; margin-top: 24px; flex-wrap: wrap; }
+  .contract-btn {
+    padding: 10px 22px;
+    border-radius: 100px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    cursor: pointer;
+    font-weight: 600;
+    border: 1px solid var(--ink);
+    background: transparent;
+    color: var(--ink);
+    transition: all 0.15s;
+  }
+  .contract-btn:hover { background: var(--ink); color: var(--bg); }
+  .contract-btn.primary { background: var(--accent); color: white; border-color: var(--accent); }
+  .contract-btn.primary:hover { background: #e8451f; }
+
+  .contract-judge {
+    margin-top: 24px;
+    padding: 24px 26px;
+    border-radius: 8px;
+    background: var(--ink);
+    color: var(--bg);
+    display: none;
+  }
+  .contract-judge.show { display: block; }
+  .contract-judge .verdict { display: inline-block; font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; padding: 3px 10px; border-radius: 100px; }
+  .contract-judge .verdict.win { color: #1f6b3a; background: #d4ecdb; }
+  .contract-judge .verdict.partial { color: #c79f1e; background: #fff3cc; }
+  .contract-judge h4 { font-family: 'Noto Serif SC', serif; font-size: 22px; margin: 10px 0 14px; color: white; line-height: 1.3; }
+  .contract-judge ul { color: #c8c8d0; margin: 0; padding-left: 20px; font-size: 13px; line-height: 1.75; }
+  .contract-judge ul li + li { margin-top: 10px; }
+  .contract-judge ul strong { color: white; }
+  .contract-judge ul .why { color: #a0a0aa; font-size: 12px; }
+  .contract-judge ul code { background: rgba(255,255,255,0.1); padding: 1px 5px; border-radius: 3px; color: #ffcf3d; font-family: 'JetBrains Mono', monospace; font-size: 12px; }
+
+  /* tips */
+  .tips-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 28px; margin-top: 24px; }
+  @media (max-width: 880px) { .tips-grid { grid-template-columns: 1fr; } }
+  .tip { background: var(--paper); border: 1px solid var(--line); border-radius: 6px; padding: 24px; position: relative; }
+  .tip-num { position: absolute; top: -14px; left: 16px; width: 32px; height: 32px; border-radius: 50%; background: var(--obj-color); color: white; display: flex; align-items: center; justify-content: center; font-family: 'Fraunces', serif; font-style: italic; font-weight: 600; font-size: 14px; }
+  .tip h4 { font-family: 'Noto Serif SC', serif; font-size: 18px; margin: 8px 0 10px; font-weight: 700; }
+  .tip p { color: var(--ink-soft); font-size: 14px; line-height: 1.6; margin: 0; }
+  .tip p + p { margin-top: 8px; }
+  .tip code { font-family: 'JetBrains Mono', monospace; font-size: 12px; background: rgba(22,22,29,0.06); padding: 1px 5px; border-radius: 3px; color: var(--obj-color); }
+  .tip-outro {
+    margin-top: 44px;
+    padding: 30px 32px;
+    background: var(--ink);
+    color: var(--bg);
+    border-radius: 8px;
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 28px;
+    align-items: flex-start;
+  }
+  @media (max-width: 720px) { .tip-outro { grid-template-columns: 1fr; gap: 12px; } }
+  .outro-tag { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.1em; color: var(--accent); padding-top: 4px; }
+  .tip-outro p { margin: 0 0 12px; color: #c8c8d0; line-height: 1.65; font-size: 15px; }
+  .tip-outro p:last-child { margin-bottom: 0; }
+  .tip-outro strong { color: white; }
+
+  /* next post */
+  .next-post {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 56px;
+    padding: 32px;
+    background: var(--bg-2);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    text-decoration: none;
+    color: var(--ink);
+    transition: all 0.2s;
+    gap: 24px;
+    flex-wrap: wrap;
+  }
+  .next-post:hover { background: var(--ink); color: var(--bg); }
+  .next-post:hover .np-tag { color: var(--accent); }
+  .next-post:hover .em { color: var(--accent); }
+  .next-post:hover p { color: #c8c8d0; }
+  .np-tag { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.1em; color: var(--ink-mute); margin-bottom: 6px; }
+  .next-post h4 { font-family: 'Noto Serif SC', serif; font-size: 26px; margin: 0 0 8px; font-weight: 700; }
+  .next-post .em { color: var(--obj-color); font-weight: 500; }
+  .next-post p { margin: 0; color: var(--ink-soft); font-size: 14px; max-width: 56ch; }
+  .np-cta { font-family: 'JetBrains Mono', monospace; font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; white-space: nowrap; }
+  .np-cta .arr { display: inline-block; transition: transform .2s; }
+  .next-post:hover .arr { transform: translateX(4px); }
+
+  /* footer */
+  footer { padding: 56px 0 64px; background: var(--bg); color: var(--ink-soft); border-top: 1px solid var(--line); }
+  .byline-group { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; margin-bottom: 32px; padding-bottom: 32px; border-bottom: 1px dashed var(--line); }
+  @media (max-width: 880px) { .byline-group { grid-template-columns: 1fr; } }
+  .byline { display: flex; gap: 16px; align-items: center; }
+  .byline .avatar { width: 56px; height: 56px; border-radius: 50%; object-fit: cover; flex-shrink: 0; }
+  .byline-label { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--accent); letter-spacing: 0.1em; }
+  .byline-label .dot { display: inline-block; width: 6px; height: 6px; background: var(--accent); border-radius: 50%; margin-right: 4px; vertical-align: middle; animation: pulse 2s ease-in-out infinite; }
+  .byline-name { font-family: 'Noto Serif SC', serif; font-weight: 700; font-size: 18px; margin: 4px 0; color: var(--ink); }
+  .byline-name .em { color: var(--accent); font-weight: 500; }
+  .byline-tag { color: var(--ink-soft); font-size: 13px; margin: 0; line-height: 1.5; }
+  .footer-meta { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ink-mute); text-align: center; letter-spacing: 0.05em; }
+  .footer-meta .heart { color: var(--accent); }
+
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="wrap topbar-inner">
+    <div class="brand-block">
+      <a href="book.html#vol-3" class="brand"><span class="brand-arrow">←</span>AI LABBOOK <span class="dot"></span></a>
+      <span class="brand-sep">/</span>
+      <span class="brand-current">X14 · props / events / slots / 状态边界</span>
+    </div>
+    <nav class="nav-links">
+      <a href="book.html#vol-3">路线图</a>
+    </nav>
+  </div>
+</div>
+
+<!-- Hero -->
+<header class="hero">
+  <div class="wrap">
+    <div class="hero-meta">
+      <span class="pill fill">高阶 · ADVANCED</span>
+      <span class="pill purple">STAGE 04 · 组件契约</span>
+      <span class="pill">X14 · 契约 4 件套</span>
+      <span class="label">阅读 ≈ 17 分钟</span>
+    </div>
+    <div class="hero-grid">
+      <div>
+        <h1>
+          <span class="display-cn">4 件套</span>，<br>
+          每件都有<br>
+          <span class="purple">设计语言</span>。
+        </h1>
+        <p class="lede">
+          Props 是"你能改什么"。Events 是"我会告诉你啥"。Slots 是"你能插啥进来"。State boundary 是"谁管哪部分"。<br>
+          4 件套各有讲究——错一个，组件就难用 / 难复用 / 难测试。
+        </p>
+      </div>
+      <div class="hero-side">
+        <div class="row"><span class="k">本页讲什么</span><span class="v">组件契约 4 件套</span></div>
+        <div class="row"><span class="k">三幕</span><span class="v">看见 · 拆开 · 再做</span></div>
+        <div class="row"><span class="k">面向</span><span class="v">B 端 / 组件设计师</span></div>
+        <div class="row"><span class="k">前置</span><span class="v">X13 · 组件 vs 模式</span></div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- Section 01: 问题 -->
+<section id="problem">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>01</strong> / 问题</div>
+        <h2 class="section-title">组件契约 ≠ <br><span class="em">一份 props 列表</span>。</h2>
+      </div>
+      <p class="section-sub">
+        设计师以为"组件契约 = 一份 props 列表"。其实 4 件套各有<strong>独立的设计原则</strong>——
+        props 的命名 / 默认值 / 受控；events 的载荷；slots 的边界；state 的内外划分。
+      </p>
+    </div>
+
+    <div class="problem-grid">
+      <div class="problem-card bad">
+        <span class="tag">揉成一团 · MIXED</span>
+        <h3>"把所有契约揉成 props"</h3>
+        <p>一个 <code>Modal</code> 组件 props 写了 <code>isOpen</code>, <code>title</code>, <code>content</code>, <code>onClose</code>, <code>footer</code>, …14 个 props。"内容"用 prop 传字符串。</p>
+        <p><strong>工程师追问：</strong>富文本怎么传？复杂 footer 怎么放？<code>isOpen</code> 是受控还是非受控？<code>onClose</code> 算 prop 还是 event？</p>
+        <p style="color:var(--accent)"><strong>结果：</strong>难用，难复用，难测试。</p>
+      </div>
+
+      <div class="problem-card good">
+        <span class="tag">4 件套清晰 · LAYERED</span>
+        <h3>"4 件套清晰分工"</h3>
+        <p><strong>Props</strong> (<code>isOpen / size / closable</code>) + <strong>Events</strong> (<code>onClose / onConfirm</code>) + <strong>Slots</strong> (<code>title / children / footer</code>) + <strong>State</strong> (受控 by <code>isOpen</code>)。</p>
+        <p><strong>工程师收到：</strong>清晰的 4 张契约表。富文本进 slot，回调进 events，开关进 props，状态边界画清楚。</p>
+        <p style="color:var(--obj-color)"><strong>结果：</strong>好用、好复用、好测试。</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Section 02: 幕一 · 看见 -->
+<section id="look">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <span class="act-tag look">幕一 · 看见</span>
+        <div class="section-num"><strong>02</strong> / 看见</div>
+        <h2 class="section-title"><span class="purple">同一个 Modal</span>，<br>4 件套各自的角色。</h2>
+      </div>
+      <p class="section-sub">
+        用一个真实 Modal 组件演示——<strong>4 件套各管一件事，谁错了组件就难用</strong>。
+        改任意控件——Modal 视觉 / 行为 / event 实时变。
+      </p>
+    </div>
+
+    <div class="modal-stage">
+      <div class="modal-stage-inner">
+        <!-- LEFT: Modal preview -->
+        <div>
+          <div class="modal-preview-wrap" id="modalPreviewWrap">
+            <div class="modal-mock size-md is-closed" id="modalMock">
+              <div class="modal-mock-header">
+                <div class="modal-mock-title" id="mockTitle">请确认这次操作</div>
+                <button class="modal-mock-close" id="mockClose" aria-label="close">×</button>
+              </div>
+              <div class="modal-mock-body" id="mockBody">删除后无法恢复，是否继续？</div>
+              <div class="modal-mock-footer" id="mockFooter">
+                <button class="modal-mock-btn" id="mockCancel">取消</button>
+                <button class="modal-mock-btn primary" id="mockConfirm">确认</button>
+              </div>
+            </div>
+            <button class="modal-open-btn" id="modalOpenBtn" style="display:none">点击打开 Modal</button>
+          </div>
+
+          <div class="event-log">
+            <div class="log-head">
+              <span>EVENT LOG · 实时</span>
+              <button class="clear-btn" id="logClear">CLEAR</button>
+            </div>
+            <div id="logBody">
+              <div class="log-entry"><span class="ts">--:--</span><span class="ev">// 改动控件触发事件</span></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- RIGHT: control panels -->
+        <div>
+          <div class="controls-tabs">
+            <div class="ctab active" data-tab="props">PROPS</div>
+            <div class="ctab" data-tab="events">EVENTS</div>
+            <div class="ctab" data-tab="slots">SLOTS</div>
+            <div class="ctab" data-tab="state">STATE</div>
+          </div>
+
+          <!-- PROPS panel -->
+          <div class="control-panel active" data-panel="props">
+            <h5>Props · 你能改什么 <span class="hint">3 项</span></h5>
+            <div class="ctl-row">
+              <span class="ctl-label">isOpen <span class="ctl-type">: boolean</span></span>
+              <div class="toggle on" data-prop="isOpen"></div>
+            </div>
+            <div class="ctl-row">
+              <span class="ctl-label">size <span class="ctl-type">: 'sm' | 'md' | 'lg'</span></span>
+              <div class="radio-group" data-prop="size">
+                <span class="radio-pill" data-val="sm">sm</span>
+                <span class="radio-pill on" data-val="md">md</span>
+                <span class="radio-pill" data-val="lg">lg</span>
+              </div>
+            </div>
+            <div class="ctl-row">
+              <span class="ctl-label">closable <span class="ctl-type">: boolean</span></span>
+              <div class="toggle on" data-prop="closable"></div>
+            </div>
+            <div class="ctl-row">
+              <span class="ctl-label">variant <span class="ctl-type">: 'default' | 'danger'</span></span>
+              <div class="radio-group" data-prop="variant">
+                <span class="radio-pill on" data-val="default">default</span>
+                <span class="radio-pill" data-val="danger">danger</span>
+              </div>
+            </div>
+            <div style="margin-top:14px;padding:10px 12px;background:var(--obj-soft);border-radius:6px;font-size:11px;line-height:1.5;color:var(--obj-color)">
+              <strong>Props 是"形态开关"</strong>——可枚举的、外部决定的样貌。
+            </div>
+          </div>
+
+          <!-- EVENTS panel -->
+          <div class="control-panel" data-panel="events">
+            <h5>Events · 我会通知你 <span class="hint">监听 → log</span></h5>
+            <p style="font-size:12px;color:var(--ink-soft);margin:0 0 12px;line-height:1.5">
+              触发右边的按钮 / 关闭按钮 / 蒙层——所有事件流向左边 EVENT LOG。
+            </p>
+            <div style="display:flex;flex-direction:column;gap:8px;font-size:12px;font-family:'JetBrains Mono',monospace">
+              <div style="padding:8px 10px;background:var(--bg);border:1px solid var(--line);border-radius:4px">
+                <strong style="color:var(--obj-color)">onClose</strong><span style="color:var(--ink-mute)"> (reason)</span><br>
+                <span style="font-size:10px;color:var(--ink-mute);line-height:1.4">载荷：'esc' / 'overlay' / 'button' / 'confirm'</span>
+              </div>
+              <div style="padding:8px 10px;background:var(--bg);border:1px solid var(--line);border-radius:4px">
+                <strong style="color:var(--obj-color)">onConfirm</strong><span style="color:var(--ink-mute)"> ()</span><br>
+                <span style="font-size:10px;color:var(--ink-mute);line-height:1.4">返回 Promise → 异步关闭。返回 false → 阻止关闭。</span>
+              </div>
+              <div style="padding:8px 10px;background:var(--bg);border:1px solid var(--line);border-radius:4px">
+                <strong style="color:var(--obj-color)">onOpenChange</strong><span style="color:var(--ink-mute)"> (newOpen)</span><br>
+                <span style="font-size:10px;color:var(--ink-mute);line-height:1.4">受控模式下，由组件请求"开/关"的统一出口。</span>
+              </div>
+            </div>
+            <div style="margin-top:12px;padding:10px 12px;background:var(--obj-soft);border-radius:6px;font-size:11px;line-height:1.5;color:var(--obj-color)">
+              <strong>Events 是"消息通道"</strong>——动作发生时把发生了什么 + 上下文告知外部。
+            </div>
+          </div>
+
+          <!-- SLOTS panel -->
+          <div class="control-panel" data-panel="slots">
+            <h5>Slots · 你能塞什么 <span class="hint">改了 → preview 实时变</span></h5>
+            <div class="slot-input-row">
+              <label>slot · title</label>
+              <input type="text" id="slotTitle" value="请确认这次操作">
+            </div>
+            <div class="slot-input-row">
+              <label>slot · children (body)</label>
+              <textarea id="slotBody">删除后无法恢复，是否继续？</textarea>
+            </div>
+            <div class="slot-input-row">
+              <label>slot · footer · 空 → fallback 取消/确认按钮</label>
+              <input type="text" id="slotFooter" placeholder="例如：自定义 footer 文案">
+            </div>
+            <div style="margin-top:12px;padding:10px 12px;background:var(--obj-soft);border-radius:6px;font-size:11px;line-height:1.5;color:var(--obj-color)">
+              <strong>Slots 是"定制点"</strong>——把这部分内容主权交给消费方。空时由 fallback 兜底。
+            </div>
+          </div>
+
+          <!-- STATE BOUNDARY panel -->
+          <div class="control-panel" data-panel="state">
+            <h5>State · 谁管什么 <span class="hint">外 ←→ 内</span></h5>
+            <div class="state-boundary">
+              <div class="state-bucket outer">
+                <div class="state-bucket-head">
+                  <span>受控 · 外部状态</span>
+                  <span>消费方在意</span>
+                </div>
+                <span class="state-chip live" id="stateIsOpen">isOpen = true</span>
+                <span class="state-chip idle" id="stateConfirmPending">confirmPending = false</span>
+                <div style="font-size:10px;color:var(--obj-color);margin-top:6px;line-height:1.4">通过 props / events 暴露给消费方</div>
+              </div>
+              <div class="state-bucket inner">
+                <div class="state-bucket-head">
+                  <span>内部状态</span>
+                  <span>消费方不在意</span>
+                </div>
+                <span class="state-chip idle" id="stateFocusLock">focusLock</span>
+                <span class="state-chip idle" id="stateScrollLock">scrollLock</span>
+                <span class="state-chip idle" id="stateAnim">animationPhase = idle</span>
+                <span class="state-chip idle" id="stateAriaId">aria-id = m-7a3</span>
+                <div style="font-size:10px;color:var(--ink-mute);margin-top:6px;line-height:1.4">不 leak 出去——focus / scroll / animation / a11y id 是实现细节</div>
+              </div>
+            </div>
+            <div style="margin-top:12px;padding:10px 12px;background:var(--obj-soft);border-radius:6px;font-size:11px;line-height:1.5;color:var(--obj-color)">
+              <strong>State boundary 是"划线"</strong>——线左是消费方在意的 (受控)；线右是组件自家事。
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="reveal-bar">
+      <div class="msg">
+        4 件套<span class="em">不重叠</span>：<br>
+        props 是"能改什么"，events 是"会通知啥"，slots 是"能塞啥"，state 是"谁管啥"。
+      </div>
+      <div class="counter">已触发事件 <strong id="evCount">0</strong> 次</div>
+    </div>
+  </div>
+</section>
+
+<!-- Section 03: 幕二 · 拆开 -->
+<section id="break">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <span class="act-tag break">幕二 · 拆开</span>
+        <div class="section-num"><strong>03</strong> / 拆开</div>
+        <h2 class="section-title"><span class="purple">4 件套</span><br>各自的<br>设计原则。</h2>
+      </div>
+      <p class="section-sub">
+        每件套有 3 条经验法则。点开看代码示例 + "破坏这条会怎样"。
+        <strong>违反一条 = 组件难复用</strong>。
+      </p>
+    </div>
+
+    <div class="rules-grid">
+      <!-- PROPS -->
+      <div class="rule-card" data-suit="props">
+        <div class="rule-card-head">
+          <div class="rule-card-name">Props · 形态开关</div>
+          <div class="rule-card-count"><strong>0</strong>/3 已看</div>
+        </div>
+        <div class="rule-list">
+          <div class="rule-item" data-rule="p1">
+            <div class="rule-item-head">
+              <span class="rule-num">1</span>
+              <span class="rule-text"><span class="key">命名要业务化</span>——描述意图，不描述实现</span>
+              <span class="rule-arrow">›</span>
+            </div>
+            <div class="rule-body">
+              <div class="rule-compare">
+                <div class="code-box bad"><pre><span class="com">// 描述实现 — 把样式细节绑死</span>
+&lt;<span class="kw">Button</span>
+  <span class="prop">bgColor</span>=<span class="str">"blue"</span>
+  <span class="prop">paddingX</span>=<span class="str">"20"</span>
+  <span class="prop">borderRadius</span>=<span class="str">"100"</span> /&gt;</pre></div>
+                <div class="code-box good"><pre><span class="com">// 描述意图 — 实现可换</span>
+&lt;<span class="kw">Button</span>
+  <span class="prop">variant</span>=<span class="str">"primary"</span>
+  <span class="prop">size</span>=<span class="str">"md"</span>
+  <span class="prop">shape</span>=<span class="str">"pill"</span> /&gt;</pre></div>
+              </div>
+              <div class="rule-break">
+                <span class="lbl">破坏这条会怎样</span>
+                改个色，所有 <code style="color:#ffcf3d;background:rgba(255,255,255,0.1);padding:1px 4px;border-radius:3px">bgColor="blue"</code> 都要扫一遍替换。<strong>API 把实现细节固化了——换皮肤就是 breaking change</strong>。
+              </div>
+            </div>
+          </div>
+          <div class="rule-item" data-rule="p2">
+            <div class="rule-item-head">
+              <span class="rule-num">2</span>
+              <span class="rule-text"><span class="key">默认值要安全</span>——什么都不传也能跑</span>
+              <span class="rule-arrow">›</span>
+            </div>
+            <div class="rule-body">
+              <div class="rule-compare">
+                <div class="code-box bad"><pre><span class="com">// 必填一堆 — 上手成本高</span>
+&lt;<span class="kw">Modal</span>
+  <span class="prop">isOpen</span>=<span class="str">{true}</span>
+  <span class="prop">disabled</span>=<span class="str">{false}</span>
+  <span class="prop">loading</span>=<span class="str">{false}</span>
+  <span class="prop">closable</span>=<span class="str">{true}</span>
+  <span class="prop">backdrop</span>=<span class="str">{true}</span> /&gt;</pre></div>
+                <div class="code-box good"><pre><span class="com">// 一行就能跑 — 默认值兜底</span>
+&lt;<span class="kw">Modal</span> <span class="prop">isOpen</span>&gt;<span class="com">...</span>&lt;/<span class="kw">Modal</span>&gt;
+
+<span class="com">// disabled / loading 默认 false</span>
+<span class="com">// closable / backdrop 默认 true</span></pre></div>
+              </div>
+              <div class="rule-break">
+                <span class="lbl">破坏这条会怎样</span>
+                <strong>每次用都要写一长串 prop</strong>。消费方抄上一份"标准配置"开始改——文档读完才会用。
+              </div>
+            </div>
+          </div>
+          <div class="rule-item" data-rule="p3">
+            <div class="rule-item-head">
+              <span class="rule-num">3</span>
+              <span class="rule-text"><span class="key">避免布尔 + 字符串混用</span>——统一 enum</span>
+              <span class="rule-arrow">›</span>
+            </div>
+            <div class="rule-body">
+              <div class="rule-compare">
+                <div class="code-box bad"><pre><span class="com">// 类型混乱 — true 是哪个值？</span>
+size: <span class="str">'sm'</span> | <span class="kw">true</span> | <span class="str">'lg'</span>
+
+&lt;<span class="kw">Input</span> <span class="prop">size</span> /&gt;
+<span class="com">// ??? 这等于 'md' 还是 'lg'</span></pre></div>
+                <div class="code-box good"><pre><span class="com">// 联合字面量 — 一眼明白</span>
+size: <span class="str">'sm'</span> | <span class="str">'md'</span> | <span class="str">'lg'</span>
+
+&lt;<span class="kw">Input</span> <span class="prop">size</span>=<span class="str">"md"</span> /&gt;</pre></div>
+              </div>
+              <div class="rule-break">
+                <span class="lbl">破坏这条会怎样</span>
+                <code style="color:#ffcf3d;background:rgba(255,255,255,0.1);padding:1px 4px;border-radius:3px">&lt;Input size /&gt;</code> 等同于 <code style="color:#ffcf3d;background:rgba(255,255,255,0.1);padding:1px 4px;border-radius:3px">size=true</code>——<strong>布尔 + 字符串混用时，简写歧义无解</strong>。
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- EVENTS -->
+      <div class="rule-card" data-suit="events">
+        <div class="rule-card-head">
+          <div class="rule-card-name">Events · 消息通道</div>
+          <div class="rule-card-count"><strong>0</strong>/3 已看</div>
+        </div>
+        <div class="rule-list">
+          <div class="rule-item" data-rule="e1">
+            <div class="rule-item-head">
+              <span class="rule-num">1</span>
+              <span class="rule-text"><span class="key">on 前缀</span>——是惯例，别发明新词</span>
+              <span class="rule-arrow">›</span>
+            </div>
+            <div class="rule-body">
+              <div class="rule-compare">
+                <div class="code-box bad"><pre><span class="com">// 自创命名 — 消费方要去查</span>
+<span class="prop">handleClick</span>
+<span class="prop">emitChange</span>
+<span class="prop">whenClose</span>
+<span class="prop">clickHandler</span></pre></div>
+                <div class="code-box good"><pre><span class="com">// 行业惯例 — 看名字就懂</span>
+<span class="prop">onClick</span>
+<span class="prop">onChange</span>
+<span class="prop">onClose</span>
+<span class="prop">onSubmit</span></pre></div>
+              </div>
+              <div class="rule-break">
+                <span class="lbl">破坏这条会怎样</span>
+                IDE 补全、文档目录、跨组件搜索全部失效——<strong>认知一致性是组件库的隐形规范</strong>。
+              </div>
+            </div>
+          </div>
+          <div class="rule-item" data-rule="e2">
+            <div class="rule-item-head">
+              <span class="rule-num">2</span>
+              <span class="rule-text"><span class="key">载荷要完整</span>——别让消费方从 event 里挖</span>
+              <span class="rule-arrow">›</span>
+            </div>
+            <div class="rule-body">
+              <div class="rule-compare">
+                <div class="code-box bad"><pre><span class="com">// 只给 event — 消费方自己挖值</span>
+<span class="prop">onChange</span>: (e) =&gt; <span class="kw">void</span>
+
+<span class="com">// 用法：</span>
+onChange={e =&gt; setValue(e.target.value)}</pre></div>
+                <div class="code-box good"><pre><span class="com">// 给业务值 + event 兜底</span>
+<span class="prop">onChange</span>: (
+  newValue: <span class="kw">string</span>,
+  e?: <span class="kw">Event</span>
+) =&gt; <span class="kw">void</span>
+
+onChange={v =&gt; setValue(v)}</pre></div>
+              </div>
+              <div class="rule-break">
+                <span class="lbl">破坏这条会怎样</span>
+                <strong>每个消费方都写一遍 <code style="color:#ffcf3d;background:rgba(255,255,255,0.1);padding:1px 4px;border-radius:3px">e.target.value</code></strong>。换底层实现（比如 input → contenteditable），所有消费方都炸。
+              </div>
+            </div>
+          </div>
+          <div class="rule-item" data-rule="e3">
+            <div class="rule-item-head">
+              <span class="rule-num">3</span>
+              <span class="rule-text"><span class="key">同步 vs 异步</span>——Promise 支持挂住默认行为</span>
+              <span class="rule-arrow">›</span>
+            </div>
+            <div class="rule-body">
+              <div class="rule-compare">
+                <div class="code-box bad"><pre><span class="com">// 只能同步 — 异步校验无路</span>
+<span class="prop">onConfirm</span>: () =&gt; <span class="kw">void</span>
+
+<span class="com">// 关闭立刻发生</span>
+<span class="com">// 服务端校验失败也已关了</span></pre></div>
+                <div class="code-box good"><pre><span class="com">// Promise 挂住关闭</span>
+<span class="prop">onConfirm</span>: () =&gt;
+  <span class="kw">void</span> | <span class="kw">Promise</span>&lt;<span class="kw">boolean</span>&gt;
+
+<span class="com">// 返回 false / reject → 不关</span>
+<span class="com">// resolve(true) → 才关</span></pre></div>
+              </div>
+              <div class="rule-break">
+                <span class="lbl">破坏这条会怎样</span>
+                <strong>消费方做异步校验时 Modal 已经关了</strong>——结果是手动 setState 重新打开 + 闪烁。
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SLOTS -->
+      <div class="rule-card" data-suit="slots">
+        <div class="rule-card-head">
+          <div class="rule-card-name">Slots · 定制点</div>
+          <div class="rule-card-count"><strong>0</strong>/3 已看</div>
+        </div>
+        <div class="rule-list">
+          <div class="rule-item" data-rule="s1">
+            <div class="rule-item-head">
+              <span class="rule-num">1</span>
+              <span class="rule-text"><span class="key">命名要语义</span>——header / body / footer，不是 slot1</span>
+              <span class="rule-arrow">›</span>
+            </div>
+            <div class="rule-body">
+              <div class="rule-compare">
+                <div class="code-box bad"><pre><span class="com">// 编号 slot — 看不出位置</span>
+&lt;<span class="kw">Modal</span>&gt;
+  &lt;<span class="kw">template</span> <span class="prop">slot</span>=<span class="str">"slot1"</span>&gt;
+    标题
+  &lt;/<span class="kw">template</span>&gt;
+  &lt;<span class="kw">template</span> <span class="prop">slot</span>=<span class="str">"slot3"</span>&gt;
+    按钮
+  &lt;/<span class="kw">template</span>&gt;
+&lt;/<span class="kw">Modal</span>&gt;</pre></div>
+                <div class="code-box good"><pre><span class="com">// 语义 slot — 一眼就懂</span>
+&lt;<span class="kw">Modal</span>&gt;
+  &lt;<span class="kw">template</span> <span class="prop">slot</span>=<span class="str">"title"</span>&gt;
+    确认删除
+  &lt;/<span class="kw">template</span>&gt;
+  &lt;<span class="kw">template</span> <span class="prop">slot</span>=<span class="str">"footer"</span>&gt;
+    &lt;<span class="kw">Button</span>&gt;OK&lt;/<span class="kw">Button</span>&gt;
+  &lt;/<span class="kw">template</span>&gt;
+&lt;/<span class="kw">Modal</span>&gt;</pre></div>
+              </div>
+              <div class="rule-break">
+                <span class="lbl">破坏这条会怎样</span>
+                <strong>消费方每次回查文档</strong>"slot2 是 body 还是 footer 来着"。重排序时所有用法都要改。
+              </div>
+            </div>
+          </div>
+          <div class="rule-item" data-rule="s2">
+            <div class="rule-item-head">
+              <span class="rule-num">2</span>
+              <span class="rule-text"><span class="key">默认 fallback</span>——空时显示什么</span>
+              <span class="rule-arrow">›</span>
+            </div>
+            <div class="rule-body">
+              <div class="rule-compare">
+                <div class="code-box bad"><pre><span class="com">// 空 slot 出现空白区</span>
+&lt;<span class="kw">Card</span>&gt;
+  &lt;<span class="com">// 不填 title 槽</span>&gt;
+  &lt;<span class="kw">template</span> <span class="prop">slot</span>=<span class="str">"body"</span>&gt;...&lt;/&gt;
+&lt;/<span class="kw">Card</span>&gt;
+<span class="com">// → 顶部留个空白 header</span></pre></div>
+                <div class="code-box good"><pre><span class="com">// 空 slot → 整块不渲染</span>
+&lt;<span class="kw">Card</span>&gt;
+  &lt;<span class="kw">template</span> <span class="prop">slot</span>=<span class="str">"body"</span>&gt;...&lt;/&gt;
+&lt;/<span class="kw">Card</span>&gt;
+<span class="com">// title 没传 → 没有 header 区</span>
+<span class="com">// footer 没传 → 默认按钮</span></pre></div>
+              </div>
+              <div class="rule-break">
+                <span class="lbl">破坏这条会怎样</span>
+                <strong>每个消费方都要处理"空态"占位</strong>。或者画稿子时设计师永远要画一个"空 slot 会怎样"。
+              </div>
+            </div>
+          </div>
+          <div class="rule-item" data-rule="s3">
+            <div class="rule-item-head">
+              <span class="rule-num">3</span>
+              <span class="rule-text"><span class="key">不要过度 slot</span>——slot 太多 = 没有形态</span>
+              <span class="rule-arrow">›</span>
+            </div>
+            <div class="rule-body">
+              <div class="rule-compare">
+                <div class="code-box bad"><pre><span class="com">// 全是 slot — 等于啥都没规范</span>
+&lt;<span class="kw">Modal</span>&gt;
+  &lt;<span class="kw">template</span> <span class="prop">slot</span>=<span class="str">"closeBtn"</span>/&gt;
+  &lt;<span class="kw">template</span> <span class="prop">slot</span>=<span class="str">"backdrop"</span>/&gt;
+  &lt;<span class="kw">template</span> <span class="prop">slot</span>=<span class="str">"shell"</span>/&gt;
+  &lt;<span class="kw">template</span> <span class="prop">slot</span>=<span class="str">"icon"</span>/&gt;
+  ...
+&lt;/<span class="kw">Modal</span>&gt;</pre></div>
+                <div class="code-box good"><pre><span class="com">// 只 slot 真正需要定制的</span>
+&lt;<span class="kw">Modal</span>&gt;
+  &lt;<span class="kw">template</span> <span class="prop">slot</span>=<span class="str">"title"</span>/&gt;
+  &lt;<span class="kw">template</span> <span class="prop">slot</span>=<span class="str">"children"</span>/&gt;
+  &lt;<span class="kw">template</span> <span class="prop">slot</span>=<span class="str">"footer"</span>/&gt;
+&lt;/<span class="kw">Modal</span>&gt;
+<span class="com">// close 按钮、蒙层、a11y 都由组件统一</span></pre></div>
+              </div>
+              <div class="rule-break">
+                <span class="lbl">破坏这条会怎样</span>
+                <strong>所有消费方都要自己画 close 按钮</strong>——位置、样式、a11y 全部分裂。组件失去了"统一"的价值。
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- STATE BOUNDARY -->
+      <div class="rule-card" data-suit="state">
+        <div class="rule-card-head">
+          <div class="rule-card-name">State · 谁管什么</div>
+          <div class="rule-card-count"><strong>0</strong>/3 已看</div>
+        </div>
+        <div class="rule-list">
+          <div class="rule-item" data-rule="st1">
+            <div class="rule-item-head">
+              <span class="rule-num">1</span>
+              <span class="rule-text"><span class="key">受控 vs 非受控</span>——选一个不要混</span>
+              <span class="rule-arrow">›</span>
+            </div>
+            <div class="rule-body">
+              <div class="rule-compare">
+                <div class="code-box bad"><pre><span class="com">// 两个都给 — 优先级模糊</span>
+&lt;<span class="kw">Input</span>
+  <span class="prop">value</span>=<span class="str">{v}</span>
+  <span class="prop">defaultValue</span>=<span class="str">"hi"</span>
+  <span class="prop">onChange</span>=<span class="str">{...}</span> /&gt;
+<span class="com">// 谁赢？value？default？</span>
+<span class="com">// 切换时 React 会警告</span></pre></div>
+                <div class="code-box good"><pre><span class="com">// 受控：value + onChange</span>
+&lt;<span class="kw">Input</span> <span class="prop">value</span>=<span class="str">{v}</span> <span class="prop">onChange</span>=<span class="str">{set}</span>/&gt;
+
+<span class="com">// 或非受控：defaultValue</span>
+&lt;<span class="kw">Input</span> <span class="prop">defaultValue</span>=<span class="str">"hi"</span>/&gt;
+
+<span class="com">// 不要两个都给</span></pre></div>
+              </div>
+              <div class="rule-break">
+                <span class="lbl">破坏这条会怎样</span>
+                <strong>组件初始化后切换 controlled/uncontrolled = 内部状态丢失</strong>。React 会警告，结果是莫名其妙的 bug。
+              </div>
+            </div>
+          </div>
+          <div class="rule-item" data-rule="st2">
+            <div class="rule-item-head">
+              <span class="rule-num">2</span>
+              <span class="rule-text"><span class="key">内部状态不能 leak</span>——animation / focus / scroll</span>
+              <span class="rule-arrow">›</span>
+            </div>
+            <div class="rule-body">
+              <div class="rule-compare">
+                <div class="code-box bad"><pre><span class="com">// 暴露实现细节 — 消费方乱用</span>
+<span class="prop">animationPhase</span>: <span class="str">'idle'</span> | <span class="str">'enter'</span>
+                | <span class="str">'leave'</span>
+<span class="prop">focusedIndex</span>: number
+<span class="prop">scrollTop</span>: number
+<span class="com">// → 消费方写代码控制动画态</span>
+<span class="com">// → 改实现就是 breaking change</span></pre></div>
+                <div class="code-box good"><pre><span class="com">// 内部状态 — 不暴露</span>
+<span class="com">// 只暴露语义事件：</span>
+<span class="prop">onOpenComplete</span>: () =&gt; <span class="kw">void</span>
+<span class="prop">onFocus</span>: (item) =&gt; <span class="kw">void</span>
+
+<span class="com">// 实现想怎么变都行</span></pre></div>
+              </div>
+              <div class="rule-break">
+                <span class="lbl">破坏这条会怎样</span>
+                <strong>消费方依赖 animationPhase===  'enter' 写逻辑</strong>。改用 CSS animation 时——所有依赖都炸。
+              </div>
+            </div>
+          </div>
+          <div class="rule-item" data-rule="st3">
+            <div class="rule-item-head">
+              <span class="rule-num">3</span>
+              <span class="rule-text"><span class="key">画线在"在意/不在意"分界处</span></span>
+              <span class="rule-arrow">›</span>
+            </div>
+            <div class="rule-body">
+              <div class="rule-compare">
+                <div class="code-box bad"><pre><span class="com">// 没分清 — 全暴露</span>
+<span class="prop">isOpen</span>, <span class="prop">scrollTop</span>,
+<span class="prop">focusedItem</span>, <span class="prop">animPhase</span>,
+<span class="prop">menuPortalNode</span>, <span class="prop">ariaId</span>,
+<span class="prop">hoverIndex</span>, <span class="prop">searchQuery</span>...
+<span class="com">// 30 个 prop。消费方迷茫</span></pre></div>
+                <div class="code-box good"><pre><span class="com">// 分清后 — 暴露 5 个</span>
+<span class="com">// 受控：</span>
+<span class="prop">value</span>, <span class="prop">isOpen</span>, <span class="prop">onChange</span>,
+<span class="prop">onOpenChange</span>, <span class="prop">onSearch</span>
+
+<span class="com">// 内部（不暴露）：</span>
+<span class="com">// scroll, focus, anim, hover...</span></pre></div>
+              </div>
+              <div class="rule-break">
+                <span class="lbl">破坏这条会怎样</span>
+                <strong>API 表面积越大，组件越难升级</strong>。每一个对外暴露的 state 都是一个"消费方可能依赖的钩子"。
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="reveal-bar" style="margin-top:32px">
+      <div class="msg">
+        4 件套 × 3 法则 = <span class="em">12 条经验</span>。<br>
+        每条都是无数项目踩出来的——你点开几条，<strong>就把别人的坑读完了</strong>。
+      </div>
+      <div class="counter">已展开 <strong id="rulesOpened">0</strong> / 12 条法则</div>
+    </div>
+  </div>
+</section>
+
+<!-- Section 04: 幕三 · 再做 -->
+<section id="make">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <span class="act-tag make">幕三 · 再做</span>
+        <div class="section-num"><strong>04</strong> / 再做</div>
+        <h2 class="section-title">轮到你——<br>给 <span class="em">Dropdown 组件</span><br>填 4 件套。</h2>
+      </div>
+      <p class="section-sub">
+        下面 4 张 contract 表（props / events / slots / state）。每张 4-7 个候选——
+        <strong>你选哪些进契约</strong>，哪些是陷阱。提交后逐题点评。
+      </p>
+    </div>
+
+    <div class="contract-stage">
+      <div class="contract-head">
+        <h3 class="contract-title">为 Dropdown 设计 4 件套契约</h3>
+        <div class="contract-progress">已选择 <span class="done" id="contractDone">0</span> 项</div>
+      </div>
+
+      <div class="dropdown-preview-wrap">
+        <div class="dropdown-mock" id="ddTrigger">
+          <span id="ddLabel">选择城市</span>
+          <span class="caret">›</span>
+        </div>
+        <div class="dropdown-popover" id="ddPopover">
+          <div class="opt">北京</div>
+          <div class="opt">上海</div>
+          <div class="opt">深圳</div>
+          <div class="opt">杭州</div>
+        </div>
+      </div>
+
+      <div class="contract-tables">
+
+        <!-- PROPS table -->
+        <div class="contract-table" data-suit="props">
+          <div class="contract-table-head">
+            <span class="contract-table-name">Props · 形态开关</span>
+            <span class="contract-table-info">已选 <span class="now" id="cntProps">0</span></span>
+          </div>
+          <div class="candidate-list" data-suit="props">
+            <div class="candidate" data-key="value" data-correct="1">
+              <div class="cand-main"><span class="cand-name">value</span><span class="cand-sub">: string | string[] · 当前选中</span></div>
+              <span class="cand-check"></span>
+            </div>
+            <div class="candidate" data-key="options" data-correct="1">
+              <div class="cand-main"><span class="cand-name">options</span><span class="cand-sub">: Option[] · 下拉选项</span></div>
+              <span class="cand-check"></span>
+            </div>
+            <div class="candidate" data-key="placeholder" data-correct="1">
+              <div class="cand-main"><span class="cand-name">placeholder</span><span class="cand-sub">: string · 空时提示</span></div>
+              <span class="cand-check"></span>
+            </div>
+            <div class="candidate" data-key="disabled" data-correct="1">
+              <div class="cand-main"><span class="cand-name">disabled</span><span class="cand-sub">: boolean</span></div>
+              <span class="cand-check"></span>
+            </div>
+            <div class="candidate" data-key="loading" data-correct="1">
+              <div class="cand-main"><span class="cand-name">loading</span><span class="cand-sub">: boolean · 加载态</span></div>
+              <span class="cand-check"></span>
+            </div>
+            <div class="candidate" data-key="multiple" data-correct="1">
+              <div class="cand-main"><span class="cand-name">multiple</span><span class="cand-sub">: boolean · 多选</span></div>
+              <span class="cand-check"></span>
+            </div>
+            <div class="candidate" data-key="searchable" data-correct="1">
+              <div class="cand-main"><span class="cand-name">searchable</span><span class="cand-sub">: boolean · 可搜索</span></div>
+              <span class="cand-check"></span>
+            </div>
+            <div class="candidate" data-key="clearable" data-correct="1">
+              <div class="cand-main"><span class="cand-name">clearable</span><span class="cand-sub">: boolean · 可清空</span></div>
+              <span class="cand-check"></span>
+            </div>
+            <div class="candidate trap" data-key="width" data-correct="0" data-trap="实现细节——宽度应该 CSS 控制，prop 化等于把布局责任揽给组件">
+              <div class="cand-main"><span class="cand-name">width</span><span class="cand-sub">: number · 宽度（陷阱）</span></div>
+              <span class="cand-check"></span>
+            </div>
+            <div class="candidate trap" data-key="onChange" data-correct="0" data-trap="onChange 是 event 不是 prop——这张表是 props，回调放到 events 表里">
+              <div class="cand-main"><span class="cand-name">onChange</span><span class="cand-sub">: fn · 选中回调（陷阱）</span></div>
+              <span class="cand-check"></span>
+            </div>
+          </div>
+        </div>
+
+        <!-- EVENTS table -->
+        <div class="contract-table" data-suit="events">
+          <div class="contract-table-head">
+            <span class="contract-table-name">Events · 消息通道</span>
+            <span class="contract-table-info">已选 <span class="now" id="cntEvents">0</span></span>
+          </div>
+          <div class="candidate-list" data-suit="events">
+            <div class="candidate" data-key="onChange" data-correct="1">
+              <div class="cand-main"><span class="cand-name">onChange</span><span class="cand-sub">(value, item, e) · 选中变化</span></div>
+              <span class="cand-check"></span>
+            </div>
+            <div class="candidate" data-key="onOpen" data-correct="1">
+              <div class="cand-main"><span class="cand-name">onOpen</span><span class="cand-sub">() · popover 打开</span></div>
+              <span class="cand-check"></span>
+            </div>
+            <div class="candidate" data-key="onClose" data-correct="1">
+              <div class="cand-main"><span class="cand-name">onClose</span><span class="cand-sub">() · popover 关闭</span></div>
+              <span class="cand-check"></span>
+            </div>
+            <div class="candidate" data-key="onSearch" data-correct="1">
+              <div class="cand-main"><span class="cand-name">onSearch</span><span class="cand-sub">(q) · 搜索关键词变化</span></div>
+              <span class="cand-check"></span>
+            </div>
+            <div class="candidate" data-key="onFocus" data-correct="1">
+              <div class="cand-main"><span class="cand-name">onFocus</span><span class="cand-sub">() · 触发器获得焦点</span></div>
+              <span class="cand-check"></span>
+            </div>
+            <div class="candidate trap" data-key="onMount" data-correct="0" data-trap="生命周期不是事件——组件挂载是 React/Vue 的事，不该通过 events 暴露">
+              <div class="cand-main"><span class="cand-name">onMount</span><span class="cand-sub">() · 组件挂载（陷阱）</span></div>
+              <span class="cand-check"></span>
+            </div>
+            <div class="candidate trap" data-key="onHover" data-correct="0" data-trap="太底层——hover 是 DOM 行为，组件不该把每个 hover 抛出去。如果真要，监听 onMouseEnter 就好">
+              <div class="cand-main"><span class="cand-name">onHover</span><span class="cand-sub">() · 鼠标悬停（陷阱）</span></div>
+              <span class="cand-check"></span>
+            </div>
+          </div>
+        </div>
+
+        <!-- SLOTS table -->
+        <div class="contract-table" data-suit="slots">
+          <div class="contract-table-head">
+            <span class="contract-table-name">Slots · 定制点</span>
+            <span class="contract-table-info">已选 <span class="now" id="cntSlots">0</span></span>
+          </div>
+          <div class="candidate-list" data-suit="slots">
+            <div class="candidate" data-key="optionTemplate" data-correct="1">
+              <div class="cand-main"><span class="cand-name">optionTemplate</span><span class="cand-sub">· 定制 item 渲染</span></div>
+              <span class="cand-check"></span>
+            </div>
+            <div class="candidate" data-key="emptyState" data-correct="1">
+              <div class="cand-main"><span class="cand-name">emptyState</span><span class="cand-sub">· 无数据时的空态</span></div>
+              <span class="cand-check"></span>
+            </div>
+            <div class="candidate" data-key="trigger" data-correct="1">
+              <div class="cand-main"><span class="cand-name">trigger</span><span class="cand-sub">· 自定义触发器</span></div>
+              <span class="cand-check"></span>
+            </div>
+            <div class="candidate" data-key="header" data-correct="1">
+              <div class="cand-main"><span class="cand-name">header</span><span class="cand-sub">· 列表上方区</span></div>
+              <span class="cand-check"></span>
+            </div>
+            <div class="candidate trap" data-key="icon" data-correct="0" data-trap="icon 应该是 prop（传一个图标名/组件），不是 slot——slot 是给"内容"的，icon 是"配置"">
+              <div class="cand-main"><span class="cand-name">icon</span><span class="cand-sub">· 触发器图标（陷阱）</span></div>
+              <span class="cand-check"></span>
+            </div>
+            <div class="candidate trap" data-key="placeholder" data-correct="0" data-trap="placeholder 是字符串 prop——只是文案，不该用 slot 占带宽">
+              <div class="cand-main"><span class="cand-name">placeholder</span><span class="cand-sub">· 空时文案（陷阱）</span></div>
+              <span class="cand-check"></span>
+            </div>
+          </div>
+        </div>
+
+        <!-- STATE BOUNDARY table -->
+        <div class="contract-table" data-suit="state">
+          <div class="contract-table-head">
+            <span class="contract-table-name">State · 谁管什么</span>
+            <span class="contract-table-info">已选 <span class="now" id="cntState">0</span></span>
+          </div>
+          <div class="state-options" data-suit="state">
+            <div class="state-option" data-key="controlled" data-correct="1">
+              <span class="so-check"></span>
+              <span class="so-text">受控选中（value + onChange）<span class="so-sub">消费方在意"选了啥"——必须受控</span></span>
+            </div>
+            <div class="state-option" data-key="uncontrolled" data-correct="0">
+              <span class="so-check"></span>
+              <span class="so-text">完全非受控（defaultValue）<span class="so-sub">defaultValue 可以作为备选——但选中必须能受控</span></span>
+            </div>
+            <div class="state-option" data-key="popover-internal" data-correct="1">
+              <span class="so-check"></span>
+              <span class="so-text">popover 显隐由内部管<span class="so-sub">大多场景下消费方不在意——内部状态</span></span>
+            </div>
+            <div class="state-option" data-key="anim-internal" data-correct="1">
+              <span class="so-check"></span>
+              <span class="so-text">动画态由内部管<span class="so-sub">enter / leave 是实现细节——绝不 leak</span></span>
+            </div>
+            <div class="state-option" data-key="all-internal" data-correct="0">
+              <span class="so-check"></span>
+              <span class="so-text">全部内部（不暴露任何状态）<span class="so-sub">那 value 怎么读？这条全错——选了它说明没分清边界</span></span>
+            </div>
+            <div class="state-option" data-key="scroll-external" data-correct="0">
+              <span class="so-check"></span>
+              <span class="so-text">scrollTop 暴露给外部<span class="so-sub">scrollTop 是实现细节——不该 leak（陷阱）</span></span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="contract-actions">
+        <button class="contract-btn primary" id="contractSubmit">提交打分</button>
+        <button class="contract-btn" id="contractReset">清空</button>
+      </div>
+
+      <div class="contract-judge" id="contractJudge"></div>
+    </div>
+  </div>
+</section>
+
+<!-- Section 05: closing -->
+<section id="closing">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>05</strong> / 把这件事变成习惯</div>
+        <h2 class="section-title">做组件前，<br>先<span class="em">写完 4 件套</span>。</h2>
+      </div>
+      <p class="section-sub">
+        从这一篇开始，每次画一个新组件，先在脑子里把 4 件套填一遍——
+        填完再开始动设计稿。
+      </p>
+    </div>
+
+    <div class="tips-grid">
+      <div class="tip">
+        <div class="tip-num">i</div>
+        <h4>props 跟着意图走</h4>
+        <p>不跟着实现细节走。<code>variant</code> 不是 <code>bgColor</code>、<code>size</code> 不是 <code>paddingX</code>。</p>
+        <p><strong>命名问一句"换皮肤这名字还活吗"。</strong>活——好命名。死——重命。</p>
+      </div>
+      <div class="tip">
+        <div class="tip-num">ii</div>
+        <h4>slot 是设计决策</h4>
+        <p>不是工程偷懒。多给一个 slot = 把那部分内容主权交给消费方。</p>
+        <p>要<strong>明确这块是定制点还是统一规范</strong>——别为了"灵活"开口子，开多了组件就没了。</p>
+      </div>
+      <div class="tip">
+        <div class="tip-num">iii</div>
+        <h4>受控早期决定</h4>
+        <p>一开始想清楚：<code>value + onChange</code> 还是 <code>defaultValue</code>。</p>
+        <p>写完上线再改 API = <strong>breaking change</strong>——所有消费方都要回头改。早 10 分钟想，省后面 10 小时。</p>
+      </div>
+    </div>
+
+    <div class="tip-outro">
+      <div class="outro-tag">划重点 · TL;DR</div>
+      <div>
+        <p>组件契约不是<strong>"一份 props 列表"</strong>，是<strong>4 张分工清晰的表</strong>——props（能改啥）、events（会通知啥）、slots（能塞啥）、state（谁管啥）。</p>
+        <p>做组件前先写 4 件套——<strong>不写完不能开始画</strong>。不然画到一半，会发现 footer 该是 slot 还是 prop 没想清，整个返工。</p>
+      </div>
+    </div>
+
+    <a href="x15-composition.html" class="next-post">
+      <div>
+        <div class="np-tag">下一站 · NEXT · X15 · 高阶 · 规划中</div>
+        <h4>X15 · <span class="em">组件组合</span>：卡片 / 表格 / 筛选器 / 详情区</h4>
+        <p>单个组件契约写完——下一站讲组件如何组合成复杂页面。Card 套 Avatar 套 Tag、Table 套 Filter 套 Pagination 怎么把契约串起来不混乱。</p>
+      </div>
+      <span class="np-cta">回路线图 <span class="arr">→</span></span>
+    </a>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div class="byline-group">
+      <div class="byline">
+        <img class="avatar" src="author.jpg" alt="范米花儿">
+        <div class="byline-meta">
+          <div class="byline-label"><span class="dot"></span>作者 · WRITTEN BY</div>
+          <div class="byline-name">嗨，我是 <span class="em">范米花儿</span></div>
+          <p class="byline-tag">设计工程师 ——<br>设计 × 代码，两边都做。</p>
+        </div>
+      </div>
+</div>
+    <div class="footer-meta">
+      做于 <span class="mono">2026</span> · 用 <span class="heart">●</span> 写给 <span class="mono">DESIGNERS &amp; DEVELOPERS</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+// ===== Game 1: Modal Lab =====
+(function(){
+  // state
+  const props = { isOpen: true, size: 'md', closable: true, variant: 'default' };
+  const slotsVal = {
+    title: '请确认这次操作',
+    body: '删除后无法恢复，是否继续？',
+    footer: ''
+  };
+  let evCount = 0;
+  const evCountEl = document.getElementById('evCount');
+
+  const modalMock = document.getElementById('modalMock');
+  const mockTitle = document.getElementById('mockTitle');
+  const mockBody = document.getElementById('mockBody');
+  const mockFooter = document.getElementById('mockFooter');
+  const mockClose = document.getElementById('mockClose');
+  const mockCancel = document.getElementById('mockCancel');
+  const mockConfirm = document.getElementById('mockConfirm');
+  const modalOpenBtn = document.getElementById('modalOpenBtn');
+  const modalPreviewWrap = document.getElementById('modalPreviewWrap');
+  const logBody = document.getElementById('logBody');
+  const logClear = document.getElementById('logClear');
+
+  // state chips
+  const stIsOpen = document.getElementById('stateIsOpen');
+  const stConfirmPending = document.getElementById('stateConfirmPending');
+  const stFocusLock = document.getElementById('stateFocusLock');
+  const stScrollLock = document.getElementById('stateScrollLock');
+  const stAnim = document.getElementById('stateAnim');
+
+  function ts() {
+    const d = new Date();
+    return String(d.getMinutes()).padStart(2,'0') + ':' + String(d.getSeconds()).padStart(2,'0');
+  }
+
+  function log(ev, payload) {
+    evCount++;
+    if (evCountEl) evCountEl.textContent = evCount;
+    const entry = document.createElement('div');
+    entry.className = 'log-entry flash';
+    entry.innerHTML = `<span class="ts">${ts()}</span><span class="ev">${ev}</span><span class="pl"> ${payload || ''}</span>`;
+    logBody.insertBefore(entry, logBody.firstChild);
+    setTimeout(() => entry.classList.remove('flash'), 300);
+    // cap entries
+    while (logBody.children.length > 30) logBody.removeChild(logBody.lastChild);
+  }
+
+  function renderModal() {
+    // size
+    modalMock.classList.remove('size-sm', 'size-md', 'size-lg');
+    modalMock.classList.add('size-' + props.size);
+    // isOpen
+    modalMock.classList.toggle('is-closed', !props.isOpen);
+    modalOpenBtn.style.display = props.isOpen ? 'none' : 'inline-flex';
+    // closable
+    mockClose.classList.toggle('hidden', !props.closable);
+    // variant
+    if (props.variant === 'danger') {
+      mockConfirm.style.background = 'var(--accent)';
+      mockConfirm.style.borderColor = 'var(--accent)';
+    } else {
+      mockConfirm.style.background = '';
+      mockConfirm.style.borderColor = '';
+    }
+    // slots
+    mockTitle.textContent = slotsVal.title || '(no title)';
+    mockTitle.style.color = slotsVal.title ? '' : 'var(--ink-mute)';
+    mockBody.textContent = slotsVal.body || '(no body)';
+    mockBody.style.color = slotsVal.body ? '' : 'var(--ink-mute)';
+    // footer slot
+    if (slotsVal.footer.trim()) {
+      mockFooter.innerHTML = `<span style="font-size:12px;color:var(--ink-soft)">${slotsVal.footer}</span>`;
+    } else {
+      mockFooter.innerHTML = `
+        <button class="modal-mock-btn" id="mockCancel">取消</button>
+        <button class="modal-mock-btn primary" id="mockConfirm">确认</button>
+      `;
+      // rebind
+      mockFooter.querySelector('#mockCancel').addEventListener('click', () => {
+        log('onClose', "{ reason: 'button' }");
+        props.isOpen = false;
+        syncProps();
+        renderModal();
+        updateStateChips();
+      });
+      mockFooter.querySelector('#mockConfirm').addEventListener('click', handleConfirm);
+    }
+  }
+
+  function syncProps() {
+    // reflect isOpen toggle in panel
+    const isOpenToggle = document.querySelector('.toggle[data-prop="isOpen"]');
+    if (isOpenToggle) isOpenToggle.classList.toggle('on', props.isOpen);
+  }
+
+  function updateStateChips() {
+    stIsOpen.textContent = 'isOpen = ' + props.isOpen;
+    stIsOpen.classList.toggle('live', props.isOpen);
+    stIsOpen.classList.toggle('idle', !props.isOpen);
+
+    // focus lock / scroll lock active when open
+    stFocusLock.classList.toggle('live', props.isOpen);
+    stFocusLock.classList.toggle('idle', !props.isOpen);
+    stScrollLock.classList.toggle('live', props.isOpen);
+    stScrollLock.classList.toggle('idle', !props.isOpen);
+    stAnim.textContent = 'animationPhase = ' + (props.isOpen ? 'enter' : 'idle');
+    stAnim.classList.toggle('live', props.isOpen);
+    stAnim.classList.toggle('idle', !props.isOpen);
+  }
+
+  function handleConfirm() {
+    log('onConfirm', '() — returns Promise<boolean>');
+    stConfirmPending.textContent = 'confirmPending = true';
+    stConfirmPending.classList.add('live');
+    stConfirmPending.classList.remove('idle');
+    // simulate async
+    setTimeout(() => {
+      log('onClose', "{ reason: 'confirm' }");
+      props.isOpen = false;
+      syncProps();
+      renderModal();
+      stConfirmPending.textContent = 'confirmPending = false';
+      stConfirmPending.classList.remove('live');
+      stConfirmPending.classList.add('idle');
+      updateStateChips();
+    }, 600);
+  }
+
+  // tabs
+  document.querySelectorAll('.ctab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      document.querySelectorAll('.ctab').forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+      document.querySelectorAll('.control-panel').forEach(p => p.classList.remove('active'));
+      document.querySelector(`.control-panel[data-panel="${tab.dataset.tab}"]`).classList.add('active');
+    });
+  });
+
+  // toggles
+  document.querySelectorAll('.toggle').forEach(tog => {
+    tog.addEventListener('click', () => {
+      const propName = tog.dataset.prop;
+      const newVal = !tog.classList.contains('on');
+      tog.classList.toggle('on', newVal);
+      props[propName] = newVal;
+      log('prop:' + propName, '= ' + newVal);
+      renderModal();
+      updateStateChips();
+    });
+  });
+
+  // radio groups
+  document.querySelectorAll('.radio-group').forEach(group => {
+    const propName = group.dataset.prop;
+    group.querySelectorAll('.radio-pill').forEach(pill => {
+      pill.addEventListener('click', () => {
+        group.querySelectorAll('.radio-pill').forEach(p => p.classList.remove('on'));
+        pill.classList.add('on');
+        props[propName] = pill.dataset.val;
+        log('prop:' + propName, '= "' + pill.dataset.val + '"');
+        renderModal();
+      });
+    });
+  });
+
+  // slot inputs
+  const slotTitleEl = document.getElementById('slotTitle');
+  const slotBodyEl = document.getElementById('slotBody');
+  const slotFooterEl = document.getElementById('slotFooter');
+  slotTitleEl.addEventListener('input', () => {
+    slotsVal.title = slotTitleEl.value;
+    renderModal();
+    log('slot:title', 'changed');
+  });
+  slotBodyEl.addEventListener('input', () => {
+    slotsVal.body = slotBodyEl.value;
+    renderModal();
+    log('slot:children', 'changed');
+  });
+  slotFooterEl.addEventListener('input', () => {
+    slotsVal.footer = slotFooterEl.value;
+    renderModal();
+    log('slot:footer', slotsVal.footer ? '→ custom' : '→ fallback');
+  });
+
+  // close button click
+  mockClose.addEventListener('click', () => {
+    if (!props.closable) return;
+    log('onClose', "{ reason: 'button' }");
+    props.isOpen = false;
+    syncProps();
+    renderModal();
+    updateStateChips();
+  });
+
+  // initial cancel/confirm
+  mockCancel.addEventListener('click', () => {
+    log('onClose', "{ reason: 'button' }");
+    props.isOpen = false;
+    syncProps();
+    renderModal();
+    updateStateChips();
+  });
+  mockConfirm.addEventListener('click', handleConfirm);
+
+  // open button (when closed)
+  modalOpenBtn.addEventListener('click', () => {
+    log('onOpenChange', '(true) — user requested open');
+    props.isOpen = true;
+    syncProps();
+    renderModal();
+    updateStateChips();
+  });
+
+  // backdrop click (preview wrap)
+  modalPreviewWrap.addEventListener('click', (e) => {
+    if (e.target === modalPreviewWrap && props.isOpen && props.closable) {
+      log('onClose', "{ reason: 'overlay' }");
+      props.isOpen = false;
+      syncProps();
+      renderModal();
+      updateStateChips();
+    }
+  });
+
+  // esc key
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && props.isOpen && props.closable) {
+      log('onClose', "{ reason: 'esc' }");
+      props.isOpen = false;
+      syncProps();
+      renderModal();
+      updateStateChips();
+    }
+  });
+
+  // log clear
+  logClear.addEventListener('click', () => {
+    logBody.innerHTML = '<div class="log-entry"><span class="ts">--:--</span><span class="ev">// log cleared</span></div>';
+    evCount = 0;
+    evCountEl.textContent = '0';
+  });
+
+  // init
+  renderModal();
+  updateStateChips();
+})();
+
+// ===== Game 2: rule cards expand =====
+(function(){
+  const rulesByCard = {};
+  const opened = new Set();
+  const counter = document.getElementById('rulesOpened');
+
+  document.querySelectorAll('.rule-card').forEach(card => {
+    const suit = card.dataset.suit;
+    rulesByCard[suit] = new Set();
+    const totalRules = card.querySelectorAll('.rule-item').length;
+    const countEl = card.querySelector('.rule-card-count strong');
+
+    card.querySelectorAll('.rule-item').forEach(item => {
+      const head = item.querySelector('.rule-item-head');
+      head.addEventListener('click', () => {
+        const wasOpen = item.classList.contains('is-open');
+        item.classList.toggle('is-open');
+        const key = suit + ':' + item.dataset.rule;
+        if (!wasOpen) {
+          opened.add(key);
+          rulesByCard[suit].add(item.dataset.rule);
+        }
+        counter.textContent = opened.size;
+        countEl.textContent = rulesByCard[suit].size;
+      });
+    });
+  });
+})();
+
+// ===== Game 3: contract builder =====
+(function(){
+  const SUITS = ['props', 'events', 'slots', 'state'];
+  const selected = { props: new Set(), events: new Set(), slots: new Set(), state: new Set() };
+  const traps = {};
+  const correctSets = {};
+
+  SUITS.forEach(suit => {
+    correctSets[suit] = new Set();
+    document.querySelectorAll(`.candidate-list[data-suit="${suit}"] .candidate, .state-options[data-suit="${suit}"] .state-option`).forEach(el => {
+      if (el.dataset.correct === '1') correctSets[suit].add(el.dataset.key);
+      if (el.dataset.trap) traps[suit + ':' + el.dataset.key] = el.dataset.trap;
+    });
+  });
+
+  function updateCount(suit) {
+    const map = { props: 'cntProps', events: 'cntEvents', slots: 'cntSlots', state: 'cntState' };
+    document.getElementById(map[suit]).textContent = selected[suit].size;
+    let total = 0;
+    SUITS.forEach(s => total += selected[s].size);
+    document.getElementById('contractDone').textContent = total;
+  }
+
+  document.querySelectorAll('.candidate').forEach(c => {
+    c.addEventListener('click', () => {
+      const suit = c.parentElement.dataset.suit;
+      const key = c.dataset.key;
+      if (selected[suit].has(key)) {
+        selected[suit].delete(key);
+        c.classList.remove('selected');
+      } else {
+        selected[suit].add(key);
+        c.classList.add('selected');
+      }
+      updateCount(suit);
+    });
+  });
+
+  document.querySelectorAll('.state-option').forEach(c => {
+    c.addEventListener('click', () => {
+      const suit = c.parentElement.dataset.suit;
+      const key = c.dataset.key;
+      if (selected[suit].has(key)) {
+        selected[suit].delete(key);
+        c.classList.remove('selected');
+      } else {
+        selected[suit].add(key);
+        c.classList.add('selected');
+      }
+      updateCount(suit);
+    });
+  });
+
+  const judge = document.getElementById('contractJudge');
+
+  document.getElementById('contractSubmit').addEventListener('click', () => {
+    let totalHits = 0, totalIdeal = 0, totalTraps = 0, totalMisses = 0;
+    const lines = [];
+    const SUIT_NAMES = {
+      props: 'Props',
+      events: 'Events',
+      slots: 'Slots',
+      state: 'State boundary'
+    };
+    SUITS.forEach(suit => {
+      const sel = selected[suit];
+      const ideal = correctSets[suit];
+      const hits = [...sel].filter(k => ideal.has(k));
+      const missed = [...ideal].filter(k => !sel.has(k));
+      const trapsHit = [...sel].filter(k => !ideal.has(k));
+
+      totalHits += hits.length;
+      totalIdeal += ideal.size;
+      totalMisses += missed.length;
+      totalTraps += trapsHit.length;
+
+      if (sel.size === 0) {
+        lines.push(`<li><strong>${SUIT_NAMES[suit]}</strong>：还没选 — 每张表都有最优解，试试。</li>`);
+      } else if (trapsHit.length === 0 && missed.length === 0) {
+        lines.push(`<li>✓ <strong>${SUIT_NAMES[suit]}</strong>：完美 — 全部命中，没踩陷阱。</li>`);
+      } else {
+        let line = `<strong>${SUIT_NAMES[suit]}</strong>：`;
+        if (missed.length > 0) line += `缺 <code>${missed.join(' / ')}</code>；`;
+        if (trapsHit.length > 0) line += `多了 <code>${trapsHit.join(' / ')}</code>；`;
+        // explain each trap hit
+        const explains = trapsHit.filter(k => traps[suit + ':' + k]).map(k => `<span class="why">↳ <strong>${k}</strong> 是陷阱：${traps[suit + ':' + k]}</span>`);
+        if (explains.length > 0) line += '<br>' + explains.join('<br>');
+        lines.push(`<li>${line}</li>`);
+      }
+    });
+
+    let verdictClass, verdictLabel, headline;
+    if (totalHits === totalIdeal && totalTraps === 0) {
+      verdictClass = 'win';
+      verdictLabel = '完美';
+      headline = '你已经会按 4 件套设计组件了。';
+    } else if (totalHits >= totalIdeal - 1 && totalTraps <= 1) {
+      verdictClass = 'win';
+      verdictLabel = '基本对了';
+      headline = '差一两个——但 4 张表的分工你已经理解了。';
+    } else {
+      verdictClass = 'partial';
+      verdictLabel = '还差一点';
+      headline = '陷阱踩了几个——换个角度：每件套问"消费方在意吗""是配置还是内容""是属性还是动作"。';
+    }
+
+    judge.innerHTML = `<span class="verdict ${verdictClass}">${verdictLabel}</span><h4>${headline}</h4><ul>${lines.join('')}</ul>`;
+    judge.classList.add('show');
+    judge.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  });
+
+  document.getElementById('contractReset').addEventListener('click', () => {
+    SUITS.forEach(suit => {
+      selected[suit].clear();
+      updateCount(suit);
+    });
+    document.querySelectorAll('.candidate.selected, .state-option.selected').forEach(el => el.classList.remove('selected'));
+    judge.classList.remove('show');
+  });
+
+  // dropdown preview demo
+  const ddTrigger = document.getElementById('ddTrigger');
+  const ddPopover = document.getElementById('ddPopover');
+  const ddLabel = document.getElementById('ddLabel');
+  ddTrigger.addEventListener('click', () => {
+    ddTrigger.classList.toggle('is-open');
+    ddPopover.classList.toggle('is-open');
+  });
+  ddPopover.querySelectorAll('.opt').forEach(opt => {
+    opt.addEventListener('click', () => {
+      ddLabel.textContent = opt.textContent;
+      ddTrigger.classList.remove('is-open');
+      ddPopover.classList.remove('is-open');
+    });
+  });
+})();
+</script>
+
+</body>
+</html>

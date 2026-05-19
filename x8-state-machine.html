@@ -1,0 +1,1151 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>状态机：对象的生命周期 — AI LABBOOK · X8</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,300..900&family=Geist:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Noto+Sans+SC:wght@300;400;500;700;900&family=Noto+Serif+SC:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f3eee5; --bg-2: #ebe4d4; --ink: #16161d; --ink-soft: #4a4a55; --ink-mute: #8a8a92;
+    --line: #d5cdba; --line-soft: #e3dcca; --accent: #ff4d2e; --accent-soft: #ffe4dc;
+    --blue: #0a4cff; --blue-soft: #dde6ff; --green: #1f6b3a; --green-soft: #d4ecdb;
+    --yellow: #ffcf3d; --paper: #faf7f0;
+    --shadow: 0 1px 0 rgba(0,0,0,0.04), 0 8px 24px rgba(22,22,29,0.06);
+    --obj-color: #ff4d2e; --obj-soft: rgba(255,77,46,0.12);
+    --proj-color: #1f6b3a; --proj-soft: rgba(31,107,58,0.12);
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--bg); color: var(--ink); font-family: 'Geist', 'Noto Sans SC', system-ui, -apple-system, sans-serif;
+    font-size: 16px; line-height: 1.6; -webkit-font-smoothing: antialiased;
+    background-image: radial-gradient(circle at 1px 1px, rgba(22,22,29,0.05) 1px, transparent 0);
+    background-size: 24px 24px;
+  }
+  .display-cn { font-family: 'Noto Serif SC', 'Fraunces', serif; font-weight: 900; letter-spacing: -0.01em; }
+  .display-en { font-family: 'Fraunces', 'Noto Serif SC', serif; font-weight: 600; font-style: italic; letter-spacing: -0.02em; }
+  .mono { font-family: 'JetBrains Mono', monospace; }
+  .label { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-mute); }
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 0 32px; }
+
+  /* Topbar */
+  .topbar { border-bottom: 1px dashed var(--line); padding: 16px 0; background: var(--bg); position: sticky; top: 0; z-index: 100; }
+  .topbar-inner { display: flex; justify-content: space-between; align-items: center; gap: 24px; flex-wrap: wrap; }
+  .brand-block { display: flex; align-items: center; gap: 10px; font-family: 'JetBrains Mono', monospace; font-size: 13px; }
+  .brand { display: inline-flex; align-items: center; gap: 6px; color: var(--ink); text-decoration: none; font-weight: 600; }
+  .brand-arrow { color: var(--ink-mute); transition: transform .2s; }
+  .brand:hover .brand-arrow { transform: translateX(-3px); }
+  .brand .dot { display: inline-block; width: 8px; height: 8px; background: var(--accent); border-radius: 50%; vertical-align: middle; animation: pulse 2s ease-in-out infinite; margin-left: 4px; }
+  .brand-sep { color: var(--ink-mute); } .brand-current { color: var(--ink-soft); }
+  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+  .nav-links { display: flex; gap: 18px; font-size: 13px; flex-wrap: wrap; }
+  .nav-links a { color: var(--ink-soft); text-decoration: none; transition: color 0.2s; }
+  .nav-links a:hover { color: var(--accent); }
+
+  /* Hero */
+  .hero { padding: 100px 0 80px; position: relative; overflow: hidden; }
+  .hero-meta { display: flex; gap: 24px; margin-bottom: 32px; align-items: center; flex-wrap: wrap; }
+  .hero-meta .pill { padding: 6px 12px; border: 1px solid var(--ink); border-radius: 100px; font-size: 11px; font-family: 'JetBrains Mono', monospace; letter-spacing: 0.05em; }
+  .hero-meta .pill.fill { background: var(--ink); color: var(--bg); }
+  .hero-meta .pill.purple { background: var(--obj-color); color: white; border-color: var(--obj-color); }
+  .hero h1 { font-family: 'Noto Serif SC', 'Fraunces', serif; font-weight: 900; font-size: clamp(48px, 7vw, 92px); line-height: 0.95; letter-spacing: -0.03em; margin: 0 0 24px; }
+  .hero h1 .em { font-family: 'Noto Serif SC', serif; font-weight: 500; color: var(--accent); }
+  .hero h1 .purple { color: var(--obj-color); font-family: 'Noto Serif SC', serif; font-weight: 500; }
+  .hero p.lede { font-size: 20px; line-height: 1.5; max-width: 640px; color: var(--ink-soft); margin: 0 0 40px; }
+  .hero-grid { display: grid; grid-template-columns: 1.4fr 1fr; gap: 48px; align-items: end; }
+  @media (max-width: 880px) { .hero-grid { grid-template-columns: 1fr; } }
+  .hero-side { border-left: 1px dashed var(--line); padding-left: 24px; font-size: 13px; color: var(--ink-soft); }
+  .hero-side .row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px dashed var(--line); gap: 12px; }
+  .hero-side .row:last-child { border-bottom: none; }
+  .hero-side .row .k { color: var(--ink-mute); font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.05em; text-transform: uppercase; }
+  .hero-side .row .v { font-weight: 500; }
+
+  /* Sections */
+  section { padding: 80px 0; border-top: 1px solid var(--line); position: relative; }
+  .section-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 56px; flex-wrap: wrap; gap: 16px; }
+  .section-num { font-family: 'JetBrains Mono', monospace; font-size: 13px; color: var(--ink-mute); letter-spacing: 0.1em; margin-top: 6px; }
+  .section-num strong { color: var(--accent); }
+  .section-title { font-family: 'Noto Serif SC', serif; font-weight: 900; font-size: clamp(32px, 4.5vw, 52px); line-height: 1.05; letter-spacing: -0.02em; margin: 8px 0 0; max-width: 22ch; }
+  .section-title .em { font-family: 'Noto Serif SC', serif; font-weight: 500; color: var(--accent); }
+  .section-title .purple { color: var(--obj-color); font-family: 'Noto Serif SC', serif; font-weight: 500; }
+  .section-sub { color: var(--ink-soft); font-size: 17px; max-width: 38ch; line-height: 1.55; margin: 0; }
+
+  /* Act tag */
+  .act-tag { display: inline-block; padding: 4px 12px; font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; border-radius: 100px; }
+  .act-tag.look { background: var(--blue-soft); color: var(--blue); }
+  .act-tag.break { background: var(--obj-soft); color: var(--obj-color); }
+  .act-tag.make { background: var(--proj-soft); color: var(--proj-color); }
+
+  /* Problem cards */
+  .problem-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; margin-top: 24px; }
+  @media (max-width: 880px) { .problem-grid { grid-template-columns: 1fr; } }
+  .problem-card { background: var(--paper); border: 1px solid var(--line); border-radius: 6px; padding: 28px; position: relative; }
+  .problem-card.bad { border-color: var(--accent); background: var(--accent-soft); }
+  .problem-card.good { border-color: var(--obj-color); background: var(--obj-soft); }
+  .problem-card .tag { position: absolute; top: -12px; left: 24px; background: var(--bg); padding: 2px 10px; font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.1em; }
+  .problem-card.bad .tag { color: var(--accent); border: 1px solid var(--accent); }
+  .problem-card.good .tag { color: var(--obj-color); border: 1px solid var(--obj-color); }
+  .problem-card h3 { font-family: 'Noto Serif SC', serif; font-size: 22px; margin: 0 0 12px; font-weight: 700; }
+  .problem-card p { margin: 0; color: var(--ink-soft); font-size: 14px; line-height: 1.55; }
+  .problem-card p + p { margin-top: 10px; }
+  .problem-card code { font-family: 'JetBrains Mono', monospace; font-size: 12px; padding: 1px 5px; background: rgba(0,0,0,0.06); border-radius: 3px; }
+  .problem-card.bad code { background: rgba(255,77,46,0.18); color: var(--accent); }
+  .problem-card.good code { background: rgba(255,77,46,0.18); color: var(--obj-color); }
+
+  /* GAME 1: timeline + mock */
+  .timeline-stage { background: var(--paper); border: 1px solid var(--line); border-radius: 8px; padding: 32px 28px 28px; position: relative; overflow: hidden; }
+  .timeline-stage::before { content: ''; position: absolute; inset: 0; background-image: linear-gradient(to right, var(--line-soft) 1px, transparent 1px), linear-gradient(to bottom, var(--line-soft) 1px, transparent 1px); background-size: 24px 24px; opacity: 0.4; pointer-events: none; }
+  .timeline-head { position: relative; display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 22px; flex-wrap: wrap; gap: 12px; }
+  .timeline-head h4 { font-family: 'Noto Serif SC', serif; font-size: 17px; margin: 0; font-weight: 700; }
+  .timeline-head .meta { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ink-mute); letter-spacing: 0.05em; }
+  .timeline-head .meta strong { color: var(--obj-color); font-size: 13px; }
+  .timeline-track { position: relative; background: white; border: 1px solid var(--line); border-radius: 6px; padding: 28px 24px 18px; margin-bottom: 24px; }
+  .timeline-svg { display: block; width: 100%; height: 130px; }
+  .tl-node { cursor: pointer; transition: transform 0.15s; }
+  .tl-node:hover { transform: scale(1.05); }
+  .tl-node circle { transition: all 0.2s; }
+  .tl-node text.lbl { font-family: 'JetBrains Mono', monospace; font-size: 11px; fill: var(--ink-soft); pointer-events: none; }
+  .tl-node text.idx { font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 700; fill: white; pointer-events: none; }
+  .tl-node.is-active circle { fill: var(--obj-color); stroke: var(--obj-color); }
+  .tl-node.is-active text.lbl { fill: var(--obj-color); font-weight: 700; }
+  .tl-node.is-visited circle { stroke: var(--obj-color); }
+  .tl-node.is-visited text.lbl { fill: var(--ink); }
+  .tl-edge { fill: none; stroke: var(--line); stroke-width: 2; transition: stroke 0.2s; }
+  .tl-edge.is-active { stroke: var(--obj-color); }
+  .tl-edge.branch { stroke-dasharray: 4 4; stroke: var(--accent); }
+
+  /* Order mock */
+  .order-mock { background: white; border: 1px solid var(--line); border-radius: 6px; padding: 22px; min-height: 320px; transition: all 0.25s; position: relative; }
+  .order-mock-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; padding-bottom: 14px; border-bottom: 1px dashed var(--line); margin-bottom: 16px; flex-wrap: wrap; }
+  .order-mock-id { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--ink-mute); margin-bottom: 4px; letter-spacing: 0.05em; }
+  .order-mock-title { font-family: 'Noto Serif SC', serif; font-size: 20px; font-weight: 700; margin: 0; }
+  .order-mock-state-pill { display: inline-flex; align-items: center; gap: 6px; padding: 4px 12px; border-radius: 100px; font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 600; letter-spacing: 0.05em; background: var(--bg-2); color: var(--ink-soft); }
+  .order-mock-state-pill .dot-s { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+  .order-mock-state-pill.draft { background: rgba(138,138,146,0.16); color: var(--ink-soft); }
+  .order-mock-state-pill.submitted { background: var(--blue-soft); color: var(--blue); }
+  .order-mock-state-pill.paid { background: var(--obj-soft); color: var(--obj-color); }
+  .order-mock-state-pill.shipped { background: rgba(255,207,61,0.32); color: #8a6b00; }
+  .order-mock-state-pill.delivered { background: var(--green-soft); color: var(--green); }
+  .order-mock-state-pill.completed { background: rgba(31,107,58,0.32); color: var(--green); }
+  .order-mock-state-pill.returned { background: var(--accent-soft); color: var(--accent); }
+  .order-mock-body { display: grid; grid-template-columns: 1.4fr 1fr; gap: 22px; }
+  @media (max-width: 880px) { .order-mock-body { grid-template-columns: 1fr; } }
+  .order-mock-fields { display: flex; flex-direction: column; gap: 8px; }
+  .om-row { display: flex; justify-content: space-between; gap: 12px; padding: 7px 0; border-bottom: 1px dashed var(--line-soft); font-size: 13px; }
+  .om-row:last-child { border-bottom: none; }
+  .om-k { color: var(--ink-mute); font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.04em; text-transform: uppercase; }
+  .om-v { font-weight: 500; }
+  .om-v.editable { color: var(--blue); }
+  .om-v.editable::after { content: ' ✎'; font-size: 10px; opacity: 0.6; }
+  .om-v.locked { color: var(--ink-mute); font-style: italic; }
+  .om-v.tracking { color: var(--obj-color); font-family: 'JetBrains Mono', monospace; font-size: 12px; }
+  .order-mock-actions { display: flex; flex-direction: column; gap: 8px; }
+  .om-action { padding: 10px 14px; border-radius: 5px; font-size: 13px; font-weight: 600; cursor: pointer; border: 1px solid var(--ink); background: transparent; color: var(--ink); text-align: left; transition: all 0.15s; font-family: inherit; }
+  .om-action:hover { background: var(--ink); color: white; }
+  .om-action.primary { background: var(--obj-color); color: white; border-color: var(--obj-color); }
+  .om-action.primary:hover { background: #d63818; }
+  .om-action.danger { background: transparent; color: var(--accent); border-color: var(--accent); }
+  .om-action.danger:hover { background: var(--accent); color: white; }
+  .om-action.muted { background: transparent; color: var(--ink-mute); border-color: var(--line); border-style: dashed; cursor: not-allowed; }
+  .om-action.muted:hover { background: transparent; color: var(--ink-mute); }
+  .om-action.staff { background: var(--blue-soft); color: var(--blue); border-color: var(--blue); }
+  .om-action.staff:hover { background: var(--blue); color: white; }
+  .om-banner { padding: 10px 14px; border-radius: 4px; background: var(--bg-2); font-size: 12px; margin-bottom: 12px; border-left: 3px solid var(--ink); line-height: 1.55; }
+  .om-banner.success { background: var(--green-soft); border-color: var(--green); color: var(--green); }
+  .om-banner.warn { background: rgba(255,207,61,0.28); border-color: var(--yellow); color: #8a6b00; }
+  .om-banner.info { background: var(--blue-soft); border-color: var(--blue); color: var(--blue); }
+  .om-banner.purple { background: var(--obj-soft); border-color: var(--obj-color); color: var(--obj-color); }
+  .om-banner.danger { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
+  .om-meta { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ink-mute); margin-top: 8px; letter-spacing: 0.05em; }
+
+  /* Reveal bar */
+  .reveal-bar { margin-top: 32px; padding: 20px 28px; background: var(--ink); color: var(--bg); border-radius: 8px; display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap; }
+  .reveal-bar .msg { font-family: 'Noto Serif SC', serif; font-size: 17px; font-weight: 500; line-height: 1.55; }
+  .reveal-bar .msg .em { color: var(--accent); }
+  .reveal-bar .counter { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ink-mute); letter-spacing: 0.05em; }
+  .reveal-bar .counter strong { color: var(--accent); font-size: 14px; }
+
+  /* GAME 2: state machine */
+  .sm-stage { display: grid; grid-template-columns: 1.5fr 1fr; gap: 28px; margin-top: 8px; }
+  @media (max-width: 980px) { .sm-stage { grid-template-columns: 1fr; } }
+  .sm-canvas { background: var(--paper); border: 1px solid var(--obj-color); border-radius: 8px; padding: 26px; position: relative; }
+  .sm-canvas::before { content: 'ORDER · STATE MACHINE'; position: absolute; top: -10px; left: 16px; background: var(--obj-color); color: white; font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.1em; padding: 2px 10px; border-radius: 100px; }
+  .sm-canvas-hint { font-size: 12px; color: var(--ink-mute); margin: 0 0 14px; line-height: 1.55; }
+  .sm-canvas-hint strong { color: var(--obj-color); }
+  .sm-svg { display: block; width: 100%; height: 460px; background: white; border-radius: 6px; border: 1px solid var(--line); }
+  .sm-svg .sm-node { cursor: pointer; transition: transform 0.18s; }
+  .sm-svg .sm-node:hover { transform: scale(1.04); transform-origin: center; transform-box: fill-box; }
+  .sm-svg .sm-node rect { fill: white; stroke: var(--line); stroke-width: 1.5; rx: 8; transition: all 0.2s; }
+  .sm-svg .sm-node.is-active rect { fill: var(--obj-soft); stroke: var(--obj-color); stroke-width: 2.5; }
+  .sm-svg .sm-node.is-hover rect { fill: var(--bg-2); }
+  .sm-svg .sm-node text.name { font-family: 'JetBrains Mono', monospace; font-weight: 600; font-size: 12px; fill: var(--ink); pointer-events: none; }
+  .sm-svg .sm-node text.sub { font-family: 'JetBrains Mono', monospace; font-size: 9px; fill: var(--ink-mute); pointer-events: none; letter-spacing: 0.04em; }
+  .sm-svg .sm-node.is-active text.name { fill: var(--obj-color); }
+  .sm-svg .sm-edge { fill: none; stroke: var(--ink-mute); stroke-width: 1.5; cursor: pointer; transition: all 0.2s; }
+  .sm-svg .sm-edge:hover { stroke: var(--obj-color); stroke-width: 2.5; }
+  .sm-svg .sm-edge.is-active { stroke: var(--obj-color); stroke-width: 3; }
+  .sm-svg .sm-edge.branch { stroke-dasharray: 4 4; stroke: var(--accent); }
+  .sm-svg .sm-edge.auto { stroke: var(--blue); }
+  .sm-svg .sm-edge-hit { fill: none; stroke: transparent; stroke-width: 16; cursor: pointer; pointer-events: stroke; }
+  .sm-svg .sm-edge-label { font-family: 'JetBrains Mono', monospace; font-size: 10px; fill: var(--ink-soft); pointer-events: none; transition: fill 0.2s; }
+  .sm-svg g.is-hover text.sm-edge-label { fill: var(--obj-color); font-weight: 700; }
+
+  .sm-inspect { background: white; border: 1px solid var(--line); border-radius: 8px; padding: 20px; position: sticky; top: 90px; align-self: start; min-height: 380px; }
+  .sm-inspect-empty { text-align: center; color: var(--ink-mute); font-style: italic; font-size: 13px; padding: 40px 0; }
+  .sm-inspect-type { display: inline-block; padding: 3px 10px; font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; border-radius: 100px; margin-bottom: 10px; }
+  .sm-inspect-type.node { background: var(--obj-soft); color: var(--obj-color); }
+  .sm-inspect-type.edge { background: var(--blue-soft); color: var(--blue); }
+  .sm-inspect-type.branch { background: var(--accent-soft); color: var(--accent); }
+  .sm-inspect-title { font-family: 'Noto Serif SC', serif; font-size: 22px; font-weight: 700; margin: 0 0 4px; }
+  .sm-inspect-mono { font-family: 'JetBrains Mono', monospace; font-size: 13px; color: var(--ink-soft); margin: 0 0 14px; }
+  .sm-inspect-mono .from { color: var(--ink); font-weight: 600; }
+  .sm-inspect-mono .arrow { color: var(--ink-mute); margin: 0 4px; }
+  .sm-inspect-mono .to { color: var(--obj-color); font-weight: 600; }
+  .sm-attr { padding: 9px 0; border-bottom: 1px dashed var(--line-soft); font-size: 13px; }
+  .sm-attr:last-child { border-bottom: none; }
+  .sm-attr .k { display: block; font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--ink-mute); letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 3px; }
+  .sm-attr .v { color: var(--ink); line-height: 1.5; }
+  .sm-attr .v.pos { color: var(--green); }
+  .sm-attr .v.neg { color: var(--accent); }
+
+  /* Mistakes */
+  .mistake-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; margin-top: 32px; }
+  @media (max-width: 880px) { .mistake-grid { grid-template-columns: 1fr; } }
+  .mistake-card { background: var(--paper); border: 1px solid var(--line); border-radius: 6px; padding: 22px; position: relative; }
+  .mistake-card .mt-num { position: absolute; top: -14px; left: 16px; width: 32px; height: 32px; border-radius: 50%; background: var(--accent); color: white; display: flex; align-items: center; justify-content: center; font-family: 'JetBrains Mono', monospace; font-weight: 700; font-size: 13px; }
+  .mistake-card h4 { font-family: 'Noto Serif SC', serif; font-size: 17px; margin: 8px 0 8px; font-weight: 700; }
+  .mistake-card p { font-size: 13px; color: var(--ink-soft); margin: 0; line-height: 1.6; }
+  .mistake-card p + p { margin-top: 8px; }
+  .mistake-card code { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--accent); background: var(--accent-soft); padding: 1px 5px; border-radius: 3px; }
+
+  /* GAME 3: builder */
+  .builder-stage { background: var(--paper); border: 1px solid var(--line); border-radius: 8px; padding: 32px; margin-top: 24px; }
+  .builder-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 28px; flex-wrap: wrap; gap: 16px; }
+  .builder-title { font-family: 'Noto Serif SC', serif; font-size: 22px; margin: 0; font-weight: 700; }
+  .builder-title .em { color: var(--accent); font-weight: 500; }
+  .builder-progress { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--ink-mute); }
+  .builder-progress .done { color: var(--proj-color); font-weight: 700; font-size: 14px; }
+  .builder-grid { display: grid; grid-template-columns: 1fr 1.6fr; gap: 28px; }
+  @media (max-width: 980px) { .builder-grid { grid-template-columns: 1fr; } }
+  .builder-pool { border: 1px dashed var(--obj-color); border-radius: 8px; padding: 18px; background: white; align-self: start; position: sticky; top: 90px; }
+  .builder-pool h5 { font-family: 'Noto Serif SC', serif; font-size: 15px; margin: 0 0 8px; color: var(--obj-color); font-weight: 700; }
+  .builder-pool h5 + p { font-size: 11px; color: var(--ink-mute); margin: 0 0 12px; line-height: 1.5; }
+  .builder-pool-section { margin-bottom: 16px; }
+  .builder-pool-section:last-child { margin-bottom: 0; }
+  .builder-pool-section h6 { font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-mute); margin: 0 0 8px; padding-bottom: 4px; border-bottom: 1px dashed var(--line); }
+  .builder-pool-list { display: flex; flex-direction: column; gap: 5px; }
+  .builder-chip { display: flex; align-items: center; gap: 8px; padding: 7px 12px; background: var(--obj-soft); border: 1px solid var(--obj-color); border-radius: 4px; font-family: 'JetBrains Mono', monospace; font-size: 12px; cursor: pointer; user-select: none; transition: all 0.15s; color: var(--ink); }
+  .builder-chip:hover { background: var(--obj-color); color: white; }
+  .builder-chip.is-active { background: var(--obj-color); color: white; box-shadow: 0 0 0 3px var(--obj-soft); }
+  .builder-chip.is-used { opacity: 0.4; cursor: default; }
+  .builder-chip.is-used:hover { background: var(--obj-soft); color: var(--ink); }
+  .builder-chip .chip-add { margin-left: auto; opacity: 0.55; font-size: 14px; }
+  .builder-chip.kind-edge { background: var(--blue-soft); border-color: var(--blue); color: var(--ink); }
+  .builder-chip.kind-edge:hover { background: var(--blue); color: white; }
+  .builder-chip.kind-edge.is-active { background: var(--blue); color: white; box-shadow: 0 0 0 3px var(--blue-soft); }
+  .builder-chip.kind-edge.is-used:hover { background: var(--blue-soft); color: var(--ink); }
+
+  .builder-canvas-wrap { display: flex; flex-direction: column; gap: 16px; }
+  .builder-canvas { background: white; border: 1px solid var(--line); border-radius: 8px; padding: 14px; min-height: 360px; position: relative; }
+  .builder-canvas-empty { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; color: var(--ink-mute); font-style: italic; font-size: 13px; pointer-events: none; }
+  .builder-canvas-empty.is-hidden { display: none; }
+  .builder-svg { display: block; width: 100%; height: 360px; }
+  .builder-svg .b-node { cursor: pointer; }
+  .builder-svg .b-node rect { fill: white; stroke: var(--obj-color); stroke-width: 1.5; rx: 8; transition: all 0.18s; }
+  .builder-svg .b-node.is-source rect { fill: var(--obj-soft); stroke-width: 2.5; }
+  .builder-svg .b-node.is-hover rect { fill: var(--bg-2); }
+  .builder-svg .b-node text { font-family: 'JetBrains Mono', monospace; font-size: 11px; fill: var(--ink); pointer-events: none; font-weight: 600; }
+  .builder-svg .b-node-remove { fill: var(--accent); cursor: pointer; opacity: 0; transition: opacity 0.15s; }
+  .builder-svg .b-node:hover .b-node-remove { opacity: 1; }
+  .builder-svg .b-edge { fill: none; stroke: var(--blue); stroke-width: 2; cursor: pointer; transition: stroke-width 0.15s; }
+  .builder-svg .b-edge:hover { stroke-width: 3; }
+  .builder-svg .b-edge-label { font-family: 'JetBrains Mono', monospace; font-size: 10px; fill: var(--blue); pointer-events: none; }
+  .builder-svg .b-edge-bg { fill: white; stroke: var(--blue); stroke-width: 1; rx: 3; }
+  .builder-svg .b-edge-group:hover .b-edge { stroke: var(--accent); }
+  .builder-svg .b-edge-group:hover .b-node-remove { opacity: 1; }
+
+  .builder-toolbar { display: flex; justify-content: space-between; align-items: center; gap: 12px; font-size: 12px; flex-wrap: wrap; }
+  .builder-mode-pill { padding: 5px 12px; border-radius: 100px; font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.05em; background: var(--bg-2); color: var(--ink-soft); display: inline-flex; align-items: center; gap: 6px; }
+  .builder-mode-pill .icon { font-weight: 700; }
+  .builder-mode-pill.is-active-add { background: var(--obj-soft); color: var(--obj-color); }
+  .builder-mode-pill.is-active-edge { background: var(--blue-soft); color: var(--blue); }
+  .builder-stats { display: inline-flex; gap: 18px; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ink-mute); }
+  .builder-stats strong { color: var(--ink); font-size: 13px; }
+
+  .builder-actions { display: flex; gap: 12px; margin-top: 24px; flex-wrap: wrap; }
+  .builder-btn { padding: 10px 22px; border-radius: 100px; font-family: 'JetBrains Mono', monospace; font-size: 12px; letter-spacing: 0.06em; text-transform: uppercase; cursor: pointer; font-weight: 600; border: 1px solid var(--ink); background: transparent; color: var(--ink); transition: all 0.15s; }
+  .builder-btn:hover { background: var(--ink); color: var(--bg); }
+  .builder-btn.primary { background: var(--accent); color: white; border-color: var(--accent); }
+  .builder-btn.primary:hover { background: #e8451f; }
+
+  .builder-judge { margin-top: 24px; padding: 24px 26px; border-radius: 8px; background: var(--ink); color: var(--bg); display: none; }
+  .builder-judge.show { display: block; }
+  .builder-judge .verdict { display: inline-block; font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; padding: 3px 10px; border-radius: 100px; }
+  .builder-judge .verdict.win { color: #1f6b3a; background: #d4ecdb; }
+  .builder-judge .verdict.partial { color: #c79f1e; background: #fff3cc; }
+  .builder-judge .verdict.fail { color: #ff8a6e; background: rgba(255,77,46,0.18); }
+  .builder-judge h4 { font-family: 'Noto Serif SC', serif; font-size: 22px; margin: 10px 0 14px; color: white; line-height: 1.3; }
+  .builder-judge h5 { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent); margin: 18px 0 8px; }
+  .builder-judge ul { color: #c8c8d0; margin: 0; padding-left: 20px; font-size: 13px; line-height: 1.75; }
+  .builder-judge ul li + li { margin-top: 6px; }
+  .builder-judge ul .why { color: #a0a0aa; font-size: 12px; }
+  .builder-judge ul .ok { color: #6bbf85; }
+  .builder-judge ul .bad { color: #ff8a6e; }
+  .builder-judge code { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #ffd166; background: rgba(255,255,255,0.08); padding: 1px 6px; border-radius: 3px; }
+  .builder-judge .judge-score { display: inline-flex; align-items: baseline; gap: 6px; margin-left: 12px; font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--ink-mute); }
+  .builder-judge .judge-score strong { color: white; font-size: 18px; }
+
+  /* picker label */
+  .picker-label { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: var(--ink); color: var(--bg); padding: 12px 20px; border-radius: 100px; font-family: 'JetBrains Mono', monospace; font-size: 12px; letter-spacing: 0.05em; z-index: 200; box-shadow: 0 8px 32px rgba(0,0,0,0.2); display: none; align-items: center; gap: 10px; }
+  .picker-label.show { display: inline-flex; }
+  .picker-label .esc { background: rgba(255,255,255,0.15); padding: 2px 6px; border-radius: 3px; font-size: 10px; }
+  .picker-label strong { color: var(--accent); }
+
+  /* tips */
+  .tips-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 28px; margin-top: 24px; }
+  @media (max-width: 880px) { .tips-grid { grid-template-columns: 1fr; } }
+  .tip { background: var(--paper); border: 1px solid var(--line); border-radius: 6px; padding: 24px; position: relative; }
+  .tip-num { position: absolute; top: -14px; left: 16px; width: 32px; height: 32px; border-radius: 50%; background: var(--obj-color); color: white; display: flex; align-items: center; justify-content: center; font-family: 'Fraunces', serif; font-style: italic; font-weight: 600; font-size: 14px; }
+  .tip h4 { font-family: 'Noto Serif SC', serif; font-size: 18px; margin: 8px 0 10px; font-weight: 700; }
+  .tip p { color: var(--ink-soft); font-size: 14px; line-height: 1.6; margin: 0; }
+  .tip p + p { margin-top: 8px; }
+  .tip code { font-family: 'JetBrains Mono', monospace; font-size: 12px; padding: 1px 5px; background: var(--obj-soft); color: var(--obj-color); border-radius: 3px; }
+  .tip-outro { margin-top: 44px; padding: 30px 32px; background: var(--ink); color: var(--bg); border-radius: 8px; display: grid; grid-template-columns: auto 1fr; gap: 28px; align-items: flex-start; }
+  @media (max-width: 720px) { .tip-outro { grid-template-columns: 1fr; gap: 12px; } }
+  .outro-tag { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.1em; color: var(--accent); padding-top: 4px; }
+  .tip-outro p { margin: 0 0 12px; color: #c8c8d0; line-height: 1.65; font-size: 15px; }
+  .tip-outro p:last-child { margin-bottom: 0; }
+  .tip-outro strong { color: white; }
+
+  /* next post */
+  .next-post { display: flex; justify-content: space-between; align-items: center; margin-top: 56px; padding: 32px; background: var(--bg-2); border: 1px solid var(--line); border-radius: 8px; text-decoration: none; color: var(--ink); transition: all 0.2s; gap: 24px; flex-wrap: wrap; }
+  .next-post:hover { background: var(--ink); color: var(--bg); }
+  .next-post:hover .np-tag { color: var(--accent); }
+  .next-post:hover .em { color: var(--accent); }
+  .next-post:hover p { color: #c8c8d0; }
+  .np-tag { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.1em; color: var(--ink-mute); margin-bottom: 6px; }
+  .next-post h4 { font-family: 'Noto Serif SC', serif; font-size: 26px; margin: 0 0 8px; font-weight: 700; }
+  .next-post .em { color: var(--obj-color); font-weight: 500; }
+  .next-post p { margin: 0; color: var(--ink-soft); font-size: 14px; max-width: 56ch; }
+  .np-cta { font-family: 'JetBrains Mono', monospace; font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; white-space: nowrap; }
+  .np-cta .arr { display: inline-block; transition: transform .2s; }
+  .next-post:hover .arr { transform: translateX(4px); }
+
+  /* footer */
+  footer { padding: 56px 0 64px; background: var(--bg); color: var(--ink-soft); border-top: 1px solid var(--line); }
+  .byline-group { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; margin-bottom: 32px; padding-bottom: 32px; border-bottom: 1px dashed var(--line); }
+  @media (max-width: 880px) { .byline-group { grid-template-columns: 1fr; } }
+  .byline { display: flex; gap: 16px; align-items: center; }
+  .byline .avatar { width: 56px; height: 56px; border-radius: 50%; object-fit: cover; flex-shrink: 0; }
+  .byline-label { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--accent); letter-spacing: 0.1em; }
+  .byline-label .dot { display: inline-block; width: 6px; height: 6px; background: var(--accent); border-radius: 50%; margin-right: 4px; vertical-align: middle; animation: pulse 2s ease-in-out infinite; }
+  .byline-name { font-family: 'Noto Serif SC', serif; font-weight: 700; font-size: 18px; margin: 4px 0; color: var(--ink); }
+  .byline-name .em { color: var(--accent); font-weight: 500; }
+  .byline-tag { color: var(--ink-soft); font-size: 13px; margin: 0; line-height: 1.5; }
+  .footer-meta { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ink-mute); text-align: center; letter-spacing: 0.05em; }
+  .footer-meta .heart { color: var(--accent); }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="wrap topbar-inner">
+    <div class="brand-block">
+      <a href="book.html#vol-3" class="brand"><span class="brand-arrow">←</span>AI LABBOOK <span class="dot"></span></a>
+      <span class="brand-sep">/</span>
+      <span class="brand-current">X8 · 状态机：对象的生命周期</span>
+    </div>
+    <nav class="nav-links"><a href="book.html#vol-3">路线图</a></nav>
+  </div>
+</div>
+
+<header class="hero">
+  <div class="wrap">
+    <div class="hero-meta">
+      <span class="pill fill">高阶 · ADVANCED</span>
+      <span class="pill purple">STAGE 02 · 任务流</span>
+      <span class="pill">X8 · 状态机</span>
+      <span class="label">阅读 ≈ 18 分钟 · 含 3 段互动</span>
+    </div>
+    <div class="hero-grid">
+      <div>
+        <h1>对象的<br><span class="display-cn">一生</span>，<br>是<span class="purple">一张状态机</span>。</h1>
+        <p class="lede">从草稿到归档之间，对象经过的所有合法路径。<br>知道这张图，<strong>UI / 权限 / 操作可见性</strong> 全都能从图里查出来。</p>
+      </div>
+      <div class="hero-side">
+        <div class="row"><span class="k">本页讲什么</span><span class="v">状态 + 迁移</span></div>
+        <div class="row"><span class="k">三幕</span><span class="v">看见 · 拆开 · 再做</span></div>
+        <div class="row"><span class="k">面向</span><span class="v">B 端 / 后台设计师</span></div>
+        <div class="row"><span class="k">前置</span><span class="v">X1 · X5 任务流</span></div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- Section 01: 问题 -->
+<section id="problem">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>01</strong> / 问题</div>
+        <h2 class="section-title">为什么<br>"状态字段"<br>永远<span class="em">说不清</span>？</h2>
+      </div>
+      <p class="section-sub">因为状态<strong>不是一个字段</strong>。它是一张<strong>有节点、有边、有守卫</strong>的图。把它当字段写，工程师永远在追问"那这个状态能跳到那个状态吗"。</p>
+    </div>
+    <div class="problem-grid">
+      <div class="problem-card bad">
+        <span class="tag">状态当字段 · BAD</span>
+        <h3>"订单状态下拉框：5 个枚举"</h3>
+        <p>稿子里写了一个下拉：<code>未支付 / 已支付 / 已发货 / 已完成 / 已退款</code>。看起来很清楚。</p>
+        <p><strong>工程师追问：</strong>已发货后能改回未支付吗？已支付后用户能取消吗？已完成的还能退货吗？哪个状态显示"申请退款"，哪个不显示？超时未付款会自动关闭吗？</p>
+        <p style="color:var(--accent)"><strong>你：</strong>啊……我画的时候没想过这些……</p>
+      </div>
+      <div class="problem-card good">
+        <span class="tag">状态当机器 · GOOD</span>
+        <h3>"订单状态机：7 节点 + 9 条迁移"</h3>
+        <p>稿子里给出一张状态机图：<code>draft → submitted → paid → shipped → delivered → completed / returned</code>。每条迁移标注：<strong>触发方 + 条件 + 副作用 + 是否可逆</strong>。</p>
+        <p><strong>工程师收到：</strong>状态机 schema 直接落 enum + transition logic，每个 UI 形态对应一种状态。</p>
+        <p style="color:var(--obj-color)"><strong>结果：</strong>追问 → 0 次。</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Section 02: 幕一 · 看见 -->
+<section id="look">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <span class="act-tag look">幕一 · 看见</span>
+        <div class="section-num"><strong>02</strong> / 看见</div>
+        <h2 class="section-title"><span class="purple">同一个订单</span>，<br>7 个状态<br>7 张 UI。</h2>
+      </div>
+      <p class="section-sub">鼠标在<strong>状态时间轴</strong>上滑动 → 同一个订单详情页随状态<strong>整体重画</strong>。不止字段变——按钮、文案、强调色、空态全变。</p>
+    </div>
+    <div class="timeline-stage">
+      <div class="timeline-head">
+        <h4>订单 #SO-2026-00428 · 张明的咖啡机</h4>
+        <div class="meta">点节点切换 · 已看 <strong id="tlVisited">0</strong> / 7 个状态</div>
+      </div>
+      <div class="timeline-track">
+        <svg class="timeline-svg" viewBox="0 0 1080 130" id="tlSvg" preserveAspectRatio="xMidYMid meet">
+          <line class="tl-edge tl-edge-line" x1="80" y1="55" x2="240" y2="55" data-from="draft" data-to="submitted"/>
+          <line class="tl-edge tl-edge-line" x1="240" y1="55" x2="400" y2="55" data-from="submitted" data-to="paid"/>
+          <line class="tl-edge tl-edge-line" x1="400" y1="55" x2="560" y2="55" data-from="paid" data-to="shipped"/>
+          <line class="tl-edge tl-edge-line" x1="560" y1="55" x2="720" y2="55" data-from="shipped" data-to="delivered"/>
+          <line class="tl-edge tl-edge-line" x1="720" y1="55" x2="880" y2="55" data-from="delivered" data-to="completed"/>
+          <path class="tl-edge branch" d="M 720 55 Q 800 55 880 110" data-from="delivered" data-to="returned"/>
+          <g class="tl-node" data-state="draft" transform="translate(80,55)"><circle r="14" fill="white" stroke="var(--line)" stroke-width="2"/><text class="idx" text-anchor="middle" dy="3">1</text><text class="lbl" text-anchor="middle" y="38">draft</text><text class="lbl" text-anchor="middle" y="52" style="font-size:9px;fill:var(--ink-mute)">草稿</text></g>
+          <g class="tl-node" data-state="submitted" transform="translate(240,55)"><circle r="14" fill="white" stroke="var(--line)" stroke-width="2"/><text class="idx" text-anchor="middle" dy="3">2</text><text class="lbl" text-anchor="middle" y="38">submitted</text><text class="lbl" text-anchor="middle" y="52" style="font-size:9px;fill:var(--ink-mute)">待付款</text></g>
+          <g class="tl-node" data-state="paid" transform="translate(400,55)"><circle r="14" fill="white" stroke="var(--line)" stroke-width="2"/><text class="idx" text-anchor="middle" dy="3">3</text><text class="lbl" text-anchor="middle" y="38">paid</text><text class="lbl" text-anchor="middle" y="52" style="font-size:9px;fill:var(--ink-mute)">已付款</text></g>
+          <g class="tl-node" data-state="shipped" transform="translate(560,55)"><circle r="14" fill="white" stroke="var(--line)" stroke-width="2"/><text class="idx" text-anchor="middle" dy="3">4</text><text class="lbl" text-anchor="middle" y="38">shipped</text><text class="lbl" text-anchor="middle" y="52" style="font-size:9px;fill:var(--ink-mute)">已发货</text></g>
+          <g class="tl-node" data-state="delivered" transform="translate(720,55)"><circle r="14" fill="white" stroke="var(--line)" stroke-width="2"/><text class="idx" text-anchor="middle" dy="3">5</text><text class="lbl" text-anchor="middle" y="38">delivered</text><text class="lbl" text-anchor="middle" y="52" style="font-size:9px;fill:var(--ink-mute)">已收货</text></g>
+          <g class="tl-node" data-state="completed" transform="translate(880,55)"><circle r="14" fill="white" stroke="var(--line)" stroke-width="2"/><text class="idx" text-anchor="middle" dy="3">6</text><text class="lbl" text-anchor="middle" y="38">completed</text><text class="lbl" text-anchor="middle" y="52" style="font-size:9px;fill:var(--ink-mute)">已完成</text></g>
+          <g class="tl-node" data-state="returned" transform="translate(880,110)"><circle r="14" fill="white" stroke="var(--accent)" stroke-width="2"/><text class="idx" text-anchor="middle" dy="3" style="fill:var(--accent)">7</text><text class="lbl" text-anchor="middle" y="-22" style="font-size:9px;fill:var(--accent)">退货分支</text><text class="lbl" text-anchor="middle" y="-8" style="fill:var(--accent)">returned</text></g>
+        </svg>
+      </div>
+      <div class="order-mock" id="orderMock">
+        <div class="order-mock-head">
+          <div><div class="order-mock-id">#SO-2026-00428</div><h3 class="order-mock-title">手冲咖啡机 · 1 件</h3></div>
+          <span class="order-mock-state-pill" id="omPill"><span class="dot-s"></span><span id="omPillText">DRAFT</span></span>
+        </div>
+        <div id="omBannerSlot"></div>
+        <div class="order-mock-body">
+          <div class="order-mock-fields" id="omFields"></div>
+          <div class="order-mock-actions" id="omActions"></div>
+        </div>
+        <div class="om-meta" id="omMeta"></div>
+      </div>
+    </div>
+    <div class="reveal-bar">
+      <div class="msg">7 张设计稿——不是 7 个详情页变体，<span class="em">是 1 个状态机驱动的 7 种渲染</span>。<br>UI 不是画出来的，是从状态推导出来的。</div>
+      <div class="counter">已访问 <strong id="tlCounter">0</strong> / 7 个状态</div>
+    </div>
+  </div>
+</section>
+
+<!-- Section 03: 幕二 · 拆开 -->
+<section id="break">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <span class="act-tag break">幕二 · 拆开</span>
+        <div class="section-num"><strong>03</strong> / 拆开</div>
+        <h2 class="section-title">状态机的<br><span class="purple">3 件事</span>。</h2>
+      </div>
+      <p class="section-sub"><strong>节点</strong>（状态）+ <strong>边</strong>（迁移）+ <strong>守卫</strong>（条件）—— 画完这 3 件，状态机就完整。点图里的节点和边看属性。</p>
+    </div>
+    <div class="sm-stage">
+      <div class="sm-canvas">
+        <p class="sm-canvas-hint">点 <strong>节点</strong> 看该状态的 UI 摘要 · 点 <strong>边</strong> 看迁移属性（触发方 / 条件 / 副作用 / 反方向）。</p>
+        <svg class="sm-svg" viewBox="0 0 600 460" id="smSvg" preserveAspectRatio="xMidYMid meet">
+          <defs>
+            <marker id="arrow1" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><polygon points="0 0, 8 4, 0 8" fill="var(--ink-mute)"/></marker>
+            <marker id="arrow2" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><polygon points="0 0, 8 4, 0 8" fill="var(--accent)"/></marker>
+            <marker id="arrow3" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><polygon points="0 0, 8 4, 0 8" fill="var(--blue)"/></marker>
+          </defs>
+          <g class="sm-edge-group" data-edge="submit"><path class="sm-edge-hit" d="M 160 80 L 235 80"/><path class="sm-edge" d="M 160 80 L 235 80" marker-end="url(#arrow1)"/><text class="sm-edge-label" x="197" y="73" text-anchor="middle">提交</text></g>
+          <g class="sm-edge-group" data-edge="pay"><path class="sm-edge-hit" d="M 300 105 L 300 165"/><path class="sm-edge" d="M 300 105 L 300 165" marker-end="url(#arrow1)"/><text class="sm-edge-label" x="312" y="138">支付</text></g>
+          <g class="sm-edge-group" data-edge="cancel-sub"><path class="sm-edge-hit" d="M 250 70 Q 175 30 100 70"/><path class="sm-edge branch" d="M 250 70 Q 175 25 110 65" marker-end="url(#arrow2)"/><text class="sm-edge-label" x="180" y="22" text-anchor="middle" style="fill:var(--accent)">取消</text></g>
+          <g class="sm-edge-group" data-edge="timeout"><path class="sm-edge-hit" d="M 360 90 L 460 145"/><path class="sm-edge auto" d="M 360 90 L 460 145" marker-end="url(#arrow3)"/><text class="sm-edge-label" x="395" y="105" style="fill:var(--blue)">超时 · 自动</text></g>
+          <g class="sm-edge-group" data-edge="ship"><path class="sm-edge-hit" d="M 270 200 L 140 240"/><path class="sm-edge" d="M 270 200 L 145 232" marker-end="url(#arrow1)"/><text class="sm-edge-label" x="200" y="210" text-anchor="middle">发货</text></g>
+          <g class="sm-edge-group" data-edge="deliver"><path class="sm-edge-hit" d="M 100 265 L 100 330"/><path class="sm-edge" d="M 100 265 L 100 330" marker-end="url(#arrow1)"/><text class="sm-edge-label" x="112" y="302">确认收货</text></g>
+          <g class="sm-edge-group" data-edge="complete"><path class="sm-edge-hit" d="M 165 350 L 300 350"/><path class="sm-edge auto" d="M 165 350 L 295 350" marker-end="url(#arrow3)"/><text class="sm-edge-label" x="232" y="343" text-anchor="middle" style="fill:var(--blue)">7 天 · 自动</text></g>
+          <g class="sm-edge-group" data-edge="refund"><path class="sm-edge-hit" d="M 360 215 L 470 175"/><path class="sm-edge branch" d="M 360 200 L 460 170" marker-end="url(#arrow2)"/><text class="sm-edge-label" x="425" y="200" text-anchor="middle" style="fill:var(--accent)">申请退款</text></g>
+          <g class="sm-edge-group" data-edge="return"><path class="sm-edge-hit" d="M 165 360 Q 330 415 460 380"/><path class="sm-edge branch" d="M 165 360 Q 330 425 460 380" marker-end="url(#arrow2)"/><text class="sm-edge-label" x="310" y="425" text-anchor="middle" style="fill:var(--accent)">7 天内退货</text></g>
+          <g class="sm-node" data-node="draft" transform="translate(40,55)"><rect width="120" height="48"/><text class="name" x="60" y="25" text-anchor="middle">draft</text><text class="sub" x="60" y="40" text-anchor="middle">草稿</text></g>
+          <g class="sm-node" data-node="submitted" transform="translate(240,55)"><rect width="120" height="48"/><text class="name" x="60" y="25" text-anchor="middle">submitted</text><text class="sub" x="60" y="40" text-anchor="middle">待付款</text></g>
+          <g class="sm-node" data-node="paid" transform="translate(240,170)"><rect width="120" height="48"/><text class="name" x="60" y="25" text-anchor="middle">paid</text><text class="sub" x="60" y="40" text-anchor="middle">已付款</text></g>
+          <g class="sm-node" data-node="cancelled" transform="translate(460,145)"><rect width="120" height="48" style="stroke:var(--accent)"/><text class="name" x="60" y="25" text-anchor="middle" style="fill:var(--accent)">cancelled</text><text class="sub" x="60" y="40" text-anchor="middle">已关闭</text></g>
+          <g class="sm-node" data-node="shipped" transform="translate(40,235)"><rect width="120" height="48"/><text class="name" x="60" y="25" text-anchor="middle">shipped</text><text class="sub" x="60" y="40" text-anchor="middle">已发货</text></g>
+          <g class="sm-node" data-node="delivered" transform="translate(40,335)"><rect width="120" height="48"/><text class="name" x="60" y="25" text-anchor="middle">delivered</text><text class="sub" x="60" y="40" text-anchor="middle">已收货</text></g>
+          <g class="sm-node" data-node="completed" transform="translate(300,335)"><rect width="120" height="48"/><text class="name" x="60" y="25" text-anchor="middle">completed</text><text class="sub" x="60" y="40" text-anchor="middle">已完成</text></g>
+          <g class="sm-node" data-node="returned" transform="translate(460,355)"><rect width="120" height="48" style="stroke:var(--accent)"/><text class="name" x="60" y="25" text-anchor="middle" style="fill:var(--accent)">returned</text><text class="sub" x="60" y="40" text-anchor="middle">已退货</text></g>
+        </svg>
+      </div>
+      <div class="sm-inspect" id="smInspect">
+        <div class="sm-inspect-empty">点节点或边查看属性<br><br>状态有 UI 形态<br>迁移有触发条件</div>
+      </div>
+    </div>
+    <div class="mistake-grid">
+      <div class="mistake-card">
+        <div class="mt-num">1</div>
+        <h4>状态被遗漏</h4>
+        <p>例：忘了"待付款超时自动关闭"——订单永远卡在 <code>submitted</code>。</p>
+        <p>3 个月后客服收到一堆"为什么还能付款"的工单。</p>
+      </div>
+      <div class="mistake-card">
+        <div class="mt-num">2</div>
+        <h4>边被遗漏</h4>
+        <p>例：忘了"已付款也能退款"——用户点进订单只看到"申请售后"灰色禁用。</p>
+        <p>客服只能手动改数据库。</p>
+      </div>
+      <div class="mistake-card">
+        <div class="mt-num">3</div>
+        <h4>守卫被遗漏</h4>
+        <p>例："标记发货"按钮没检查库存——运营点了就发不出去，最后还得回退状态。</p>
+        <p>状态机最隐蔽的坑，全靠条件兜底。</p>
+      </div>
+    </div>
+    <div class="reveal-bar">
+      <div class="msg">状态机不画清楚，<span class="em">每个 PM / 前端 / 后端理解都不一样</span>——产品就裂了。<br>画清楚 = 大家在看同一张图说话。</div>
+      <div class="counter">点 <strong id="smInspectCount">0</strong> 处 · 看属性</div>
+    </div>
+  </div>
+</section>
+
+<!-- Section 04: 幕三 · 再做 -->
+<section id="make">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <span class="act-tag make">幕三 · 再做</span>
+        <div class="section-num"><strong>04</strong> / 再做</div>
+        <h2 class="section-title">轮到你——<br>给「<span class="em">请假申请</span>」<br>画状态机。</h2>
+      </div>
+      <p class="section-sub">状态池里有 8 个候选，操作池里有 10 个候选—— 其中各有几个<strong>陷阱</strong>。先选状态进画布，再选操作连边。</p>
+    </div>
+    <div class="builder-stage">
+      <div class="builder-head">
+        <h3 class="builder-title">请假申请 · <span class="em">画一张完整状态机</span></h3>
+        <div class="builder-progress">状态 <span class="done" id="bNodeCount">0</span> · 边 <span class="done" id="bEdgeCount">0</span></div>
+      </div>
+      <div class="builder-grid">
+        <div class="builder-pool">
+          <h5>候选池</h5>
+          <p>① 从「状态池」点一个加进画布；② 在画布上点一个状态作为起点；③ 从「操作池」点一个操作，再点终点状态。</p>
+          <div class="builder-pool-section">
+            <h6>状态池 · 8 个</h6>
+            <div class="builder-pool-list" id="bNodePool">
+              <div class="builder-chip" data-kind="node" data-key="drafting">drafting <span class="chip-add">+</span></div>
+              <div class="builder-chip" data-kind="node" data-key="submitted">submitted <span class="chip-add">+</span></div>
+              <div class="builder-chip" data-kind="node" data-key="approved">approved <span class="chip-add">+</span></div>
+              <div class="builder-chip" data-kind="node" data-key="rejected">rejected <span class="chip-add">+</span></div>
+              <div class="builder-chip" data-kind="node" data-key="in_progress">in_progress <span class="chip-add">+</span></div>
+              <div class="builder-chip" data-kind="node" data-key="completed">completed <span class="chip-add">+</span></div>
+              <div class="builder-chip" data-kind="node" data-key="cancelled">cancelled <span class="chip-add">+</span></div>
+              <div class="builder-chip" data-kind="node" data-key="saved">saved <span class="chip-add">+</span></div>
+            </div>
+          </div>
+          <div class="builder-pool-section">
+            <h6>操作池 · 10 个</h6>
+            <div class="builder-pool-list" id="bEdgePool">
+              <div class="builder-chip kind-edge" data-kind="edge" data-key="submit">提交 <span class="chip-add">+</span></div>
+              <div class="builder-chip kind-edge" data-kind="edge" data-key="approve">同意 <span class="chip-add">+</span></div>
+              <div class="builder-chip kind-edge" data-kind="edge" data-key="reject">驳回 <span class="chip-add">+</span></div>
+              <div class="builder-chip kind-edge" data-kind="edge" data-key="withdraw">撤回 <span class="chip-add">+</span></div>
+              <div class="builder-chip kind-edge" data-kind="edge" data-key="resubmit">修改重提 <span class="chip-add">+</span></div>
+              <div class="builder-chip kind-edge" data-kind="edge" data-key="start">假期开始 <span class="chip-add">+</span></div>
+              <div class="builder-chip kind-edge" data-kind="edge" data-key="finish">假期结束 <span class="chip-add">+</span></div>
+              <div class="builder-chip kind-edge" data-kind="edge" data-key="cancel">提前取消 <span class="chip-add">+</span></div>
+              <div class="builder-chip kind-edge" data-kind="edge" data-key="view_history">看历史 <span class="chip-add">+</span></div>
+              <div class="builder-chip kind-edge" data-kind="edge" data-key="reassign">转交 <span class="chip-add">+</span></div>
+            </div>
+          </div>
+        </div>
+        <div class="builder-canvas-wrap">
+          <div class="builder-toolbar">
+            <div class="builder-mode-pill" id="bModePill"><span class="icon">○</span><span id="bModeText">未选中——先从候选池点一个</span></div>
+            <div class="builder-stats"><span>节点 <strong id="bNodeStat">0</strong></span><span>边 <strong id="bEdgeStat">0</strong></span></div>
+          </div>
+          <div class="builder-canvas" id="bCanvas">
+            <div class="builder-canvas-empty" id="bCanvasEmpty">从候选池点一个状态——它会落到这块画布</div>
+            <svg class="builder-svg" id="bSvg" viewBox="0 0 720 360" preserveAspectRatio="xMidYMid meet">
+              <defs><marker id="b-arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><polygon points="0 0, 8 4, 0 8" fill="var(--blue)"/></marker></defs>
+            </svg>
+          </div>
+          <p style="font-size:11px;color:var(--ink-mute);margin:0;line-height:1.5">提示：节点会自动排版。鼠标移到节点 / 边上出现 <span style="color:var(--accent)">×</span> 即可删除（删节点会连同相关边一起清除）。</p>
+        </div>
+      </div>
+      <div class="builder-actions">
+        <button class="builder-btn primary" id="bSubmit">提交打分</button>
+        <button class="builder-btn" id="bReset">清空画布</button>
+      </div>
+      <div class="builder-judge" id="bJudge"></div>
+    </div>
+  </div>
+</section>
+
+<!-- Section 05: closing -->
+<section id="closing">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>05</strong> / 把这件事变成习惯</div>
+        <h2 class="section-title">拿到新需求，<br>先<span class="em">画状态机</span>。</h2>
+      </div>
+      <p class="section-sub">从这一篇开始，"对象有什么字段"会让位给"对象的一生经过哪些合法状态"。 UI 是从图里推导出来的——不是设计师拍脑袋画的。</p>
+    </div>
+    <div class="tips-grid">
+      <div class="tip">
+        <div class="tip-num">i</div>
+        <h4>每个对象画一张状态机</h4>
+        <p>状态机是对象的"时间轴 schema"。不画 = 不知道哪个时刻显示什么。</p>
+        <p><strong>主对象先画，子对象（评论 / 附件 / 任务）也各画各的。</strong></p>
+      </div>
+      <div class="tip">
+        <div class="tip-num">ii</div>
+        <h4>没有"草稿"和"保存"</h4>
+        <p>"保存"是<strong>动作</strong>，对应 <code>drafting</code> 状态；"草稿"是状态，不是动作。</p>
+        <p><strong>区分动词（迁移）和名词（状态）</strong>——一字之差，状态机就清楚了。</p>
+      </div>
+      <div class="tip">
+        <div class="tip-num">iii</div>
+        <h4>守卫 = 隐形 UI 约束</h4>
+        <p>某条迁移有条件——意味着相关 UI 按钮要带<strong>禁用态 + 解释文案</strong>。</p>
+        <p>守卫不画 = 用户按了按钮然后被拒绝 = 客服工单。</p>
+      </div>
+    </div>
+    <div class="tip-outro">
+      <div class="outro-tag">划重点 · TL;DR</div>
+      <div>
+        <p>拿到新需求第一件事：<strong>写出主对象的状态名 + 状态之间的合法迁移</strong>。其余都从这张图派生——UI 形态、按钮可见性、权限规则、自动化时机。</p>
+        <p>下次需求评审，试一次——<strong>第一句不是"我打算这么画"，而是"这个对象有几个状态，每两个状态之间是怎么跳的"</strong>。会议的语言就变了。</p>
+      </div>
+    </div>
+    <a href="x9-data-sources.html" class="next-post">
+      <div>
+        <div class="np-tag">下一站 · NEXT · X9 · 高阶 · 规划中</div>
+        <h4>数据从哪来：<span class="em">本地 / 接口 / 服务端 / 第三方</span></h4>
+        <p>状态机讲完 → 状态变化要靠"数据"落地。下一站讲：每个字段的数据从哪来、谁是 truth owner、什么时候可以 stale、什么时候必须实时。</p>
+      </div>
+      <span class="np-cta">继续 <span class="arr">→</span></span>
+    </a>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div class="byline-group">
+      <div class="byline">
+        <img class="avatar" src="author.jpg" alt="范米花儿">
+        <div class="byline-meta">
+          <div class="byline-label"><span class="dot"></span>作者 · WRITTEN BY</div>
+          <div class="byline-name">嗨，我是 <span class="em">范米花儿</span></div>
+          <p class="byline-tag">设计工程师 ——<br>设计 × 代码，两边都做。</p>
+        </div>
+      </div>
+</div>
+    <div class="footer-meta">做于 <span class="mono">2026</span> · 用 <span class="heart">●</span> 写给 <span class="mono">DESIGNERS &amp; DEVELOPERS</span></div>
+  </div>
+</footer>
+
+<div class="picker-label" id="pickerLabel"></div>
+
+<script>
+// ===== Game 1: state timeline -> order detail mock =====
+(function(){
+  const STATES = {
+    draft: { pill:'DRAFT · 草稿', pillClass:'draft',
+      banner:{kind:'info', html:'编辑模式 · 你正在创建订单，确认无误后提交'},
+      fields:[{k:'商品',v:'手冲咖啡机',c:'editable'},{k:'数量',v:'1 件',c:'editable'},{k:'收货地址',v:'——',c:'editable'},{k:'价格',v:'¥ 1,280',c:'locked'},{k:'应付',v:'¥ 1,280',c:'locked'}],
+      actions:[{l:'提交订单',k:'primary'},{l:'保存草稿',k:''},{l:'丢弃',k:'danger'}],
+      meta:'可编辑所有字段 · 提交前不会扣款 · 草稿 14 天后自动清理' },
+    submitted: { pill:'SUBMITTED · 待付款', pillClass:'submitted',
+      banner:{kind:'warn', html:'待付款 · 剩余 <strong>14:52</strong>——超时订单自动关闭'},
+      fields:[{k:'商品',v:'手冲咖啡机',c:'locked'},{k:'数量',v:'1 件',c:'locked'},{k:'收货地址',v:'杭州 · 西湖区 · 文一西路 100 号',c:'locked'},{k:'订单号',v:'SO-2026-00428',c:'locked'},{k:'应付',v:'¥ 1,280',c:'locked'}],
+      actions:[{l:'去支付',k:'primary'},{l:'取消订单',k:'danger'}],
+      meta:'字段已锁定 · 不可编辑 · 15 分钟内未支付自动转为 cancelled' },
+    paid: { pill:'PAID · 已付款', pillClass:'paid',
+      banner:{kind:'purple', html:'✓ 已付款 · ¥ 1,280 · 等待商家发货'},
+      fields:[{k:'商品',v:'手冲咖啡机',c:'locked'},{k:'收货地址',v:'杭州 · 西湖区 · 文一西路 100 号',c:'locked'},{k:'支付方式',v:'支付宝 · 尾号 5821',c:'locked'},{k:'支付时间',v:'03-12 14:08',c:'locked'},{k:'订单号',v:'SO-2026-00428',c:'locked'}],
+      actions:[{l:'申请退款',k:'danger'},{l:'联系商家',k:''},{l:'【运营】标记发货',k:'staff'}],
+      meta:'用户可申请退款 · 运营可改"标记发货"· 库存已锁定' },
+    shipped: { pill:'SHIPPED · 已发货', pillClass:'shipped',
+      banner:{kind:'info', html:'物流单 <strong>SF-1023-4456</strong> · 预计 03-15 送达'},
+      fields:[{k:'商品',v:'手冲咖啡机',c:'locked'},{k:'物流公司',v:'顺丰速运',c:'tracking'},{k:'物流单号',v:'SF1023445612',c:'tracking'},{k:'当前位置',v:'杭州转运中心 · 派送中',c:'tracking'},{k:'收货地址',v:'杭州 · 西湖区 · 文一西路 100 号',c:'locked'}],
+      actions:[{l:'确认收货',k:'primary'},{l:'查看物流',k:''},{l:'申请退款',k:'muted'}],
+      meta:'物流信息展开 · 退款入口禁用 · 需先确认收货或申请退货' },
+    delivered: { pill:'DELIVERED · 已签收', pillClass:'delivered',
+      banner:{kind:'success', html:'✓ 你已签收 · 03-15 11:23 · 还可在 7 天内申请退货'},
+      fields:[{k:'商品',v:'手冲咖啡机',c:'locked'},{k:'签收时间',v:'03-15 11:23',c:'locked'},{k:'物流单号',v:'SF1023445612',c:'locked'},{k:'收货地址',v:'杭州 · 西湖区 · 文一西路 100 号',c:'locked'}],
+      actions:[{l:'评价',k:'primary'},{l:'申请退货',k:'danger'},{l:'再来一单',k:''}],
+      meta:'评价入口出现 · 7 天后自动 completed · 评价完即视为完成' },
+    completed: { pill:'COMPLETED · 已完成', pillClass:'completed',
+      banner:{kind:'success', html:'订单已完成 · 03-22 已超过 7 天 · 售后期已结束'},
+      fields:[{k:'商品',v:'手冲咖啡机',c:'locked'},{k:'完成时间',v:'03-22 11:23',c:'locked'},{k:'评分',v:'★★★★★',c:'locked'},{k:'订单号',v:'SO-2026-00428',c:'locked'}],
+      actions:[{l:'查看评价',k:''},{l:'联系客服',k:''},{l:'再来一单',k:'primary'}],
+      meta:'纯展示态 · 售后入口仅保留客服 · 数据进入归档' },
+    returned: { pill:'RETURNED · 退货中', pillClass:'returned',
+      banner:{kind:'danger', html:'退货申请已提交 · 退货单号 <strong>RT-2026-0117</strong>'},
+      fields:[{k:'商品',v:'手冲咖啡机',c:'locked'},{k:'退货原因',v:'与描述不符',c:'locked'},{k:'退款金额',v:'¥ 1,280',c:'locked'},{k:'退货地址',v:'杭州转运中心',c:'locked'},{k:'状态',v:'待商家收货确认',c:'locked'}],
+      actions:[{l:'上传退货物流',k:'primary'},{l:'撤销退货',k:'danger'},{l:'联系客服',k:''}],
+      meta:'退货流程独立子状态机 · 退款会触发库存归还和资金回退' }
+  };
+  const visited = new Set();
+  const tlNodes = document.querySelectorAll('.tl-node');
+  const tlEdges = document.querySelectorAll('.tl-edge');
+  const visitedEl = document.getElementById('tlVisited');
+  const counterEl = document.getElementById('tlCounter');
+  const omPill = document.getElementById('omPill');
+  const omPillText = document.getElementById('omPillText');
+  const omFields = document.getElementById('omFields');
+  const omActions = document.getElementById('omActions');
+  const omBannerSlot = document.getElementById('omBannerSlot');
+  const omMeta = document.getElementById('omMeta');
+
+  function render(key){
+    const s = STATES[key]; if (!s) return;
+    omPill.className = 'order-mock-state-pill ' + s.pillClass;
+    omPillText.textContent = s.pill;
+    omBannerSlot.innerHTML = s.banner ? `<div class="om-banner ${s.banner.kind}">${s.banner.html}</div>` : '';
+    omFields.innerHTML = s.fields.map(f => `<div class="om-row"><span class="om-k">${f.k}</span><span class="om-v ${f.c}">${f.v}</span></div>`).join('');
+    omActions.innerHTML = s.actions.map(a => `<button class="om-action ${a.k}">${a.l}</button>`).join('');
+    omMeta.textContent = s.meta;
+  }
+  function highlight(key){
+    tlNodes.forEach(n => n.classList.toggle('is-active', n.dataset.state === key));
+    const order = ['draft','submitted','paid','shipped','delivered','completed'];
+    const idx = order.indexOf(key);
+    tlEdges.forEach(e => {
+      const f = e.dataset.from, t = e.dataset.to;
+      const fi = order.indexOf(f), ti = order.indexOf(t);
+      let active = false;
+      if (idx >= 0 && fi >= 0 && ti >= 0 && ti <= idx) active = true;
+      if (key === 'returned' && f === 'delivered' && t === 'returned') active = true;
+      e.classList.toggle('is-active', active);
+    });
+  }
+  function activate(key){
+    if (!visited.has(key)) { visited.add(key); visitedEl.textContent = visited.size; counterEl.textContent = visited.size; }
+    highlight(key); render(key);
+  }
+  tlNodes.forEach(n => {
+    n.addEventListener('click', () => activate(n.dataset.state));
+    n.addEventListener('mouseenter', () => activate(n.dataset.state));
+  });
+  activate('draft');
+})();
+
+// ===== Game 2: state machine inspector =====
+(function(){
+  const NODES = {
+    draft: { title:'草稿 · DRAFT', mono:'state · 入口', attrs:[
+      {k:'谁能看到',v:'只有创建者'},{k:'可编辑字段',v:'全部 — 商品、数量、地址、备注'},
+      {k:'可见操作',v:'提交 / 保存草稿 / 丢弃'},{k:'空态文案',v:'"还没填完？没关系，14 天内随时回来"'},
+      {k:'出边',v:'→ submitted（提交）· → cancelled（丢弃）'}] },
+    submitted: { title:'待付款 · SUBMITTED', mono:'state · 等待用户', attrs:[
+      {k:'可编辑字段',v:'无 — 字段已锁定'},{k:'可见操作',v:'去支付 / 取消订单'},
+      {k:'强调色',v:'蓝色 · 提醒尚未完成'},{k:'倒计时',v:'15 分钟内未支付自动 cancelled'},
+      {k:'出边',v:'→ paid（支付）· → cancelled（手动 / 超时）'}] },
+    paid: { title:'已付款 · PAID', mono:'state · 等待商家', attrs:[
+      {k:'可编辑字段',v:'无'},{k:'可见操作',v:'申请退款 / 联系商家 / 【运营】标记发货'},
+      {k:'副作用',v:'库存已锁定 · 资金到达平台担保账户'},
+      {k:'出边',v:'→ shipped（运营标记发货）· → cancelled（退款 / 缺货）'}] },
+    shipped: { title:'已发货 · SHIPPED', mono:'state · 等待物流', attrs:[
+      {k:'UI 新增',v:'物流卡片 — 公司 / 单号 / 当前位置'},{k:'可见操作',v:'确认收货 / 查看物流'},
+      {k:'已禁用',v:'申请退款（已无法逆向，只能走退货分支）'},
+      {k:'出边',v:'→ delivered（确认收货）'}] },
+    delivered: { title:'已签收 · DELIVERED', mono:'state · 售后窗口', attrs:[
+      {k:'UI 新增',v:'评价入口'},{k:'可见操作',v:'评价 / 申请退货 / 再来一单'},
+      {k:'倒计时',v:'7 天 — 内无操作自动 completed'},
+      {k:'出边',v:'→ completed（自动 / 评价完）· → returned（退货）'}] },
+    completed: { title:'已完成 · COMPLETED', mono:'state · 终态', attrs:[
+      {k:'可见操作',v:'查看评价 / 联系客服 / 再来一单'},{k:'UI 形态',v:'纯展示 + 售后入口（仅客服）'},
+      {k:'副作用',v:'数据进入归档 · 不再出现在"进行中"列表'},
+      {k:'出边',v:'终态 — 无'}] },
+    cancelled: { title:'已关闭 · CANCELLED', mono:'state · 终态 / 分支', attrs:[
+      {k:'触发来源',v:'用户取消 · 超时未付 · 商家拒单 · 退款完成'},
+      {k:'可见操作',v:'再来一单 / 联系客服'},{k:'UI 形态',v:'灰态展示 — 文案"订单已关闭"'},
+      {k:'副作用',v:'库存归还 · 资金退回'},{k:'出边',v:'终态 — 无（不可逆）'}] },
+    returned: { title:'退货中 · RETURNED', mono:'state · 子状态机入口', attrs:[
+      {k:'可见操作',v:'上传退货物流 / 撤销退货 / 联系客服'},
+      {k:'UI 形态',v:'退货流程页 — 商品 / 原因 / 退款金额 / 退货地址'},
+      {k:'副作用',v:'资金冻结 · 进入退货子状态机'},
+      {k:'出边',v:'→ cancelled（退款到账）· → completed（撤销退货）'}] }
+  };
+  const EDGES = {
+    submit: { title:'提交 · submit', type:'edge', from:'draft', to:'submitted', attrs:[
+      {k:'触发方',v:'用户'},{k:'条件 · 守卫',v:'商品 / 地址 / 数量都已填'},
+      {k:'副作用',v:'生成订单号 · 锁定价格 · 启动 15 分钟倒计时'},
+      {k:'反方向是否可逆',v:'可（在 submitted 内可撤回到 draft，未实现）',kind:'pos'}] },
+    pay: { title:'支付 · pay', type:'edge', from:'submitted', to:'paid', attrs:[
+      {k:'触发方',v:'用户'},{k:'条件 · 守卫',v:'支付通道返回成功 · 金额一致 · 订单未超时'},
+      {k:'副作用',v:'资金到担保账户 · 库存锁定 · 推送商家发货提醒'},
+      {k:'反方向是否可逆',v:'不可逆 — 需走退款 / 退货分支',kind:'neg'}] },
+    'cancel-sub': { title:'取消 · cancel', type:'branch', from:'submitted', to:'cancelled', attrs:[
+      {k:'触发方',v:'用户主动 · 系统自动（超时）'},{k:'条件 · 守卫',v:'尚未支付'},
+      {k:'副作用',v:'释放库存 · 发取消通知'},
+      {k:'反方向是否可逆',v:'不可逆 — 取消后需重新下单',kind:'neg'}] },
+    timeout: { title:'超时关闭 · timeout', type:'edge', from:'submitted', to:'cancelled', attrs:[
+      {k:'触发方',v:'系统 · 自动（cron）'},{k:'条件 · 守卫',v:'15 分钟内未完成支付'},
+      {k:'副作用',v:'释放库存 · 发短信通知'},
+      {k:'反方向是否可逆',v:'不可逆',kind:'neg'}] },
+    ship: { title:'发货 · ship', type:'edge', from:'paid', to:'shipped', attrs:[
+      {k:'触发方',v:'运营 / 商家'},{k:'条件 · 守卫',v:'付款已完成 · 库存有货 · 已生成物流单'},
+      {k:'副作用',v:'生成物流单 · 推送用户 · 库存正式扣减'},
+      {k:'反方向是否可逆',v:'不可逆 — 已出库不能改回 paid，只能走退货',kind:'neg'}] },
+    deliver: { title:'确认收货 · deliver', type:'edge', from:'shipped', to:'delivered', attrs:[
+      {k:'触发方',v:'用户 · 物流自动（部分场景）'},{k:'条件 · 守卫',v:'物流已显示送达 · 用户点击确认'},
+      {k:'副作用',v:'启动 7 天售后倒计时 · 资金解冻给商家'},
+      {k:'反方向是否可逆',v:'可（争议期内 → returned）',kind:'pos'}] },
+    complete: { title:'自动完成 · complete', type:'edge', from:'delivered', to:'completed', attrs:[
+      {k:'触发方',v:'系统 · 自动（7 天）'},{k:'条件 · 守卫',v:'7 天内无退货 / 评价操作'},
+      {k:'副作用',v:'订单归档 · 资金正式结算'},
+      {k:'反方向是否可逆',v:'不可逆 — 完成态是终态',kind:'neg'}] },
+    refund: { title:'申请退款 · refund', type:'branch', from:'paid', to:'cancelled', attrs:[
+      {k:'触发方',v:'用户主动 · 商家拒单'},{k:'条件 · 守卫',v:'商品未发货（已发货走退货）'},
+      {k:'副作用',v:'资金原路退回 · 释放库存'},
+      {k:'反方向是否可逆',v:'不可逆',kind:'neg'}] },
+    return: { title:'7 天内退货 · return', type:'branch', from:'delivered', to:'returned', attrs:[
+      {k:'触发方',v:'用户'},{k:'条件 · 守卫',v:'签收后 ≤ 7 天 · 商品未拆封 / 符合退货规则'},
+      {k:'副作用',v:'资金冻结 · 进入退货子状态机'},
+      {k:'反方向是否可逆',v:'可（撤销退货 → completed）',kind:'pos'}] }
+  };
+  const inspectEl = document.getElementById('smInspect');
+  const countEl = document.getElementById('smInspectCount');
+  const inspected = new Set();
+  function paint(html, key){
+    inspectEl.innerHTML = html;
+    if (key && !inspected.has(key)) { inspected.add(key); countEl.textContent = inspected.size; }
+  }
+  function renderNode(key){
+    const n = NODES[key]; if (!n) return;
+    const attrs = n.attrs.map(a => `<div class="sm-attr"><span class="k">${a.k}</span><span class="v ${a.kind||''}">${a.v}</span></div>`).join('');
+    paint(`<span class="sm-inspect-type node">node · 状态</span><h3 class="sm-inspect-title">${n.title}</h3><p class="sm-inspect-mono">${n.mono}</p>${attrs}`, 'n:'+key);
+  }
+  function renderEdge(key){
+    const e = EDGES[key]; if (!e) return;
+    const typeCls = e.type === 'branch' ? 'branch' : 'edge';
+    const typeLabel = e.type === 'branch' ? 'branch · 分支边' : 'edge · 迁移';
+    const attrs = e.attrs.map(a => `<div class="sm-attr"><span class="k">${a.k}</span><span class="v ${a.kind||''}">${a.v}</span></div>`).join('');
+    paint(`<span class="sm-inspect-type ${typeCls}">${typeLabel}</span><h3 class="sm-inspect-title">${e.title}</h3><p class="sm-inspect-mono"><span class="from">${e.from}</span><span class="arrow">→</span><span class="to">${e.to}</span></p>${attrs}`, 'e:'+key);
+  }
+  document.querySelectorAll('.sm-node').forEach(n => {
+    n.addEventListener('click', () => {
+      document.querySelectorAll('.sm-node').forEach(x => x.classList.toggle('is-active', x === n));
+      document.querySelectorAll('.sm-edge-group').forEach(g => g.querySelector('.sm-edge').classList.remove('is-active'));
+      renderNode(n.dataset.node);
+    });
+    n.addEventListener('mouseenter', () => n.classList.add('is-hover'));
+    n.addEventListener('mouseleave', () => n.classList.remove('is-hover'));
+  });
+  document.querySelectorAll('.sm-edge-group').forEach(g => {
+    g.addEventListener('click', () => {
+      document.querySelectorAll('.sm-edge-group').forEach(x => x.querySelector('.sm-edge').classList.toggle('is-active', x === g));
+      document.querySelectorAll('.sm-node').forEach(x => x.classList.remove('is-active'));
+      renderEdge(g.dataset.edge);
+    });
+    g.addEventListener('mouseenter', () => g.classList.add('is-hover'));
+    g.addEventListener('mouseleave', () => g.classList.remove('is-hover'));
+  });
+})();
+
+// ===== Game 3: builder =====
+(function(){
+  const NODE_DEFS = {
+    drafting:    { label:'drafting',    correct:true,  why:'员工填表中。是独立状态。' },
+    submitted:   { label:'submitted',   correct:true,  why:'已提交、等审批。明确状态。' },
+    approved:    { label:'approved',    correct:true,  why:'审批通过，等假期开始。' },
+    rejected:    { label:'rejected',    correct:true,  why:'驳回。可重新修改重提。' },
+    in_progress: { label:'in_progress', correct:true,  why:'正在休假中。' },
+    completed:   { label:'completed',   correct:true,  why:'假期结束，终态之一。' },
+    cancelled:   { label:'cancelled',   correct:true,  why:'提前结束。终态之二。' },
+    saved:       { label:'saved',       correct:false, why:'陷阱 · "保存"是动作，对应 drafting 状态，不是独立状态。' }
+  };
+  const EDGE_DEFS = {
+    submit:       { label:'提交',     correct:true,  from:'drafting',    to:'submitted',   why:'drafting → submitted，用户触发。' },
+    approve:      { label:'同意',     correct:true,  from:'submitted',   to:'approved',    why:'submitted → approved，审批人触发。' },
+    reject:       { label:'驳回',     correct:true,  from:'submitted',   to:'rejected',    why:'submitted → rejected，审批人触发。' },
+    withdraw:     { label:'撤回',     correct:true,  from:'submitted',   to:'drafting',    why:'submitted → drafting，用户在审批前撤回。' },
+    resubmit:     { label:'修改重提', correct:true,  from:'rejected',    to:'submitted',   why:'rejected → submitted，被驳回后改完再交。' },
+    start:        { label:'假期开始', correct:true,  from:'approved',    to:'in_progress', why:'approved → in_progress，系统自动（到日期）。' },
+    finish:       { label:'假期结束', correct:true,  from:'in_progress', to:'completed',   why:'in_progress → completed，系统自动。' },
+    cancel:       { label:'提前取消', correct:true,  from:'approved',    to:'cancelled',   why:'approved → cancelled，用户主动。' },
+    view_history: { label:'看历史',   correct:false, why:'陷阱 · "查看"不改状态——是读操作，不是迁移。' },
+    reassign:     { label:'转交',     correct:false, why:'陷阱 · "转交审批人"改的是字段，不是状态——审批状态没变。' }
+  };
+  const REQUIRED_NODES = ['drafting','submitted','approved','rejected','in_progress','completed','cancelled'];
+  const REQUIRED_EDGES = ['submit','approve','reject','withdraw','resubmit','start','finish','cancel'];
+
+  const nodes = [], edges = [];
+  let pickedKind = null, pickedKey = null, edgeStart = null;
+  let nodeIdSeq = 1, edgeIdSeq = 1;
+
+  const svg = document.getElementById('bSvg');
+  const canvasEmpty = document.getElementById('bCanvasEmpty');
+  const pickerLabel = document.getElementById('pickerLabel');
+  const modePill = document.getElementById('bModePill');
+  const modeText = document.getElementById('bModeText');
+  const judgeEl = document.getElementById('bJudge');
+
+  function reflowNodes(){
+    nodes.forEach((n, idx) => {
+      const cols = 4, cellW = 720 / cols, cellH = 110;
+      const col = idx % cols, row = Math.floor(idx / cols);
+      n.x = col * cellW + cellW / 2;
+      n.y = row * cellH + 60;
+    });
+  }
+  function getNode(id){ return nodes.find(n => n.id === id); }
+  function render(){
+    Array.from(svg.querySelectorAll('g.b-node, g.b-edge-group')).forEach(el => el.remove());
+    edges.forEach(e => {
+      const from = getNode(e.fromId), to = getNode(e.toId);
+      if (!from || !to) return;
+      const def = EDGE_DEFS[e.key];
+      const dx = to.x - from.x, dy = to.y - from.y;
+      const len = Math.sqrt(dx*dx + dy*dy) || 1;
+      const ux = dx / len, uy = dy / len;
+      const sx = from.x + ux * 50, sy = from.y + uy * 20;
+      const ex = to.x - ux * 50, ey = to.y - uy * 20;
+      const mx = (sx + ex) / 2, my = (sy + ey) / 2;
+      const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+      g.classList.add('b-edge-group');
+      g.dataset.edgeId = e.id;
+      g.innerHTML = `<line class="b-edge is-removable" x1="${sx}" y1="${sy}" x2="${ex}" y2="${ey}" marker-end="url(#b-arrow)"/>
+        <rect class="b-edge-bg" x="${mx-30}" y="${my-9}" width="60" height="16"/>
+        <text class="b-edge-label" x="${mx}" y="${my+3}" text-anchor="middle">${def.label}</text>
+        <circle class="b-node-remove" cx="${mx+32}" cy="${my-2}" r="6" data-remove-edge="${e.id}"/>
+        <text x="${mx+32}" y="${my+1}" text-anchor="middle" fill="white" font-size="9" font-weight="700" style="pointer-events:none">×</text>`;
+      svg.appendChild(g);
+    });
+    nodes.forEach(n => {
+      const def = NODE_DEFS[n.key];
+      const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+      g.classList.add('b-node');
+      if (edgeStart === n.id) g.classList.add('is-source');
+      g.dataset.nodeId = n.id;
+      g.setAttribute('transform', `translate(${n.x - 45},${n.y - 16})`);
+      g.innerHTML = `<rect width="90" height="32"/>
+        <text x="45" y="20" text-anchor="middle">${def.label}</text>
+        <circle class="b-node-remove" cx="84" cy="-4" r="7" data-remove-node="${n.id}"/>
+        <text x="84" y="-1" text-anchor="middle" fill="white" font-size="11" font-weight="700" style="pointer-events:none">×</text>`;
+      svg.appendChild(g);
+    });
+    document.querySelectorAll('#bNodePool .builder-chip').forEach(chip => {
+      chip.classList.toggle('is-used', nodes.some(n => n.key === chip.dataset.key));
+    });
+    document.querySelectorAll('#bEdgePool .builder-chip').forEach(chip => {
+      chip.classList.toggle('is-used', edges.some(e => e.key === chip.dataset.key));
+    });
+    document.getElementById('bNodeCount').textContent = nodes.length;
+    document.getElementById('bEdgeCount').textContent = edges.length;
+    document.getElementById('bNodeStat').textContent = nodes.length;
+    document.getElementById('bEdgeStat').textContent = edges.length;
+    canvasEmpty.classList.toggle('is-hidden', nodes.length > 0 || edges.length > 0);
+    updateModePill();
+  }
+  function updateModePill(){
+    modePill.className = 'builder-mode-pill';
+    if (pickedKind === 'node') {
+      modePill.classList.add('is-active-add');
+      modeText.textContent = `准备落节点: ${NODE_DEFS[pickedKey].label} · 点画布空白处放置`;
+    } else if (pickedKind === 'edge' && !edgeStart) {
+      modePill.classList.add('is-active-edge');
+      modeText.textContent = `准备连边: ${EDGE_DEFS[pickedKey].label} · 先点起点状态`;
+    } else if (pickedKind === 'edge' && edgeStart) {
+      const start = getNode(edgeStart);
+      modePill.classList.add('is-active-edge');
+      modeText.textContent = `起点 ${start ? NODE_DEFS[start.key].label : ''} · 再点终点状态`;
+    } else {
+      modeText.textContent = '未选中——先从候选池点一个';
+    }
+  }
+  function pickChip(kind, key){
+    if (pickedKind === kind && pickedKey === key) { clearPick(); return; }
+    pickedKind = kind; pickedKey = key; edgeStart = null;
+    document.querySelectorAll('.builder-chip').forEach(c => c.classList.remove('is-active'));
+    const chip = document.querySelector(`[data-kind="${kind}"][data-key="${key}"]`);
+    if (chip) chip.classList.add('is-active');
+    pickerLabel.classList.add('show');
+    if (kind === 'node') pickerLabel.innerHTML = `已选状态 <strong>${NODE_DEFS[key].label}</strong>——点画布空白处落点 <span class="esc">Esc</span> 取消`;
+    else pickerLabel.innerHTML = `已选操作 <strong>${EDGE_DEFS[key].label}</strong>——点画布上两个状态（起 → 终）<span class="esc">Esc</span> 取消`;
+    updateModePill();
+  }
+  function clearPick(){
+    pickedKind = null; pickedKey = null; edgeStart = null;
+    document.querySelectorAll('.builder-chip').forEach(c => c.classList.remove('is-active'));
+    pickerLabel.classList.remove('show');
+    document.querySelectorAll('.b-node').forEach(n => n.classList.remove('is-source'));
+    updateModePill();
+  }
+  function placeNode(){
+    if (!pickedKey) return;
+    if (nodes.some(n => n.key === pickedKey)) {
+      pickerLabel.innerHTML = `状态 <strong>${NODE_DEFS[pickedKey].label}</strong> 已在画布上——选别的`;
+      return;
+    }
+    nodes.push({ id: nodeIdSeq++, key: pickedKey });
+    reflowNodes(); clearPick(); render();
+  }
+  function selectAsEdgeStart(node){
+    edgeStart = node.id;
+    document.querySelectorAll('.b-node').forEach(n => n.classList.toggle('is-source', n.dataset.nodeId == node.id));
+    updateModePill();
+  }
+  function selectAsEdgeEnd(node){
+    if (edgeStart === node.id) { pickerLabel.innerHTML = `起点和终点不能是同一个 · 重选`; return; }
+    if (edges.some(e => e.key === pickedKey)) {
+      pickerLabel.innerHTML = `操作 <strong>${EDGE_DEFS[pickedKey].label}</strong> 已存在——选别的`;
+      return;
+    }
+    edges.push({ id: edgeIdSeq++, key: pickedKey, fromId: edgeStart, toId: node.id });
+    clearPick(); render();
+  }
+  function removeNode(id){
+    const idx = nodes.findIndex(n => n.id === id);
+    if (idx < 0) return;
+    nodes.splice(idx, 1);
+    for (let i = edges.length - 1; i >= 0; i--) {
+      if (edges[i].fromId === id || edges[i].toId === id) edges.splice(i, 1);
+    }
+    reflowNodes(); render();
+  }
+  function removeEdge(id){
+    const idx = edges.findIndex(e => e.id === id);
+    if (idx < 0) return;
+    edges.splice(idx, 1); render();
+  }
+  document.querySelectorAll('#bNodePool .builder-chip').forEach(chip => {
+    chip.addEventListener('click', e => {
+      e.stopPropagation();
+      if (nodes.some(n => n.key === chip.dataset.key)) return;
+      pickChip('node', chip.dataset.key);
+    });
+  });
+  document.querySelectorAll('#bEdgePool .builder-chip').forEach(chip => {
+    chip.addEventListener('click', e => {
+      e.stopPropagation();
+      if (edges.some(ed => ed.key === chip.dataset.key)) return;
+      pickChip('edge', chip.dataset.key);
+    });
+  });
+  svg.addEventListener('click', e => {
+    const rmEdge = e.target.closest('[data-remove-edge]');
+    if (rmEdge) { removeEdge(parseInt(rmEdge.getAttribute('data-remove-edge'), 10)); return; }
+    const rmNode = e.target.closest('[data-remove-node]');
+    if (rmNode) { removeNode(parseInt(rmNode.getAttribute('data-remove-node'), 10)); return; }
+    const nodeG = e.target.closest('.b-node');
+    if (nodeG) {
+      const n = getNode(parseInt(nodeG.dataset.nodeId, 10));
+      if (pickedKind === 'edge') {
+        if (!edgeStart) selectAsEdgeStart(n);
+        else selectAsEdgeEnd(n);
+      }
+      return;
+    }
+    if (pickedKind === 'node') placeNode();
+  });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') clearPick(); });
+
+  document.getElementById('bSubmit').addEventListener('click', () => {
+    const placedNodeKeys = new Set(nodes.map(n => n.key));
+    const placedEdgeKeys = new Set(edges.map(e => e.key));
+    const correctNodes = [], wrongNodes = [], missingNodes = [];
+    placedNodeKeys.forEach(k => {
+      const def = NODE_DEFS[k];
+      if (def.correct) correctNodes.push(k); else wrongNodes.push(k);
+    });
+    REQUIRED_NODES.forEach(k => { if (!placedNodeKeys.has(k)) missingNodes.push(k); });
+    const correctEdges = [], wrongEdgeOps = [], wrongDir = [], missingEdges = [];
+    edges.forEach(e => {
+      const def = EDGE_DEFS[e.key];
+      const from = getNode(e.fromId), to = getNode(e.toId);
+      if (!def.correct) { wrongEdgeOps.push(e.key); return; }
+      if (!from || !to) return;
+      if (from.key === def.from && to.key === def.to) correctEdges.push(e.key);
+      else wrongDir.push({ key: e.key, actualFrom: from.key, actualTo: to.key, expectedFrom: def.from, expectedTo: def.to });
+    });
+    REQUIRED_EDGES.forEach(k => { if (!placedEdgeKeys.has(k)) missingEdges.push(k); });
+
+    const totalRequired = REQUIRED_NODES.length + REQUIRED_EDGES.length;
+    const totalCorrect = correctNodes.length + correctEdges.length;
+    const totalWrong = wrongNodes.length + wrongEdgeOps.length + wrongDir.length;
+    const lines = [];
+
+    lines.push(`<h5>状态 · NODES</h5>`);
+    if (correctNodes.length > 0) lines.push(`<ul><li><span class="ok">✓ 命中</span> ${correctNodes.length} / 7：<code>${correctNodes.join(', ')}</code></li></ul>`);
+    if (missingNodes.length > 0) lines.push(`<ul><li><span class="bad">✗ 缺</span>：<code>${missingNodes.join(', ')}</code><br><span class="why">↳ ${missingNodes.map(k => NODE_DEFS[k].why).join(' · ')}</span></li></ul>`);
+    if (wrongNodes.length > 0) lines.push(`<ul>${wrongNodes.map(k => `<li><span class="bad">✗ 陷阱</span>：<code>${k}</code><br><span class="why">↳ ${NODE_DEFS[k].why}</span></li>`).join('')}</ul>`);
+    if (correctNodes.length === 0 && missingNodes.length === REQUIRED_NODES.length) lines.push(`<ul><li>还没放状态——先从「状态池」点一个进画布</li></ul>`);
+
+    lines.push(`<h5>迁移 · EDGES</h5>`);
+    if (correctEdges.length > 0) lines.push(`<ul><li><span class="ok">✓ 命中</span> ${correctEdges.length} / 8：<code>${correctEdges.map(k => EDGE_DEFS[k].label).join(', ')}</code></li></ul>`);
+    if (missingEdges.length > 0) lines.push(`<ul><li><span class="bad">✗ 缺</span>：<code>${missingEdges.map(k => EDGE_DEFS[k].label).join(', ')}</code><br><span class="why">↳ 没有这些边，对象会卡在中间状态走不动。</span></li></ul>`);
+    if (wrongDir.length > 0) {
+      const lis = wrongDir.map(w => {
+        const def = EDGE_DEFS[w.key];
+        return `<li><span class="bad">✗ 方向错</span>：<code>${def.label}</code> 你画的 <code>${w.actualFrom} → ${w.actualTo}</code>，应是 <code>${w.expectedFrom} → ${w.expectedTo}</code><br><span class="why">↳ ${def.why}</span></li>`;
+      }).join('');
+      lines.push(`<ul>${lis}</ul>`);
+    }
+    if (wrongEdgeOps.length > 0) {
+      const lis = wrongEdgeOps.map(k => `<li><span class="bad">✗ 陷阱</span>：<code>${EDGE_DEFS[k].label}</code><br><span class="why">↳ ${EDGE_DEFS[k].why}</span></li>`).join('');
+      lines.push(`<ul>${lis}</ul>`);
+    }
+    if (correctEdges.length === 0 && missingEdges.length === REQUIRED_EDGES.length && wrongDir.length === 0 && wrongEdgeOps.length === 0) {
+      lines.push(`<ul><li>还没连边——先在画布上放状态，再从「操作池」选一个连两个状态</li></ul>`);
+    }
+
+    let verdictClass, verdictLabel, headline;
+    const perfect = correctNodes.length === REQUIRED_NODES.length && correctEdges.length === REQUIRED_EDGES.length && wrongNodes.length === 0 && wrongDir.length === 0 && wrongEdgeOps.length === 0;
+    if (perfect) {
+      verdictClass='win'; verdictLabel='完美'; headline='你已经能把对象的「一生」画出来了——状态机思维上线。';
+    } else if (totalCorrect >= totalRequired - 2 && totalWrong <= 1) {
+      verdictClass='win'; verdictLabel='基本对了'; headline='主干已经成图——差一两条边 / 一个陷阱，离完整只剩一步。';
+    } else if (totalCorrect >= 8) {
+      verdictClass='partial'; verdictLabel='还差一点'; headline='骨架在，但漏了关键迁移——对象会卡住。把缺的边补上。';
+    } else {
+      verdictClass='fail'; verdictLabel='再想想'; headline='状态 / 迁移没分清——"保存"和"看历史"这种是陷阱，不进状态机。';
+    }
+    judgeEl.innerHTML = `<span class="verdict ${verdictClass}">${verdictLabel}</span><span class="judge-score">命中 <strong>${totalCorrect}</strong> / ${totalRequired}</span><h4>${headline}</h4>${lines.join('')}`;
+    judgeEl.classList.add('show');
+    judgeEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  });
+
+  document.getElementById('bReset').addEventListener('click', () => {
+    nodes.length = 0; edges.length = 0;
+    nodeIdSeq = 1; edgeIdSeq = 1;
+    clearPick(); judgeEl.classList.remove('show'); render();
+  });
+
+  render();
+})();
+</script>
+
+</body>
+</html>

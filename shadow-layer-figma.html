@@ -8,8 +8,196 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,300..900&family=Geist:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&family=Noto+Sans+SC:wght@300;400;500;700;900&family=Noto+Serif+SC:wght@400;500;700;900&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style-translation.css">
+<style>
+  /* Minimal hero demo */
+  .hero-demo .demo-shadow-card {
+    background: var(--paper);
+    border: 1px solid var(--line-soft);
+  }
+  .hero-demo .demo-shadow-card.level-1 {
+    box-shadow: 0 1px 2px rgba(22,22,29,.06);
+  }
+  .hero-demo .demo-shadow-card.level-3 {
+    box-shadow: 0 1px 2px rgba(22,22,29,.1), 0 10px 26px rgba(22,22,29,.08);
+  }
+  .hero-demo .demo-shadow-card.bad {
+    box-shadow: 10px 10px 0 rgba(0,0,0,.32);
+    background: var(--paper);
+  }
+
+  /* Minimal lab */
+  .lab {
+    margin-top: 8px;
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    overflow: hidden;
+  }
+  .lab-meta {
+    display: flex;
+    gap: 22px;
+    flex-wrap: wrap;
+    padding: 12px 18px;
+    border-bottom: 1px dashed var(--line);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: .08em;
+    color: var(--ink-mute);
+    text-transform: uppercase;
+  }
+  .lab-meta strong { color: var(--ink); font-weight: 700; text-transform: none; letter-spacing: 0; }
+
+  .lab-body {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 240px;
+    gap: 20px;
+    padding: 20px;
+  }
+  @media (max-width: 880px) { .lab-body { grid-template-columns: 1fr; } }
+
+  .stack-stage {
+    --light-x: 25%;
+    position: relative;
+    min-height: 380px;
+    border: 1px solid var(--line-soft);
+    border-radius: 6px;
+    background: var(--bg);
+    padding: 24px;
+  }
+  .stack-stage[data-bg="dark"] {
+    background: #1a1b22;
+    border-color: #1a1b22;
+  }
+  .stage-label {
+    position: absolute;
+    top: 10px;
+    left: 12px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: .12em;
+    color: var(--ink-mute);
+    text-transform: uppercase;
+  }
+  .stack-stage[data-bg="dark"] .stage-label { color: rgba(255,255,255,.5); }
+
+  .stack-wrap {
+    height: 100%;
+    min-height: 320px;
+    display: flex;
+    flex-direction: column-reverse;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding-top: 24px;
+  }
+  .stack-card {
+    --stack-y: 0px;
+    --stack-shadow: none;
+    width: min(320px, 88%);
+    padding: 10px 14px;
+    background: var(--paper);
+    border: 1px solid var(--line-soft);
+    border-radius: 5px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transform: translateY(var(--stack-y));
+    box-shadow: var(--stack-shadow);
+    transition: transform .24s ease, box-shadow .24s ease;
+  }
+  .stack-stage[data-bg="dark"] .stack-card {
+    background: #2c2d36;
+    color: #f3eee5;
+    border-color: rgba(255,255,255,.06);
+  }
+  .stack-card .lvl {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: .12em;
+    color: var(--ink-mute);
+    text-transform: uppercase;
+  }
+  .stack-card .name {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 15px;
+    font-weight: 700;
+    margin-top: 2px;
+  }
+  .stack-card .z {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10.5px;
+    color: var(--ink-mute);
+  }
+  .stack-stage[data-bg="dark"] .stack-card .lvl,
+  .stack-stage[data-bg="dark"] .stack-card .z { color: rgba(255,255,255,.42); }
+  .stack-card[data-active="true"] { outline: 1px solid var(--accent); outline-offset: 2px; }
+
+  .controls {
+    display: grid;
+    gap: 16px;
+    align-content: start;
+  }
+  .ctrl { display: grid; gap: 6px; }
+  .ctrl-label {
+    display: flex;
+    justify-content: space-between;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10.5px;
+    letter-spacing: .08em;
+    color: var(--ink-mute);
+    text-transform: uppercase;
+  }
+  .ctrl-label output { color: var(--ink); font-weight: 700; letter-spacing: 0; text-transform: none; }
+  input[type="range"] { width: 100%; accent-color: var(--accent); }
+  .seg { display: flex; gap: 6px; flex-wrap: wrap; }
+  .seg button {
+    flex: 1;
+    border: 1px solid var(--line);
+    background: transparent;
+    color: var(--ink-soft);
+    padding: 6px 8px;
+    border-radius: 3px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10.5px;
+    cursor: pointer;
+    transition: color .14s, border-color .14s;
+  }
+  .seg button:hover { color: var(--accent); border-color: var(--accent); }
+  .seg button.active { color: var(--ink); border-color: var(--ink); background: var(--bg); }
+
+  .lab-readout {
+    padding: 14px 20px;
+    border-top: 1px dashed var(--line);
+    font-size: 13.5px;
+    line-height: 1.65;
+    color: var(--ink-soft);
+  }
+  .lab-readout strong { color: var(--ink); }
+
+  .lab-code {
+    margin: 0;
+    padding: 14px 20px;
+    border-top: 1px dashed var(--line);
+    background: var(--code-bg);
+    color: #f5f5f7;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    line-height: 1.6;
+    overflow: auto;
+    white-space: pre;
+  }
+  .lab-code .prop { color: #c4c6ff; }
+  .lab-code .val { color: #9ce0a8; }
+  .lab-code .com { color: #6c7088; font-style: italic; }
+  .lab-code .active {
+    background: rgba(255,207,61,.1);
+    border-left: 2px solid var(--yellow);
+    padding-left: 6px;
+    margin-left: -8px;
+  }
+</style>
 </head>
-<body class="page-shadow">
+<body>
 <div class="topbar">
   <div class="wrap topbar-inner">
     <a class="brand" href="book.html#vol-3"><span class="dot"></span>AI LABBOOK</a>
@@ -25,17 +213,15 @@
     <div class="hero-meta">
       <span class="pill fill">S2 · STYLE TRANSLATION</span>
       <span class="pill">Figma Effects → CSS</span>
-      <span class="pill accent">INTERACTIVE</span>
     </div>
     <div class="hero-grid">
       <div>
         <h1>
           <span class="display-cn">阴影 / 层级</span><br>
-          <span class="display-en">Shadow & Elevation</span>
+          <span class="display-en">Shadow &amp; Elevation</span>
         </h1>
         <p class="lede">
-          设计稿里的 shadow 不只是“一坨黑色模糊”。它在表达表面离背景多远、光从哪来、哪个面板应该压在上面。
-          翻成 CSS 时，最重要的是把“视觉层级”翻译成可复用的 shadow token。
+          设计稿里的 shadow 不只是"一坨黑色模糊"。它在表达表面离背景多远、光从哪来、哪个面板压在上面。翻成 CSS 时，最重要的事是把"视觉层级"翻译成可复用的 shadow token，而不是逐个 surface 手调一组数字。
         </p>
       </div>
       <div class="hero-side">
@@ -47,20 +233,20 @@
     </div>
 
     <div class="hero-demo" aria-label="三种阴影效果预览">
-      <div class="mini-card shadow-low">
-        <div class="tag">level 01</div>
+      <div class="mini-card demo-shadow-card level-1">
+        <div class="tag">level 01 · card</div>
         <h3>贴近背景</h3>
-        <p>轻边框 + 极浅阴影，适合普通卡片和列表项。</p>
+        <p>轻边框 + 极浅阴影，给普通卡片和列表项。</p>
       </div>
-      <div class="mini-card shadow-layered">
-        <div class="tag">level 03</div>
+      <div class="mini-card demo-shadow-card level-3">
+        <div class="tag">level 03 · popover</div>
         <h3>抬起来</h3>
-        <p>两层阴影表达高度：贴边层负责接触感，扩散层负责空间感。</p>
+        <p>两层阴影：贴边层接触感，扩散层空间感。</p>
       </div>
-      <div class="mini-card shadow-bad">
+      <div class="mini-card demo-shadow-card bad">
         <div class="tag">anti-pattern</div>
         <h3>脏黑块</h3>
-        <p>只把黑色透明度拉高，会让界面显脏，也不一定更有层级。</p>
+        <p>只把黑色加深，界面只是脏，不一定更有层级。</p>
       </div>
     </div>
   </div>
@@ -74,34 +260,36 @@
         <h2 class="section-title">阴影不是装饰，<br>是 <span class="em">空间关系</span>。</h2>
       </div>
       <p class="section-sub">
-        Figma 里你看到的是 x、y、blur、spread、color。前端真正要还原的是：这个 surface 是 flat、raised，还是 overlay。
+        Figma 里你看到的是 x、y、blur、spread、color。前端真正要还原的是：这块 surface 是 flat、raised，还是 overlay。先回答这个，再决定数值。
       </p>
     </div>
 
     <div class="explain-grid">
       <div class="explain-card bad">
         <span class="stamp">WRONG MODEL</span>
-        <h3>把每个阴影都当成独立特效</h3>
-        <p>如果每张卡片都手调一组 shadow，页面很快会出现 12 种“差不多但不一样”的层级。</p>
+        <h3>把每个阴影都当独立特效</h3>
+        <p>每张卡片单独配一组 shadow，页面很快会出现 12 种"差不多但都不一样"的层级。维护时找不到统一口径。</p>
         <code class="code-inline">.card-a { <span class="bad">box-shadow: 0 9px 31px #0003;</span> }
 .card-b { <span class="bad">box-shadow: 2px 14px 40px #0004;</span> }</code>
       </div>
       <div class="explain-card good">
         <span class="stamp">RIGHT MODEL</span>
-        <h3>先定义层级，再套 token</h3>
-        <p>把效果从“这张卡片的影子”升级成“第 3 层表面”。以后组件只选择层级，不重新发明阴影。</p>
+        <h3>先定级别，再套 token</h3>
+        <p>把效果从"这张卡片的影子"升级成"第 3 层表面"。以后组件只选层级，不重新发明阴影。</p>
         <code class="code-inline">:root {
-  <span class="good">--shadow-raised-3:</span> 0 1px 2px #16161d1f,
-    0 12px 32px #16161d24;
+  <span class="good">--shadow-card:</span> 0 1px 2px #16161d14,
+    0 8px 24px #16161d1c;
+  <span class="good">--shadow-popover:</span> 0 1px 2px #16161d1f,
+    0 18px 40px #16161d24;
 }</code>
       </div>
     </div>
 
     <div class="model-strip" aria-label="阴影翻译步骤">
       <div class="model-step"><span class="k">01</span><strong>判断表面</strong><span>flat / raised / overlay，不同表面不该用同一套影子。</span></div>
-      <div class="model-step"><span class="k">02</span><strong>统一光源</strong><span>全站 y 方向和 x 偏移要一致，否则页面会像多盏灯乱照。</span></div>
-      <div class="model-step"><span class="k">03</span><strong>拆成两层</strong><span>ambient 贴边，directional 表达高度，别只靠一个大 blur。</span></div>
-      <div class="model-step"><span class="k">04</span><strong>落成 token</strong><span>组件写 var(--shadow-raised-3)，而不是复制 Figma 数字。</span></div>
+      <div class="model-step"><span class="k">02</span><strong>统一光源</strong><span>全站 y 方向和 x 偏移要一致，否则页面像多盏灯乱照。</span></div>
+      <div class="model-step"><span class="k">03</span><strong>拆成两层</strong><span>ambient 贴边接触，directional 扩散表达高度，别只靠一个大 blur。</span></div>
+      <div class="model-step"><span class="k">04</span><strong>落成 token</strong><span>组件写 <span style="font-family:'JetBrains Mono',monospace;">var(--shadow-popover)</span>，而不是复制 Figma 数字。</span></div>
     </div>
   </div>
 </section>
@@ -111,84 +299,68 @@
     <div class="section-head">
       <div>
         <div class="section-num"><strong>02</strong> / 样式拆解台</div>
-        <h2 class="section-title">调一个 shadow，<br>看 <span class="em">层级怎么变</span>。</h2>
+        <h2 class="section-title">5 个层级，<br>看 <span class="em">阴影怎么搭楼梯</span>。</h2>
       </div>
       <p class="section-sub">
-        下面的实验台把 shadow 拆成 elevation、blur、opacity 和光源方向。你会看到“更高”通常不是更黑，而是更远、更散。
+        实验台把 5 个表面（base / card / popover / modal / toast）放进同一个场景。切换"层叠 vs 偷懒"看脏阴影怎么发生。
       </p>
     </div>
 
-    <div class="lab-shell">
-      <div class="lab-toolbar">
-        <div class="lab-title">STYLE LAB / SHADOW TOKENS</div>
-        <div class="status-chip"><span class="status-dot"></span><span>box-shadow is composable</span></div>
+    <div class="lab">
+      <div class="lab-meta">
+        <span>method · <strong id="modeStatus">layered</strong></span>
+        <span>canvas · <strong id="bgStatus">light</strong></span>
+        <span>focus · <strong id="focusStatus">popover</strong></span>
       </div>
-      <div class="lab-grid">
-        <div class="playground">
-          <div class="preview-stage shadow-stage" id="shadowStage" data-light="left">
-            <span class="shadow-grid" aria-hidden="true"></span>
-            <span class="light-source" aria-hidden="true"></span>
-            <div class="stage-label">surface preview</div>
-            <article class="shadow-demo-card" id="shadowCard">
-              <h3>浮层卡片</h3>
-              <p>它应该压住背景，但不能变成一块脏黑的贴纸。</p>
-            </article>
-            <div class="layer-stack" aria-label="层级栈">
-              <div class="layer-row active" data-layer-row="1"><span>base</span><span>z 0</span></div>
-              <div class="layer-row active" data-layer-row="2"><span>card</span><span>z 10</span></div>
-              <div class="layer-row active" data-layer-row="3"><span>popover</span><span>z 40</span></div>
-              <div class="layer-row" data-layer-row="5"><span>modal</span><span>z 80</span></div>
-            </div>
-          </div>
-
-          <div class="lab-readout">
-            <div class="readout-card">
-              <div class="r-label">观察点</div>
-              <p id="shadowObserve">阴影由 ambient 和 directional 两层组成。</p>
-            </div>
-            <div class="readout-card">
-              <div class="r-label">当前组合</div>
-              <p id="shadowCombo">level 3，blur 28px，opacity 18%。</p>
-            </div>
-          </div>
-
-          <div class="code-panel">
-            <div class="code-head"><span>card.css</span><span>token ready</span></div>
-            <pre id="shadowCode"></pre>
-          </div>
+      <div class="lab-body">
+        <div class="stack-stage" id="stackStage" data-bg="light">
+          <div class="stage-label">elevation scene</div>
+          <div class="stack-wrap" id="stackWrap"></div>
         </div>
 
-        <aside class="controls" aria-label="阴影参数">
-          <div class="control-group">
-            <label class="control-label" for="shadowElevation"><span>elevation</span><output id="shadowElevationOut">level 3</output></label>
-            <input id="shadowElevation" type="range" min="0" max="5" value="3" step="1">
+        <div class="controls">
+          <div class="ctrl">
+            <label class="ctrl-label" for="spreadRange">
+              <span>elevation</span><output id="spreadOut">3</output>
+            </label>
+            <input id="spreadRange" type="range" min="0" max="5" value="3" step="1">
           </div>
-          <div class="control-group">
-            <label class="control-label" for="shadowBlur"><span>blur radius</span><output id="shadowBlurOut">28px</output></label>
-            <input id="shadowBlur" type="range" min="6" max="64" value="28" step="2">
-          </div>
-          <div class="control-group">
-            <label class="control-label" for="shadowOpacity"><span>shadow opacity</span><output id="shadowOpacityOut">18%</output></label>
-            <input id="shadowOpacity" type="range" min="6" max="36" value="18" step="1">
-          </div>
-          <div class="control-group">
-            <div class="control-label"><span>light source</span><output id="shadowLightOut">left</output></div>
-            <div class="seg" id="shadowLightSeg">
-              <button class="active" data-light="left">left top</button>
-              <button data-light="right">right top</button>
+          <div class="ctrl">
+            <div class="ctrl-label"><span>light source</span></div>
+            <div class="seg" id="lightSeg">
+              <button class="active" data-light="left">left</button>
+              <button data-light="center">center</button>
+              <button data-light="right">right</button>
             </div>
           </div>
-          <div class="control-group">
-            <div class="control-label"><span>surface type</span><output id="shadowSurfaceOut">raised</output></div>
-            <div class="seg three" id="shadowSurfaceSeg">
-              <button data-surface="flat">flat</button>
-              <button class="active" data-surface="raised">raised</button>
-              <button data-surface="overlay">overlay</button>
+          <div class="ctrl">
+            <div class="ctrl-label"><span>mode</span></div>
+            <div class="seg" id="modeSeg">
+              <button class="active" data-mode="layered">layered</button>
+              <button data-mode="lazy">lazy</button>
             </div>
           </div>
-          <div class="note-panel" id="shadowNote">Raised 表面需要一层贴边阴影和一层扩散阴影。</div>
-        </aside>
+          <div class="ctrl">
+            <div class="ctrl-label"><span>canvas</span></div>
+            <div class="seg" id="bgSeg">
+              <button class="active" data-bg="light">light</button>
+              <button data-bg="dark">dark</button>
+            </div>
+          </div>
+          <div class="ctrl">
+            <div class="ctrl-label"><span>focus token</span></div>
+            <div class="seg" id="focusSeg">
+              <button data-focus="card">card</button>
+              <button class="active" data-focus="popover">popover</button>
+              <button data-focus="modal">modal</button>
+            </div>
+          </div>
+        </div>
       </div>
+      <div class="lab-readout" id="labReadout">
+        两层阴影组合：贴边的 ambient 表达接触，扩散的 directional 表达高度。光源方向决定 x 偏移。
+      </div>
+      <pre class="lab-code" id="codeOut"></pre>
     </div>
   </div>
 </section>
@@ -197,11 +369,11 @@
   <div class="wrap">
     <div class="section-head">
       <div>
-        <div class="section-num"><strong>03</strong> / 设计到代码的对照</div>
+        <div class="section-num"><strong>03</strong> / 设计到代码对照</div>
         <h2 class="section-title">Figma 数字，<br>不要 <span class="em">逐个照抄</span>。</h2>
       </div>
       <p class="section-sub">
-        Figma 的 Effect 是设计表达，CSS 的 shadow 是系统实现。两边的单位相似，但维护方式不一样。
+        Figma 的 Effect 是设计表达，CSS 的 shadow 是系统实现。两边单位相似，但维护方式不一样。
       </p>
     </div>
 
@@ -210,9 +382,10 @@
         <tr><th>设计稿看到</th><th>代码里先问</th><th>推荐翻译</th></tr>
       </thead>
       <tbody>
-        <tr><td><strong>多张卡片都有轻阴影</strong><br>参数略有不同</td><td>它们是不是同一种 surface？</td><td>合并成一个 token，例如 <span class="mono">--shadow-card</span>。</td></tr>
+        <tr><td><strong>多张卡片都有轻阴影</strong><br>参数略有不同</td><td>它们是同一类 surface 吗？</td><td>合并成 <span class="mono">--shadow-card</span>，不要保留 N 种"差不多的卡片"。</td></tr>
         <tr><td><strong>弹窗阴影特别重</strong><br>设计想强调遮挡关系</td><td>是不是 overlay 层？背景是否需要 dim？</td><td>shadow + backdrop，而不是无限加黑。</td></tr>
-        <tr><td><strong>异形元素有影子</strong><br>圆角、凹角、票券形状</td><td>阴影是否需要跟透明轮廓走？</td><td>考虑 <span class="mono">filter: drop-shadow()</span>，而不是 <span class="mono">box-shadow</span>。</td></tr>
+        <tr><td><strong>异形元素有影子</strong><br>圆角、凹角、票券形状</td><td>阴影是否需要跟随透明轮廓？</td><td>用 <span class="mono">filter: drop-shadow()</span>，而不是 box-shadow。</td></tr>
+        <tr><td><strong>暗色模式阴影变淡</strong><br>对比度变化</td><td>暗背景上还需要阴影吗？</td><td>暗模式常常改用 border + 微高光，不再依赖深色阴影。</td></tr>
       </tbody>
     </table>
   </div>
@@ -226,7 +399,7 @@
         <h2 class="section-title">给 AI 和前端的<br><span class="em">shadow spec</span>。</h2>
       </div>
       <p class="section-sub">
-        描述阴影时不要只说“加点阴影”。要把层级、场景、token 和限制说清楚。
+        描述阴影时不要只说"加点阴影"。要把层级、场景、token 和限制说清楚，AI 才能给出可复用的实现。
       </p>
     </div>
 
@@ -234,19 +407,19 @@
       <article class="principle-card">
         <span class="num">01 / LEVEL</span>
         <h3>用级别说话</h3>
-        <p>“这里是 raised-2，不是 modal-5。”级别比具体数值更稳定。</p>
-        <ul><li>base：无阴影</li><li>card：轻浮起</li><li>overlay：明确压层</li></ul>
+        <p>"这里是 popover，不是 modal。"级别比具体数值更稳定。</p>
+        <ul><li>base：无阴影</li><li>card：轻浮起</li><li>popover：明确分离</li><li>modal：压住所有</li></ul>
       </article>
       <article class="principle-card">
         <span class="num">02 / TOKEN</span>
         <h3>把效果命名</h3>
         <p>效果 token 可以跟颜色、圆角、间距一样进入设计系统。</p>
-        <ul><li>--shadow-card</li><li>--shadow-popover</li><li>--shadow-modal</li></ul>
+        <ul><li>--shadow-card</li><li>--shadow-popover</li><li>--shadow-modal</li><li>--shadow-toast</li></ul>
       </article>
       <article class="principle-card">
         <span class="num">03 / TEST</span>
         <h3>换背景检查</h3>
-        <p>浅背景、深背景、彩色背景都要看一眼。阴影不是只在设计稿那块背景上成立。</p>
+        <p>浅、深、彩色背景都要看一眼。阴影不是只在设计稿那块画布上成立。</p>
         <ul><li>不要脏</li><li>不要糊</li><li>不要抢内容</li></ul>
       </article>
     </div>
@@ -259,9 +432,9 @@
       <div>
         <div class="np-tag">下一篇 · NEXT · S3 · 样式</div>
         <h4>毛玻璃 / 背景模糊 <span class="em">·</span> Backdrop Blur</h4>
-        <p>阴影解决“谁在上面”。下一篇看毛玻璃：为什么 filter: blur 和 backdrop-filter 不是一回事。</p>
+        <p>阴影解决"谁在上面"。下一篇看毛玻璃：为什么 filter: blur 和 backdrop-filter 不是一回事。</p>
       </div>
-      <span class="np-cta">继续阅读 <span class="arr">→</span></span>
+      <span class="np-cta">继续阅读 →</span>
     </a>
   </div>
 </section>
@@ -273,11 +446,12 @@
       <a href="https://developer.mozilla.org/en-US/docs/Web/CSS/box-shadow" target="_blank" rel="noreferrer">MDN box-shadow</a>
       <a href="https://developer.mozilla.org/en-US/docs/Web/CSS/filter-function/drop-shadow" target="_blank" rel="noreferrer">MDN drop-shadow()</a>
       <a href="https://m3.material.io/styles/elevation/overview" target="_blank" rel="noreferrer">Material elevation</a>
+      <a href="https://www.joshwcomeau.com/css/designing-shadows/" target="_blank" rel="noreferrer">Designing Beautiful Shadows in CSS</a>
     </div>
   </div>
 </footer>
 
-<!-- 路线图弹窗 (11 分类) -->
+<!-- 路线图弹窗 -->
 <div class="rm-modal" id="rm-modal" hidden>
   <div class="rm-backdrop" data-rm-close></div>
   <div class="rm-dialog" role="dialog" aria-label="完整路线图">
@@ -315,7 +489,7 @@
         </div>
       </div>
       <div class="rm-mod">
-        <div class="rm-mod-key">04 · 设计样式怎么翻译成 CSS</div>
+        <div class="rm-mod-key" style="color:var(--accent);">04 · 设计样式怎么翻译成 CSS</div>
         <div class="rm-mod-list">
           <a href="inverted-radius-figma.html" class="rm-cell"><span class="rm-cell-code">S1</span><span class="rm-cell-name">内翻圆角 · Inverted Border Radius</span><span class="rm-cell-tier">样式</span></a>
           <a href="shadow-layer-figma.html" class="rm-cell"><span class="rm-cell-code">S2</span><span class="rm-cell-name">阴影 / 层级 · Shadow &amp; Elevation</span><span class="rm-cell-tier">样式</span></a>
@@ -324,7 +498,7 @@
         </div>
       </div>
       <div class="rm-mod">
-        <div class="rm-mod-key" style="color:var(--accent);">05 · AI 怎么参与实现</div>
+        <div class="rm-mod-key">05 · AI 怎么参与实现</div>
         <div class="rm-mod-list">
           <a href="q1-mcp-figma.html" class="rm-cell"><span class="rm-cell-code">Q1</span><span class="rm-cell-name">MCP · AI 的 USB 接口</span><span class="rm-cell-tier">工具</span></a>
           <a href="q2-skills-figma.html" class="rm-cell"><span class="rm-cell-code">Q2</span><span class="rm-cell-name">Skills · SKILL.md 拆解</span><span class="rm-cell-tier">工具</span></a>
@@ -388,5 +562,162 @@
   </div>
 </div>
 <script src="style-translation.js"></script>
+<script>
+(function(){
+  var LEVELS = [
+    { key: 'base', name: '基底', cn: 'page' },
+    { key: 'card', name: '卡片', cn: 'list item' },
+    { key: 'popover', name: '浮层', cn: 'tooltip' },
+    { key: 'modal', name: '对话框', cn: 'dialog' },
+    { key: 'toast', name: '提示条', cn: 'toast' }
+  ];
+
+  var state = {
+    spread: 3,
+    mode: 'layered',
+    bg: 'light',
+    focus: 'popover',
+    light: 'left'
+  };
+
+  var lightX = { left: 25, center: 50, right: 75 };
+
+  var stage = document.getElementById('stackStage');
+  var wrap = document.getElementById('stackWrap');
+  var spreadRange = document.getElementById('spreadRange');
+  var spreadOut = document.getElementById('spreadOut');
+  var lightSeg = document.getElementById('lightSeg');
+  var modeSeg = document.getElementById('modeSeg');
+  var bgSeg = document.getElementById('bgSeg');
+  var focusSeg = document.getElementById('focusSeg');
+  var modeStatus = document.getElementById('modeStatus');
+  var bgStatus = document.getElementById('bgStatus');
+  var focusStatus = document.getElementById('focusStatus');
+  var readout = document.getElementById('labReadout');
+  var codeOut = document.getElementById('codeOut');
+
+  function buildCards() {
+    wrap.innerHTML = '';
+    LEVELS.forEach(function(l, i){
+      var c = document.createElement('div');
+      c.className = 'stack-card';
+      c.dataset.level = String(i);
+      c.dataset.key = l.key;
+      c.innerHTML =
+        '<div><div class="lvl">level 0' + i + ' · ' + l.key + '</div>' +
+        '<div class="name">' + l.name + '</div></div>' +
+        '<div class="z">' + l.cn + '</div>';
+      wrap.appendChild(c);
+    });
+  }
+
+  function shadowForLevel(i){
+    if (i === 0) return 'none';
+    if (state.spread === 0) return '0 1px 0 rgba(22,22,29,.06)';
+    var xRatio = (lightX[state.light] - 50) / 50 * -0.42;
+    var keyBlur = Math.round(10 + i * 12 * state.spread / 3);
+    var keyY = Math.round(2 + i * 4 * state.spread / 3);
+    var keyX = Math.round(keyY * xRatio);
+
+    if (state.mode === 'lazy') {
+      var lazyBlur = 12 + i * 8 * state.spread / 3;
+      var lazyY = 4 + i * 4 * state.spread / 3;
+      var lazyAlpha = Math.min(0.6, 0.22 + i * 0.05);
+      return '0 ' + lazyY + 'px ' + Math.round(lazyBlur) + 'px rgba(0,0,0,' + lazyAlpha.toFixed(2) + ')';
+    }
+    var ambientAlpha = state.bg === 'dark' ? 0.3 : Math.min(0.5, 0.10 + i * 0.02);
+    var keyAlpha = state.bg === 'dark' ? Math.min(0.5, 0.36 + i * 0.04) : Math.min(0.5, 0.10 + i * 0.025);
+
+    return '0 1px 2px rgba(22,22,29,' + ambientAlpha.toFixed(2) + '), ' +
+           keyX + 'px ' + keyY + 'px ' + keyBlur + 'px rgba(22,22,29,' + keyAlpha.toFixed(2) + ')';
+  }
+
+  function yForLevel(i){
+    if (state.spread === 0) return 0;
+    return -(i * (state.spread * 1.2 + 1));
+  }
+
+  function tokenName(key){ return '--shadow-' + key; }
+
+  function renderCode(){
+    var lines = [];
+    lines.push('<span class="com">/* light: ' + state.light + ' · mode: ' + state.mode + ' */</span>');
+    lines.push(':root {');
+    LEVELS.forEach(function(l, i){
+      if (i === 0) return;
+      var sh = shadowForLevel(i);
+      var line = '  <span class="prop">' + tokenName(l.key) + '</span>: <span class="val">' + sh.replace(/[<>&]/g, function(c){return ({ '<':'&lt;','>':'&gt;','&':'&amp;' })[c];}) + '</span>;';
+      if (state.focus === l.key) line = '<span class="active">' + line + '</span>';
+      lines.push(line);
+    });
+    lines.push('}');
+    codeOut.innerHTML = lines.join('\n');
+  }
+
+  function render(){
+    Array.prototype.slice.call(wrap.children).forEach(function(c){
+      var i = Number(c.dataset.level);
+      c.style.setProperty('--stack-shadow', shadowForLevel(i));
+      c.style.setProperty('--stack-y', yForLevel(i) + 'px');
+      c.setAttribute('data-active', c.dataset.key === state.focus ? 'true' : 'false');
+    });
+
+    stage.dataset.bg = state.bg;
+    spreadOut.textContent = state.spread;
+    modeStatus.textContent = state.mode;
+    bgStatus.textContent = state.bg;
+    focusStatus.textContent = state.focus;
+
+    var ob;
+    if (state.mode === 'lazy') {
+      ob = '<strong>lazy 模式</strong>：每层只有一个大 blur，颜色被压得很深。看起来每张卡都贴了一块同样的灰纸，层级反而消失。';
+    } else if (state.bg === 'dark') {
+      ob = '<strong>暗色画布</strong>：深阴影会被背景吞掉。这时常常改用 border + 微高光，让边界跟内容自己站出来。';
+    } else if (state.spread === 0) {
+      ob = '<strong>flat 模式</strong>：spread 为 0，所有 surface 贴在画布上。靠 border 和背景差区分层级。';
+    } else {
+      ob = '两层阴影组合：贴边的 ambient 表达接触，扩散的 directional 表达高度。光源在 <strong>' + state.light + '</strong>。';
+    }
+    readout.innerHTML = ob;
+
+    renderCode();
+  }
+
+  spreadRange.addEventListener('input', function(){
+    state.spread = Number(spreadRange.value);
+    render();
+  });
+  function bindSeg(seg, key, attr){
+    seg.addEventListener('click', function(e){
+      var btn = e.target.closest('button[' + attr + ']');
+      if (!btn) return;
+      state[key] = btn.getAttribute(attr);
+      Array.prototype.slice.call(seg.querySelectorAll('button')).forEach(function(b){
+        b.classList.toggle('active', b === btn);
+      });
+      render();
+    });
+  }
+  bindSeg(lightSeg, 'light', 'data-light');
+  bindSeg(modeSeg, 'mode', 'data-mode');
+  bindSeg(bgSeg, 'bg', 'data-bg');
+  bindSeg(focusSeg, 'focus', 'data-focus');
+
+  wrap.addEventListener('click', function(e){
+    var card = e.target.closest('.stack-card');
+    if (!card) return;
+    var k = card.dataset.key;
+    if (k === 'base' || k === 'toast') return;
+    state.focus = k;
+    Array.prototype.slice.call(focusSeg.querySelectorAll('button')).forEach(function(b){
+      b.classList.toggle('active', b.getAttribute('data-focus') === k);
+    });
+    render();
+  });
+
+  buildCards();
+  render();
+})();
+</script>
 </body>
 </html>

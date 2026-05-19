@@ -1,0 +1,1228 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>组件不是图层，是契约 — AI LABBOOK · X13</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,300..900&family=Geist:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Noto+Sans+SC:wght@300;400;500;700;900&family=Noto+Serif+SC:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f3eee5;
+    --bg-2: #ebe4d4;
+    --ink: #16161d;
+    --ink-soft: #4a4a55;
+    --ink-mute: #8a8a92;
+    --line: #d5cdba;
+    --line-soft: #e3dcca;
+    --accent: #ff4d2e;
+    --accent-soft: #ffe4dc;
+    --blue: #0a4cff;
+    --blue-soft: #dde6ff;
+    --green: #1f6b3a;
+    --green-soft: #d4ecdb;
+    --yellow: #ffcf3d;
+    --paper: #faf7f0;
+    --shadow: 0 1px 0 rgba(0,0,0,0.04), 0 8px 24px rgba(22,22,29,0.06);
+
+    --obj-color: #ff4d2e;
+    --obj-soft: rgba(255,77,46,0.12);
+    --proj-color: #1f6b3a;
+    --proj-soft: rgba(31,107,58,0.12);
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'Geist', 'Noto Sans SC', system-ui, -apple-system, sans-serif;
+    font-size: 16px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    background-image: radial-gradient(circle at 1px 1px, rgba(22,22,29,0.05) 1px, transparent 0);
+    background-size: 24px 24px;
+  }
+
+  .display-cn { font-family: 'Noto Serif SC', 'Fraunces', serif; font-weight: 900; letter-spacing: -0.01em; }
+  .display-en { font-family: 'Fraunces', 'Noto Serif SC', serif; font-weight: 600; font-style: italic; letter-spacing: -0.02em; }
+  .mono { font-family: 'JetBrains Mono', monospace; }
+  .label { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-mute); }
+
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 0 32px; }
+
+  /* Topbar */
+  .topbar {
+    border-bottom: 1px dashed var(--line);
+    padding: 16px 0;
+    background: var(--bg);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .topbar-inner { display: flex; justify-content: space-between; align-items: center; gap: 24px; flex-wrap: wrap; }
+  .brand-block { display: flex; align-items: center; gap: 10px; font-family: 'JetBrains Mono', monospace; font-size: 13px; }
+  .brand { display: inline-flex; align-items: center; gap: 6px; color: var(--ink); text-decoration: none; font-weight: 600; }
+  .brand-arrow { color: var(--ink-mute); transition: transform .2s; }
+  .brand:hover .brand-arrow { transform: translateX(-3px); }
+  .brand .dot { display: inline-block; width: 8px; height: 8px; background: var(--accent); border-radius: 50%; vertical-align: middle; animation: pulse 2s ease-in-out infinite; margin-left: 4px; }
+  .brand-sep { color: var(--ink-mute); }
+  .brand-current { color: var(--ink-soft); }
+  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+  .nav-links { display: flex; gap: 18px; font-size: 13px; flex-wrap: wrap; }
+  .nav-links a { color: var(--ink-soft); text-decoration: none; transition: color 0.2s; }
+  .nav-links a:hover { color: var(--accent); }
+  .nav-links a.current { color: var(--accent); font-weight: 600; }
+
+  /* Hero */
+  .hero { padding: 100px 0 80px; position: relative; overflow: hidden; }
+  .hero-meta { display: flex; gap: 24px; margin-bottom: 32px; align-items: center; flex-wrap: wrap; }
+  .hero-meta .pill { padding: 6px 12px; border: 1px solid var(--ink); border-radius: 100px; font-size: 11px; font-family: 'JetBrains Mono', monospace; letter-spacing: 0.05em; }
+  .hero-meta .pill.fill { background: var(--ink); color: var(--bg); }
+  .hero-meta .pill.purple { background: var(--obj-color); color: white; border-color: var(--obj-color); }
+  .hero h1 {
+    font-family: 'Noto Serif SC', 'Fraunces', serif;
+    font-weight: 900;
+    font-size: clamp(48px, 7vw, 92px);
+    line-height: 0.95;
+    letter-spacing: -0.03em;
+    margin: 0 0 24px;
+  }
+  .hero h1 .em { font-family: 'Noto Serif SC', serif; font-weight: 500; color: var(--accent); }
+  .hero h1 .purple { color: var(--obj-color); font-family: 'Noto Serif SC', serif; font-weight: 500; }
+  .hero p.lede {
+    font-size: 20px;
+    line-height: 1.5;
+    max-width: 640px;
+    color: var(--ink-soft);
+    margin: 0 0 40px;
+  }
+  .hero-grid { display: grid; grid-template-columns: 1.4fr 1fr; gap: 48px; align-items: end; }
+  @media (max-width: 880px) { .hero-grid { grid-template-columns: 1fr; } }
+  .hero-side { border-left: 1px dashed var(--line); padding-left: 24px; font-size: 13px; color: var(--ink-soft); }
+  .hero-side .row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px dashed var(--line); gap: 12px; }
+  .hero-side .row:last-child { border-bottom: none; }
+  .hero-side .row .k { color: var(--ink-mute); font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.05em; text-transform: uppercase; }
+  .hero-side .row .v { font-weight: 500; }
+
+  /* Sections */
+  section { padding: 80px 0; border-top: 1px solid var(--line); position: relative; }
+  .section-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 56px; flex-wrap: wrap; gap: 16px; }
+  .section-num { font-family: 'JetBrains Mono', monospace; font-size: 13px; color: var(--ink-mute); letter-spacing: 0.1em; margin-top: 6px; }
+  .section-num strong { color: var(--accent); }
+  .section-title { font-family: 'Noto Serif SC', serif; font-weight: 900; font-size: clamp(32px, 4.5vw, 52px); line-height: 1.05; letter-spacing: -0.02em; margin: 8px 0 0; max-width: 22ch; }
+  .section-title .em { font-family: 'Noto Serif SC', serif; font-weight: 500; color: var(--accent); }
+  .section-title .purple { color: var(--obj-color); font-family: 'Noto Serif SC', serif; font-weight: 500; }
+  .section-sub { color: var(--ink-soft); font-size: 17px; max-width: 38ch; line-height: 1.55; margin: 0; }
+
+  /* Act tag */
+  .act-tag { display: inline-block; padding: 4px 12px; font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; border-radius: 100px; }
+  .act-tag.look { background: var(--blue-soft); color: var(--blue); }
+  .act-tag.break { background: var(--obj-soft); color: var(--obj-color); }
+  .act-tag.make { background: var(--proj-soft); color: var(--proj-color); }
+
+  /* Problem cards */
+  .problem-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; margin-top: 24px; }
+  @media (max-width: 880px) { .problem-grid { grid-template-columns: 1fr; } }
+  .problem-card { background: var(--paper); border: 1px solid var(--line); border-radius: 6px; padding: 28px; position: relative; }
+  .problem-card.bad { border-color: var(--accent); background: var(--accent-soft); }
+  .problem-card.good { border-color: var(--obj-color); background: var(--obj-soft); }
+  .problem-card .tag { position: absolute; top: -12px; left: 24px; background: var(--bg); padding: 2px 10px; font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.1em; }
+  .problem-card.bad .tag { color: var(--accent); border: 1px solid var(--accent); }
+  .problem-card.good .tag { color: var(--obj-color); border: 1px solid var(--obj-color); }
+  .problem-card h3 { font-family: 'Noto Serif SC', serif; font-size: 22px; margin: 0 0 12px; font-weight: 700; }
+  .problem-card p { margin: 0; color: var(--ink-soft); font-size: 14px; line-height: 1.55; }
+  .problem-card p + p { margin-top: 10px; }
+  .problem-card .code-snippet {
+    margin-top: 12px;
+    padding: 12px 14px;
+    background: var(--ink);
+    color: #e8e8ee;
+    border-radius: 6px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11.5px;
+    line-height: 1.55;
+    overflow-x: auto;
+  }
+  .problem-card .code-snippet .ck { color: #ff9bd2; }
+  .problem-card .code-snippet .cs { color: #ffd166; }
+  .problem-card .code-snippet .cc { color: #9aa0a8; font-style: italic; }
+  .problem-card .code-snippet .cn { color: #8be9fd; }
+
+  /* GAME 1: contract preview (split screen) */
+  .contract-stage { background: var(--paper); border: 1px solid var(--line); border-radius: 8px; padding: 32px; position: relative; overflow: hidden; }
+  .contract-stage::before { content: ''; position: absolute; inset: 0; background-image: linear-gradient(to right, var(--line-soft) 1px, transparent 1px), linear-gradient(to bottom, var(--line-soft) 1px, transparent 1px); background-size: 24px 24px; opacity: 0.35; pointer-events: none; }
+  .contract-split { position: relative; display: grid; grid-template-columns: 1fr 1fr; gap: 28px; align-items: stretch; }
+  @media (max-width: 980px) { .contract-split { grid-template-columns: 1fr; } }
+  .contract-panel { background: white; border: 1px solid var(--line); border-radius: 8px; padding: 18px 18px 22px; position: relative; display: flex; flex-direction: column; }
+  .contract-panel-label { position: absolute; top: -10px; left: 14px; font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.1em; padding: 2px 10px; border-radius: 100px; background: var(--ink); color: var(--bg); text-transform: uppercase; }
+  .contract-panel.left .contract-panel-label { background: var(--blue); }
+  .contract-panel.right .contract-panel-label { background: var(--obj-color); }
+  .panel-h { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--ink-mute); letter-spacing: 0.08em; text-transform: uppercase; margin: 4px 0 14px; padding-bottom: 8px; border-bottom: 1px dashed var(--line-soft); }
+
+  .figma-variants { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin-bottom: 14px; }
+  .variant-btn { border: 1px solid transparent; border-radius: 6px; padding: 9px 6px 8px; font-size: 10.5px; font-weight: 600; text-align: center; cursor: pointer; transition: all 0.15s; font-family: 'Geist', sans-serif; line-height: 1.2; user-select: none; }
+  .variant-btn.is-hot { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(255,77,46,0.25); }
+  .vb-primary { background: var(--obj-color); color: white; }
+  .vb-secondary { background: var(--bg-2); color: var(--ink); border-color: var(--line); }
+  .vb-ghost { background: transparent; color: var(--ink); border-color: var(--line); }
+  .vb-danger { background: var(--accent); color: white; }
+  .vb-success { background: var(--green); color: white; }
+  .figma-section-label { font-family: 'JetBrains Mono', monospace; font-size: 9px; color: var(--ink-mute); letter-spacing: 0.08em; text-transform: uppercase; margin: 12px 0 6px; }
+  .figma-states { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin-bottom: 8px; }
+  .state-btn { border: 1px solid var(--line); border-radius: 6px; padding: 8px 4px; font-size: 10px; text-align: center; cursor: pointer; transition: all 0.15s; background: white; color: var(--ink-soft); user-select: none; font-family: 'JetBrains Mono', monospace; letter-spacing: 0.04em; }
+  .state-btn .swatch { display: flex; margin: 0 auto 5px; width: 100%; height: 26px; border-radius: 4px; background: var(--obj-color); color: white; font-family: 'Geist', sans-serif; font-size: 9px; font-weight: 600; align-items: center; justify-content: center; }
+  .state-btn[data-state="hover"] .swatch { background: #d63818; box-shadow: 0 2px 6px rgba(255,77,46,0.3); }
+  .state-btn[data-state="pressed"] .swatch { background: #b8300f; transform: translateY(1px); }
+  .state-btn[data-state="disabled"] .swatch { background: #ffd5c6; color: #ffffffaa; }
+  .state-btn[data-state="loading"] .swatch::before { content: '◐'; font-size: 11px; margin-right: 3px; }
+  .state-btn.is-hot { background: var(--obj-soft); border-color: var(--obj-color); color: var(--obj-color); }
+  .figma-extras { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 8px; }
+  .extra-btn { background: white; border: 1px solid var(--line); border-radius: 6px; padding: 9px 8px; text-align: center; font-size: 10.5px; font-weight: 600; cursor: pointer; transition: all 0.15s; user-select: none; color: var(--ink); }
+  .extra-btn.is-hot { background: var(--obj-soft); border-color: var(--obj-color); color: var(--obj-color); }
+  .extra-btn .ico { display: inline-block; width: 12px; height: 12px; border-radius: 50%; background: var(--obj-color); vertical-align: middle; margin-right: 3px; opacity: 0.85; }
+  .figma-sizes { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .size-btn { background: white; border: 1px solid var(--line); border-radius: 6px; padding: 8px 6px; text-align: center; font-family: 'JetBrains Mono', monospace; font-size: 10.5px; color: var(--ink); cursor: pointer; transition: all 0.15s; user-select: none; }
+  .size-btn .pad { display: block; margin: 0 auto 5px; background: var(--obj-color); color: white; border-radius: 3px; font-family: 'Geist', sans-serif; font-weight: 600; }
+  .size-btn[data-size="sm"] .pad { padding: 3px 8px; font-size: 9px; width: max-content; }
+  .size-btn[data-size="md"] .pad { padding: 5px 12px; font-size: 11px; width: max-content; }
+  .size-btn[data-size="lg"] .pad { padding: 8px 18px; font-size: 13px; width: max-content; }
+  .size-btn.is-hot { background: var(--obj-soft); border-color: var(--obj-color); }
+
+  /* Code panel */
+  .code-block {
+    background: #1a1a23;
+    color: #d8d8e2;
+    border-radius: 6px;
+    padding: 14px 16px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    line-height: 1.65;
+    overflow-x: auto;
+    flex: 1;
+    position: relative;
+  }
+  .code-line {
+    display: block;
+    padding: 1px 8px;
+    margin: 0 -8px;
+    border-radius: 3px;
+    transition: all 0.2s;
+    white-space: pre;
+  }
+  .code-line.is-hot {
+    background: rgba(255,207,61,0.18);
+    box-shadow: inset 3px 0 0 var(--yellow);
+  }
+  .ck { color: #ff9bd2; }
+  .cs { color: #ffd166; }
+  .cc { color: #6a6a78; font-style: italic; }
+  .cn { color: #8be9fd; }
+  .cv { color: #ff9b7a; }
+  .cp { color: #e8e8ee; }
+  .cf { color: #9bff97; }
+
+  .code-tooltip { position: absolute; background: var(--ink); color: var(--bg); padding: 10px 14px; border-radius: 6px; font-family: 'Geist', sans-serif; font-size: 12px; line-height: 1.5; max-width: 220px; z-index: 50; pointer-events: none; opacity: 0; transform: translateY(4px); transition: opacity 0.18s, transform 0.18s; box-shadow: 0 12px 32px rgba(0,0,0,0.25); }
+  .code-tooltip.show { opacity: 1; transform: translateY(0); }
+  .code-tooltip strong { color: var(--yellow); font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.05em; }
+  .code-tooltip .hint { color: #b8b8c0; font-size: 11px; margin-top: 4px; }
+  .contract-foot-note { margin-top: 22px; padding: 14px 18px; background: var(--bg-2); border-left: 3px solid var(--obj-color); border-radius: 4px; font-size: 13px; color: var(--ink-soft); line-height: 1.6; }
+  .contract-foot-note strong { color: var(--ink); }
+
+  /* Reveal bar */
+  .reveal-bar { margin-top: 32px; padding: 20px 28px; background: var(--ink); color: var(--bg); border-radius: 8px; display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap; }
+  .reveal-bar .msg { font-family: 'Noto Serif SC', serif; font-size: 17px; font-weight: 500; line-height: 1.55; }
+  .reveal-bar .msg .em { color: var(--accent); }
+  .reveal-bar .counter { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ink-mute); letter-spacing: 0.05em; }
+  .reveal-bar .counter strong { color: var(--accent); font-size: 14px; }
+
+  /* GAME 2: 4 cards (contract pieces) */
+  .pieces-stage { margin-top: 24px; display: grid; grid-template-columns: repeat(2, 1fr); gap: 24px; }
+  @media (max-width: 880px) { .pieces-stage { grid-template-columns: 1fr; } }
+  .piece-card { background: var(--paper); border: 1px solid var(--line); border-radius: 8px; padding: 24px; position: relative; cursor: pointer; transition: all 0.2s; }
+  .piece-card:hover { border-color: var(--obj-color); transform: translateY(-2px); box-shadow: 0 10px 28px rgba(255,77,46,0.12); }
+  .piece-card.is-open { background: white; border-color: var(--obj-color); box-shadow: 0 12px 32px rgba(255,77,46,0.18); }
+  .piece-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
+  .piece-icon { width: 38px; height: 38px; border-radius: 8px; background: var(--obj-soft); color: var(--obj-color); display: flex; align-items: center; justify-content: center; font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 700; flex-shrink: 0; }
+  .piece-card.is-open .piece-icon { background: var(--obj-color); color: white; }
+  .piece-title { font-family: 'Noto Serif SC', serif; font-size: 22px; margin: 0; font-weight: 700; line-height: 1.2; }
+  .piece-title .en { display: block; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ink-mute); margin-top: 4px; letter-spacing: 0.06em; font-weight: 400; }
+  .piece-toggle { background: white; border: 1px solid var(--line); border-radius: 50%; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; font-size: 14px; color: var(--ink-mute); transition: all 0.2s; flex-shrink: 0; }
+  .piece-card.is-open .piece-toggle { background: var(--obj-color); border-color: var(--obj-color); color: white; transform: rotate(45deg); }
+  .piece-lede { font-size: 14px; color: var(--ink-soft); line-height: 1.55; margin: 14px 0 0; }
+  .piece-lede strong { color: var(--ink); }
+  .piece-body { display: none; margin-top: 18px; padding-top: 18px; border-top: 1px dashed var(--line); }
+  .piece-card.is-open .piece-body { display: block; }
+  .piece-row { margin-bottom: 14px; }
+  .piece-row:last-child { margin-bottom: 0; }
+  .piece-lbl { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--obj-color); letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 6px; }
+  .piece-row p { margin: 0; color: var(--ink-soft); font-size: 13.5px; line-height: 1.6; }
+  .piece-row p code { background: var(--bg-2); padding: 1px 5px; border-radius: 3px; font-family: 'JetBrains Mono', monospace; font-size: 11.5px; color: var(--ink); }
+  .piece-row.bad p { color: var(--accent); }
+  .piece-row.bad .piece-lbl { color: var(--accent); }
+  .piece-code { background: var(--ink); color: #e0e0e8; border-radius: 6px; padding: 12px 14px; font-family: 'JetBrains Mono', monospace; font-size: 11.5px; line-height: 1.65; margin-top: 6px; overflow-x: auto; }
+  .piece-code .ck { color: #ff9bd2; } .piece-code .cs { color: #ffd166; } .piece-code .cc { color: #7a7a88; font-style: italic; } .piece-code .cn { color: #8be9fd; } .piece-code .cv { color: #ff9b7a; } .piece-code .cf { color: #9bff97; }
+  .pieces-counter { margin-top: 24px; text-align: center; font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--ink-mute); }
+  .pieces-counter strong { color: var(--obj-color); }
+
+  /* GAME 3: builder for Tag contract */
+  .tag-stage { background: var(--paper); border: 1px solid var(--line); border-radius: 8px; padding: 32px; margin-top: 24px; }
+  .tag-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 22px; flex-wrap: wrap; gap: 16px; }
+  .tag-title { font-family: 'Noto Serif SC', serif; font-size: 22px; margin: 0; font-weight: 700; }
+  .tag-progress { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--ink-mute); }
+  .tag-progress strong { color: var(--obj-color); font-size: 14px; font-weight: 700; }
+  .tag-preview { background: white; border: 1px solid var(--line); border-radius: 8px; padding: 22px; margin-bottom: 24px; position: relative; }
+  .tag-preview-lbl { position: absolute; top: -10px; left: 14px; background: var(--ink); color: var(--bg); font-family: 'JetBrains Mono', monospace; font-size: 10px; padding: 2px 10px; border-radius: 100px; letter-spacing: 0.08em; }
+  .tag-rows { display: flex; flex-direction: column; gap: 14px; }
+  .tag-row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+  .tag-row-lbl { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--ink-mute); letter-spacing: 0.06em; text-transform: uppercase; width: 64px; flex-shrink: 0; }
+
+  /* Tag visuals */
+  .vt { display: inline-flex; align-items: center; gap: 4px; padding: 3px 9px; font-size: 12px; border-radius: 100px; line-height: 1.4; font-weight: 500; font-family: 'Geist', sans-serif; }
+  .vt-sm { padding: 1px 7px; font-size: 11px; }
+  .vt-md { padding: 4px 10px; font-size: 13px; }
+  .vt-red { background: var(--accent-soft); color: var(--accent); }
+  .vt-green { background: var(--green-soft); color: var(--green); }
+  .vt-blue { background: var(--blue-soft); color: var(--blue); }
+  .vt-gray { background: var(--bg-2); color: var(--ink-soft); }
+  .vt-yellow { background: #fff3cc; color: #b88500; }
+  .vt-purple { background: var(--obj-soft); color: var(--obj-color); }
+  .vt-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+  .vt-icon { font-size: 11px; opacity: 0.85; }
+  .vt-close { display: inline-flex; width: 14px; height: 14px; align-items: center; justify-content: center; border-radius: 50%; background: currentColor; color: white !important; font-size: 9px; margin-left: 2px; opacity: 0.6; }
+  .vt-red .vt-close { background: var(--accent); } .vt-green .vt-close { background: var(--green); } .vt-blue .vt-close { background: var(--blue); } .vt-gray .vt-close { background: var(--ink-soft); } .vt-yellow .vt-close { background: #b88500; } .vt-purple .vt-close { background: var(--obj-color); }
+
+  .tag-form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  @media (max-width: 880px) { .tag-form-grid { grid-template-columns: 1fr; } }
+  .form-group { background: white; border: 1px solid var(--line); border-radius: 8px; padding: 18px; }
+  .form-group h4 { font-family: 'JetBrains Mono', monospace; font-size: 11px; margin: 0 0 4px; color: var(--obj-color); letter-spacing: 0.08em; text-transform: uppercase; }
+  .form-group .help { margin: 0 0 12px; font-size: 11px; color: var(--ink-mute); line-height: 1.5; }
+  .form-options { display: flex; flex-direction: column; gap: 6px; }
+  .opt-row { display: flex; align-items: center; gap: 10px; padding: 7px 10px; border: 1px solid var(--line); border-radius: 5px; cursor: pointer; transition: all 0.15s; font-family: 'JetBrains Mono', monospace; font-size: 12px; background: var(--bg); user-select: none; }
+  .opt-row:hover { border-color: var(--obj-color); }
+  .opt-row input { margin: 0; accent-color: var(--obj-color); cursor: pointer; }
+  .opt-row .opt-name { color: var(--ink); font-weight: 500; flex: 1; }
+  .opt-row .opt-hint { color: var(--ink-mute); font-size: 10.5px; }
+  .opt-row.is-checked { background: var(--obj-soft); border-color: var(--obj-color); }
+  .opt-row.is-checked .opt-name { color: var(--obj-color); font-weight: 600; }
+  .form-group.state { grid-column: 1 / -1; }
+  .form-group.state .form-options { flex-direction: row; flex-wrap: wrap; gap: 10px; }
+  .form-group.state .opt-row { flex: 1; min-width: 160px; justify-content: flex-start; }
+
+  .tag-actions { display: flex; gap: 12px; margin-top: 24px; flex-wrap: wrap; }
+  .tag-btn { padding: 10px 22px; border-radius: 100px; font-family: 'JetBrains Mono', monospace; font-size: 12px; letter-spacing: 0.06em; text-transform: uppercase; cursor: pointer; font-weight: 600; border: 1px solid var(--ink); background: transparent; color: var(--ink); transition: all 0.15s; }
+  .tag-btn:hover { background: var(--ink); color: var(--bg); }
+  .tag-btn.primary { background: var(--accent); color: white; border-color: var(--accent); }
+  .tag-btn.primary:hover { background: #e8451f; }
+  .tag-judge { margin-top: 24px; padding: 26px 28px; border-radius: 8px; background: var(--ink); color: var(--bg); display: none; }
+  .tag-judge.show { display: block; }
+  .tag-judge .verdict { display: inline-block; font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; padding: 3px 10px; border-radius: 100px; }
+  .tag-judge .verdict.win { color: #1f6b3a; background: #d4ecdb; }
+  .tag-judge .verdict.partial { color: #c79f1e; background: #fff3cc; }
+  .tag-judge h4 { font-family: 'Noto Serif SC', serif; font-size: 22px; margin: 10px 0 14px; color: white; line-height: 1.3; }
+  .tag-judge h4 .em { color: var(--accent); font-weight: 500; }
+  .tag-judge ul { color: #c8c8d0; margin: 0; padding-left: 20px; font-size: 13px; line-height: 1.75; }
+  .tag-judge ul li + li { margin-top: 10px; }
+  .tag-judge ul strong { color: white; }
+  .tag-judge ul .why { color: #a0a0aa; font-size: 12px; }
+  .tag-judge ul code { background: rgba(255,255,255,0.08); padding: 1px 5px; border-radius: 3px; font-family: 'JetBrains Mono', monospace; font-size: 11.5px; }
+  .tag-judge .tj-code {
+    margin-top: 18px;
+    padding: 14px 16px;
+    background: rgba(255,255,255,0.04);
+    border-radius: 6px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11.5px;
+    line-height: 1.7;
+    color: #d8d8e2;
+    overflow-x: auto;
+  }
+  .tag-judge .tj-code .ck { color: #ff9bd2; }
+  .tag-judge .tj-code .cs { color: #ffd166; }
+  .tag-judge .tj-code .cc { color: #6a6a78; font-style: italic; }
+  .tag-judge .tj-code .cn { color: #8be9fd; }
+
+  /* tips */
+  .tips-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 28px; margin-top: 24px; }
+  @media (max-width: 880px) { .tips-grid { grid-template-columns: 1fr; } }
+  .tip { background: var(--paper); border: 1px solid var(--line); border-radius: 6px; padding: 24px; position: relative; }
+  .tip-num { position: absolute; top: -14px; left: 16px; width: 32px; height: 32px; border-radius: 50%; background: var(--obj-color); color: white; display: flex; align-items: center; justify-content: center; font-family: 'Fraunces', serif; font-style: italic; font-weight: 600; font-size: 14px; }
+  .tip h4 { font-family: 'Noto Serif SC', serif; font-size: 18px; margin: 8px 0 10px; font-weight: 700; }
+  .tip p { color: var(--ink-soft); font-size: 14px; line-height: 1.6; margin: 0; }
+  .tip p + p { margin-top: 8px; }
+  .tip-outro {
+    margin-top: 44px;
+    padding: 30px 32px;
+    background: var(--ink);
+    color: var(--bg);
+    border-radius: 8px;
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 28px;
+    align-items: flex-start;
+  }
+  @media (max-width: 720px) { .tip-outro { grid-template-columns: 1fr; gap: 12px; } }
+  .outro-tag { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.1em; color: var(--accent); padding-top: 4px; }
+  .tip-outro p { margin: 0 0 12px; color: #c8c8d0; line-height: 1.65; font-size: 15px; }
+  .tip-outro p:last-child { margin-bottom: 0; }
+  .tip-outro strong { color: white; }
+
+  /* next post */
+  .next-post {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 56px;
+    padding: 32px;
+    background: var(--bg-2);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    text-decoration: none;
+    color: var(--ink);
+    transition: all 0.2s;
+    gap: 24px;
+    flex-wrap: wrap;
+  }
+  .next-post:hover { background: var(--ink); color: var(--bg); }
+  .next-post:hover .np-tag { color: var(--accent); }
+  .next-post:hover .em { color: var(--accent); }
+  .next-post:hover p { color: #c8c8d0; }
+  .np-tag { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.1em; color: var(--ink-mute); margin-bottom: 6px; }
+  .next-post h4 { font-family: 'Noto Serif SC', serif; font-size: 26px; margin: 0 0 8px; font-weight: 700; }
+  .next-post .em { color: var(--obj-color); font-weight: 500; }
+  .next-post p { margin: 0; color: var(--ink-soft); font-size: 14px; max-width: 56ch; }
+  .np-cta { font-family: 'JetBrains Mono', monospace; font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; white-space: nowrap; }
+  .np-cta .arr { display: inline-block; transition: transform .2s; }
+  .next-post:hover .arr { transform: translateX(4px); }
+
+  /* footer */
+  footer { padding: 56px 0 64px; background: var(--bg); color: var(--ink-soft); border-top: 1px solid var(--line); }
+  .byline-group { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; margin-bottom: 32px; padding-bottom: 32px; border-bottom: 1px dashed var(--line); }
+  @media (max-width: 880px) { .byline-group { grid-template-columns: 1fr; } }
+  .byline { display: flex; gap: 16px; align-items: center; }
+  .byline .avatar { width: 56px; height: 56px; border-radius: 50%; object-fit: cover; flex-shrink: 0; }
+  .byline-label { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--accent); letter-spacing: 0.1em; }
+  .byline-label .dot { display: inline-block; width: 6px; height: 6px; background: var(--accent); border-radius: 50%; margin-right: 4px; vertical-align: middle; animation: pulse 2s ease-in-out infinite; }
+  .byline-name { font-family: 'Noto Serif SC', serif; font-weight: 700; font-size: 18px; margin: 4px 0; color: var(--ink); }
+  .byline-name .em { color: var(--accent); font-weight: 500; }
+  .byline-tag { color: var(--ink-soft); font-size: 13px; margin: 0; line-height: 1.5; }
+  .footer-meta { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ink-mute); text-align: center; letter-spacing: 0.05em; }
+  .footer-meta .heart { color: var(--accent); }
+
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="wrap topbar-inner">
+    <div class="brand-block">
+      <a href="book.html#vol-3" class="brand"><span class="brand-arrow">←</span>AI LABBOOK <span class="dot"></span></a>
+      <span class="brand-sep">/</span>
+      <span class="brand-current">X13 · 组件不是图层，是契约</span>
+    </div>
+    <nav class="nav-links">
+      <a href="book.html#vol-3">路线图</a>
+    </nav>
+  </div>
+</div>
+
+<!-- Hero -->
+<header class="hero">
+  <div class="wrap">
+    <div class="hero-meta">
+      <span class="pill fill">高阶 · ADVANCED</span>
+      <span class="pill purple">STAGE 04 · 组件契约</span>
+      <span class="pill">X13 · 契约思维</span>
+      <span class="label">阅读 ≈ 16 分钟 · 含 3 段互动</span>
+    </div>
+    <div class="hero-grid">
+      <div>
+        <h1>
+          组件不是<br>
+          <span class="display-cn">图层</span>——<br>
+          是一份<span class="purple">契约</span>。
+        </h1>
+        <p class="lede">
+          Figma 里一个组件 = 一组图层 + variants。<br>
+          代码里一个组件 = 一份合同：能接什么 props、会发什么 events、给哪些 slots、状态闭环在哪。<br>
+          看图层 ≠ 看契约。
+        </p>
+      </div>
+      <div class="hero-side">
+        <div class="row"><span class="k">本页讲什么</span><span class="v">图层 → 契约</span></div>
+        <div class="row"><span class="k">三幕</span><span class="v">看见 · 拆开 · 再做</span></div>
+        <div class="row"><span class="k">面向</span><span class="v">交付组件的设计师</span></div>
+        <div class="row"><span class="k">前置</span><span class="v">X12 · 组件颗粒度</span></div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- Section 01: 问题 -->
+<section id="problem">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>01</strong> / 问题</div>
+        <h2 class="section-title">为什么"看起来一样"的组件，<br>到了代码里<span class="em">不能复用</span>？</h2>
+      </div>
+      <p class="section-sub">
+        因为设计师在描述<strong>视觉单元</strong>（图层 + 变体），
+        工程师在写一份<strong>合同</strong>。可复用与好不好看无关——只看契约稳不稳。
+      </p>
+    </div>
+
+    <div class="problem-grid">
+      <div class="problem-card bad">
+        <span class="tag">图层思维 · LAYERS</span>
+        <h3>"我做了一个 Button 组件"</h3>
+        <p>5 个 variant、3 个 size、有 hover 态。看起来完整——可工程师还在追问。</p>
+        <p><strong>工程师追问：</strong>禁用怎么写？loading 态有吗？图标 + 文字怎么传？点击事件叫什么？是不是受控？icon 自由插还是固定 prop？</p>
+        <p style="color:var(--accent)"><strong>你：</strong>呃……我画了视觉，<br>没写"它能接什么"。</p>
+      </div>
+
+      <div class="problem-card good">
+        <span class="tag">契约思维 · CONTRACT</span>
+        <h3>"我交付了一份 Button 契约"</h3>
+        <p>视觉只是合同附录。真正交付的是一份 <strong>props / events / slots / state</strong> 清单，工程师直接落 TypeScript interface。</p>
+        <div class="code-snippet"><span class="cc">// 一眼可以变成 type</span>
+<span class="ck">interface</span> <span class="cn">ButtonProps</span> {
+  <span class="cf">variant</span>: <span class="cs">'primary' | 'secondary'</span> | …;
+  <span class="cf">disabled</span>?: <span class="cn">boolean</span>;
+  <span class="cf">loading</span>?: <span class="cn">boolean</span>;
+  <span class="cf">onClick</span>: <span class="cv">(e) =&gt; void</span>;
+}</div>
+        <p style="color:var(--obj-color);margin-top:14px"><strong>追问 → 0 次。</strong></p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Section 02: 幕一 · 看见 -->
+<section id="look">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <span class="act-tag look">幕一 · 看见</span>
+        <div class="section-num"><strong>02</strong> / 看见</div>
+        <h2 class="section-title">Figma 里的 Button，<br>代码里是<span class="purple">这份合同</span>。</h2>
+      </div>
+      <p class="section-sub">
+        左边 Figma 里的 Button 组件 → 右边它的代码契约。
+        鼠标在左侧任意 variant / 状态 / 配置上悬停 → 右侧契约里的对应字段会高亮 + 弹 tooltip 说明。
+      </p>
+    </div>
+
+    <div class="contract-stage">
+      <div class="contract-split">
+
+        <div class="contract-panel left">
+          <span class="contract-panel-label">Figma 组件</span>
+          <div class="panel-h">Button / 5 variants · 5 states · 3 sizes · icon · slot</div>
+
+          <div class="figma-section-label">Variant — 颜色风格</div>
+          <div class="figma-variants" id="figmaVariants">
+            <div class="variant-btn vb-primary" data-bind="variant-value">primary</div>
+            <div class="variant-btn vb-secondary" data-bind="variant-value">secondary</div>
+            <div class="variant-btn vb-ghost" data-bind="variant-value">ghost</div>
+            <div class="variant-btn vb-danger" data-bind="variant-value">danger</div>
+            <div class="variant-btn vb-success" data-bind="variant-value">success</div>
+          </div>
+
+          <div class="figma-section-label">State — 交互态</div>
+          <div class="figma-states" id="figmaStates">
+            <div class="state-btn" data-state="default" data-bind="state-default"><span class="swatch">default</span>default</div>
+            <div class="state-btn" data-state="hover" data-bind="state-hover"><span class="swatch">hover</span>hover</div>
+            <div class="state-btn" data-state="pressed" data-bind="state-pressed"><span class="swatch">pressed</span>pressed</div>
+            <div class="state-btn" data-state="disabled" data-bind="state-disabled"><span class="swatch">disabled</span>disabled</div>
+            <div class="state-btn" data-state="loading" data-bind="state-loading"><span class="swatch">loading</span>loading</div>
+          </div>
+
+          <div class="figma-section-label">Size — 尺寸</div>
+          <div class="figma-sizes" id="figmaSizes">
+            <div class="size-btn" data-size="sm" data-bind="size"><span class="pad">sm</span>sm</div>
+            <div class="size-btn" data-size="md" data-bind="size"><span class="pad">md</span>md</div>
+            <div class="size-btn" data-size="lg" data-bind="size"><span class="pad">lg</span>lg</div>
+          </div>
+
+          <div class="figma-section-label">Composition — 内部组合</div>
+          <div class="figma-extras" id="figmaExtras">
+            <div class="extra-btn" data-bind="icon"><span class="ico"></span>icon</div>
+            <div class="extra-btn" data-bind="icon-position">left / right</div>
+            <div class="extra-btn" data-bind="children">文字 slot</div>
+          </div>
+
+          <div class="figma-section-label">Interaction — 行为</div>
+          <div class="figma-extras">
+            <div class="extra-btn" style="grid-column: span 3" data-bind="onclick">点击 → 触发 onClick(e)</div>
+          </div>
+        </div>
+
+        <div class="contract-panel right">
+          <span class="contract-panel-label">代码契约</span>
+          <div class="panel-h">ButtonProps · 一份合同</div>
+
+          <div class="code-block">
+<span class="code-line" data-line="0"><span class="cc">// Button 组件的契约</span></span>
+<span class="code-line" data-line="1"><span class="ck">interface</span> <span class="cn">ButtonProps</span> {</span>
+<span class="code-line" data-line="2" data-key="variant"><span class="cp">  </span><span class="cf">variant</span>: <span class="cs">'primary'</span> | <span class="cs">'secondary'</span> | <span class="cs">'ghost'</span> | <span class="cs">'danger'</span> | <span class="cs">'success'</span>;</span>
+<span class="code-line" data-line="3" data-key="size"><span class="cp">  </span><span class="cf">size</span>: <span class="cs">'sm'</span> | <span class="cs">'md'</span> | <span class="cs">'lg'</span>;</span>
+<span class="code-line" data-line="4" data-key="disabled"><span class="cp">  </span><span class="cf">disabled</span>?: <span class="cn">boolean</span>;<span class="cc">  // 外部控制是否可点</span></span>
+<span class="code-line" data-line="5" data-key="loading"><span class="cp">  </span><span class="cf">loading</span>?: <span class="cn">boolean</span>;<span class="cc">   // 异步态，自带 spinner</span></span>
+<span class="code-line" data-line="6" data-key="icon"><span class="cp">  </span><span class="cf">icon</span>?: <span class="cn">ReactNode</span>;<span class="cc">  // slot，外部塞图标</span></span>
+<span class="code-line" data-line="7" data-key="iconPosition"><span class="cp">  </span><span class="cf">iconPosition</span>?: <span class="cs">'left'</span> | <span class="cs">'right'</span>;</span>
+<span class="code-line" data-line="8" data-key="children"><span class="cp">  </span><span class="cf">children</span>: <span class="cn">ReactNode</span>;<span class="cc"> // slot，文字内容</span></span>
+<span class="code-line" data-line="9" data-key="onClick"><span class="cp">  </span><span class="cf">onClick</span>: <span class="cv">(e</span>: <span class="cn">MouseEvent</span><span class="cv">) =&gt; void</span>;</span>
+<span class="code-line" data-line="10"><span class="cp">}</span></span>
+<span class="code-line" data-line="11"></span>
+<span class="code-line" data-line="12"><span class="cc">// 用法示例 —— 工程师拿到这份合同就能写：</span></span>
+<span class="code-line" data-line="13"><span class="cp">&lt;</span><span class="cn">Button</span> <span class="cf">variant</span>=<span class="cs">"primary"</span> <span class="cf">size</span>=<span class="cs">"md"</span> <span class="cf">loading</span></span>
+<span class="code-line" data-line="14"><span class="cp">        </span><span class="cf">icon</span>=<span class="cp">{</span><span class="cv">&lt;CheckIcon /&gt;</span><span class="cp">}</span> <span class="cf">onClick</span>=<span class="cp">{</span><span class="cv">save</span><span class="cp">}&gt;</span></span>
+<span class="code-line" data-line="15"><span class="cp">  </span>保存修改</span>
+<span class="code-line" data-line="16"><span class="cp">&lt;/</span><span class="cn">Button</span><span class="cp">&gt;</span></span>
+            <div class="code-tooltip" id="codeTooltip"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="contract-foot-note">
+        <strong>看 image 看 image，但看合同看合同。</strong>
+        Figma 里看到的每一个视觉差异——颜色、状态、尺寸、有没有图标——背后都是一个 prop 或 slot。
+        把视觉翻译回契约，就能直接对话工程师。
+      </div>
+    </div>
+
+    <div class="reveal-bar">
+      <div class="msg">
+        Figma 里看到的每一个视觉差异，<span class="em">背后都是一个 prop 或 slot</span>。<br>
+        变体不是装饰，是合同条款。
+      </div>
+      <div class="counter">
+        已对应 <strong id="bindCount">0</strong> / 11 个绑定
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Section 03: 幕二 · 拆开 -->
+<section id="break">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <span class="act-tag break">幕二 · 拆开</span>
+        <div class="section-num"><strong>03</strong> / 拆开</div>
+        <h2 class="section-title"><span class="purple">契约 4 件套</span>。</h2>
+      </div>
+      <p class="section-sub">
+        <strong>Props</strong>（接入数据）/ <strong>Events</strong>（发出反馈）/ <strong>Slots</strong>（可插内容）/ <strong>State boundary</strong>（谁管哪部分状态）。
+        点开任意一张卡片看深度解释和典型反例。
+      </p>
+    </div>
+
+    <div class="pieces-stage" id="piecesStage">
+
+      <div class="piece-card" data-piece="props">
+        <div class="piece-head">
+          <div style="display:flex;gap:14px;align-items:center">
+            <div class="piece-icon">P</div>
+            <div>
+              <h3 class="piece-title">Props<span class="en">接入数据 / 组件的输入端</span></h3>
+            </div>
+          </div>
+          <span class="piece-toggle">+</span>
+        </div>
+        <p class="piece-lede">
+          组件从外面接受的<strong>输入</strong>。决定它长什么样、处于什么模式。
+        </p>
+        <div class="piece-body">
+          <div class="piece-row">
+            <div class="piece-lbl">常见例子</div>
+            <p><code>variant</code>（外观风格）/ <code>size</code>（尺寸）/ <code>disabled</code>（禁用与否）/ <code>value</code>（受控值）/ <code>placeholder</code>（占位文案）</p>
+          </div>
+          <div class="piece-row bad">
+            <div class="piece-lbl">反例 · 模糊的设计稿</div>
+            <p>稿子写"button has hover state"——但没说 hover 是<strong>prop 触发</strong>还是<strong>CSS 触发</strong>。工程师可能写一个无意义的 <code>hovered</code> prop（永远没人传），也可能写 CSS（外部代码无法编程触发）。</p>
+          </div>
+          <div class="piece-row">
+            <div class="piece-lbl">工程上看这件事</div>
+            <div class="piece-code"><span class="cc">// 好的 props 就像参数列表</span>
+<span class="ck">type</span> <span class="cn">ButtonProps</span> = {
+  <span class="cf">variant</span>: <span class="cs">'primary'</span> | <span class="cs">'secondary'</span>;
+  <span class="cf">disabled</span>?: <span class="cn">boolean</span>;<span class="cc"> // 由外部传，组件不自管</span>
+};</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="piece-card" data-piece="events">
+        <div class="piece-head">
+          <div style="display:flex;gap:14px;align-items:center">
+            <div class="piece-icon">E</div>
+            <div>
+              <h3 class="piece-title">Events<span class="en">发出反馈 / 组件的输出端</span></h3>
+            </div>
+          </div>
+          <span class="piece-toggle">+</span>
+        </div>
+        <p class="piece-lede">
+          组件向外<strong>发出的通知</strong>。用户做了什么动作，组件喊一声让外面知道。
+        </p>
+        <div class="piece-body">
+          <div class="piece-row">
+            <div class="piece-lbl">常见例子</div>
+            <p><code>onClick(e, value)</code> / <code>onChange(newValue)</code> / <code>onFocus()</code> / <code>onClose()</code> / <code>onSelect(item)</code>。命名规则：<code>on*</code> 前缀。</p>
+          </div>
+          <div class="piece-row bad">
+            <div class="piece-lbl">反例 · 副作用归属不清</div>
+            <p>设计稿："按了按钮之后弹出 modal"——但没说是按钮内部直接打开 modal（耦合），还是按钮发 <code>onClick</code>、外部决定要不要弹（解耦）。工程师只能猜——猜错就埋了一个耦合 bug。</p>
+          </div>
+          <div class="piece-row">
+            <div class="piece-lbl">工程上看这件事</div>
+            <div class="piece-code"><span class="cc">// 组件只负责"喊一声"</span>
+<span class="cf">onClick</span>: <span class="cv">(e</span>: <span class="cn">MouseEvent</span><span class="cv">) =&gt; void</span>;
+<span class="cf">onClose</span>: <span class="cv">() =&gt; void</span>;<span class="cc"> // closable 时必填</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="piece-card" data-piece="slots">
+        <div class="piece-head">
+          <div style="display:flex;gap:14px;align-items:center">
+            <div class="piece-icon">S</div>
+            <div>
+              <h3 class="piece-title">Slots<span class="en">可插内容 / 组件留的"洞"</span></h3>
+            </div>
+          </div>
+          <span class="piece-toggle">+</span>
+        </div>
+        <p class="piece-lede">
+          组件<strong>留给消费方的"洞"</strong>——这里要塞什么内容，组件不规定。
+        </p>
+        <div class="piece-body">
+          <div class="piece-row">
+            <div class="piece-lbl">常见例子</div>
+            <p><code>children</code>（主内容）/ <code>leftIcon</code>、<code>rightIcon</code>（前后图标）/ <code>trailing</code>（行尾区）/ <code>header</code>、<code>footer</code>（页头页脚）</p>
+          </div>
+          <div class="piece-row bad">
+            <div class="piece-lbl">反例 · prop / slot 没分清</div>
+            <p>设计稿画了一张 Card：里头有标题、副标题、图标、操作按钮。工程师懵——哪些是<strong>prop</strong>（结构固定，只能传文字/值）哪些是<strong>slot</strong>（自由，能塞 ReactNode）？只画图不能区分。</p>
+          </div>
+          <div class="piece-row">
+            <div class="piece-lbl">工程上看这件事</div>
+            <div class="piece-code"><span class="cc">// 给 slot 等于"这块内容我不管"</span>
+<span class="cf">title</span>: <span class="cn">string</span>;<span class="cc">           // prop, 固定为文字</span>
+<span class="cf">trailing</span>?: <span class="cn">ReactNode</span>;<span class="cc"> // slot, 你想塞啥都行</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="piece-card" data-piece="state">
+        <div class="piece-head">
+          <div style="display:flex;gap:14px;align-items:center">
+            <div class="piece-icon">B</div>
+            <div>
+              <h3 class="piece-title">State boundary<span class="en">状态边界 / 谁管哪部分</span></h3>
+            </div>
+          </div>
+          <span class="piece-toggle">+</span>
+        </div>
+        <p class="piece-lede">
+          组件<strong>内部管什么</strong>、<strong>外部管什么</strong>。受控 vs 非受控的根本问题。
+        </p>
+        <div class="piece-body">
+          <div class="piece-row">
+            <div class="piece-lbl">两种模式</div>
+            <p><strong>受控</strong>：<code>value</code> + <code>onChange</code>——值住在外面，组件只是渲染。<br><strong>非受控</strong>：<code>defaultValue</code>——值住在组件里，外部不管。</p>
+          </div>
+          <div class="piece-row bad">
+            <div class="piece-lbl">反例 · 默认值没说清归属</div>
+            <p>设计稿画"Toggle 默认是关闭"——没说是<strong>受控</strong>（每次都要消费方告诉它当前是开还是关）还是<strong>非受控</strong>（组件自己记着状态）。工程师猜——猜错就出现"为什么我设的值不生效"这种 bug。</p>
+          </div>
+          <div class="piece-row">
+            <div class="piece-lbl">工程上看这件事</div>
+            <div class="piece-code"><span class="cc">// 受控</span>
+<span class="cf">value</span>: <span class="cn">boolean</span>;
+<span class="cf">onChange</span>: <span class="cv">(v</span>: <span class="cn">boolean</span><span class="cv">) =&gt; void</span>;
+
+<span class="cc">// 非受控</span>
+<span class="cf">defaultValue</span>?: <span class="cn">boolean</span>;<span class="cc"> // 只初始化一次</span></div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="pieces-counter">已展开 <strong id="piecesOpen">0</strong> / 4 件套</div>
+
+    <div class="reveal-bar" style="margin-top:32px">
+      <div class="msg">
+        4 件套填完 = <span class="em">工程师 0 追问</span>。<br>
+        组件交付不是图，是合同。
+      </div>
+      <div class="counter">点卡片展开看反例</div>
+    </div>
+  </div>
+</section>
+
+<!-- Section 04: 幕三 · 再做 -->
+<section id="make">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <span class="act-tag make">幕三 · 再做</span>
+        <div class="section-num"><strong>04</strong> / 再做</div>
+        <h2 class="section-title">轮到你——<br>给 <span class="em">Tag 组件</span><br>写契约。</h2>
+      </div>
+      <p class="section-sub">
+        下面是一个 Tag 组件的 5 类视觉表现。
+        你来填它的 <strong>props / events / slots / state boundary</strong>——多选混入了干扰项，挑出最少必要的合同条款。
+      </p>
+    </div>
+
+    <div class="tag-stage">
+      <div class="tag-head">
+        <h3 class="tag-title">给 Tag 组件写一份契约</h3>
+        <div class="tag-progress">已勾选 <strong id="tagPicked">0</strong> 条契约 · 完成度 <strong id="tagFill">0%</strong></div>
+      </div>
+
+      <div class="tag-preview">
+        <span class="tag-preview-lbl">Tag 视觉规格</span>
+
+        <div class="tag-rows">
+          <div class="tag-row">
+            <span class="tag-row-lbl">颜色</span>
+            <span class="vt vt-red"><span class="vt-dot"></span>danger</span>
+            <span class="vt vt-green"><span class="vt-dot"></span>active</span>
+            <span class="vt vt-blue"><span class="vt-dot"></span>info</span>
+            <span class="vt vt-gray"><span class="vt-dot"></span>neutral</span>
+            <span class="vt vt-yellow"><span class="vt-dot"></span>warning</span>
+            <span class="vt vt-purple"><span class="vt-dot"></span>vip</span>
+          </div>
+          <div class="tag-row">
+            <span class="tag-row-lbl">大小</span>
+            <span class="vt vt-blue vt-sm">sm</span>
+            <span class="vt vt-blue vt-md">md</span>
+            <span class="vt vt-blue">lg</span>
+          </div>
+          <div class="tag-row">
+            <span class="tag-row-lbl">图标</span>
+            <span class="vt vt-green"><span class="vt-dot"></span>有 dot</span>
+            <span class="vt vt-green"><span class="vt-icon">★</span>有 icon</span>
+            <span class="vt vt-green">仅文字</span>
+          </div>
+          <div class="tag-row">
+            <span class="tag-row-lbl">关闭</span>
+            <span class="vt vt-purple">可关 <span class="vt-close">×</span></span>
+            <span class="vt vt-purple">不可关</span>
+          </div>
+          <div class="tag-row">
+            <span class="tag-row-lbl">点击</span>
+            <span class="vt vt-blue" style="cursor:pointer;text-decoration:underline">可点击</span>
+            <span class="vt vt-gray">不可点击（展示）</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="tag-form-grid">
+
+        <div class="form-group" data-group="props">
+          <h4>Props · 接入数据</h4>
+          <p class="help">挑出"组件需要从外面接受的输入"。多选——但每多选一个错的会扣分。</p>
+          <div class="form-options" id="optsProps">
+            <label class="opt-row" data-key="color"><input type="checkbox" data-correct="1"><span class="opt-name">color</span><span class="opt-hint">enum 红绿蓝灰黄紫</span></label>
+            <label class="opt-row" data-key="size"><input type="checkbox" data-correct="1"><span class="opt-name">size</span><span class="opt-hint">'sm' | 'md' | 'lg'</span></label>
+            <label class="opt-row" data-key="closable"><input type="checkbox" data-correct="1"><span class="opt-name">closable</span><span class="opt-hint">boolean 是否显示 ✕</span></label>
+            <label class="opt-row" data-key="dot"><input type="checkbox" data-correct="1"><span class="opt-name">dot</span><span class="opt-hint">boolean 是否显示色点</span></label>
+            <label class="opt-row" data-key="value"><input type="checkbox" data-correct="0"><span class="opt-name">value</span><span class="opt-hint">⚠ 这是 Input 的属性</span></label>
+            <label class="opt-row" data-key="onClose-prop"><input type="checkbox" data-correct="0"><span class="opt-name">onClose</span><span class="opt-hint">⚠ on* 应该在 events</span></label>
+            <label class="opt-row" data-key="children-prop"><input type="checkbox" data-correct="0"><span class="opt-name">children</span><span class="opt-hint">⚠ children 是 slot 不是 prop</span></label>
+            <label class="opt-row" data-key="active"><input type="checkbox" data-correct="0"><span class="opt-name">active</span><span class="opt-hint">⚠ Tag 没有"选中态"概念</span></label>
+          </div>
+        </div>
+
+        <div class="form-group" data-group="events">
+          <h4>Events · 发出反馈</h4>
+          <p class="help">挑出"组件要向外发出的通知"。命名以 <code style="background:var(--bg-2);padding:1px 4px;border-radius:2px">on*</code> 开头。</p>
+          <div class="form-options" id="optsEvents">
+            <label class="opt-row" data-key="onClose"><input type="checkbox" data-correct="1"><span class="opt-name">onClose</span><span class="opt-hint">closable 时必填</span></label>
+            <label class="opt-row" data-key="onClick"><input type="checkbox" data-correct="1"><span class="opt-name">onClick</span><span class="opt-hint">可点击时需要</span></label>
+            <label class="opt-row" data-key="onFocus"><input type="checkbox" data-correct="0"><span class="opt-name">onFocus</span><span class="opt-hint">⚠ Tag 不可聚焦</span></label>
+            <label class="opt-row" data-key="onChange"><input type="checkbox" data-correct="0"><span class="opt-name">onChange</span><span class="opt-hint">⚠ Tag 没有"值"会变</span></label>
+            <label class="opt-row" data-key="onHover"><input type="checkbox" data-correct="0"><span class="opt-name">onHover</span><span class="opt-hint">⚠ hover 是 CSS 不是事件</span></label>
+            <label class="opt-row" data-key="onSubmit"><input type="checkbox" data-correct="0"><span class="opt-name">onSubmit</span><span class="opt-hint">⚠ Tag 不是表单元素</span></label>
+          </div>
+        </div>
+
+        <div class="form-group" data-group="slots">
+          <h4>Slots · 可插内容</h4>
+          <p class="help">挑出"组件留给消费方自由塞内容的洞"。这里要严格——给一个 slot 等于让出主权。</p>
+          <div class="form-options" id="optsSlots">
+            <label class="opt-row" data-key="children"><input type="checkbox" data-correct="1"><span class="opt-name">children</span><span class="opt-hint">标签文字本体</span></label>
+            <label class="opt-row" data-key="leftIcon"><input type="checkbox" data-correct="1"><span class="opt-name">leftIcon</span><span class="opt-hint">前置图标可自由插</span></label>
+            <label class="opt-row" data-key="closeIcon"><input type="checkbox" data-correct="0"><span class="opt-name">closeIcon</span><span class="opt-hint">⚠ ✕ 应内置，不该让消费方插</span></label>
+            <label class="opt-row" data-key="trailingAction"><input type="checkbox" data-correct="0"><span class="opt-name">trailingAction</span><span class="opt-hint">⚠ Tag 不应承担"操作"</span></label>
+            <label class="opt-row" data-key="header"><input type="checkbox" data-correct="0"><span class="opt-name">header</span><span class="opt-hint">⚠ Tag 没有"头部"概念</span></label>
+            <label class="opt-row" data-key="footer"><input type="checkbox" data-correct="0"><span class="opt-name">footer</span><span class="opt-hint">⚠ Tag 没有"尾部"概念</span></label>
+          </div>
+        </div>
+
+        <div class="form-group state" data-group="state">
+          <h4>State boundary · 状态边界</h4>
+          <p class="help">单选——Tag 内部需要管自己的状态吗？想想"用户点 ✕ 之后，Tag 自己消失还是要等外部告诉它"。</p>
+          <div class="form-options" id="optsState">
+            <label class="opt-row" data-key="controlled"><input type="radio" name="state" data-correct="0"><span class="opt-name">受控</span><span class="opt-hint">value + onChange 由外部驱动</span></label>
+            <label class="opt-row" data-key="uncontrolled"><input type="radio" name="state" data-correct="0"><span class="opt-name">非受控</span><span class="opt-hint">defaultValue 组件自管</span></label>
+            <label class="opt-row" data-key="stateless"><input type="radio" name="state" data-correct="1"><span class="opt-name">无状态（纯展示）</span><span class="opt-hint">Tag 是展示组件 · ✓ 多数情况</span></label>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="tag-actions">
+        <button class="tag-btn primary" id="tagSubmit">提交契约</button>
+        <button class="tag-btn" id="tagReset">清空</button>
+      </div>
+
+      <div class="tag-judge" id="tagJudge"></div>
+    </div>
+  </div>
+</section>
+
+<!-- Section 05: closing -->
+<section id="closing">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>05</strong> / 把这件事变成习惯</div>
+        <h2 class="section-title">画组件之前，<br>先<span class="em">写合同</span>。</h2>
+      </div>
+      <p class="section-sub">
+        从这一篇开始，做组件评审时，第一句话从"我打算这么画"变成"这组件的契约是什么"。整个会议的语言就变了。
+      </p>
+    </div>
+
+    <div class="tips-grid">
+      <div class="tip">
+        <div class="tip-num">i</div>
+        <h4>画组件之前先写 props / events / slots</h4>
+        <p>一句话写不出契约的组件，证明你<strong>还没想清楚它要做什么</strong>。先把这三件套口头描述一遍——卡住的那一项，就是含糊的地方。</p>
+      </div>
+      <div class="tip">
+        <div class="tip-num">ii</div>
+        <h4>slot 是"信任"的设计</h4>
+        <p>给一个 slot 等于把这部分内容主权<strong>交给消费方</strong>。给不给 slot，是关键设计决策——不是技术细节。</p>
+      </div>
+      <div class="tip">
+        <div class="tip-num">iii</div>
+        <h4>受控 vs 非受控不是工程细节</h4>
+        <p>它决定了组件<strong>能不能被外部驱动</strong>。设计稿要明说——表单组件几乎都要受控，展示组件几乎都无状态。中间地带最容易出 bug。</p>
+      </div>
+    </div>
+
+    <div class="tip-outro">
+      <div class="outro-tag">划重点 · TL;DR</div>
+      <div>
+        <p>组件交付不是<strong>图</strong>，是<strong>合同</strong>。下次评审，第一句问"<strong>这组件的契约是什么</strong>"——能讲清 4 件套的，是组件设计师；只能讲清图层的，是图层堆叠师。</p>
+        <p>Figma 里的视觉差异 → 都能映射回一条契约。一旦你开始用契约描述组件，工程师追问 0 次，复用率反着涨。</p>
+      </div>
+    </div>
+
+    <a href="x14-props-events-slots.html" class="next-post">
+      <div>
+        <div class="np-tag">下一站 · NEXT · X14 · 高阶</div>
+        <h4>props / events / slots / <span class="em">状态边界</span></h4>
+        <p>契约 4 件套讲过了 → 下一站每件单独拆深。从"啥是契约"到"每件契约怎么写"——命名规则、可选 vs 必填、默认值放哪、事件签名怎么定。</p>
+      </div>
+      <span class="np-cta">下一篇 <span class="arr">→</span></span>
+    </a>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div class="byline-group">
+      <div class="byline">
+        <img class="avatar" src="author.jpg" alt="范米花儿">
+        <div class="byline-meta">
+          <div class="byline-label"><span class="dot"></span>作者 · WRITTEN BY</div>
+          <div class="byline-name">嗨，我是 <span class="em">范米花儿</span></div>
+          <p class="byline-tag">设计工程师 ——<br>设计 × 代码，两边都做。</p>
+        </div>
+      </div>
+</div>
+    <div class="footer-meta">
+      做于 <span class="mono">2026</span> · 用 <span class="heart">●</span> 写给 <span class="mono">DESIGNERS &amp; DEVELOPERS</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+// ===== Game 1: Figma <-> Contract bindings =====
+(function(){
+  const tooltip = document.getElementById('codeTooltip');
+  const codeBlock = tooltip ? tooltip.parentElement : null;
+  const bindCount = document.getElementById('bindCount');
+  const visited = new Set();
+
+  // Maps each Figma binding key to: which code lines highlight + tooltip text
+  const BIND_MAP = {
+    'variant-value':   { lines: ['variant'],     msg: 'variant', hint: '这是 prop 取值——5 个 variant 对应 5 个枚举' },
+    'state-default':   { lines: [],              msg: 'default 是基线', hint: '默认态：组件啥 prop 都没启用时的样子' },
+    'state-hover':     { lines: [],              msg: 'hover 是 CSS', hint: 'hover 不是 prop！是 CSS :hover 自动触发' },
+    'state-pressed':   { lines: [],              msg: 'pressed 是 CSS', hint: '同 hover——:active 触发，不是 prop' },
+    'state-disabled':  { lines: ['disabled'],    msg: 'disabled', hint: 'prop 触发的态——外部传 true 就禁用' },
+    'state-loading':   { lines: ['loading'],     msg: 'loading', hint: 'prop 触发的态——外部传 true 就转圈' },
+    'size':            { lines: ['size'],        msg: 'size', hint: '这是 prop 取值——3 个 size 对应 3 个枚举' },
+    'icon':            { lines: ['icon'],        msg: 'icon (slot)', hint: '是 ReactNode slot 不是布尔——外部塞图标进来' },
+    'icon-position':   { lines: ['iconPosition'],msg: 'iconPosition', hint: '辅助 prop——决定 icon slot 在文字左还是右' },
+    'children':        { lines: ['children'],    msg: 'children (slot)', hint: '文字本体——slot 不是 prop' },
+    'onclick':         { lines: ['onClick'],     msg: 'onClick (event)', hint: '组件向外发的事件——签名带 e: MouseEvent' }
+  };
+
+  function clearHL() {
+    document.querySelectorAll('.code-line.is-hot').forEach(el => el.classList.remove('is-hot'));
+    document.querySelectorAll('[data-bind].is-hot').forEach(el => el.classList.remove('is-hot'));
+    tooltip.classList.remove('show');
+  }
+
+  function highlight(key, anchorEl) {
+    const map = BIND_MAP[key];
+    if (!map) return;
+    document.querySelectorAll('.code-line').forEach(line => {
+      if (map.lines.includes(line.dataset.key)) line.classList.add('is-hot');
+    });
+    if (!visited.has(key)) {
+      visited.add(key);
+      bindCount.textContent = visited.size;
+    }
+    // position tooltip near the first highlighted line OR near top-right
+    const firstHot = document.querySelector('.code-line.is-hot');
+    const codeRect = codeBlock.getBoundingClientRect();
+    if (firstHot) {
+      const lineRect = firstHot.getBoundingClientRect();
+      tooltip.style.top = (lineRect.top - codeRect.top + 28) + 'px';
+      tooltip.style.right = '12px';
+      tooltip.style.left = 'auto';
+    } else {
+      tooltip.style.top = '12px';
+      tooltip.style.right = '12px';
+      tooltip.style.left = 'auto';
+    }
+    tooltip.innerHTML = `<strong>${map.msg}</strong><div class="hint">${map.hint}</div>`;
+    tooltip.classList.add('show');
+  }
+
+  document.querySelectorAll('[data-bind]').forEach(el => {
+    el.addEventListener('mouseenter', () => {
+      clearHL();
+      el.classList.add('is-hot');
+      highlight(el.dataset.bind, el);
+    });
+    el.addEventListener('mouseleave', () => clearHL());
+    // click for touch: same as hover
+    el.addEventListener('click', () => {
+      clearHL();
+      el.classList.add('is-hot');
+      highlight(el.dataset.bind, el);
+    });
+  });
+})();
+
+// ===== Game 2: pieces expand =====
+(function(){
+  const cards = document.querySelectorAll('.piece-card');
+  const counter = document.getElementById('piecesOpen');
+  cards.forEach(card => {
+    card.addEventListener('click', () => {
+      card.classList.toggle('is-open');
+      const open = document.querySelectorAll('.piece-card.is-open').length;
+      counter.textContent = open;
+    });
+  });
+})();
+
+// ===== Game 3: tag contract builder =====
+(function(){
+  const pickedEl = document.getElementById('tagPicked');
+  const fillEl = document.getElementById('tagFill');
+  const judge = document.getElementById('tagJudge');
+
+  const allOpts = document.querySelectorAll('.opt-row input');
+  const allRows = document.querySelectorAll('.opt-row');
+
+  // Total correct count for "完成度" tracking
+  const CORRECT_COUNT = Array.from(allOpts).filter(i => i.dataset.correct === '1').length;
+
+  function refresh() {
+    let picked = 0;
+    let correctPicked = 0;
+    let wrongPicked = 0;
+    allOpts.forEach(input => {
+      const row = input.closest('.opt-row');
+      if (input.checked) {
+        picked++;
+        row.classList.add('is-checked');
+        if (input.dataset.correct === '1') correctPicked++;
+        else wrongPicked++;
+      } else {
+        row.classList.remove('is-checked');
+      }
+    });
+    pickedEl.textContent = picked;
+    const pct = Math.max(0, Math.round(((correctPicked - wrongPicked * 0.5) / CORRECT_COUNT) * 100));
+    fillEl.textContent = Math.min(100, pct) + '%';
+  }
+
+  allOpts.forEach(input => {
+    input.addEventListener('change', refresh);
+  });
+  allRows.forEach(row => {
+    row.addEventListener('click', e => {
+      // let the actual input handle change
+    });
+  });
+
+  // Explanations for wrong picks
+  const EXPLAIN = {
+    'value': '<code>value</code> 是 Input / Slider 这种"有值"的组件的属性。Tag 没有"值"——它只是个标签。',
+    'onClose-prop': '<code>onClose</code> 是事件——以 <code>on</code> 开头的都该归到 events，不是 props。Props 是数据，events 是反馈。',
+    'children-prop': '<code>children</code> 是 React 的 slot 机制——能塞任意 ReactNode 进来。它不是普通字符串 prop。',
+    'active': 'Tag 是展示组件，没有"被选中"的概念。你想要的可能是<code>color</code>变化——那是 prop。',
+    'onFocus': 'Tag 默认不可聚焦（不在 tab 序列里）。除非你做的是 chip 输入框的标签，否则 <code>onFocus</code> 多余。',
+    'onChange': 'Tag 没有"值会变"——它不维护数据。<code>onChange</code> 只属于 Input、Select 这种有值的组件。',
+    'onHover': 'hover 反馈应该用 CSS <code>:hover</code> 实现，不需要 event。外部代码不需要"知道"用户在 hover。',
+    'onSubmit': 'Tag 不是表单元素，没有"提交"动作。',
+    'closeIcon': '✕ 是 closable 状态下的内置 affordance，应该由组件提供。让消费方自由插会破坏一致性。',
+    'trailingAction': '给 Tag 加 "trailing action" slot 会让它承担"操作"职责——那是 Button 或 Chip 该做的事，不是 Tag。',
+    'header': 'Tag 是单行内联元素，没有头部尾部概念。给 header slot 会鼓励错误用法。',
+    'footer': '同上——Tag 不该有 footer。',
+    'controlled': 'Tag 是<strong>展示组件</strong>——它不维护"值"，所以根本不需要 value/onChange 这套受控机制。点 ✕ 时由消费方决定要不要从数据里删，组件只发 onClose。',
+    'uncontrolled': 'Tag 内部没有值需要"自管"——它不是 Input，没有可输入的内容。defaultValue 在这里没有意义。'
+  };
+
+  // The "perfect" set
+  const PERFECT = {
+    props: new Set(['color', 'size', 'closable', 'dot']),
+    events: new Set(['onClose', 'onClick']),
+    slots: new Set(['children', 'leftIcon']),
+    state: 'stateless'
+  };
+
+  function getPicked(group) {
+    const arr = [];
+    document.querySelectorAll(`.form-group[data-group="${group}"] .opt-row`).forEach(row => {
+      const input = row.querySelector('input');
+      if (input.checked) arr.push(row.dataset.key);
+    });
+    return arr;
+  }
+
+  document.getElementById('tagSubmit').addEventListener('click', () => {
+    const propsPicked = getPicked('props');
+    const eventsPicked = getPicked('events');
+    const slotsPicked = getPicked('slots');
+    const statePicked = getPicked('state')[0] || null;
+
+    let totalCorrect = 0;
+    let totalIdeal = 0;
+    let wrongs = [];
+    let missings = [];
+
+    function check(group, picked, ideal) {
+      const setI = ideal instanceof Set ? ideal : new Set([ideal]);
+      const setP = new Set(picked);
+      let correct = 0;
+      setI.forEach(k => { if (setP.has(k)) correct++; });
+      totalCorrect += correct;
+      totalIdeal += setI.size;
+      const wrong = [...setP].filter(k => !setI.has(k));
+      const missing = [...setI].filter(k => !setP.has(k));
+      return { correct, wrong, missing };
+    }
+
+    const rProps = check('props', propsPicked, PERFECT.props);
+    const rEvents = check('events', eventsPicked, PERFECT.events);
+    const rSlots = check('slots', slotsPicked, PERFECT.slots);
+    const rState = check('state', statePicked ? [statePicked] : [], new Set([PERFECT.state]));
+
+    const lines = [];
+
+    function fmtLine(label, r, groupName) {
+      const labelMap = {
+        'props': '<code>color</code> / <code>size</code> / <code>closable</code> / <code>dot</code>',
+        'events': '<code>onClose</code> / <code>onClick</code>',
+        'slots': '<code>children</code> / <code>leftIcon</code>',
+        'state': '<code>无状态</code>（纯展示）'
+      };
+      if (r.wrong.length === 0 && r.missing.length === 0) {
+        lines.push(`<li><strong>${label}</strong>：完美命中 — ${labelMap[groupName]}</li>`);
+      } else {
+        let line = `<strong>${label}</strong>：`;
+        if (r.missing.length > 0) {
+          const miss = r.missing.map(k => `<code style="color:#ffd166">${k.replace('-prop','').replace('stateless','无状态')}</code>`).join(' / ');
+          line += `缺 ${miss}；`;
+        }
+        if (r.wrong.length > 0) {
+          const extra = r.wrong.map(k => `<code style="color:#ff8a6e">${k.replace('-prop','').replace('-event','')}</code>`).join(' / ');
+          line += `多了 ${extra}`;
+        }
+        if (r.wrong.length > 0) {
+          const why = r.wrong.map(k => EXPLAIN[k]).filter(Boolean)[0];
+          if (why) line += `<br><span class="why">↳ ${why}</span>`;
+        }
+        lines.push(`<li>${line}</li>`);
+      }
+    }
+
+    fmtLine('Props', rProps, 'props');
+    fmtLine('Events', rEvents, 'events');
+    fmtLine('Slots', rSlots, 'slots');
+    fmtLine('State boundary', rState, 'state');
+
+    const totalWrong = rProps.wrong.length + rEvents.wrong.length + rSlots.wrong.length + rState.wrong.length;
+    let verdictClass, verdictLabel, headline;
+
+    if (totalCorrect === totalIdeal && totalWrong === 0) {
+      verdictClass = 'win';
+      verdictLabel = '完美';
+      headline = '<span class="em">契约思维 unlock</span>。下次可以直接写 TS interface 了。';
+    } else if (totalCorrect >= totalIdeal - 1 && totalWrong <= 1) {
+      verdictClass = 'win';
+      verdictLabel = '基本对了';
+      headline = '差一两条——但你已经在用合同的语言描述组件。';
+    } else {
+      verdictClass = 'partial';
+      verdictLabel = '还差一点';
+      headline = '换个角度看：每一条契约都对应"工程师可能问的一个问题"。';
+    }
+
+    const finalCode = `<div class="tj-code"><span class="cc">// Tag 组件的契约（参考）</span>
+<span class="ck">interface</span> <span class="cn">TagProps</span> {
+  <span class="cf">color</span>: <span class="cs">'red' | 'green' | 'blue' | 'gray' | 'yellow' | 'purple'</span>;
+  <span class="cf">size</span>?: <span class="cs">'sm' | 'md' | 'lg'</span>;
+  <span class="cf">dot</span>?: <span class="cn">boolean</span>;
+  <span class="cf">closable</span>?: <span class="cn">boolean</span>;
+  <span class="cf">leftIcon</span>?: <span class="cn">ReactNode</span>;<span class="cc">  // slot</span>
+  <span class="cf">children</span>: <span class="cn">ReactNode</span>;<span class="cc">    // slot - 标签文字</span>
+  <span class="cf">onClick</span>?: <span class="cv">(e</span>: <span class="cn">MouseEvent</span><span class="cv">) =&gt; void</span>;
+  <span class="cf">onClose</span>?: <span class="cv">() =&gt; void</span>;<span class="cc">  // closable 时必填</span>
+}</div>`;
+
+    judge.innerHTML = `<span class="verdict ${verdictClass}">${verdictLabel}</span><h4>${headline}</h4><ul>${lines.join('')}</ul>${finalCode}`;
+    judge.classList.add('show');
+    judge.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  });
+
+  document.getElementById('tagReset').addEventListener('click', () => {
+    allOpts.forEach(i => { i.checked = false; });
+    refresh();
+    judge.classList.remove('show');
+  });
+
+  refresh();
+})();
+</script>
+
+</body>
+</html>

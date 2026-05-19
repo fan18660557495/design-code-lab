@@ -1,0 +1,1298 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>交付与验收：从视觉稿到规则说明书 — AI LABBOOK · X19</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,300..900&family=Geist:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Noto+Sans+SC:wght@300;400;500;700;900&family=Noto+Serif+SC:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f3eee5;
+    --bg-2: #ebe4d4;
+    --ink: #16161d;
+    --ink-soft: #4a4a55;
+    --ink-mute: #8a8a92;
+    --line: #d5cdba;
+    --line-soft: #e3dcca;
+    --accent: #ff4d2e;
+    --accent-soft: #ffe4dc;
+    --blue: #0a4cff;
+    --blue-soft: #dde6ff;
+    --green: #1f6b3a;
+    --green-soft: #d4ecdb;
+    --yellow: #ffcf3d;
+    --paper: #faf7f0;
+    --shadow: 0 1px 0 rgba(0,0,0,0.04), 0 8px 24px rgba(22,22,29,0.06);
+
+    --obj-color: #ff4d2e;
+    --obj-soft: rgba(255,77,46,0.12);
+    --proj-color: #1f6b3a;
+    --proj-soft: rgba(31,107,58,0.12);
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'Geist', 'Noto Sans SC', system-ui, -apple-system, sans-serif;
+    font-size: 16px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    background-image: radial-gradient(circle at 1px 1px, rgba(22,22,29,0.05) 1px, transparent 0);
+    background-size: 24px 24px;
+  }
+
+  .display-cn { font-family: 'Noto Serif SC', 'Fraunces', serif; font-weight: 900; letter-spacing: -0.01em; }
+  .display-en { font-family: 'Fraunces', 'Noto Serif SC', serif; font-weight: 600; font-style: italic; letter-spacing: -0.02em; }
+  .mono { font-family: 'JetBrains Mono', monospace; }
+  .label { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-mute); }
+
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 0 32px; }
+
+  /* Topbar */
+  .topbar {
+    border-bottom: 1px dashed var(--line);
+    padding: 16px 0;
+    background: var(--bg);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .topbar-inner { display: flex; justify-content: space-between; align-items: center; gap: 24px; flex-wrap: wrap; }
+  .brand-block { display: flex; align-items: center; gap: 10px; font-family: 'JetBrains Mono', monospace; font-size: 13px; }
+  .brand { display: inline-flex; align-items: center; gap: 6px; color: var(--ink); text-decoration: none; font-weight: 600; }
+  .brand-arrow { color: var(--ink-mute); transition: transform .2s; }
+  .brand:hover .brand-arrow { transform: translateX(-3px); }
+  .brand .dot { display: inline-block; width: 8px; height: 8px; background: var(--accent); border-radius: 50%; vertical-align: middle; animation: pulse 2s ease-in-out infinite; margin-left: 4px; }
+  .brand-sep { color: var(--ink-mute); }
+  .brand-current { color: var(--ink-soft); }
+  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+  .nav-links { display: flex; gap: 18px; font-size: 13px; flex-wrap: wrap; }
+  .nav-links a { color: var(--ink-soft); text-decoration: none; transition: color 0.2s; }
+  .nav-links a:hover { color: var(--accent); }
+  .nav-links a.current { color: var(--accent); font-weight: 600; }
+
+  /* Hero */
+  .hero { padding: 100px 0 80px; position: relative; overflow: hidden; }
+  .hero-meta { display: flex; gap: 24px; margin-bottom: 32px; align-items: center; flex-wrap: wrap; }
+  .hero-meta .pill { padding: 6px 12px; border: 1px solid var(--ink); border-radius: 100px; font-size: 11px; font-family: 'JetBrains Mono', monospace; letter-spacing: 0.05em; }
+  .hero-meta .pill.fill { background: var(--ink); color: var(--bg); }
+  .hero-meta .pill.purple { background: var(--obj-color); color: white; border-color: var(--obj-color); }
+  .hero h1 {
+    font-family: 'Noto Serif SC', 'Fraunces', serif;
+    font-weight: 900;
+    font-size: clamp(48px, 7vw, 92px);
+    line-height: 0.95;
+    letter-spacing: -0.03em;
+    margin: 0 0 24px;
+  }
+  .hero h1 .em { font-family: 'Noto Serif SC', serif; font-weight: 500; color: var(--accent); }
+  .hero h1 .purple { color: var(--obj-color); font-family: 'Noto Serif SC', serif; font-weight: 500; }
+  .hero p.lede {
+    font-size: 20px;
+    line-height: 1.5;
+    max-width: 640px;
+    color: var(--ink-soft);
+    margin: 0 0 40px;
+  }
+  .hero-grid { display: grid; grid-template-columns: 1.4fr 1fr; gap: 48px; align-items: end; }
+  @media (max-width: 880px) { .hero-grid { grid-template-columns: 1fr; } }
+  .hero-side { border-left: 1px dashed var(--line); padding-left: 24px; font-size: 13px; color: var(--ink-soft); }
+  .hero-side .row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px dashed var(--line); gap: 12px; }
+  .hero-side .row:last-child { border-bottom: none; }
+  .hero-side .row .k { color: var(--ink-mute); font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.05em; text-transform: uppercase; }
+  .hero-side .row .v { font-weight: 500; }
+
+  /* Sections */
+  section { padding: 80px 0; border-top: 1px solid var(--line); position: relative; }
+  .section-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 56px; flex-wrap: wrap; gap: 16px; }
+  .section-num { font-family: 'JetBrains Mono', monospace; font-size: 13px; color: var(--ink-mute); letter-spacing: 0.1em; margin-top: 6px; }
+  .section-num strong { color: var(--accent); }
+  .section-title { font-family: 'Noto Serif SC', serif; font-weight: 900; font-size: clamp(32px, 4.5vw, 52px); line-height: 1.05; letter-spacing: -0.02em; margin: 8px 0 0; max-width: 22ch; }
+  .section-title .em { font-family: 'Noto Serif SC', serif; font-weight: 500; color: var(--accent); }
+  .section-title .purple { color: var(--obj-color); font-family: 'Noto Serif SC', serif; font-weight: 500; }
+  .section-sub { color: var(--ink-soft); font-size: 17px; max-width: 38ch; line-height: 1.55; margin: 0; }
+
+  /* Act tag */
+  .act-tag { display: inline-block; padding: 4px 12px; font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; border-radius: 100px; }
+  .act-tag.look { background: var(--blue-soft); color: var(--blue); }
+  .act-tag.break { background: var(--obj-soft); color: var(--obj-color); }
+  .act-tag.make { background: var(--proj-soft); color: var(--proj-color); }
+
+  /* Problem cards */
+  .problem-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; margin-top: 24px; }
+  @media (max-width: 880px) { .problem-grid { grid-template-columns: 1fr; } }
+  .problem-card { background: var(--paper); border: 1px solid var(--line); border-radius: 6px; padding: 28px; position: relative; }
+  .problem-card.bad { border-color: var(--accent); background: var(--accent-soft); }
+  .problem-card.good { border-color: var(--obj-color); background: var(--obj-soft); }
+  .problem-card .tag { position: absolute; top: -12px; left: 24px; background: var(--bg); padding: 2px 10px; font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.1em; }
+  .problem-card.bad .tag { color: var(--accent); border: 1px solid var(--accent); }
+  .problem-card.good .tag { color: var(--obj-color); border: 1px solid var(--obj-color); }
+  .problem-card h3 { font-family: 'Noto Serif SC', serif; font-size: 22px; margin: 0 0 12px; font-weight: 700; }
+  .problem-card p { margin: 0; color: var(--ink-soft); font-size: 14px; line-height: 1.55; }
+  .problem-card p + p { margin-top: 10px; }
+
+  /* GAME 1: 4 layers tabs */
+  .layers-stage { background: var(--paper); border: 1px solid var(--line); border-radius: 8px; padding: 28px; position: relative; overflow: hidden; }
+  .layers-head { display: flex; flex-direction: column; gap: 6px; margin-bottom: 22px; padding-bottom: 18px; border-bottom: 1px dashed var(--line); }
+  .layers-case-label { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.1em; color: var(--ink-mute); text-transform: uppercase; }
+  .layers-case-title { font-family: 'Noto Serif SC', serif; font-weight: 700; font-size: 20px; }
+  .layers-tabs { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 24px; }
+  .layers-tab { flex: 1 1 auto; min-width: 160px; background: white; border: 1px solid var(--line); border-radius: 6px; padding: 14px 16px; cursor: pointer; transition: all 0.2s; text-align: left; font-family: inherit; color: var(--ink); }
+  .layers-tab:hover { border-color: var(--obj-color); transform: translateY(-1px); }
+  .layers-tab.active { border-color: var(--obj-color); background: var(--obj-soft); box-shadow: 0 0 0 2px var(--obj-soft); }
+  .layers-tab .tab-num { font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.08em; color: var(--ink-mute); text-transform: uppercase; }
+  .layers-tab.active .tab-num { color: var(--obj-color); font-weight: 700; }
+  .layers-tab .tab-name { font-family: 'Noto Serif SC', serif; font-weight: 700; font-size: 15px; margin-top: 2px; }
+  .layers-tab .tab-en { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--ink-mute); margin-top: 2px; }
+
+  .layers-body { display: grid; grid-template-columns: 1.3fr 1fr; gap: 24px; }
+  @media (max-width: 880px) { .layers-body { grid-template-columns: 1fr; } }
+  .layers-content { background: white; border: 1px solid var(--line); border-radius: 6px; padding: 22px; min-height: 280px; }
+  .layers-content h5 { font-family: 'Noto Serif SC', serif; font-size: 17px; margin: 0 0 8px; font-weight: 700; color: var(--obj-color); }
+  .layers-content .layer-tag { font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.08em; color: var(--ink-mute); text-transform: uppercase; }
+  .layers-content ul { margin: 10px 0 0; padding-left: 20px; font-size: 13px; line-height: 1.7; color: var(--ink-soft); }
+  .layers-content ul li + li { margin-top: 4px; }
+  .layers-content code { font-family: 'JetBrains Mono', monospace; background: var(--bg-2); padding: 1px 5px; border-radius: 3px; font-size: 12px; }
+  .layers-questions { background: var(--accent-soft); border: 1px solid var(--accent); border-radius: 6px; padding: 22px; min-height: 280px; }
+  .layers-questions .q-tag { font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.08em; color: var(--accent); text-transform: uppercase; }
+  .layers-questions h5 { font-family: 'Noto Serif SC', serif; font-size: 17px; margin: 4px 0 12px; font-weight: 700; color: var(--accent); }
+  .layers-questions .q-list { display: flex; flex-direction: column; gap: 8px; }
+  .layers-questions .q-item { background: white; border: 1px solid var(--accent); border-radius: 4px; padding: 8px 12px 8px 30px; font-size: 13px; color: var(--ink); position: relative; }
+  .layers-questions .q-item::before { content: '?'; position: absolute; left: 10px; top: 50%; transform: translateY(-50%); width: 16px; height: 16px; background: var(--accent); color: white; border-radius: 50%; font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center; }
+  .layers-questions.is-accept { background: var(--proj-soft); border-color: var(--proj-color); }
+  .layers-questions.is-accept .q-tag, .layers-questions.is-accept h5 { color: var(--proj-color); }
+  .layers-questions.is-accept .q-item { border-color: var(--proj-color); }
+  .layers-questions.is-accept .q-item::before { content: '✓'; background: var(--proj-color); }
+  .layers-foot { margin-top: 22px; padding-top: 18px; border-top: 1px dashed var(--line); display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  @media (max-width: 720px) { .layers-foot { grid-template-columns: 1fr; } }
+  .layers-foot .foot-card { padding: 14px 18px; border-radius: 6px; font-size: 13px; line-height: 1.55; display: flex; flex-direction: column; gap: 4px; }
+  .layers-foot .foot-card.bad { background: var(--accent-soft); border: 1px solid var(--accent); }
+  .layers-foot .foot-card.good { background: var(--proj-soft); border: 1px solid var(--proj-color); }
+  .layers-foot .foot-label { font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; }
+  .layers-foot .foot-card.bad .foot-label { color: var(--accent); }
+  .layers-foot .foot-card.good .foot-label { color: var(--proj-color); }
+  .layers-foot .foot-stat { font-family: 'JetBrains Mono', monospace; font-size: 22px; font-weight: 700; }
+  .layers-foot .foot-card.bad .foot-stat { color: var(--accent); }
+  .layers-foot .foot-card.good .foot-stat { color: var(--proj-color); }
+
+  /* Reveal bar */
+  .reveal-bar {
+    margin-top: 32px;
+    padding: 20px 28px;
+    background: var(--ink);
+    color: var(--bg);
+    border-radius: 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+  .reveal-bar .msg { font-family: 'Noto Serif SC', serif; font-size: 17px; font-weight: 500; line-height: 1.55; }
+  .reveal-bar .msg .em { color: var(--accent); }
+  .reveal-bar .counter { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ink-mute); letter-spacing: 0.05em; }
+  .reveal-bar .counter strong { color: var(--accent); font-size: 14px; }
+
+  /* GAME 2: spec modules */
+  .modules-stage { margin-top: 32px; }
+  .modules-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 18px; }
+  .module-card { background: var(--paper); border: 1px solid var(--line); border-radius: 8px; padding: 20px; transition: all 0.2s; position: relative; }
+  .module-card.expanded { border-color: var(--obj-color); background: white; box-shadow: 0 0 0 2px var(--obj-soft), 0 8px 24px rgba(255,77,46,0.1); }
+  .module-card.checked { border-color: var(--proj-color); }
+  .module-card.checked .module-num { background: var(--proj-color); }
+  .module-head { display: flex; align-items: flex-start; gap: 12px; cursor: pointer; }
+  .module-num { width: 28px; height: 28px; border-radius: 50%; background: var(--obj-color); color: white; display: flex; align-items: center; justify-content: center; font-family: 'Fraunces', serif; font-style: italic; font-weight: 700; font-size: 13px; flex-shrink: 0; transition: background 0.2s; }
+  .module-title-wrap { flex: 1; min-width: 0; }
+  .module-title { font-family: 'Noto Serif SC', serif; font-size: 17px; font-weight: 700; line-height: 1.2; }
+  .module-en { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ink-mute); letter-spacing: 0.05em; }
+  .module-toggle { width: 22px; height: 22px; border-radius: 4px; border: 1px solid var(--line); background: white; color: var(--ink-mute); font-size: 14px; line-height: 1; cursor: pointer; padding: 0; flex-shrink: 0; }
+  .module-card.expanded .module-toggle { color: var(--obj-color); border-color: var(--obj-color); }
+  .module-body { max-height: 0; overflow: hidden; transition: max-height 0.3s ease; }
+  .module-card.expanded .module-body { max-height: 800px; }
+  .module-body-inner { margin-top: 14px; padding-top: 14px; border-top: 1px dashed var(--line); }
+  .module-body-inner h6 { font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-mute); margin: 8px 0 4px; }
+  .module-body-inner ul { margin: 0; padding-left: 18px; font-size: 12px; line-height: 1.65; color: var(--ink-soft); }
+  .module-body-inner code { font-family: 'JetBrains Mono', monospace; background: var(--bg-2); padding: 1px 4px; border-radius: 3px; font-size: 11px; }
+  .module-checkbox-row { display: flex; align-items: center; gap: 8px; margin-top: 14px; padding-top: 12px; border-top: 1px dashed var(--line); cursor: pointer; }
+  .module-checkbox { width: 18px; height: 18px; border: 1.5px solid var(--ink-soft); border-radius: 4px; background: white; cursor: pointer; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 12px; color: white; transition: all 0.15s; }
+  .module-card.checked .module-checkbox { background: var(--proj-color); border-color: var(--proj-color); }
+  .module-card.checked .module-checkbox::before { content: '✓'; }
+  .module-checkbox-label { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ink-soft); letter-spacing: 0.04em; }
+  .module-card.checked .module-checkbox-label { color: var(--proj-color); font-weight: 600; }
+
+  .modules-progress { margin-top: 22px; padding: 18px 24px; background: var(--bg-2); border: 1px solid var(--line); border-radius: 8px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 14px; }
+  .modules-progress-label { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--ink-soft); letter-spacing: 0.05em; }
+  .modules-progress-bar { flex: 1; max-width: 360px; min-width: 200px; height: 8px; background: white; border: 1px solid var(--line); border-radius: 100px; overflow: hidden; }
+  .modules-progress-fill { height: 100%; background: linear-gradient(90deg, var(--obj-color), var(--proj-color)); transition: width 0.3s ease; width: 0%; }
+  .modules-progress-stat { font-family: 'JetBrains Mono', monospace; font-size: 14px; font-weight: 700; color: var(--obj-color); }
+  .modules-progress-stat.complete { color: var(--proj-color); }
+
+  /* GAME 3: spec builder */
+  .builder-stage { background: var(--paper); border: 1px solid var(--line); border-radius: 8px; padding: 32px; margin-top: 24px; }
+  .builder-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 28px; flex-wrap: wrap; gap: 16px; }
+  .builder-title { font-family: 'Noto Serif SC', serif; font-size: 22px; margin: 0; font-weight: 700; }
+  .builder-progress { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--ink-mute); }
+  .builder-progress .done { color: var(--proj-color); font-weight: 700; font-size: 14px; }
+
+  /* Skeleton info */
+  .skeleton-block { background: white; border: 1px solid var(--line); border-radius: 8px; padding: 22px 24px; margin-bottom: 28px; }
+  .skeleton-block h4 { font-family: 'Noto Serif SC', serif; font-size: 16px; margin: 0 0 14px; font-weight: 700; }
+  .skeleton-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+  @media (max-width: 880px) { .skeleton-grid { grid-template-columns: 1fr; } }
+  .skeleton-card { background: var(--proj-soft); border: 1px solid var(--proj-color); border-radius: 6px; padding: 12px 14px; }
+  .skeleton-tag { font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.08em; color: var(--proj-color); text-transform: uppercase; font-weight: 600; }
+  .skeleton-card h5 { font-family: 'Noto Serif SC', serif; font-size: 14px; margin: 3px 0 4px; font-weight: 700; }
+  .skeleton-card p { margin: 0; font-size: 12px; color: var(--ink-soft); line-height: 1.55; }
+  .skeleton-card .skeleton-mark { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--proj-color); font-weight: 700; margin-top: 4px; display: inline-block; }
+
+  /* Fill A — data contract table */
+  .fill-block { background: white; border: 1px solid var(--line); border-radius: 8px; padding: 22px 24px; margin-bottom: 24px; }
+  .fill-head { display: flex; align-items: baseline; justify-content: space-between; flex-wrap: wrap; gap: 10px; margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px dashed var(--line); }
+  .fill-title { font-family: 'Noto Serif SC', serif; font-size: 17px; margin: 0; font-weight: 700; }
+  .fill-title .em { color: var(--obj-color); }
+  .fill-tag { font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.1em; padding: 3px 10px; border-radius: 100px; text-transform: uppercase; background: var(--obj-soft); color: var(--obj-color); font-weight: 600; }
+  .contract-table { width: 100%; border-collapse: separate; border-spacing: 0; }
+  .contract-table thead th { font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-mute); text-align: left; padding: 8px 10px; background: var(--bg-2); border-bottom: 1px solid var(--line); }
+  .contract-table tbody td { padding: 10px 8px; border-bottom: 1px dashed var(--line-soft); vertical-align: top; font-size: 13px; }
+  .contract-table tbody td.field-cell { font-family: 'JetBrains Mono', monospace; font-weight: 600; color: var(--obj-color); padding-left: 10px; min-width: 90px; }
+  .contract-input, .contract-select, .contract-textarea { width: 100%; background: var(--bg); border: 1px solid var(--line); border-radius: 4px; padding: 6px 8px; font-family: 'Geist', 'Noto Sans SC', system-ui, sans-serif; font-size: 12px; color: var(--ink); transition: all 0.15s; }
+  .contract-input:focus, .contract-select:focus, .contract-textarea:focus { outline: none; border-color: var(--obj-color); background: white; box-shadow: 0 0 0 2px var(--obj-soft); }
+  .contract-textarea { min-height: 38px; resize: vertical; font-family: 'JetBrains Mono', monospace; font-size: 11px; line-height: 1.45; }
+  .contract-required-toggle { display: inline-flex; align-items: center; gap: 6px; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ink-soft); cursor: pointer; user-select: none; }
+  .contract-required-toggle input { margin: 0; cursor: pointer; }
+
+  /* Fill B — acceptance checklist */
+  .accept-list { display: flex; flex-direction: column; gap: 10px; }
+  .accept-item { display: flex; gap: 12px; padding: 12px 14px; background: var(--bg); border: 1px solid var(--line); border-radius: 6px; align-items: flex-start; cursor: pointer; transition: all 0.15s; }
+  .accept-item:hover { border-color: var(--obj-color); background: white; }
+  .accept-item.checked { background: var(--proj-soft); border-color: var(--proj-color); }
+  .accept-check { width: 18px; height: 18px; border: 1.5px solid var(--ink-soft); border-radius: 4px; background: white; flex-shrink: 0; margin-top: 1px; display: flex; align-items: center; justify-content: center; font-size: 12px; color: white; line-height: 1; }
+  .accept-item.checked .accept-check { background: var(--proj-color); border-color: var(--proj-color); }
+  .accept-item.checked .accept-check::before { content: '✓'; }
+  .accept-text { font-size: 13px; line-height: 1.55; color: var(--ink); }
+  .accept-text .gwt { display: inline-block; font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.05em; padding: 1px 6px; border-radius: 3px; margin-right: 4px; background: var(--bg-2); color: var(--ink-mute); }
+  .accept-item.checked .accept-text .gwt { background: var(--proj-color); color: white; }
+  .accept-extra-block { margin-top: 14px; padding-top: 14px; border-top: 1px dashed var(--line); }
+  .accept-extra-label { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ink-mute); letter-spacing: 0.05em; margin-bottom: 6px; display: block; }
+  .accept-extra-textarea { width: 100%; min-height: 56px; background: var(--bg); border: 1px solid var(--line); border-radius: 4px; padding: 8px 10px; font-family: 'Geist', 'Noto Sans SC', system-ui, sans-serif; font-size: 12px; line-height: 1.55; color: var(--ink); transition: all 0.15s; resize: vertical; }
+  .accept-extra-textarea:focus { outline: none; border-color: var(--obj-color); background: white; box-shadow: 0 0 0 2px var(--obj-soft); }
+
+  .builder-actions { display: flex; gap: 12px; margin-top: 24px; flex-wrap: wrap; }
+  .builder-btn { padding: 10px 22px; border-radius: 100px; font-family: 'JetBrains Mono', monospace; font-size: 12px; letter-spacing: 0.06em; text-transform: uppercase; cursor: pointer; font-weight: 600; border: 1px solid var(--ink); background: transparent; color: var(--ink); transition: all 0.15s; }
+  .builder-btn:hover { background: var(--ink); color: var(--bg); }
+  .builder-btn.primary { background: var(--accent); color: white; border-color: var(--accent); }
+  .builder-btn.primary:hover { background: #e8451f; }
+
+  .builder-judge { margin-top: 24px; padding: 24px 26px; border-radius: 8px; background: var(--ink); color: var(--bg); display: none; }
+  .builder-judge.show { display: block; }
+  .builder-judge .verdict { display: inline-block; font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; padding: 3px 10px; border-radius: 100px; }
+  .builder-judge .verdict.win { color: #1f6b3a; background: #d4ecdb; }
+  .builder-judge .verdict.partial { color: #c79f1e; background: #fff3cc; }
+  .builder-judge h4 { font-family: 'Noto Serif SC', serif; font-size: 22px; margin: 10px 0 14px; color: white; line-height: 1.3; }
+  .builder-judge ul { color: #c8c8d0; margin: 0; padding-left: 20px; font-size: 13px; line-height: 1.75; }
+  .builder-judge ul li + li { margin-top: 10px; }
+  .builder-judge ul strong { color: white; }
+  .builder-judge ul .why { color: #a0a0aa; font-size: 12px; }
+  .builder-judge ul code { font-family: 'JetBrains Mono', monospace; background: rgba(255,255,255,0.08); padding: 1px 5px; border-radius: 3px; font-size: 12px; }
+
+  /* tips */
+  .tips-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 28px; margin-top: 24px; }
+  @media (max-width: 880px) { .tips-grid { grid-template-columns: 1fr; } }
+  .tip { background: var(--paper); border: 1px solid var(--line); border-radius: 6px; padding: 24px; position: relative; }
+  .tip-num { position: absolute; top: -14px; left: 16px; width: 32px; height: 32px; border-radius: 50%; background: var(--obj-color); color: white; display: flex; align-items: center; justify-content: center; font-family: 'Fraunces', serif; font-style: italic; font-weight: 600; font-size: 14px; }
+  .tip h4 { font-family: 'Noto Serif SC', serif; font-size: 18px; margin: 8px 0 10px; font-weight: 700; }
+  .tip p { color: var(--ink-soft); font-size: 14px; line-height: 1.6; margin: 0; }
+  .tip p + p { margin-top: 8px; }
+  .tip-outro { margin-top: 44px; padding: 30px 32px; background: var(--ink); color: var(--bg); border-radius: 8px; display: grid; grid-template-columns: auto 1fr; gap: 28px; align-items: flex-start; }
+  @media (max-width: 720px) { .tip-outro { grid-template-columns: 1fr; gap: 12px; } }
+  .outro-tag { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.1em; color: var(--accent); padding-top: 4px; }
+  .tip-outro p { margin: 0 0 12px; color: #c8c8d0; line-height: 1.65; font-size: 15px; }
+  .tip-outro p:last-child { margin-bottom: 0; }
+  .tip-outro strong { color: white; }
+
+  /* next post */
+  .next-post { display: flex; justify-content: space-between; align-items: center; margin-top: 56px; padding: 32px; background: var(--bg-2); border: 1px solid var(--line); border-radius: 8px; text-decoration: none; color: var(--ink); transition: all 0.2s; gap: 24px; flex-wrap: wrap; }
+  .next-post:hover { background: var(--ink); color: var(--bg); }
+  .next-post:hover .np-tag { color: var(--accent); }
+  .next-post:hover .em { color: var(--accent); }
+  .next-post:hover p { color: #c8c8d0; }
+  .np-tag { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.1em; color: var(--ink-mute); margin-bottom: 6px; }
+  .next-post h4 { font-family: 'Noto Serif SC', serif; font-size: 26px; margin: 0 0 8px; font-weight: 700; }
+  .next-post .em { color: var(--obj-color); font-weight: 500; }
+  .next-post p { margin: 0; color: var(--ink-soft); font-size: 14px; max-width: 56ch; }
+  .np-cta { font-family: 'JetBrains Mono', monospace; font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; white-space: nowrap; }
+  .np-cta .arr { display: inline-block; transition: transform .2s; }
+  .next-post:hover .arr { transform: translateX(4px); }
+
+  /* footer */
+  footer { padding: 56px 0 64px; background: var(--bg); color: var(--ink-soft); border-top: 1px solid var(--line); }
+  .byline-group { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; margin-bottom: 32px; padding-bottom: 32px; border-bottom: 1px dashed var(--line); }
+  @media (max-width: 880px) { .byline-group { grid-template-columns: 1fr; } }
+  .byline { display: flex; gap: 16px; align-items: center; }
+  .byline .avatar { width: 56px; height: 56px; border-radius: 50%; object-fit: cover; flex-shrink: 0; }
+  .byline-label { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--accent); letter-spacing: 0.1em; }
+  .byline-label .dot { display: inline-block; width: 6px; height: 6px; background: var(--accent); border-radius: 50%; margin-right: 4px; vertical-align: middle; animation: pulse 2s ease-in-out infinite; }
+  .byline-name { font-family: 'Noto Serif SC', serif; font-weight: 700; font-size: 18px; margin: 4px 0; color: var(--ink); }
+  .byline-name .em { color: var(--accent); font-weight: 500; }
+  .byline-tag { color: var(--ink-soft); font-size: 13px; margin: 0; line-height: 1.5; }
+  .footer-meta { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ink-mute); text-align: center; letter-spacing: 0.05em; }
+  .footer-meta .heart { color: var(--accent); }
+
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="wrap topbar-inner">
+    <div class="brand-block">
+      <a href="book.html#vol-3" class="brand"><span class="brand-arrow">←</span>AI LABBOOK <span class="dot"></span></a>
+      <span class="brand-sep">/</span>
+      <span class="brand-current">X19 · 交付与验收</span>
+    </div>
+    <nav class="nav-links">
+      <a href="book.html#vol-3">路线图</a>
+    </nav>
+  </div>
+</div>
+
+<!-- Hero -->
+<header class="hero">
+  <div class="wrap">
+    <div class="hero-meta">
+      <span class="pill fill">高阶 · ADVANCED</span>
+      <span class="pill purple">STAGE 05 · 系统演进</span>
+      <span class="pill">X19 · 交付</span>
+      <span class="label">阅读 ≈ 17 分钟 · 含 3 段互动</span>
+    </div>
+    <div class="hero-grid">
+      <div>
+        <h1>
+          稿子不是<br>
+          <span class="display-cn">交付</span>——<br>
+          <span class="purple">规则说明书</span>才是。
+        </h1>
+        <p class="lede">
+          工程师拿到稿子开始问 10 个问题——这 10 个问题就是稿子没说的。<br>
+          真正的交付是一份"读完就能写代码 + 写测试 + 验收"的文档。
+        </p>
+      </div>
+      <div class="hero-side">
+        <div class="row"><span class="k">本页讲什么</span><span class="v">稿子 → 说明书</span></div>
+        <div class="row"><span class="k">三幕</span><span class="v">看见 · 拆开 · 再做</span></div>
+        <div class="row"><span class="k">面向</span><span class="v">交付前的设计师</span></div>
+        <div class="row"><span class="k">前置</span><span class="v">熟悉 Figma 标注</span></div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- Section 01: 问题 -->
+<section id="problem">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>01</strong> / 问题</div>
+        <h2 class="section-title">为什么稿子<br>开发完后<span class="em">总要返工 5 次</span>？</h2>
+      </div>
+      <p class="section-sub">
+        因为你交的是<strong>视觉</strong>——但代码不止视觉。代码还要处理交互、数据、异常。
+        没说的部分，工程师只能猜——猜错了就返工。
+      </p>
+    </div>
+
+    <div class="problem-grid">
+      <div class="problem-card bad">
+        <span class="tag">稿子思维 · MOCKUP</span>
+        <h3>"稿子 + 标注 = 完成"</h3>
+        <p>设计师交一个 Figma 链接 + 标注：颜色、字号、spacing 都标全。<strong>看起来很完整。</strong></p>
+        <p><strong>工程师做完测试发现：</strong>按钮 disabled 颜色没标？empty state 谁画？接口报错怎么显示？提交超时呢？返工 5 次。</p>
+        <p style="color:var(--accent)"><strong>你：</strong>呃……每次都是临时补一个状态？</p>
+      </div>
+
+      <div class="problem-card good">
+        <span class="tag">说明书思维 · SPEC</span>
+        <h3>"规则说明书"</h3>
+        <p>视觉 + <strong>交互流程</strong> + <strong>数据约束</strong> + <strong>验收清单</strong> 四层一份文档。每层都写清，每层都可读。</p>
+        <p><strong>工程师拿到：</strong>1 次到位写完代码，QA 照单写测试用例，PM 照单验收。三方对齐。</p>
+        <p style="color:var(--obj-color)"><strong>结果：</strong>返工 → 0 次。</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Section 02: 幕一 · 看见 -->
+<section id="look">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <span class="act-tag look">幕一 · 看见</span>
+        <div class="section-num"><strong>02</strong> / 看见</div>
+        <h2 class="section-title"><span class="purple">4 层交付物</span>。</h2>
+      </div>
+      <p class="section-sub">
+        看下面对比——只交视觉稿 vs 交完整规则说明书，工程师反复追问的差距。
+        点切换 Tab，看每一层都写了什么、工程师还会问什么。
+      </p>
+    </div>
+
+    <div class="layers-stage">
+      <div class="layers-head">
+        <span class="layers-case-label">案例 · CASE</span>
+        <span class="layers-case-title">「确认删除 Modal」组件交付</span>
+      </div>
+
+      <div class="layers-tabs" id="layersTabs">
+        <button class="layers-tab active" data-layer="visuals">
+          <div class="tab-num">01 · 第一层</div>
+          <div class="tab-name">视觉</div>
+          <div class="tab-en">VISUALS</div>
+        </button>
+        <button class="layers-tab" data-layer="interactions">
+          <div class="tab-num">02 · 第二层</div>
+          <div class="tab-name">交互流程</div>
+          <div class="tab-en">INTERACTIONS</div>
+        </button>
+        <button class="layers-tab" data-layer="data">
+          <div class="tab-num">03 · 第三层</div>
+          <div class="tab-name">数据契约</div>
+          <div class="tab-en">DATA CONTRACT</div>
+        </button>
+        <button class="layers-tab" data-layer="accept">
+          <div class="tab-num">04 · 第四层</div>
+          <div class="tab-name">验收清单</div>
+          <div class="tab-en">ACCEPTANCE</div>
+        </button>
+      </div>
+
+      <div class="layers-body">
+        <div class="layers-content" id="layerContent">
+          <!-- filled by JS -->
+        </div>
+        <div class="layers-questions" id="layerQuestions">
+          <!-- filled by JS -->
+        </div>
+      </div>
+
+      <div class="layers-foot">
+        <div class="foot-card bad">
+          <span class="foot-label">只交 Tab 1 · 视觉</span>
+          <span class="foot-stat" id="footBad">5×</span>
+          <span>工程返工次数 · 用户 bug 高发</span>
+        </div>
+        <div class="foot-card good">
+          <span class="foot-label">交全 4 Tab · 说明书</span>
+          <span class="foot-stat" id="footGood">0×</span>
+          <span>工程 0 追问 + 测试 0 返工</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="reveal-bar">
+      <div class="msg">
+        4 层都交 = <span class="em">工程 0 追问 + 测试 0 返工</span>。<br>
+        视觉只是 1/4——真正的交付物在另外 3 层。
+      </div>
+      <div class="counter">
+        已浏览 <strong id="layerVisited">1</strong> / 4 层
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Section 03: 幕二 · 拆开 -->
+<section id="break">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <span class="act-tag break">幕二 · 拆开</span>
+        <div class="section-num"><strong>03</strong> / 拆开</div>
+        <h2 class="section-title"><span class="purple">规则说明书</span><br>解剖。</h2>
+      </div>
+      <p class="section-sub">
+        一份完整的说明书包含 <strong>5 个标准模块</strong>。每个模块都有 checklist——
+        每张卡片展开看里面写什么、勾选"本模块就绪"。
+      </p>
+    </div>
+
+    <div class="modules-stage">
+      <div class="modules-grid" id="modulesGrid">
+
+        <div class="module-card" data-module="overview">
+          <div class="module-head">
+            <div class="module-num">1</div>
+            <div class="module-title-wrap">
+              <div class="module-title">描述</div>
+              <div class="module-en">OVERVIEW</div>
+            </div>
+            <button class="module-toggle" aria-label="展开">＋</button>
+          </div>
+          <div class="module-body">
+            <div class="module-body-inner">
+              <h6>包含内容</h6>
+              <ul>
+                <li>这是个什么组件 / 页面 / 功能</li>
+                <li>目标用户 + 主要使用场景</li>
+                <li>业务价值（为啥要做）</li>
+              </ul>
+              <h6>示例</h6>
+              <ul>
+                <li><code>「确认删除 Modal」</code>用在删除高风险数据前的二次确认</li>
+                <li>用户 = 普通操作员；场景 = 列表勾选 → 删除 → 弹出</li>
+              </ul>
+            </div>
+            <div class="module-checkbox-row" data-toggle-check>
+              <div class="module-checkbox"></div>
+              <span class="module-checkbox-label">本模块就绪</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="module-card" data-module="visuals">
+          <div class="module-head">
+            <div class="module-num">2</div>
+            <div class="module-title-wrap">
+              <div class="module-title">视觉</div>
+              <div class="module-en">VISUALS</div>
+            </div>
+            <button class="module-toggle" aria-label="展开">＋</button>
+          </div>
+          <div class="module-body">
+            <div class="module-body-inner">
+              <h6>包含内容</h6>
+              <ul>
+                <li>Figma 链接 + 标注（spacing / color / font / 8px 网格）</li>
+                <li>所有状态截图：<code>default</code> / <code>hover</code> / <code>active</code> / <code>disabled</code> / <code>loading</code> / <code>error</code> / <code>empty</code></li>
+                <li>响应式 breakpoints（mobile / tablet / desktop）</li>
+              </ul>
+              <h6>常被漏</h6>
+              <ul>
+                <li>loading spinner 大小 / disabled 色值 / focus 描边</li>
+              </ul>
+            </div>
+            <div class="module-checkbox-row" data-toggle-check>
+              <div class="module-checkbox"></div>
+              <span class="module-checkbox-label">本模块就绪</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="module-card" data-module="behavior">
+          <div class="module-head">
+            <div class="module-num">3</div>
+            <div class="module-title-wrap">
+              <div class="module-title">行为</div>
+              <div class="module-en">BEHAVIOR</div>
+            </div>
+            <button class="module-toggle" aria-label="展开">＋</button>
+          </div>
+          <div class="module-body">
+            <div class="module-body-inner">
+              <h6>包含内容</h6>
+              <ul>
+                <li>交互流程（状态机 / 用户事件 → 系统反馈）</li>
+                <li>异常处理：<code>超时</code> / <code>冲突</code> / <code>双击</code> / <code>权限不足</code></li>
+                <li>副作用：发邮件 / 写日志 / 刷新缓存 / 跳页面</li>
+              </ul>
+              <h6>示例</h6>
+              <ul>
+                <li><code>draft → submitting → success | fail</code></li>
+                <li>双击提交按钮 = 仅触发一次</li>
+              </ul>
+            </div>
+            <div class="module-checkbox-row" data-toggle-check>
+              <div class="module-checkbox"></div>
+              <span class="module-checkbox-label">本模块就绪</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="module-card" data-module="data">
+          <div class="module-head">
+            <div class="module-num">4</div>
+            <div class="module-title-wrap">
+              <div class="module-title">数据</div>
+              <div class="module-en">DATA</div>
+            </div>
+            <button class="module-toggle" aria-label="展开">＋</button>
+          </div>
+          <div class="module-body">
+            <div class="module-body-inner">
+              <h6>包含内容</h6>
+              <ul>
+                <li>字段 schema：<code>name · type · required · default · validation · computed · source</code></li>
+                <li>API 契约：<code>endpoint</code> / <code>request</code> / <code>response</code> / <code>error codes</code></li>
+                <li>状态住址：URL 参数 / 本页 state / 服务端 / 浏览器缓存</li>
+              </ul>
+              <h6>常被漏</h6>
+              <ul>
+                <li>空值显示什么 / 错误返回什么 code / 字段长度上限</li>
+              </ul>
+            </div>
+            <div class="module-checkbox-row" data-toggle-check>
+              <div class="module-checkbox"></div>
+              <span class="module-checkbox-label">本模块就绪</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="module-card" data-module="accept">
+          <div class="module-head">
+            <div class="module-num">5</div>
+            <div class="module-title-wrap">
+              <div class="module-title">验收</div>
+              <div class="module-en">ACCEPTANCE</div>
+            </div>
+            <button class="module-toggle" aria-label="展开">＋</button>
+          </div>
+          <div class="module-body">
+            <div class="module-body-inner">
+              <h6>包含内容</h6>
+              <ul>
+                <li>用户场景：<code>Given / When / Then</code> 三段式</li>
+                <li>边界场景：<code>empty</code> / <code>max</code> / <code>unauthorized</code> / <code>network fail</code></li>
+                <li>性能要求：首屏 &lt; N 秒 / 交互响应 &lt; N ms</li>
+              </ul>
+              <h6>作用</h6>
+              <ul>
+                <li>QA 拿到这层 → 直接写测试用例</li>
+                <li>PM 拿到这层 → 直接照单验收</li>
+              </ul>
+            </div>
+            <div class="module-checkbox-row" data-toggle-check>
+              <div class="module-checkbox"></div>
+              <span class="module-checkbox-label">本模块就绪</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="modules-progress">
+        <span class="modules-progress-label">说明书完整度</span>
+        <div class="modules-progress-bar">
+          <div class="modules-progress-fill" id="modulesProgressFill"></div>
+        </div>
+        <span class="modules-progress-stat" id="modulesProgressStat">0 / 5 模块就绪</span>
+      </div>
+    </div>
+
+    <div class="reveal-bar" style="margin-top:32px">
+      <div class="msg">
+        5 模块就是 <span class="em">工程 / QA / 产品三方共同合同</span> 的写法。<br>
+        谁拿到哪一层都能动手——这才叫交付。
+      </div>
+      <div class="counter">勾选已就绪的模块 →</div>
+    </div>
+  </div>
+</section>
+
+<!-- Section 04: 幕三 · 再做 -->
+<section id="make">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <span class="act-tag make">幕三 · 再做</span>
+        <div class="section-num"><strong>04</strong> / 再做</div>
+        <h2 class="section-title">轮到你——<br>给 <span class="em">用户注册流程</span><br>填规则说明书。</h2>
+      </div>
+      <p class="section-sub">
+        骨架已有，让你填"数据契约"和"验收清单"两个最难的层。
+        提交后会给你打分——不是看填了多少，看你<strong>填得对不对</strong>。
+      </p>
+    </div>
+
+    <div class="builder-stage">
+      <div class="builder-head">
+        <h3 class="builder-title">需求：用户注册</h3>
+        <div class="builder-progress">字段配置 <span class="done" id="builderFieldsDone">0</span> / 4 · 场景勾选 <span class="done" id="builderScenesDone">0</span> / 5</div>
+      </div>
+
+      <!-- skeleton already done -->
+      <div class="skeleton-block">
+        <h4>骨架（已附 · 描述 + 视觉 + 行为）</h4>
+        <div class="skeleton-grid">
+          <div class="skeleton-card">
+            <span class="skeleton-tag">01 · 描述</span>
+            <h5>用户注册</h5>
+            <p>用户首次创建账号——邮箱 + 密码 + 验证码 + 同意条款。</p>
+            <span class="skeleton-mark">✓ 就绪</span>
+          </div>
+          <div class="skeleton-card">
+            <span class="skeleton-tag">02 · 视觉</span>
+            <h5>4 态截图就位</h5>
+            <p>Figma 链接 + default / loading / error / success 全 4 态截图齐。</p>
+            <span class="skeleton-mark">✓ 就绪</span>
+          </div>
+          <div class="skeleton-card">
+            <span class="skeleton-tag">03 · 行为</span>
+            <h5>状态流就位</h5>
+            <p>draft → 提交 → 校验 → 成功页 / 失败回填。</p>
+            <span class="skeleton-mark">✓ 就绪</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Fill A — data contract -->
+      <div class="fill-block">
+        <div class="fill-head">
+          <h4 class="fill-title">填空 A · <span class="em">数据契约</span></h4>
+          <span class="fill-tag">第 4 层 · DATA CONTRACT</span>
+        </div>
+        <table class="contract-table">
+          <thead>
+            <tr>
+              <th>字段</th>
+              <th>类型</th>
+              <th>必填</th>
+              <th>校验规则</th>
+              <th>错误信息</th>
+            </tr>
+          </thead>
+          <tbody id="contractTable">
+            <tr data-field="email">
+              <td class="field-cell">email</td>
+              <td>
+                <select class="contract-select" data-key="type">
+                  <option value="">— 选 —</option>
+                  <option value="string">string</option>
+                  <option value="boolean">boolean</option>
+                  <option value="number">number (6 位)</option>
+                </select>
+              </td>
+              <td>
+                <label class="contract-required-toggle">
+                  <input type="checkbox" data-key="required"> 必填
+                </label>
+              </td>
+              <td>
+                <input class="contract-input" data-key="validation" type="text" placeholder="如：email 正则 / 长度 / trim">
+              </td>
+              <td>
+                <textarea class="contract-textarea" data-key="error" placeholder="如：请输入有效邮箱"></textarea>
+              </td>
+            </tr>
+            <tr data-field="password">
+              <td class="field-cell">password</td>
+              <td>
+                <select class="contract-select" data-key="type">
+                  <option value="">— 选 —</option>
+                  <option value="string">string</option>
+                  <option value="boolean">boolean</option>
+                  <option value="number">number (6 位)</option>
+                </select>
+              </td>
+              <td>
+                <label class="contract-required-toggle">
+                  <input type="checkbox" data-key="required"> 必填
+                </label>
+              </td>
+              <td>
+                <input class="contract-input" data-key="validation" type="text" placeholder="如：长度 / 强度">
+              </td>
+              <td>
+                <textarea class="contract-textarea" data-key="error" placeholder="如：密码至少 8 位"></textarea>
+              </td>
+            </tr>
+            <tr data-field="code">
+              <td class="field-cell">code</td>
+              <td>
+                <select class="contract-select" data-key="type">
+                  <option value="">— 选 —</option>
+                  <option value="string">string</option>
+                  <option value="boolean">boolean</option>
+                  <option value="number">number (6 位)</option>
+                </select>
+              </td>
+              <td>
+                <label class="contract-required-toggle">
+                  <input type="checkbox" data-key="required"> 必填
+                </label>
+              </td>
+              <td>
+                <input class="contract-input" data-key="validation" type="text" placeholder="如：6 位 / 时效 / 节流">
+              </td>
+              <td>
+                <textarea class="contract-textarea" data-key="error" placeholder="如：验证码错误或已过期"></textarea>
+              </td>
+            </tr>
+            <tr data-field="agreed">
+              <td class="field-cell">agreed</td>
+              <td>
+                <select class="contract-select" data-key="type">
+                  <option value="">— 选 —</option>
+                  <option value="string">string</option>
+                  <option value="boolean">boolean</option>
+                  <option value="number">number (6 位)</option>
+                </select>
+              </td>
+              <td>
+                <label class="contract-required-toggle">
+                  <input type="checkbox" data-key="required"> 必填
+                </label>
+              </td>
+              <td>
+                <input class="contract-input" data-key="validation" type="text" placeholder="如：必须为 true">
+              </td>
+              <td>
+                <textarea class="contract-textarea" data-key="error" placeholder="如：请先同意服务条款"></textarea>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Fill B — acceptance checklist -->
+      <div class="fill-block">
+        <div class="fill-head">
+          <h4 class="fill-title">填空 B · <span class="em">验收清单</span></h4>
+          <span class="fill-tag">第 5 层 · ACCEPTANCE</span>
+        </div>
+        <div class="accept-list" id="acceptList">
+          <div class="accept-item" data-scene="duplicate">
+            <div class="accept-check"></div>
+            <div class="accept-text">
+              <span class="gwt">GIVEN</span>已有用户使用同一邮箱<span class="gwt">WHEN</span>再次注册<span class="gwt">THEN</span>显示"邮箱已注册请登录" + 跳登录页
+            </div>
+          </div>
+          <div class="accept-item" data-scene="weak-pwd">
+            <div class="accept-check"></div>
+            <div class="accept-text">
+              <span class="gwt">GIVEN</span>用户输入<span class="gwt">WHEN</span>密码强度不足<span class="gwt">THEN</span>实时错误提示 + 不提交表单
+            </div>
+          </div>
+          <div class="accept-item" data-scene="bad-code">
+            <div class="accept-check"></div>
+            <div class="accept-text">
+              <span class="gwt">GIVEN</span>用户已收到验证码<span class="gwt">WHEN</span>填错或验证码过期<span class="gwt">THEN</span>提示错误 + 可重新获取
+            </div>
+          </div>
+          <div class="accept-item" data-scene="network">
+            <div class="accept-check"></div>
+            <div class="accept-text">
+              <span class="gwt">GIVEN</span>表单已填好<span class="gwt">WHEN</span>提交时网络断开<span class="gwt">THEN</span>保留输入 + 显示重试按钮
+            </div>
+          </div>
+          <div class="accept-item" data-scene="no-agree">
+            <div class="accept-check"></div>
+            <div class="accept-text">
+              <span class="gwt">GIVEN</span>用户未勾选条款<span class="gwt">WHEN</span>点击提交<span class="gwt">THEN</span>提示"请先同意条款" + 不调用接口
+            </div>
+          </div>
+        </div>
+
+        <div class="accept-extra-block">
+          <label class="accept-extra-label" for="acceptExtra">补充 · 你能想到的边界场景（写 1–2 条，加分项）</label>
+          <textarea id="acceptExtra" class="accept-extra-textarea" placeholder="如：慢网 loading 超过 10 秒 / 验证码风控 / 邮箱前后空格 trim……"></textarea>
+        </div>
+      </div>
+
+      <div class="builder-actions">
+        <button class="builder-btn primary" id="builderSubmit">提交打分</button>
+        <button class="builder-btn" id="builderReset">清空</button>
+      </div>
+
+      <div class="builder-judge" id="builderJudge"></div>
+    </div>
+  </div>
+</section>
+
+<!-- Section 05: closing -->
+<section id="closing">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>05</strong> / 把这件事变成习惯</div>
+        <h2 class="section-title">下次交付，<br>不发<span class="em">稿子链接</span>。</h2>
+      </div>
+      <p class="section-sub">
+        从这一篇开始，把"发 Figma" 换成"过一遍 4 层 + 5 模块"。
+        工程师 / QA 会感谢你——返工 0 次的稿，第一次出现。
+      </p>
+    </div>
+
+    <div class="tips-grid">
+      <div class="tip">
+        <div class="tip-num">i</div>
+        <h4>稿子下面附 4 段</h4>
+        <p>视觉 · 交互 · 数据 · 验收。哪怕一句话——也比没强。</p>
+        <p><strong>4 段都附，工程师 0 追问。</strong></p>
+      </div>
+      <div class="tip">
+        <div class="tip-num">ii</div>
+        <h4>验收先写 Given/When/Then</h4>
+        <p>不写场景的设计 = 不可测。可测 = 可验收。</p>
+        <p><strong>先写场景，再画稿——稿子反而更准。</strong></p>
+      </div>
+      <div class="tip">
+        <div class="tip-num">iii</div>
+        <h4>交付不是 send Figma</h4>
+        <p>把稿子发出去后，跟工程师过一遍每个模块。对不上的地方现场补——比事后撕扯快 10 倍。</p>
+        <p><strong>是确认对齐，不是丢链接。</strong></p>
+      </div>
+    </div>
+
+    <div class="tip-outro">
+      <div class="outro-tag">划重点 · TL;DR</div>
+      <div>
+        <p>稿子是 <strong>视觉 × 一个组件</strong> 的产物——只占交付的 1/4。剩下的 3/4（交互、数据、验收）不写，就只能由工程师猜、QA 漏、PM 撕。</p>
+        <p>下次交付，附一张 5 项的 checklist——<strong>勾完才发</strong>。工程师 / QA 都会感谢你。</p>
+      </div>
+    </div>
+
+    <a href="x20-case-start.html" class="next-post">
+      <div>
+        <div class="np-tag">下一站 · NEXT · X20 · 高阶 · 规划中</div>
+        <h4>案例：<span class="em">从一个客户详情页开始</span></h4>
+        <p>前 19 篇都是单点能力。下一阶段把全部能力"压"在一个完整 CRM 案例上——从一张客户详情页出发，拆全栈。</p>
+      </div>
+      <span class="np-cta">继续 <span class="arr">→</span></span>
+    </a>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div class="byline-group">
+      <div class="byline">
+        <img class="avatar" src="author.jpg" alt="范米花儿">
+        <div class="byline-meta">
+          <div class="byline-label"><span class="dot"></span>作者 · WRITTEN BY</div>
+          <div class="byline-name">嗨，我是 <span class="em">范米花儿</span></div>
+          <p class="byline-tag">设计工程师 ——<br>设计 × 代码，两边都做。</p>
+        </div>
+      </div>
+</div>
+    <div class="footer-meta">
+      做于 <span class="mono">2026</span> · 用 <span class="heart">●</span> 写给 <span class="mono">DESIGNERS &amp; DEVELOPERS</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+// ===== Game 1: 4 layers tabs =====
+(function(){
+  const LAYERS = {
+    visuals: {
+      title: '视觉 · Visuals',
+      tag: '第 1 层 · 设计师最熟悉的一层',
+      content: [
+        '截图 + 标注 + 8 px 网格',
+        '颜色 / spacing / 字体 / radius',
+        'default 状态截图（最多人交付的就只到这里）'
+      ],
+      qTitle: '工程师还会问',
+      questions: [
+        'disabled 是哪个色？',
+        'hover 颜色比 default 深几度？',
+        'loading spinner 多大？居中还是顶部？',
+        'error 文案出现位置在哪？'
+      ]
+    },
+    interactions: {
+      title: '交互流程 · Interactions',
+      tag: '第 2 层 · 状态机 + 异常路径',
+      content: [
+        '状态机：<code>draft → submitted → success | fail</code>',
+        '错误处理路径（4 种异常）',
+        '异步行为（请求中 / 超时 / 重试）'
+      ],
+      qTitle: '工程师还会问',
+      questions: [
+        '提交后超时怎么办？显示重试按钮？',
+        '两个用户同时编辑——冲突怎么处理？',
+        '用户双击提交——只触发一次还是两次？',
+        '请求中再点关闭——取消请求还是允许提交完？'
+      ]
+    },
+    data: {
+      title: '数据契约 · Data Contract',
+      tag: '第 3 层 · 字段 schema + API',
+      content: [
+        '字段表：<code>name · type · required · range · validation · computed</code>',
+        '数据来源：<code>API endpoint · push · local state</code>',
+        'response shape + error codes（401 / 403 / 409 / 500）'
+      ],
+      qTitle: '工程师还会问',
+      questions: [
+        '字段为空时显示什么——"-" 还是空字符串？',
+        '后端返回 error code = 409 —— UI 怎么显示？',
+        '字段长度有上限吗？超长截断还是不让输？',
+        '数据是实时拉还是缓存？过期策略？'
+      ]
+    },
+    accept: {
+      title: '验收清单 · Acceptance Criteria',
+      tag: '第 4 层 · QA / PM 直接照单测试',
+      content: [
+        '用户场景：<code>Given / When / Then</code> 三段式',
+        '边界场景：空数据 / 网络断 / 权限不足 / 数据极大',
+        '性能要求：首屏 &lt; 2s · 交互 &lt; 100ms'
+      ],
+      qTitle: '拿到这层 → 工程师 / QA 不再问',
+      questions: [
+        '✓ QA 直接照场景写测试用例',
+        '✓ PM 直接照清单验收',
+        '✓ 工程师有了"做完的定义"——不会漏边界',
+        '✓ 设计师不会被半夜叫醒补稿子'
+      ]
+    }
+  };
+
+  const tabs = document.querySelectorAll('.layers-tab');
+  const content = document.getElementById('layerContent');
+  const questions = document.getElementById('layerQuestions');
+  const visited = new Set();
+  const counter = document.getElementById('layerVisited');
+
+  function render(key) {
+    const L = LAYERS[key];
+    let cHtml = `<span class="layer-tag">${L.tag}</span><h5>${L.title}</h5><ul>`;
+    L.content.forEach(c => cHtml += `<li>${c}</li>`);
+    cHtml += '</ul>';
+    content.innerHTML = cHtml;
+
+    const tagText = key === 'accept' ? '✓ 工程师 / QA 反馈' : '? 工程师追问';
+    let qHtml = `<span class="q-tag">${tagText}</span><h5>${L.qTitle}</h5><div class="q-list">`;
+    L.questions.forEach(q => qHtml += `<div class="q-item">${q}</div>`);
+    qHtml += '</div>';
+    questions.innerHTML = qHtml;
+    questions.classList.toggle('is-accept', key === 'accept');
+
+    if (!visited.has(key)) {
+      visited.add(key);
+      counter.textContent = visited.size;
+    }
+  }
+
+  tabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+      tabs.forEach(t => t.classList.toggle('active', t === tab));
+      render(tab.dataset.layer);
+    });
+  });
+
+  // init
+  render('visuals');
+})();
+
+// ===== Game 2: module cards expand + checkbox =====
+(function(){
+  const cards = document.querySelectorAll('.module-card');
+  const fill = document.getElementById('modulesProgressFill');
+  const stat = document.getElementById('modulesProgressStat');
+
+  function updateProgress() {
+    const checked = document.querySelectorAll('.module-card.checked').length;
+    const total = cards.length;
+    const pct = (checked / total) * 100;
+    fill.style.width = pct + '%';
+    stat.textContent = `${checked} / ${total} 模块就绪`;
+    stat.classList.toggle('complete', checked === total);
+  }
+
+  cards.forEach(card => {
+    const head = card.querySelector('.module-head');
+    const toggle = card.querySelector('.module-toggle');
+    const checkRow = card.querySelector('[data-toggle-check]');
+
+    function toggleExpand() {
+      card.classList.toggle('expanded');
+      toggle.textContent = card.classList.contains('expanded') ? '−' : '＋';
+    }
+
+    head.addEventListener('click', (e) => {
+      // if click was on toggle, prevent double
+      toggleExpand();
+    });
+
+    if (checkRow) {
+      checkRow.addEventListener('click', (e) => {
+        e.stopPropagation();
+        card.classList.toggle('checked');
+        updateProgress();
+      });
+    }
+  });
+})();
+
+// ===== Game 3: spec builder =====
+(function(){
+  // ---- Data Contract grading ----
+  // Each field has an ideal answer profile:
+  //   type — correct type
+  //   required — true (all 4 are required)
+  //   validation hints — must contain certain keyword
+  //   error — must be non-empty
+  const IDEAL_FIELD = {
+    email: {
+      type: 'string',
+      required: true,
+      validKeywords: ['email', '@', '正则', 'regex', 'trim', '格式'],
+      label: 'email'
+    },
+    password: {
+      type: 'string',
+      required: true,
+      validKeywords: ['长度', '≥ 8', '>=8', '>= 8', '8', '强度', '大小写', '字符'],
+      label: 'password'
+    },
+    code: {
+      type: 'number',
+      required: true,
+      validKeywords: ['6', '位', '时效', '过期', '60', '分钟', '5 分', '5分'],
+      label: 'code'
+    },
+    agreed: {
+      type: 'boolean',
+      required: true,
+      validKeywords: ['true', '必', 'must', '勾选', '同意'],
+      label: 'agreed'
+    }
+  };
+
+  function gradeContract() {
+    const rows = document.querySelectorAll('#contractTable tr[data-field]');
+    const result = [];
+    let hits = 0, total = 0;
+
+    rows.forEach(tr => {
+      const field = tr.dataset.field;
+      const ideal = IDEAL_FIELD[field];
+      const typeSel = tr.querySelector('[data-key="type"]').value;
+      const reqChk = tr.querySelector('[data-key="required"]').checked;
+      const valVal = (tr.querySelector('[data-key="validation"]').value || '').trim().toLowerCase();
+      const errVal = (tr.querySelector('[data-key="error"]').value || '').trim();
+
+      const checks = {
+        type: typeSel === ideal.type,
+        required: reqChk === ideal.required,
+        validation: valVal.length > 0 && ideal.validKeywords.some(k => valVal.includes(k.toLowerCase())),
+        error: errVal.length >= 3
+      };
+      const correctCount = Object.values(checks).filter(Boolean).length;
+      total += 4;
+      hits += correctCount;
+      result.push({ field, checks, correctCount });
+    });
+
+    return { result, hits, total };
+  }
+
+  function getFieldDoneCount() {
+    const rows = document.querySelectorAll('#contractTable tr[data-field]');
+    let done = 0;
+    rows.forEach(tr => {
+      const typeSel = tr.querySelector('[data-key="type"]').value;
+      const reqChk = tr.querySelector('[data-key="required"]').checked;
+      const valVal = (tr.querySelector('[data-key="validation"]').value || '').trim();
+      const errVal = (tr.querySelector('[data-key="error"]').value || '').trim();
+      if (typeSel && (reqChk || valVal || errVal)) done++;
+    });
+    return done;
+  }
+
+  // live counters
+  function updateLiveCounters() {
+    document.getElementById('builderFieldsDone').textContent = getFieldDoneCount();
+    const checked = document.querySelectorAll('.accept-item.checked').length;
+    document.getElementById('builderScenesDone').textContent = checked;
+  }
+
+  // wire all inputs to update live counters
+  document.querySelectorAll('#contractTable select, #contractTable input, #contractTable textarea').forEach(el => {
+    el.addEventListener('change', updateLiveCounters);
+    el.addEventListener('input', updateLiveCounters);
+  });
+
+  // accept items
+  const acceptItems = document.querySelectorAll('.accept-item');
+  acceptItems.forEach(item => {
+    item.addEventListener('click', () => {
+      item.classList.toggle('checked');
+      updateLiveCounters();
+    });
+  });
+
+  // ---- Submit ----
+  const judge = document.getElementById('builderJudge');
+  document.getElementById('builderSubmit').addEventListener('click', () => {
+    const { result, hits, total } = gradeContract();
+    const checkedScenes = document.querySelectorAll('.accept-item.checked');
+    const allScenes = document.querySelectorAll('.accept-item');
+    const sceneRate = checkedScenes.length / allScenes.length;
+    const extra = (document.getElementById('acceptExtra').value || '').trim();
+    const extraBonus = extra.length >= 8;
+
+    // Build field feedback
+    const lines = [];
+    result.forEach(r => {
+      const f = r.field;
+      const c = r.checks;
+      if (c.type && c.required && c.validation && c.error) {
+        lines.push(`<li>✓ <strong>${f}</strong>：4 项全对 — 类型 / 必填 / 校验规则 / 错误信息齐备。</li>`);
+      } else {
+        const miss = [];
+        if (!c.type) miss.push('类型');
+        if (!c.required) miss.push('必填');
+        if (!c.validation) miss.push('校验规则');
+        if (!c.error) miss.push('错误信息');
+        let why = '';
+        if (f === 'email') why = '邮箱必填、加正则、写友好错误信息——不写正则等于工程师自己拍。';
+        else if (f === 'password') why = '密码长度 ≥ 8 是常见要求（≥ 6 是错的），还要写强度提示规则。';
+        else if (f === 'code') why = '验证码 6 位 + 必填 + 时效（一般 5 分钟）。时效不写工程师只能猜。';
+        else if (f === 'agreed') why = 'agreed 是 boolean，必填——很多设计师漏了"必填"或忘了写错误信息。';
+        lines.push(`<li><strong>${f}</strong>：缺 <code>${miss.join(' · ')}</code><br><span class="why">↳ ${why}</span></li>`);
+      }
+    });
+
+    // Acceptance feedback
+    if (checkedScenes.length === allScenes.length) {
+      lines.push(`<li>✓ <strong>验收场景</strong>：5 个全勾，覆盖到位。${extraBonus ? '<br><span class="why">↳ 补充场景也写了——非常加分。</span>' : '<br><span class="why">↳ 试试再加 1 条边界（慢网 / 验证码风控 / 邮箱 trim），更稳。</span>'}</li>`);
+    } else {
+      const missScenes = allScenes.length - checkedScenes.length;
+      lines.push(`<li><strong>验收场景</strong>：还有 ${missScenes} 条没勾 — 这 5 条都是基本盘 (重复邮箱 / 弱密码 / 错验证码 / 网络断 / 未同意条款)，缺一条 = QA 漏一个 bug。${extraBonus ? '<br><span class="why">↳ 不过你补了 1 条边界——思路对。</span>' : ''}</li>`);
+    }
+
+    // Verdict
+    let verdictClass, verdictLabel, headline;
+    const score = (hits / total) * 0.7 + sceneRate * 0.3 + (extraBonus ? 0.05 : 0);
+    if (hits === total && checkedScenes.length === allScenes.length && extraBonus) {
+      verdictClass = 'win';
+      verdictLabel = '完美';
+      headline = '你已经在交"工程能直接做 + QA 能直接测"的说明书了。';
+    } else if (score >= 0.75) {
+      verdictClass = 'win';
+      verdictLabel = '基本对了';
+      headline = '差一两处细节——但说明书的形态已经搭好了。';
+    } else {
+      verdictClass = 'partial';
+      verdictLabel = '还差一点';
+      headline = '换个角度——数据契约是给工程师写代码的依据，验收清单是给 QA 写测试用例的依据。';
+    }
+
+    judge.innerHTML = `<span class="verdict ${verdictClass}">${verdictLabel}</span><h4>${headline}</h4><ul>${lines.join('')}</ul>`;
+    judge.classList.add('show');
+    judge.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  });
+
+  document.getElementById('builderReset').addEventListener('click', () => {
+    document.querySelectorAll('#contractTable select').forEach(s => s.value = '');
+    document.querySelectorAll('#contractTable input[type="checkbox"]').forEach(c => c.checked = false);
+    document.querySelectorAll('#contractTable input[type="text"]').forEach(i => i.value = '');
+    document.querySelectorAll('#contractTable textarea').forEach(t => t.value = '');
+    document.querySelectorAll('.accept-item').forEach(it => it.classList.remove('checked'));
+    document.getElementById('acceptExtra').value = '';
+    judge.classList.remove('show');
+    updateLiveCounters();
+  });
+
+  updateLiveCounters();
+})();
+</script>
+
+</body>
+</html>

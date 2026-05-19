@@ -1,0 +1,1348 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>一致性：多团队 / 多页面如何不失控 — AI LABBOOK · X18</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,300..900&family=Geist:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Noto+Sans+SC:wght@300;400;500;700;900&family=Noto+Serif+SC:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f3eee5;
+    --bg-2: #ebe4d4;
+    --ink: #16161d;
+    --ink-soft: #4a4a55;
+    --ink-mute: #8a8a92;
+    --line: #d5cdba;
+    --line-soft: #e3dcca;
+    --accent: #ff4d2e;
+    --accent-soft: #ffe4dc;
+    --blue: #0a4cff;
+    --blue-soft: #dde6ff;
+    --green: #1f6b3a;
+    --green-soft: #d4ecdb;
+    --yellow: #ffcf3d;
+    --paper: #faf7f0;
+    --shadow: 0 1px 0 rgba(0,0,0,0.04), 0 8px 24px rgba(22,22,29,0.06);
+
+    --obj-color: #ff4d2e;
+    --obj-soft: rgba(255,77,46,0.12);
+    --proj-color: #1f6b3a;
+    --proj-soft: rgba(31,107,58,0.12);
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'Geist', 'Noto Sans SC', system-ui, -apple-system, sans-serif;
+    font-size: 16px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    background-image: radial-gradient(circle at 1px 1px, rgba(22,22,29,0.05) 1px, transparent 0);
+    background-size: 24px 24px;
+  }
+
+  .display-cn { font-family: 'Noto Serif SC', 'Fraunces', serif; font-weight: 900; letter-spacing: -0.01em; }
+  .display-en { font-family: 'Fraunces', 'Noto Serif SC', serif; font-weight: 600; font-style: italic; letter-spacing: -0.02em; }
+  .mono { font-family: 'JetBrains Mono', monospace; }
+  .label { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-mute); }
+
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 0 32px; }
+
+  /* Topbar */
+  .topbar {
+    border-bottom: 1px dashed var(--line);
+    padding: 16px 0;
+    background: var(--bg);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .topbar-inner { display: flex; justify-content: space-between; align-items: center; gap: 24px; flex-wrap: wrap; }
+  .brand-block { display: flex; align-items: center; gap: 10px; font-family: 'JetBrains Mono', monospace; font-size: 13px; }
+  .brand { display: inline-flex; align-items: center; gap: 6px; color: var(--ink); text-decoration: none; font-weight: 600; }
+  .brand-arrow { color: var(--ink-mute); transition: transform .2s; }
+  .brand:hover .brand-arrow { transform: translateX(-3px); }
+  .brand .dot { display: inline-block; width: 8px; height: 8px; background: var(--accent); border-radius: 50%; vertical-align: middle; animation: pulse 2s ease-in-out infinite; margin-left: 4px; }
+  .brand-sep { color: var(--ink-mute); }
+  .brand-current { color: var(--ink-soft); }
+  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+  .nav-links { display: flex; gap: 18px; font-size: 13px; flex-wrap: wrap; }
+  .nav-links a { color: var(--ink-soft); text-decoration: none; transition: color 0.2s; }
+  .nav-links a:hover { color: var(--accent); }
+  .nav-links a.current { color: var(--accent); font-weight: 600; }
+
+  /* Hero */
+  .hero { padding: 100px 0 80px; position: relative; overflow: hidden; }
+  .hero-meta { display: flex; gap: 24px; margin-bottom: 32px; align-items: center; flex-wrap: wrap; }
+  .hero-meta .pill { padding: 6px 12px; border: 1px solid var(--ink); border-radius: 100px; font-size: 11px; font-family: 'JetBrains Mono', monospace; letter-spacing: 0.05em; }
+  .hero-meta .pill.fill { background: var(--ink); color: var(--bg); }
+  .hero-meta .pill.purple { background: var(--obj-color); color: white; border-color: var(--obj-color); }
+  .hero h1 {
+    font-family: 'Noto Serif SC', 'Fraunces', serif;
+    font-weight: 900;
+    font-size: clamp(48px, 7vw, 92px);
+    line-height: 0.95;
+    letter-spacing: -0.03em;
+    margin: 0 0 24px;
+  }
+  .hero h1 .em { font-family: 'Noto Serif SC', serif; font-weight: 500; color: var(--accent); }
+  .hero h1 .purple { color: var(--obj-color); font-family: 'Noto Serif SC', serif; font-weight: 500; }
+  .hero p.lede {
+    font-size: 20px;
+    line-height: 1.5;
+    max-width: 640px;
+    color: var(--ink-soft);
+    margin: 0 0 40px;
+  }
+  .hero-grid { display: grid; grid-template-columns: 1.4fr 1fr; gap: 48px; align-items: end; }
+  @media (max-width: 880px) { .hero-grid { grid-template-columns: 1fr; } }
+  .hero-side { border-left: 1px dashed var(--line); padding-left: 24px; font-size: 13px; color: var(--ink-soft); }
+  .hero-side .row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px dashed var(--line); gap: 12px; }
+  .hero-side .row:last-child { border-bottom: none; }
+  .hero-side .row .k { color: var(--ink-mute); font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.05em; text-transform: uppercase; }
+  .hero-side .row .v { font-weight: 500; }
+
+  /* Sections */
+  section { padding: 80px 0; border-top: 1px solid var(--line); position: relative; }
+  .section-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 56px; flex-wrap: wrap; gap: 16px; }
+  .section-num { font-family: 'JetBrains Mono', monospace; font-size: 13px; color: var(--ink-mute); letter-spacing: 0.1em; margin-top: 6px; }
+  .section-num strong { color: var(--accent); }
+  .section-title { font-family: 'Noto Serif SC', serif; font-weight: 900; font-size: clamp(32px, 4.5vw, 52px); line-height: 1.05; letter-spacing: -0.02em; margin: 8px 0 0; max-width: 22ch; }
+  .section-title .em { font-family: 'Noto Serif SC', serif; font-weight: 500; color: var(--accent); }
+  .section-title .purple { color: var(--obj-color); font-family: 'Noto Serif SC', serif; font-weight: 500; }
+  .section-sub { color: var(--ink-soft); font-size: 17px; max-width: 38ch; line-height: 1.55; margin: 0; }
+
+  /* Act tag */
+  .act-tag { display: inline-block; padding: 4px 12px; font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; border-radius: 100px; }
+  .act-tag.look { background: var(--blue-soft); color: var(--blue); }
+  .act-tag.break { background: var(--obj-soft); color: var(--obj-color); }
+  .act-tag.make { background: var(--proj-soft); color: var(--proj-color); }
+
+  /* Problem cards */
+  .problem-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; margin-top: 24px; }
+  @media (max-width: 880px) { .problem-grid { grid-template-columns: 1fr; } }
+  .problem-card { background: var(--paper); border: 1px solid var(--line); border-radius: 6px; padding: 28px; position: relative; }
+  .problem-card.bad { border-color: var(--accent); background: var(--accent-soft); }
+  .problem-card.good { border-color: var(--obj-color); background: var(--obj-soft); }
+  .problem-card .tag { position: absolute; top: -12px; left: 24px; background: var(--bg); padding: 2px 10px; font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.1em; }
+  .problem-card.bad .tag { color: var(--accent); border: 1px solid var(--accent); }
+  .problem-card.good .tag { color: var(--obj-color); border: 1px solid var(--obj-color); }
+  .problem-card h3 { font-family: 'Noto Serif SC', serif; font-size: 22px; margin: 0 0 12px; font-weight: 700; }
+  .problem-card p { margin: 0; color: var(--ink-soft); font-size: 14px; line-height: 1.55; }
+  .problem-card p + p { margin-top: 10px; }
+
+  /* GAME 1: drift surfaces */
+  .drift-stage {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 40px 28px 28px;
+    position: relative;
+    overflow: hidden;
+  }
+  .drift-stage::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(to right, var(--line-soft) 1px, transparent 1px),
+      linear-gradient(to bottom, var(--line-soft) 1px, transparent 1px);
+    background-size: 24px 24px;
+    opacity: 0.4;
+    pointer-events: none;
+  }
+  .drift-grid {
+    position: relative;
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 16px;
+  }
+  @media (max-width: 1080px) { .drift-grid { grid-template-columns: repeat(3, 1fr); } }
+  @media (max-width: 720px) { .drift-grid { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 480px) { .drift-grid { grid-template-columns: 1fr; } }
+
+  .drift-card {
+    background: white;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 14px 14px 12px;
+    position: relative;
+    cursor: pointer;
+    transition: all .25s cubic-bezier(0.4, 0, 0.2, 1);
+    min-height: 160px;
+  }
+  .drift-card:hover { box-shadow: 0 8px 24px rgba(22,22,29,0.08); transform: translateY(-2px); }
+  .drift-card.is-zoom { transform: translateY(-4px) scale(1.04); box-shadow: 0 0 0 2px var(--obj-color), 0 16px 36px rgba(255,77,46,0.22); z-index: 5; }
+  .drift-card.is-flagged { border-color: var(--accent); }
+  .drift-card .drift-tag {
+    position: absolute;
+    top: -10px;
+    left: 12px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    background: var(--ink);
+    color: var(--bg);
+    padding: 2px 8px;
+    border-radius: 100px;
+    transition: background .2s;
+  }
+  .drift-card.is-zoom .drift-tag { background: var(--obj-color); }
+  .drift-card .drift-flag {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    width: 20px; height: 20px;
+    border-radius: 50%;
+    background: white;
+    border: 1px solid var(--line);
+    color: var(--ink-mute);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all .15s;
+    user-select: none;
+    z-index: 2;
+  }
+  .drift-card .drift-flag:hover { border-color: var(--accent); color: var(--accent); }
+  .drift-card.is-flagged .drift-flag { background: var(--accent); border-color: var(--accent); color: white; }
+
+  .drift-status-chip { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 100px; font-size: 11px; font-weight: 600; }
+  .drift-status-dot { display: inline-flex; align-items: center; gap: 5px; font-size: 11px; }
+  .drift-status-dot .dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+  .drift-mini-name { font-weight: 700; font-size: 12px; }
+  .drift-mini-meta { color: var(--ink-mute); font-size: 10px; margin-top: 1px; }
+
+  /* drift matrix */
+  .drift-matrix {
+    margin-top: 26px;
+    padding: 18px 20px;
+    background: white;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 18px;
+  }
+  @media (max-width: 720px) { .drift-matrix { grid-template-columns: 1fr; } }
+  .matrix-cell { display: flex; flex-direction: column; gap: 5px; }
+  .matrix-lbl { font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-mute); }
+  .matrix-val { font-family: 'Noto Serif SC', serif; font-size: 22px; font-weight: 700; color: var(--accent); line-height: 1; }
+  .matrix-val .of { color: var(--ink-mute); font-size: 14px; font-weight: 400; }
+  .matrix-note { font-size: 11px; color: var(--ink-soft); }
+
+  /* Reveal bar */
+  .reveal-bar {
+    margin-top: 32px;
+    padding: 20px 28px;
+    background: var(--ink);
+    color: var(--bg);
+    border-radius: 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+  .reveal-bar .msg { font-family: 'Noto Serif SC', serif; font-size: 17px; font-weight: 500; line-height: 1.55; }
+  .reveal-bar .msg .em { color: var(--accent); }
+  .reveal-bar .counter { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ink-mute); letter-spacing: 0.05em; }
+  .reveal-bar .counter strong { color: var(--accent); font-size: 14px; }
+
+  /* GAME 2: 4 layers */
+  .layers-stage { display: grid; grid-template-columns: repeat(2, 1fr); gap: 22px; margin-top: 32px; }
+  @media (max-width: 880px) { .layers-stage { grid-template-columns: 1fr; } }
+
+  .layer-card {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 26px 24px 22px;
+    cursor: pointer;
+    transition: all .2s;
+    position: relative;
+  }
+  .layer-card:hover { border-color: var(--obj-color); transform: translateY(-2px); box-shadow: 0 8px 24px rgba(22,22,29,0.06); }
+  .layer-card.is-open { border-color: var(--obj-color); background: white; box-shadow: 0 0 0 2px var(--obj-soft), 0 10px 28px rgba(255,77,46,0.12); }
+
+  .layer-head { display: flex; align-items: center; gap: 14px; margin-bottom: 10px; }
+  .layer-num {
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    background: var(--obj-color);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    font-weight: 600;
+    font-size: 15px;
+    flex-shrink: 0;
+  }
+  .layer-title { font-family: 'Noto Serif SC', serif; font-size: 19px; margin: 0; font-weight: 700; }
+  .layer-title .lbl-en { font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.08em; color: var(--ink-mute); display: block; margin-top: 2px; font-weight: 400; }
+  .layer-intro { font-size: 13px; color: var(--ink-soft); margin: 0 0 12px; line-height: 1.55; }
+
+  .layer-toggle {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--obj-color);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    margin-top: 4px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .layer-toggle .arr { transition: transform .2s; }
+  .layer-card.is-open .layer-toggle .arr { transform: rotate(90deg); }
+
+  .layer-body {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height .35s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .layer-card.is-open .layer-body { max-height: 720px; }
+  .layer-body-inner { padding-top: 14px; border-top: 1px dashed var(--line); margin-top: 14px; }
+  .layer-row { display: grid; grid-template-columns: 70px 1fr; gap: 10px; margin-bottom: 10px; }
+  .layer-row .lbl { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--ink-mute); letter-spacing: 0.06em; text-transform: uppercase; padding-top: 3px; }
+  .layer-row .val { font-size: 13px; color: var(--ink); line-height: 1.55; }
+  .layer-row.bad .val { color: var(--accent); }
+  .layer-row .val code { font-family: 'JetBrains Mono', monospace; background: var(--bg-2); padding: 1px 5px; border-radius: 3px; font-size: 11px; }
+
+  .layer-broken {
+    margin-top: 14px;
+    padding: 12px 14px;
+    background: var(--accent-soft);
+    border-left: 3px solid var(--accent);
+    border-radius: 4px;
+    font-size: 12px;
+    color: var(--ink-soft);
+    line-height: 1.55;
+  }
+  .layer-broken strong { color: var(--accent); }
+
+  /* GAME 3: governance */
+  .gov-stage { margin-top: 32px; }
+  .gov-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 24px; flex-wrap: wrap; gap: 12px; }
+  .gov-title { font-family: 'Noto Serif SC', serif; font-size: 22px; margin: 0; font-weight: 700; }
+  .gov-progress { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--ink-mute); }
+  .gov-progress .done { color: var(--proj-color); font-weight: 700; font-size: 14px; }
+
+  .gov-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 22px; }
+  @media (max-width: 880px) { .gov-grid { grid-template-columns: 1fr; } }
+
+  .gov-case {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 20px 22px;
+    transition: all .15s;
+  }
+  .gov-case.is-answered { border-color: var(--proj-color); background: white; }
+  .gov-case-head { display: flex; align-items: baseline; gap: 10px; margin-bottom: 10px; flex-wrap: wrap; }
+  .gov-case-num { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--obj-color); font-weight: 700; letter-spacing: 0.08em; }
+  .gov-case-title { font-family: 'Noto Serif SC', serif; font-size: 16px; margin: 0; font-weight: 700; flex: 1; min-width: 0; }
+  .gov-case-desc { font-size: 13px; color: var(--ink-soft); margin: 0 0 16px; line-height: 1.55; }
+
+  .gov-options { display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px; }
+  .gov-opt {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    padding: 9px 12px;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all .12s;
+    font-size: 13px;
+    background: white;
+  }
+  .gov-opt:hover { border-color: var(--obj-color); background: var(--obj-soft); }
+  .gov-opt input { display: none; }
+  .gov-opt .radio {
+    width: 14px; height: 14px;
+    border: 1.5px solid var(--ink-mute);
+    border-radius: 50%;
+    flex-shrink: 0;
+    position: relative;
+    transition: all .12s;
+  }
+  .gov-opt input:checked + .radio {
+    border-color: var(--obj-color);
+  }
+  .gov-opt input:checked + .radio::after {
+    content: '';
+    position: absolute;
+    inset: 2px;
+    background: var(--obj-color);
+    border-radius: 50%;
+  }
+  .gov-opt input:checked ~ .opt-text { color: var(--obj-color); font-weight: 600; }
+  .gov-opt .opt-text { flex: 1; }
+  .gov-opt .opt-mono { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ink-mute); }
+  .gov-opt input:checked ~ .opt-mono { color: var(--obj-color); }
+
+  .gov-priority {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding-top: 12px;
+    border-top: 1px dashed var(--line);
+    font-size: 12px;
+    color: var(--ink-soft);
+  }
+  .gov-priority select {
+    flex: 1;
+    padding: 7px 10px;
+    border: 1px solid var(--line);
+    border-radius: 5px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    background: white;
+    color: var(--ink);
+    cursor: pointer;
+  }
+  .gov-priority select:focus { outline: none; border-color: var(--obj-color); }
+
+  .gov-feedback {
+    margin-top: 12px;
+    padding: 10px 12px;
+    border-radius: 5px;
+    font-size: 12px;
+    line-height: 1.55;
+    display: none;
+  }
+  .gov-feedback.show { display: block; }
+  .gov-feedback.win { background: var(--green-soft); color: var(--green); border-left: 3px solid var(--green); }
+  .gov-feedback.wrong { background: var(--accent-soft); color: var(--accent); border-left: 3px solid var(--accent); }
+  .gov-feedback.maybe { background: #fff3cc; color: #8a6500; border-left: 3px solid #ffcf3d; }
+  .gov-feedback strong { font-weight: 700; }
+
+  .gov-actions { display: flex; gap: 12px; margin-top: 24px; flex-wrap: wrap; }
+  .gov-btn {
+    padding: 10px 22px;
+    border-radius: 100px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    cursor: pointer;
+    font-weight: 600;
+    border: 1px solid var(--ink);
+    background: transparent;
+    color: var(--ink);
+    transition: all .15s;
+  }
+  .gov-btn:hover { background: var(--ink); color: var(--bg); }
+  .gov-btn.primary { background: var(--accent); color: white; border-color: var(--accent); }
+  .gov-btn.primary:hover { background: #e8451f; }
+
+  .gov-judge {
+    margin-top: 24px;
+    padding: 24px 26px;
+    border-radius: 8px;
+    background: var(--ink);
+    color: var(--bg);
+    display: none;
+  }
+  .gov-judge.show { display: block; }
+  .gov-judge .verdict { display: inline-block; font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; padding: 3px 10px; border-radius: 100px; }
+  .gov-judge .verdict.win { color: #1f6b3a; background: #d4ecdb; }
+  .gov-judge .verdict.partial { color: #c79f1e; background: #fff3cc; }
+  .gov-judge h4 { font-family: 'Noto Serif SC', serif; font-size: 22px; margin: 10px 0 14px; color: white; line-height: 1.3; }
+  .gov-judge ul { color: #c8c8d0; margin: 0; padding-left: 20px; font-size: 13px; line-height: 1.75; }
+  .gov-judge ul li + li { margin-top: 8px; }
+  .gov-judge ul strong { color: white; }
+
+  /* tips */
+  .tips-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 28px; margin-top: 24px; }
+  @media (max-width: 880px) { .tips-grid { grid-template-columns: 1fr; } }
+  .tip { background: var(--paper); border: 1px solid var(--line); border-radius: 6px; padding: 24px; position: relative; }
+  .tip-num { position: absolute; top: -14px; left: 16px; width: 32px; height: 32px; border-radius: 50%; background: var(--obj-color); color: white; display: flex; align-items: center; justify-content: center; font-family: 'Fraunces', serif; font-style: italic; font-weight: 600; font-size: 14px; }
+  .tip h4 { font-family: 'Noto Serif SC', serif; font-size: 18px; margin: 8px 0 10px; font-weight: 700; }
+  .tip p { color: var(--ink-soft); font-size: 14px; line-height: 1.6; margin: 0; }
+  .tip p + p { margin-top: 8px; }
+  .tip-outro {
+    margin-top: 44px;
+    padding: 30px 32px;
+    background: var(--ink);
+    color: var(--bg);
+    border-radius: 8px;
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 28px;
+    align-items: flex-start;
+  }
+  @media (max-width: 720px) { .tip-outro { grid-template-columns: 1fr; gap: 12px; } }
+  .outro-tag { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.1em; color: var(--accent); padding-top: 4px; }
+  .tip-outro p { margin: 0 0 12px; color: #c8c8d0; line-height: 1.65; font-size: 15px; }
+  .tip-outro p:last-child { margin-bottom: 0; }
+  .tip-outro strong { color: white; }
+
+  /* next post */
+  .next-post {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 56px;
+    padding: 32px;
+    background: var(--bg-2);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    text-decoration: none;
+    color: var(--ink);
+    transition: all 0.2s;
+    gap: 24px;
+    flex-wrap: wrap;
+  }
+  .next-post:hover { background: var(--ink); color: var(--bg); }
+  .next-post:hover .np-tag { color: var(--accent); }
+  .next-post:hover .em { color: var(--accent); }
+  .next-post:hover p { color: #c8c8d0; }
+  .np-tag { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.1em; color: var(--ink-mute); margin-bottom: 6px; }
+  .next-post h4 { font-family: 'Noto Serif SC', serif; font-size: 26px; margin: 0 0 8px; font-weight: 700; }
+  .next-post .em { color: var(--obj-color); font-weight: 500; }
+  .next-post p { margin: 0; color: var(--ink-soft); font-size: 14px; max-width: 56ch; }
+  .np-cta { font-family: 'JetBrains Mono', monospace; font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; white-space: nowrap; }
+  .np-cta .arr { display: inline-block; transition: transform .2s; }
+  .next-post:hover .arr { transform: translateX(4px); }
+
+  /* footer */
+  footer { padding: 56px 0 64px; background: var(--bg); color: var(--ink-soft); border-top: 1px solid var(--line); }
+  .byline-group { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; margin-bottom: 32px; padding-bottom: 32px; border-bottom: 1px dashed var(--line); }
+  @media (max-width: 880px) { .byline-group { grid-template-columns: 1fr; } }
+  .byline { display: flex; gap: 16px; align-items: center; }
+  .byline .avatar { width: 56px; height: 56px; border-radius: 50%; object-fit: cover; flex-shrink: 0; }
+  .byline-label { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--accent); letter-spacing: 0.1em; }
+  .byline-label .dot { display: inline-block; width: 6px; height: 6px; background: var(--accent); border-radius: 50%; margin-right: 4px; vertical-align: middle; animation: pulse 2s ease-in-out infinite; }
+  .byline-name { font-family: 'Noto Serif SC', serif; font-weight: 700; font-size: 18px; margin: 4px 0; color: var(--ink); }
+  .byline-name .em { color: var(--accent); font-weight: 500; }
+  .byline-tag { color: var(--ink-soft); font-size: 13px; margin: 0; line-height: 1.5; }
+  .footer-meta { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ink-mute); text-align: center; letter-spacing: 0.05em; }
+  .footer-meta .heart { color: var(--accent); }
+
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="wrap topbar-inner">
+    <div class="brand-block">
+      <a href="book.html#vol-3" class="brand"><span class="brand-arrow">←</span>AI LABBOOK <span class="dot"></span></a>
+      <span class="brand-sep">/</span>
+      <span class="brand-current">X18 · 一致性</span>
+    </div>
+    <nav class="nav-links">
+      <a href="book.html#vol-3">路线图</a>
+    </nav>
+  </div>
+</div>
+
+<!-- Hero -->
+<header class="hero">
+  <div class="wrap">
+    <div class="hero-meta">
+      <span class="pill fill">高阶 · ADVANCED</span>
+      <span class="pill purple">STAGE 05 · 系统演进</span>
+      <span class="pill">X18 · 一致性</span>
+      <span class="label">阅读 ≈ 16 分钟 · 含 3 段互动</span>
+    </div>
+    <div class="hero-grid">
+      <div>
+        <h1>
+          同一个<br>
+          <span class="display-cn">客户状态</span>，<br>
+          5 个页面<span class="purple">5 种画法</span>。
+        </h1>
+        <p class="lede">
+          随着团队和页面变多，"活跃 / 休眠 / 流失"这种核心概念会被各团队各自定义。<br>
+          视觉漂移、文案漂移、规则漂移——3 种漂移会让产品在用户眼里变成 5 个不一致的子产品。
+        </p>
+      </div>
+      <div class="hero-side">
+        <div class="row"><span class="k">本页讲什么</span><span class="v">多团队一致性</span></div>
+        <div class="row"><span class="k">三幕</span><span class="v">看见 · 拆开 · 再做</span></div>
+        <div class="row"><span class="k">面向</span><span class="v">设计师 / DS 负责人</span></div>
+        <div class="row"><span class="k">前置</span><span class="v">设计系统基础</span></div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- Section 01: 问题 -->
+<section id="problem">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>01</strong> / 问题</div>
+        <h2 class="section-title">"做完自己那块"<br>不等于<span class="em">系统一致</span>。</h2>
+      </div>
+      <p class="section-sub">
+        设计师以为"做完自己那块就 OK"。其实系统级一致性 = 视觉 token / 共享组件 / 共享 formatter / 共享 validator——
+        这 4 层都需要主动建立 + 维护，否则 6 个月后系统就裂开。
+      </p>
+    </div>
+
+    <div class="problem-grid">
+      <div class="problem-card bad">
+        <span class="tag">各做各的 · DRIFT</span>
+        <h3>"我团队这块做完了"</h3>
+        <p>A 团队的"客户状态"用 enum 红/绿/灰；B 团队的同一字段用 chip 蓝/橙/紫；C 团队的用图标。用户在系统里看 3 套语言。</p>
+        <p><strong>6 个月后：</strong>同一份业务概念在产品里被画成 5 种、写成 5 种、算成 5 种。</p>
+        <p style="color:var(--accent)"><strong>用户感觉：</strong>这不是 1 个产品，是 5 个长得有点像的产品。</p>
+      </div>
+
+      <div class="problem-card good">
+        <span class="tag">单一来源 · SOURCE</span>
+        <h3>"客户状态"是一个原子</h3>
+        <p>"客户状态"作为一个原子定义在 design system 里——所有页面用同一个 component + 同一个 token + 同一份文案。</p>
+        <p><strong>漂移 = bug。</strong>任何页面画得不一样 = PR 被打回。</p>
+        <p style="color:var(--obj-color)"><strong>结果：</strong>1 个原子 1 处定义，N 个页面 1 套体验。</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Section 02: 幕一 · 看见 -->
+<section id="look">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <span class="act-tag look">幕一 · 看见</span>
+        <div class="section-num"><strong>02</strong> / 看见</div>
+        <h2 class="section-title"><span class="purple">5 个页面</span>，5 种<br>"客户状态"。</h2>
+      </div>
+      <p class="section-sub">
+        下面是同一个 CRM 在 5 个页面里渲染"客户状态"的真实截图——
+        视觉、文案、阈值全不一致。点卡片放大查看，点右上角的 <strong>!</strong> 标记你认为有问题的差异点。
+      </p>
+    </div>
+
+    <div class="drift-stage">
+      <div class="drift-grid" id="driftGrid">
+
+        <div class="drift-card" data-drift="detail">
+          <span class="drift-tag">01 · 详情页</span>
+          <span class="drift-flag" title="标记漂移">!</span>
+          <div style="margin-top:10px">
+            <div class="drift-mini-name">张明 · 星河科技</div>
+            <div class="drift-mini-meta">最近联系 · 3 天前</div>
+            <div style="margin-top:14px;display:flex;flex-direction:column;gap:6px">
+              <span class="drift-status-chip" style="background:var(--green-soft);color:var(--green)">● 活跃</span>
+              <span class="drift-status-chip" style="background:var(--bg-2);color:var(--ink-soft)">● 休眠</span>
+              <span class="drift-status-chip" style="background:var(--accent-soft);color:var(--accent)">● 流失</span>
+            </div>
+            <div style="margin-top:10px;font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--ink-mute);letter-spacing:0.06em">CHIP · 中文 · 红绿灰</div>
+          </div>
+        </div>
+
+        <div class="drift-card" data-drift="list">
+          <span class="drift-tag">02 · 列表</span>
+          <span class="drift-flag" title="标记漂移">!</span>
+          <div style="margin-top:10px">
+            <div class="drift-mini-name" style="font-size:11px">客户列表</div>
+            <div style="margin-top:8px;display:flex;flex-direction:column;gap:5px">
+              <div style="display:flex;justify-content:space-between;align-items:center;font-size:11px">
+                <span>张明</span>
+                <span class="drift-status-chip" style="background:var(--accent-soft);color:var(--accent);font-size:10px;padding:1px 6px">active</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;align-items:center;font-size:11px">
+                <span>王芳</span>
+                <span class="drift-status-chip" style="background:#fff3cc;color:#8a6500;font-size:10px;padding:1px 6px">dormant</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;align-items:center;font-size:11px">
+                <span>陈强</span>
+                <span class="drift-status-chip" style="background:var(--bg-2);color:var(--ink-mute);font-size:10px;padding:1px 6px">lost</span>
+              </div>
+            </div>
+            <div style="margin-top:8px;font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--ink-mute);letter-spacing:0.06em">CHIP · 英文 · 红黄灰</div>
+          </div>
+        </div>
+
+        <div class="drift-card" data-drift="card">
+          <span class="drift-tag">03 · 卡片</span>
+          <span class="drift-flag" title="标记漂移">!</span>
+          <div style="margin-top:10px">
+            <div class="drift-mini-name">联系人卡片</div>
+            <div style="margin-top:10px;display:flex;flex-direction:column;gap:7px">
+              <div class="drift-status-dot"><span class="dot" style="background:var(--green)"></span>近期活跃</div>
+              <div class="drift-status-dot"><span class="dot" style="background:var(--ink-mute)"></span>未联系 30 天</div>
+              <div style="font-size:11px;color:var(--ink-mute);font-style:italic">流失客户已隐藏</div>
+            </div>
+            <div style="margin-top:12px;font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--ink-mute);letter-spacing:0.06em">DOT · 自然语言 · 流失被滤掉</div>
+          </div>
+        </div>
+
+        <div class="drift-card" data-drift="toast">
+          <span class="drift-tag">04 · 通知</span>
+          <span class="drift-flag" title="标记漂移">!</span>
+          <div style="margin-top:10px">
+            <div class="drift-mini-name">通知中心</div>
+            <div style="margin-top:10px;display:flex;flex-direction:column;gap:6px;font-size:12px">
+              <div>🔥 张明很<strong>热</strong></div>
+              <div>🌤 王芳还<strong>温</strong></div>
+              <div>❄️ 陈强已<strong>冷</strong></div>
+            </div>
+            <div style="margin-top:12px;font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--ink-mute);letter-spacing:0.06em">EMOJI · 隐喻 · 热温冷</div>
+          </div>
+        </div>
+
+        <div class="drift-card" data-drift="report">
+          <span class="drift-tag">05 · 报表</span>
+          <span class="drift-flag" title="标记漂移">!</span>
+          <div style="margin-top:10px">
+            <div class="drift-mini-name">月度报表</div>
+            <div style="margin-top:10px">
+              <div style="display:flex;gap:3px;align-items:flex-end;height:48px">
+                <div style="width:14px;height:42px;background:var(--blue);border-radius:2px"></div>
+                <div style="width:14px;height:28px;background:#ffcf3d;border-radius:2px"></div>
+                <div style="width:14px;height:16px;background:var(--obj-color);border-radius:2px"></div>
+              </div>
+              <div style="margin-top:6px;display:flex;gap:3px;font-size:9px;color:var(--ink-mute)">
+                <span style="width:14px;text-align:center">A</span>
+                <span style="width:14px;text-align:center">D</span>
+                <span style="width:14px;text-align:center">L</span>
+              </div>
+            </div>
+            <div style="margin-top:10px;font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--ink-mute);letter-spacing:0.06em">BAR · 缩写 · 蓝黄紫</div>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="drift-matrix" id="driftMatrix">
+        <div class="matrix-cell">
+          <span class="matrix-lbl">颜色不一致</span>
+          <span class="matrix-val" id="mxColor">5<span class="of"> / 5 套色</span></span>
+          <span class="matrix-note">每个页面用自己的色系——红绿灰 / 红黄灰 / 蓝黄紫……</span>
+        </div>
+        <div class="matrix-cell">
+          <span class="matrix-lbl">文案不一致</span>
+          <span class="matrix-val" id="mxCopy">5<span class="of"> / 5 套词</span></span>
+          <span class="matrix-note">活跃 / active / 近期活跃 / 热 / A——同一个状态 5 种说法。</span>
+        </div>
+        <div class="matrix-cell">
+          <span class="matrix-lbl">阈值不一致</span>
+          <span class="matrix-val" id="mxRule">3<span class="of"> 种"活跃"定义</span></span>
+          <span class="matrix-note">&lt; 7 天 / &lt; 30 天 / &lt; 90 天——后台数据是同一个，每页算法不同。</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="reveal-bar">
+      <div class="msg">
+        1 个原子，<span class="em">5 种实现</span>。<br>
+        用户感觉是 5 个产品，不是 5 个页面。
+      </div>
+      <div class="counter">
+        已放大 <strong id="zoomCount">0</strong> / 5 · 已标记 <strong id="flagCount">0</strong> 个漂移点
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Section 03: 幕二 · 拆开 -->
+<section id="break">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <span class="act-tag break">幕二 · 拆开</span>
+        <div class="section-num"><strong>03</strong> / 拆开</div>
+        <h2 class="section-title"><span class="purple">4 层一致性</span>。</h2>
+      </div>
+      <p class="section-sub">
+        把"客户状态"统一，需要 4 层都对齐——只对齐颜色不够。
+        点每张卡片展开看每一层做了什么 + 不做会怎么裂。
+      </p>
+    </div>
+
+    <div class="layers-stage" id="layersStage">
+
+      <div class="layer-card" data-layer="token">
+        <div class="layer-head">
+          <div class="layer-num">1</div>
+          <div>
+            <h3 class="layer-title">设计 token<span class="lbl-en">颜色 / spacing / 圆角 / 字号</span></h3>
+          </div>
+        </div>
+        <p class="layer-intro">原子值——颜色、间距、字号、圆角这些"视觉常量"。统一这层，视觉漂移才能止住。</p>
+        <span class="layer-toggle">展开看反例 <span class="arr">›</span></span>
+        <div class="layer-body">
+          <div class="layer-body-inner">
+            <div class="layer-row">
+              <span class="lbl">是什么</span>
+              <span class="val">定义一组原子值。例：<code>color.status.active = #1F6B3A</code>，<code>color.status.dormant = #8A8A92</code>。</span>
+            </div>
+            <div class="layer-row">
+              <span class="lbl">落地</span>
+              <span class="val">所有团队 import 同一个 token 文件——Figma 变量 + 代码 CSS 变量双绑定。</span>
+            </div>
+            <div class="layer-row bad">
+              <span class="lbl">反例</span>
+              <span class="val">颜色硬编码——A 用 <code>#1F6B3A</code>，B 用 <code>#20A040</code>。设计师视觉上认为一样，用户在两个页面切换时能感觉出"绿不一样"。</span>
+            </div>
+            <div class="layer-broken">
+              <strong>破窗效应：</strong>第一个团队硬编码颜色 → 第二个看到也觉得"我也可以" → 6 个月后 token 名存实亡。
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="layer-card" data-layer="component">
+        <div class="layer-head">
+          <div class="layer-num">2</div>
+          <div>
+            <h3 class="layer-title">共享组件<span class="lbl-en">StatusBadge / EmptyState / Pagination</span></h3>
+          </div>
+        </div>
+        <p class="layer-intro">把"客户状态显示"做成一个 React 组件，所有团队 import 同一个——不让每个团队各自画 chip。</p>
+        <span class="layer-toggle">展开看反例 <span class="arr">›</span></span>
+        <div class="layer-body">
+          <div class="layer-body-inner">
+            <div class="layer-row">
+              <span class="lbl">是什么</span>
+              <span class="val">封装为 <code>&lt;StatusBadge value="active"/&gt;</code>，组件内部决定颜色 / 文案 / icon。</span>
+            </div>
+            <div class="layer-row">
+              <span class="lbl">落地</span>
+              <span class="val">在 design system 仓库发布；所有 app import 同一个版本；改动通过 PR + design review。</span>
+            </div>
+            <div class="layer-row bad">
+              <span class="lbl">反例</span>
+              <span class="val">每个团队自己用 <code>&lt;span&gt;</code> 画一遍 → 视觉漂、可访问性漂、交互态（hover / disabled）也漂。</span>
+            </div>
+            <div class="layer-broken">
+              <strong>破窗效应：</strong>组件不存在 → 大家各自画 → 即便后来发布了组件，老页面也不会迁移 → 系统始终有 2 套实现。
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="layer-card" data-layer="formatter">
+        <div class="layer-head">
+          <div class="layer-num">3</div>
+          <div>
+            <h3 class="layer-title">共享 formatter<span class="lbl-en">数字 / 日期 / 货币 / 状态文案</span></h3>
+          </div>
+        </div>
+        <p class="layer-intro">把"原始值 → 显示字符串"的映射放在一个 utils 包里。统一这层，文案漂移才能止住。</p>
+        <span class="layer-toggle">展开看反例 <span class="arr">›</span></span>
+        <div class="layer-body">
+          <div class="layer-body-inner">
+            <div class="layer-row">
+              <span class="lbl">是什么</span>
+              <span class="val">全局唯一函数：<code>formatStatus('active') = '活跃'</code>，<code>formatMoney(480000) = '¥ 48 万'</code>。</span>
+            </div>
+            <div class="layer-row">
+              <span class="lbl">落地</span>
+              <span class="val">放在 <code>@app/utils/format</code> 包；i18n 文案 key 唯一；任何页面要展示状态都从这里读。</span>
+            </div>
+            <div class="layer-row bad">
+              <span class="lbl">反例</span>
+              <span class="val">每个页面写 <code>if (status==='active') return '活跃'</code> → 一个写"活跃"，另一个写"已激活"，第三个写"active"。</span>
+            </div>
+            <div class="layer-broken">
+              <strong>破窗效应：</strong>没有共享 formatter → 翻译团队改"活跃"→"已激活"时只能逐文件改 → 永远改不干净。
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="layer-card" data-layer="validator">
+        <div class="layer-head">
+          <div class="layer-num">4</div>
+          <div>
+            <h3 class="layer-title">共享 validator<span class="lbl-en">业务规则 / 阈值</span></h3>
+          </div>
+        </div>
+        <p class="layer-intro">"什么算活跃"这条业务规则要全局唯一。统一这层，数据漂移才能止住。</p>
+        <span class="layer-toggle">展开看反例 <span class="arr">›</span></span>
+        <div class="layer-body">
+          <div class="layer-body-inner">
+            <div class="layer-row">
+              <span class="lbl">是什么</span>
+              <span class="val">全局唯一函数：<code>isActive(customer) = customer.lastContactAt &gt; now - 30d</code>。所有页面调它。</span>
+            </div>
+            <div class="layer-row">
+              <span class="lbl">落地</span>
+              <span class="val">放在 <code>@app/domain/customer</code>；后端 + 前端共用同一份；改阈值只改一处。</span>
+            </div>
+            <div class="layer-row bad">
+              <span class="lbl">反例</span>
+              <span class="val">A 团队定义"活跃 = &lt; 7 天"，B 团队"&lt; 30 天"，C 团队"&lt; 90 天"。后台同一个客户，3 个页面里 3 种状态。</span>
+            </div>
+            <div class="layer-broken">
+              <strong>破窗效应：</strong>规则散落 → 运营问"为啥这个客户在 A 页是流失、在 B 页是活跃" → 没人答得上来。
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="reveal-bar" style="margin-top:32px">
+      <div class="msg">
+        4 层都对齐 = <span class="em">系统稳</span>。<br>
+        任何一层裂 = 漂移连锁。
+      </div>
+      <div class="counter">已展开 <strong id="layerCount">0</strong> / 4 层</div>
+    </div>
+  </div>
+</section>
+
+<!-- Section 04: 幕三 · 再做 -->
+<section id="make">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <span class="act-tag make">幕三 · 再做</span>
+        <div class="section-num"><strong>04</strong> / 再做</div>
+        <h2 class="section-title">轮到你——<br>给 6 个不一致点<br><span class="em">选治理方案</span>。</h2>
+      </div>
+      <p class="section-sub">
+        下面 6 个真实漂移案例。每个有 4 个治理候选（token / 组件 / formatter / validator）。
+        你来选哪个 + 落地优先级。提交后会逐题判分。
+      </p>
+    </div>
+
+    <div class="gov-stage">
+      <div class="gov-head">
+        <h3 class="gov-title">6 个漂移案例 · 选治理 + 优先级</h3>
+        <div class="gov-progress">已选 <span class="done" id="govDone">0</span> / 6 案例</div>
+      </div>
+
+      <div class="gov-grid" id="govGrid">
+        <!-- Cases generated by JS -->
+      </div>
+
+      <div class="gov-actions">
+        <button class="gov-btn primary" id="govSubmit">提交打分</button>
+        <button class="gov-btn" id="govReset">清空</button>
+      </div>
+
+      <div class="gov-judge" id="govJudge"></div>
+    </div>
+  </div>
+</section>
+
+<!-- Section 05: closing -->
+<section id="closing">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>05</strong> / 把这件事变成习惯</div>
+        <h2 class="section-title">下次设计评审，<br>第一句先<span class="em">问 token / 组件</span>。</h2>
+      </div>
+      <p class="section-sub">
+        从这一篇开始，"一致性"会变成一种工程师朋友会感谢你的设计语言。
+      </p>
+    </div>
+
+    <div class="tips-grid">
+      <div class="tip">
+        <div class="tip-num">i</div>
+        <h4>一致性是基础设施不是装饰</h4>
+        <p>token / 共享组件 / formatter / validator 是产品的脊柱。这 4 层不立，每个团队各自做加法 = 系统裂。</p>
+        <p><strong>先建基础设施，再做新功能。</strong></p>
+      </div>
+      <div class="tip">
+        <div class="tip-num">ii</div>
+        <h4>设计稿要标"用了哪个 token / 哪个组件"</h4>
+        <p>稿子里不标 = 工程师自己画一遍 = 漂移。每个元素都该有"来源"——这是 token 还是新原子？这是 StatusBadge 还是新组件？</p>
+        <p><strong>不标 = 漂移的起点。</strong></p>
+      </div>
+      <div class="tip">
+        <div class="tip-num">iii</div>
+        <h4>允许"有意识的不一致"</h4>
+        <p>通知里的 emoji 可能是产品决策。重点是"主动选择"——记录下来"这里我们故意和别处不同"，而不是"随手画"。</p>
+        <p><strong>选择 ≠ 错误。漂移才是。</strong></p>
+      </div>
+    </div>
+
+    <div class="tip-outro">
+      <div class="outro-tag">划重点 · TL;DR</div>
+      <div>
+        <p>一致性不是某个人的洁癖——是<strong>所有团队都需要的基础设施</strong>。视觉 token / 共享组件 / 共享 formatter / 共享 validator 这 4 层任何一层裂开，漂移就会从那里开始扩散。</p>
+        <p>下次设计评审，第一句问<strong>"这块用了 design system 的哪个组件 / token？"</strong>——只要这一句变成会议默认问题，一致性就开始自动维护了。</p>
+      </div>
+    </div>
+
+    <a href="x19-spec-delivery.html" class="next-post">
+      <div>
+        <div class="np-tag">下一站 · NEXT · X19 · 高阶 · 规划中</div>
+        <h4>交付与验收：<span class="em">从视觉稿到规则说明书</span></h4>
+        <p>一致性讲完——下一站讲设计如何"交付"给工程：稿子之外，规则说明书 + 验收清单才是真交付物。设计稿之外，还需要哪些产物，工程师才能不来回追问？</p>
+      </div>
+      <span class="np-cta">回路线图 <span class="arr">→</span></span>
+    </a>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div class="byline-group">
+      <div class="byline">
+        <img class="avatar" src="author.jpg" alt="范米花儿">
+        <div class="byline-meta">
+          <div class="byline-label"><span class="dot"></span>作者 · WRITTEN BY</div>
+          <div class="byline-name">嗨，我是 <span class="em">范米花儿</span></div>
+          <p class="byline-tag">设计工程师 ——<br>设计 × 代码，两边都做。</p>
+        </div>
+      </div>
+</div>
+    <div class="footer-meta">
+      做于 <span class="mono">2026</span> · 用 <span class="heart">●</span> 写给 <span class="mono">DESIGNERS &amp; DEVELOPERS</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+// ===== Game 1: drift surfaces — zoom + flag =====
+(function(){
+  const cards = document.querySelectorAll('.drift-card');
+  const zoomed = new Set();
+  const flagged = new Set();
+  const zoomCount = document.getElementById('zoomCount');
+  const flagCount = document.getElementById('flagCount');
+
+  cards.forEach(card => {
+    const key = card.dataset.drift;
+
+    // Click card body -> zoom toggle
+    card.addEventListener('click', e => {
+      if (e.target.closest('.drift-flag')) return;
+      const wasZoom = card.classList.contains('is-zoom');
+      cards.forEach(c => c.classList.remove('is-zoom'));
+      if (!wasZoom) {
+        card.classList.add('is-zoom');
+        if (!zoomed.has(key)) {
+          zoomed.add(key);
+          zoomCount.textContent = zoomed.size;
+        }
+      }
+    });
+
+    // Hover highlight all (same-pattern lock-step "drift" feeling)
+    card.addEventListener('mouseenter', () => {
+      if (!zoomed.has(key)) {
+        zoomed.add(key);
+        zoomCount.textContent = zoomed.size;
+      }
+    });
+
+    // Flag toggle
+    const flag = card.querySelector('.drift-flag');
+    if (flag) {
+      flag.addEventListener('click', e => {
+        e.stopPropagation();
+        if (flagged.has(key)) {
+          flagged.delete(key);
+          card.classList.remove('is-flagged');
+        } else {
+          flagged.add(key);
+          card.classList.add('is-flagged');
+        }
+        flagCount.textContent = flagged.size;
+      });
+    }
+  });
+
+  // Click outside to clear zoom
+  document.addEventListener('click', e => {
+    if (!e.target.closest('.drift-card')) {
+      cards.forEach(c => c.classList.remove('is-zoom'));
+    }
+  });
+})();
+
+// ===== Game 2: layer cards — expand / collapse =====
+(function(){
+  const cards = document.querySelectorAll('.layer-card');
+  const opened = new Set();
+  const counter = document.getElementById('layerCount');
+
+  cards.forEach(card => {
+    card.addEventListener('click', () => {
+      const isOpen = card.classList.contains('is-open');
+      card.classList.toggle('is-open');
+      if (!isOpen) {
+        opened.add(card.dataset.layer);
+        counter.textContent = opened.size;
+      }
+    });
+  });
+})();
+
+// ===== Game 3: governance — 6 cases, radio + priority =====
+(function(){
+  const CASES = [
+    {
+      id: 'c1',
+      title: '同一个"活跃"状态，5 个页面用 5 种颜色',
+      desc: '详情页绿，列表红，卡片黑，通知 emoji，报表蓝——同一个状态色相完全不一致。',
+      correct: 'token',
+      bestPriority: 'P0',
+      explain: {
+        token: '✓ 对。"活跃"色应是 token <code>color.status.active</code>，一改全改。这是视觉一致性最底层的修复。',
+        component: '× 组件层只决定"用什么形状显示"，颜色源头还是 token。先改 token，组件才能跟上。',
+        formatter: '× formatter 管文案不管颜色。文案没漂——是颜色漂了。',
+        validator: '× validator 管业务规则。"活跃"判断没漂——是显示方式漂了。'
+      }
+    },
+    {
+      id: 'c2',
+      title: '"流失"文案：A 页"已流失" B 页"已离去" C 页"inactive"',
+      desc: '同一个状态在不同页面被翻译成不同文案——中英文混杂，措辞各异。',
+      correct: 'formatter',
+      bestPriority: 'P0',
+      explain: {
+        token: '× token 是颜色 / 间距等视觉值，管不到文字。',
+        component: '△ StatusBadge 组件内部要调 formatter——组件是壳，文案源头是 formatter。',
+        formatter: '✓ 对。<code>formatStatus(\'lost\') = \'已流失\'</code> 全局唯一。i18n 也应该挂在这层。',
+        validator: '× validator 决定"是不是流失"，不决定"叫什么"。'
+      }
+    },
+    {
+      id: 'c3',
+      title: '客户活跃阈值各团队不同（7 / 30 / 90 天）',
+      desc: '同一个客户在 A 页是"活跃"、在 B 页是"流失"——后台数据一样，每页算法不同。',
+      correct: 'validator',
+      bestPriority: 'P0',
+      explain: {
+        token: '× 这是业务规则不一致，不是视觉问题。改 token 不会解决"为啥同一个客户两边状态不同"。',
+        component: '× 组件渲染状态，但"是什么状态"由 validator 决定。',
+        formatter: '× formatter 只管"状态值 → 文案"映射。源头的状态值就已经不一致了。',
+        validator: '✓ 对。<code>isActive(customer)</code> 全局唯一。这是业务规则层，要后端 + 前端共用同一份。'
+      }
+    },
+    {
+      id: 'c4',
+      title: '状态 badge 的样式各页不同（chip / dot / icon）',
+      desc: '颜色用了 token，文案用了 formatter，但展示形态依然 3 套——chip、dot、icon。',
+      correct: 'component',
+      bestPriority: 'P1',
+      explain: {
+        token: '× token 已经在用了，问题不在颜色。',
+        component: '✓ 对。把"状态显示"做成 <code>&lt;StatusBadge variant="chip|dot|icon"/&gt;</code> 共享组件，让设计师有"形态变体"但不让各团队自己写一遍。',
+        formatter: '× 形态不是文案，formatter 解决不了。',
+        validator: '× 业务规则没问题，是展示形态漂了。'
+      }
+    },
+    {
+      id: 'c5',
+      title: '导出报表里的字段顺序各页不同',
+      desc: '运营从详情页导出客户列表是"姓名 / 公司 / 状态"，从筛选页导出是"状态 / 姓名 / 公司"——下载下来的 csv 字段顺序乱。',
+      correct: 'component',
+      bestPriority: 'P2',
+      explain: {
+        token: '× 视觉 token 管不到字段顺序。',
+        component: '✓ 对。做一个共享的 <code>&lt;ColumnsConfig&gt;</code> / <code>exportColumns()</code> 函数——所有导出走同一份字段顺序定义。也可视作"共享配置"——本质是 shared module。',
+        formatter: '△ 单个字段的格式化用 formatter，但"哪些字段、什么顺序"是结构，不是格式。',
+        validator: '× 不是业务规则问题。'
+      }
+    },
+    {
+      id: 'c6',
+      title: '通知里"活跃"用 emoji 🔥（亲和风格）',
+      desc: '其它 4 个地方都用 chip + "活跃"二字。通知中心团队故意用 emoji + "热"——他们说"通知要有情感色"。',
+      correct: 'discuss',
+      bestPriority: 'P3',
+      explain: {
+        token: '△ 选 token 意味着"必须统一颜色 / 视觉"——通知失去情感色。',
+        component: '△ 选组件意味着"必须用 StatusBadge"——同样失去通知的特殊语调。',
+        formatter: '△ 选 formatter 意味着"必须用同一份文案"——失去"热/温/冷"的诗意。',
+        validator: '× 业务判断没漂，是表达漂了。',
+        discuss: '✓ 这题没有标准答案。'
+      },
+      isDiscuss: true
+    }
+  ];
+
+  const PRIORITIES = ['P0', 'P1', 'P2', 'P3'];
+  const PRIORITY_LABEL = { P0: 'P0 立即（≤ 1 周）', P1: 'P1 一周内（迭代级）', P2: 'P2 一月内（计划入排期）', P3: 'P3 待办（先放着观察）' };
+  const OPT_LABELS = {
+    token: { name: '设计 token', mono: 'tokens' },
+    component: { name: '共享组件', mono: 'components' },
+    formatter: { name: '共享 formatter', mono: 'utils/format' },
+    validator: { name: '共享 validator', mono: 'domain/rules' }
+  };
+
+  const state = {};
+
+  function renderCases() {
+    const grid = document.getElementById('govGrid');
+    grid.innerHTML = '';
+    CASES.forEach((c, i) => {
+      state[c.id] = state[c.id] || { choice: null, priority: null };
+      const wrap = document.createElement('div');
+      wrap.className = 'gov-case';
+      wrap.dataset.case = c.id;
+
+      let optsHtml = '';
+      Object.keys(OPT_LABELS).forEach(k => {
+        const o = OPT_LABELS[k];
+        optsHtml += `
+          <label class="gov-opt">
+            <input type="radio" name="${c.id}" value="${k}">
+            <span class="radio"></span>
+            <span class="opt-text">${o.name}</span>
+            <span class="opt-mono">${o.mono}</span>
+          </label>`;
+      });
+
+      let priorityHtml = '<option value="">— 选优先级 —</option>';
+      PRIORITIES.forEach(p => {
+        priorityHtml += `<option value="${p}">${PRIORITY_LABEL[p]}</option>`;
+      });
+
+      wrap.innerHTML = `
+        <div class="gov-case-head">
+          <span class="gov-case-num">案例 ${i+1} / 6</span>
+          <h4 class="gov-case-title">${c.title}</h4>
+        </div>
+        <p class="gov-case-desc">${c.desc}</p>
+        <div class="gov-options">${optsHtml}</div>
+        <div class="gov-priority">
+          <span>优先级 →</span>
+          <select data-pri="${c.id}">${priorityHtml}</select>
+        </div>
+        <div class="gov-feedback" data-fb="${c.id}"></div>
+      `;
+      grid.appendChild(wrap);
+    });
+
+    bindEvents();
+  }
+
+  function bindEvents() {
+    document.querySelectorAll('.gov-opt input').forEach(input => {
+      input.addEventListener('change', e => {
+        const c = e.target.name;
+        state[c].choice = e.target.value;
+        markAnswered(c);
+        renderProgress();
+      });
+    });
+    document.querySelectorAll('select[data-pri]').forEach(sel => {
+      sel.addEventListener('change', e => {
+        const c = e.target.dataset.pri;
+        state[c].priority = e.target.value || null;
+        markAnswered(c);
+        renderProgress();
+      });
+    });
+  }
+
+  function markAnswered(caseId) {
+    const el = document.querySelector(`.gov-case[data-case="${caseId}"]`);
+    if (!el) return;
+    const s = state[caseId];
+    if (s.choice && s.priority) el.classList.add('is-answered');
+    else el.classList.remove('is-answered');
+  }
+
+  function renderProgress() {
+    const done = CASES.filter(c => state[c.id].choice && state[c.id].priority).length;
+    document.getElementById('govDone').textContent = done;
+  }
+
+  document.getElementById('govSubmit').addEventListener('click', () => {
+    const lines = [];
+    let correct = 0, totalScored = 0;
+
+    CASES.forEach((c, i) => {
+      const s = state[c.id];
+      const fb = document.querySelector(`.gov-feedback[data-fb="${c.id}"]`);
+      let line = `<li><strong>案例 ${i+1}</strong>：`;
+
+      if (!s.choice) {
+        line += `没选 — 任何治理候选都需要一个判断。`;
+        if (fb) { fb.className = 'gov-feedback wrong show'; fb.innerHTML = '没选 — 任何治理候选都需要一个判断。'; }
+        lines.push(line + '</li>');
+        return;
+      }
+
+      const explain = c.explain[s.choice] || '';
+
+      if (c.isDiscuss) {
+        // Case 6: no single right answer
+        const ext = s.choice === 'token' || s.choice === 'component' || s.choice === 'formatter'
+          ? '坚决统一 → 通知失去情感色。'
+          : s.choice === 'validator' ? '业务规则没漂，validator 救不了表达漂移。'
+          : '保持现状 → 通知体系内可以有特色。';
+        line += `${OPT_LABELS[s.choice]?.name || s.choice} · 优先级 ${s.priority} — 这题没有标准答案。`;
+        if (fb) {
+          fb.className = 'gov-feedback maybe show';
+          fb.innerHTML = `${explain}<br>↳ ${ext}`;
+        }
+        // count as "scored" but don't increment correct
+        totalScored += 0.5;
+      } else if (s.choice === c.correct) {
+        correct++;
+        totalScored += 1;
+        const priOk = s.priority === c.bestPriority;
+        line += `✓ ${OPT_LABELS[s.choice].name}${priOk ? `（优先级 ${s.priority}，正确）` : `（优先级建议 <strong>${c.bestPriority}</strong>，你选 ${s.priority}）`}`;
+        if (fb) {
+          fb.className = 'gov-feedback win show';
+          fb.innerHTML = `${explain}${priOk ? '' : `<br>↳ 优先级：建议 <strong>${c.bestPriority}</strong>——${c.correct === 'validator' ? '业务规则漂移影响数据正确性，必须 P0。' : c.correct === 'component' ? '视觉形态属"应该收敛但可以分迭代"，P1 / P2 都合理。' : '影响用户感知，越早越好。'}`}`;
+        }
+      } else {
+        totalScored += 0;
+        line += `✗ 选了 <strong>${OPT_LABELS[s.choice].name}</strong>，正确是 <strong>${OPT_LABELS[c.correct].name}</strong>。`;
+        if (fb) {
+          fb.className = 'gov-feedback wrong show';
+          fb.innerHTML = `${explain}<br>↳ 正确答案：<strong>${OPT_LABELS[c.correct].name}</strong>。`;
+        }
+      }
+
+      lines.push(line + '</li>');
+    });
+
+    const judge = document.getElementById('govJudge');
+    let verdictClass, verdictLabel, headline;
+    if (correct >= 5) {
+      verdictClass = 'win';
+      verdictLabel = '系统级思维';
+      headline = '你已经在用"4 层一致性"分析漂移了。';
+    } else if (correct >= 3) {
+      verdictClass = 'win';
+      verdictLabel = '方向对了';
+      headline = '层错了一两个——但已经知道"漂移要分层修"。';
+    } else {
+      verdictClass = 'partial';
+      verdictLabel = '换个角度';
+      headline = '不是看"哪里漂"——是看"漂在哪一层"。';
+    }
+
+    judge.innerHTML = `<span class="verdict ${verdictClass}">${verdictLabel}</span><h4>${headline}</h4><ul>${lines.join('')}</ul>`;
+    judge.classList.add('show');
+    judge.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  });
+
+  document.getElementById('govReset').addEventListener('click', () => {
+    Object.keys(state).forEach(k => { state[k] = { choice: null, priority: null }; });
+    document.querySelectorAll('.gov-feedback').forEach(fb => fb.classList.remove('show'));
+    document.querySelectorAll('.gov-case').forEach(el => el.classList.remove('is-answered'));
+    document.querySelectorAll('.gov-opt input').forEach(i => { i.checked = false; });
+    document.querySelectorAll('select[data-pri]').forEach(s => { s.value = ''; });
+    document.getElementById('govDone').textContent = '0';
+    document.getElementById('govJudge').classList.remove('show');
+  });
+
+  renderCases();
+})();
+</script>
+
+</body>
+</html>

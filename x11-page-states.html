@@ -1,0 +1,1761 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>页面状态：loading / empty / error / stale / no-permission — AI LABBOOK · X11</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,300..900&family=Geist:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Noto+Sans+SC:wght@300;400;500;700;900&family=Noto+Serif+SC:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f3eee5;
+    --bg-2: #ebe4d4;
+    --ink: #16161d;
+    --ink-soft: #4a4a55;
+    --ink-mute: #8a8a92;
+    --line: #d5cdba;
+    --line-soft: #e3dcca;
+    --accent: #ff4d2e;
+    --accent-soft: #ffe4dc;
+    --blue: #0a4cff;
+    --blue-soft: #dde6ff;
+    --green: #1f6b3a;
+    --green-soft: #d4ecdb;
+    --yellow: #ffcf3d;
+    --paper: #faf7f0;
+    --shadow: 0 1px 0 rgba(0,0,0,0.04), 0 8px 24px rgba(22,22,29,0.06);
+
+    --obj-color: #ff4d2e;
+    --obj-soft: rgba(255,77,46,0.12);
+    --proj-color: #1f6b3a;
+    --proj-soft: rgba(31,107,58,0.12);
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'Geist', 'Noto Sans SC', system-ui, -apple-system, sans-serif;
+    font-size: 16px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    background-image: radial-gradient(circle at 1px 1px, rgba(22,22,29,0.05) 1px, transparent 0);
+    background-size: 24px 24px;
+  }
+
+  .display-cn { font-family: 'Noto Serif SC', 'Fraunces', serif; font-weight: 900; letter-spacing: -0.01em; }
+  .display-en { font-family: 'Fraunces', 'Noto Serif SC', serif; font-weight: 600; font-style: italic; letter-spacing: -0.02em; }
+  .mono { font-family: 'JetBrains Mono', monospace; }
+  .label { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-mute); }
+
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 0 32px; }
+
+  /* Topbar */
+  .topbar {
+    border-bottom: 1px dashed var(--line);
+    padding: 16px 0;
+    background: var(--bg);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .topbar-inner { display: flex; justify-content: space-between; align-items: center; gap: 24px; flex-wrap: wrap; }
+  .brand-block { display: flex; align-items: center; gap: 10px; font-family: 'JetBrains Mono', monospace; font-size: 13px; }
+  .brand { display: inline-flex; align-items: center; gap: 6px; color: var(--ink); text-decoration: none; font-weight: 600; }
+  .brand-arrow { color: var(--ink-mute); transition: transform .2s; }
+  .brand:hover .brand-arrow { transform: translateX(-3px); }
+  .brand .dot { display: inline-block; width: 8px; height: 8px; background: var(--accent); border-radius: 50%; vertical-align: middle; animation: pulse 2s ease-in-out infinite; margin-left: 4px; }
+  .brand-sep { color: var(--ink-mute); }
+  .brand-current { color: var(--ink-soft); }
+  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+  .nav-links { display: flex; gap: 18px; font-size: 13px; flex-wrap: wrap; }
+  .nav-links a { color: var(--ink-soft); text-decoration: none; transition: color 0.2s; }
+  .nav-links a:hover { color: var(--accent); }
+  .nav-links a.current { color: var(--accent); font-weight: 600; }
+
+  /* Hero */
+  .hero { padding: 100px 0 80px; position: relative; overflow: hidden; }
+  .hero-meta { display: flex; gap: 24px; margin-bottom: 32px; align-items: center; flex-wrap: wrap; }
+  .hero-meta .pill { padding: 6px 12px; border: 1px solid var(--ink); border-radius: 100px; font-size: 11px; font-family: 'JetBrains Mono', monospace; letter-spacing: 0.05em; }
+  .hero-meta .pill.fill { background: var(--ink); color: var(--bg); }
+  .hero-meta .pill.purple { background: var(--obj-color); color: white; border-color: var(--obj-color); }
+  .hero h1 {
+    font-family: 'Noto Serif SC', 'Fraunces', serif;
+    font-weight: 900;
+    font-size: clamp(48px, 7vw, 92px);
+    line-height: 0.95;
+    letter-spacing: -0.03em;
+    margin: 0 0 24px;
+  }
+  .hero h1 .em { font-family: 'Noto Serif SC', serif; font-weight: 500; color: var(--accent); }
+  .hero h1 .purple { color: var(--obj-color); font-family: 'Noto Serif SC', serif; font-weight: 500; }
+  .hero p.lede {
+    font-size: 20px;
+    line-height: 1.5;
+    max-width: 640px;
+    color: var(--ink-soft);
+    margin: 0 0 40px;
+  }
+  .hero-grid { display: grid; grid-template-columns: 1.4fr 1fr; gap: 48px; align-items: end; }
+  @media (max-width: 880px) { .hero-grid { grid-template-columns: 1fr; } }
+  .hero-side { border-left: 1px dashed var(--line); padding-left: 24px; font-size: 13px; color: var(--ink-soft); }
+  .hero-side .row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px dashed var(--line); gap: 12px; }
+  .hero-side .row:last-child { border-bottom: none; }
+  .hero-side .row .k { color: var(--ink-mute); font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.05em; text-transform: uppercase; }
+  .hero-side .row .v { font-weight: 500; }
+
+  /* Sections */
+  section { padding: 80px 0; border-top: 1px solid var(--line); position: relative; }
+  .section-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 56px; flex-wrap: wrap; gap: 16px; }
+  .section-num { font-family: 'JetBrains Mono', monospace; font-size: 13px; color: var(--ink-mute); letter-spacing: 0.1em; margin-top: 6px; }
+  .section-num strong { color: var(--accent); }
+  .section-title { font-family: 'Noto Serif SC', serif; font-weight: 900; font-size: clamp(32px, 4.5vw, 52px); line-height: 1.05; letter-spacing: -0.02em; margin: 8px 0 0; max-width: 22ch; }
+  .section-title .em { font-family: 'Noto Serif SC', serif; font-weight: 500; color: var(--accent); }
+  .section-title .purple { color: var(--obj-color); font-family: 'Noto Serif SC', serif; font-weight: 500; }
+  .section-sub { color: var(--ink-soft); font-size: 17px; max-width: 38ch; line-height: 1.55; margin: 0; }
+
+  /* Act tag */
+  .act-tag { display: inline-block; padding: 4px 12px; font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; border-radius: 100px; }
+  .act-tag.look { background: var(--blue-soft); color: var(--blue); }
+  .act-tag.break { background: var(--obj-soft); color: var(--obj-color); }
+  .act-tag.make { background: var(--proj-soft); color: var(--proj-color); }
+
+  /* Problem cards */
+  .problem-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; margin-top: 24px; }
+  @media (max-width: 880px) { .problem-grid { grid-template-columns: 1fr; } }
+  .problem-card { background: var(--paper); border: 1px solid var(--line); border-radius: 6px; padding: 28px; position: relative; }
+  .problem-card.bad { border-color: var(--accent); background: var(--accent-soft); }
+  .problem-card.good { border-color: var(--obj-color); background: var(--obj-soft); }
+  .problem-card .tag { position: absolute; top: -12px; left: 24px; background: var(--bg); padding: 2px 10px; font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.1em; }
+  .problem-card.bad .tag { color: var(--accent); border: 1px solid var(--accent); }
+  .problem-card.good .tag { color: var(--obj-color); border: 1px solid var(--obj-color); }
+  .problem-card h3 { font-family: 'Noto Serif SC', serif; font-size: 22px; margin: 0 0 12px; font-weight: 700; }
+  .problem-card p { margin: 0; color: var(--ink-soft); font-size: 14px; line-height: 1.55; }
+  .problem-card p + p { margin-top: 10px; }
+  .problem-card ul { margin: 10px 0 0; padding-left: 18px; color: var(--ink-soft); font-size: 14px; line-height: 1.6; }
+  .problem-card ul li + li { margin-top: 4px; }
+
+  /* GAME 1: state switcher */
+  .states-stage {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 32px 28px;
+    position: relative;
+    overflow: hidden;
+  }
+  .states-stage::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(to right, var(--line-soft) 1px, transparent 1px),
+      linear-gradient(to bottom, var(--line-soft) 1px, transparent 1px);
+    background-size: 24px 24px;
+    opacity: 0.4;
+    pointer-events: none;
+  }
+  .state-tabs {
+    position: relative;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 24px;
+    padding: 12px;
+    background: var(--bg-2);
+    border-radius: 8px;
+    border: 1px solid var(--line);
+  }
+  .state-tab {
+    padding: 8px 14px;
+    background: white;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    letter-spacing: 0.04em;
+    cursor: pointer;
+    transition: all 0.18s;
+    color: var(--ink);
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .state-tab:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(22,22,29,0.06); }
+  .state-tab.active {
+    background: var(--obj-color);
+    color: white;
+    border-color: var(--obj-color);
+    box-shadow: 0 0 0 3px var(--obj-soft);
+  }
+  .state-tab .ico { font-size: 13px; }
+
+  .device-frame {
+    position: relative;
+    background: white;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 0;
+    box-shadow: 0 8px 24px rgba(22,22,29,0.08);
+    overflow: hidden;
+    min-height: 460px;
+  }
+  .device-chrome {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 14px;
+    background: var(--bg-2);
+    border-bottom: 1px solid var(--line);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--ink-mute);
+  }
+  .device-chrome .dot-r { width: 10px; height: 10px; border-radius: 50%; background: #ff5f57; }
+  .device-chrome .dot-y { width: 10px; height: 10px; border-radius: 50%; background: #febc2e; }
+  .device-chrome .dot-g { width: 10px; height: 10px; border-radius: 50%; background: #28c840; }
+  .device-chrome .url { flex: 1; text-align: center; background: white; padding: 4px 10px; border-radius: 4px; border: 1px solid var(--line); }
+  .device-body {
+    padding: 20px 24px 28px;
+    min-height: 410px;
+  }
+  .page-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: 14px;
+    border-bottom: 1px solid var(--line);
+    margin-bottom: 18px;
+  }
+  .page-title { font-family: 'Noto Serif SC', serif; font-size: 20px; font-weight: 700; }
+  .page-actions { display: flex; gap: 8px; }
+  .btn-ghost {
+    padding: 5px 12px;
+    background: white;
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    font-size: 12px;
+    color: var(--ink-soft);
+    cursor: pointer;
+    font-family: 'Geist', sans-serif;
+  }
+  .btn-primary {
+    padding: 5px 12px;
+    background: var(--ink);
+    color: white;
+    border: none;
+    border-radius: 4px;
+    font-size: 12px;
+    cursor: pointer;
+    font-family: 'Geist', sans-serif;
+  }
+
+  /* state contents */
+  .state-area {
+    animation: fadeSwap .35s ease;
+  }
+  @keyframes fadeSwap {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .filter-bar { display: flex; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; }
+  .filter-chip {
+    padding: 4px 10px;
+    background: var(--bg-2);
+    border: 1px solid var(--line);
+    border-radius: 100px;
+    font-size: 12px;
+    color: var(--ink-soft);
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .filter-chip.active { background: var(--ink); color: white; border-color: var(--ink); }
+
+  .task-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 12px;
+    border-bottom: 1px dashed var(--line);
+    font-size: 13px;
+  }
+  .task-row:last-child { border-bottom: none; }
+  .task-check {
+    width: 16px;
+    height: 16px;
+    border: 1.5px solid var(--ink-mute);
+    border-radius: 4px;
+    flex-shrink: 0;
+  }
+  .task-check.done { background: var(--green); border-color: var(--green); }
+  .task-check.done::after { content: '✓'; color: white; display: block; line-height: 14px; text-align: center; font-size: 10px; }
+  .task-name { flex: 1; min-width: 0; }
+  .task-name strong { font-weight: 600; }
+  .task-meta { color: var(--ink-mute); font-size: 11px; }
+  .task-row .pill-s {
+    padding: 2px 8px;
+    border-radius: 100px;
+    font-size: 10px;
+    font-family: 'JetBrains Mono', monospace;
+    letter-spacing: 0.04em;
+  }
+  .pill-s.todo { background: var(--bg-2); color: var(--ink-soft); }
+  .pill-s.doing { background: var(--blue-soft); color: var(--blue); }
+  .pill-s.done { background: var(--green-soft); color: var(--green); }
+  .pill-s.late { background: var(--accent-soft); color: var(--accent); }
+
+  /* loading skeleton */
+  .skel-row { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-bottom: 1px dashed var(--line-soft); }
+  .skel-block {
+    background: linear-gradient(90deg, var(--bg-2) 25%, var(--line-soft) 50%, var(--bg-2) 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.4s ease-in-out infinite;
+    border-radius: 4px;
+  }
+  @keyframes shimmer {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+  }
+  .skel-circle { width: 16px; height: 16px; border-radius: 4px; flex-shrink: 0; }
+  .skel-line-1 { height: 12px; width: 60%; }
+  .skel-line-2 { height: 8px; width: 35%; }
+  .skel-tag { height: 16px; width: 50px; border-radius: 100px; }
+
+  /* empty */
+  .empty-illo {
+    width: 90px;
+    height: 90px;
+    margin: 18px auto 14px;
+    border: 2px dashed var(--obj-color);
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--obj-soft);
+  }
+  .empty-illo .plus { font-family: 'Fraunces', serif; font-size: 44px; font-weight: 600; color: var(--obj-color); line-height: 1; }
+  .empty-wrap {
+    padding: 20px 20px 26px;
+    text-align: center;
+  }
+  .empty-h { font-family: 'Noto Serif SC', serif; font-size: 22px; font-weight: 700; margin: 0 0 8px; }
+  .empty-p { color: var(--ink-soft); font-size: 13px; margin: 0 0 18px; line-height: 1.6; }
+  .empty-cta {
+    display: inline-block;
+    padding: 9px 22px;
+    background: var(--accent);
+    color: white;
+    border: none;
+    border-radius: 100px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    cursor: pointer;
+  }
+  .empty-cta-sec {
+    display: inline-block;
+    padding: 8px 16px;
+    margin-left: 8px;
+    color: var(--ink-soft);
+    border: none;
+    background: transparent;
+    text-decoration: underline;
+    font-size: 12px;
+    cursor: pointer;
+  }
+
+  /* error */
+  .error-wrap {
+    padding: 32px 20px;
+    text-align: center;
+  }
+  .error-icon {
+    width: 64px;
+    height: 64px;
+    margin: 0 auto 14px;
+    background: var(--accent-soft);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--accent);
+    font-family: 'Fraunces', serif;
+    font-size: 36px;
+    font-weight: 600;
+  }
+  .error-h { font-family: 'Noto Serif SC', serif; font-size: 20px; margin: 0 0 6px; font-weight: 700; }
+  .error-code { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ink-mute); margin-bottom: 18px; }
+  .error-actions { display: flex; gap: 10px; justify-content: center; margin-bottom: 14px; flex-wrap: wrap; }
+  .err-btn-primary {
+    padding: 9px 22px;
+    background: var(--ink);
+    color: white;
+    border: none;
+    border-radius: 100px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .err-btn-sec {
+    padding: 8px 18px;
+    background: white;
+    border: 1px solid var(--line);
+    border-radius: 100px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--ink-soft);
+    cursor: pointer;
+  }
+  .error-foot { font-size: 11px; color: var(--ink-mute); }
+  .error-foot a { color: var(--blue); text-decoration: none; }
+
+  /* stale */
+  .stale-banner {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 14px;
+    background: var(--accent-soft);
+    border-left: 3px solid var(--accent);
+    border-radius: 4px;
+    margin-bottom: 16px;
+    font-size: 12px;
+  }
+  .stale-banner .stale-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--accent);
+    animation: pulse 1.6s ease-in-out infinite;
+    flex-shrink: 0;
+  }
+  .stale-banner .msg { flex: 1; color: var(--ink); }
+  .stale-banner .msg strong { color: var(--accent); }
+  .stale-banner .reconnect {
+    padding: 4px 10px;
+    background: var(--accent);
+    color: white;
+    border: none;
+    border-radius: 100px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .stale-content { opacity: 0.62; filter: grayscale(0.4); }
+
+  /* no-perm */
+  .perm-wrap {
+    padding: 36px 24px;
+    text-align: center;
+    position: relative;
+  }
+  .perm-icon {
+    width: 64px;
+    height: 64px;
+    margin: 0 auto 16px;
+    background: var(--bg-2);
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--ink-soft);
+    font-size: 32px;
+  }
+  .perm-h { font-family: 'Noto Serif SC', serif; font-size: 20px; margin: 0 0 6px; font-weight: 700; }
+  .perm-p { color: var(--ink-soft); font-size: 13px; margin: 0 0 8px; line-height: 1.6; }
+  .perm-tag {
+    display: inline-block;
+    padding: 3px 10px;
+    background: var(--accent-soft);
+    color: var(--accent);
+    border-radius: 100px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    margin-bottom: 18px;
+  }
+  .perm-actions { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+  .perm-blur {
+    position: absolute;
+    inset: 0;
+    background: rgba(255,255,255,0.55);
+    backdrop-filter: blur(3px);
+    pointer-events: none;
+  }
+
+  /* Reveal bar */
+  .reveal-bar {
+    margin-top: 32px;
+    padding: 20px 28px;
+    background: var(--ink);
+    color: var(--bg);
+    border-radius: 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+  .reveal-bar .msg { font-family: 'Noto Serif SC', serif; font-size: 17px; font-weight: 500; line-height: 1.55; }
+  .reveal-bar .msg .em { color: var(--accent); }
+  .reveal-bar .counter { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ink-mute); letter-spacing: 0.05em; }
+  .reveal-bar .counter strong { color: var(--accent); font-size: 14px; }
+
+  /* GAME 2: state anatomy cards */
+  .anatomy-grid { display: grid; grid-template-columns: 1fr; gap: 14px; margin-top: 28px; }
+  .anatomy-card {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    overflow: hidden;
+    transition: all 0.2s;
+  }
+  .anatomy-card.open {
+    border-color: var(--obj-color);
+    box-shadow: 0 0 0 2px var(--obj-soft), 0 8px 24px rgba(255,77,46,0.08);
+  }
+  .anatomy-head {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 16px 22px;
+    cursor: pointer;
+    user-select: none;
+  }
+  .anatomy-head:hover { background: var(--bg-2); }
+  .anatomy-ico {
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    background: var(--bg-2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 16px;
+    flex-shrink: 0;
+  }
+  .anatomy-card.open .anatomy-ico { background: var(--obj-color); color: white; }
+  .anatomy-name { font-family: 'Noto Serif SC', serif; font-size: 18px; font-weight: 700; flex: 1; }
+  .anatomy-sub {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--ink-mute);
+    letter-spacing: 0.04em;
+  }
+  .anatomy-toggle {
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    background: var(--bg-2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    color: var(--ink-soft);
+    transition: transform 0.2s;
+  }
+  .anatomy-card.open .anatomy-toggle { transform: rotate(45deg); background: var(--obj-color); color: white; }
+  .anatomy-body {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease;
+  }
+  .anatomy-card.open .anatomy-body { max-height: 1200px; }
+  .anatomy-inner {
+    padding: 4px 22px 22px;
+    border-top: 1px dashed var(--line);
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+  @media (max-width: 880px) { .anatomy-inner { grid-template-columns: 1fr; } }
+  .anatomy-row {
+    background: white;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 12px 14px;
+  }
+  .anatomy-row.full { grid-column: 1 / -1; }
+  .anatomy-row .k {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--ink-mute);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+  .anatomy-row .v {
+    font-size: 13px;
+    color: var(--ink);
+    line-height: 1.6;
+  }
+  .anatomy-row .v code {
+    background: var(--bg-2);
+    padding: 1px 5px;
+    border-radius: 3px;
+    font-size: 11px;
+    color: var(--obj-color);
+  }
+  .anatomy-row.warn {
+    background: var(--accent-soft);
+    border-color: var(--accent);
+  }
+  .anatomy-row.warn .k { color: var(--accent); }
+  .anatomy-row.warn .v { color: var(--ink); }
+
+  /* GAME 3: state quiz */
+  .quiz-stage {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 32px;
+    margin-top: 24px;
+  }
+  .quiz-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 28px; flex-wrap: wrap; gap: 16px; }
+  .quiz-title { font-family: 'Noto Serif SC', serif; font-size: 22px; margin: 0; font-weight: 700; }
+  .quiz-progress { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--ink-mute); }
+  .quiz-progress .done { color: var(--proj-color); font-weight: 700; font-size: 14px; }
+  .quiz-list { display: flex; flex-direction: column; gap: 18px; }
+
+  .quiz-card {
+    background: white;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 20px 22px;
+    transition: all 0.2s;
+  }
+  .quiz-card.answered { border-color: var(--proj-color); }
+  .quiz-card.answered.wrong { border-color: var(--accent); }
+
+  .quiz-card-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 6px; flex-wrap: wrap; gap: 8px; }
+  .quiz-card-name { font-weight: 700; font-size: 15px; font-family: 'Noto Serif SC', serif; }
+  .quiz-card-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    padding: 2px 8px;
+    border-radius: 100px;
+    background: var(--bg-2);
+    color: var(--ink-soft);
+    letter-spacing: 0.06em;
+  }
+  .quiz-card.answered .quiz-card-tag { background: var(--proj-soft); color: var(--proj-color); }
+  .quiz-card.answered.wrong .quiz-card-tag { background: var(--accent-soft); color: var(--accent); }
+  .quiz-context { color: var(--ink-soft); font-size: 13px; margin: 0 0 14px; }
+  .quiz-options { display: flex; flex-direction: column; gap: 8px; }
+  .quiz-option {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 10px 14px;
+    background: var(--bg-2);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.15s;
+    user-select: none;
+  }
+  .quiz-option:hover { border-color: var(--ink); background: white; }
+  .quiz-option input { display: none; }
+  .quiz-option .opt-tag {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: white;
+    border: 1.5px solid var(--line);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--ink-soft);
+    flex-shrink: 0;
+  }
+  .quiz-option.selected { background: var(--obj-soft); border-color: var(--obj-color); }
+  .quiz-option.selected .opt-tag { background: var(--obj-color); color: white; border-color: var(--obj-color); }
+  .quiz-card.answered .quiz-option.correct { background: var(--proj-soft); border-color: var(--proj-color); }
+  .quiz-card.answered .quiz-option.correct .opt-tag { background: var(--proj-color); color: white; border-color: var(--proj-color); }
+  .quiz-card.answered .quiz-option.selected.wrong { background: var(--accent-soft); border-color: var(--accent); }
+  .quiz-card.answered .quiz-option.selected.wrong .opt-tag { background: var(--accent); color: white; border-color: var(--accent); }
+  .quiz-card.answered .quiz-option { cursor: default; pointer-events: none; }
+  .quiz-card.answered .quiz-option:hover { background: var(--bg-2); border-color: var(--line); }
+  .quiz-card.answered .quiz-option.correct,
+  .quiz-card.answered .quiz-option.selected { background: inherit; }
+  .quiz-option .opt-text { flex: 1; font-size: 13px; line-height: 1.55; color: var(--ink); }
+  .quiz-explain {
+    margin-top: 12px;
+    padding: 12px 14px;
+    background: var(--ink);
+    color: var(--bg-2);
+    border-radius: 6px;
+    font-size: 13px;
+    line-height: 1.65;
+    display: none;
+  }
+  .quiz-explain.show { display: block; }
+  .quiz-explain strong { color: white; }
+  .quiz-explain .em { color: var(--accent); }
+  .quiz-explain .principle {
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px dashed rgba(255,255,255,0.15);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: #c8c8d0;
+    letter-spacing: 0.04em;
+  }
+  .quiz-explain .principle strong { color: var(--accent); }
+
+  .quiz-actions { display: flex; gap: 12px; margin-top: 24px; flex-wrap: wrap; }
+  .quiz-btn {
+    padding: 10px 22px;
+    border-radius: 100px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    cursor: pointer;
+    font-weight: 600;
+    border: 1px solid var(--ink);
+    background: transparent;
+    color: var(--ink);
+    transition: all 0.15s;
+  }
+  .quiz-btn:hover { background: var(--ink); color: var(--bg); }
+  .quiz-btn.primary { background: var(--accent); color: white; border-color: var(--accent); }
+  .quiz-btn.primary:hover { background: #e8451f; }
+  .quiz-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  .quiz-judge {
+    margin-top: 24px;
+    padding: 24px 26px;
+    border-radius: 8px;
+    background: var(--ink);
+    color: var(--bg);
+    display: none;
+  }
+  .quiz-judge.show { display: block; }
+  .quiz-judge .verdict { display: inline-block; font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; padding: 3px 10px; border-radius: 100px; }
+  .quiz-judge .verdict.win { color: #1f6b3a; background: #d4ecdb; }
+  .quiz-judge .verdict.partial { color: #c79f1e; background: #fff3cc; }
+  .quiz-judge .verdict.fail { color: var(--accent); background: var(--accent-soft); }
+  .quiz-judge h4 { font-family: 'Noto Serif SC', serif; font-size: 22px; margin: 10px 0 14px; color: white; line-height: 1.3; }
+  .quiz-judge p { color: #c8c8d0; margin: 0; font-size: 14px; line-height: 1.7; }
+
+  /* tips */
+  .tips-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 28px; margin-top: 24px; }
+  @media (max-width: 880px) { .tips-grid { grid-template-columns: 1fr; } }
+  .tip { background: var(--paper); border: 1px solid var(--line); border-radius: 6px; padding: 24px; position: relative; }
+  .tip-num { position: absolute; top: -14px; left: 16px; width: 32px; height: 32px; border-radius: 50%; background: var(--obj-color); color: white; display: flex; align-items: center; justify-content: center; font-family: 'Fraunces', serif; font-style: italic; font-weight: 600; font-size: 14px; }
+  .tip h4 { font-family: 'Noto Serif SC', serif; font-size: 18px; margin: 8px 0 10px; font-weight: 700; }
+  .tip p { color: var(--ink-soft); font-size: 14px; line-height: 1.6; margin: 0; }
+  .tip p + p { margin-top: 8px; }
+  .tip-outro {
+    margin-top: 44px;
+    padding: 30px 32px;
+    background: var(--ink);
+    color: var(--bg);
+    border-radius: 8px;
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 28px;
+    align-items: flex-start;
+  }
+  @media (max-width: 720px) { .tip-outro { grid-template-columns: 1fr; gap: 12px; } }
+  .outro-tag { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.1em; color: var(--accent); padding-top: 4px; }
+  .tip-outro p { margin: 0 0 12px; color: #c8c8d0; line-height: 1.65; font-size: 15px; }
+  .tip-outro p:last-child { margin-bottom: 0; }
+  .tip-outro strong { color: white; }
+
+  /* next post */
+  .next-post {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 56px;
+    padding: 32px;
+    background: var(--bg-2);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    text-decoration: none;
+    color: var(--ink);
+    transition: all 0.2s;
+    gap: 24px;
+    flex-wrap: wrap;
+  }
+  .next-post:hover { background: var(--ink); color: var(--bg); }
+  .next-post:hover .np-tag { color: var(--accent); }
+  .next-post:hover .em { color: var(--accent); }
+  .next-post:hover p { color: #c8c8d0; }
+  .np-tag { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.1em; color: var(--ink-mute); margin-bottom: 6px; }
+  .next-post h4 { font-family: 'Noto Serif SC', serif; font-size: 26px; margin: 0 0 8px; font-weight: 700; }
+  .next-post .em { color: var(--obj-color); font-weight: 500; }
+  .next-post p { margin: 0; color: var(--ink-soft); font-size: 14px; max-width: 56ch; }
+  .np-cta { font-family: 'JetBrains Mono', monospace; font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; white-space: nowrap; }
+  .np-cta .arr { display: inline-block; transition: transform .2s; }
+  .next-post:hover .arr { transform: translateX(4px); }
+
+  /* footer */
+  footer { padding: 56px 0 64px; background: var(--bg); color: var(--ink-soft); border-top: 1px solid var(--line); }
+  .byline-group { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; margin-bottom: 32px; padding-bottom: 32px; border-bottom: 1px dashed var(--line); }
+  @media (max-width: 880px) { .byline-group { grid-template-columns: 1fr; } }
+  .byline { display: flex; gap: 16px; align-items: center; }
+  .byline .avatar { width: 56px; height: 56px; border-radius: 50%; object-fit: cover; flex-shrink: 0; }
+  .byline-label { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--accent); letter-spacing: 0.1em; }
+  .byline-label .dot { display: inline-block; width: 6px; height: 6px; background: var(--accent); border-radius: 50%; margin-right: 4px; vertical-align: middle; animation: pulse 2s ease-in-out infinite; }
+  .byline-name { font-family: 'Noto Serif SC', serif; font-weight: 700; font-size: 18px; margin: 4px 0; color: var(--ink); }
+  .byline-name .em { color: var(--accent); font-weight: 500; }
+  .byline-tag { color: var(--ink-soft); font-size: 13px; margin: 0; line-height: 1.5; }
+  .footer-meta { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ink-mute); text-align: center; letter-spacing: 0.05em; }
+  .footer-meta .heart { color: var(--accent); }
+
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="wrap topbar-inner">
+    <div class="brand-block">
+      <a href="book.html#vol-3" class="brand"><span class="brand-arrow">←</span>AI LABBOOK <span class="dot"></span></a>
+      <span class="brand-sep">/</span>
+      <span class="brand-current">X11 · 页面状态</span>
+    </div>
+    <nav class="nav-links">
+      <a href="book.html#vol-3">路线图</a>
+    </nav>
+  </div>
+</div>
+
+<!-- Hero -->
+<header class="hero">
+  <div class="wrap">
+    <div class="hero-meta">
+      <span class="pill fill">高阶 · ADVANCED</span>
+      <span class="pill purple">STAGE 03 · 数据与状态</span>
+      <span class="pill">X11 · 页面状态</span>
+      <span class="label">阅读 ≈ 15 分钟 · 含 3 段互动</span>
+    </div>
+    <div class="hero-grid">
+      <div>
+        <h1>
+          页面不是<br>
+          <span class="display-cn">一张稿</span>——<br>
+          是<span class="purple">5 张</span>。
+        </h1>
+        <p class="lede">
+          加载中、空、报错、过期、无权限——同一张页面在不同状态下是 5 张完全不同的稿。<br>
+          稿子里只画 happy path，等于把其它 4 张交给工程师瞎猜。
+        </p>
+      </div>
+      <div class="hero-side">
+        <div class="row"><span class="k">本页讲什么</span><span class="v">页面 → 5+ 状态</span></div>
+        <div class="row"><span class="k">三幕</span><span class="v">看见 · 拆开 · 再做</span></div>
+        <div class="row"><span class="k">面向</span><span class="v">B 端 / 后台设计师</span></div>
+        <div class="row"><span class="k">前置</span><span class="v">X1 · 不是页面是对象</span></div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- Section 01: 问题 -->
+<section id="problem">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>01</strong> / 问题</div>
+        <h2 class="section-title">为什么稿子画完，<br>线上还是<span class="em">一堆空白和报错</span>？</h2>
+      </div>
+      <p class="section-sub">
+        因为你画的是<strong>有数据 · 网好 · 用户有权限</strong>的那张稿。
+        真实世界里，用户大部分时间都不在这条 happy path 上。
+      </p>
+    </div>
+
+    <div class="problem-grid">
+      <div class="problem-card bad">
+        <span class="tag">一张稿 · HAPPY PATH</span>
+        <h3>"稿子画了一张任务列表页"</h3>
+        <p>有 10 条任务、3 个筛选、操作按钮。看起来完整。</p>
+        <p><strong>工程师追问：</strong></p>
+        <ul>
+          <li>首次加载长啥样？</li>
+          <li>用户一个任务都没有呢？</li>
+          <li>接口挂了呢？</li>
+          <li>这个用户没权限看呢？</li>
+          <li>数据有 1 周没刷新了呢？</li>
+        </ul>
+        <p style="color:var(--accent);margin-top:10px"><strong>你：</strong>呃……要再画 4 张？</p>
+      </div>
+
+      <div class="problem-card good">
+        <span class="tag">5 张稿 · STATES</span>
+        <h3>"任务列表 · 5 态完整"</h3>
+        <p><strong>(1) loading</strong> · skeleton 占位<br>
+        <strong>(2) empty</strong> · "去创建第一个" CTA<br>
+        <strong>(3) error</strong> · 错误 + 重试<br>
+        <strong>(4) stale</strong> · 上次缓存 + 红点<br>
+        <strong>(5) no-perm</strong> · "你没权限" + 申请入口</p>
+        <p><strong>工程师收到：</strong>5 张稿 + 状态切换条件。能直接落代码。</p>
+        <p style="color:var(--obj-color)"><strong>结果：</strong>线上空白和报错 → 0 个。</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Section 02: 幕一 · 看见 -->
+<section id="look">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <span class="act-tag look">幕一 · 看见</span>
+        <div class="section-num"><strong>02</strong> / 看见</div>
+        <h2 class="section-title">同一张<br><span class="purple">"任务列表"</span>，<br>5 种状态。</h2>
+      </div>
+      <p class="section-sub">
+        切换状态按钮 → 同一张页面整体重画。
+        注意每态的<strong>版式、文案、CTA</strong> 都换了——不是同一张稿"加个 loading 圈"那么简单。
+      </p>
+    </div>
+
+    <div class="states-stage">
+      <div class="state-tabs" id="stateTabs">
+        <button class="state-tab active" data-state="normal"><span class="ico">✓</span> 正常</button>
+        <button class="state-tab" data-state="loading"><span class="ico">⏳</span> loading</button>
+        <button class="state-tab" data-state="empty"><span class="ico">⊘</span> empty</button>
+        <button class="state-tab" data-state="error"><span class="ico">✗</span> error</button>
+        <button class="state-tab" data-state="stale"><span class="ico">⏰</span> stale</button>
+        <button class="state-tab" data-state="noperm"><span class="ico">🔒</span> no-perm</button>
+      </div>
+
+      <div class="device-frame">
+        <div class="device-chrome">
+          <span class="dot-r"></span><span class="dot-y"></span><span class="dot-g"></span>
+          <div class="url">app.example.com / tasks</div>
+        </div>
+        <div class="device-body" id="deviceBody">
+          <!-- normal state -->
+          <div class="state-area" id="state-normal">
+            <div class="page-head">
+              <div class="page-title">我的任务</div>
+              <div class="page-actions">
+                <button class="btn-ghost">导出</button>
+                <button class="btn-primary">+ 新建</button>
+              </div>
+            </div>
+            <div class="filter-bar">
+              <span class="filter-chip active">全部 · 5</span>
+              <span class="filter-chip">进行中 · 2</span>
+              <span class="filter-chip">已完成 · 2</span>
+              <span class="filter-chip">逾期 · 1</span>
+            </div>
+            <div class="task-row">
+              <div class="task-check"></div>
+              <div class="task-name"><strong>对齐 Q2 OKR</strong><div class="task-meta">李华 · 今天 18:00</div></div>
+              <span class="pill-s doing">进行中</span>
+            </div>
+            <div class="task-row">
+              <div class="task-check"></div>
+              <div class="task-name"><strong>设计评审：客户详情页</strong><div class="task-meta">王芳 · 明天 14:30</div></div>
+              <span class="pill-s todo">待开始</span>
+            </div>
+            <div class="task-row">
+              <div class="task-check done"></div>
+              <div class="task-name"><strong>整理上周需求</strong><div class="task-meta">陈强 · 昨天</div></div>
+              <span class="pill-s done">已完成</span>
+            </div>
+            <div class="task-row">
+              <div class="task-check"></div>
+              <div class="task-name"><strong>回复客户合同问题</strong><div class="task-meta">李华 · 3 天前</div></div>
+              <span class="pill-s late">逾期 2 天</span>
+            </div>
+            <div class="task-row">
+              <div class="task-check"></div>
+              <div class="task-name"><strong>季度复盘准备</strong><div class="task-meta">未指派</div></div>
+              <span class="pill-s doing">进行中</span>
+            </div>
+          </div>
+          <!-- loading -->
+          <div class="state-area" id="state-loading" style="display:none">
+            <div class="page-head">
+              <div class="page-title">我的任务</div>
+              <div class="page-actions">
+                <div class="skel-block" style="width:54px;height:26px;border-radius:4px"></div>
+                <div class="skel-block" style="width:64px;height:26px;border-radius:4px"></div>
+              </div>
+            </div>
+            <div class="filter-bar">
+              <div class="skel-block skel-tag"></div>
+              <div class="skel-block skel-tag"></div>
+              <div class="skel-block skel-tag"></div>
+              <div class="skel-block skel-tag"></div>
+            </div>
+            <div class="skel-row"><div class="skel-block skel-circle"></div><div style="flex:1"><div class="skel-block skel-line-1"></div><div class="skel-block skel-line-2" style="margin-top:6px"></div></div><div class="skel-block" style="width:52px;height:18px;border-radius:100px"></div></div>
+            <div class="skel-row"><div class="skel-block skel-circle"></div><div style="flex:1"><div class="skel-block skel-line-1" style="width:72%"></div><div class="skel-block skel-line-2" style="margin-top:6px;width:28%"></div></div><div class="skel-block" style="width:52px;height:18px;border-radius:100px"></div></div>
+            <div class="skel-row"><div class="skel-block skel-circle"></div><div style="flex:1"><div class="skel-block skel-line-1" style="width:50%"></div><div class="skel-block skel-line-2" style="margin-top:6px"></div></div><div class="skel-block" style="width:52px;height:18px;border-radius:100px"></div></div>
+            <div class="skel-row"><div class="skel-block skel-circle"></div><div style="flex:1"><div class="skel-block skel-line-1" style="width:68%"></div><div class="skel-block skel-line-2" style="margin-top:6px;width:40%"></div></div><div class="skel-block" style="width:52px;height:18px;border-radius:100px"></div></div>
+            <div class="skel-row"><div class="skel-block skel-circle"></div><div style="flex:1"><div class="skel-block skel-line-1" style="width:55%"></div><div class="skel-block skel-line-2" style="margin-top:6px;width:32%"></div></div><div class="skel-block" style="width:52px;height:18px;border-radius:100px"></div></div>
+          </div>
+          <!-- empty -->
+          <div class="state-area" id="state-empty" style="display:none">
+            <div class="page-head">
+              <div class="page-title">我的任务</div>
+              <div class="page-actions">
+                <button class="btn-ghost" disabled style="opacity:0.5">导出</button>
+                <button class="btn-primary">+ 新建</button>
+              </div>
+            </div>
+            <div class="empty-wrap">
+              <div class="empty-illo"><span class="plus">+</span></div>
+              <h3 class="empty-h">还没有任务</h3>
+              <p class="empty-p">从一个具体动作开始——比如"明天 10 点见客户"。<br>系统会帮你记住、提醒、归类。</p>
+              <button class="empty-cta">创建第一个任务</button>
+              <button class="empty-cta-sec">看看示例任务</button>
+            </div>
+          </div>
+          <!-- error -->
+          <div class="state-area" id="state-error" style="display:none">
+            <div class="page-head">
+              <div class="page-title">我的任务</div>
+              <div class="page-actions">
+                <button class="btn-ghost">导出</button>
+                <button class="btn-primary">+ 新建</button>
+              </div>
+            </div>
+            <div class="error-wrap">
+              <div class="error-icon">!</div>
+              <h3 class="error-h">加载失败</h3>
+              <div class="error-code">err / TASK_LIST_FETCH_FAILED · 503</div>
+              <div class="error-actions">
+                <button class="err-btn-primary" id="errRetry">重试</button>
+                <button class="err-btn-sec">刷新页面</button>
+              </div>
+              <div class="error-foot">问题还在？<a href="#">联系支持</a> · <a href="#">报告问题</a></div>
+            </div>
+          </div>
+          <!-- stale -->
+          <div class="state-area" id="state-stale" style="display:none">
+            <div class="stale-banner">
+              <span class="stale-dot"></span>
+              <div class="msg"><strong>离线模式</strong> · 数据为上次缓存 · 5 分钟前更新</div>
+              <button class="reconnect">重新连接</button>
+            </div>
+            <div class="stale-content">
+              <div class="page-head">
+                <div class="page-title">我的任务</div>
+                <div class="page-actions">
+                  <button class="btn-ghost">导出</button>
+                  <button class="btn-primary" disabled style="opacity:0.5">+ 新建</button>
+                </div>
+              </div>
+              <div class="filter-bar">
+                <span class="filter-chip active">全部 · 5</span>
+                <span class="filter-chip">进行中 · 2</span>
+                <span class="filter-chip">已完成 · 2</span>
+                <span class="filter-chip">逾期 · 1</span>
+              </div>
+              <div class="task-row">
+                <div class="task-check"></div>
+                <div class="task-name"><strong>对齐 Q2 OKR</strong><div class="task-meta">李华 · 今天 18:00</div></div>
+                <span class="pill-s doing">进行中</span>
+              </div>
+              <div class="task-row">
+                <div class="task-check"></div>
+                <div class="task-name"><strong>设计评审：客户详情页</strong><div class="task-meta">王芳 · 明天 14:30</div></div>
+                <span class="pill-s todo">待开始</span>
+              </div>
+              <div class="task-row">
+                <div class="task-check done"></div>
+                <div class="task-name"><strong>整理上周需求</strong><div class="task-meta">陈强 · 昨天</div></div>
+                <span class="pill-s done">已完成</span>
+              </div>
+              <div class="task-row">
+                <div class="task-check"></div>
+                <div class="task-name"><strong>回复客户合同问题</strong><div class="task-meta">李华 · 3 天前</div></div>
+                <span class="pill-s late">逾期 2 天</span>
+              </div>
+            </div>
+          </div>
+          <!-- no-perm -->
+          <div class="state-area" id="state-noperm" style="display:none">
+            <div class="page-head">
+              <div class="page-title">我的任务</div>
+              <div class="page-actions">
+                <button class="btn-ghost" disabled style="opacity:0.4">导出</button>
+                <button class="btn-primary" disabled style="opacity:0.4">+ 新建</button>
+              </div>
+            </div>
+            <div class="perm-wrap">
+              <div class="perm-icon">🔒</div>
+              <h3 class="perm-h">你的角色无法访问此页面</h3>
+              <p class="perm-p">"任务列表"需要 <strong>团队成员</strong> 或更高权限。你目前是 <strong>访客</strong>。</p>
+              <div class="perm-tag">CURRENT · viewer</div>
+              <div class="perm-actions">
+                <button class="err-btn-primary">申请访问</button>
+                <button class="err-btn-sec">联系管理员</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="reveal-bar">
+      <div class="msg">
+        1 张稿 → 5 张稿。<span class="em">设计师交付 1 张 = 工程师额外做 4 张猜的版本</span>。<br>
+        而猜的版本，永远不会和你想象的一样。
+      </div>
+      <div class="counter">
+        已切换 <strong id="stateCount">1</strong> / 6 个状态
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Section 03: 幕二 · 拆开 -->
+<section id="break">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <span class="act-tag break">幕二 · 拆开</span>
+        <div class="section-num"><strong>03</strong> / 拆开</div>
+        <h2 class="section-title"><span class="purple">5 状态</span>的<br>设计骨架。</h2>
+      </div>
+      <p class="section-sub">
+        每个状态要回答 4 件事——<strong>版式骨架 / 主文案 / CTA / 二选行动</strong>。
+        点开任一卡片，看它的骨架和"不画会怎样"。
+      </p>
+    </div>
+
+    <div class="anatomy-grid" id="anatomyGrid">
+      <div class="anatomy-card" data-key="loading">
+        <div class="anatomy-head">
+          <div class="anatomy-ico">⏳</div>
+          <div style="flex:1;min-width:0">
+            <div class="anatomy-name">Loading · 加载中</div>
+            <div class="anatomy-sub">数据在路上 · 给用户视觉反馈</div>
+          </div>
+          <div class="anatomy-toggle">+</div>
+        </div>
+        <div class="anatomy-body">
+          <div class="anatomy-inner">
+            <div class="anatomy-row">
+              <div class="k">版式骨架</div>
+              <div class="v"><code>skeleton</code> 复刻最终布局——不是居中 <code>spinner</code>。让用户立刻"看见"内容大概的位置。</div>
+            </div>
+            <div class="anatomy-row">
+              <div class="k">主文案</div>
+              <div class="v">通常不需要——skeleton 本身就解释了"在加载"。文字反而画蛇添足。</div>
+            </div>
+            <div class="anatomy-row">
+              <div class="k">主 CTA</div>
+              <div class="v">无。用户唯一能做的事是等。</div>
+            </div>
+            <div class="anatomy-row">
+              <div class="k">二选行动</div>
+              <div class="v">加载超 <code>3s</code> 显示"还在加载……"。超 <code>10s</code> 给"取消"或"重试"。</div>
+            </div>
+            <div class="anatomy-row warn full">
+              <div class="k">⚠ 如果设计稿不画</div>
+              <div class="v">工程师默认用 <code>spinner</code> → 用户看不到内容轮廓 → 感觉"什么都没有" → 误以为页面坏了，主动刷新 → 服务器多扛一轮。</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="anatomy-card" data-key="empty">
+        <div class="anatomy-head">
+          <div class="anatomy-ico">⊘</div>
+          <div style="flex:1;min-width:0">
+            <div class="anatomy-name">Empty · 空</div>
+            <div class="anatomy-sub">数据来了 · 但是空的</div>
+          </div>
+          <div class="anatomy-toggle">+</div>
+        </div>
+        <div class="anatomy-body">
+          <div class="anatomy-inner">
+            <div class="anatomy-row">
+              <div class="k">版式骨架</div>
+              <div class="v">居中 大字 + 插图 + 引导操作。把"空"变成"系统的潜力"。</div>
+            </div>
+            <div class="anatomy-row">
+              <div class="k">主文案</div>
+              <div class="v">"你还没有 <code>X</code>"——主语是"你"。不是"暂无数据"——主语缺失。</div>
+            </div>
+            <div class="anatomy-row">
+              <div class="k">主 CTA</div>
+              <div class="v">主要操作。例如 <code>创建第一个 X</code>。不是"刷新页面"——你刷一万次也还是空。</div>
+            </div>
+            <div class="anatomy-row">
+              <div class="k">二选行动</div>
+              <div class="v">引导文案（怎么用）、看示例、跳模板库。给犹豫的用户一个软入口。</div>
+            </div>
+            <div class="anatomy-row warn full">
+              <div class="k">⚠ 如果设计稿不画</div>
+              <div class="v">工程师写 <code>"暂无数据"</code> 4 个字 + 居中。用户站在"空"前面 → 不知道下一步该干嘛 → 离开。新用户留存就这么没了。</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="anatomy-card" data-key="error">
+        <div class="anatomy-head">
+          <div class="anatomy-ico">✗</div>
+          <div style="flex:1;min-width:0">
+            <div class="anatomy-name">Error · 报错</div>
+            <div class="anatomy-sub">系统坏了 · 但用户还得用</div>
+          </div>
+          <div class="anatomy-toggle">+</div>
+        </div>
+        <div class="anatomy-body">
+          <div class="anatomy-inner">
+            <div class="anatomy-row">
+              <div class="k">版式骨架</div>
+              <div class="v">居中错误图标 + 简短解释 + 操作。保持页面骨架（导航 / 标题），别整个跳错误页。</div>
+            </div>
+            <div class="anatomy-row">
+              <div class="k">主文案</div>
+              <div class="v">用户能理解的语言。"加载失败"，不是 <code>"500 Internal Server Error"</code>。错误码放小字。</div>
+            </div>
+            <div class="anatomy-row">
+              <div class="k">主 CTA</div>
+              <div class="v">重试（主要）。让用户先有一个不需要思考的动作。</div>
+            </div>
+            <div class="anatomy-row">
+              <div class="k">二选行动</div>
+              <div class="v">刷新页面 / 联系支持 / 报告问题。给"重试还是不行"的用户一个出路。</div>
+            </div>
+            <div class="anatomy-row warn full">
+              <div class="k">⚠ 如果设计稿不画</div>
+              <div class="v">工程师直接把后端错误码贴上去——<code>"NullPointerException at line 247"</code>。用户骂；客服热线被打爆；其实问题可能 30 秒后自动恢复。</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="anatomy-card" data-key="stale">
+        <div class="anatomy-head">
+          <div class="anatomy-ico">⏰</div>
+          <div style="flex:1;min-width:0">
+            <div class="anatomy-name">Stale · 过期 / 离线</div>
+            <div class="anatomy-sub">数据是真的 · 但不是最新</div>
+          </div>
+          <div class="anatomy-toggle">+</div>
+        </div>
+        <div class="anatomy-body">
+          <div class="anatomy-inner">
+            <div class="anatomy-row">
+              <div class="k">版式骨架</div>
+              <div class="v">内容 + 顶部 banner。内容稍灰 / 降饱和——视觉上提示"不新鲜"。</div>
+            </div>
+            <div class="anatomy-row">
+              <div class="k">主文案</div>
+              <div class="v">"数据为离线 · 上次更新 <code>X</code> 分钟前"。要带时间——用户判断要不要相信。</div>
+            </div>
+            <div class="anatomy-row">
+              <div class="k">主 CTA</div>
+              <div class="v">重新连接。把"刷新"做成显眼的动作，不是埋在菜单里。</div>
+            </div>
+            <div class="anatomy-row">
+              <div class="k">二选行动</div>
+              <div class="v">强制刷新 / 继续看离线版。给"知道是旧的但就想看看"的用户留路。</div>
+            </div>
+            <div class="anatomy-row warn full">
+              <div class="k">⚠ 如果设计稿不画</div>
+              <div class="v">工程师不知道要不要标记"过期"——可能用户以为是实时数据，结果按 5 分钟前的库存下了单。线上事故就是这么来的。</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="anatomy-card" data-key="noperm">
+        <div class="anatomy-head">
+          <div class="anatomy-ico">🔒</div>
+          <div style="flex:1;min-width:0">
+            <div class="anatomy-name">No-permission · 无权限</div>
+            <div class="anatomy-sub">你不能看 · 但要告诉你为什么</div>
+          </div>
+          <div class="anatomy-toggle">+</div>
+        </div>
+        <div class="anatomy-body">
+          <div class="anatomy-inner">
+            <div class="anatomy-row">
+              <div class="k">版式骨架</div>
+              <div class="v">锁图标 + 解释 + 行动。可以保留页面外壳（顶部导航、面包屑），让用户知道"是这页不让看，不是整个应用挂了"。</div>
+            </div>
+            <div class="anatomy-row">
+              <div class="k">主文案</div>
+              <div class="v">"你的角色无法访问此页面" + 当前角色 + 需要的角色。把信息说全。</div>
+            </div>
+            <div class="anatomy-row">
+              <div class="k">主 CTA</div>
+              <div class="v">申请访问。一键发邮件给管理员，附上当前 URL 和原因。</div>
+            </div>
+            <div class="anatomy-row">
+              <div class="k">二选行动</div>
+              <div class="v">联系管理员 / 返回首页 / 切换账号。</div>
+            </div>
+            <div class="anatomy-row warn full">
+              <div class="k">⚠ 如果设计稿不画</div>
+              <div class="v">工程师直接跳 <code>403</code> 错误页 → 用户不知道为啥进不去 → 以为是 bug → 找客服 → 客服查半天才发现是权限。</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="reveal-bar" style="margin-top:32px">
+      <div class="msg">
+        5 状态 × 4 维度 = <span class="em">20 个设计决策</span>。<br>
+        漏一个 → 工程师猜 → 用户买单。
+      </div>
+      <div class="counter">已展开 <strong id="anatomyCount">0</strong> / 5 个状态</div>
+    </div>
+  </div>
+</section>
+
+<!-- Section 04: 幕三 · 再做 -->
+<section id="make">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <span class="act-tag make">幕三 · 再做</span>
+        <div class="section-num"><strong>04</strong> / 再做</div>
+        <h2 class="section-title">轮到你——<br>给「<span class="em">设置中心</span>」<br>配 5 张稿。</h2>
+      </div>
+      <p class="section-sub">
+        下面 5 个状态。每个有 3 个候选（版式 + 文案 + CTA 各 1 选）。
+        选完按"提交打分"——错一个会解释为什么。
+      </p>
+    </div>
+
+    <div class="quiz-stage">
+      <div class="quiz-head">
+        <h3 class="quiz-title">设置中心 · 5 状态选择题</h3>
+        <div class="quiz-progress">已作答 <span class="done" id="quizDone">0</span> / 5</div>
+      </div>
+
+      <div class="quiz-list" id="quizList">
+
+        <div class="quiz-card" data-q="empty">
+          <div class="quiz-card-head">
+            <div class="quiz-card-name">1 · Empty</div>
+            <span class="quiz-card-tag">新用户首次进入设置中心</span>
+          </div>
+          <p class="quiz-context">这位用户刚注册，第一次打开"设置中心"。他还没改过任何东西。你要给他看什么？</p>
+          <div class="quiz-options">
+            <label class="quiz-option" data-opt="A">
+              <input type="radio" name="q-empty">
+              <span class="opt-tag">A</span>
+              <span class="opt-text">大字"<strong>暂无设置项</strong>"，居中放一个"添加"按钮。</span>
+            </label>
+            <label class="quiz-option" data-opt="B">
+              <input type="radio" name="q-empty">
+              <span class="opt-tag">B</span>
+              <span class="opt-text">显示<strong>默认设置项</strong>（通知 / 主题 / 语言…），让用户立即能操作。</span>
+            </label>
+            <label class="quiz-option" data-opt="C">
+              <input type="radio" name="q-empty">
+              <span class="opt-tag">C</span>
+              <span class="opt-text">显示 <code>skeleton</code> 占位，等待用户主动创建。</span>
+            </label>
+          </div>
+          <div class="quiz-explain">
+            <strong>✓ 正解 B</strong>——设置中心没有"真正的空"。系统总有一份默认配置；第一次进就该看到这些默认值。
+            选 A 是把"empty 模板"乱套——不是所有页面都需要 empty。
+            选 C 是把"loading"和"empty"混了——loading 是数据还没到，empty 是数据到了但是空。
+            <div class="principle"><strong>原则：</strong>问"这页真的会空吗"——可能根本没有 empty 态。</div>
+          </div>
+        </div>
+
+        <div class="quiz-card" data-q="loading">
+          <div class="quiz-card-head">
+            <div class="quiz-card-name">2 · Loading</div>
+            <span class="quiz-card-tag">网络慢 · 2 秒拉取设置</span>
+          </div>
+          <p class="quiz-context">网络慢，后端要 2 秒才返回当前用户的设置。这 2 秒里页面长啥样？</p>
+          <div class="quiz-options">
+            <label class="quiz-option" data-opt="A">
+              <input type="radio" name="q-loading">
+              <span class="opt-tag">A</span>
+              <span class="opt-text">居中一个大 <code>spinner</code>，黑色背景遮罩。</span>
+            </label>
+            <label class="quiz-option" data-opt="B">
+              <input type="radio" name="q-loading">
+              <span class="opt-tag">B</span>
+              <span class="opt-text"><code>skeleton</code> 占位 + 模拟最终结构（每行设置项的轮廓）。</span>
+            </label>
+            <label class="quiz-option" data-opt="C">
+              <input type="radio" name="q-loading">
+              <span class="opt-tag">C</span>
+              <span class="opt-text">直接显示<strong>默认值</strong>，后端数据来了再覆盖（乐观渲染）。</span>
+            </label>
+          </div>
+          <div class="quiz-explain">
+            <strong>✓ B 或 C 都对</strong>——但代价不同。
+            <br>B（skeleton）简单，但 2 秒后数据替换会有"闪烁"。
+            <br>C（乐观渲染）体验最好，但要处理"用户已经改了，后端又把它覆盖了"的并发问题。
+            <br>A 最差——大 spinner = 把"loading"做成了"什么都看不到"。
+            <div class="principle"><strong>原则：</strong>loading 不是"挡住用户"，是"让用户看见即将到来的内容"。</div>
+          </div>
+        </div>
+
+        <div class="quiz-card" data-q="error">
+          <div class="quiz-card-head">
+            <div class="quiz-card-name">3 · Error</div>
+            <span class="quiz-card-tag">接口 500 · 后端挂了</span>
+          </div>
+          <p class="quiz-context">后端 500。前端没收到任何设置数据。怎么向用户解释？</p>
+          <div class="quiz-options">
+            <label class="quiz-option" data-opt="A">
+              <input type="radio" name="q-error">
+              <span class="opt-tag">A</span>
+              <span class="opt-text">右上角弹一个红色 <code>toast</code> "加载失败"，页面其它部分留空白。</span>
+            </label>
+            <label class="quiz-option" data-opt="B">
+              <input type="radio" name="q-error">
+              <span class="opt-tag">B</span>
+              <span class="opt-text">居中错误页 + <strong>重试</strong> 按钮 + 备选 <strong>还原默认</strong>。</span>
+            </label>
+            <label class="quiz-option" data-opt="C">
+              <input type="radio" name="q-error">
+              <span class="opt-tag">C</span>
+              <span class="opt-text">直接跳全站的"500 服务暂不可用"错误页。</span>
+            </label>
+          </div>
+          <div class="quiz-explain">
+            <strong>✓ 正解 B</strong>——错误应保持页面骨架（导航 / 标题），用户知道是这页加载失败，不是整个应用挂了。
+            <br>给 2 种行动：<span class="em">重试</span>（也许只是临时网络抖动）+ <span class="em">还原默认</span>（实在不行用默认值先用着）。
+            <br>A 不行——toast 一闪没了，用户没看清就消失，页面还是空白。
+            <br>C 也不行——一处 API 挂了不该让用户感觉整个应用都挂了。
+            <div class="principle"><strong>原则：</strong>错误要"局部化"——出错的是数据，不是页面。</div>
+          </div>
+        </div>
+
+        <div class="quiz-card" data-q="stale">
+          <div class="quiz-card-head">
+            <div class="quiz-card-name">4 · Stale</div>
+            <span class="quiz-card-tag">用户切断网了一会儿</span>
+          </div>
+          <p class="quiz-context">用户在地铁里，网断了 1 分钟。他现在看到的设置是从本地缓存读的——不是实时的。怎么处理？</p>
+          <div class="quiz-options">
+            <label class="quiz-option" data-opt="A">
+              <input type="radio" name="q-stale">
+              <span class="opt-tag">A</span>
+              <span class="opt-text">显示当前值（不告诉用户离线）——反正大概率没人改设置。</span>
+            </label>
+            <label class="quiz-option" data-opt="B">
+              <input type="radio" name="q-stale">
+              <span class="opt-tag">B</span>
+              <span class="opt-text">顶部 banner "<strong>离线模式 · 设置变更不会保存</strong>" + 仍可浏览。</span>
+            </label>
+            <label class="quiz-option" data-opt="C">
+              <input type="radio" name="q-stale">
+              <span class="opt-tag">C</span>
+              <span class="opt-text">直接跳"请检查网络"页，全屏遮罩，不让用户做任何事。</span>
+            </label>
+          </div>
+          <div class="quiz-explain">
+            <strong>✓ 正解 B</strong>——告诉用户"你处于离线模式" + 限制能做什么（不能保存）+ 仍可浏览（不打断阅读）。
+            <br>A 危险——用户改了设置以为生效了，网恢复后发现没保存，骂。
+            <br>C 太暴力——网断 1 分钟，整个应用瘫痪？地铁里能用的 app 就这么没了。
+            <div class="principle"><strong>原则：</strong>stale 的核心是"诚实但不阻断"。</div>
+          </div>
+        </div>
+
+        <div class="quiz-card" data-q="noperm">
+          <div class="quiz-card-head">
+            <div class="quiz-card-name">5 · No-permission</div>
+            <span class="quiz-card-tag">普通员工进入"管理员设置"</span>
+          </div>
+          <p class="quiz-context">普通员工点开了"管理员设置"链接（可能是别人发的）。他没权限。怎么处理？</p>
+          <div class="quiz-options">
+            <label class="quiz-option" data-opt="A">
+              <input type="radio" name="q-noperm">
+              <span class="opt-tag">A</span>
+              <span class="opt-text">直接跳全站的"403 禁止访问"错误页。</span>
+            </label>
+            <label class="quiz-option" data-opt="B">
+              <input type="radio" name="q-noperm">
+              <span class="opt-tag">B</span>
+              <span class="opt-text">显示页面骨架 + 居中"<strong>该设置仅管理员可见</strong>" + 申请入口。</span>
+            </label>
+            <label class="quiz-option" data-opt="C">
+              <input type="radio" name="q-noperm">
+              <span class="opt-tag">C</span>
+              <span class="opt-text">直接隐藏整页，连侧边栏菜单都看不到（从根本上不让他知道有这页）。</span>
+            </label>
+          </div>
+          <div class="quiz-explain">
+            <strong>✓ B 或 C 都对——看产品偏好</strong>。
+            <br>B：清晰反馈 + 行动入口。适合开放型组织——让用户知道有这权限可以申请。
+            <br>C：隐藏式权限。适合敏感场景——比如"财务报表"这种连存在都不希望普通员工知道的页面。
+            <br>A 最差——通用 403 页，用户不知道哪个权限不够 / 找谁申请 / 该做什么。
+            <div class="principle"><strong>原则：</strong>no-perm 不是"踢出去"，是"告诉为什么 + 给出路"。</div>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="quiz-actions">
+        <button class="quiz-btn primary" id="quizSubmit">提交打分</button>
+        <button class="quiz-btn" id="quizReset">重做</button>
+      </div>
+
+      <div class="quiz-judge" id="quizJudge"></div>
+    </div>
+  </div>
+</section>
+
+<!-- Section 05: closing -->
+<section id="closing">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>05</strong> / 把这件事变成习惯</div>
+        <h2 class="section-title">下次接需求，<br>第一句问<span class="em">"这页有几态"</span>。</h2>
+      </div>
+      <p class="section-sub">
+        "页面"和"状态集合"的差距，会出现在你每一次需求评审里。
+        让自己从"画一张稿"切换到"画一组稿"。
+      </p>
+    </div>
+
+    <div class="tips-grid">
+      <div class="tip">
+        <div class="tip-num">i</div>
+        <h4>每张稿都画 5 态</h4>
+        <p>至少 <strong>loading + empty + error</strong>。<br>stale 和 no-perm 看页面性质——只读页面通常不需要 stale；公开页面不需要 no-perm。</p>
+        <p><strong>漏一个就交付一张猜的版本。</strong></p>
+      </div>
+      <div class="tip">
+        <div class="tip-num">ii</div>
+        <h4>空态不等于"暂无数据"</h4>
+        <p>空态是"<strong>系统的潜力</strong>"——给用户一个清晰的下一步动作。"暂无数据"是放弃。</p>
+        <p>把空态当作产品 onboarding 的延伸：用户站在空前面，你说什么决定他留不留。</p>
+      </div>
+      <div class="tip">
+        <div class="tip-num">iii</div>
+        <h4>错误不等于"出错了"</h4>
+        <p>错误是"<strong>我帮不了你这次</strong>"——但要让用户能继续行动：重试 / 联系 / 报告 / 跳走。</p>
+        <p>错误码 / 堆栈写在小字里给排查用；主文案永远是人话。</p>
+      </div>
+    </div>
+
+    <div class="tip-outro">
+      <div class="outro-tag">划重点 · TL;DR</div>
+      <div>
+        <p>页面 = <strong>1 张 happy path × 5+ 个状态稿</strong>。每个状态都是一张完整的稿——版式 / 文案 / CTA / 二选行动，全都不一样。</p>
+        <p>下次需求评审，<strong>第一句问"这页有几态？loading / empty / error 都画了吗？"</strong>。整个会议的语言就变了——从"差不多就行"到"5 张都要"。</p>
+      </div>
+    </div>
+
+    <a href="x12-state-placement.html" class="next-post">
+      <div>
+        <div class="np-tag">下一站 · NEXT · X12 · 高阶</div>
+        <h4>状态住在哪：<span class="em">组件 / 本页 / URL / 服务端</span></h4>
+        <p>页面有状态，状态本身也有"住址"——它住在哪一层决定了刷新行为、URL 分享、跨页面同步。下一站讲：状态归属。</p>
+      </div>
+      <span class="np-cta">继续 <span class="arr">→</span></span>
+    </a>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div class="byline-group">
+      <div class="byline">
+        <img class="avatar" src="author.jpg" alt="范米花儿">
+        <div class="byline-meta">
+          <div class="byline-label"><span class="dot"></span>作者 · WRITTEN BY</div>
+          <div class="byline-name">嗨，我是 <span class="em">范米花儿</span></div>
+          <p class="byline-tag">设计工程师 ——<br>设计 × 代码，两边都做。</p>
+        </div>
+      </div>
+</div>
+    <div class="footer-meta">
+      做于 <span class="mono">2026</span> · 用 <span class="heart">●</span> 写给 <span class="mono">DESIGNERS &amp; DEVELOPERS</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+// ===== Game 1: state switcher =====
+(function(){
+  const tabs = document.querySelectorAll('.state-tab');
+  const areas = document.querySelectorAll('.state-area');
+  const counter = document.getElementById('stateCount');
+  const visited = new Set(['normal']);
+
+  function switchTo(state) {
+    tabs.forEach(t => t.classList.toggle('active', t.dataset.state === state));
+    areas.forEach(a => {
+      const isMatch = a.id === 'state-' + state;
+      a.style.display = isMatch ? 'block' : 'none';
+      if (isMatch) {
+        // re-trigger animation
+        a.style.animation = 'none';
+        void a.offsetWidth;
+        a.style.animation = '';
+      }
+    });
+    if (!visited.has(state)) {
+      visited.add(state);
+      counter.textContent = visited.size;
+    }
+  }
+
+  tabs.forEach(tab => {
+    tab.addEventListener('click', () => switchTo(tab.dataset.state));
+  });
+
+  // error retry simulates loading
+  document.getElementById('errRetry')?.addEventListener('click', e => {
+    e.stopPropagation();
+    const btn = e.currentTarget;
+    const orig = btn.textContent;
+    btn.textContent = '重试中…';
+    btn.disabled = true;
+    setTimeout(() => {
+      btn.textContent = orig;
+      btn.disabled = false;
+      switchTo('loading');
+      setTimeout(() => switchTo('error'), 1800);
+    }, 600);
+  });
+})();
+
+// ===== Game 2: anatomy expand =====
+(function(){
+  const cards = document.querySelectorAll('.anatomy-card');
+  const opened = new Set();
+  const counter = document.getElementById('anatomyCount');
+
+  cards.forEach(card => {
+    const head = card.querySelector('.anatomy-head');
+    head.addEventListener('click', () => {
+      const wasOpen = card.classList.contains('open');
+      card.classList.toggle('open');
+      if (!wasOpen) {
+        opened.add(card.dataset.key);
+        counter.textContent = opened.size;
+      }
+    });
+  });
+
+  // open first card by default
+  cards[0].classList.add('open');
+  opened.add(cards[0].dataset.key);
+  counter.textContent = opened.size;
+})();
+
+// ===== Game 3: state quiz =====
+(function(){
+  const ANSWERS = {
+    empty:   { correct: ['B'],      explain: 'empty' },
+    loading: { correct: ['B', 'C'], explain: 'loading' },
+    error:   { correct: ['B'],      explain: 'error' },
+    stale:   { correct: ['B'],      explain: 'stale' },
+    noperm:  { correct: ['B', 'C'], explain: 'noperm' }
+  };
+
+  const cards = document.querySelectorAll('.quiz-card');
+  const selected = {};
+  const submitBtn = document.getElementById('quizSubmit');
+  const resetBtn = document.getElementById('quizReset');
+  const judge = document.getElementById('quizJudge');
+  const doneEl = document.getElementById('quizDone');
+
+  function updateDone() {
+    doneEl.textContent = Object.keys(selected).length;
+  }
+
+  cards.forEach(card => {
+    const q = card.dataset.q;
+    const opts = card.querySelectorAll('.quiz-option');
+    opts.forEach(opt => {
+      opt.addEventListener('click', e => {
+        if (card.classList.contains('answered')) return;
+        opts.forEach(o => o.classList.remove('selected'));
+        opt.classList.add('selected');
+        selected[q] = opt.dataset.opt;
+        updateDone();
+      });
+    });
+  });
+
+  submitBtn.addEventListener('click', () => {
+    let hits = 0;
+    let answered = 0;
+    cards.forEach(card => {
+      const q = card.dataset.q;
+      const userChoice = selected[q];
+      if (!userChoice) return;
+      answered++;
+      const correct = ANSWERS[q].correct;
+      const isHit = correct.includes(userChoice);
+      if (isHit) hits++;
+      card.classList.add('answered');
+      if (!isHit) card.classList.add('wrong');
+      // mark correct options
+      card.querySelectorAll('.quiz-option').forEach(opt => {
+        if (correct.includes(opt.dataset.opt)) opt.classList.add('correct');
+        if (opt.dataset.opt === userChoice && !isHit) opt.classList.add('wrong');
+      });
+      // show explanation
+      card.querySelector('.quiz-explain').classList.add('show');
+    });
+
+    // verdict
+    let verdictClass, verdictLabel, headline, body;
+    if (answered === 0) {
+      verdictClass = 'fail';
+      verdictLabel = '还没作答';
+      headline = '5 道题一道都没选。';
+      body = '上面 5 个状态卡片各选一个选项，再来试一次。';
+    } else if (hits === 5) {
+      verdictClass = 'win';
+      verdictLabel = '满分';
+      headline = '你已经在用"状态思维"设计了。';
+      body = '5 道全对——下次需求评审，你就是那个第一句问"这页有几态"的人。';
+    } else if (hits >= 3) {
+      verdictClass = 'win';
+      verdictLabel = '基本对了';
+      headline = `${hits} / 5 ——方向对，差几个判断。`;
+      body = '看一下错的题的解释——尤其是"原则"那行。下次画稿前先问自己一遍。';
+    } else if (hits >= 1) {
+      verdictClass = 'partial';
+      verdictLabel = '还差一点';
+      headline = `${hits} / 5 ——大部分还在"画 happy path"。`;
+      body = '5 态思维需要一段时间。回去看每道题的"原则"——把它们当 checklist 用，画稿时一条一条过。';
+    } else {
+      verdictClass = 'fail';
+      verdictLabel = '0 分';
+      headline = '一道都没对——但这才是该读这篇文章的人。';
+      body = '把这页存了，下次画稿前打开它，对照"5 态 × 4 维"清单一遍。一周后再回来重做。';
+    }
+
+    judge.innerHTML = `<span class="verdict ${verdictClass}">${verdictLabel}</span><h4>${headline}</h4><p>${body}</p>`;
+    judge.classList.add('show');
+    judge.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  });
+
+  resetBtn.addEventListener('click', () => {
+    Object.keys(selected).forEach(k => delete selected[k]);
+    updateDone();
+    cards.forEach(card => {
+      card.classList.remove('answered', 'wrong');
+      card.querySelectorAll('.quiz-option').forEach(opt => {
+        opt.classList.remove('selected', 'correct', 'wrong');
+      });
+      card.querySelector('.quiz-explain').classList.remove('show');
+    });
+    judge.classList.remove('show');
+  });
+})();
+</script>
+
+</body>
+</html>

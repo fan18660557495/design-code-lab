@@ -8,8 +8,269 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,300..900&family=Geist:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&family=Noto+Sans+SC:wght@300;400;500;700;900&family=Noto+Serif+SC:wght@400;500;700;900&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style-translation.css">
+<style>
+  /* Hero demo — restrained, paper bg with a small chunk of text behind */
+  .glass-demo-row {
+    margin-top: 52px;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 14px;
+  }
+  @media (max-width: 760px) { .glass-demo-row { grid-template-columns: 1fr; } }
+  .glass-demo-tile {
+    position: relative;
+    min-height: 158px;
+    padding: 0;
+    border: 1px solid var(--line);
+    background: var(--paper);
+    border-radius: 6px;
+    overflow: hidden;
+  }
+  .glass-demo-bg {
+    position: absolute;
+    inset: 0;
+    padding: 14px 16px;
+    font-family: 'Noto Sans SC', system-ui, sans-serif;
+    font-size: 11px;
+    color: rgba(22,22,29,.36);
+    line-height: 1.5;
+    pointer-events: none;
+  }
+  .glass-demo-bg strong { color: rgba(22,22,29,.6); font-weight: 700; }
+  .glass-demo-overlay {
+    position: absolute;
+    inset: 22px;
+    border-radius: 6px;
+    padding: 16px;
+    color: var(--ink);
+  }
+  .glass-demo-overlay .tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: .12em;
+    color: var(--accent);
+    text-transform: uppercase;
+  }
+  .glass-demo-overlay h3 {
+    margin: 8px 0 4px;
+    font-family: 'Noto Serif SC', serif;
+    font-size: 18px;
+    line-height: 1.15;
+  }
+  .glass-demo-overlay p {
+    margin: 0;
+    font-size: 12px;
+    color: var(--ink-soft);
+    line-height: 1.45;
+  }
+  .glass-demo-overlay.balanced {
+    background: rgba(250,247,240,.6);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(22,22,29,.08);
+  }
+  .glass-demo-overlay.opaque {
+    background: rgba(250,247,240,.96);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border: 1px solid rgba(22,22,29,.08);
+  }
+  .glass-demo-overlay.missing {
+    background: rgba(250,247,240,.18);
+    border: 1px solid rgba(22,22,29,.08);
+  }
+  .glass-demo-overlay.missing .tag { color: #c01b00; }
+
+  /* === Lab === */
+  .lab {
+    margin-top: 8px;
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    overflow: hidden;
+  }
+  .lab-meta {
+    display: flex;
+    gap: 22px;
+    flex-wrap: wrap;
+    padding: 12px 18px;
+    border-bottom: 1px dashed var(--line);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: .08em;
+    color: var(--ink-mute);
+    text-transform: uppercase;
+  }
+  .lab-meta strong { color: var(--ink); font-weight: 700; text-transform: none; letter-spacing: 0; }
+  .lab-meta .warn strong { color: var(--accent); }
+
+  .lab-body {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 240px;
+    gap: 20px;
+    padding: 20px;
+  }
+  @media (max-width: 880px) { .lab-body { grid-template-columns: 1fr; } }
+
+  /* Stage: a fake page of content (the realistic scenario for a panel) */
+  .glass-stage {
+    position: relative;
+    min-height: 380px;
+    border: 1px solid var(--line-soft);
+    border-radius: 6px;
+    background: var(--bg);
+    overflow: hidden;
+  }
+  .page-mock {
+    position: absolute;
+    inset: 0;
+    padding: 28px 32px;
+    color: rgba(22,22,29,.7);
+    font-family: 'Noto Sans SC', system-ui, sans-serif;
+    font-size: 12.5px;
+    line-height: 1.62;
+    overflow: hidden;
+  }
+  .page-mock h4 {
+    margin: 0 0 12px;
+    font-family: 'Noto Serif SC', serif;
+    font-size: 22px;
+    line-height: 1.18;
+    color: var(--ink);
+  }
+  .page-mock .meta {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10.5px;
+    letter-spacing: .12em;
+    color: var(--ink-mute);
+    margin-bottom: 16px;
+    text-transform: uppercase;
+  }
+  .page-mock p { margin: 0 0 10px; }
+  .page-mock .accent-line {
+    color: var(--accent);
+    font-weight: 600;
+  }
+
+  /* The glass panel */
+  .glass-panel {
+    --gb: 16px;
+    --ga: .46;
+    --gs: 1.18;
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    width: min(300px, 78%);
+    padding: 18px 20px;
+    border-radius: 8px;
+    background: rgba(250,247,240, var(--ga));
+    backdrop-filter: blur(var(--gb)) saturate(var(--gs));
+    -webkit-backdrop-filter: blur(var(--gb)) saturate(var(--gs));
+    border: 1px solid rgba(22,22,29,.08);
+    box-shadow: 0 14px 32px rgba(22,22,29,.10);
+    color: var(--ink);
+  }
+  .glass-panel.no-border { border-color: transparent; }
+  .glass-panel.method-filter {
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    filter: blur(calc(var(--gb) * .35));
+  }
+  .glass-panel h3 {
+    margin: 0 0 4px;
+    font-family: 'Noto Serif SC', serif;
+    font-size: 19px;
+    line-height: 1.18;
+  }
+  .glass-panel .meta {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10.5px;
+    letter-spacing: .04em;
+    color: var(--ink-mute);
+    margin-bottom: 12px;
+  }
+  .glass-metrics {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    border-top: 1px solid rgba(22,22,29,.12);
+    padding-top: 8px;
+  }
+  .glass-metric .k {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9.5px;
+    color: var(--ink-mute);
+    letter-spacing: .08em;
+    text-transform: uppercase;
+  }
+  .glass-metric strong {
+    display: block;
+    margin-top: 2px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+  }
+
+  /* Controls */
+  .controls { display: grid; gap: 16px; align-content: start; }
+  .ctrl { display: grid; gap: 6px; }
+  .ctrl-label {
+    display: flex;
+    justify-content: space-between;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10.5px;
+    letter-spacing: .08em;
+    color: var(--ink-mute);
+    text-transform: uppercase;
+  }
+  .ctrl-label output { color: var(--ink); font-weight: 700; letter-spacing: 0; text-transform: none; }
+  input[type="range"] { width: 100%; accent-color: var(--accent); }
+  .seg { display: flex; gap: 6px; flex-wrap: wrap; }
+  .seg button {
+    flex: 1;
+    border: 1px solid var(--line);
+    background: transparent;
+    color: var(--ink-soft);
+    padding: 6px 8px;
+    border-radius: 3px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10.5px;
+    cursor: pointer;
+    transition: color .14s, border-color .14s;
+  }
+  .seg button:hover { color: var(--accent); border-color: var(--accent); }
+  .seg button.active { color: var(--ink); border-color: var(--ink); background: var(--bg); }
+  .seg button.danger.active { color: var(--accent); border-color: var(--accent); background: var(--accent-soft); }
+
+  .lab-readout {
+    padding: 14px 20px;
+    border-top: 1px dashed var(--line);
+    font-size: 13.5px;
+    line-height: 1.65;
+    color: var(--ink-soft);
+  }
+  .lab-readout strong { color: var(--ink); }
+  .lab-readout.warn strong { color: var(--accent); }
+
+  .lab-code {
+    margin: 0;
+    padding: 14px 20px;
+    border-top: 1px dashed var(--line);
+    background: var(--code-bg);
+    color: #f5f5f7;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    line-height: 1.6;
+    overflow: auto;
+    white-space: pre;
+  }
+  .lab-code .prop { color: #c4c6ff; }
+  .lab-code .val { color: #9ce0a8; }
+  .lab-code .com { color: #6c7088; font-style: italic; }
+  .lab-code .bad { color: #ff8a6e; }
+</style>
 </head>
-<body class="page-glass">
+<body>
 <div class="topbar">
   <div class="wrap topbar-inner">
     <a class="brand" href="book.html#vol-3"><span class="dot"></span>AI LABBOOK</a>
@@ -25,7 +286,6 @@
     <div class="hero-meta">
       <span class="pill fill">S3 · STYLE TRANSLATION</span>
       <span class="pill">Layer Blur → CSS</span>
-      <span class="pill accent">INTERACTIVE</span>
     </div>
     <div class="hero-grid">
       <div>
@@ -34,8 +294,7 @@
           <span class="display-en">Backdrop Blur</span>
         </h1>
         <p class="lede">
-          毛玻璃不是把卡片本身 blur 掉，而是让卡片背后的内容被模糊、降噪、再透出来。
-          代码里关键不是一个 blur 值，而是 backdrop-filter、半透明底色、边缘线和降级方案的组合。
+          毛玻璃不是把卡片本身 blur 掉，而是让卡片背后的内容被模糊、降噪、再透过来。代码里关键不是一个 blur 值，而是 backdrop-filter、半透明底色、边缘线和降级方案的组合。
         </p>
       </div>
       <div class="hero-side">
@@ -46,21 +305,36 @@
       </div>
     </div>
 
-    <div class="hero-demo" aria-label="三种毛玻璃效果预览">
-      <div class="mini-card glass-soft">
-        <div class="tag">balanced</div>
-        <h3>能看见背景</h3>
-        <p>半透明底色 + 适度模糊，背景还在，但不会抢文字。</p>
+    <div class="glass-demo-row" aria-label="三种毛玻璃效果预览">
+      <div class="glass-demo-tile">
+        <div class="glass-demo-bg">
+          <strong>Demo</strong> 这里是一段背景里的内容。文章正文、列表项、表格数据，都是常见的毛玻璃面板背后会出现的素材。
+        </div>
+        <div class="glass-demo-overlay balanced">
+          <div class="tag">balanced</div>
+          <h3>能看见背景</h3>
+          <p>半透明底色 + 适度模糊，背景还在但不抢文字。</p>
+        </div>
       </div>
-      <div class="mini-card glass-hard">
-        <div class="tag">too opaque</div>
-        <h3>像普通卡片</h3>
-        <p>底色太实，玻璃感会消失，只剩一张浅色面板。</p>
+      <div class="glass-demo-tile">
+        <div class="glass-demo-bg">
+          <strong>Demo</strong> 这里是一段背景里的内容。文章正文、列表项、表格数据，都是常见的毛玻璃面板背后会出现的素材。
+        </div>
+        <div class="glass-demo-overlay opaque">
+          <div class="tag">too opaque</div>
+          <h3>变回普通卡片</h3>
+          <p>底色太实，玻璃感消失，只剩一张浅色面板。</p>
+        </div>
       </div>
-      <div class="mini-card glass-missing">
-        <div class="tag">missing base</div>
-        <h3>只剩噪音</h3>
-        <p>透明度太低时，内容会被背景纹理和色块干扰。</p>
+      <div class="glass-demo-tile">
+        <div class="glass-demo-bg">
+          <strong>Demo</strong> 这里是一段背景里的内容。文章正文、列表项、表格数据，都是常见的毛玻璃面板背后会出现的素材。
+        </div>
+        <div class="glass-demo-overlay missing">
+          <div class="tag">missing base</div>
+          <h3>只剩噪音</h3>
+          <p>透明度太低，正文被背景文字直接干扰。</p>
+        </div>
       </div>
     </div>
   </div>
@@ -74,7 +348,7 @@
         <h2 class="section-title">它模糊的不是自己，<br>是 <span class="em">背后</span>。</h2>
       </div>
       <p class="section-sub">
-        Figma 里的 Background Blur 对应 CSS 的 backdrop-filter。它和 filter: blur 最大的区别是：一个处理背后，一个处理自己。
+        Figma 里的 Background Blur 对应 CSS 的 backdrop-filter。和 filter: blur 的根本区别是：一个处理背后，一个处理自己。
       </p>
     </div>
 
@@ -82,7 +356,7 @@
       <div class="explain-card bad">
         <span class="stamp">WRONG MODEL</span>
         <h3>用 <span class="mono">filter: blur()</span> 模糊卡片</h3>
-        <p>filter 会让卡片和里面的文字一起糊掉。它适合处理图片本身，不适合做清晰文字上的玻璃面板。</p>
+        <p>filter 会让卡片和里面的文字一起糊掉。它处理图片本身可以，做清晰文字上的玻璃面板不行。</p>
         <code class="code-inline">.glass {
   <span class="bad">filter: blur(16px);</span>
   /* 文字也会一起糊 */
@@ -100,9 +374,9 @@
     </div>
 
     <div class="model-strip" aria-label="毛玻璃翻译步骤">
-      <div class="model-step"><span class="k">01</span><strong>先铺底色</strong><span>没有半透明底色，blur 后的背景仍然会干扰文字。</span></div>
+      <div class="model-step"><span class="k">01</span><strong>先铺底色</strong><span>没有半透明底色，blur 之后的背景仍然会干扰文字。</span></div>
       <div class="model-step"><span class="k">02</span><strong>再加模糊</strong><span>backdrop-filter 作用在背后，不是让内容糊掉。</span></div>
-      <div class="model-step"><span class="k">03</span><strong>补边缘线</strong><span>浅色内描边和高光能让面板从复杂背景里分出来。</span></div>
+      <div class="model-step"><span class="k">03</span><strong>补边缘线</strong><span>浅色内描边和高光让面板从复杂背景里分出来。</span></div>
       <div class="model-step"><span class="k">04</span><strong>准备 fallback</strong><span>不支持 backdrop-filter 时，退回更实的背景色。</span></div>
     </div>
   </div>
@@ -113,72 +387,78 @@
     <div class="section-head">
       <div>
         <div class="section-num"><strong>02</strong> / 样式拆解台</div>
-        <h2 class="section-title">玻璃感，<br>靠 <span class="em">四个参数</span>。</h2>
+        <h2 class="section-title">面板压在<br><span class="em">内容</span>上。</h2>
       </div>
       <p class="section-sub">
-        试着调 blur、底色透明度、饱和度和边缘线。你会看到：blur 越大不一定越好，透明度太低会直接伤害可读性。
+        实验台底层是一段真实的文章内容。玻璃面板压在上面，最关键的开关在右下：切换 <span class="mono">backdrop-filter</span> 和 <span class="mono">filter</span> —— 文字会不会跟着糊？
       </p>
     </div>
 
-    <div class="lab-shell">
-      <div class="lab-toolbar">
-        <div class="lab-title">STYLE LAB / BACKDROP FILTER</div>
-        <div class="status-chip"><span class="status-dot"></span><span>needs transparent background</span></div>
+    <div class="lab">
+      <div class="lab-meta">
+        <span>method · <strong id="methodStatus">backdrop-filter</strong></span>
+        <span>readability · <strong id="readStatus">good</strong></span>
+        <span id="supportPill">@supports · <strong id="supportStatus">检测中</strong></span>
       </div>
-      <div class="lab-grid">
-        <div class="playground">
-          <div class="preview-stage glass-stage">
-            <div class="stage-label">busy background</div>
-            <article class="glass-card" id="glassCard">
-              <h3>玻璃<br>信息面板</h3>
-              <div class="glass-metrics">
-                <div class="glass-metric"><span class="k">blur</span><strong id="metricBlur">16px</strong></div>
-                <div class="glass-metric"><span class="k">alpha</span><strong id="metricAlpha">46%</strong></div>
-                <div class="glass-metric"><span class="k">sat</span><strong id="metricSat">135%</strong></div>
-              </div>
-            </article>
+      <div class="lab-body">
+        <div class="glass-stage" id="glassStage">
+          <div class="page-mock">
+            <div class="meta">设计科普 / 2026-05-18 / 04 期 · 样式</div>
+            <h4>毛玻璃的本质是<br>透过去看后面</h4>
+            <p>当我们说一个面板"是玻璃的"，意思是：它<span class="accent-line">允许背景被看见</span>，但又把背景柔化到不抢内容的程度。</p>
+            <p>在浏览器里，这个能力由 backdrop-filter 提供。它不影响元素自己，只处理元素背后那一块画面。和 filter 完全不同。</p>
+            <p>所以做毛玻璃面板时，元素本身的文字要清晰，背景里的内容要被模糊和降噪——两者由两个不同的属性负责。</p>
           </div>
-
-          <div class="lab-readout">
-            <div class="readout-card">
-              <div class="r-label">观察点</div>
-              <p id="glassObserve">先保证半透明底色，再叠 backdrop-filter。</p>
+          <article class="glass-panel" id="glassPanel">
+            <h3>玻璃面板</h3>
+            <div class="meta">STYLE · BACKDROP-FILTER</div>
+            <div class="glass-metrics">
+              <div class="glass-metric"><span class="k">blur</span><strong id="metricBlur">16px</strong></div>
+              <div class="glass-metric"><span class="k">alpha</span><strong id="metricAlpha">46%</strong></div>
+              <div class="glass-metric"><span class="k">sat</span><strong id="metricSat">118%</strong></div>
             </div>
-            <div class="readout-card">
-              <div class="r-label">当前组合</div>
-              <p id="glassCombo">blur 16px，背景 alpha 46%，saturate 135%。</p>
-            </div>
-          </div>
-
-          <div class="code-panel">
-            <div class="code-head"><span>glass-panel.css</span><span>fallback included</span></div>
-            <pre id="glassCode"></pre>
-          </div>
+          </article>
         </div>
 
-        <aside class="controls" aria-label="毛玻璃参数">
-          <div class="control-group">
-            <label class="control-label" for="glassBlur"><span>backdrop blur</span><output id="glassBlurOut">16px</output></label>
-            <input id="glassBlur" type="range" min="0" max="36" value="16" step="2">
+        <div class="controls">
+          <div class="ctrl">
+            <label class="ctrl-label" for="blurRange">
+              <span>backdrop blur</span><output id="blurOut">16px</output>
+            </label>
+            <input id="blurRange" type="range" min="0" max="36" value="16" step="1">
           </div>
-          <div class="control-group">
-            <label class="control-label" for="glassAlpha"><span>background alpha</span><output id="glassAlphaOut">46%</output></label>
-            <input id="glassAlpha" type="range" min="18" max="86" value="46" step="2">
+          <div class="ctrl">
+            <label class="ctrl-label" for="alphaRange">
+              <span>background alpha</span><output id="alphaOut">46%</output>
+            </label>
+            <input id="alphaRange" type="range" min="10" max="92" value="46" step="2">
           </div>
-          <div class="control-group">
-            <label class="control-label" for="glassSat"><span>saturation</span><output id="glassSatOut">135%</output></label>
-            <input id="glassSat" type="range" min="80" max="180" value="135" step="5">
+          <div class="ctrl">
+            <label class="ctrl-label" for="satRange">
+              <span>saturation</span><output id="satOut">118%</output>
+            </label>
+            <input id="satRange" type="range" min="80" max="160" value="118" step="2">
           </div>
-          <div class="control-group">
-            <div class="control-label"><span>edge highlight</span><output id="glassBorderOut">on</output></div>
-            <div class="seg" id="glassBorderSeg">
+          <div class="ctrl">
+            <div class="ctrl-label"><span>edge highlight</span></div>
+            <div class="seg" id="borderSeg">
               <button class="active" data-border="on">on</button>
               <button data-border="off">off</button>
             </div>
           </div>
-          <div class="note-panel" id="glassNote">白色内边线和 inset highlight 能让玻璃边缘从复杂背景里分出来。</div>
-        </aside>
+          <div class="ctrl">
+            <div class="ctrl-label"><span>method</span></div>
+            <div class="seg" id="methodSeg">
+              <button class="active" data-method="backdrop">backdrop</button>
+              <button class="danger" data-method="filter">filter ✗</button>
+            </div>
+          </div>
+        </div>
       </div>
+      <div class="lab-readout" id="labReadout">
+        当前 <strong>backdrop-filter</strong> + 半透明底色，面板里的文字保持清晰，背后的文章被柔化。
+      </div>
+      <pre class="lab-code" id="codeOut"></pre>
     </div>
   </div>
 </section>
@@ -187,11 +467,11 @@
   <div class="wrap">
     <div class="section-head">
       <div>
-        <div class="section-num"><strong>03</strong> / 设计到代码的对照</div>
+        <div class="section-num"><strong>03</strong> / 设计到代码对照</div>
         <h2 class="section-title">三个坑，<br>最容易 <span class="em">翻错</span>。</h2>
       </div>
       <p class="section-sub">
-        毛玻璃效果看起来很视觉，但实现上有明确边界：容器背景、父级层叠、浏览器支持都会影响结果。
+        毛玻璃效果看起来视觉化，实现上有明确边界：容器背景、父级层叠、浏览器支持都会影响结果。
       </p>
     </div>
 
@@ -203,6 +483,7 @@
         <tr><td><strong>Figma Background Blur</strong><br>面板内部文字清晰</td><td>写成 <span class="mono">filter: blur()</span></td><td>用 <span class="mono">backdrop-filter</span>，并保持内容层不被 blur。</td></tr>
         <tr><td><strong>玻璃面板很透</strong><br>背景色彩很丰富</td><td>只调 blur，不加底色</td><td>先加 <span class="mono">rgba()</span> 底色，再决定 blur 大小。</td></tr>
         <tr><td><strong>边缘有轻高光</strong><br>玻璃边界清楚</td><td>忽略 border 和 inset highlight</td><td>加半透明 border、内阴影或 1px 高光。</td></tr>
+        <tr><td><strong>父级有 transform / overflow</strong><br>backdrop 不生效</td><td>以为属性写错了</td><td>检查父级层叠上下文。某些 transform / will-change 会切断 backdrop。</td></tr>
       </tbody>
     </table>
   </div>
@@ -216,7 +497,7 @@
         <h2 class="section-title">毛玻璃要交付<br><span class="em">可读性条件</span>。</h2>
       </div>
       <p class="section-sub">
-        不要只标“背景模糊 16”。更实用的交付是：在哪些背景上用、文字颜色怎么保证对比、降级方案是什么。
+        不要只标"背景模糊 16"。更实用的交付是：在什么背景上用、文字怎么保证对比、降级方案是什么。
       </p>
     </div>
 
@@ -225,13 +506,13 @@
         <span class="num">01 / CONTRAST</span>
         <h3>先看文字</h3>
         <p>背景越花，底色越不能太透明。玻璃感必须服从可读性。</p>
-        <ul><li>正文不要贴复杂图案</li><li>底色 alpha 留安全值</li><li>必要时加遮罩层</li></ul>
+        <ul><li>正文不贴复杂图案</li><li>底色 alpha 留安全值</li><li>必要时加遮罩层</li></ul>
       </article>
       <article class="principle-card">
         <span class="num">02 / SUPPORT</span>
         <h3>准备降级</h3>
         <p>浏览器不支持时，退成更实的半透明面板，而不是让内容裸奔。</p>
-        <ul><li>@supports 包一层</li><li>fallback 背景更不透明</li><li>避免关键功能依赖玻璃</li></ul>
+        <ul><li>@supports 包一层</li><li>fallback 背景更不透明</li><li>关键功能不依赖玻璃</li></ul>
       </article>
       <article class="principle-card">
         <span class="num">03 / COST</span>
@@ -249,9 +530,9 @@
       <div>
         <div class="np-tag">下一篇 · NEXT · S4 · 样式</div>
         <h4>遮罩 / 裁切 <span class="em">·</span> Mask & Clip</h4>
-        <p>玻璃讲的是背景怎么透出来。下一篇讲什么该被看见、什么该被裁掉：mask、clip-path 和 object-fit。</p>
+        <p>玻璃讲的是背景怎么透过来。下一篇讲什么该被看见、什么该被裁掉：mask、clip-path 和 object-fit。</p>
       </div>
-      <span class="np-cta">继续阅读 <span class="arr">→</span></span>
+      <span class="np-cta">继续阅读 →</span>
     </a>
   </div>
 </section>
@@ -263,11 +544,12 @@
       <a href="https://developer.mozilla.org/en-US/docs/Web/CSS/backdrop-filter" target="_blank" rel="noreferrer">MDN backdrop-filter</a>
       <a href="https://developer.mozilla.org/en-US/docs/Web/CSS/filter" target="_blank" rel="noreferrer">MDN filter</a>
       <a href="https://developer.mozilla.org/en-US/docs/Web/CSS/@supports" target="_blank" rel="noreferrer">MDN @supports</a>
+      <a href="https://caniuse.com/css-backdrop-filter" target="_blank" rel="noreferrer">Can I use backdrop-filter</a>
     </div>
   </div>
 </footer>
 
-<!-- 路线图弹窗 (11 分类) -->
+<!-- 路线图弹窗 -->
 <div class="rm-modal" id="rm-modal" hidden>
   <div class="rm-backdrop" data-rm-close></div>
   <div class="rm-dialog" role="dialog" aria-label="完整路线图">
@@ -305,7 +587,7 @@
         </div>
       </div>
       <div class="rm-mod">
-        <div class="rm-mod-key">04 · 设计样式怎么翻译成 CSS</div>
+        <div class="rm-mod-key" style="color:var(--accent);">04 · 设计样式怎么翻译成 CSS</div>
         <div class="rm-mod-list">
           <a href="inverted-radius-figma.html" class="rm-cell"><span class="rm-cell-code">S1</span><span class="rm-cell-name">内翻圆角 · Inverted Border Radius</span><span class="rm-cell-tier">样式</span></a>
           <a href="shadow-layer-figma.html" class="rm-cell"><span class="rm-cell-code">S2</span><span class="rm-cell-name">阴影 / 层级 · Shadow &amp; Elevation</span><span class="rm-cell-tier">样式</span></a>
@@ -314,7 +596,7 @@
         </div>
       </div>
       <div class="rm-mod">
-        <div class="rm-mod-key" style="color:var(--accent);">05 · AI 怎么参与实现</div>
+        <div class="rm-mod-key">05 · AI 怎么参与实现</div>
         <div class="rm-mod-list">
           <a href="q1-mcp-figma.html" class="rm-cell"><span class="rm-cell-code">Q1</span><span class="rm-cell-name">MCP · AI 的 USB 接口</span><span class="rm-cell-tier">工具</span></a>
           <a href="q2-skills-figma.html" class="rm-cell"><span class="rm-cell-code">Q2</span><span class="rm-cell-name">Skills · SKILL.md 拆解</span><span class="rm-cell-tier">工具</span></a>
@@ -378,5 +660,130 @@
   </div>
 </div>
 <script src="style-translation.js"></script>
+<script>
+(function(){
+  var state = { blur: 16, alpha: 46, sat: 118, border: 'on', method: 'backdrop' };
+
+  var panel = document.getElementById('glassPanel');
+  var blurRange = document.getElementById('blurRange');
+  var alphaRange = document.getElementById('alphaRange');
+  var satRange = document.getElementById('satRange');
+  var blurOut = document.getElementById('blurOut');
+  var alphaOut = document.getElementById('alphaOut');
+  var satOut = document.getElementById('satOut');
+  var borderSeg = document.getElementById('borderSeg');
+  var methodSeg = document.getElementById('methodSeg');
+  var metricBlur = document.getElementById('metricBlur');
+  var metricAlpha = document.getElementById('metricAlpha');
+  var metricSat = document.getElementById('metricSat');
+  var methodStatus = document.getElementById('methodStatus');
+  var readStatus = document.getElementById('readStatus');
+  var supportStatus = document.getElementById('supportStatus');
+  var readout = document.getElementById('labReadout');
+  var codeOut = document.getElementById('codeOut');
+
+  function detectSupport(){
+    if (typeof CSS === 'undefined' || !CSS.supports) { supportStatus.textContent = '未知'; return; }
+    var ok = CSS.supports('backdrop-filter', 'blur(1px)') || CSS.supports('-webkit-backdrop-filter', 'blur(1px)');
+    supportStatus.textContent = ok ? '支持' : '需降级';
+  }
+
+  function alphaDec(){ return (state.alpha / 100).toFixed(2); }
+  function satDec(){ return (state.sat / 100).toFixed(2); }
+
+  function readability(){
+    if (state.method === 'filter') return 'broken';
+    if (state.alpha < 28) return 'risky';
+    if (state.alpha > 80 && state.blur < 6) return 'flat';
+    return 'good';
+  }
+
+  function renderCode(){
+    var a = alphaDec(), s = satDec();
+    var bs = state.border === 'on' ? 'rgba(22,22,29,.08)' : 'transparent';
+    var lines = [];
+    if (state.method === 'filter') {
+      lines.push('<span class="com">/* WRONG: filter 把文字也糊掉了 */</span>');
+      lines.push('.glass {');
+      lines.push('  <span class="prop">background</span>: <span class="val">rgba(250,247,240, ' + a + ')</span>;');
+      lines.push('  <span class="prop">filter</span>: <span class="bad">blur(' + Math.round(state.blur * 0.35) + 'px)</span>;');
+      lines.push('}');
+    } else {
+      lines.push('.glass {');
+      lines.push('  <span class="prop">background</span>: <span class="val">rgba(250,247,240, ' + a + ')</span>;');
+      lines.push('  <span class="prop">backdrop-filter</span>: <span class="val">blur(' + state.blur + 'px) saturate(' + s + ')</span>;');
+      lines.push('  <span class="prop">-webkit-backdrop-filter</span>: <span class="val">blur(' + state.blur + 'px) saturate(' + s + ')</span>;');
+      lines.push('  <span class="prop">border</span>: 1px solid <span class="val">' + bs + '</span>;');
+      lines.push('}');
+      lines.push('');
+      lines.push('@supports not (backdrop-filter: blur(1px)) {');
+      lines.push('  .glass { <span class="prop">background</span>: <span class="val">rgba(250,247,240, .9)</span>; }');
+      lines.push('}');
+    }
+    codeOut.innerHTML = lines.join('\n');
+  }
+
+  function render(){
+    panel.style.setProperty('--gb', state.blur + 'px');
+    panel.style.setProperty('--ga', alphaDec());
+    panel.style.setProperty('--gs', satDec());
+    panel.classList.toggle('no-border', state.border === 'off');
+    panel.classList.toggle('method-filter', state.method === 'filter');
+
+    var subEl = panel.querySelector('.meta');
+    if (subEl) subEl.textContent = 'STYLE · ' + (state.method === 'backdrop' ? 'BACKDROP-FILTER' : 'FILTER (WRONG)');
+
+    blurOut.textContent = state.blur + 'px';
+    alphaOut.textContent = state.alpha + '%';
+    satOut.textContent = state.sat + '%';
+    metricBlur.textContent = state.blur + 'px';
+    metricAlpha.textContent = state.alpha + '%';
+    metricSat.textContent = state.sat + '%';
+    methodStatus.textContent = state.method === 'backdrop' ? 'backdrop-filter' : 'filter (wrong)';
+
+    var r = readability();
+    readStatus.textContent = r;
+
+    var ob;
+    if (state.method === 'filter') {
+      ob = '<strong>filter 把整个面板（含文字）都糊了</strong>。这是处理图片本身的属性，不能拿来做玻璃面板。切回 backdrop-filter 看差别。';
+      readout.classList.add('warn');
+    } else if (state.alpha < 28) {
+      ob = '<strong>底色 alpha 太低</strong>（' + state.alpha + '%）：背景里的文字会从面板下面透出来，读起来吃力。';
+      readout.classList.add('warn');
+    } else if (state.alpha > 80 && state.blur < 8) {
+      ob = '<strong>底色很实 + blur 很小</strong>：玻璃感几乎消失，只剩一张浅色面板。要么减底色，要么加 blur。';
+      readout.classList.remove('warn');
+    } else {
+      ob = '当前 <strong>backdrop-filter</strong> + 半透明底色，面板里的文字保持清晰，背后的文章被柔化。';
+      readout.classList.remove('warn');
+    }
+    readout.innerHTML = ob;
+
+    renderCode();
+  }
+
+  blurRange.addEventListener('input', function(){ state.blur = Number(blurRange.value); render(); });
+  alphaRange.addEventListener('input', function(){ state.alpha = Number(alphaRange.value); render(); });
+  satRange.addEventListener('input', function(){ state.sat = Number(satRange.value); render(); });
+
+  function bindSeg(seg, key, attr){
+    seg.addEventListener('click', function(e){
+      var btn = e.target.closest('button[' + attr + ']');
+      if (!btn) return;
+      state[key] = btn.getAttribute(attr);
+      Array.prototype.slice.call(seg.querySelectorAll('button')).forEach(function(b){
+        b.classList.toggle('active', b === btn);
+      });
+      render();
+    });
+  }
+  bindSeg(borderSeg, 'border', 'data-border');
+  bindSeg(methodSeg, 'method', 'data-method');
+
+  detectSupport();
+  render();
+})();
+</script>
 </body>
 </html>

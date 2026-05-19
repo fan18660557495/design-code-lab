@@ -1,0 +1,990 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>角色：不同人看到不是同一个系统 — AI LABBOOK · X4</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,300..900&family=Geist:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Noto+Sans+SC:wght@300;400;500;700;900&family=Noto+Serif+SC:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f3eee5; --bg-2: #ebe4d4; --ink: #16161d; --ink-soft: #4a4a55; --ink-mute: #8a8a92;
+    --line: #d5cdba; --line-soft: #e3dcca; --accent: #ff4d2e; --accent-soft: #ffe4dc;
+    --blue: #0a4cff; --blue-soft: #dde6ff; --green: #1f6b3a; --green-soft: #d4ecdb;
+    --yellow: #ffcf3d; --paper: #faf7f0; --shadow: 0 1px 0 rgba(0,0,0,0.04), 0 8px 24px rgba(22,22,29,0.06);
+    --obj-color: #ff4d2e; --obj-soft: rgba(255,77,46,0.12);
+    --proj-color: #1f6b3a; --proj-soft: rgba(31,107,58,0.12);
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--ink); font-family: 'Geist', 'Noto Sans SC', system-ui, -apple-system, sans-serif; font-size: 16px; line-height: 1.6; -webkit-font-smoothing: antialiased; background-image: radial-gradient(circle at 1px 1px, rgba(22,22,29,0.05) 1px, transparent 0); background-size: 24px 24px; }
+  .display-cn { font-family: 'Noto Serif SC', 'Fraunces', serif; font-weight: 900; letter-spacing: -0.01em; }
+  .display-en { font-family: 'Fraunces', 'Noto Serif SC', serif; font-weight: 600; font-style: italic; letter-spacing: -0.02em; }
+  .mono { font-family: 'JetBrains Mono', monospace; }
+  .label { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-mute); }
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 0 32px; }
+
+  /* Topbar */
+  .topbar { border-bottom: 1px dashed var(--line); padding: 16px 0; background: var(--bg); position: sticky; top: 0; z-index: 100; }
+  .topbar-inner { display: flex; justify-content: space-between; align-items: center; gap: 24px; flex-wrap: wrap; }
+  .brand-block { display: flex; align-items: center; gap: 10px; font-family: 'JetBrains Mono', monospace; font-size: 13px; }
+  .brand { display: inline-flex; align-items: center; gap: 6px; color: var(--ink); text-decoration: none; font-weight: 600; }
+  .brand-arrow { color: var(--ink-mute); transition: transform .2s; }
+  .brand:hover .brand-arrow { transform: translateX(-3px); }
+  .brand .dot { display: inline-block; width: 8px; height: 8px; background: var(--accent); border-radius: 50%; vertical-align: middle; animation: pulse 2s ease-in-out infinite; margin-left: 4px; }
+  .brand-sep { color: var(--ink-mute); }
+  .brand-current { color: var(--ink-soft); }
+  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+  .nav-links { display: flex; gap: 18px; font-size: 13px; flex-wrap: wrap; }
+  .nav-links a { color: var(--ink-soft); text-decoration: none; transition: color 0.2s; }
+  .nav-links a:hover { color: var(--accent); }
+  .nav-links a.current { color: var(--accent); font-weight: 600; }
+
+  /* Hero */
+  .hero { padding: 100px 0 80px; position: relative; overflow: hidden; }
+  .hero-meta { display: flex; gap: 24px; margin-bottom: 32px; align-items: center; flex-wrap: wrap; }
+  .hero-meta .pill { padding: 6px 12px; border: 1px solid var(--ink); border-radius: 100px; font-size: 11px; font-family: 'JetBrains Mono', monospace; letter-spacing: 0.05em; }
+  .hero-meta .pill.fill { background: var(--ink); color: var(--bg); }
+  .hero-meta .pill.purple { background: var(--obj-color); color: white; border-color: var(--obj-color); }
+  .hero h1 { font-family: 'Noto Serif SC', 'Fraunces', serif; font-weight: 900; font-size: clamp(48px, 7vw, 92px); line-height: 0.95; letter-spacing: -0.03em; margin: 0 0 24px; }
+  .hero h1 .em { font-family: 'Noto Serif SC', serif; font-weight: 500; color: var(--accent); }
+  .hero h1 .purple { color: var(--obj-color); font-family: 'Noto Serif SC', serif; font-weight: 500; }
+  .hero p.lede { font-size: 20px; line-height: 1.5; max-width: 640px; color: var(--ink-soft); margin: 0 0 40px; }
+  .hero-grid { display: grid; grid-template-columns: 1.4fr 1fr; gap: 48px; align-items: end; }
+  @media (max-width: 880px) { .hero-grid { grid-template-columns: 1fr; } }
+  .hero-side { border-left: 1px dashed var(--line); padding-left: 24px; font-size: 13px; color: var(--ink-soft); }
+  .hero-side .row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px dashed var(--line); gap: 12px; }
+  .hero-side .row:last-child { border-bottom: none; }
+  .hero-side .row .k { color: var(--ink-mute); font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.05em; text-transform: uppercase; }
+  .hero-side .row .v { font-weight: 500; }
+
+  /* Sections */
+  section { padding: 80px 0; border-top: 1px solid var(--line); position: relative; }
+  .section-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 56px; flex-wrap: wrap; gap: 16px; }
+  .section-num { font-family: 'JetBrains Mono', monospace; font-size: 13px; color: var(--ink-mute); letter-spacing: 0.1em; margin-top: 6px; }
+  .section-num strong { color: var(--accent); }
+  .section-title { font-family: 'Noto Serif SC', serif; font-weight: 900; font-size: clamp(32px, 4.5vw, 52px); line-height: 1.05; letter-spacing: -0.02em; margin: 8px 0 0; max-width: 22ch; }
+  .section-title .em { font-family: 'Noto Serif SC', serif; font-weight: 500; color: var(--accent); }
+  .section-title .purple { color: var(--obj-color); font-family: 'Noto Serif SC', serif; font-weight: 500; }
+  .section-sub { color: var(--ink-soft); font-size: 17px; max-width: 38ch; line-height: 1.55; margin: 0; }
+
+  /* Act tag */
+  .act-tag { display: inline-block; padding: 4px 12px; font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; border-radius: 100px; }
+  .act-tag.look { background: var(--blue-soft); color: var(--blue); }
+  .act-tag.break { background: var(--obj-soft); color: var(--obj-color); }
+  .act-tag.make { background: var(--proj-soft); color: var(--proj-color); }
+
+  /* Problem cards */
+  .problem-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; margin-top: 24px; }
+  @media (max-width: 880px) { .problem-grid { grid-template-columns: 1fr; } }
+  .problem-card { background: var(--paper); border: 1px solid var(--line); border-radius: 6px; padding: 28px; position: relative; }
+  .problem-card.bad { border-color: var(--accent); background: var(--accent-soft); }
+  .problem-card.good { border-color: var(--obj-color); background: var(--obj-soft); }
+  .problem-card .tag { position: absolute; top: -12px; left: 24px; background: var(--bg); padding: 2px 10px; font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.1em; }
+  .problem-card.bad .tag { color: var(--accent); border: 1px solid var(--accent); }
+  .problem-card.good .tag { color: var(--obj-color); border: 1px solid var(--obj-color); }
+  .problem-card h3 { font-family: 'Noto Serif SC', serif; font-size: 22px; margin: 0 0 12px; font-weight: 700; }
+  .problem-card p { margin: 0; color: var(--ink-soft); font-size: 14px; line-height: 1.55; }
+  .problem-card p + p { margin-top: 10px; }
+
+  /* GAME 1: roles mock */
+  .roles-stage { background: var(--paper); border: 1px solid var(--line); border-radius: 8px; padding: 28px; position: relative; }
+  .role-tabs { display: flex; gap: 6px; flex-wrap: wrap; padding-bottom: 16px; border-bottom: 1px dashed var(--line); margin-bottom: 22px; }
+  .role-tab { display: inline-flex; align-items: center; gap: 8px; padding: 10px 16px; background: white; border: 1px solid var(--line); border-radius: 100px; font-family: 'JetBrains Mono', monospace; font-size: 12px; cursor: pointer; transition: all 0.2s; color: var(--ink-soft); user-select: none; }
+  .role-tab:hover { border-color: var(--obj-color); color: var(--ink); }
+  .role-tab.is-active { background: var(--obj-color); border-color: var(--obj-color); color: white; box-shadow: 0 0 0 3px var(--obj-soft); }
+  .role-tab .role-avatar { width: 22px; height: 22px; border-radius: 50%; background: linear-gradient(135deg,#ff8a4a,#ff4d2e); color: white; display: inline-flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700; font-family: 'Noto Sans SC', sans-serif; }
+  .role-tab[data-role="finance"] .role-avatar { background: linear-gradient(135deg,#6e9efb,#0a4cff); }
+  .role-tab[data-role="cs"] .role-avatar { background: linear-gradient(135deg,#5cc782,#1f6b3a); }
+  .role-tab[data-role="self"] .role-avatar { background: linear-gradient(135deg,#ff9b7a,#ff4d2e); }
+
+  .role-page { background: white; border: 1px solid var(--line); border-radius: 6px; padding: 20px; display: grid; grid-template-columns: 1.1fr 1fr; gap: 20px; transition: opacity 0.25s; }
+  @media (max-width: 880px) { .role-page { grid-template-columns: 1fr; } }
+  .role-page.is-fading { opacity: 0; }
+  .role-page-head { grid-column: 1 / -1; display: flex; align-items: center; gap: 14px; padding-bottom: 16px; border-bottom: 1px dashed var(--line); }
+  .role-page-head .ph-avatar { width: 52px; height: 52px; border-radius: 50%; background: linear-gradient(135deg, #ff8a4a, #ff4d2e); color: white; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 18px; flex-shrink: 0; }
+  .role-page-head .ph-name { font-family: 'Noto Serif SC', serif; font-size: 18px; font-weight: 700; }
+  .role-page-head .ph-sub { color: var(--ink-mute); font-size: 12px; margin-top: 2px; }
+  .role-page-head .ph-context { margin-left: auto; font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--obj-color); padding: 4px 10px; border: 1px solid var(--obj-color); border-radius: 100px; letter-spacing: 0.08em; text-transform: uppercase; background: var(--obj-soft); }
+
+  .role-block { background: var(--paper); border: 1px solid var(--line-soft); border-radius: 6px; padding: 14px 16px; }
+  .role-block h5 { font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-mute); margin: 0 0 10px; font-weight: 500; }
+  .role-fields { display: flex; flex-direction: column; gap: 6px; }
+  .role-field-row { display: flex; justify-content: space-between; gap: 12px; padding: 4px 0; font-size: 13px; border-bottom: 1px dashed var(--line-soft); }
+  .role-field-row:last-child { border-bottom: none; }
+  .role-field-row .k { color: var(--ink-mute); font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.04em; }
+  .role-field-row .v { font-weight: 500; color: var(--ink); }
+  .role-field-row .v.green { color: var(--green); }
+  .role-field-row .v.red { color: var(--accent); }
+  .role-field-row .v.blue { color: var(--blue); }
+
+  .role-actions { display: flex; flex-direction: column; gap: 7px; }
+  .role-action { display: flex; align-items: center; gap: 8px; padding: 8px 12px; background: white; border: 1px solid var(--line); border-radius: 4px; font-size: 13px; font-weight: 500; }
+  .role-action .ic { width: 22px; height: 22px; background: var(--obj-soft); color: var(--obj-color); border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 12px; flex-shrink: 0; }
+  .role-action.primary { background: var(--ink); color: white; border-color: var(--ink); }
+  .role-action.primary .ic { background: rgba(255,255,255,0.2); color: white; }
+
+  .role-status { padding: 14px 16px; background: var(--bg-2); border-radius: 6px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px 14px; }
+  .role-status .st-row { font-size: 12px; }
+  .role-status .st-k { color: var(--ink-mute); font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.05em; }
+  .role-status .st-v { font-weight: 600; font-size: 14px; margin-top: 2px; }
+  .role-status .st-v.green { color: var(--green); }
+  .role-status .st-v.red { color: var(--accent); }
+  .role-status .st-v.blue { color: var(--blue); }
+  .role-status .st-v.purple { color: var(--obj-color); }
+
+  .role-empty { grid-column: 1 / -1; padding: 16px 18px; background: var(--bg); border: 1px dashed var(--line); border-radius: 6px; display: flex; align-items: center; gap: 14px; }
+  .role-empty .empty-ic { width: 36px; height: 36px; border-radius: 50%; background: white; border: 1px dashed var(--line); color: var(--ink-mute); display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0; }
+  .role-empty .empty-text { font-size: 13px; color: var(--ink-soft); line-height: 1.55; }
+  .role-empty .empty-text strong { color: var(--ink); }
+
+  /* Reveal bar */
+  .reveal-bar { margin-top: 32px; padding: 20px 28px; background: var(--ink); color: var(--bg); border-radius: 8px; display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap; }
+  .reveal-bar .msg { font-family: 'Noto Serif SC', serif; font-size: 17px; font-weight: 500; line-height: 1.55; }
+  .reveal-bar .msg .em { color: var(--accent); }
+  .reveal-bar .counter { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ink-mute); letter-spacing: 0.05em; }
+  .reveal-bar .counter strong { color: var(--accent); font-size: 14px; }
+
+  /* GAME 2: matrix */
+  .matrix-stage { background: var(--paper); border: 1px solid var(--line); border-radius: 8px; padding: 22px; overflow-x: auto; margin-top: 24px; }
+  .matrix-table { width: 100%; border-collapse: separate; border-spacing: 6px; min-width: 880px; }
+  .matrix-table th, .matrix-table td { text-align: left; vertical-align: top; }
+  .matrix-table thead th { padding: 10px 12px; background: var(--ink); color: var(--bg); font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; border-radius: 4px; font-weight: 500; }
+  .matrix-table thead th:first-child { background: transparent; color: var(--ink-mute); }
+  .matrix-table .role-row-label { padding: 14px 14px; background: var(--obj-soft); border-left: 3px solid var(--obj-color); border-radius: 4px; font-family: 'Noto Serif SC', serif; font-weight: 700; font-size: 14px; color: var(--obj-color); min-width: 110px; white-space: nowrap; }
+  .matrix-table .role-row-label small { display: block; font-family: 'JetBrains Mono', monospace; font-weight: 400; font-size: 10px; color: var(--ink-mute); letter-spacing: 0.04em; margin-top: 4px; }
+  .matrix-cell { background: white; border: 1px solid var(--line); border-radius: 4px; padding: 0; cursor: pointer; transition: all 0.2s; overflow: hidden; min-width: 140px; }
+  .matrix-cell:hover { border-color: var(--obj-color); }
+  .matrix-cell.is-open { border-color: var(--obj-color); box-shadow: 0 4px 12px rgba(255,77,46,0.12); }
+  .matrix-cell-head { padding: 10px 12px; display: flex; align-items: center; justify-content: space-between; gap: 8px; background: var(--paper); border-bottom: 1px solid var(--line-soft); transition: background 0.2s; }
+  .matrix-cell.is-open .matrix-cell-head { background: var(--obj-soft); border-bottom-color: var(--obj-color); }
+  .matrix-cell-summary { font-size: 11px; color: var(--ink-soft); font-family: 'JetBrains Mono', monospace; line-height: 1.4; flex: 1; min-width: 0; }
+  .matrix-cell-toggle { font-family: 'JetBrains Mono', monospace; font-size: 14px; color: var(--ink-mute); width: 18px; text-align: center; flex-shrink: 0; }
+  .matrix-cell.is-open .matrix-cell-toggle { color: var(--obj-color); }
+  .matrix-cell-body { display: none; padding: 12px; font-size: 12px; line-height: 1.55; }
+  .matrix-cell.is-open .matrix-cell-body { display: block; }
+  .matrix-cell-body .mc-list { margin: 0 0 10px; padding: 0; list-style: none; display: flex; flex-wrap: wrap; gap: 4px; }
+  .matrix-cell-body .mc-list li { padding: 2px 7px; background: var(--obj-soft); color: var(--obj-color); font-family: 'JetBrains Mono', monospace; font-size: 10px; border-radius: 3px; letter-spacing: 0.02em; }
+  .matrix-cell-body .mc-warn { padding: 8px 10px; background: var(--accent-soft); border-left: 2px solid var(--accent); border-radius: 3px; font-size: 11px; color: var(--ink-soft); line-height: 1.5; }
+  .matrix-cell-body .mc-warn strong { color: var(--accent); }
+
+  .matrix-foot { margin-top: 18px; padding: 16px 20px; background: white; border: 1px solid var(--obj-color); border-radius: 6px; display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap; }
+  .matrix-foot .lbl { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ink-mute); letter-spacing: 0.06em; }
+  .matrix-foot .num { font-family: 'Noto Serif SC', serif; font-weight: 900; font-size: 36px; color: var(--obj-color); line-height: 1; }
+  .matrix-foot .formula { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--ink-soft); }
+  .matrix-foot .formula strong { color: var(--obj-color); }
+  .matrix-foot .opened { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ink-mute); letter-spacing: 0.04em; }
+  .matrix-foot .opened strong { color: var(--obj-color); font-size: 14px; }
+
+  /* GAME 3: auditor builder */
+  .builder-stage { background: var(--paper); border: 1px solid var(--line); border-radius: 8px; padding: 32px; margin-top: 24px; }
+  .builder-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 28px; flex-wrap: wrap; gap: 16px; }
+  .builder-title { font-family: 'Noto Serif SC', serif; font-size: 22px; margin: 0; font-weight: 700; }
+  .builder-progress { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--ink-mute); }
+  .builder-progress .done { color: var(--proj-color); font-weight: 700; font-size: 14px; }
+
+  .auditor-intro { padding: 18px 20px; background: white; border: 1px dashed var(--obj-color); border-radius: 6px; margin-bottom: 28px; display: grid; grid-template-columns: 60px 1fr; gap: 16px; align-items: center; }
+  @media (max-width: 720px) { .auditor-intro { grid-template-columns: 1fr; } }
+  .auditor-intro .au-avatar { width: 60px; height: 60px; border-radius: 50%; background: linear-gradient(135deg, #ff9b7a, #ff4d2e); color: white; display: flex; align-items: center; justify-content: center; font-family: 'Noto Serif SC', serif; font-weight: 700; font-size: 24px; flex-shrink: 0; }
+  .auditor-intro .au-name { font-family: 'Noto Serif SC', serif; font-size: 18px; font-weight: 700; color: var(--obj-color); margin-bottom: 4px; }
+  .auditor-intro .au-desc { font-size: 13px; color: var(--ink-soft); line-height: 1.55; margin: 0; }
+  .auditor-intro .au-desc strong { color: var(--ink); }
+
+  .dim-grid { display: grid; gap: 18px; }
+  .dim-card { background: white; border: 1px solid var(--line); border-radius: 8px; padding: 20px 22px; }
+  .dim-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 14px; flex-wrap: wrap; }
+  .dim-name { font-family: 'Noto Serif SC', serif; font-size: 17px; font-weight: 700; display: flex; align-items: center; gap: 10px; }
+  .dim-name .dim-num { width: 26px; height: 26px; border-radius: 50%; background: var(--obj-color); color: white; display: flex; align-items: center; justify-content: center; font-family: 'Fraunces', serif; font-style: italic; font-size: 13px; font-weight: 600; }
+  .dim-hint { font-size: 12px; color: var(--ink-mute); font-family: 'JetBrains Mono', monospace; letter-spacing: 0.03em; }
+  .dim-options { display: flex; flex-wrap: wrap; gap: 6px; }
+  .dim-option { padding: 7px 12px; background: var(--paper); border: 1px solid var(--line); border-radius: 100px; font-family: 'JetBrains Mono', monospace; font-size: 12px; cursor: pointer; transition: all 0.15s; color: var(--ink-soft); user-select: none; }
+  .dim-option:hover { border-color: var(--obj-color); color: var(--ink); }
+  .dim-option.is-on { background: var(--obj-color); color: white; border-color: var(--obj-color); box-shadow: 0 0 0 2px var(--obj-soft); }
+  .dim-option.is-correct { background: var(--green-soft); color: var(--green); border-color: var(--green); }
+  .dim-option.is-wrong { background: var(--accent-soft); color: var(--accent); border-color: var(--accent); text-decoration: line-through; }
+  .dim-option.is-missed { border-style: dashed; border-color: var(--obj-color); color: var(--obj-color); background: white; }
+  .dim-feedback { margin-top: 14px; padding: 12px 14px; background: var(--bg-2); border-left: 3px solid var(--ink); border-radius: 4px; font-size: 13px; line-height: 1.6; display: none; }
+  .dim-feedback.show { display: block; }
+  .dim-feedback.win { background: var(--green-soft); border-left-color: var(--green); }
+  .dim-feedback.fail { background: var(--accent-soft); border-left-color: var(--accent); }
+  .dim-feedback.warn { background: #fff5d6; border-left-color: var(--yellow); }
+  .dim-feedback .fb-mark { font-family: 'JetBrains Mono', monospace; font-weight: 700; margin-right: 6px; }
+  .dim-feedback.win .fb-mark { color: var(--green); }
+  .dim-feedback.fail .fb-mark { color: var(--accent); }
+  .dim-feedback.warn .fb-mark { color: #b8881a; }
+  .dim-feedback p { margin: 4px 0; color: var(--ink-soft); }
+  .dim-feedback p strong { color: var(--ink); }
+
+  .builder-actions { display: flex; gap: 12px; margin-top: 24px; flex-wrap: wrap; }
+  .builder-btn { padding: 10px 22px; border-radius: 100px; font-family: 'JetBrains Mono', monospace; font-size: 12px; letter-spacing: 0.06em; text-transform: uppercase; cursor: pointer; font-weight: 600; border: 1px solid var(--ink); background: transparent; color: var(--ink); transition: all 0.15s; }
+  .builder-btn:hover { background: var(--ink); color: var(--bg); }
+  .builder-btn.primary { background: var(--accent); color: white; border-color: var(--accent); }
+  .builder-btn.primary:hover { background: #e8451f; }
+
+  .builder-judge { margin-top: 24px; padding: 24px 26px; border-radius: 8px; background: var(--ink); color: var(--bg); display: none; }
+  .builder-judge.show { display: block; }
+  .builder-judge .verdict { display: inline-block; font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; padding: 3px 10px; border-radius: 100px; }
+  .builder-judge .verdict.win { color: #1f6b3a; background: #d4ecdb; }
+  .builder-judge .verdict.partial { color: #c79f1e; background: #fff3cc; }
+  .builder-judge h4 { font-family: 'Noto Serif SC', serif; font-size: 22px; margin: 10px 0 14px; color: white; line-height: 1.3; }
+  .builder-judge ul { color: #c8c8d0; margin: 0; padding-left: 20px; font-size: 13px; line-height: 1.75; }
+  .builder-judge ul li + li { margin-top: 10px; }
+  .builder-judge ul strong { color: white; }
+  .builder-judge ul .why { color: #a0a0aa; font-size: 12px; }
+
+  /* tips */
+  .tips-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 28px; margin-top: 24px; }
+  @media (max-width: 880px) { .tips-grid { grid-template-columns: 1fr; } }
+  .tip { background: var(--paper); border: 1px solid var(--line); border-radius: 6px; padding: 24px; position: relative; }
+  .tip-num { position: absolute; top: -14px; left: 16px; width: 32px; height: 32px; border-radius: 50%; background: var(--obj-color); color: white; display: flex; align-items: center; justify-content: center; font-family: 'Fraunces', serif; font-style: italic; font-weight: 600; font-size: 14px; }
+  .tip h4 { font-family: 'Noto Serif SC', serif; font-size: 18px; margin: 8px 0 10px; font-weight: 700; }
+  .tip p { color: var(--ink-soft); font-size: 14px; line-height: 1.6; margin: 0; }
+  .tip p + p { margin-top: 8px; }
+  .tip-outro { margin-top: 44px; padding: 30px 32px; background: var(--ink); color: var(--bg); border-radius: 8px; display: grid; grid-template-columns: auto 1fr; gap: 28px; align-items: flex-start; }
+  @media (max-width: 720px) { .tip-outro { grid-template-columns: 1fr; gap: 12px; } }
+  .outro-tag { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.1em; color: var(--accent); padding-top: 4px; }
+  .tip-outro p { margin: 0 0 12px; color: #c8c8d0; line-height: 1.65; font-size: 15px; }
+  .tip-outro p:last-child { margin-bottom: 0; }
+  .tip-outro strong { color: white; }
+
+  /* next post */
+  .next-post { display: flex; justify-content: space-between; align-items: center; margin-top: 56px; padding: 32px; background: var(--bg-2); border: 1px solid var(--line); border-radius: 8px; text-decoration: none; color: var(--ink); transition: all 0.2s; gap: 24px; flex-wrap: wrap; }
+  .next-post:hover { background: var(--ink); color: var(--bg); }
+  .next-post:hover .np-tag { color: var(--accent); }
+  .next-post:hover .em { color: var(--accent); }
+  .next-post:hover p { color: #c8c8d0; }
+  .np-tag { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.1em; color: var(--ink-mute); margin-bottom: 6px; }
+  .next-post h4 { font-family: 'Noto Serif SC', serif; font-size: 26px; margin: 0 0 8px; font-weight: 700; }
+  .next-post .em { color: var(--obj-color); font-weight: 500; }
+  .next-post p { margin: 0; color: var(--ink-soft); font-size: 14px; max-width: 56ch; }
+  .np-cta { font-family: 'JetBrains Mono', monospace; font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; white-space: nowrap; }
+  .np-cta .arr { display: inline-block; transition: transform .2s; }
+  .next-post:hover .arr { transform: translateX(4px); }
+
+  /* footer */
+  footer { padding: 56px 0 64px; background: var(--bg); color: var(--ink-soft); border-top: 1px solid var(--line); }
+  .byline-group { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; margin-bottom: 32px; padding-bottom: 32px; border-bottom: 1px dashed var(--line); }
+  @media (max-width: 880px) { .byline-group { grid-template-columns: 1fr; } }
+  .byline { display: flex; gap: 16px; align-items: center; }
+  .byline .avatar { width: 56px; height: 56px; border-radius: 50%; object-fit: cover; flex-shrink: 0; }
+  .byline-label { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--accent); letter-spacing: 0.1em; }
+  .byline-label .dot { display: inline-block; width: 6px; height: 6px; background: var(--accent); border-radius: 50%; margin-right: 4px; vertical-align: middle; animation: pulse 2s ease-in-out infinite; }
+  .byline-name { font-family: 'Noto Serif SC', serif; font-weight: 700; font-size: 18px; margin: 4px 0; color: var(--ink); }
+  .byline-name .em { color: var(--accent); font-weight: 500; }
+  .byline-tag { color: var(--ink-soft); font-size: 13px; margin: 0; line-height: 1.5; }
+  .footer-meta { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ink-mute); text-align: center; letter-spacing: 0.05em; }
+  .footer-meta .heart { color: var(--accent); }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="wrap topbar-inner">
+    <div class="brand-block">
+      <a href="book.html#vol-3" class="brand"><span class="brand-arrow">←</span>AI LABBOOK <span class="dot"></span></a>
+      <span class="brand-sep">/</span>
+      <span class="brand-current">X4 · 角色：不同人看到不是同一个系统</span>
+    </div>
+    <nav class="nav-links">
+      <a href="book.html#vol-3">路线图</a>
+    </nav>
+  </div>
+</div>
+
+<!-- Hero -->
+<header class="hero">
+  <div class="wrap">
+    <div class="hero-meta">
+      <span class="pill fill">高阶 · ADVANCED</span>
+      <span class="pill purple">STAGE 01 · 对象关系</span>
+      <span class="pill">X4 · 角色</span>
+      <span class="label">阅读 ≈ 16 分钟 · 含 3 段互动</span>
+    </div>
+    <div class="hero-grid">
+      <div>
+        <h1>
+          <span class="display-cn">不同的人，</span><br>
+          看到<span class="purple">不同的系统</span>。
+        </h1>
+        <p class="lede">
+          你以为"权限"是详情页底下加个"隐藏"开关。<br>
+          其实是同一个对象在 4 个角色眼里是 4 种东西——字段、操作、状态、空态全都不一样。
+        </p>
+      </div>
+      <div class="hero-side">
+        <div class="row"><span class="k">本页讲什么</span><span class="v">权限 → 角色矩阵</span></div>
+        <div class="row"><span class="k">三幕</span><span class="v">看见 · 拆开 · 再做</span></div>
+        <div class="row"><span class="k">面向</span><span class="v">B 端 / 多角色系统</span></div>
+        <div class="row"><span class="k">前置</span><span class="v">X1 / X2 / X3</span></div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- Section 01: 问题 -->
+<section id="problem">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>01</strong> / 问题</div>
+        <h2 class="section-title">"加个隐藏开关"，<br>是<span class="em">权限思维</span>的死结。</h2>
+      </div>
+      <p class="section-sub">
+        角色不是"隐藏几个按钮"，是"同一份数据 + 不同的子集 + 不同的操作 + 不同的空态"。
+        设计稿要为每个角色单独跑一遍——不能只画"管理员视图"再假装其他角色"看不到部分内容"。
+      </p>
+    </div>
+
+    <div class="problem-grid">
+      <div class="problem-card bad">
+        <span class="tag">权限当开关 · BAD</span>
+        <h3>"我把'删除'按钮加了 if-admin 隐藏。"</h3>
+        <p><strong>工程师：</strong>好。那财务能看到金额但不能改吧？销售看不到内部备注吧？客户本人能看自己的资料但 owner 只读？客服打开同一条客户能看到 SLA 倒计时吧？空态文案对每个角色都一样吗？……</p>
+        <p style="color:var(--accent)"><strong>设计师：</strong>呃。</p>
+      </div>
+
+      <div class="problem-card good">
+        <span class="tag">角色当维度 · GOOD</span>
+        <h3>"每个字段、操作、空态、跳转都按角色矩阵列出。"</h3>
+        <p>稿子里有一张 <strong>5 × N 的矩阵</strong>——5 个维度（字段 / 操作 / 状态 / 空态 / 跳转） × N 个角色。每一格都是已经做过决定的。</p>
+        <p style="color:var(--obj-color)"><strong>工程师收到：</strong>直接落 RBAC schema。追问 → 0 次。</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Section 02: 幕一 · 看见 -->
+<section id="look">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <span class="act-tag look">幕一 · 看见</span>
+        <div class="section-num"><strong>02</strong> / 看见</div>
+        <h2 class="section-title">同一个客户页，<br><span class="purple">4 个人</span> 看到 4 个版本。</h2>
+      </div>
+      <p class="section-sub">
+        切换角色 → 整页字段 / 操作 / 状态全变。<strong>不是"隐藏"，是"重画"。</strong>
+        点上方 tab 切换角色，注意看下面所有区块如何同时换。
+      </p>
+    </div>
+
+    <div class="roles-stage">
+      <div class="role-tabs" id="roleTabs">
+        <button class="role-tab is-active" data-role="sales"><span class="role-avatar">销</span><span>销售</span></button>
+        <button class="role-tab" data-role="finance"><span class="role-avatar">财</span><span>财务</span></button>
+        <button class="role-tab" data-role="cs"><span class="role-avatar">客</span><span>客服</span></button>
+        <button class="role-tab" data-role="self"><span class="role-avatar">本</span><span>客户本人</span></button>
+      </div>
+
+      <div class="role-page" id="rolePage">
+        <div class="role-page-head">
+          <div class="ph-avatar">张</div>
+          <div>
+            <div class="ph-name">张明</div>
+            <div class="ph-sub" id="phSub">星河科技 · CTO</div>
+          </div>
+          <span class="ph-context" id="phContext">销售视角</span>
+        </div>
+
+        <div class="role-block">
+          <h5>字段表 · FIELDS</h5>
+          <div class="role-fields" id="roleFields"></div>
+        </div>
+
+        <div>
+          <div class="role-block" style="margin-bottom:14px">
+            <h5>操作 · ACTIONS</h5>
+            <div class="role-actions" id="roleActions"></div>
+          </div>
+          <div class="role-block">
+            <h5>状态摘要 · STATUS</h5>
+            <div class="role-status" id="roleStatus"></div>
+          </div>
+        </div>
+
+        <div class="role-empty">
+          <div class="empty-ic">∅</div>
+          <div class="empty-text" id="roleEmpty"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="reveal-bar">
+      <div class="msg">
+        4 次切换，<span class="em">4 张不同的设计稿</span>。<br>
+        但只画了 1 张吗？工程师那边其实在做 4 套。
+      </div>
+      <div class="counter">已切换 <strong id="roleVisited">1</strong> / 4 个角色</div>
+    </div>
+  </div>
+</section>
+
+<!-- Section 03: 幕二 · 拆开 -->
+<section id="break">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <span class="act-tag break">幕二 · 拆开</span>
+        <div class="section-num"><strong>03</strong> / 拆开</div>
+        <h2 class="section-title">把每个角色的<br><span class="purple">差异矩阵</span> 画出来。</h2>
+      </div>
+      <p class="section-sub">
+        5 个维度 × 4 个角色 = 一张设计矩阵。每一格都是设计决策。
+        点开任意格子，看<strong>这一格具体长什么样</strong>，以及"如果稿子只写了管理员视图，这格会怎么错"。
+      </p>
+    </div>
+
+    <div class="matrix-stage">
+      <table class="matrix-table" id="matrixTable">
+        <thead>
+          <tr>
+            <th></th>
+            <th>能看的字段</th>
+            <th>能做的操作</th>
+            <th>状态摘要</th>
+            <th>空态文案</th>
+            <th>跳转入口</th>
+          </tr>
+        </thead>
+        <tbody id="matrixBody"></tbody>
+      </table>
+
+      <div class="matrix-foot">
+        <div>
+          <div class="lbl">汇总 · TOTAL DECISIONS</div>
+          <div style="display:flex;align-items:baseline;gap:14px;margin-top:6px">
+            <span class="num">20</span>
+            <span class="formula">= <strong>5</strong> 维度 × <strong>4</strong> 角色</span>
+          </div>
+        </div>
+        <div class="opened">已展开 <strong id="matrixOpenedCount">0</strong> / 20 格</div>
+      </div>
+    </div>
+
+    <div class="reveal-bar" style="margin-top:32px">
+      <div class="msg">
+        20 个决策点。<span class="em">如果你只交付管理员视图，工程师有 20 个空白要猜</span>。<br>
+        猜对的概率 ≈ 0%。
+      </div>
+      <div class="counter">点格子展开 / 收起</div>
+    </div>
+  </div>
+</section>
+
+<!-- Section 04: 幕三 · 再做 -->
+<section id="make">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <span class="act-tag make">幕三 · 再做</span>
+        <div class="section-num"><strong>04</strong> / 再做</div>
+        <h2 class="section-title">轮到你——<br>给新角色 <span class="em">「审计员」</span> 配矩阵。</h2>
+      </div>
+      <p class="section-sub">
+        公司新增"审计员"角色。给这个角色配 5 个维度——每个维度有 3-4 个候选。
+        点选你认为该角色应该拥有的，提交后会给你打分。
+      </p>
+    </div>
+
+    <div class="builder-stage">
+      <div class="builder-head">
+        <h3 class="builder-title">为「审计员」配 5 个维度</h3>
+        <div class="builder-progress">已配置 <span class="done" id="builderDone">0</span> / 5 个维度</div>
+      </div>
+
+      <div class="auditor-intro">
+        <div class="au-avatar">审</div>
+        <div>
+          <div class="au-name">审计员 · AUDITOR</div>
+          <p class="au-desc">
+            审计员要做的事：<strong>审查交易记录、查看金额流水、确认合规</strong>，
+            但<strong>不能改任何数据</strong>，也<strong>不该让客户感知审计的存在</strong>。
+            工作语境是「独立 · 只读 · 可追溯」。
+          </p>
+        </div>
+      </div>
+
+      <div class="dim-grid" id="dimGrid"></div>
+
+      <div class="builder-actions">
+        <button class="builder-btn primary" id="builderSubmit">提交打分</button>
+        <button class="builder-btn" id="builderReset">清空</button>
+      </div>
+
+      <div class="builder-judge" id="builderJudge"></div>
+    </div>
+  </div>
+</section>
+
+<!-- Section 05: closing -->
+<section id="closing">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>05</strong> / 把这件事变成习惯</div>
+        <h2 class="section-title">下次接到"角色权限"，<br>先<span class="em">画矩阵</span>。</h2>
+      </div>
+      <p class="section-sub">
+        权限不是"加几个 if"。每个角色都有自己的工作语境，要为它单独跑一遍设计。
+      </p>
+    </div>
+
+    <div class="tips-grid">
+      <div class="tip">
+        <div class="tip-num">i</div>
+        <h4>角色是"维度"，不是"开关"</h4>
+        <p>每个角色都是一份独立的工作语境。"隐藏几个字段"是症状，"为每个角色画一张矩阵"才是设计。</p>
+        <p><strong>多角色 ≠ 多 if-else。</strong></p>
+      </div>
+      <div class="tip">
+        <div class="tip-num">ii</div>
+        <h4>画一个角色之前问"它在解决什么问题"</h4>
+        <p>销售在卖、财务在算账、客服在救火、审计在查证。语境不同，整张页面的字段 / 操作 / 语言都该不同。</p>
+        <p><strong>语境先于布局。</strong></p>
+      </div>
+      <div class="tip">
+        <div class="tip-num">iii</div>
+        <h4>空态是角色最容易被忽略的差异</h4>
+        <p>同一个空列表，文案在不同角色眼里意义完全不同。空态文案是判断你是否真的<strong>为这个角色设计过</strong>的试金石。</p>
+        <p><strong>稿子里有 4 段空态？说明你跑过 4 遍。</strong></p>
+      </div>
+    </div>
+
+    <div class="tip-outro">
+      <div class="outro-tag">划重点 · TL;DR</div>
+      <div>
+        <p>权限不是"详情页底部加个开关"。<strong>同一份数据 × N 个角色 = N 套字段 / 操作 / 状态 / 空态 / 跳转</strong>。每个角色都是从对象的同一池里取一个完全不同的子集。</p>
+        <p>下次接到"角色权限"需求，第一句不是 <strong>"要加什么 if"</strong>，是 <strong>"要拉一张 5×N 的差异矩阵"</strong>。</p>
+      </div>
+    </div>
+
+    <a href="x5-task-flow.html" class="next-post">
+      <div>
+        <div class="np-tag">下一站 · NEXT · X5 · 高阶</div>
+        <h4>任务流：<span class="em">从开始到完成</span></h4>
+        <p>对象、引用、层级、角色都讲完了。接下来要讲的是：用户怎么用这些对象"完成一件事"——任务流是一组对象状态的迁移，不只是"页面跳转"。</p>
+      </div>
+      <span class="np-cta">继续 <span class="arr">→</span></span>
+    </a>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div class="byline-group">
+      <div class="byline">
+        <img class="avatar" src="author.jpg" alt="范米花儿">
+        <div class="byline-meta">
+          <div class="byline-label"><span class="dot"></span>作者 · WRITTEN BY</div>
+          <div class="byline-name">嗨，我是 <span class="em">范米花儿</span></div>
+          <p class="byline-tag">设计工程师 ——<br>设计 × 代码，两边都做。</p>
+        </div>
+      </div>
+</div>
+    <div class="footer-meta">
+      做于 <span class="mono">2026</span> · 用 <span class="heart">●</span> 写给 <span class="mono">DESIGNERS &amp; DEVELOPERS</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+// ===== Game 1: role switcher =====
+(function(){
+  const ROLES = {
+    sales: {
+      context: '销售视角', sub: '星河科技 · CTO',
+      fields: [
+        { k: '姓名', v: '张明' }, { k: '公司', v: '星河科技' }, { k: '职位', v: 'CTO' },
+        { k: '跟进人', v: '李华（我）' }, { k: '合作金额', v: '¥ 480k', cls: 'green' },
+        { k: '标签', v: 'VIP · 技术决策' },
+      ],
+      actions: [
+        { ic: '+', label: '创建商机', primary: true },
+        { ic: '✎', label: '记录跟进' },
+        { ic: '↗', label: '邀请同事协作' },
+      ],
+      status: [
+        { k: '销售管线', v: 'Stage 3 / 5', cls: 'purple' },
+        { k: '本月互动', v: '12 次', cls: 'green' },
+        { k: '预计成单', v: 'Q3', cls: 'blue' },
+        { k: '上次联系', v: '3 天前' },
+      ],
+      empty: '<strong>还没创建商机。</strong><br>从这个客户出发新建一个，跟进就归你了。'
+    },
+    finance: {
+      context: '财务视角', sub: '账号 #C-1027 · 已对账 3 笔',
+      fields: [
+        { k: '客户编号', v: 'C-1027' }, { k: '公司名', v: '星河科技有限公司' },
+        { k: '开票主体', v: '星河科技 · 主体 A' },
+        { k: '付款详情', v: '¥ 320k 已收 / ¥ 160k 待收', cls: 'green' },
+        { k: '账期', v: 'Net 30 · 即将到期', cls: 'red' },
+        { k: '合同编号', v: 'CT-2026-0419' },
+      ],
+      actions: [
+        { ic: '⇄', label: '对账', primary: true },
+        { ic: '$', label: '生成发票' },
+        { ic: '↓', label: '导出付款流水' },
+      ],
+      status: [
+        { k: '付款状态', v: '部分到账', cls: 'red' },
+        { k: '应收余额', v: '¥ 160k', cls: 'red' },
+        { k: '已收金额', v: '¥ 320k', cls: 'green' },
+        { k: '账期剩余', v: '7 天', cls: 'red' },
+      ],
+      empty: '<strong>这个客户尚未产生应收。</strong><br>等合同入账后会自动出现在对账列表里。'
+    },
+    cs: {
+      context: '客服视角', sub: 'VIP 等级 · 上次工单 2 天前',
+      fields: [
+        { k: '联系人', v: '张明' }, { k: '公司', v: '星河科技' },
+        { k: '客户等级', v: 'VIP', cls: 'red' },
+        { k: '工单总数', v: '7 个（2 个开放）' },
+        { k: '最近问题', v: '登录异常 · #T-3812' },
+        { k: '历史评分', v: '4.6 / 5' },
+      ],
+      actions: [
+        { ic: '!', label: '创建工单', primary: true },
+        { ic: '↑', label: '升级到 L2' },
+        { ic: '☎', label: '主动外呼' },
+      ],
+      status: [
+        { k: 'SLA 倒计时', v: '02:14:33', cls: 'red' },
+        { k: '开放工单', v: '2 个', cls: 'red' },
+        { k: '本月联络', v: '4 次' },
+        { k: '上次解决', v: '2 天前', cls: 'green' },
+      ],
+      empty: '<strong>当前没有开放工单。</strong><br>客户最近一次问题已于 2 天前解决，可主动回访。'
+    },
+    self: {
+      context: '客户本人视角', sub: '我的账号 · 已加入 14 个月',
+      fields: [
+        { k: '姓名', v: '张明' }, { k: '公司', v: '星河科技' },
+        { k: '注册邮箱', v: 'zhang****@xinghe.com' },
+        { k: '密码', v: '••••••••' },
+        { k: '我的服务', v: 'Pro 版 · 至 2027-04' },
+        { k: '专属顾问', v: '李华（已认证）' },
+      ],
+      actions: [
+        { ic: '✎', label: '修改资料', primary: true },
+        { ic: '🔒', label: '修改密码' },
+        { ic: '?', label: '联系顾问' },
+      ],
+      status: [
+        { k: '服务到期', v: '2027-04-12', cls: 'green' },
+        { k: '当前方案', v: 'Pro 版', cls: 'purple' },
+        { k: '我的进度', v: '配置 80%', cls: 'blue' },
+        { k: '使用天数', v: '423 天' },
+      ],
+      empty: '<strong>我们正在为您准备方案。</strong><br>您的专属顾问会在 24 小时内主动联系您。'
+    }
+  };
+
+  const tabs = document.querySelectorAll('.role-tab');
+  const page = document.getElementById('rolePage');
+  const phSub = document.getElementById('phSub');
+  const phContext = document.getElementById('phContext');
+  const fieldsEl = document.getElementById('roleFields');
+  const actionsEl = document.getElementById('roleActions');
+  const statusEl = document.getElementById('roleStatus');
+  const emptyEl = document.getElementById('roleEmpty');
+  const visitedCounter = document.getElementById('roleVisited');
+  const visited = new Set(['sales']);
+
+  function renderRole(roleKey) {
+    const r = ROLES[roleKey];
+    if (!r) return;
+    page.classList.add('is-fading');
+    setTimeout(() => {
+      phSub.textContent = r.sub;
+      phContext.textContent = r.context;
+      fieldsEl.innerHTML = r.fields.map(f =>
+        `<div class="role-field-row"><span class="k">${f.k}</span><span class="v ${f.cls || ''}">${f.v}</span></div>`
+      ).join('');
+      actionsEl.innerHTML = r.actions.map(a =>
+        `<div class="role-action ${a.primary ? 'primary' : ''}"><span class="ic">${a.ic}</span>${a.label}</div>`
+      ).join('');
+      statusEl.innerHTML = r.status.map(s =>
+        `<div class="st-row"><div class="st-k">${s.k}</div><div class="st-v ${s.cls || ''}">${s.v}</div></div>`
+      ).join('');
+      emptyEl.innerHTML = r.empty;
+      page.classList.remove('is-fading');
+    }, 180);
+  }
+
+  tabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+      tabs.forEach(t => t.classList.toggle('is-active', t === tab));
+      const roleKey = tab.dataset.role;
+      renderRole(roleKey);
+      visited.add(roleKey);
+      visitedCounter.textContent = visited.size;
+    });
+  });
+
+  renderRole('sales');
+})();
+
+// ===== Game 2: matrix table =====
+(function(){
+  const ROLES = [
+    { key: 'sales', name: '销售', en: 'SALES' },
+    { key: 'finance', name: '财务', en: 'FINANCE' },
+    { key: 'cs', name: '客服', en: 'SUPPORT' },
+    { key: 'self', name: '客户本人', en: 'SELF' },
+  ];
+  const DIMS = ['fields', 'actions', 'status', 'empty', 'entry'];
+
+  const DATA = {
+    sales: {
+      fields: { summary: 'name · company · status · deal_value · owner · tags',
+        list: ['name', 'company', 'status', 'deal_value', 'owner', 'tags'],
+        wrong: '<strong>反例：</strong>如果稿子统一显示所有字段，销售会被「付款流水」「工单计数」淹没——他要的是"合作金额 + 跟进状态"，多一个都分散注意力。' },
+      actions: { summary: '创建商机 · 记录跟进 · 邀请协作',
+        list: ['创建商机', '记录跟进', '邀请协作'],
+        wrong: '<strong>反例：</strong>如果给销售放"对账"按钮，他会误点；如果不放"创建商机"，他得跳出去新建——核心动作必须在视线内。' },
+      status: { summary: '销售管线 · 本月互动 · 预计成单',
+        list: ['销售管线 Stage 3/5', '本月互动 12 次', '预计成单 Q3'],
+        wrong: '<strong>反例：</strong>把"付款状态"放在销售视图，销售会以为客户已经成单，影响他对管线阶段的判断。' },
+      empty: { summary: '"还没创建商机。"',
+        list: ['还没创建商机', '从这个客户新建一个'],
+        wrong: '<strong>反例：</strong>统一文案"暂无数据"——销售看完愣住："是没数据，还是没权限？"。语境一变文案就该变。' },
+      entry: { summary: '销售管线 / 跟进列表 / 商机',
+        list: ['销售管线', '跟进列表', '商机'],
+        wrong: '<strong>反例：</strong>如果只放在"客户列表"统一入口，销售要先过滤一层"我跟进的"。每个角色的入口姿势不同。' }
+    },
+    finance: {
+      fields: { summary: 'company · payment_details · 账期 · 合同编号',
+        list: ['company', 'payment_details', '账期', '合同编号', '开票主体'],
+        wrong: '<strong>反例：</strong>财务看到"跟进人 / 标签 / 销售管线"会被噪音淹没；缺了"账期 / 合同编号"会直接对不上账。' },
+      actions: { summary: '对账 · 生成发票 · 导出流水',
+        list: ['对账', '生成发票', '导出流水'],
+        wrong: '<strong>反例：</strong>给财务放"创建商机"——按错一次就是脏数据。财务的所有操作都该围绕"算账"。' },
+      status: { summary: '付款状态 · 应收余额 · 账期剩余',
+        list: ['付款状态', '应收余额 ¥160k', '账期剩余 7 天'],
+        wrong: '<strong>反例：</strong>放"SLA 倒计时 / 销售管线"——和财务无关，但稿子统一显示就会出现。' },
+      empty: { summary: '"尚未产生应收。"',
+        list: ['尚未产生应收', '等合同入账后会出现'],
+        wrong: '<strong>反例：</strong>统一"暂无数据"——财务看完不知道是"还没合同"还是"系统没同步"。空态文案要告诉用户"为什么空"。' },
+      entry: { summary: '对账中心 / 应收列表 / 合同',
+        list: ['对账中心', '应收列表', '合同'],
+        wrong: '<strong>反例：</strong>从"客户列表"进——财务要先扫一遍 1000 个客户找出有应收的。入口必须按工作语境组织。' }
+    },
+    cs: {
+      fields: { summary: 'name · company · 客户等级 · 工单计数 · 最近问题',
+        list: ['name', 'company', '客户等级', '工单计数', '最近问题', '历史评分'],
+        wrong: '<strong>反例：</strong>客服看到"合作金额"会被影响判断（VIP 不一定金额最高）；缺"工单计数"就要跳出去查历史。' },
+      actions: { summary: '创建工单 · 升级 · 主动外呼',
+        list: ['创建工单', '升级 L2', '主动外呼'],
+        wrong: '<strong>反例：</strong>放"对账 / 修改资料"——客服会按错。客服的操作都是"救火"逻辑。' },
+      status: { summary: 'SLA 倒计时 · 开放工单 · 上次解决',
+        list: ['SLA 倒计时 02:14:33', '开放工单 2', '上次解决 2 天前'],
+        wrong: '<strong>反例：</strong>没 SLA 倒计时——客服打开就漏过 deadline，工单超时直接掉客户。' },
+      empty: { summary: '"当前无开放工单。"',
+        list: ['无开放工单', '可主动回访'],
+        wrong: '<strong>反例：</strong>统一"暂无数据"——客服不知道是"客户从没来过"还是"刚解决完"，对应的下一步动作完全不同。' },
+      entry: { summary: '工单中心 / SLA 看板 / 高优客户',
+        list: ['工单中心', 'SLA 看板', '高优客户'],
+        wrong: '<strong>反例：</strong>从"客户列表"进——客服要先筛"有工单的"。每个角色都有自己的工作首屏。' }
+    },
+    self: {
+      fields: { summary: '我的资料 · 注册邮箱 · 服务到期 · 顾问',
+        list: ['我的资料', '注册邮箱', '我的方案', '服务到期', '专属顾问'],
+        wrong: '<strong>反例：</strong>客户本人看到"内部备注 / 跟进人 owner"——这是隐私事故。也不该看到"客户等级 / 销售管线"。' },
+      actions: { summary: '修改资料 · 修改密码 · 联系顾问',
+        list: ['修改资料', '修改密码', '联系顾问'],
+        wrong: '<strong>反例：</strong>放"创建商机 / 对账"——客户本人不该有内部动作。所有写权限都该限于"自己的资料"。' },
+      status: { summary: '服务到期 · 当前方案 · 我的进度',
+        list: ['服务到期 2027-04', '当前方案 Pro', '配置进度 80%'],
+        wrong: '<strong>反例：</strong>显示"SLA 倒计时 / 销售管线"——客户感知到"我在被流程化对待"，体验事故。' },
+      empty: { summary: '"我们正在为您准备方案。"',
+        list: ['正在为您准备方案', '顾问 24 小时内联系'],
+        wrong: '<strong>反例：</strong>"还没创建商机"——客户看到这句话会困惑（什么商机？）。空态文案要从"客户自己的语言"出发。' },
+      entry: { summary: '个人中心 / 我的服务 / 顾问消息',
+        list: ['个人中心', '我的服务', '顾问消息'],
+        wrong: '<strong>反例：</strong>从"客户列表"进——客户本人压根看不到列表。客户的入口在"个人空间"。' }
+    }
+  };
+
+  const tbody = document.getElementById('matrixBody');
+  const openedCounter = document.getElementById('matrixOpenedCount');
+  const openedSet = new Set();
+
+  function render() {
+    let html = '';
+    ROLES.forEach(role => {
+      html += '<tr>';
+      html += `<td class="role-row-label">${role.name}<small>${role.en}</small></td>`;
+      DIMS.forEach(dim => {
+        const cell = DATA[role.key][dim];
+        const cellId = `${role.key}__${dim}`;
+        const listHtml = cell.list.map(x => `<li>${x}</li>`).join('');
+        html += `<td class="matrix-cell" data-cell="${cellId}"><div class="matrix-cell-head"><div class="matrix-cell-summary">${cell.summary}</div><div class="matrix-cell-toggle">+</div></div><div class="matrix-cell-body"><ul class="mc-list">${listHtml}</ul><div class="mc-warn">${cell.wrong}</div></div></td>`;
+      });
+      html += '</tr>';
+    });
+    tbody.innerHTML = html;
+
+    document.querySelectorAll('.matrix-cell').forEach(cell => {
+      cell.addEventListener('click', () => {
+        cell.classList.toggle('is-open');
+        const toggle = cell.querySelector('.matrix-cell-toggle');
+        if (toggle) toggle.textContent = cell.classList.contains('is-open') ? '−' : '+';
+        if (cell.classList.contains('is-open')) openedSet.add(cell.dataset.cell);
+        else openedSet.delete(cell.dataset.cell);
+        openedCounter.textContent = openedSet.size;
+      });
+    });
+  }
+  render();
+})();
+
+// ===== Game 3: auditor builder =====
+(function(){
+  const DIMS = [
+    { key: 'fields', num: 1, name: '能看的字段', hint: '审计要看什么 / 不该看什么',
+      options: ['name', 'company', 'status', 'deal_value', 'owner', 'internal_notes', 'payment_details', 'contracts', 'contact_info', 'activity_log'],
+      correct: ['name', 'company', 'deal_value', 'payment_details', 'contracts', 'activity_log'],
+      explain: '审计核心是"金额 + 痕迹"，所以 payment_details / contracts / activity_log 必选；contact_info 不需要（审计不联络客户）。' },
+    { key: 'actions', num: 2, name: '能做的操作', hint: '审计只读 · 但需要留下意见',
+      options: ['创建商机', '修改字段', '导出报告', '添加备注', '标记合规', '上传文件', '删除记录'],
+      correct: ['导出报告', '添加备注', '标记合规'],
+      explain: '审计员对客户数据全是"只读"。但她要留下审计意见（添加备注 / 标记合规 / 导出报告）——这些是审计自己的产物，不修改客户数据。写操作（修改 / 删除 / 创建商机）一律不该出现。' },
+    { key: 'status', num: 3, name: '状态摘要里显示什么', hint: '审计语境里"该客户当前是什么样"',
+      options: ['销售管线', '付款进度', '合规状态', '工单状态', '上次审计时间'],
+      correct: ['合规状态', '上次审计时间', '付款进度'],
+      explain: '审计员看一个客户的第一眼应该是"上次审过没？合规吗？金额对得上吗？"。销售管线 / 工单都和审计无关。' },
+    { key: 'empty', num: 4, name: '空态文案', hint: '同一个空列表 · 对审计员意味着什么',
+      options: ['还没创建商机', '无审计标记', '该客户尚未进入合规流程', '请联系销售获取更多信息'],
+      correct: ['该客户尚未进入合规流程'],
+      explain: '审计的空态语境是"流程还没启动"——不是"缺数据"。"还没创建商机"是销售的语言；"请联系销售"会让审计感知到自己"非独立"。' },
+    { key: 'entry', num: 5, name: '跳转入口', hint: '审计员从哪里进入这个客户',
+      options: ['从仪表盘进', '从客户列表进', '从合规中心进', '全局搜索'],
+      correct: ['从合规中心进', '全局搜索'],
+      explain: '审计员的工作首屏是"合规中心"——按合规状态 / 审计周期组织。从"客户列表"进会陷入销售视角（按跟进 / 金额排序），不是审计的工作语境。' }
+  ];
+
+  const state = {};
+  DIMS.forEach(d => state[d.key] = new Set());
+
+  const dimGrid = document.getElementById('dimGrid');
+  const judge = document.getElementById('builderJudge');
+  const builderDone = document.getElementById('builderDone');
+
+  function render() {
+    let html = '';
+    DIMS.forEach(d => {
+      const opts = d.options.map(opt => {
+        const isOn = state[d.key].has(opt);
+        return `<button class="dim-option ${isOn ? 'is-on' : ''}" data-dim="${d.key}" data-opt="${opt}">${opt}</button>`;
+      }).join('');
+      html += `<div class="dim-card" data-dim-card="${d.key}"><div class="dim-head"><div class="dim-name"><span class="dim-num">${d.num}</span><span>${d.name}</span></div><div class="dim-hint">${d.hint}</div></div><div class="dim-options">${opts}</div><div class="dim-feedback" data-dim-feedback="${d.key}"></div></div>`;
+    });
+    dimGrid.innerHTML = html;
+
+    document.querySelectorAll('.dim-option').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const dimKey = btn.dataset.dim;
+        const opt = btn.dataset.opt;
+        if (state[dimKey].has(opt)) state[dimKey].delete(opt);
+        else state[dimKey].add(opt);
+        btn.classList.toggle('is-on');
+        updateProgress();
+      });
+    });
+    updateProgress();
+  }
+
+  function updateProgress() {
+    const done = DIMS.filter(d => state[d.key].size > 0).length;
+    builderDone.textContent = done;
+  }
+
+  function clearMarks() {
+    document.querySelectorAll('.dim-option').forEach(btn => {
+      btn.classList.remove('is-correct', 'is-wrong', 'is-missed');
+    });
+    document.querySelectorAll('.dim-feedback').forEach(el => {
+      el.classList.remove('show', 'win', 'fail', 'warn');
+      el.innerHTML = '';
+    });
+  }
+
+  document.getElementById('builderSubmit').addEventListener('click', () => {
+    clearMarks();
+    let totalCorrect = 0, totalIdeal = 0, totalWrong = 0, perfectDims = 0;
+
+    DIMS.forEach(d => {
+      const sel = state[d.key];
+      const ideal = new Set(d.correct);
+      const card = document.querySelector(`[data-dim-card="${d.key}"]`);
+      const fb = card.querySelector('.dim-feedback');
+      const hits = [...sel].filter(x => ideal.has(x));
+      const wrongs = [...sel].filter(x => !ideal.has(x));
+      const missed = [...ideal].filter(x => !sel.has(x));
+      totalCorrect += hits.length;
+      totalIdeal += ideal.size;
+      totalWrong += wrongs.length;
+
+      card.querySelectorAll('.dim-option').forEach(btn => {
+        const opt = btn.dataset.opt;
+        if (sel.has(opt) && ideal.has(opt)) btn.classList.add('is-correct');
+        else if (sel.has(opt) && !ideal.has(opt)) btn.classList.add('is-wrong');
+        else if (!sel.has(opt) && ideal.has(opt)) btn.classList.add('is-missed');
+      });
+
+      let mark, cls, msg;
+      if (sel.size === 0) {
+        mark = '○'; cls = 'warn';
+        msg = `<p><strong>还没选。</strong>这道题的正解是 <code>${[...ideal].join(' / ')}</code>。</p><p>${d.explain}</p>`;
+      } else if (wrongs.length === 0 && missed.length === 0) {
+        mark = '✓'; cls = 'win';
+        msg = `<p><strong>完美。</strong>正解 ${[...ideal].join(' / ')}</p><p>${d.explain}</p>`;
+        perfectDims += 1;
+      } else if (wrongs.length === 0 && missed.length > 0) {
+        mark = '⚠'; cls = 'warn';
+        msg = `<p><strong>方向对了，但漏了：</strong><code>${missed.join(' / ')}</code></p><p>原因：${d.explain}</p>`;
+      } else if (wrongs.length > 0 && missed.length === 0) {
+        mark = '✗'; cls = 'fail';
+        msg = `<p><strong>多选了：</strong><code>${wrongs.join(' / ')}</code></p><p>原因：审计的工作语境是"独立 + 只读 + 可追溯"，不该出现这些选项。${d.explain}</p>`;
+      } else {
+        mark = '✗'; cls = 'fail';
+        msg = `<p><strong>错选：</strong><code>${wrongs.join(' / ')}</code> · <strong>漏选：</strong><code>${missed.join(' / ')}</code></p><p>原因：${d.explain}</p>`;
+      }
+      fb.innerHTML = `<span class="fb-mark">${mark}</span>${msg}`;
+      fb.classList.add('show', cls);
+    });
+
+    let verdictClass, verdictLabel, headline;
+    if (perfectDims === 5) {
+      verdictClass = 'win'; verdictLabel = '完美 · 5/5';
+      headline = '你已经在从角色的工作语境出发设计了，而不是套"谁该看到什么"的开关思维。';
+    } else if (perfectDims >= 3) {
+      verdictClass = 'win'; verdictLabel = `基本对了 · ${perfectDims}/5`;
+      headline = '大方向稳。再补一两个维度，矩阵就完整了。';
+    } else {
+      verdictClass = 'partial'; verdictLabel = `还差一点 · ${perfectDims}/5`;
+      headline = '换个角度——审计员不是"看不到部分内容的管理员"，是一个完全独立的工作语境。';
+    }
+
+    const summary = `<li><strong>命中：</strong>${totalCorrect} / ${totalIdeal} 个正确选项</li><li><strong>多选：</strong>${totalWrong} 个 — 多选的代价是"角色边界越过了"</li><li><strong>完美维度：</strong>${perfectDims} / 5</li><li class="why">↳ 提示：每个角色都是一份"独立的工作语境"。审计员从合规中心进入，只读 + 留痕 + 不打扰客户。把这条心法套进每个维度的判断。</li>`;
+
+    judge.innerHTML = `<span class="verdict ${verdictClass}">${verdictLabel}</span><h4>${headline}</h4><ul>${summary}</ul>`;
+    judge.classList.add('show');
+    judge.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  });
+
+  document.getElementById('builderReset').addEventListener('click', () => {
+    DIMS.forEach(d => state[d.key].clear());
+    clearMarks();
+    render();
+    judge.classList.remove('show');
+    judge.innerHTML = '';
+  });
+
+  render();
+})();
+</script>
+
+</body>
+</html>

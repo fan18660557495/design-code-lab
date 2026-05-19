@@ -1,0 +1,1329 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>信息层级：主对象与附属 — AI LABBOOK · X3</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,300..900&family=Geist:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Noto+Sans+SC:wght@300;400;500;700;900&family=Noto+Serif+SC:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f3eee5;
+    --bg-2: #ebe4d4;
+    --ink: #16161d;
+    --ink-soft: #4a4a55;
+    --ink-mute: #8a8a92;
+    --line: #d5cdba;
+    --line-soft: #e3dcca;
+    --accent: #ff4d2e;
+    --accent-soft: #ffe4dc;
+    --blue: #0a4cff;
+    --blue-soft: #dde6ff;
+    --green: #1f6b3a;
+    --green-soft: #d4ecdb;
+    --yellow: #ffcf3d;
+    --paper: #faf7f0;
+    --shadow: 0 1px 0 rgba(0,0,0,0.04), 0 8px 24px rgba(22,22,29,0.06);
+
+    --obj-color: #ff4d2e;
+    --obj-soft: rgba(255,77,46,0.12);
+    --proj-color: #1f6b3a;
+    --proj-soft: rgba(31,107,58,0.12);
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'Geist', 'Noto Sans SC', system-ui, -apple-system, sans-serif;
+    font-size: 16px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    background-image: radial-gradient(circle at 1px 1px, rgba(22,22,29,0.05) 1px, transparent 0);
+    background-size: 24px 24px;
+  }
+
+  .display-cn { font-family: 'Noto Serif SC', 'Fraunces', serif; font-weight: 900; letter-spacing: -0.01em; }
+  .display-en { font-family: 'Fraunces', 'Noto Serif SC', serif; font-weight: 600; font-style: italic; letter-spacing: -0.02em; }
+  .mono { font-family: 'JetBrains Mono', monospace; }
+  .label { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-mute); }
+
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 0 32px; }
+
+  /* Topbar */
+  .topbar {
+    border-bottom: 1px dashed var(--line);
+    padding: 16px 0;
+    background: var(--bg);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .topbar-inner { display: flex; justify-content: space-between; align-items: center; gap: 24px; flex-wrap: wrap; }
+  .brand-block { display: flex; align-items: center; gap: 10px; font-family: 'JetBrains Mono', monospace; font-size: 13px; }
+  .brand { display: inline-flex; align-items: center; gap: 6px; color: var(--ink); text-decoration: none; font-weight: 600; }
+  .brand-arrow { color: var(--ink-mute); transition: transform .2s; }
+  .brand:hover .brand-arrow { transform: translateX(-3px); }
+  .brand .dot { display: inline-block; width: 8px; height: 8px; background: var(--accent); border-radius: 50%; vertical-align: middle; animation: pulse 2s ease-in-out infinite; margin-left: 4px; }
+  .brand-sep { color: var(--ink-mute); }
+  .brand-current { color: var(--ink-soft); }
+  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+  .nav-links { display: flex; gap: 18px; font-size: 13px; flex-wrap: wrap; }
+  .nav-links a { color: var(--ink-soft); text-decoration: none; transition: color 0.2s; }
+  .nav-links a:hover { color: var(--accent); }
+  .nav-links a.current { color: var(--accent); font-weight: 600; }
+
+  /* Hero */
+  .hero { padding: 100px 0 80px; position: relative; overflow: hidden; }
+  .hero-meta { display: flex; gap: 24px; margin-bottom: 32px; align-items: center; flex-wrap: wrap; }
+  .hero-meta .pill { padding: 6px 12px; border: 1px solid var(--ink); border-radius: 100px; font-size: 11px; font-family: 'JetBrains Mono', monospace; letter-spacing: 0.05em; }
+  .hero-meta .pill.fill { background: var(--ink); color: var(--bg); }
+  .hero-meta .pill.purple { background: var(--obj-color); color: white; border-color: var(--obj-color); }
+  .hero h1 {
+    font-family: 'Noto Serif SC', 'Fraunces', serif;
+    font-weight: 900;
+    font-size: clamp(48px, 7vw, 92px);
+    line-height: 0.95;
+    letter-spacing: -0.03em;
+    margin: 0 0 24px;
+  }
+  .hero h1 .em { font-family: 'Noto Serif SC', serif; font-weight: 500; color: var(--accent); }
+  .hero h1 .purple { color: var(--obj-color); font-family: 'Noto Serif SC', serif; font-weight: 500; }
+  .hero p.lede {
+    font-size: 20px;
+    line-height: 1.5;
+    max-width: 640px;
+    color: var(--ink-soft);
+    margin: 0 0 40px;
+  }
+  .hero-grid { display: grid; grid-template-columns: 1.4fr 1fr; gap: 48px; align-items: end; }
+  @media (max-width: 880px) { .hero-grid { grid-template-columns: 1fr; } }
+  .hero-side { border-left: 1px dashed var(--line); padding-left: 24px; font-size: 13px; color: var(--ink-soft); }
+  .hero-side .row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px dashed var(--line); gap: 12px; }
+  .hero-side .row:last-child { border-bottom: none; }
+  .hero-side .row .k { color: var(--ink-mute); font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.05em; text-transform: uppercase; }
+  .hero-side .row .v { font-weight: 500; }
+
+  /* Sections */
+  section { padding: 80px 0; border-top: 1px solid var(--line); position: relative; }
+  .section-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 56px; flex-wrap: wrap; gap: 16px; }
+  .section-num { font-family: 'JetBrains Mono', monospace; font-size: 13px; color: var(--ink-mute); letter-spacing: 0.1em; margin-top: 6px; }
+  .section-num strong { color: var(--accent); }
+  .section-title { font-family: 'Noto Serif SC', serif; font-weight: 900; font-size: clamp(32px, 4.5vw, 52px); line-height: 1.05; letter-spacing: -0.02em; margin: 8px 0 0; max-width: 22ch; }
+  .section-title .em { font-family: 'Noto Serif SC', serif; font-weight: 500; color: var(--accent); }
+  .section-title .purple { color: var(--obj-color); font-family: 'Noto Serif SC', serif; font-weight: 500; }
+  .section-sub { color: var(--ink-soft); font-size: 17px; max-width: 38ch; line-height: 1.55; margin: 0; }
+
+  /* Act tag */
+  .act-tag { display: inline-block; padding: 4px 12px; font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; border-radius: 100px; }
+  .act-tag.look { background: var(--blue-soft); color: var(--blue); }
+  .act-tag.break { background: var(--obj-soft); color: var(--obj-color); }
+  .act-tag.make { background: var(--proj-soft); color: var(--proj-color); }
+
+  /* Problem cards */
+  .problem-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; margin-top: 24px; }
+  @media (max-width: 880px) { .problem-grid { grid-template-columns: 1fr; } }
+  .problem-card { background: var(--paper); border: 1px solid var(--line); border-radius: 6px; padding: 28px; position: relative; }
+  .problem-card.bad { border-color: var(--accent); background: var(--accent-soft); }
+  .problem-card.good { border-color: var(--obj-color); background: var(--obj-soft); }
+  .problem-card .tag { position: absolute; top: -12px; left: 24px; background: var(--bg); padding: 2px 10px; font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.1em; }
+  .problem-card.bad .tag { color: var(--accent); border: 1px solid var(--accent); }
+  .problem-card.good .tag { color: var(--obj-color); border: 1px solid var(--obj-color); }
+  .problem-card h3 { font-family: 'Noto Serif SC', serif; font-size: 22px; margin: 0 0 12px; font-weight: 700; }
+  .problem-card p { margin: 0; color: var(--ink-soft); font-size: 14px; line-height: 1.55; }
+  .problem-card p + p { margin-top: 10px; }
+
+  /* ====== GAME 1: tab switcher ====== */
+  .tabs-stage { background: var(--paper); border: 1px solid var(--line); border-radius: 8px; padding: 32px 28px 28px; position: relative; overflow: hidden; }
+  .tabs-stage::before { content: ''; position: absolute; inset: 0; background-image: linear-gradient(to right, var(--line-soft) 1px, transparent 1px), linear-gradient(to bottom, var(--line-soft) 1px, transparent 1px); background-size: 24px 24px; opacity: 0.4; pointer-events: none; }
+  .tabs-row { position: relative; display: flex; gap: 8px; margin-bottom: 28px; flex-wrap: wrap; }
+  .tab-btn { padding: 10px 18px; border-radius: 100px; background: white; border: 1px solid var(--line); font-family: 'JetBrains Mono', monospace; font-size: 12px; letter-spacing: 0.04em; color: var(--ink-soft); cursor: pointer; transition: all 0.2s; display: inline-flex; align-items: center; gap: 8px; }
+  .tab-btn .lab-num { font-size: 10px; opacity: 0.55; }
+  .tab-btn:hover { border-color: var(--obj-color); color: var(--obj-color); }
+  .tab-btn.is-active { background: var(--obj-color); color: white; border-color: var(--obj-color); box-shadow: 0 4px 14px rgba(255,77,46,0.25); }
+  .tab-btn.is-active .lab-num { opacity: 0.65; color: white; }
+  .tabs-body { position: relative; display: grid; grid-template-columns: 1.45fr 1fr; gap: 28px; }
+  @media (max-width: 980px) { .tabs-body { grid-template-columns: 1fr; } }
+
+  /* Mock page */
+  .mock-page { background: white; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; position: relative; }
+  .mock-browser { display: flex; align-items: center; gap: 8px; padding: 8px 12px; background: var(--bg-2); border-bottom: 1px solid var(--line); }
+  .mock-dots { display: flex; gap: 4px; }
+  .mock-dots span { width: 8px; height: 8px; border-radius: 50%; background: var(--line); }
+  .mock-dots span:nth-child(1) { background: #ff5f57; }
+  .mock-dots span:nth-child(2) { background: #ffbd2e; }
+  .mock-dots span:nth-child(3) { background: #28c840; }
+  .mock-url { flex: 1; background: white; border-radius: 4px; padding: 4px 10px; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ink-soft); border: 1px solid var(--line); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .mock-url .host { color: var(--ink-mute); }
+  .mock-url .path-main { color: var(--obj-color); font-weight: 600; transition: all 0.3s; }
+  .mock-url .path-id { color: var(--ink); font-weight: 600; }
+  .mock-url .path-attach { color: var(--ink-mute); }
+  .mock-tab { padding: 4px 10px; background: var(--bg); border-radius: 4px 4px 0 0; font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--ink-soft); margin: 4px 0 -1px 18px; border: 1px solid var(--line); border-bottom: none; align-self: flex-start; max-width: 240px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .mock-crumbs { padding: 10px 18px; border-bottom: 1px dashed var(--line); font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ink-soft); display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+  .mock-crumbs .crumb { color: var(--ink-mute); }
+  .mock-crumbs .crumb.main { color: var(--obj-color); font-weight: 600; }
+  .mock-crumbs .crumb.last { color: var(--ink); font-weight: 600; }
+  .mock-crumbs .sep { color: var(--ink-mute); opacity: 0.55; }
+  .mock-back { display: inline-flex; align-items: center; gap: 6px; margin: 12px 0 6px 18px; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ink-soft); padding: 4px 10px; border: 1px dashed var(--line); border-radius: 100px; transition: all 0.3s; }
+  .mock-back .arr { font-size: 12px; }
+  .mock-back .target { color: var(--obj-color); font-weight: 600; }
+  .mock-body { padding: 6px 22px 22px; }
+  .mock-title { font-family: 'Noto Serif SC', serif; font-size: 22px; font-weight: 800; margin: 8px 0 4px; line-height: 1.2; color: var(--ink); transition: all 0.3s; }
+  .mock-title .sub { font-family: 'Geist'; font-weight: 500; font-size: 12px; color: var(--ink-mute); margin-left: 6px; }
+  .mock-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 16px; }
+  @media (max-width: 720px) { .mock-cards { grid-template-columns: 1fr; } }
+  .mock-card { background: var(--paper); border: 1px solid var(--line); border-radius: 6px; padding: 12px 14px; position: relative; transition: all 0.3s; }
+  .mock-card.is-main { border-color: var(--obj-color); background: var(--obj-soft); box-shadow: 0 4px 16px rgba(255,77,46,0.15); }
+  .mock-card.is-main::after { content: '主'; position: absolute; top: -8px; right: 10px; background: var(--obj-color); color: white; font-family: 'JetBrains Mono', monospace; font-size: 9px; padding: 1px 7px; border-radius: 100px; letter-spacing: 0.08em; }
+  .mock-card.is-focus { outline: 2px dashed var(--accent); outline-offset: 3px; }
+  .mock-card .mc-label { font-family: 'JetBrains Mono', monospace; font-size: 9px; color: var(--ink-mute); letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 6px; }
+  .mock-card .mc-title { font-weight: 700; font-size: 14px; margin-bottom: 4px; }
+  .mock-card .mc-meta { font-size: 11px; color: var(--ink-mute); line-height: 1.5; }
+  .mock-focus-ring { position: absolute; top: 6px; right: 6px; font-family: 'JetBrains Mono', monospace; font-size: 8px; background: var(--accent); color: white; padding: 1px 5px; border-radius: 100px; letter-spacing: 0.08em; opacity: 0; transition: opacity 0.25s; }
+  .mock-card.is-focus .mock-focus-ring { opacity: 1; }
+  .mock-card.is-main.is-focus::after { right: 38px; }
+
+  /* Derive panel */
+  .derive-panel { background: white; border: 1px solid var(--obj-color); border-radius: 8px; padding: 20px 22px; position: relative; }
+  .derive-panel::before { content: '5 件事 · DERIVED'; position: absolute; top: -10px; left: 16px; background: var(--obj-color); color: white; font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.1em; padding: 2px 10px; border-radius: 100px; }
+  .derive-list { display: flex; flex-direction: column; gap: 10px; margin-top: 8px; }
+  .derive-row { border: 1px solid var(--line); border-radius: 6px; padding: 10px 12px; background: var(--paper); transition: all 0.35s; }
+  .derive-row.is-pulse { border-color: var(--obj-color); background: var(--obj-soft); transform: translateX(3px); }
+  .derive-row .dr-key { font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.08em; color: var(--ink-mute); text-transform: uppercase; }
+  .derive-row .dr-val { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--ink); margin-top: 3px; word-break: break-all; }
+  .derive-row.is-pulse .dr-val { color: var(--obj-color); font-weight: 600; }
+
+  /* Reveal bar */
+  .reveal-bar {
+    margin-top: 32px;
+    padding: 20px 28px;
+    background: var(--ink);
+    color: var(--bg);
+    border-radius: 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+  .reveal-bar .msg { font-family: 'Noto Serif SC', serif; font-size: 17px; font-weight: 500; line-height: 1.55; }
+  .reveal-bar .msg .em { color: var(--accent); }
+  .reveal-bar .counter { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ink-mute); letter-spacing: 0.05em; }
+  .reveal-bar .counter strong { color: var(--accent); font-size: 14px; }
+
+  /* ====== GAME 2: 5 rules expandable ====== */
+  .rules-list {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 14px;
+    margin-top: 24px;
+  }
+  .rule-card { background: var(--paper); border: 1px solid var(--line); border-radius: 8px; overflow: hidden; transition: all 0.25s; }
+  .rule-card.is-open { border-color: var(--obj-color); box-shadow: 0 8px 24px rgba(255,77,46,0.1); }
+  .rule-head { display: grid; grid-template-columns: 56px 1fr auto; align-items: center; gap: 16px; padding: 18px 22px; cursor: pointer; user-select: none; }
+  .rule-num { width: 38px; height: 38px; border-radius: 50%; background: var(--bg-2); color: var(--ink); font-family: 'Fraunces', serif; font-style: italic; font-weight: 600; font-size: 16px; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
+  .rule-card.is-open .rule-num { background: var(--obj-color); color: white; }
+  .rule-title { font-family: 'Noto Serif SC', serif; font-weight: 700; font-size: 18px; line-height: 1.3; }
+  .rule-title .key { font-family: 'JetBrains Mono', monospace; font-size: 11px; background: var(--bg-2); color: var(--ink-soft); padding: 2px 7px; border-radius: 4px; margin-left: 10px; letter-spacing: 0.04em; vertical-align: 2px; font-weight: 500; }
+  .rule-card.is-open .rule-title .key { background: var(--obj-soft); color: var(--obj-color); }
+  .rule-toggle { width: 32px; height: 32px; border-radius: 50%; background: white; border: 1px solid var(--line); display: flex; align-items: center; justify-content: center; font-size: 16px; color: var(--ink-mute); transition: all 0.2s; }
+  .rule-card.is-open .rule-toggle { background: var(--obj-color); color: white; border-color: var(--obj-color); transform: rotate(45deg); }
+  .rule-body { max-height: 0; overflow: hidden; transition: max-height 0.35s ease; }
+  .rule-card.is-open .rule-body { max-height: 800px; }
+  .rule-body-inner { padding: 0 22px 22px; border-top: 1px dashed var(--line); }
+  .rule-three { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 16px; }
+  @media (max-width: 880px) { .rule-three { grid-template-columns: 1fr; } }
+  .rule-three .three-cell { background: white; border: 1px solid var(--line); border-radius: 6px; padding: 12px 14px; }
+  .rule-three .three-cell .ttl { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--obj-color); letter-spacing: 0.08em; text-transform: uppercase; font-weight: 600; margin-bottom: 6px; }
+  .rule-three .three-cell .val { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--ink); line-height: 1.6; word-break: break-all; }
+  .rule-three .three-cell .val .light { color: var(--ink-mute); }
+  .rule-warn { margin-top: 14px; padding: 12px 16px; background: var(--accent-soft); border-left: 3px solid var(--accent); border-radius: 4px; font-size: 13px; color: var(--ink-soft); line-height: 1.6; }
+  .rule-warn strong { color: var(--accent); }
+  .rules-foot { margin-top: 18px; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ink-mute); text-align: right; letter-spacing: 0.05em; }
+  .rules-foot strong { color: var(--obj-color); font-weight: 600; }
+
+  /* ====== GAME 3: scenarios builder ====== */
+  .scenarios-stage { background: var(--paper); border: 1px solid var(--line); border-radius: 8px; padding: 32px; margin-top: 24px; }
+  .scenarios-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 28px; flex-wrap: wrap; gap: 16px; }
+  .scenarios-title { font-family: 'Noto Serif SC', serif; font-size: 22px; margin: 0; font-weight: 700; }
+  .scenarios-prog { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--ink-mute); }
+  .scenarios-prog .done { color: var(--proj-color); font-weight: 700; font-size: 14px; }
+  .scen-list { display: flex; flex-direction: column; gap: 20px; }
+  .scen-card { background: white; border: 1px solid var(--line); border-radius: 8px; padding: 22px 24px; transition: all 0.2s; position: relative; }
+  .scen-card.is-correct { border-color: var(--green); box-shadow: 0 0 0 3px rgba(31,107,58,0.08); }
+  .scen-card.is-wrong { border-color: var(--accent); }
+  .scen-head { display: flex; justify-content: space-between; align-items: baseline; gap: 16px; margin-bottom: 16px; flex-wrap: wrap; }
+  .scen-num { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--obj-color); letter-spacing: 0.1em; font-weight: 700; }
+  .scen-name { font-family: 'Noto Serif SC', serif; font-size: 19px; font-weight: 700; margin: 6px 0 8px; line-height: 1.3; }
+  .scen-need {
+    background: var(--bg-2);
+    border-radius: 6px;
+    padding: 10px 14px;
+    font-size: 13px;
+    color: var(--ink-soft);
+    line-height: 1.55;
+    border-left: 3px solid var(--obj-color);
+  }
+  .scen-need .quote { font-family: 'Noto Serif SC', serif; font-style: italic; color: var(--ink); }
+
+  .scen-row { margin-top: 18px; }
+  .scen-row-label { font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-mute); margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
+  .scen-row-label .num { width: 16px; height: 16px; border-radius: 50%; background: var(--ink); color: var(--bg); font-size: 9px; display: flex; align-items: center; justify-content: center; font-weight: 700; }
+  .scen-radios { display: flex; flex-direction: column; gap: 6px; }
+  .scen-radio { display: flex; align-items: flex-start; gap: 10px; padding: 10px 14px; border: 1px solid var(--line); border-radius: 6px; cursor: pointer; background: var(--paper); transition: all 0.15s; }
+  .scen-radio:hover { border-color: var(--obj-color); }
+  .scen-radio input { margin-top: 3px; accent-color: var(--obj-color); cursor: pointer; }
+  .scen-radio .label-main { font-family: 'JetBrains Mono', monospace; font-weight: 600; font-size: 13px; color: var(--ink); }
+  .scen-radio .label-sub { font-size: 11px; color: var(--ink-mute); margin-top: 2px; line-height: 1.5; }
+  .scen-radio.is-picked { border-color: var(--obj-color); background: var(--obj-soft); }
+  .scen-radio.is-right { border-color: var(--green); background: var(--green-soft); }
+  .scen-radio.is-wrong { border-color: var(--accent); background: var(--accent-soft); }
+  .scen-fills { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 10px; }
+  @media (max-width: 720px) { .scen-fills { grid-template-columns: 1fr; } }
+  .fill-cell { display: flex; flex-direction: column; gap: 4px; }
+  .fill-cell label { font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-mute); }
+  .fill-cell select, .fill-cell input { padding: 9px 12px; border: 1px solid var(--line); border-radius: 5px; background: white; font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--ink); transition: all 0.15s; width: 100%; }
+  .fill-cell input::placeholder { color: var(--ink-mute); font-style: italic; }
+  .fill-cell select:focus, .fill-cell input:focus { outline: none; border-color: var(--obj-color); box-shadow: 0 0 0 3px var(--obj-soft); }
+  .fill-cell.is-right select, .fill-cell.is-right input { border-color: var(--green); background: var(--green-soft); }
+  .fill-cell.is-wrong select, .fill-cell.is-wrong input { border-color: var(--accent); background: var(--accent-soft); }
+  .fill-cell .hint { font-size: 11px; color: var(--accent); margin-top: 2px; line-height: 1.5; display: none; }
+  .fill-cell.is-wrong .hint { display: block; }
+  .scen-foot { margin-top: 16px; display: flex; gap: 12px; align-items: center; flex-wrap: wrap; justify-content: flex-end; }
+  .scen-verdict { flex: 1; min-width: 200px; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ink-mute); letter-spacing: 0.04em; line-height: 1.55; }
+  .scen-verdict.win { color: var(--green); font-weight: 600; }
+  .scen-verdict.partial { color: var(--accent); font-weight: 600; }
+  .scen-btn { padding: 9px 20px; border-radius: 100px; font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; cursor: pointer; font-weight: 600; border: 1px solid var(--ink); background: transparent; color: var(--ink); transition: all 0.15s; }
+  .scen-btn:hover { background: var(--ink); color: var(--bg); }
+  .scen-btn.primary { background: var(--obj-color); color: white; border-color: var(--obj-color); }
+  .scen-btn.primary:hover { background: #d63818; }
+  .scen-explain { display: none; margin-top: 14px; padding: 14px 18px; background: var(--ink); color: var(--bg); border-radius: 6px; font-size: 13px; line-height: 1.7; }
+  .scen-explain.show { display: block; }
+  .scen-explain strong { color: white; }
+  .scen-explain .em { color: var(--accent); }
+  .scen-explain code { background: rgba(255,255,255,0.1); padding: 1px 6px; border-radius: 3px; font-size: 11px; color: #ffd166; }
+  .scen-summary { margin-top: 26px; padding: 22px 26px; background: var(--ink); color: var(--bg); border-radius: 8px; display: none; }
+  .scen-summary.show { display: block; }
+  .scen-summary .verdict { display: inline-block; font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; padding: 3px 10px; border-radius: 100px; }
+  .scen-summary .verdict.win { color: #1f6b3a; background: #d4ecdb; }
+  .scen-summary .verdict.partial { color: #c79f1e; background: #fff3cc; }
+  .scen-summary h4 { font-family: 'Noto Serif SC', serif; font-size: 22px; margin: 10px 0 12px; color: white; line-height: 1.3; }
+  .scen-summary p { color: #c8c8d0; margin: 0; font-size: 14px; line-height: 1.65; }
+  .scen-summary p strong { color: white; }
+
+  /* tips */
+  .tips-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 28px; margin-top: 24px; }
+  @media (max-width: 880px) { .tips-grid { grid-template-columns: 1fr; } }
+  .tip { background: var(--paper); border: 1px solid var(--line); border-radius: 6px; padding: 24px; position: relative; }
+  .tip-num { position: absolute; top: -14px; left: 16px; width: 32px; height: 32px; border-radius: 50%; background: var(--obj-color); color: white; display: flex; align-items: center; justify-content: center; font-family: 'Fraunces', serif; font-style: italic; font-weight: 600; font-size: 14px; }
+  .tip h4 { font-family: 'Noto Serif SC', serif; font-size: 18px; margin: 8px 0 10px; font-weight: 700; }
+  .tip p { color: var(--ink-soft); font-size: 14px; line-height: 1.6; margin: 0; }
+  .tip p + p { margin-top: 8px; }
+  .tip-outro { margin-top: 44px; padding: 30px 32px; background: var(--ink); color: var(--bg); border-radius: 8px; display: grid; grid-template-columns: auto 1fr; gap: 28px; align-items: flex-start; }
+  @media (max-width: 720px) { .tip-outro { grid-template-columns: 1fr; gap: 12px; } }
+  .outro-tag { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.1em; color: var(--accent); padding-top: 4px; }
+  .tip-outro p { margin: 0 0 12px; color: #c8c8d0; line-height: 1.65; font-size: 15px; }
+  .tip-outro p:last-child { margin-bottom: 0; }
+  .tip-outro strong { color: white; }
+
+  /* next post */
+  .next-post { display: flex; justify-content: space-between; align-items: center; margin-top: 56px; padding: 32px; background: var(--bg-2); border: 1px solid var(--line); border-radius: 8px; text-decoration: none; color: var(--ink); transition: all 0.2s; gap: 24px; flex-wrap: wrap; }
+  .next-post:hover { background: var(--ink); color: var(--bg); }
+  .next-post:hover .np-tag { color: var(--accent); }
+  .next-post:hover .em { color: var(--accent); }
+  .next-post:hover p { color: #c8c8d0; }
+  .np-tag { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.1em; color: var(--ink-mute); margin-bottom: 6px; }
+  .next-post h4 { font-family: 'Noto Serif SC', serif; font-size: 26px; margin: 0 0 8px; font-weight: 700; }
+  .next-post .em { color: var(--obj-color); font-weight: 500; }
+  .next-post p { margin: 0; color: var(--ink-soft); font-size: 14px; max-width: 56ch; }
+  .np-cta { font-family: 'JetBrains Mono', monospace; font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; white-space: nowrap; }
+  .np-cta .arr { display: inline-block; transition: transform .2s; }
+  .next-post:hover .arr { transform: translateX(4px); }
+
+  /* footer */
+  footer { padding: 56px 0 64px; background: var(--bg); color: var(--ink-soft); border-top: 1px solid var(--line); }
+  .byline-group { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; margin-bottom: 32px; padding-bottom: 32px; border-bottom: 1px dashed var(--line); }
+  @media (max-width: 880px) { .byline-group { grid-template-columns: 1fr; } }
+  .byline { display: flex; gap: 16px; align-items: center; }
+  .byline .avatar { width: 56px; height: 56px; border-radius: 50%; object-fit: cover; flex-shrink: 0; }
+  .byline-label { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--accent); letter-spacing: 0.1em; }
+  .byline-label .dot { display: inline-block; width: 6px; height: 6px; background: var(--accent); border-radius: 50%; margin-right: 4px; vertical-align: middle; animation: pulse 2s ease-in-out infinite; }
+  .byline-name { font-family: 'Noto Serif SC', serif; font-weight: 700; font-size: 18px; margin: 4px 0; color: var(--ink); }
+  .byline-name .em { color: var(--accent); font-weight: 500; }
+  .byline-tag { color: var(--ink-soft); font-size: 13px; margin: 0; line-height: 1.5; }
+  .footer-meta { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ink-mute); text-align: center; letter-spacing: 0.05em; }
+  .footer-meta .heart { color: var(--accent); }
+
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="wrap topbar-inner">
+    <div class="brand-block">
+      <a href="book.html#vol-3" class="brand"><span class="brand-arrow">←</span>AI LABBOOK <span class="dot"></span></a>
+      <span class="brand-sep">/</span>
+      <span class="brand-current">X3 · 信息层级：主对象与附属</span>
+    </div>
+    <nav class="nav-links">
+      <a href="book.html#vol-3">路线图</a>
+    </nav>
+  </div>
+</div>
+
+<!-- Hero -->
+<header class="hero">
+  <div class="wrap">
+    <div class="hero-meta">
+      <span class="pill fill">高阶 · ADVANCED</span>
+      <span class="pill purple">STAGE 01 · 对象关系</span>
+      <span class="pill">X3 · 主与附属</span>
+      <span class="label">阅读 ≈ 15 分钟</span>
+    </div>
+    <div class="hero-grid">
+      <div>
+        <h1>
+          <span class="display-cn">谁是主，</span><br>
+          谁是<span class="purple">附属</span>？
+        </h1>
+        <p class="lede">
+          同一份数据放在同一张页面上——但"当前页面是关于谁"的判断不同。<br>
+          URL、面包屑、页面标题、back 行为、键盘焦点 全都从这件事派生。
+        </p>
+      </div>
+      <div class="hero-side">
+        <div class="row"><span class="k">本页讲什么</span><span class="v">主对象 vs 附属</span></div>
+        <div class="row"><span class="k">三幕</span><span class="v">看见 · 拆开 · 再做</span></div>
+        <div class="row"><span class="k">面向</span><span class="v">B 端 / 后台设计师</span></div>
+        <div class="row"><span class="k">前置</span><span class="v">X1 · 对象思维</span></div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- Section 01: 问题 -->
+<section id="problem">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>01</strong> / 问题</div>
+        <h2 class="section-title">"一张页面里有<br>多个对象"<span class="em">——然后呢？</span></h2>
+      </div>
+      <p class="section-sub">
+        你以为页面 = 视觉布局。其实页面 = <strong>"这个画面属于哪个对象"</strong> + 它的附属信息。
+        没决定"谁是主"，URL/面包屑/back 全都没法落地。
+      </p>
+    </div>
+
+    <div class="problem-grid">
+      <div class="problem-card bad">
+        <span class="tag">视觉思维 · LAYOUT</span>
+        <h3>"我把信息都放在这一页上了"</h3>
+        <p>稿子里画了客户卡 + 商机卡 + 合同卡 + 活动时间线——4 个对象，看起来信息很全。</p>
+        <p><strong>工程师追问：</strong>URL 写什么？<code>/customers/123/opportunities</code>？还是 <code>/opportunities?customer=123</code>？面包屑怎么走？back 按钮回哪里？</p>
+        <p style="color:var(--accent)"><strong>你：</strong>呃……不就是一张页面吗？</p>
+      </div>
+
+      <div class="problem-card good">
+        <span class="tag">主对象思维 · OBJECT</span>
+        <h3>"这是商机详情页"</h3>
+        <p>稿子里写明：<strong>主对象是 Opportunity #2401</strong>。客户是附属摘要，点"星河科技"跳走变成客户详情。</p>
+        <p><strong>工程师收到：</strong>URL pattern + 主对象 ID + 附属对象只读。能直接落路由。</p>
+        <p style="color:var(--obj-color)"><strong>结果：</strong>URL/back/标题/焦点全都自动落位。</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Section 02: 幕一 · 看见 -->
+<section id="look">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <span class="act-tag look">幕一 · 看见</span>
+        <div class="section-num"><strong>02</strong> / 看见</div>
+        <h2 class="section-title">同一组卡片，<br><span class="purple">3 种主对象</span>，3 种页面。</h2>
+      </div>
+      <p class="section-sub">
+        下面 3 张稿子布局接近，但"谁是主"不同。点切换主对象——观察 <strong>URL / 面包屑 / 标题 / back / 焦点</strong> 5 个东西同时变化。
+      </p>
+    </div>
+
+    <div class="tabs-stage">
+      <div class="tabs-row" role="tablist">
+        <button class="tab-btn is-active" data-tab="customer" role="tab">
+          <span class="lab-num">A</span>
+          <span>客户为主</span>
+        </button>
+        <button class="tab-btn" data-tab="opportunity" role="tab">
+          <span class="lab-num">B</span>
+          <span>商机为主</span>
+        </button>
+        <button class="tab-btn" data-tab="contract" role="tab">
+          <span class="lab-num">C</span>
+          <span>合同为主</span>
+        </button>
+      </div>
+
+      <div class="tabs-body">
+        <!-- Mock page preview -->
+        <div class="mock-page">
+          <div class="mock-browser">
+            <span class="mock-dots"><span></span><span></span><span></span></span>
+            <div class="mock-url" id="mockUrl">
+              <span class="host">app.crm.com</span><span id="urlPath"></span>
+            </div>
+          </div>
+          <div class="mock-tab" id="mockTab"></div>
+          <div class="mock-crumbs" id="mockCrumbs"></div>
+          <div class="mock-back" id="mockBack"></div>
+
+          <div class="mock-body">
+            <h3 class="mock-title" id="mockTitle"></h3>
+
+            <div class="mock-cards">
+              <div class="mock-card" data-block="customer">
+                <div class="mock-focus-ring">FOCUS</div>
+                <div class="mc-label">客户 · CUSTOMER</div>
+                <div class="mc-title" id="mcCustomerTitle">张明</div>
+                <div class="mc-meta">星河科技 · CTO<br>跟进 李华 · 活跃</div>
+              </div>
+              <div class="mock-card" data-block="opportunity">
+                <div class="mock-focus-ring">FOCUS</div>
+                <div class="mc-label">商机 · OPPORTUNITY</div>
+                <div class="mc-title" id="mcOpportunityTitle">O-2401 续约</div>
+                <div class="mc-meta">¥ 480k · 进入谈判<br>预计 06/12 关单</div>
+              </div>
+              <div class="mock-card" data-block="contract">
+                <div class="mock-focus-ring">FOCUS</div>
+                <div class="mc-label">合同 · CONTRACT</div>
+                <div class="mc-title" id="mcContractTitle">C-2401</div>
+                <div class="mc-meta">起 2026/01/01<br>讫 2026/12/31 · 年付</div>
+              </div>
+              <div class="mock-card" data-block="activity">
+                <div class="mock-focus-ring">FOCUS</div>
+                <div class="mc-label">活动 · ACTIVITY</div>
+                <div class="mc-title">最近 3 次互动</div>
+                <div class="mc-meta">电话 · 邮件 · 会议<br>最近一次：3 天前</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Derive panel -->
+        <div class="derive-panel">
+          <div class="derive-list">
+            <div class="derive-row" data-key="url">
+              <div class="dr-key">① URL</div>
+              <div class="dr-val" id="drUrl">/customers/123</div>
+            </div>
+            <div class="derive-row" data-key="crumb">
+              <div class="dr-key">② 面包屑</div>
+              <div class="dr-val" id="drCrumb">客户 / 张明</div>
+            </div>
+            <div class="derive-row" data-key="title">
+              <div class="dr-key">③ 页面标题 H1</div>
+              <div class="dr-val" id="drTitle">张明</div>
+            </div>
+            <div class="derive-row" data-key="back">
+              <div class="dr-key">④ back 回到</div>
+              <div class="dr-val" id="drBack">客户列表</div>
+            </div>
+            <div class="derive-row" data-key="focus">
+              <div class="dr-key">⑤ 键盘焦点</div>
+              <div class="dr-val" id="drFocus">客户.name</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="reveal-bar">
+      <div class="msg">
+        卡片没动——但 <span class="em">URL 变了、back 变了、SEO 变了、键盘行为变了</span>。<br>
+        这就是"主对象"的力量。
+      </div>
+      <div class="counter">
+        已切换 <strong id="tabVisited">1</strong> / 3 种主对象
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Section 03: 幕二 · 拆开 -->
+<section id="break">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <span class="act-tag break">幕二 · 拆开</span>
+        <div class="section-num"><strong>03</strong> / 拆开</div>
+        <h2 class="section-title">主对象决定<br><span class="purple">5 件事</span>。</h2>
+      </div>
+      <p class="section-sub">
+        把这 5 件事拉出来，单独看每一件如何从"主对象"派生。<strong>点开</strong>看 3 种主对象下的差异，<strong>以及搞错了会发生什么</strong>。
+      </p>
+    </div>
+
+    <div class="rules-list" id="rulesList">
+
+      <div class="rule-card" data-rule="url">
+        <div class="rule-head">
+          <div class="rule-num">i</div>
+          <div class="rule-title">URL 模式 <span class="key">/[主对象]/[ID]?attached=[附属]</span></div>
+          <div class="rule-toggle">+</div>
+        </div>
+        <div class="rule-body">
+          <div class="rule-body-inner">
+            <div class="rule-three">
+              <div class="three-cell">
+                <div class="ttl">客户为主</div>
+                <div class="val">/customers/123<br><span class="light">?view=activities</span></div>
+              </div>
+              <div class="three-cell">
+                <div class="ttl">商机为主</div>
+                <div class="val">/opportunities/2401<br><span class="light">?customer=123</span></div>
+              </div>
+              <div class="three-cell">
+                <div class="ttl">合同为主</div>
+                <div class="val">/contracts/c-2401<br><span class="light">?customer=123</span></div>
+              </div>
+            </div>
+            <div class="rule-warn">
+              <strong>搞错了会发生什么：</strong>分享给同事的链接打开是错对象。本来想发"商机 #2401"——同事点开却是"客户 #123"的页面，找不到要讨论的那条商机。
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="rule-card" data-rule="crumb">
+        <div class="rule-head">
+          <div class="rule-num">ii</div>
+          <div class="rule-title">面包屑 <span class="key">链回主对象的列表/父对象，不显示附属</span></div>
+          <div class="rule-toggle">+</div>
+        </div>
+        <div class="rule-body">
+          <div class="rule-body-inner">
+            <div class="rule-three">
+              <div class="three-cell">
+                <div class="ttl">客户为主</div>
+                <div class="val">客户 / 张明</div>
+              </div>
+              <div class="three-cell">
+                <div class="ttl">商机为主</div>
+                <div class="val">商机 / O-2401<br><span class="light">/ 星河续约</span></div>
+              </div>
+              <div class="three-cell">
+                <div class="ttl">合同为主</div>
+                <div class="val">合同 / C-2401</div>
+              </div>
+            </div>
+            <div class="rule-warn">
+              <strong>搞错了会发生什么：</strong>用户回不去。把附属对象塞进面包屑——点客户名跳走，再点客户面包屑，回到客户列表而不是回到原来的商机。
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="rule-card" data-rule="title">
+        <div class="rule-head">
+          <div class="rule-num">iii</div>
+          <div class="rule-title">页面标题 / Tab title <span class="key">H1 = 主对象.name（或 .title）</span></div>
+          <div class="rule-toggle">+</div>
+        </div>
+        <div class="rule-body">
+          <div class="rule-body-inner">
+            <div class="rule-three">
+              <div class="three-cell">
+                <div class="ttl">客户为主</div>
+                <div class="val">"张明 · 客户"</div>
+              </div>
+              <div class="three-cell">
+                <div class="ttl">商机为主</div>
+                <div class="val">"O-2401 续约 · 商机"</div>
+              </div>
+              <div class="three-cell">
+                <div class="ttl">合同为主</div>
+                <div class="val">"C-2401 · 合同"</div>
+              </div>
+            </div>
+            <div class="rule-warn">
+              <strong>搞错了会发生什么：</strong>浏览器多 tab 全叫同一个名。开 5 个商机 tab——5 个都显示"张明"，用户切 tab 凭运气。SEO 同样错。
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="rule-card" data-rule="back">
+        <div class="rule-head">
+          <div class="rule-num">iv</div>
+          <div class="rule-title">back / 返回行为 <span class="key">回主对象的列表页 · 用 Link/replace 不依赖浏览器历史</span></div>
+          <div class="rule-toggle">+</div>
+        </div>
+        <div class="rule-body">
+          <div class="rule-body-inner">
+            <div class="rule-three">
+              <div class="three-cell">
+                <div class="ttl">客户为主</div>
+                <div class="val">← 客户列表</div>
+              </div>
+              <div class="three-cell">
+                <div class="ttl">商机为主</div>
+                <div class="val">← 商机列表</div>
+              </div>
+              <div class="three-cell">
+                <div class="ttl">合同为主</div>
+                <div class="val">← 合同列表</div>
+              </div>
+            </div>
+            <div class="rule-warn">
+              <strong>搞错了会发生什么：</strong>用户一直在客户和商机之间打转。点附属里的客户跳走 → 在客户页 back → 回到商机？回到客户列表？规则不清，用户就在两个对象间反复横跳。
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="rule-card" data-rule="focus">
+        <div class="rule-head">
+          <div class="rule-num">v</div>
+          <div class="rule-title">焦点起点（a11y）<span class="key">tab 第一次按 → 主对象的主字段/主操作</span></div>
+          <div class="rule-toggle">+</div>
+        </div>
+        <div class="rule-body">
+          <div class="rule-body-inner">
+            <div class="rule-three">
+              <div class="three-cell">
+                <div class="ttl">客户为主</div>
+                <div class="val">焦点 → 客户.name<br><span class="light">→ "联系客户" 按钮</span></div>
+              </div>
+              <div class="three-cell">
+                <div class="ttl">商机为主</div>
+                <div class="val">焦点 → 商机.title<br><span class="light">→ "推进到下一阶段"</span></div>
+              </div>
+              <div class="three-cell">
+                <div class="ttl">合同为主</div>
+                <div class="val">焦点 → 合同.contract_id<br><span class="light">→ "下载合同 PDF"</span></div>
+              </div>
+            </div>
+            <div class="rule-warn">
+              <strong>搞错了会发生什么：</strong>键盘用户跳不到关键按钮。打开一个商机详情，焦点在客户卡上——按 Tab 7 次才能到达"推进商机"，这页面对键盘用户基本不可用。
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="rules-foot">
+      已展开 <strong id="rulesVisited">0</strong> / 5 条规则
+    </div>
+
+    <div class="reveal-bar" style="margin-top:32px">
+      <div class="msg">
+        5 件事，<span class="em">全部从"主对象是谁"派生</span>。<br>
+        先定主对象，5 件事自动落位。
+      </div>
+      <div class="counter">点开每条对比 3 种主对象差异</div>
+    </div>
+  </div>
+</section>
+
+<!-- Section 04: 幕三 · 再做 -->
+<section id="make">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <span class="act-tag make">幕三 · 再做</span>
+        <div class="section-num"><strong>04</strong> / 再做</div>
+        <h2 class="section-title">轮到你——<br>给 3 个新场景，<br><span class="em">选主对象</span>。</h2>
+      </div>
+      <p class="section-sub">
+        下面 3 个真实需求，每个都有 2-3 个候选主对象。选一个，再回答 5 件事派生。
+        <strong>错了我告诉你为啥。</strong>
+      </p>
+    </div>
+
+    <div class="scenarios-stage">
+      <div class="scenarios-head">
+        <h3 class="scenarios-title">3 个需求，选你的"主对象"</h3>
+        <div class="scenarios-prog">已完成 <span class="done" id="scenDone">0</span> / 3 个场景</div>
+      </div>
+
+      <div class="scen-list" id="scenList">
+
+        <!-- Scenario 1 -->
+        <div class="scen-card" data-scen="1">
+          <div class="scen-head">
+            <div>
+              <div class="scen-num">场景 01</div>
+              <div class="scen-name">"我要看张明客户的本月活动"</div>
+            </div>
+          </div>
+          <div class="scen-need">
+            <span class="quote">"做一个页面，能看到张明这个客户本月所有跟进活动——电话、邮件、会议。"</span>
+          </div>
+
+          <div class="scen-row">
+            <div class="scen-row-label"><span class="num">1</span>主对象是？</div>
+            <div class="scen-radios">
+              <label class="scen-radio">
+                <input type="radio" name="scen1-main" value="customer">
+                <div>
+                  <div class="label-main">Customer</div>
+                  <div class="label-sub">把"客户"当主，"活动"是它的附属列表</div>
+                </div>
+              </label>
+              <label class="scen-radio">
+                <input type="radio" name="scen1-main" value="activity">
+                <div>
+                  <div class="label-main">Activity</div>
+                  <div class="label-sub">把"活动"当主，按客户筛选</div>
+                </div>
+              </label>
+              <label class="scen-radio">
+                <input type="radio" name="scen1-main" value="report">
+                <div>
+                  <div class="label-main">CustomerActivityReport</div>
+                  <div class="label-sub">把"该客户的活动报表"当成一个独立聚合对象</div>
+                </div>
+              </label>
+            </div>
+          </div>
+
+          <div class="scen-row">
+            <div class="scen-row-label"><span class="num">2</span>5 件事派生</div>
+            <div class="scen-fills">
+              <div class="fill-cell" data-fill="url">
+                <label>① URL 模式</label>
+                <select data-scen="1" data-key="url">
+                  <option value="">选一个 URL 形态…</option>
+                  <option value="/customers/:id?view=activities">/customers/:id?view=activities</option>
+                  <option value="/activities?customer=:id">/activities?customer=:id</option>
+                  <option value="/reports/customer-activity/:id">/reports/customer-activity/:id</option>
+                </select>
+                <div class="hint">提示：URL 体现"这是什么页面"——详情页用 <code>/[对象]/[id]</code>，列表筛选用 <code>/[对象]?filter</code>。</div>
+              </div>
+              <div class="fill-cell" data-fill="crumb">
+                <label>② 面包屑首项</label>
+                <input type="text" data-scen="1" data-key="crumb" placeholder="客户 / 活动 / 报表 …">
+                <div class="hint">提示：面包屑首项应是主对象的列表入口。</div>
+              </div>
+              <div class="fill-cell" data-fill="title">
+                <label>③ 页面标题 H1</label>
+                <input type="text" data-scen="1" data-key="title" placeholder="张明 / 本月活动 / …">
+                <div class="hint">提示：H1 应该是主对象的 .name。</div>
+              </div>
+              <div class="fill-cell" data-fill="back">
+                <label>④ back 回到</label>
+                <input type="text" data-scen="1" data-key="back" placeholder="客户列表 / 活动列表 …">
+                <div class="hint">提示：back 回主对象的列表。</div>
+              </div>
+              <div class="fill-cell" data-fill="focus">
+                <label>⑤ 键盘焦点起点</label>
+                <input type="text" data-scen="1" data-key="focus" placeholder="客户.name / 活动.subject …">
+                <div class="hint">提示：焦点落在主对象的主字段或主操作。</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="scen-foot">
+            <div class="scen-verdict" data-verdict="1">填完 5 项点提交</div>
+            <button class="scen-btn primary" data-submit="1">判分</button>
+            <button class="scen-btn" data-reset="1">清空</button>
+          </div>
+          <div class="scen-explain" data-explain="1"></div>
+        </div>
+
+        <!-- Scenario 2 -->
+        <div class="scen-card" data-scen="2">
+          <div class="scen-head">
+            <div>
+              <div class="scen-num">场景 02</div>
+              <div class="scen-name">"审批一个加班申请"</div>
+            </div>
+          </div>
+          <div class="scen-need">
+            <span class="quote">"做一个页面，HR 主管收到通知后能查看、审批一条加班申请。"</span>
+          </div>
+
+          <div class="scen-row">
+            <div class="scen-row-label"><span class="num">1</span>主对象是？</div>
+            <div class="scen-radios">
+              <label class="scen-radio">
+                <input type="radio" name="scen2-main" value="user">
+                <div>
+                  <div class="label-main">User（申请人）</div>
+                  <div class="label-sub">把"申请的人"当主，他名下挂着这条申请</div>
+                </div>
+              </label>
+              <label class="scen-radio">
+                <input type="radio" name="scen2-main" value="request">
+                <div>
+                  <div class="label-main">OvertimeRequest（申请单）</div>
+                  <div class="label-sub">把"申请单"当主，申请人是附属信息</div>
+                </div>
+              </label>
+            </div>
+          </div>
+
+          <div class="scen-row">
+            <div class="scen-row-label"><span class="num">2</span>5 件事派生</div>
+            <div class="scen-fills">
+              <div class="fill-cell" data-fill="url">
+                <label>① URL 模式</label>
+                <select data-scen="2" data-key="url">
+                  <option value="">选一个 URL 形态…</option>
+                  <option value="/users/:id/overtime">/users/:id/overtime</option>
+                  <option value="/overtime/:id">/overtime/:id</option>
+                  <option value="/approvals?type=overtime&user=:id">/approvals?type=overtime&user=:id</option>
+                </select>
+                <div class="hint">提示：操作的对象决定 URL 主体。</div>
+              </div>
+              <div class="fill-cell" data-fill="crumb">
+                <label>② 面包屑首项</label>
+                <input type="text" data-scen="2" data-key="crumb" placeholder="人员 / 加班申请 / 审批 …">
+                <div class="hint">提示：面包屑首项 = 主对象的列表入口。</div>
+              </div>
+              <div class="fill-cell" data-fill="title">
+                <label>③ 页面标题 H1</label>
+                <input type="text" data-scen="2" data-key="title" placeholder="申请人名 / 申请单号 …">
+                <div class="hint">提示：H1 应该是主对象的 .id / .title。</div>
+              </div>
+              <div class="fill-cell" data-fill="back">
+                <label>④ back 回到</label>
+                <input type="text" data-scen="2" data-key="back" placeholder="人员列表 / 申请列表 …">
+                <div class="hint">提示：back 回主对象的列表。</div>
+              </div>
+              <div class="fill-cell" data-fill="focus">
+                <label>⑤ 键盘焦点起点</label>
+                <input type="text" data-scen="2" data-key="focus" placeholder="申请人字段 / 通过按钮 …">
+                <div class="hint">提示：焦点落在主对象的主操作——审批页主操作是"通过/驳回"。</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="scen-foot">
+            <div class="scen-verdict" data-verdict="2">填完 5 项点提交</div>
+            <button class="scen-btn primary" data-submit="2">判分</button>
+            <button class="scen-btn" data-reset="2">清空</button>
+          </div>
+          <div class="scen-explain" data-explain="2"></div>
+        </div>
+
+        <!-- Scenario 3 -->
+        <div class="scen-card" data-scen="3">
+          <div class="scen-head">
+            <div>
+              <div class="scen-num">场景 03</div>
+              <div class="scen-name">"我在合同 C-2401 上加一条备注"</div>
+            </div>
+          </div>
+          <div class="scen-need">
+            <span class="quote">"打开合同 C-2401，在右边的备注区写一条新备注，保存。"</span>
+          </div>
+
+          <div class="scen-row">
+            <div class="scen-row-label"><span class="num">1</span>主对象是？</div>
+            <div class="scen-radios">
+              <label class="scen-radio">
+                <input type="radio" name="scen3-main" value="contract">
+                <div>
+                  <div class="label-main">Contract</div>
+                  <div class="label-sub">仍然在合同详情页，备注是合同上的子操作</div>
+                </div>
+              </label>
+              <label class="scen-radio">
+                <input type="radio" name="scen3-main" value="note">
+                <div>
+                  <div class="label-main">Note</div>
+                  <div class="label-sub">备注是独立对象，跳到 /notes/new</div>
+                </div>
+              </label>
+              <label class="scen-radio">
+                <input type="radio" name="scen3-main" value="comment">
+                <div>
+                  <div class="label-main">Comment</div>
+                  <div class="label-sub">挂在评论流上，跳到 /comments/new</div>
+                </div>
+              </label>
+            </div>
+          </div>
+
+          <div class="scen-row">
+            <div class="scen-row-label"><span class="num">2</span>5 件事派生</div>
+            <div class="scen-fills">
+              <div class="fill-cell" data-fill="url">
+                <label>① URL 模式</label>
+                <select data-scen="3" data-key="url">
+                  <option value="">选一个 URL 形态…</option>
+                  <option value="/contracts/:id#new-note">/contracts/:id#new-note</option>
+                  <option value="/notes/new?contract=:id">/notes/new?contract=:id</option>
+                  <option value="/comments/new?ref=:id">/comments/new?ref=:id</option>
+                </select>
+                <div class="hint">提示：子操作不换页——hash 或保持 URL 不变。</div>
+              </div>
+              <div class="fill-cell" data-fill="crumb">
+                <label>② 面包屑首项</label>
+                <input type="text" data-scen="3" data-key="crumb" placeholder="合同 / 备注 / 评论 …">
+                <div class="hint">提示：面包屑首项 = 主对象的列表入口。</div>
+              </div>
+              <div class="fill-cell" data-fill="title">
+                <label>③ 页面标题 H1</label>
+                <input type="text" data-scen="3" data-key="title" placeholder="合同号 / 备注 / …">
+                <div class="hint">提示：H1 应该是主对象的 .id / .contract_id。</div>
+              </div>
+              <div class="fill-cell" data-fill="back">
+                <label>④ back 回到</label>
+                <input type="text" data-scen="3" data-key="back" placeholder="合同列表 / 备注列表 …">
+                <div class="hint">提示：back 回主对象的列表。</div>
+              </div>
+              <div class="fill-cell" data-fill="focus">
+                <label>⑤ 键盘焦点起点</label>
+                <input type="text" data-scen="3" data-key="focus" placeholder="备注输入框 / 合同号 …">
+                <div class="hint">提示：写新备注时焦点应直接落在输入框——主对象不变，但当前子任务的焦点是 textarea。</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="scen-foot">
+            <div class="scen-verdict" data-verdict="3">填完 5 项点提交</div>
+            <button class="scen-btn primary" data-submit="3">判分</button>
+            <button class="scen-btn" data-reset="3">清空</button>
+          </div>
+          <div class="scen-explain" data-explain="3"></div>
+        </div>
+
+      </div>
+
+      <div class="scen-summary" id="scenSummary"></div>
+    </div>
+  </div>
+</section>
+
+<!-- Section 05: closing -->
+<section id="closing">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>05</strong> / 把这件事变成习惯</div>
+        <h2 class="section-title">下次接需求，<br>先<span class="em">问"主对象是谁"</span>。</h2>
+      </div>
+      <p class="section-sub">
+        这 4 个字一旦出现在你的脑子里，整张稿子的 URL/back/标题/SEO 就有了锚点。
+      </p>
+    </div>
+
+    <div class="tips-grid">
+      <div class="tip">
+        <div class="tip-num">i</div>
+        <h4>第一句话先问"主对象是谁"</h4>
+        <p>接到需求，画稿子之前问一句。整张页面的 URL/back/焦点/标题/SEO 全围着这个答案转。</p>
+        <p><strong>没决定主对象前不动笔。</strong></p>
+      </div>
+      <div class="tip">
+        <div class="tip-num">ii</div>
+        <h4>附属 ≠ 不重要，只是"挂载"</h4>
+        <p>附属对象不该决定 URL，也不该让用户"以为这是它的页面"。它的 link 通常打开它自己的详情页。</p>
+        <p><strong>附属是只读摘要 + 跳转入口。</strong></p>
+      </div>
+      <div class="tip">
+        <div class="tip-num">iii</div>
+        <h4>"我设计了一张大页面"是危险句</h4>
+        <p>一张页面就是一个主对象。两个对象的"详情都在同一页"意味着至少一个被错降级了。</p>
+        <p><strong>要么改主，要么把附属换成摘要+跳转。</strong></p>
+      </div>
+    </div>
+
+    <div class="tip-outro">
+      <div class="outro-tag">划重点 · TL;DR</div>
+      <div>
+        <p>下次设计画面前，把<strong>"主对象"</strong>写在稿子角落。这 4 个字在场，你就不会再做出"信息层级模糊"的稿子。</p>
+        <p>URL、面包屑、标题、back、焦点——5 件事一旦从"谁是主"派生，工程师再也不用追问。<strong>稿子第一眼就有结构。</strong></p>
+      </div>
+    </div>
+
+    <a href="x4-roles-permissions.html" class="next-post">
+      <div>
+        <div class="np-tag">下一站 · NEXT · X4 · 高阶</div>
+        <h4>角色：<span class="em">不同人看到不同系统</span></h4>
+        <p>同一个主对象，不同的人打开看到的不一样。角色不是面板里加几个开关，是结构性问题。下一站讲：怎么把"角色"当成对象级的设计维度。</p>
+      </div>
+      <span class="np-cta">继续 <span class="arr">→</span></span>
+    </a>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div class="byline-group">
+      <div class="byline">
+        <img class="avatar" src="author.jpg" alt="范米花儿">
+        <div class="byline-meta">
+          <div class="byline-label"><span class="dot"></span>作者 · WRITTEN BY</div>
+          <div class="byline-name">嗨，我是 <span class="em">范米花儿</span></div>
+          <p class="byline-tag">设计工程师 ——<br>设计 × 代码，两边都做。</p>
+        </div>
+      </div>
+</div>
+    <div class="footer-meta">
+      做于 <span class="mono">2026</span> · 用 <span class="heart">●</span> 写给 <span class="mono">DESIGNERS &amp; DEVELOPERS</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+// ===== Game 1: Tab switcher (3 main objects) =====
+(function(){
+  const TAB_DATA = {
+    customer: {
+      path: '<span class="path-main">/customers/</span><span class="path-id">123</span>',
+      tab: '张明 · 客户 — CRM',
+      crumbs: [['main','客户'],['sep'],['last','张明']],
+      back: '客户列表',
+      title: '<span>张明</span><span class="sub">· 客户 · CTO @ 星河科技</span>',
+      mainBlock: 'customer', focusBlock: 'customer',
+      derived: { url:'/customers/123?view=activities', crumb:'客户 / 张明', title:'张明 · 客户', back:'回客户列表', focus:'客户.name / "联系客户" 按钮' }
+    },
+    opportunity: {
+      path: '<span class="path-main">/opportunities/</span><span class="path-id">2401</span><span class="path-attach">?customer=123</span>',
+      tab: 'O-2401 续约 · 商机 — CRM',
+      crumbs: [['main','商机'],['sep'],['last','O-2401'],['sep'],['sub','星河续约']],
+      back: '商机列表',
+      title: '<span>O-2401 · 星河续约</span><span class="sub">· 商机 · 谈判中</span>',
+      mainBlock: 'opportunity', focusBlock: 'opportunity',
+      derived: { url:'/opportunities/2401?customer=123', crumb:'商机 / O-2401 / 星河续约', title:'O-2401 续约 · 商机', back:'回商机列表', focus:'商机.title / "推进到下一阶段"' }
+    },
+    contract: {
+      path: '<span class="path-main">/contracts/</span><span class="path-id">c-2401</span><span class="path-attach">?customer=123</span>',
+      tab: 'C-2401 · 合同 — CRM',
+      crumbs: [['main','合同'],['sep'],['last','C-2401']],
+      back: '合同列表',
+      title: '<span>C-2401</span><span class="sub">· 合同 · 2026/01/01 — 2026/12/31</span>',
+      mainBlock: 'contract', focusBlock: 'contract',
+      derived: { url:'/contracts/c-2401?customer=123', crumb:'合同 / C-2401', title:'C-2401 · 合同', back:'回合同列表', focus:'合同.contract_id / "下载合同 PDF"' }
+    }
+  };
+
+  const tabBtns = document.querySelectorAll('.tab-btn');
+  const visited = new Set(['customer']);
+  const tabCounter = document.getElementById('tabVisited');
+
+  function applyTab(key) {
+    const d = TAB_DATA[key];
+    document.getElementById('urlPath').innerHTML = d.path;
+    document.getElementById('mockTab').textContent = d.tab;
+
+    const cwrap = document.getElementById('mockCrumbs');
+    cwrap.innerHTML = '';
+    d.crumbs.forEach(c => {
+      const sp = document.createElement('span');
+      if (c[0] === 'sep') { sp.className = 'sep'; sp.textContent = '/'; }
+      else { sp.className = 'crumb ' + c[0]; sp.textContent = c[1]; }
+      cwrap.appendChild(sp);
+    });
+
+    document.getElementById('mockBack').innerHTML = `<span class="arr">←</span> 回到 <span class="target">${d.back}</span>`;
+    document.getElementById('mockTitle').innerHTML = d.title;
+
+    document.querySelectorAll('.mock-card').forEach(card => {
+      card.classList.toggle('is-main', card.dataset.block === d.mainBlock);
+      card.classList.toggle('is-focus', card.dataset.block === d.focusBlock);
+    });
+
+    ['url','crumb','title','back','focus'].forEach((k, i) => {
+      const row = document.querySelector(`.derive-row[data-key="${k}"]`);
+      const valEl = row.querySelector('.dr-val');
+      setTimeout(() => {
+        valEl.textContent = d.derived[k];
+        row.classList.add('is-pulse');
+        setTimeout(() => row.classList.remove('is-pulse'), 850);
+      }, i * 90);
+    });
+
+    tabBtns.forEach(b => b.classList.toggle('is-active', b.dataset.tab === key));
+    if (!visited.has(key)) { visited.add(key); tabCounter.textContent = visited.size; }
+  }
+
+  tabBtns.forEach(b => b.addEventListener('click', () => applyTab(b.dataset.tab)));
+  applyTab('customer');
+})();
+
+// ===== Game 2: Rules expandable cards =====
+(function(){
+  const visited = new Set();
+  const counter = document.getElementById('rulesVisited');
+  document.querySelectorAll('.rule-card').forEach(card => {
+    card.querySelector('.rule-head').addEventListener('click', () => {
+      const open = card.classList.toggle('is-open');
+      if (open && !visited.has(card.dataset.rule)) { visited.add(card.dataset.rule); counter.textContent = visited.size; }
+    });
+  });
+})();
+
+// ===== Game 3: Scenario builder (radio + fill + judge) =====
+(function(){
+  const SCEN = {
+    '1': {
+      main: 'customer', url: '/customers/:id?view=activities',
+      crumbKw: '客户', titleKw: '张明', backKw: '客户列表', focusKw: ['客户','name'],
+      mainExplain: '<strong>正解：Customer 是主。</strong>用户问的是"<em>某客户的</em>活动"——是个详情页的子视图，不是列表的筛选结果。',
+      wrong: {
+        activity: '把 Activity 当主：那 URL 是 <code>/activities?customer=X</code>，意味着这是个<strong>列表页 + 筛选</strong>。但用户的语义是"张明的活动"——是个详情页的子视图，不是列表的筛选结果。',
+        report: '把"客户活动报表"当独立聚合对象：除非这真的是一个"报表"页（带导出、PDF、定期生成），否则不要造新对象。直接挂在 Customer 下即可。'
+      }
+    },
+    '2': {
+      main: 'request', url: '/overtime/:id',
+      crumbKw: ['加班','申请'], titleKw: ['OT','加班','申请'], backKw: ['申请','审批'], focusKw: ['通过','审批','按钮','驳回'],
+      mainExplain: '<strong>正解：OvertimeRequest 是主。</strong>操作的对象是<em>申请单</em>，不是人。申请人 (User) 是附属摘要。',
+      wrong: {
+        user: '把 User 当主：那 URL 是 <code>/users/:id/overtime</code>——这适合"看某人所有加班"的报表页，<strong>不适合"审批单条申请"</strong>。审批关注的是"这条申请"，不是"这个人"。'
+      }
+    },
+    '3': {
+      main: 'contract', url: '/contracts/:id#new-note',
+      crumbKw: '合同', titleKw: ['C-2401','合同'], backKw: '合同列表', focusKw: ['输入','textarea','备注','note'],
+      mainExplain: '<strong>正解：Contract 是主。</strong>Note 是 Contract 上的<em>附属操作</em>——URL 不该换页。用 hash 或保持当前 URL 表达"在这个合同上做事"。',
+      wrong: {
+        note: '把 Note 当主：跳 <code>/notes/new</code> 意味着这是"在备注列表里新建一条"——脱离了合同上下文。用户的心智是"<strong>在这份合同上</strong>加备注"，URL 不该跳走。',
+        comment: '把 Comment 当主：同样问题——丢失了"备注挂在哪个合同上"的上下文。子操作不该换 URL 主体。'
+      }
+    }
+  };
+  const FILL_LABELS = { url:'① URL 模式', crumb:'② 面包屑', title:'③ 标题', back:'④ back', focus:'⑤ 焦点' };
+  const FILL_KEYS = ['url','crumb','title','back','focus'];
+
+  const completed = new Set();
+  const scenDone = document.getElementById('scenDone');
+  const summary = document.getElementById('scenSummary');
+
+  const matchAny = (text, kw) => {
+    if (!text) return false;
+    const t = text.toLowerCase();
+    return (Array.isArray(kw) ? kw : [kw]).some(k => t.includes(String(k).toLowerCase()));
+  };
+  const $q = (scen, key) => document.querySelector(`[data-scen="${scen}"][data-key="${key}"]`);
+  const pickMain = scen => document.querySelector(`input[name="scen${scen}-main"]:checked`);
+  const setCell = (scen, key, ok) => {
+    const cell = $q(scen, key).closest('.fill-cell');
+    cell.classList.remove('is-right','is-wrong');
+    cell.classList.add(ok ? 'is-right' : 'is-wrong');
+  };
+
+  function judge(scen) {
+    const c = SCEN[scen];
+    const mainPicked = pickMain(scen);
+    const card = document.querySelector(`.scen-card[data-scen="${scen}"]`);
+    const verdictEl = document.querySelector(`[data-verdict="${scen}"]`);
+    const explainEl = document.querySelector(`[data-explain="${scen}"]`);
+
+    document.querySelectorAll(`input[name="scen${scen}-main"]`).forEach(r => {
+      r.closest('.scen-radio').classList.remove('is-right','is-wrong','is-picked');
+    });
+
+    if (!mainPicked) { verdictEl.textContent = '请先选一个"主对象"'; verdictEl.className = 'scen-verdict partial'; return; }
+
+    const fills = {}; FILL_KEYS.forEach(k => fills[k] = $q(scen, k).value.trim());
+    if (!FILL_KEYS.every(k => fills[k].length > 0)) {
+      verdictEl.textContent = '5 件事还没填完'; verdictEl.className = 'scen-verdict partial';
+      mainPicked.closest('.scen-radio').classList.add('is-picked');
+      return;
+    }
+
+    const checks = {
+      main: mainPicked.value === c.main,
+      url: fills.url === c.url,
+      crumb: matchAny(fills.crumb, c.crumbKw),
+      title: matchAny(fills.title, c.titleKw),
+      back: matchAny(fills.back, c.backKw),
+      focus: matchAny(fills.focus, c.focusKw)
+    };
+
+    if (checks.main) mainPicked.closest('.scen-radio').classList.add('is-right');
+    else {
+      mainPicked.closest('.scen-radio').classList.add('is-wrong');
+      const r = document.querySelector(`input[name="scen${scen}-main"][value="${c.main}"]`);
+      if (r) r.closest('.scen-radio').classList.add('is-right');
+    }
+
+    FILL_KEYS.forEach(k => setCell(scen, k, checks[k]));
+
+    const hits = Object.values(checks).filter(Boolean).length;
+    card.classList.remove('is-correct','is-wrong');
+    if (hits === 6) card.classList.add('is-correct');
+    else if (hits < 3) card.classList.add('is-wrong');
+
+    if (hits === 6) { verdictEl.textContent = `命中 ${hits}/6 · 完美`; verdictEl.className = 'scen-verdict win'; }
+    else if (hits >= 4) { verdictEl.textContent = `命中 ${hits}/6 · 主对象对了，再调几个细节`; verdictEl.className = 'scen-verdict partial'; }
+    else { verdictEl.textContent = `命中 ${hits}/6 · 看下面解释`; verdictEl.className = 'scen-verdict partial'; }
+
+    let html = '';
+    if (!checks.main) {
+      const wrongMsg = c.wrong[mainPicked.value] || '';
+      html += `<p style="margin:0 0 10px"><span class="em">主对象选错。</span> ${wrongMsg}</p>`;
+    }
+    html += `<p style="margin:0 0 10px">${c.mainExplain}</p>`;
+    const wrongList = FILL_KEYS.filter(k => !checks[k]);
+    if (wrongList.length > 0) {
+      html += '<p style="margin:0;font-size:12px;color:#a0a0aa">细节差异：' +
+        wrongList.map(k => {
+          const want = k === 'url' ? c.url : (Array.isArray(c[k+'Kw']) ? c[k+'Kw'].join(' / ') : c[k+'Kw']);
+          return `${FILL_LABELS[k]} · 期望 <code>${want}</code>`;
+        }).join('； ') + '</p>';
+    }
+    explainEl.innerHTML = html;
+    explainEl.classList.add('show');
+
+    if (hits >= 5) completed.add(scen); else completed.delete(scen);
+    scenDone.textContent = completed.size;
+    updateSummary();
+  }
+
+  function reset(scen) {
+    document.querySelectorAll(`input[name="scen${scen}-main"]`).forEach(r => {
+      r.checked = false;
+      r.closest('.scen-radio').classList.remove('is-right','is-wrong','is-picked');
+    });
+    FILL_KEYS.forEach(k => {
+      const el = $q(scen, k); el.value = '';
+      el.closest('.fill-cell').classList.remove('is-right','is-wrong');
+    });
+    document.querySelector(`.scen-card[data-scen="${scen}"]`).classList.remove('is-correct','is-wrong');
+    const v = document.querySelector(`[data-verdict="${scen}"]`);
+    v.textContent = '填完 5 项点提交'; v.className = 'scen-verdict';
+    document.querySelector(`[data-explain="${scen}"]`).classList.remove('show');
+    completed.delete(scen); scenDone.textContent = completed.size;
+    updateSummary();
+  }
+
+  function updateSummary() {
+    if (completed.size >= 3) {
+      summary.innerHTML = `<span class="verdict win">全部命中</span><h4>你已经在用"主对象思维"了。</h4><p>从下次需求评审起，<strong>第一句话先问"主对象是谁"</strong>。URL/面包屑/标题/back/焦点会自动落位——工程师不用再追问。</p>`;
+      summary.classList.add('show');
+    } else if (completed.size > 0) {
+      summary.innerHTML = `<span class="verdict partial">已完成 ${completed.size}/3</span><h4>把另外 ${3 - completed.size} 个也做完。</h4><p>三个场景代表 B 端最常见的三种"主对象坑"：<strong>详情页 vs 列表筛选</strong>、<strong>操作单 vs 用户</strong>、<strong>父对象 vs 子操作</strong>。把它们都过一遍，思维就稳了。</p>`;
+      summary.classList.add('show');
+    } else {
+      summary.classList.remove('show');
+    }
+  }
+
+  document.querySelectorAll('[data-submit]').forEach(btn => btn.addEventListener('click', () => judge(btn.dataset.submit)));
+  document.querySelectorAll('[data-reset]').forEach(btn => btn.addEventListener('click', () => reset(btn.dataset.reset)));
+
+  ['1','2','3'].forEach(scen => {
+    document.querySelectorAll(`input[name="scen${scen}-main"]`).forEach(r => {
+      r.addEventListener('change', () => {
+        document.querySelectorAll(`input[name="scen${scen}-main"]`).forEach(rr => {
+          rr.closest('.scen-radio').classList.toggle('is-picked', rr === r);
+          rr.closest('.scen-radio').classList.remove('is-right','is-wrong');
+        });
+      });
+    });
+  });
+})();
+</script>
+
+</body>
+</html>

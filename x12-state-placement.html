@@ -1,0 +1,1292 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>状态住的地方 — AI LABBOOK · X12</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,300..900&family=Geist:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Noto+Sans+SC:wght@300;400;500;700;900&family=Noto+Serif+SC:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f3eee5;
+    --bg-2: #ebe4d4;
+    --ink: #16161d;
+    --ink-soft: #4a4a55;
+    --ink-mute: #8a8a92;
+    --line: #d5cdba;
+    --line-soft: #e3dcca;
+    --accent: #ff4d2e;
+    --accent-soft: #ffe4dc;
+    --blue: #0a4cff;
+    --blue-soft: #dde6ff;
+    --green: #1f6b3a;
+    --green-soft: #d4ecdb;
+    --yellow: #ffcf3d;
+    --paper: #faf7f0;
+    --shadow: 0 1px 0 rgba(0,0,0,0.04), 0 8px 24px rgba(22,22,29,0.06);
+
+    --obj-color: #ff4d2e;
+    --obj-soft: rgba(255,77,46,0.12);
+    --proj-color: #1f6b3a;
+    --proj-soft: rgba(31,107,58,0.12);
+
+    /* 4 home colors for state placement */
+    --home-c: #d97706;       /* component (orange) */
+    --home-c-soft: rgba(217,119,6,0.12);
+    --home-p: #0a4cff;       /* page (blue) */
+    --home-p-soft: rgba(10,76,255,0.12);
+    --home-u: #ff4d2e;       /* URL (purple) */
+    --home-u-soft: rgba(255,77,46,0.12);
+    --home-s: #1f6b3a;       /* server (green) */
+    --home-s-soft: rgba(31,107,58,0.12);
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'Geist', 'Noto Sans SC', system-ui, -apple-system, sans-serif;
+    font-size: 16px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    background-image: radial-gradient(circle at 1px 1px, rgba(22,22,29,0.05) 1px, transparent 0);
+    background-size: 24px 24px;
+  }
+
+  .display-cn { font-family: 'Noto Serif SC', 'Fraunces', serif; font-weight: 900; letter-spacing: -0.01em; }
+  .display-en { font-family: 'Fraunces', 'Noto Serif SC', serif; font-weight: 600; font-style: italic; letter-spacing: -0.02em; }
+  .mono { font-family: 'JetBrains Mono', monospace; }
+  .label { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-mute); }
+
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 0 32px; }
+
+  /* Topbar */
+  .topbar { border-bottom: 1px dashed var(--line); padding: 16px 0; background: var(--bg); position: sticky; top: 0; z-index: 100; }
+  .topbar-inner { display: flex; justify-content: space-between; align-items: center; gap: 24px; flex-wrap: wrap; }
+  .brand-block { display: flex; align-items: center; gap: 10px; font-family: 'JetBrains Mono', monospace; font-size: 13px; }
+  .brand { display: inline-flex; align-items: center; gap: 6px; color: var(--ink); text-decoration: none; font-weight: 600; }
+  .brand-arrow { color: var(--ink-mute); transition: transform .2s; }
+  .brand:hover .brand-arrow { transform: translateX(-3px); }
+  .brand .dot { display: inline-block; width: 8px; height: 8px; background: var(--accent); border-radius: 50%; vertical-align: middle; animation: pulse 2s ease-in-out infinite; margin-left: 4px; }
+  .brand-sep { color: var(--ink-mute); }
+  .brand-current { color: var(--ink-soft); }
+  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+  .nav-links { display: flex; gap: 18px; font-size: 13px; flex-wrap: wrap; }
+  .nav-links a { color: var(--ink-soft); text-decoration: none; transition: color 0.2s; }
+  .nav-links a:hover { color: var(--accent); }
+  .nav-links a.current { color: var(--accent); font-weight: 600; }
+
+  /* Hero */
+  .hero { padding: 100px 0 80px; position: relative; overflow: hidden; }
+  .hero-meta { display: flex; gap: 24px; margin-bottom: 32px; align-items: center; flex-wrap: wrap; }
+  .hero-meta .pill { padding: 6px 12px; border: 1px solid var(--ink); border-radius: 100px; font-size: 11px; font-family: 'JetBrains Mono', monospace; letter-spacing: 0.05em; }
+  .hero-meta .pill.fill { background: var(--ink); color: var(--bg); }
+  .hero-meta .pill.purple { background: var(--obj-color); color: white; border-color: var(--obj-color); }
+  .hero h1 { font-family: 'Noto Serif SC', 'Fraunces', serif; font-weight: 900; font-size: clamp(48px, 7vw, 92px); line-height: 0.95; letter-spacing: -0.03em; margin: 0 0 24px; }
+  .hero h1 .em { font-family: 'Noto Serif SC', serif; font-weight: 500; color: var(--accent); }
+  .hero h1 .purple { color: var(--obj-color); font-family: 'Noto Serif SC', serif; font-weight: 500; }
+  .hero p.lede { font-size: 20px; line-height: 1.5; max-width: 640px; color: var(--ink-soft); margin: 0 0 40px; }
+  .hero-grid { display: grid; grid-template-columns: 1.4fr 1fr; gap: 48px; align-items: end; }
+  @media (max-width: 880px) { .hero-grid { grid-template-columns: 1fr; } }
+  .hero-side { border-left: 1px dashed var(--line); padding-left: 24px; font-size: 13px; color: var(--ink-soft); }
+  .hero-side .row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px dashed var(--line); gap: 12px; }
+  .hero-side .row:last-child { border-bottom: none; }
+  .hero-side .row .k { color: var(--ink-mute); font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.05em; text-transform: uppercase; }
+  .hero-side .row .v { font-weight: 500; }
+
+  /* Sections */
+  section { padding: 80px 0; border-top: 1px solid var(--line); position: relative; }
+  .section-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 56px; flex-wrap: wrap; gap: 16px; }
+  .section-num { font-family: 'JetBrains Mono', monospace; font-size: 13px; color: var(--ink-mute); letter-spacing: 0.1em; margin-top: 6px; }
+  .section-num strong { color: var(--accent); }
+  .section-title { font-family: 'Noto Serif SC', serif; font-weight: 900; font-size: clamp(32px, 4.5vw, 52px); line-height: 1.05; letter-spacing: -0.02em; margin: 8px 0 0; max-width: 22ch; }
+  .section-title .em { font-family: 'Noto Serif SC', serif; font-weight: 500; color: var(--accent); }
+  .section-title .purple { color: var(--obj-color); font-family: 'Noto Serif SC', serif; font-weight: 500; }
+  .section-sub { color: var(--ink-soft); font-size: 17px; max-width: 38ch; line-height: 1.55; margin: 0; }
+
+  /* Act tag */
+  .act-tag { display: inline-block; padding: 4px 12px; font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; border-radius: 100px; }
+  .act-tag.look { background: var(--blue-soft); color: var(--blue); }
+  .act-tag.break { background: var(--obj-soft); color: var(--obj-color); }
+  .act-tag.make { background: var(--proj-soft); color: var(--proj-color); }
+
+  /* Problem cards */
+  .problem-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; margin-top: 24px; }
+  @media (max-width: 880px) { .problem-grid { grid-template-columns: 1fr; } }
+  .problem-card { background: var(--paper); border: 1px solid var(--line); border-radius: 6px; padding: 28px; position: relative; }
+  .problem-card.bad { border-color: var(--accent); background: var(--accent-soft); }
+  .problem-card.good { border-color: var(--obj-color); background: var(--obj-soft); }
+  .problem-card .tag { position: absolute; top: -12px; left: 24px; background: var(--bg); padding: 2px 10px; font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.1em; }
+  .problem-card.bad .tag { color: var(--accent); border: 1px solid var(--accent); }
+  .problem-card.good .tag { color: var(--obj-color); border: 1px solid var(--obj-color); }
+  .problem-card h3 { font-family: 'Noto Serif SC', serif; font-size: 22px; margin: 0 0 12px; font-weight: 700; }
+  .problem-card p { margin: 0; color: var(--ink-soft); font-size: 14px; line-height: 1.55; }
+  .problem-card p + p { margin-top: 10px; }
+
+  /* Reveal bar */
+  .reveal-bar { margin-top: 32px; padding: 20px 28px; background: var(--ink); color: var(--bg); border-radius: 8px; display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap; }
+  .reveal-bar .msg { font-family: 'Noto Serif SC', serif; font-size: 17px; font-weight: 500; line-height: 1.55; }
+  .reveal-bar .msg .em { color: var(--accent); }
+  .reveal-bar .counter { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ink-mute); letter-spacing: 0.05em; }
+  .reveal-bar .counter strong { color: var(--accent); font-size: 14px; }
+
+  /* ===== Game 1: Action probe ===== */
+  .probe-stage { background: var(--paper); border: 1px solid var(--line); border-radius: 8px; padding: 32px 28px; position: relative; overflow: hidden; }
+  .probe-stage::before { content: ''; position: absolute; inset: 0; background-image: linear-gradient(to right, var(--line-soft) 1px, transparent 1px), linear-gradient(to bottom, var(--line-soft) 1px, transparent 1px); background-size: 24px 24px; opacity: 0.4; pointer-events: none; }
+  .probe-bar { position: relative; display: flex; flex-wrap: wrap; gap: 8px; padding: 12px 14px; background: var(--ink); color: var(--bg); border-radius: 8px; margin-bottom: 28px; align-items: center; }
+  .probe-label { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-mute); margin-right: 4px; }
+  .probe-btn { display: inline-flex; align-items: center; gap: 6px; padding: 8px 14px; background: transparent; border: 1px dashed rgba(255,255,255,0.3); color: var(--bg); border-radius: 100px; font-family: 'JetBrains Mono', monospace; font-size: 12px; letter-spacing: 0.05em; cursor: pointer; transition: all 0.15s; }
+  .probe-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .probe-btn.is-active { background: var(--accent); color: white; border-color: var(--accent); border-style: solid; }
+  .probe-btn .ico { font-size: 14px; }
+  .probe-reset { margin-left: auto; padding: 4px 10px; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ink-mute); background: transparent; border: none; cursor: pointer; letter-spacing: 0.05em; }
+  .probe-reset:hover { color: var(--bg); }
+
+  .probe-grid { position: relative; display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; }
+  @media (max-width: 980px) { .probe-grid { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 580px) { .probe-grid { grid-template-columns: 1fr; } }
+  .probe-card { background: white; border: 1px solid var(--line); border-radius: 8px; padding: 18px 16px 16px; position: relative; transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1); cursor: pointer; }
+  .probe-card:hover { box-shadow: 0 6px 18px rgba(22,22,29,0.06); transform: translateY(-2px); }
+  .probe-card.is-focus { box-shadow: 0 0 0 2px var(--accent-soft), 0 6px 18px rgba(255,77,46,0.18); border-color: var(--accent); }
+  .probe-tag { position: absolute; top: -10px; left: 14px; font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; padding: 2px 8px; border-radius: 100px; color: white; }
+  .probe-tag[data-home="component"] { background: var(--home-c); }
+  .probe-tag[data-home="page"] { background: var(--home-p); }
+  .probe-tag[data-home="url"] { background: var(--home-u); }
+  .probe-tag[data-home="server"] { background: var(--home-s); }
+  .probe-card[data-home="component"] { border-top: 3px solid var(--home-c); }
+  .probe-card[data-home="page"] { border-top: 3px solid var(--home-p); }
+  .probe-card[data-home="url"] { border-top: 3px solid var(--home-u); }
+  .probe-card[data-home="server"] { border-top: 3px solid var(--home-s); }
+
+  .probe-card h4 { font-family: 'Noto Serif SC', serif; font-size: 16px; margin: 6px 0 4px; font-weight: 700; line-height: 1.3; }
+  .probe-home-line { font-family: 'JetBrains Mono', monospace; font-size: 10.5px; color: var(--ink-mute); letter-spacing: 0.04em; margin-bottom: 12px; }
+  .probe-home-line strong { font-weight: 600; }
+  .probe-home-line[data-home="component"] strong { color: var(--home-c); }
+  .probe-home-line[data-home="page"] strong { color: var(--home-p); }
+  .probe-home-line[data-home="url"] strong { color: var(--home-u); }
+  .probe-home-line[data-home="server"] strong { color: var(--home-s); }
+
+  .probe-visual { background: var(--bg-2); border-radius: 5px; padding: 12px; min-height: 70px; font-size: 12px; display: flex; flex-direction: column; justify-content: center; margin-bottom: 12px; position: relative; }
+  .probe-visual.modal { background: rgba(217,119,6,0.08); }
+  .probe-visual.filter { background: rgba(10,76,255,0.07); }
+  .probe-visual.sidebar { background: rgba(255,77,46,0.07); }
+  .probe-visual.draft { background: rgba(31,107,58,0.07); }
+
+  .pv-modal-shell { background: white; border: 1px solid var(--line); border-radius: 5px; padding: 8px 10px; font-size: 11px; }
+  .pv-modal-shell .x { float: right; color: var(--ink-mute); font-family: 'JetBrains Mono', monospace; font-size: 12px; line-height: 1; cursor: default; }
+  .pv-modal-shell .ttl { font-weight: 700; font-size: 12px; margin-bottom: 4px; }
+  .pv-modal-shell .ln { background: var(--bg-2); height: 5px; border-radius: 2px; margin-top: 4px; }
+  .pv-modal-shell .ln.s { width: 60%; }
+
+  .pv-url { font-family: 'JetBrains Mono', monospace; font-size: 10.5px; color: var(--ink-soft); background: white; padding: 6px 8px; border-radius: 4px; border: 1px solid var(--line); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .pv-url .q { color: var(--home-u); }
+  .pv-chips { margin-top: 6px; display: flex; flex-wrap: wrap; gap: 4px; }
+  .pv-chip { background: var(--home-u-soft); color: var(--home-u); padding: 2px 7px; border-radius: 100px; font-size: 10.5px; font-weight: 600; }
+
+  .pv-sidebar { display: flex; gap: 6px; }
+  .pv-sb-rail { width: 20px; background: white; border: 1px solid var(--line); border-radius: 3px; padding: 6px 0; display: flex; flex-direction: column; gap: 5px; align-items: center; }
+  .pv-sb-rail .ic { width: 10px; height: 10px; border-radius: 2px; background: var(--home-p-soft); }
+  .pv-sb-rail .ic.on { background: var(--home-p); }
+  .pv-sb-content { flex: 1; background: white; border: 1px solid var(--line); border-radius: 3px; padding: 8px; display: flex; flex-direction: column; gap: 4px; }
+  .pv-sb-content .ln { height: 5px; background: var(--bg-2); border-radius: 2px; }
+  .pv-sb-content .ln.s { width: 70%; }
+
+  .pv-draft { background: white; border: 1px solid var(--line); border-radius: 5px; padding: 8px 10px; font-size: 11px; }
+  .pv-draft .save-tag { font-family: 'JetBrains Mono', monospace; font-size: 9.5px; color: var(--home-s); display: inline-flex; align-items: center; gap: 4px; }
+  .pv-draft .save-dot { width: 5px; height: 5px; background: var(--home-s); border-radius: 50%; }
+  .pv-draft .ln { height: 5px; background: var(--bg-2); border-radius: 2px; margin-top: 4px; }
+  .pv-draft .ln.s { width: 50%; }
+
+  .probe-status { border-top: 1px dashed var(--line); padding-top: 10px; font-size: 11.5px; line-height: 1.5; min-height: 56px; color: var(--ink-soft); transition: all 0.2s; }
+  .probe-status.is-empty { color: var(--ink-mute); font-style: italic; }
+  .probe-status .verdict { font-family: 'JetBrains Mono', monospace; font-size: 10.5px; letter-spacing: 0.05em; font-weight: 700; margin-right: 4px; }
+  .probe-status .verdict.keep { color: var(--green); }
+  .probe-status .verdict.lose { color: var(--accent); }
+
+  .probe-legend { margin-top: 18px; display: flex; flex-wrap: wrap; gap: 12px; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ink-soft); position: relative; }
+  .probe-legend .lg { display: inline-flex; align-items: center; gap: 6px; padding: 3px 9px; background: white; border: 1px solid var(--line); border-radius: 100px; }
+  .probe-legend .sw { width: 10px; height: 10px; border-radius: 2px; }
+  .lg .sw.c { background: var(--home-c); }
+  .lg .sw.p { background: var(--home-p); }
+  .lg .sw.u { background: var(--home-u); }
+  .lg .sw.s { background: var(--home-s); }
+
+  /* ===== Game 2: Compare table ===== */
+  .compare-stage { margin-top: 24px; background: var(--paper); border: 1px solid var(--line); border-radius: 8px; padding: 28px; }
+  .compare-table { width: 100%; border-collapse: collapse; background: white; border-radius: 6px; overflow: hidden; border: 1px solid var(--line); }
+  .compare-table th, .compare-table td { padding: 14px 14px; text-align: left; border-bottom: 1px solid var(--line); vertical-align: middle; font-size: 13px; }
+  .compare-table th { background: var(--bg-2); font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-soft); font-weight: 600; }
+  .compare-row { cursor: pointer; transition: all 0.2s; }
+  .compare-row:hover { background: var(--bg); }
+  .compare-row.is-open { background: var(--bg); }
+  .compare-row td:first-child { font-weight: 700; }
+  .compare-tag { display: inline-flex; align-items: center; gap: 8px; padding: 5px 10px; border-radius: 100px; color: white; font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.04em; font-weight: 600; }
+  .compare-tag[data-home="component"] { background: var(--home-c); }
+  .compare-tag[data-home="page"] { background: var(--home-p); }
+  .compare-tag[data-home="url"] { background: var(--home-u); }
+  .compare-tag[data-home="server"] { background: var(--home-s); }
+  .compare-cell { font-family: 'JetBrains Mono', monospace; font-size: 12.5px; }
+  .compare-cell.yes { color: var(--green); font-weight: 700; }
+  .compare-cell.no { color: var(--accent); font-weight: 700; }
+  .compare-cell.mixed { color: var(--ink-soft); font-size: 11px; }
+  .compare-use { font-size: 12px; color: var(--ink-soft); line-height: 1.5; }
+  .compare-toggle { display: inline-block; width: 18px; height: 18px; border-radius: 50%; background: var(--bg-2); color: var(--ink-soft); text-align: center; line-height: 18px; font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 700; margin-left: 6px; transition: all 0.2s; }
+  .compare-row.is-open .compare-toggle { background: var(--ink); color: var(--bg); transform: rotate(45deg); }
+
+  .compare-detail-row { display: none; }
+  .compare-detail-row.is-open { display: table-row; }
+  .compare-detail-row td { padding: 0; background: var(--bg-2); border-bottom: 1px solid var(--line); }
+  .compare-detail { padding: 20px 22px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+  @media (max-width: 880px) { .compare-detail { grid-template-columns: 1fr; } }
+  .compare-detail-block { background: white; border-radius: 6px; padding: 14px 16px; border-left: 3px solid var(--ink); }
+  .compare-detail-block[data-kind="tech"] { border-left-color: var(--blue); }
+  .compare-detail-block[data-kind="bad"] { border-left-color: var(--accent); }
+  .compare-detail-block[data-kind="when"] { border-left-color: var(--green); }
+  .compare-detail-block h5 { font-family: 'JetBrains Mono', monospace; font-size: 10.5px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-mute); margin: 0 0 6px; font-weight: 600; }
+  .compare-detail-block[data-kind="tech"] h5 { color: var(--blue); }
+  .compare-detail-block[data-kind="bad"] h5 { color: var(--accent); }
+  .compare-detail-block[data-kind="when"] h5 { color: var(--green); }
+  .compare-detail-block .h-title { font-family: 'Noto Serif SC', serif; font-size: 14px; font-weight: 700; margin: 0 0 6px; line-height: 1.4; }
+  .compare-detail-block p { margin: 0; font-size: 12.5px; line-height: 1.6; color: var(--ink-soft); }
+  .compare-detail-block code { font-family: 'JetBrains Mono', monospace; font-size: 11px; background: var(--bg-2); padding: 1px 5px; border-radius: 3px; color: var(--ink); }
+
+  /* Anti-pattern callouts */
+  .anti-grid { margin-top: 28px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+  @media (max-width: 880px) { .anti-grid { grid-template-columns: 1fr; } }
+  .anti-card { background: white; border: 1px solid var(--accent); border-radius: 8px; padding: 18px; position: relative; transition: all 0.2s; }
+  .anti-card:hover { box-shadow: 0 4px 16px rgba(255,77,46,0.12); }
+  .anti-card .anti-num { position: absolute; top: -12px; left: 14px; background: var(--accent); color: white; font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.08em; padding: 3px 9px; border-radius: 100px; }
+  .anti-card h5 { font-family: 'Noto Serif SC', serif; font-size: 14.5px; margin: 6px 0 8px; font-weight: 700; line-height: 1.4; color: var(--ink); }
+  .anti-card p { margin: 0; font-size: 12.5px; line-height: 1.55; color: var(--ink-soft); }
+  .anti-card p strong { color: var(--accent); }
+
+  /* ===== Game 3: Quiz ===== */
+  .quiz-stage { background: var(--paper); border: 1px solid var(--line); border-radius: 8px; padding: 32px; margin-top: 24px; }
+  .quiz-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 24px; flex-wrap: wrap; gap: 16px; }
+  .quiz-title { font-family: 'Noto Serif SC', serif; font-size: 22px; margin: 0; font-weight: 700; }
+  .quiz-progress { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--ink-mute); }
+  .quiz-progress .done { color: var(--proj-color); font-weight: 700; font-size: 14px; }
+
+  .quiz-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
+  @media (max-width: 880px) { .quiz-grid { grid-template-columns: 1fr; } }
+  .quiz-card { background: white; border: 1px solid var(--line); border-radius: 8px; padding: 18px; display: flex; flex-direction: column; gap: 12px; transition: all 0.2s; }
+  .quiz-card.is-correct { border-color: var(--green); background: var(--green-soft); }
+  .quiz-card.is-wrong { border-color: var(--accent); background: var(--accent-soft); }
+  .quiz-card.is-partial { border-color: var(--yellow); background: rgba(255,207,61,0.18); }
+  .quiz-card-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+  .quiz-card-num { font-family: 'JetBrains Mono', monospace; font-size: 10.5px; letter-spacing: 0.06em; color: var(--ink-mute); }
+  .quiz-card-name { font-family: 'Noto Serif SC', serif; font-size: 15.5px; font-weight: 700; line-height: 1.35; flex: 1; min-width: 0; }
+  .quiz-card-verdict { font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; padding: 2px 8px; border-radius: 100px; color: white; display: none; }
+  .quiz-card.is-correct .quiz-card-verdict { display: inline-block; background: var(--green); }
+  .quiz-card.is-wrong .quiz-card-verdict { display: inline-block; background: var(--accent); }
+  .quiz-card.is-partial .quiz-card-verdict { display: inline-block; background: #c79f1e; }
+  .quiz-card-hint { font-size: 12px; color: var(--ink-mute); line-height: 1.5; }
+
+  .quiz-opts { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; }
+  .quiz-opt { padding: 8px 4px; border-radius: 5px; background: var(--bg-2); cursor: pointer; text-align: center; transition: all 0.15s; border: 1px solid transparent; font-size: 11.5px; line-height: 1.3; user-select: none; }
+  .quiz-opt:hover { background: white; border-color: var(--line); }
+  .quiz-opt.is-picked { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+  .quiz-opt .opt-label { font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.05em; display: block; opacity: 0.7; margin-bottom: 2px; }
+  .quiz-opt .opt-name { font-weight: 600; }
+  .quiz-opt[data-h="component"].is-picked { background: var(--home-c); border-color: var(--home-c); }
+  .quiz-opt[data-h="page"].is-picked { background: var(--home-p); border-color: var(--home-p); }
+  .quiz-opt[data-h="url"].is-picked { background: var(--home-u); border-color: var(--home-u); }
+  .quiz-opt[data-h="server"].is-picked { background: var(--home-s); border-color: var(--home-s); }
+
+  .quiz-fb { display: none; font-size: 12px; line-height: 1.55; color: var(--ink-soft); padding-top: 10px; border-top: 1px dashed var(--line); }
+  .quiz-fb.show { display: block; }
+  .quiz-fb strong { color: var(--ink); }
+  .quiz-fb code { font-family: 'JetBrains Mono', monospace; background: white; padding: 1px 5px; border-radius: 3px; font-size: 11px; color: var(--ink); }
+
+  .quiz-actions { display: flex; gap: 12px; margin-top: 24px; flex-wrap: wrap; }
+  .quiz-btn { padding: 10px 22px; border-radius: 100px; font-family: 'JetBrains Mono', monospace; font-size: 12px; letter-spacing: 0.06em; text-transform: uppercase; cursor: pointer; font-weight: 600; border: 1px solid var(--ink); background: transparent; color: var(--ink); transition: all 0.15s; }
+  .quiz-btn:hover { background: var(--ink); color: var(--bg); }
+  .quiz-btn.primary { background: var(--accent); color: white; border-color: var(--accent); }
+  .quiz-btn.primary:hover { background: #e8451f; }
+
+  .quiz-judge { margin-top: 24px; padding: 24px 26px; border-radius: 8px; background: var(--ink); color: var(--bg); display: none; }
+  .quiz-judge.show { display: block; }
+  .quiz-judge .verdict { display: inline-block; font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; padding: 3px 10px; border-radius: 100px; }
+  .quiz-judge .verdict.win { color: #1f6b3a; background: #d4ecdb; }
+  .quiz-judge .verdict.partial { color: #c79f1e; background: #fff3cc; }
+  .quiz-judge .verdict.fail { color: var(--accent); background: var(--accent-soft); }
+  .quiz-judge h4 { font-family: 'Noto Serif SC', serif; font-size: 22px; margin: 10px 0 14px; color: white; line-height: 1.3; }
+  .quiz-judge p { color: #c8c8d0; margin: 0; font-size: 13.5px; line-height: 1.65; }
+  .quiz-judge .score-line { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #a0a0aa; margin-top: 10px; letter-spacing: 0.04em; }
+  .quiz-judge .score-line .num { color: var(--accent); font-weight: 700; font-size: 16px; }
+
+  /* tips */
+  .tips-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 28px; margin-top: 24px; }
+  @media (max-width: 880px) { .tips-grid { grid-template-columns: 1fr; } }
+  .tip { background: var(--paper); border: 1px solid var(--line); border-radius: 6px; padding: 24px; position: relative; }
+  .tip-num { position: absolute; top: -14px; left: 16px; width: 32px; height: 32px; border-radius: 50%; background: var(--obj-color); color: white; display: flex; align-items: center; justify-content: center; font-family: 'Fraunces', serif; font-style: italic; font-weight: 600; font-size: 14px; }
+  .tip h4 { font-family: 'Noto Serif SC', serif; font-size: 18px; margin: 8px 0 10px; font-weight: 700; }
+  .tip p { color: var(--ink-soft); font-size: 14px; line-height: 1.6; margin: 0; }
+  .tip p + p { margin-top: 8px; }
+  .tip-outro {
+    margin-top: 44px;
+    padding: 30px 32px;
+    background: var(--ink);
+    color: var(--bg);
+    border-radius: 8px;
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 28px;
+    align-items: flex-start;
+  }
+  @media (max-width: 720px) { .tip-outro { grid-template-columns: 1fr; gap: 12px; } }
+  .outro-tag { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.1em; color: var(--accent); padding-top: 4px; }
+  .tip-outro p { margin: 0 0 12px; color: #c8c8d0; line-height: 1.65; font-size: 15px; }
+  .tip-outro p:last-child { margin-bottom: 0; }
+  .tip-outro strong { color: white; }
+
+  /* next post */
+  .next-post {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 56px;
+    padding: 32px;
+    background: var(--bg-2);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    text-decoration: none;
+    color: var(--ink);
+    transition: all 0.2s;
+    gap: 24px;
+    flex-wrap: wrap;
+  }
+  .next-post:hover { background: var(--ink); color: var(--bg); }
+  .next-post:hover .np-tag { color: var(--accent); }
+  .next-post:hover .em { color: var(--accent); }
+  .next-post:hover p { color: #c8c8d0; }
+  .np-tag { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.1em; color: var(--ink-mute); margin-bottom: 6px; }
+  .next-post h4 { font-family: 'Noto Serif SC', serif; font-size: 26px; margin: 0 0 8px; font-weight: 700; }
+  .next-post .em { color: var(--obj-color); font-weight: 500; }
+  .next-post p { margin: 0; color: var(--ink-soft); font-size: 14px; max-width: 56ch; }
+  .np-cta { font-family: 'JetBrains Mono', monospace; font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; white-space: nowrap; }
+  .np-cta .arr { display: inline-block; transition: transform .2s; }
+  .next-post:hover .arr { transform: translateX(4px); }
+
+  /* footer */
+  footer { padding: 56px 0 64px; background: var(--bg); color: var(--ink-soft); border-top: 1px solid var(--line); }
+  .byline-group { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; margin-bottom: 32px; padding-bottom: 32px; border-bottom: 1px dashed var(--line); }
+  @media (max-width: 880px) { .byline-group { grid-template-columns: 1fr; } }
+  .byline { display: flex; gap: 16px; align-items: center; }
+  .byline .avatar { width: 56px; height: 56px; border-radius: 50%; object-fit: cover; flex-shrink: 0; }
+  .byline-label { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--accent); letter-spacing: 0.1em; }
+  .byline-label .dot { display: inline-block; width: 6px; height: 6px; background: var(--accent); border-radius: 50%; margin-right: 4px; vertical-align: middle; animation: pulse 2s ease-in-out infinite; }
+  .byline-name { font-family: 'Noto Serif SC', serif; font-weight: 700; font-size: 18px; margin: 4px 0; color: var(--ink); }
+  .byline-name .em { color: var(--accent); font-weight: 500; }
+  .byline-tag { color: var(--ink-soft); font-size: 13px; margin: 0; line-height: 1.5; }
+  .footer-meta { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ink-mute); text-align: center; letter-spacing: 0.05em; }
+  .footer-meta .heart { color: var(--accent); }
+
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="wrap topbar-inner">
+    <div class="brand-block">
+      <a href="book.html#vol-3" class="brand"><span class="brand-arrow">←</span>AI LABBOOK <span class="dot"></span></a>
+      <span class="brand-sep">/</span>
+      <span class="brand-current">X12 · 状态住在哪</span>
+    </div>
+    <nav class="nav-links">
+      <a href="book.html#vol-3">路线图</a>
+    </nav>
+  </div>
+</div>
+
+<!-- Hero -->
+<header class="hero">
+  <div class="wrap">
+    <div class="hero-meta">
+      <span class="pill fill">高阶 · ADVANCED</span>
+      <span class="pill purple">STAGE 03 · 数据与状态</span>
+      <span class="pill">X12 · 状态归属</span>
+      <span class="label">阅读 ≈ 16 分钟 · 含 3 段互动</span>
+    </div>
+    <div class="hero-grid">
+      <div>
+        <h1>
+          状态<br>
+          <span class="display-cn">住的地方</span><br>
+          决定它的<span class="purple">命运</span>。
+        </h1>
+        <p class="lede">
+          刷新会丢吗？分享链接给同事能复现吗？多标签页能同步吗？换设备能续上吗？<br>
+          4 个答案 → 4 种住址。<strong>住错了 = 用户行为出 bug。</strong>
+        </p>
+      </div>
+      <div class="hero-side">
+        <div class="row"><span class="k">本页讲什么</span><span class="v">状态归属</span></div>
+        <div class="row"><span class="k">四种住址</span><span class="v">组件 / 页 / URL / 服务端</span></div>
+        <div class="row"><span class="k">三幕</span><span class="v">看见 · 拆开 · 再做</span></div>
+        <div class="row"><span class="k">前置</span><span class="v">X11 · 数据流</span></div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- Section 01: 问题 -->
+<section id="problem">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>01</strong> / 问题</div>
+        <h2 class="section-title">设计稿里"状态都标了"，<br>但<span class="em">没人知道</span>它住在哪。</h2>
+      </div>
+      <p class="section-sub">
+        设计师以为状态就是"按钮高亮/不高亮"。其实<strong>状态有 4 种住址</strong>——住址决定它在刷新、分享、跨设备、关 tab 时怎么表现。
+        住址不写清楚 = 行为靠工程师猜。
+      </p>
+    </div>
+
+    <div class="problem-grid">
+      <div class="problem-card bad">
+        <span class="tag">把状态当装饰 · BAD</span>
+        <h3>"筛选 / 弹窗 / tab 都标了高亮"</h3>
+        <p>稿子里这三件状态都画了——筛选条选中态、弹窗打开态、当前 tab 高亮态。看起来完整。</p>
+        <p><strong>工程师追问：</strong>刷新页面，筛选会保留吗？把当前 URL 发给同事，他打开能看到一样的 tab 吗？关掉弹窗下次再开，是新的还是上次那个？</p>
+        <p style="color:var(--accent)"><strong>你：</strong>呃……我没想。</p>
+      </div>
+
+      <div class="problem-card good">
+        <span class="tag">状态有住址 · GOOD</span>
+        <h3>"筛选住 URL，弹窗住组件，tab 住本页"</h3>
+        <p>稿子里每个状态都标了住址——<strong>筛选住 URL</strong>（可分享 + 刷新保留）/ <strong>弹窗住组件</strong>（关掉就重置）/ <strong>tab 住本页</strong>（页内共享，刷新还原）。</p>
+        <p><strong>工程师收到：</strong>三件状态各有明确"住址 + 行为"，直接落 router + state schema。</p>
+        <p style="color:var(--obj-color)"><strong>结果：</strong>追问 → 0 次。</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Section 02: 幕一 · 看见 -->
+<section id="look">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <span class="act-tag look">幕一 · 看见</span>
+        <div class="section-num"><strong>02</strong> / 看见</div>
+        <h2 class="section-title"><span class="purple">4 个状态</span>，<br>4 种住址。</h2>
+      </div>
+      <p class="section-sub">
+        下面 4 个真实状态——刷新、分享链接、换设备、关 tab 各种操作下，它们表现完全不一样。
+        点顶上的动作按钮，看 4 张卡片同时显示"<strong>保留 / 丢失</strong>"。
+      </p>
+    </div>
+
+    <div class="probe-stage">
+      <div class="probe-bar">
+        <span class="probe-label">触发动作</span>
+        <button class="probe-btn" data-action="refresh"><span class="ico">↻</span> 刷新</button>
+        <button class="probe-btn" data-action="share"><span class="ico">↗</span> 分享链接</button>
+        <button class="probe-btn" data-action="device"><span class="ico">⇄</span> 换设备</button>
+        <button class="probe-btn" data-action="close"><span class="ico">×</span> 关 tab 再开</button>
+        <button class="probe-reset" id="probeReset">清除</button>
+      </div>
+
+      <div class="probe-grid">
+
+        <div class="probe-card" data-state="modal" data-home="component">
+          <span class="probe-tag" data-home="component">组件内</span>
+          <h4>模态框开 / 关</h4>
+          <div class="probe-home-line" data-home="component">住 · <strong>useState</strong> · 关掉就忘</div>
+          <div class="probe-visual modal">
+            <div class="pv-modal-shell">
+              <span class="x">×</span>
+              <div class="ttl">确认删除？</div>
+              <div class="ln"></div><div class="ln s"></div>
+            </div>
+          </div>
+          <div class="probe-status is-empty" data-status="modal">点动作按钮 → 看保不保留</div>
+        </div>
+
+        <div class="probe-card" data-state="filter" data-home="url">
+          <span class="probe-tag" data-home="url">URL</span>
+          <h4>当前筛选条件</h4>
+          <div class="probe-home-line" data-home="url">住 · <strong>?status=active&amp;owner=lh</strong></div>
+          <div class="probe-visual filter">
+            <div class="pv-url">/customers<span class="q">?status=active&amp;owner=lh</span></div>
+            <div class="pv-chips"><span class="pv-chip">活跃</span><span class="pv-chip">李华跟进</span></div>
+          </div>
+          <div class="probe-status is-empty" data-status="filter">点动作按钮 → 看保不保留</div>
+        </div>
+
+        <div class="probe-card" data-state="sidebar" data-home="page">
+          <span class="probe-tag" data-home="page">本页 / 本地</span>
+          <h4>侧边栏折叠状态</h4>
+          <div class="probe-home-line" data-home="page">住 · <strong>localStorage</strong> · 设备本地</div>
+          <div class="probe-visual sidebar">
+            <div class="pv-sidebar">
+              <div class="pv-sb-rail"><div class="ic on"></div><div class="ic"></div><div class="ic"></div></div>
+              <div class="pv-sb-content"><div class="ln"></div><div class="ln s"></div><div class="ln"></div></div>
+            </div>
+          </div>
+          <div class="probe-status is-empty" data-status="sidebar">点动作按钮 → 看保不保留</div>
+        </div>
+
+        <div class="probe-card" data-state="draft" data-home="server">
+          <span class="probe-tag" data-home="server">服务端</span>
+          <h4>草稿数据</h4>
+          <div class="probe-home-line" data-home="server">住 · <strong>autosave → DB</strong> · 永久</div>
+          <div class="probe-visual draft">
+            <div class="pv-draft">
+              <span class="save-tag"><span class="save-dot"></span>已保存 · 2 秒前</span>
+              <div class="ln"></div><div class="ln"></div><div class="ln s"></div>
+            </div>
+          </div>
+          <div class="probe-status is-empty" data-status="draft">点动作按钮 → 看保不保留</div>
+        </div>
+
+      </div>
+
+      <div class="probe-legend"><span class="lg"><span class="sw c"></span> 组件内</span><span class="lg"><span class="sw p"></span> 本页</span><span class="lg"><span class="sw u"></span> URL</span><span class="lg"><span class="sw s"></span> 服务端</span></div>
+    </div>
+
+    <div class="reveal-bar">
+      <div class="msg">
+        同样标"状态"，<span class="em">住址不同 = 行为天差地别</span>。<br>
+        设计稿不标住址 = 行为靠工程师猜。
+      </div>
+      <div class="counter">
+        已触发 <strong id="probeCount">0</strong> / 4 个动作
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Section 03: 幕二 · 拆开 -->
+<section id="break">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <span class="act-tag break">幕二 · 拆开</span>
+        <div class="section-num"><strong>03</strong> / 拆开</div>
+        <h2 class="section-title"><span class="purple">4 种住址</span>的<br>对比表。</h2>
+      </div>
+      <p class="section-sub">
+        每种住址都有 4 个特征——<strong>刷新行为 / 分享行为 / 跨设备 / 持久度</strong>，加上典型用例。
+        点每一行展开看技术承载、设计反例、选择信号。
+      </p>
+    </div>
+
+    <div class="compare-stage">
+      <table class="compare-table" id="compareTable">
+        <thead>
+          <tr>
+            <th>住址</th>
+            <th>刷新</th>
+            <th>分享</th>
+            <th>跨设备</th>
+            <th>持久</th>
+            <th>典型用例</th>
+          </tr>
+        </thead>
+        <tbody>
+
+          <tr class="compare-row" data-row="component">
+            <td><span class="compare-tag" data-home="component">组件内</span><span class="compare-toggle">+</span></td>
+            <td><span class="compare-cell no">✗</span></td>
+            <td><span class="compare-cell no">✗</span></td>
+            <td><span class="compare-cell no">✗</span></td>
+            <td><span class="compare-cell mixed">关闭即灭</span></td>
+            <td><span class="compare-use">弹窗开 / 关、tooltip、hover、菜单展开</span></td>
+          </tr>
+          <tr class="compare-detail-row" data-detail="component">
+            <td colspan="6">
+              <div class="compare-detail">
+                <div class="compare-detail-block" data-kind="tech">
+                  <h5>技术承载 · How</h5>
+                  <div class="h-title">useState · ref · 本地实例变量</div>
+                  <p>状态住在组件实例里。组件 unmount 就消失。<br>React 里就是 <code>useState</code> / <code>useReducer</code>；Vue 里是 <code>ref</code> / <code>reactive</code>。</p>
+                </div>
+                <div class="compare-detail-block" data-kind="bad">
+                  <h5>设计反例 · Bad</h5>
+                  <div class="h-title">把"当前筛选"塞进组件里</div>
+                  <p>同事打开你分享的列表 URL，看到的是<strong>没筛选过</strong>的全表。因为筛选状态死在你的组件实例里，URL 里没带——根本传不出去。</p>
+                </div>
+                <div class="compare-detail-block" data-kind="when">
+                  <h5>选择信号 · When</h5>
+                  <div class="h-title">瞬态 + 私有</div>
+                  <p>只有当前组件用 + 关掉就该丢 → 选这个。Hover 高亮、dropdown 开合、表单字段聚焦——典型组件内状态。</p>
+                </div>
+              </div>
+            </td>
+          </tr>
+
+          <tr class="compare-row" data-row="page">
+            <td><span class="compare-tag" data-home="page">本页</span><span class="compare-toggle">+</span></td>
+            <td><span class="compare-cell mixed">local: ✓ / mem: ✗</span></td>
+            <td><span class="compare-cell no">✗</span></td>
+            <td><span class="compare-cell no">✗</span></td>
+            <td><span class="compare-cell mixed">设备本地</span></td>
+            <td><span class="compare-use">侧栏折叠、主题、字体大小、列表密度</span></td>
+          </tr>
+          <tr class="compare-detail-row" data-detail="page">
+            <td colspan="6">
+              <div class="compare-detail">
+                <div class="compare-detail-block" data-kind="tech">
+                  <h5>技术承载 · How</h5>
+                  <div class="h-title">localStorage / Context / Memory</div>
+                  <p>跨组件、跨页面共享，但只活在当前设备 / 浏览器。<br><code>localStorage</code>（刷新保留）/ Context Provider（仅内存，刷新清空）。</p>
+                </div>
+                <div class="compare-detail-block" data-kind="bad">
+                  <h5>设计反例 · Bad</h5>
+                  <div class="h-title">主题设置只住本页</div>
+                  <p>用户换台电脑/手机登录，主题、字号、密度全部重置。如果"用户偏好要跟人走"，就该住服务端，不是 localStorage。</p>
+                </div>
+                <div class="compare-detail-block" data-kind="when">
+                  <h5>选择信号 · When</h5>
+                  <div class="h-title">本设备私有偏好</div>
+                  <p>跨页面共享 + 但不想跨设备 + 不想分享。布局密度、最近打开过的项、本机草稿这种"<strong>这台设备上我喜欢这样</strong>"——选这个。</p>
+                </div>
+              </div>
+            </td>
+          </tr>
+
+          <tr class="compare-row" data-row="url">
+            <td><span class="compare-tag" data-home="url">URL</span><span class="compare-toggle">+</span></td>
+            <td><span class="compare-cell yes">✓</span></td>
+            <td><span class="compare-cell yes">✓</span></td>
+            <td><span class="compare-cell yes">✓ (链接)</span></td>
+            <td><span class="compare-cell mixed">URL 有效期</span></td>
+            <td><span class="compare-use">筛选、排序、当前 tab、当前页码、搜索词</span></td>
+          </tr>
+          <tr class="compare-detail-row" data-detail="url">
+            <td colspan="6">
+              <div class="compare-detail">
+                <div class="compare-detail-block" data-kind="tech">
+                  <h5>技术承载 · How</h5>
+                  <div class="h-title">URLSearchParams / path / hash</div>
+                  <p>状态序列化进 URL。三种位置：<code>?key=val</code>（query）/ <code>/path/x</code>（path）/ <code>#anchor</code>（hash）。<br>路由库 (React Router / Next router) 提供读写 API。</p>
+                </div>
+                <div class="compare-detail-block" data-kind="bad">
+                  <h5>设计反例 · Bad</h5>
+                  <div class="h-title">把模态框开 / 关塞进 URL</div>
+                  <p>用户后退 → 模态自动重开；再前进 → 又关掉。浏览器历史里一堆"打开 / 关闭"的脏数据。模态框是瞬态 UI，不该出现在历史里。</p>
+                </div>
+                <div class="compare-detail-block" data-kind="when">
+                  <h5>选择信号 · When</h5>
+                  <div class="h-title">想分享 / 刷新 / 后退能回来</div>
+                  <p>用户希望：把当前视图发给同事、刷新不丢、后退退回上一次的视图。一句话——<strong>"如果丢了用户会骂"的状态，URL 是默认住址</strong>。</p>
+                </div>
+              </div>
+            </td>
+          </tr>
+
+          <tr class="compare-row" data-row="server">
+            <td><span class="compare-tag" data-home="server">服务端</span><span class="compare-toggle">+</span></td>
+            <td><span class="compare-cell yes">✓</span></td>
+            <td><span class="compare-cell yes">✓</span></td>
+            <td><span class="compare-cell yes">✓</span></td>
+            <td><span class="compare-cell mixed">数据库永久</span></td>
+            <td><span class="compare-use">草稿、未读、用户偏好、订阅、协作状态</span></td>
+          </tr>
+          <tr class="compare-detail-row" data-detail="server">
+            <td colspan="6">
+              <div class="compare-detail">
+                <div class="compare-detail-block" data-kind="tech">
+                  <h5>技术承载 · How</h5>
+                  <div class="h-title">DB / API / Sync 协议</div>
+                  <p>状态写进数据库，前端只是"展示 + 同步"。<br>典型：<code>autosave 草稿</code> / <code>用户 settings 表</code> / WebSocket 实时同步。</p>
+                </div>
+                <div class="compare-detail-block" data-kind="bad">
+                  <h5>设计反例 · Bad</h5>
+                  <div class="h-title">未登录用户的主题塞服务端</div>
+                  <p>用户没账号 → 没地方存。强制登录才让选主题——劝退体验。先在 localStorage 起，登录后 sync 到服务端，才是渐进路径。</p>
+                </div>
+                <div class="compare-detail-block" data-kind="when">
+                  <h5>选择信号 · When</h5>
+                  <div class="h-title">必须跨设备 / 协作</div>
+                  <p>"换设备能续上"、"团队里别人能看到"、"不能丢一个字"——三个里有一个，就该住服务端。代价是接口 / 同步 / 冲突，<strong>不是 default，是 last resort</strong>。</p>
+                </div>
+              </div>
+            </td>
+          </tr>
+
+        </tbody>
+      </table>
+
+      <div class="anti-grid">
+        <div class="anti-card">
+          <span class="anti-num">反例 01</span>
+          <h5>筛选住组件 → 链接传不出去</h5>
+          <p>用户分享当前列表链接给同事，<strong>同事打开看不到一样的筛选</strong>——因为筛选状态死在你组件里，URL 干干净净。</p>
+        </div>
+        <div class="anti-card">
+          <span class="anti-num">反例 02</span>
+          <h5>模态框住 URL → 后退诡异</h5>
+          <p>退回去 → 模态自动重开；再前进 → 又关掉。<strong>浏览器历史变成"开关弹窗"的日志</strong>。模态是瞬态 UI，不进历史。</p>
+        </div>
+        <div class="anti-card">
+          <span class="anti-num">反例 03</span>
+          <h5>主题住服务端 → 未登录无解</h5>
+          <p>新用户没账号 → 没法存偏好 → 必须先注册才能换暗色模式。<strong>渐进式应该是 localStorage 起 → 登录后 sync</strong>。</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="reveal-bar" style="margin-top:32px">
+      <div class="msg">
+        4 种住址 = <span class="em">4 种产品行为</span>。<br>
+        设计住址 = 设计行为。状态写在哪 = 它能不能被分享、能不能跨设备、能不能后退。
+      </div>
+      <div class="counter">点行展开看反例</div>
+    </div>
+  </div>
+</section>
+
+<!-- Section 04: 幕三 · 再做 -->
+<section id="make">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <span class="act-tag make">幕三 · 再做</span>
+        <div class="section-num"><strong>04</strong> / 再做</div>
+        <h2 class="section-title">轮到你——<br>给 8 个状态<br><span class="em">选住址</span>。</h2>
+      </div>
+      <p class="section-sub">
+        下面 8 个状态。每个有 4 个住址 radio——组件 / 本页 / URL / 服务端。
+        <strong>提交后看你有没有"住对"</strong>——每错一项给具体反例。
+      </p>
+    </div>
+
+    <div class="quiz-stage">
+      <div class="quiz-head">
+        <h3 class="quiz-title">状态归属判断 · 8 题</h3>
+        <div class="quiz-progress">已选 <span class="done" id="quizDone">0</span> / 8 题</div>
+      </div>
+
+      <div class="quiz-grid" id="quizGrid">
+
+        <div class="quiz-card" data-q="tab">
+          <div class="quiz-card-head">
+            <div>
+              <div class="quiz-card-num">Q1</div>
+              <div class="quiz-card-name">当前选中的 tab</div>
+            </div>
+            <span class="quiz-card-verdict">—</span>
+          </div>
+          <div class="quiz-card-hint">列表页头部有 4 个 tab：全部 / 我的 / 待跟进 / 已完成。</div>
+          <div class="quiz-opts" data-qid="tab">
+            <div class="quiz-opt" data-h="component"><span class="opt-label">A</span><span class="opt-name">组件</span></div>
+            <div class="quiz-opt" data-h="page"><span class="opt-label">B</span><span class="opt-name">本页</span></div>
+            <div class="quiz-opt" data-h="url"><span class="opt-label">C</span><span class="opt-name">URL</span></div>
+            <div class="quiz-opt" data-h="server"><span class="opt-label">D</span><span class="opt-name">服务端</span></div>
+          </div>
+          <div class="quiz-fb" data-fb="tab"></div>
+        </div>
+
+        <div class="quiz-card" data-q="search">
+          <div class="quiz-card-head">
+            <div>
+              <div class="quiz-card-num">Q2</div>
+              <div class="quiz-card-name">搜索框里的关键词</div>
+            </div>
+            <span class="quiz-card-verdict">—</span>
+          </div>
+          <div class="quiz-card-hint">用户在搜框输入"张明"——边搜边查，结果实时筛掉。</div>
+          <div class="quiz-opts" data-qid="search">
+            <div class="quiz-opt" data-h="component"><span class="opt-label">A</span><span class="opt-name">组件</span></div>
+            <div class="quiz-opt" data-h="page"><span class="opt-label">B</span><span class="opt-name">本页</span></div>
+            <div class="quiz-opt" data-h="url"><span class="opt-label">C</span><span class="opt-name">URL</span></div>
+            <div class="quiz-opt" data-h="server"><span class="opt-label">D</span><span class="opt-name">服务端</span></div>
+          </div>
+          <div class="quiz-fb" data-fb="search"></div>
+        </div>
+
+        <div class="quiz-card" data-q="sidebar">
+          <div class="quiz-card-head">
+            <div>
+              <div class="quiz-card-num">Q3</div>
+              <div class="quiz-card-name">侧栏折叠 / 展开</div>
+            </div>
+            <span class="quiz-card-verdict">—</span>
+          </div>
+          <div class="quiz-card-hint">用户在自己电脑上喜欢折叠侧栏腾空间，公司大屏喜欢展开。</div>
+          <div class="quiz-opts" data-qid="sidebar">
+            <div class="quiz-opt" data-h="component"><span class="opt-label">A</span><span class="opt-name">组件</span></div>
+            <div class="quiz-opt" data-h="page"><span class="opt-label">B</span><span class="opt-name">本页</span></div>
+            <div class="quiz-opt" data-h="url"><span class="opt-label">C</span><span class="opt-name">URL</span></div>
+            <div class="quiz-opt" data-h="server"><span class="opt-label">D</span><span class="opt-name">服务端</span></div>
+          </div>
+          <div class="quiz-fb" data-fb="sidebar"></div>
+        </div>
+
+        <div class="quiz-card" data-q="unread">
+          <div class="quiz-card-head">
+            <div>
+              <div class="quiz-card-num">Q4</div>
+              <div class="quiz-card-name">未读消息红点</div>
+            </div>
+            <span class="quiz-card-verdict">—</span>
+          </div>
+          <div class="quiz-card-hint">用户在手机上读过的消息，在电脑端也要显示成已读。</div>
+          <div class="quiz-opts" data-qid="unread">
+            <div class="quiz-opt" data-h="component"><span class="opt-label">A</span><span class="opt-name">组件</span></div>
+            <div class="quiz-opt" data-h="page"><span class="opt-label">B</span><span class="opt-name">本页</span></div>
+            <div class="quiz-opt" data-h="url"><span class="opt-label">C</span><span class="opt-name">URL</span></div>
+            <div class="quiz-opt" data-h="server"><span class="opt-label">D</span><span class="opt-name">服务端</span></div>
+          </div>
+          <div class="quiz-fb" data-fb="unread"></div>
+        </div>
+
+        <div class="quiz-card" data-q="draft">
+          <div class="quiz-card-head">
+            <div>
+              <div class="quiz-card-num">Q5</div>
+              <div class="quiz-card-name">草稿里的表单数据</div>
+            </div>
+            <span class="quiz-card-verdict">—</span>
+          </div>
+          <div class="quiz-card-hint">用户写了一半的客户备注——电脑突然关机，下次打开希望能接着写。</div>
+          <div class="quiz-opts" data-qid="draft">
+            <div class="quiz-opt" data-h="component"><span class="opt-label">A</span><span class="opt-name">组件</span></div>
+            <div class="quiz-opt" data-h="page"><span class="opt-label">B</span><span class="opt-name">本页</span></div>
+            <div class="quiz-opt" data-h="url"><span class="opt-label">C</span><span class="opt-name">URL</span></div>
+            <div class="quiz-opt" data-h="server"><span class="opt-label">D</span><span class="opt-name">服务端</span></div>
+          </div>
+          <div class="quiz-fb" data-fb="draft"></div>
+        </div>
+
+        <div class="quiz-card" data-q="dropdown">
+          <div class="quiz-card-head">
+            <div>
+              <div class="quiz-card-num">Q6</div>
+              <div class="quiz-card-name">下拉菜单开 / 关</div>
+            </div>
+            <span class="quiz-card-verdict">—</span>
+          </div>
+          <div class="quiz-card-hint">表头的"更多操作 ▾"，点开是个浮层，点外面就收起。</div>
+          <div class="quiz-opts" data-qid="dropdown">
+            <div class="quiz-opt" data-h="component"><span class="opt-label">A</span><span class="opt-name">组件</span></div>
+            <div class="quiz-opt" data-h="page"><span class="opt-label">B</span><span class="opt-name">本页</span></div>
+            <div class="quiz-opt" data-h="url"><span class="opt-label">C</span><span class="opt-name">URL</span></div>
+            <div class="quiz-opt" data-h="server"><span class="opt-label">D</span><span class="opt-name">服务端</span></div>
+          </div>
+          <div class="quiz-fb" data-fb="dropdown"></div>
+        </div>
+
+        <div class="quiz-card" data-q="theme">
+          <div class="quiz-card-head">
+            <div>
+              <div class="quiz-card-num">Q7</div>
+              <div class="quiz-card-name">暗色模式开 / 关</div>
+            </div>
+            <span class="quiz-card-verdict">—</span>
+          </div>
+          <div class="quiz-card-hint">注意——这题有两个合理答案，看你想不想"跟账号走"。</div>
+          <div class="quiz-opts" data-qid="theme">
+            <div class="quiz-opt" data-h="component"><span class="opt-label">A</span><span class="opt-name">组件</span></div>
+            <div class="quiz-opt" data-h="page"><span class="opt-label">B</span><span class="opt-name">本页</span></div>
+            <div class="quiz-opt" data-h="url"><span class="opt-label">C</span><span class="opt-name">URL</span></div>
+            <div class="quiz-opt" data-h="server"><span class="opt-label">D</span><span class="opt-name">服务端</span></div>
+          </div>
+          <div class="quiz-fb" data-fb="theme"></div>
+        </div>
+
+        <div class="quiz-card" data-q="page">
+          <div class="quiz-card-head">
+            <div>
+              <div class="quiz-card-num">Q8</div>
+              <div class="quiz-card-name">当前页码 (page=3)</div>
+            </div>
+            <span class="quiz-card-verdict">—</span>
+          </div>
+          <div class="quiz-card-hint">列表底部分页 1 / 2 / 3 / 4。用户在第 3 页发了个链接给同事。</div>
+          <div class="quiz-opts" data-qid="page">
+            <div class="quiz-opt" data-h="component"><span class="opt-label">A</span><span class="opt-name">组件</span></div>
+            <div class="quiz-opt" data-h="page"><span class="opt-label">B</span><span class="opt-name">本页</span></div>
+            <div class="quiz-opt" data-h="url"><span class="opt-label">C</span><span class="opt-name">URL</span></div>
+            <div class="quiz-opt" data-h="server"><span class="opt-label">D</span><span class="opt-name">服务端</span></div>
+          </div>
+          <div class="quiz-fb" data-fb="page"></div>
+        </div>
+
+      </div>
+
+      <div class="quiz-actions">
+        <button class="quiz-btn primary" id="quizSubmit">提交打分</button>
+        <button class="quiz-btn" id="quizReset">清空</button>
+      </div>
+
+      <div class="quiz-judge" id="quizJudge"></div>
+    </div>
+  </div>
+</section>
+
+<!-- Section 05: closing -->
+<section id="closing">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>05</strong> / 把这件事变成习惯</div>
+        <h2 class="section-title">下次评审，<br>每个状态先<span class="em">问"住哪"</span>。</h2>
+      </div>
+      <p class="section-sub">
+        住址不是技术细节——它<strong>就是用户行为</strong>。能不能分享、能不能后退、能不能跨设备——全由住址决定。
+      </p>
+    </div>
+
+    <div class="tips-grid">
+      <div class="tip">
+        <div class="tip-num">i</div>
+        <h4>先问"住哪"再问"长啥样"</h4>
+        <p>设计稿里每个有状态的元素，标上住址——<code style="font-family:'JetBrains Mono',monospace;font-size:12px;background:var(--bg-2);padding:1px 5px;border-radius:3px">@url</code> / <code style="font-family:'JetBrains Mono',monospace;font-size:12px;background:var(--bg-2);padding:1px 5px;border-radius:3px">@component</code>。</p>
+        <p>工程师拿到稿就能落 schema，<strong>不用追问</strong>。</p>
+      </div>
+      <div class="tip">
+        <div class="tip-num">ii</div>
+        <h4>URL 是设计语言</h4>
+        <p>凡是"用户希望<strong>分享 / 刷新保留 / 后退能回来</strong>"的状态——URL 是默认住址。</p>
+        <p>筛选、排序、tab、页码、搜索词……能进 URL 的尽量进 URL。</p>
+      </div>
+      <div class="tip">
+        <div class="tip-num">iii</div>
+        <h4>服务端不是 default</h4>
+        <p>服务端持久代价高——接口 / 同步 / 冲突 / 未登录怎么办。</p>
+        <p>只有"<strong>必须跨设备 / 协作 / 不能丢</strong>"的状态才该住服务端。其余先从本页或 URL 起。</p>
+      </div>
+    </div>
+
+    <div class="tip-outro">
+      <div class="outro-tag">划重点 · TL;DR</div>
+      <div>
+        <p>状态有 4 种住址——<strong>组件 / 本页 / URL / 服务端</strong>。住址决定它在刷新、分享、跨设备、关 tab 时的行为。</p>
+        <p>下次评审，问每个状态"住哪"——<strong>4 个字省 10 次追问</strong>。设计稿里写"@url / @component"，比"高亮态 / 普通态"信息量大 10 倍。</p>
+      </div>
+    </div>
+
+    <a href="x13-component-contract.html" class="next-post">
+      <div>
+        <div class="np-tag">下一站 · NEXT · X13 · 高阶 · 规划中</div>
+        <h4>组件不是图层，<span class="em">是契约</span></h4>
+        <p>数据与状态讲完，下一站讲组件——组件是 props / events / slots 的契约，不是 Figma 里的图层组。把组件当契约设计，命名、API、复用都会变清楚。</p>
+      </div>
+      <span class="np-cta">回路线图 <span class="arr">→</span></span>
+    </a>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div class="byline-group">
+      <div class="byline">
+        <img class="avatar" src="author.jpg" alt="范米花儿">
+        <div class="byline-meta">
+          <div class="byline-label"><span class="dot"></span>作者 · WRITTEN BY</div>
+          <div class="byline-name">嗨，我是 <span class="em">范米花儿</span></div>
+          <p class="byline-tag">设计工程师 ——<br>设计 × 代码，两边都做。</p>
+        </div>
+      </div>
+</div>
+    <div class="footer-meta">
+      做于 <span class="mono">2026</span> · 用 <span class="heart">●</span> 写给 <span class="mono">DESIGNERS &amp; DEVELOPERS</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+// ===== Game 1: action probe =====
+(function(){
+  // For each state × action: keep (true) / lose (false) + short explanation
+  const MATRIX = {
+    modal: {
+      refresh:  { keep: false, why: '组件状态住内存里 → 整页重建 → 弹窗状态消失。' },
+      share:    { keep: false, why: 'URL 里没有"弹窗开"这个字段 → 同事看不到。' },
+      device:   { keep: false, why: '没同步到任何账号——换设备一定是空。' },
+      close:    { keep: false, why: 'tab 一关，组件实例销毁——状态归零。'  }
+    },
+    filter: {
+      refresh:  { keep: true,  why: 'URL 还在 → 路由重新读 query → 筛选还原。' },
+      share:    { keep: true,  why: '同事打开你的链接 → 看到一样的筛选结果。' },
+      device:   { keep: true,  why: '只要 URL 一致，任何设备打开都还原。' },
+      close:    { keep: false, why: '新开 tab 默认 URL → 没有 query → 重置。（但贴回旧 URL 就还原。）' }
+    },
+    sidebar: {
+      refresh:  { keep: true,  why: 'localStorage 写在本机磁盘——刷新读回来。' },
+      share:    { keep: false, why: '链接传不出偏好——同事看到的是他自己的折叠状态。' },
+      device:   { keep: false, why: '换台设备 = 换个 localStorage——之前的偏好读不到。' },
+      close:    { keep: true,  why: '关 tab 不动磁盘——再开还在。' }
+    },
+    draft: {
+      refresh:  { keep: true,  why: 'autosave 进服务端 → 重新拉就还原。' },
+      share:    { keep: true,  why: '同账号下能看到——但 ACL 决定别人能不能读。' },
+      device:   { keep: true,  why: '换电脑登录 → 草稿从服务端拉下来，接着写。' },
+      close:    { keep: true,  why: '服务端不在乎你 tab——下次再开依然在。' }
+    }
+  };
+
+  const ACTION_LABEL = {
+    refresh: '刷新',
+    share:   '分享链接',
+    device:  '换设备',
+    close:   '关 tab 再开'
+  };
+
+  const btns = document.querySelectorAll('.probe-btn');
+  const cards = document.querySelectorAll('.probe-card');
+  const counter = document.getElementById('probeCount');
+  const resetBtn = document.getElementById('probeReset');
+  const triggered = new Set();
+  let currentAction = null;
+
+  function applyAction(action) {
+    currentAction = action;
+    btns.forEach(b => b.classList.toggle('is-active', b.dataset.action === action));
+    cards.forEach(card => {
+      card.classList.add('is-focus');
+      const state = card.dataset.state;
+      const result = MATRIX[state][action];
+      const statusEl = card.querySelector('[data-status]');
+      statusEl.classList.remove('is-empty');
+      const verdictClass = result.keep ? 'keep' : 'lose';
+      const verdictTxt = result.keep ? '✓ 保留' : '✗ 丢失';
+      statusEl.innerHTML = `<span class="verdict ${verdictClass}">${verdictTxt}</span> ${result.why}`;
+    });
+  }
+
+  btns.forEach(b => {
+    b.addEventListener('click', () => {
+      const action = b.dataset.action;
+      if (!triggered.has(action)) {
+        triggered.add(action);
+        counter.textContent = triggered.size;
+      }
+      applyAction(action);
+    });
+  });
+
+  resetBtn.addEventListener('click', () => {
+    currentAction = null;
+    btns.forEach(b => b.classList.remove('is-active'));
+    cards.forEach(card => {
+      card.classList.remove('is-focus');
+      const statusEl = card.querySelector('[data-status]');
+      statusEl.classList.add('is-empty');
+      statusEl.innerHTML = '点动作按钮 → 看保不保留';
+    });
+  });
+
+  // hover preview: when no action picked, hovering a card highlights it
+  cards.forEach(card => {
+    card.addEventListener('mouseenter', () => {
+      if (!currentAction) card.classList.add('is-focus');
+    });
+    card.addEventListener('mouseleave', () => {
+      if (!currentAction) card.classList.remove('is-focus');
+    });
+  });
+})();
+
+// ===== Game 2: compare table expand =====
+(function(){
+  const rows = document.querySelectorAll('.compare-row');
+  rows.forEach(row => {
+    row.addEventListener('click', () => {
+      const key = row.dataset.row;
+      const detail = document.querySelector(`.compare-detail-row[data-detail="${key}"]`);
+      const open = row.classList.toggle('is-open');
+      if (detail) detail.classList.toggle('is-open', open);
+    });
+  });
+})();
+
+// ===== Game 3: quiz =====
+(function(){
+  // Each q: correct = primary right answer; alt = also-acceptable; bad = anti-pattern reply
+  const QUIZ = {
+    tab: {
+      correct: 'url',
+      alt: null,
+      good: '✓ <strong>tab 住 URL</strong>——刷新还原、分享同事能看到一样的 tab、后退能回。这是经典 URL 用例。',
+      bad: {
+        component: '<strong>tab 住组件</strong> → 刷新页面跳回第一个 tab，用户傻眼。也分享不出去。',
+        page:      '<strong>tab 住本页 / localStorage</strong> → 别人打开你的链接看到的是他自己上次的 tab，不是你的。',
+        server:    '<strong>tab 住服务端</strong> → 杀鸡用牛刀——每次切 tab 调一次接口写 DB，未登录直接没法用。'
+      }
+    },
+    search: {
+      correct: 'url',
+      alt: null,
+      good: '✓ <strong>搜索词住 URL</strong>——边搜边写进 query，可分享、可刷新、可后退。Google、Notion、GitHub 都这么干。',
+      bad: {
+        component: '<strong>搜索词住组件</strong> → 链接传不出搜索词，刷新就空。这正是"分享传不出去"反例。',
+        page:      '<strong>住本页</strong> → 跨用户分享失败。同事打开看到的是空搜索框。',
+        server:    '<strong>住服务端</strong> → 每次按键写一次 DB，性能灾难。'
+      }
+    },
+    sidebar: {
+      correct: 'page',
+      alt: null,
+      good: '✓ <strong>侧栏住 localStorage</strong>——个人偏好、跨页保留、不要分享、不要跨设备。完美匹配本页住址。',
+      bad: {
+        component: '<strong>住组件</strong> → 切到下一页就重置——每页都要手动折叠一次，烦。',
+        url:       '<strong>住 URL</strong> → 每个链接都带 <code>?sidebar=collapsed</code>，分享给同事强制改了他的布局，不友好。',
+        server:    '<strong>住服务端</strong> → 接口 / 同步成本，但收益微弱（这种轻偏好不必跨设备）。可接受但 overkill。'
+      }
+    },
+    unread: {
+      correct: 'server',
+      alt: null,
+      good: '✓ <strong>未读住服务端</strong>——必须跨设备同步。手机读过电脑要消失，电脑读过手机要消失。典型服务端状态。',
+      bad: {
+        component: '<strong>住组件</strong> → 关掉就忘，永远显示所有消息未读。',
+        page:      '<strong>住 localStorage</strong> → 换台设备所有红点都回来——用户："我不是已经读过了吗？"',
+        url:       '<strong>住 URL</strong> → 把未读列表塞链接里？URL 长到爆且毫无意义。'
+      }
+    },
+    draft: {
+      correct: 'server',
+      alt: 'page',
+      good: '✓ <strong>草稿住服务端 autosave</strong>——核心要求是"<strong>不能丢一个字</strong>"+ 换设备能接着写。Google Docs、Notion 都这模式。',
+      partial: '<strong>住 localStorage</strong> 也可以接受——胜在快、离线能用。但用户换设备就接不上。理想是"localStorage 起 + 服务端 sync"双层。',
+      bad: {
+        component: '<strong>住组件</strong> → 不小心关了 tab 全没了。这是最经典的"用户骂街"反例。',
+        url:       '<strong>住 URL</strong> → 用户输入每个字符 URL 就变 → 历史污染 + URL 超长，且别人能看到。'
+      }
+    },
+    dropdown: {
+      correct: 'component',
+      alt: null,
+      good: '✓ <strong>dropdown 住组件</strong>——瞬态 UI、私有、关掉就该忘。<code>useState</code> 一行搞定。',
+      bad: {
+        page:   '<strong>住本页</strong> → 多余。dropdown 不需要跨组件共享。',
+        url:    '<strong>住 URL</strong> → 一开一关就在浏览器历史里加一条，后退一次先打开 dropdown，再后退才离开页面——诡异。',
+        server: '<strong>住服务端</strong> → 每点一次 dropdown 调接口写 DB？工程师当场离职。'
+      }
+    },
+    theme: {
+      correct: 'page',
+      alt: 'server',
+      good: '✓ <strong>主题住本页 localStorage</strong>——快、离线可用、未登录也能用。绝大多数产品的首选。',
+      partial: '✓ <strong>主题住服务端</strong> 也合理——如果你的产品定位是"偏好跟人走，多设备同步"（比如 Notion、Linear）。<br>权衡：服务端代价 = 接口 + 未登录怎么办。理想方案：先 localStorage 起，登录后 sync 到服务端，做"渐进式持久"。',
+      bad: {
+        component: '<strong>住组件</strong> → 一刷新就回默认。用户："我不是切了暗色吗？"',
+        url:       '<strong>住 URL</strong> → 每个链接都带 <code>?theme=dark</code>，传给同事强制改他的主题。荒谬。'
+      }
+    },
+    page: {
+      correct: 'url',
+      alt: null,
+      good: '✓ <strong>页码住 URL</strong>——<code>?page=3</code> 可分享、可刷新、可后退。同事打开链接直接到第 3 页。',
+      bad: {
+        component: '<strong>页码住组件</strong> → 刷新跳回第 1 页，用户："我刚才在第 3 页啊？"',
+        page:      '<strong>住本页 / localStorage</strong> → 分享链接没用，别人打开还是从他上次的页码起。',
+        server:    '<strong>住服务端</strong> → 每翻一页写一次 DB，过分。'
+      }
+    }
+  };
+
+  const picks = {};
+  const cards = document.querySelectorAll('.quiz-card');
+  const done = document.getElementById('quizDone');
+  const judge = document.getElementById('quizJudge');
+
+  function updateDone() {
+    done.textContent = Object.keys(picks).length;
+  }
+
+  document.querySelectorAll('.quiz-opt').forEach(opt => {
+    opt.addEventListener('click', () => {
+      const card = opt.closest('.quiz-card');
+      const qid = card.dataset.q;
+      const home = opt.dataset.h;
+      card.querySelectorAll('.quiz-opt').forEach(o => o.classList.remove('is-picked'));
+      opt.classList.add('is-picked');
+      picks[qid] = home;
+      card.classList.remove('is-correct', 'is-wrong', 'is-partial');
+      const fb = card.querySelector('.quiz-fb');
+      fb.classList.remove('show');
+      fb.innerHTML = '';
+      updateDone();
+    });
+  });
+
+  document.getElementById('quizSubmit').addEventListener('click', () => {
+    let perfect = 0, partial = 0, wrong = 0;
+    cards.forEach(card => {
+      const qid = card.dataset.q;
+      const def = QUIZ[qid];
+      const pick = picks[qid];
+      const fb = card.querySelector('.quiz-fb');
+      card.classList.remove('is-correct', 'is-wrong', 'is-partial');
+      fb.classList.remove('show');
+
+      if (!pick) {
+        fb.innerHTML = '<strong>没选——</strong>每题都有最优解，回头补上。';
+        fb.classList.add('show');
+        wrong++;
+        return;
+      }
+      if (pick === def.correct) {
+        card.classList.add('is-correct');
+        fb.innerHTML = def.good;
+        fb.classList.add('show');
+        perfect++;
+      } else if (def.alt && pick === def.alt) {
+        card.classList.add('is-partial');
+        fb.innerHTML = def.partial || def.good;
+        fb.classList.add('show');
+        partial++;
+      } else {
+        card.classList.add('is-wrong');
+        const explain = (def.bad && def.bad[pick]) || '——这个住址在这个场景下不合适。';
+        fb.innerHTML = `${explain}<br><br>更好的住址：<strong>${pick === def.correct ? pick : ({component:'组件',page:'本页',url:'URL',server:'服务端'})[def.correct]}</strong>。${def.good}`;
+        fb.classList.add('show');
+        wrong++;
+      }
+    });
+
+    const totalRight = perfect + partial;
+    let verdictClass, verdictLabel, headline, body;
+    if (perfect === 8) {
+      verdictClass = 'win';
+      verdictLabel = '完美 · 8/8';
+      headline = '你已经会按行为选住址了。';
+      body = '这是状态架构的基本功——下次评审，每个状态都先问"住哪"，工程师会感谢你。';
+    } else if (totalRight >= 7) {
+      verdictClass = 'win';
+      verdictLabel = '基本对了 · ' + totalRight + '/8';
+      headline = '一两题差点意思，但判断方向对了。';
+      body = '把错的那一两题看一下反例——通常是"瞬态 vs 持久"或"私有 vs 共享"边界没分清。';
+    } else if (totalRight >= 5) {
+      verdictClass = 'partial';
+      verdictLabel = '过半 · ' + totalRight + '/8';
+      headline = '一半对了——但还没形成稳定直觉。';
+      body = '记一个口诀：<strong>能分享 → URL；能跨设备 → 服务端；只本机 → 本页；瞬态 → 组件</strong>。回头按这个再做一遍。';
+    } else {
+      verdictClass = 'fail';
+      verdictLabel = '需重做 · ' + totalRight + '/8';
+      headline = '别急——这是一种新思维，第一次容易混。';
+      body = '看每道题的反例，再回头读一遍幕二的对比表。这个能力一旦形成，会让你以后所有的需求评审都少 10 次追问。';
+    }
+
+    judge.innerHTML = `<span class="verdict ${verdictClass}">${verdictLabel}</span><h4>${headline}</h4><p>${body}</p><div class="score-line">完美 <span class="num">${perfect}</span> · 部分 <span class="num">${partial}</span> · 错 <span class="num">${wrong}</span></div>`;
+    judge.classList.add('show');
+    judge.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  });
+
+  document.getElementById('quizReset').addEventListener('click', () => {
+    Object.keys(picks).forEach(k => delete picks[k]);
+    document.querySelectorAll('.quiz-opt').forEach(o => o.classList.remove('is-picked'));
+    cards.forEach(card => {
+      card.classList.remove('is-correct', 'is-wrong', 'is-partial');
+      const fb = card.querySelector('.quiz-fb');
+      fb.classList.remove('show');
+      fb.innerHTML = '';
+    });
+    judge.classList.remove('show');
+    updateDone();
+  });
+})();
+</script>
+
+</body>
+</html>

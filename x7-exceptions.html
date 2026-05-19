@@ -1,0 +1,1547 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>异常：失败 / 超时 / 冲突 / 重复 — AI LABBOOK · X7</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,300..900&family=Geist:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Noto+Sans+SC:wght@300;400;500;700;900&family=Noto+Serif+SC:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f3eee5;
+    --bg-2: #ebe4d4;
+    --ink: #16161d;
+    --ink-soft: #4a4a55;
+    --ink-mute: #8a8a92;
+    --line: #d5cdba;
+    --line-soft: #e3dcca;
+    --accent: #ff4d2e;
+    --accent-soft: #ffe4dc;
+    --blue: #0a4cff;
+    --blue-soft: #dde6ff;
+    --green: #1f6b3a;
+    --green-soft: #d4ecdb;
+    --yellow: #ffcf3d;
+    --paper: #faf7f0;
+    --shadow: 0 1px 0 rgba(0,0,0,0.04), 0 8px 24px rgba(22,22,29,0.06);
+
+    --obj-color: #ff4d2e;
+    --obj-soft: rgba(255,77,46,0.12);
+    --proj-color: #1f6b3a;
+    --proj-soft: rgba(31,107,58,0.12);
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'Geist', 'Noto Sans SC', system-ui, -apple-system, sans-serif;
+    font-size: 16px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    background-image: radial-gradient(circle at 1px 1px, rgba(22,22,29,0.05) 1px, transparent 0);
+    background-size: 24px 24px;
+  }
+
+  .display-cn { font-family: 'Noto Serif SC', 'Fraunces', serif; font-weight: 900; letter-spacing: -0.01em; }
+  .display-en { font-family: 'Fraunces', 'Noto Serif SC', serif; font-weight: 600; font-style: italic; letter-spacing: -0.02em; }
+  .mono { font-family: 'JetBrains Mono', monospace; }
+  .label { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-mute); }
+
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 0 32px; }
+
+  /* Topbar */
+  .topbar {
+    border-bottom: 1px dashed var(--line);
+    padding: 16px 0;
+    background: var(--bg);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .topbar-inner { display: flex; justify-content: space-between; align-items: center; gap: 24px; flex-wrap: wrap; }
+  .brand-block { display: flex; align-items: center; gap: 10px; font-family: 'JetBrains Mono', monospace; font-size: 13px; }
+  .brand { display: inline-flex; align-items: center; gap: 6px; color: var(--ink); text-decoration: none; font-weight: 600; }
+  .brand-arrow { color: var(--ink-mute); transition: transform .2s; }
+  .brand:hover .brand-arrow { transform: translateX(-3px); }
+  .brand .dot { display: inline-block; width: 8px; height: 8px; background: var(--accent); border-radius: 50%; vertical-align: middle; animation: pulse 2s ease-in-out infinite; margin-left: 4px; }
+  .brand-sep { color: var(--ink-mute); }
+  .brand-current { color: var(--ink-soft); }
+  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+  .nav-links { display: flex; gap: 18px; font-size: 13px; flex-wrap: wrap; }
+  .nav-links a { color: var(--ink-soft); text-decoration: none; transition: color 0.2s; }
+  .nav-links a:hover { color: var(--accent); }
+  .nav-links a.current { color: var(--accent); font-weight: 600; }
+
+  /* Hero */
+  .hero { padding: 100px 0 80px; position: relative; overflow: hidden; }
+  .hero-meta { display: flex; gap: 24px; margin-bottom: 32px; align-items: center; flex-wrap: wrap; }
+  .hero-meta .pill { padding: 6px 12px; border: 1px solid var(--ink); border-radius: 100px; font-size: 11px; font-family: 'JetBrains Mono', monospace; letter-spacing: 0.05em; }
+  .hero-meta .pill.fill { background: var(--ink); color: var(--bg); }
+  .hero-meta .pill.purple { background: var(--obj-color); color: white; border-color: var(--obj-color); }
+  .hero h1 {
+    font-family: 'Noto Serif SC', 'Fraunces', serif;
+    font-weight: 900;
+    font-size: clamp(48px, 7vw, 92px);
+    line-height: 0.95;
+    letter-spacing: -0.03em;
+    margin: 0 0 24px;
+  }
+  .hero h1 .em { font-family: 'Noto Serif SC', serif; font-weight: 500; color: var(--accent); }
+  .hero h1 .purple { color: var(--obj-color); font-family: 'Noto Serif SC', serif; font-weight: 500; }
+  .hero p.lede {
+    font-size: 20px;
+    line-height: 1.5;
+    max-width: 640px;
+    color: var(--ink-soft);
+    margin: 0 0 40px;
+  }
+  .hero-grid { display: grid; grid-template-columns: 1.4fr 1fr; gap: 48px; align-items: end; }
+  @media (max-width: 880px) { .hero-grid { grid-template-columns: 1fr; } }
+  .hero-side { border-left: 1px dashed var(--line); padding-left: 24px; font-size: 13px; color: var(--ink-soft); }
+  .hero-side .row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px dashed var(--line); gap: 12px; }
+  .hero-side .row:last-child { border-bottom: none; }
+  .hero-side .row .k { color: var(--ink-mute); font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.05em; text-transform: uppercase; }
+  .hero-side .row .v { font-weight: 500; }
+
+  /* Sections */
+  section { padding: 80px 0; border-top: 1px solid var(--line); position: relative; }
+  .section-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 56px; flex-wrap: wrap; gap: 16px; }
+  .section-num { font-family: 'JetBrains Mono', monospace; font-size: 13px; color: var(--ink-mute); letter-spacing: 0.1em; margin-top: 6px; }
+  .section-num strong { color: var(--accent); }
+  .section-title { font-family: 'Noto Serif SC', serif; font-weight: 900; font-size: clamp(32px, 4.5vw, 52px); line-height: 1.05; letter-spacing: -0.02em; margin: 8px 0 0; max-width: 22ch; }
+  .section-title .em { font-family: 'Noto Serif SC', serif; font-weight: 500; color: var(--accent); }
+  .section-title .purple { color: var(--obj-color); font-family: 'Noto Serif SC', serif; font-weight: 500; }
+  .section-sub { color: var(--ink-soft); font-size: 17px; max-width: 38ch; line-height: 1.55; margin: 0; }
+
+  /* Act tag */
+  .act-tag { display: inline-block; padding: 4px 12px; font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; border-radius: 100px; }
+  .act-tag.look { background: var(--blue-soft); color: var(--blue); }
+  .act-tag.break { background: var(--obj-soft); color: var(--obj-color); }
+  .act-tag.make { background: var(--proj-soft); color: var(--proj-color); }
+
+  /* Problem cards */
+  .problem-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; margin-top: 24px; }
+  @media (max-width: 880px) { .problem-grid { grid-template-columns: 1fr; } }
+  .problem-card { background: var(--paper); border: 1px solid var(--line); border-radius: 6px; padding: 28px; position: relative; }
+  .problem-card.bad { border-color: var(--accent); background: var(--accent-soft); }
+  .problem-card.good { border-color: var(--obj-color); background: var(--obj-soft); }
+  .problem-card .tag { position: absolute; top: -12px; left: 24px; background: var(--bg); padding: 2px 10px; font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.1em; }
+  .problem-card.bad .tag { color: var(--accent); border: 1px solid var(--accent); }
+  .problem-card.good .tag { color: var(--obj-color); border: 1px solid var(--obj-color); }
+  .problem-card h3 { font-family: 'Noto Serif SC', serif; font-size: 22px; margin: 0 0 12px; font-weight: 700; }
+  .problem-card p { margin: 0; color: var(--ink-soft); font-size: 14px; line-height: 1.55; }
+  .problem-card p + p { margin-top: 10px; }
+
+  /* GAME 1: exception scenes (live demos) */
+  .ex-stage {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 40px 28px;
+    position: relative;
+    overflow: hidden;
+  }
+  .ex-stage::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(to right, var(--line-soft) 1px, transparent 1px),
+      linear-gradient(to bottom, var(--line-soft) 1px, transparent 1px);
+    background-size: 24px 24px;
+    opacity: 0.4;
+    pointer-events: none;
+  }
+  .ex-grid {
+    position: relative;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 24px;
+  }
+  @media (max-width: 880px) { .ex-grid { grid-template-columns: 1fr; } }
+  .ex-card {
+    background: white;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 18px 18px 16px;
+    position: relative;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    cursor: pointer;
+    min-height: 280px;
+  }
+  .ex-card:hover { box-shadow: 0 8px 24px rgba(22,22,29,0.08); }
+  .ex-card.is-highlight {
+    border-color: var(--obj-color);
+    box-shadow: 0 0 0 2px var(--obj-soft), 0 8px 24px rgba(255,77,46,0.18);
+    transform: translateY(-3px);
+  }
+  .ex-tag {
+    position: absolute;
+    top: -10px;
+    left: 14px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    background: var(--ink);
+    color: var(--bg);
+    padding: 2px 10px;
+    border-radius: 100px;
+    transition: background 0.3s;
+  }
+  .ex-card.is-highlight .ex-tag { background: var(--obj-color); }
+  .ex-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 10px; padding-top: 4px; }
+  .ex-name { font-family: 'Noto Serif SC', serif; font-size: 17px; font-weight: 700; }
+  .ex-sub { color: var(--ink-mute); font-size: 11px; font-family: 'JetBrains Mono', monospace; }
+  .ex-screen {
+    background: var(--bg-2);
+    border: 1px solid var(--line-soft);
+    border-radius: 4px;
+    padding: 14px;
+    min-height: 140px;
+    font-size: 12px;
+    line-height: 1.55;
+    position: relative;
+    overflow: hidden;
+  }
+  .ex-screen .frame { display: none; }
+  .ex-screen .frame.active { display: block; animation: frameIn .35s ease-out; }
+  @keyframes frameIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+  .ex-frame-meta {
+    margin-top: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--ink-mute);
+    letter-spacing: 0.05em;
+  }
+  .ex-frame-meta .dots { display: inline-flex; gap: 4px; }
+  .ex-frame-meta .dots .d { width: 6px; height: 6px; border-radius: 50%; background: var(--line); }
+  .ex-frame-meta .dots .d.on { background: var(--obj-color); }
+  .ex-pain {
+    margin-top: 8px;
+    font-size: 11px;
+    color: var(--accent);
+    background: var(--accent-soft);
+    border-radius: 4px;
+    padding: 6px 10px;
+    line-height: 1.5;
+    display: none;
+  }
+  .ex-card.is-highlight .ex-pain { display: block; }
+  .ex-step-btn {
+    margin-top: 10px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--ink);
+    color: var(--bg);
+    padding: 5px 12px;
+    border-radius: 100px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    cursor: pointer;
+    border: none;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+  .ex-step-btn:hover { background: var(--obj-color); }
+
+  /* live demo mini-bits */
+  .btn-mini {
+    display: inline-block;
+    padding: 7px 14px;
+    background: var(--accent);
+    color: white;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 600;
+  }
+  .btn-mini.disabled { background: var(--ink-mute); cursor: not-allowed; }
+  .btn-mini.loading::before { content: '⟳ '; display: inline-block; animation: spin 1s linear infinite; }
+  @keyframes spin { from { transform: rotate(0); } to { transform: rotate(360deg); } }
+  .spinner {
+    display: inline-block;
+    width: 14px; height: 14px;
+    border: 2px solid var(--line);
+    border-top-color: var(--obj-color);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    vertical-align: middle;
+  }
+  .toast-mini {
+    background: var(--ink);
+    color: var(--bg);
+    padding: 6px 10px;
+    border-radius: 4px;
+    font-size: 11px;
+    display: inline-block;
+  }
+  .toast-mini.err { background: var(--accent); }
+  .input-row {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+    margin: 6px 0;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+  }
+  .input-row .lbl { color: var(--ink-mute); min-width: 36px; }
+  .input-row .val { background: white; padding: 3px 7px; border: 1px solid var(--line); border-radius: 3px; flex: 1; }
+  .input-row .val.was { color: var(--ink-mute); text-decoration: line-through; }
+  .input-row .val.new { color: var(--obj-color); border-color: var(--obj-color); font-weight: 600; }
+  .input-row .val.dup { background: var(--accent-soft); color: var(--accent); border-color: var(--accent); }
+  .user-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: var(--blue-soft);
+    color: var(--blue);
+    padding: 2px 7px;
+    border-radius: 100px;
+    font-size: 10px;
+    font-weight: 600;
+  }
+  .order-row {
+    background: white;
+    border: 1px solid var(--line);
+    border-radius: 3px;
+    padding: 5px 8px;
+    margin: 3px 0;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    display: flex;
+    justify-content: space-between;
+  }
+  .order-row.dup { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
+
+  /* Reveal bar */
+  .reveal-bar {
+    margin-top: 32px;
+    padding: 20px 28px;
+    background: var(--ink);
+    color: var(--bg);
+    border-radius: 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+  .reveal-bar .msg { font-family: 'Noto Serif SC', serif; font-size: 17px; font-weight: 500; line-height: 1.55; }
+  .reveal-bar .msg .em { color: var(--accent); }
+  .reveal-bar .counter { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ink-mute); letter-spacing: 0.05em; }
+  .reveal-bar .counter strong { color: var(--accent); font-size: 14px; }
+
+  /* GAME 2: diagnostic cards */
+  .diag-stage { display: grid; grid-template-columns: repeat(2, 1fr); gap: 22px; margin-top: 32px; }
+  @media (max-width: 880px) { .diag-stage { grid-template-columns: 1fr; } }
+
+  .diag-card {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 22px 22px 18px;
+    position: relative;
+    transition: all 0.2s;
+    cursor: pointer;
+  }
+  .diag-card:hover { border-color: var(--obj-color); transform: translateY(-2px); }
+  .diag-card.is-open { border-color: var(--obj-color); background: white; box-shadow: 0 8px 24px rgba(255,77,46,0.12); }
+  .diag-card::before {
+    content: attr(data-num);
+    position: absolute;
+    top: -10px;
+    left: 16px;
+    background: var(--obj-color);
+    color: white;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    padding: 2px 10px;
+    border-radius: 100px;
+  }
+  .diag-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 4px; }
+  .diag-name { font-family: 'Noto Serif SC', serif; font-size: 20px; font-weight: 700; }
+  .diag-name .en { color: var(--ink-mute); font-family: 'Fraunces', serif; font-style: italic; font-size: 14px; font-weight: 500; margin-left: 8px; }
+  .diag-toggle { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--obj-color); cursor: pointer; }
+  .diag-card.is-open .diag-toggle::before { content: '收起 ←'; }
+  .diag-card:not(.is-open) .diag-toggle::before { content: '展开 →'; }
+  .diag-summary { color: var(--ink-soft); font-size: 13px; line-height: 1.55; margin: 0 0 10px; }
+  .diag-slots {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 10px;
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .diag-card.is-open .diag-slots { max-height: 800px; padding-top: 6px; }
+  .diag-slot {
+    padding: 9px 12px;
+    background: var(--bg-2);
+    border-left: 3px solid var(--obj-color);
+    border-radius: 0 4px 4px 0;
+    font-size: 12px;
+    line-height: 1.55;
+  }
+  .diag-slot .slot-k {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--obj-color);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    display: block;
+    margin-bottom: 3px;
+  }
+  .diag-slot .slot-v { color: var(--ink); }
+  .diag-pain {
+    margin-top: 12px;
+    padding: 10px 12px;
+    background: var(--accent-soft);
+    border-radius: 4px;
+    border-left: 3px solid var(--accent);
+    font-size: 12px;
+    color: var(--accent);
+    font-weight: 600;
+    line-height: 1.5;
+    display: none;
+  }
+  .diag-card.is-open .diag-pain { display: block; }
+
+  /* GAME 3: choose-the-UI builder */
+  .choose-stage {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 32px;
+    margin-top: 24px;
+  }
+  .choose-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 28px; flex-wrap: wrap; gap: 16px; }
+  .choose-title { font-family: 'Noto Serif SC', serif; font-size: 22px; margin: 0; font-weight: 700; }
+  .choose-progress { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--ink-mute); }
+  .choose-progress .done { color: var(--proj-color); font-weight: 700; font-size: 14px; }
+
+  .choose-scenes { display: flex; flex-direction: column; gap: 24px; }
+  .choose-scene {
+    background: white;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 22px;
+  }
+  .choose-scene-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 14px; flex-wrap: wrap; gap: 8px; }
+  .choose-scene-name { font-weight: 700; font-size: 16px; }
+  .choose-scene-name .tag-inline {
+    display: inline-block;
+    margin-right: 8px;
+    padding: 2px 9px;
+    background: var(--obj-soft);
+    color: var(--obj-color);
+    border-radius: 100px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    font-weight: 600;
+  }
+  .choose-scene-prog { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ink-mute); }
+  .choose-scene-prog.ready { color: var(--proj-color); font-weight: 700; }
+  .choose-scenario {
+    background: var(--bg-2);
+    padding: 10px 14px;
+    border-radius: 4px;
+    font-size: 13px;
+    color: var(--ink-soft);
+    margin-bottom: 16px;
+    line-height: 1.55;
+    border-left: 3px solid var(--ink-mute);
+  }
+  .choose-scenario strong { color: var(--ink); }
+  .choose-options {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+  @media (max-width: 720px) { .choose-options { grid-template-columns: 1fr; } }
+  .choose-opt {
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 12px 14px;
+    cursor: pointer;
+    transition: all 0.15s;
+    background: white;
+    position: relative;
+  }
+  .choose-opt:hover { border-color: var(--obj-color); }
+  .choose-opt.selected {
+    border-color: var(--obj-color);
+    background: var(--obj-soft);
+    box-shadow: 0 0 0 2px var(--obj-soft);
+  }
+  .choose-opt-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    color: var(--ink-mute);
+    margin-bottom: 6px;
+    display: block;
+  }
+  .choose-opt.selected .choose-opt-label { color: var(--obj-color); }
+  .choose-opt-title { font-weight: 600; font-size: 13px; margin-bottom: 6px; }
+  .choose-opt-demo {
+    background: var(--bg-2);
+    border-radius: 3px;
+    padding: 8px 10px;
+    margin-top: 8px;
+    font-size: 11px;
+    line-height: 1.5;
+    color: var(--ink-soft);
+    min-height: 56px;
+  }
+  .choose-opt.selected .choose-opt-demo { background: white; }
+
+  .choose-recover {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-top: 4px;
+  }
+  .choose-recover-lbl {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--ink-mute);
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+  .choose-recover select {
+    flex: 1;
+    min-width: 180px;
+    padding: 8px 12px;
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    font-family: 'Geist', 'Noto Sans SC', sans-serif;
+    font-size: 13px;
+    background: white;
+    color: var(--ink);
+    cursor: pointer;
+  }
+  .choose-recover select:focus { outline: 2px solid var(--obj-soft); border-color: var(--obj-color); }
+
+  .choose-actions { display: flex; gap: 12px; margin-top: 24px; flex-wrap: wrap; }
+  .choose-btn {
+    padding: 10px 22px;
+    border-radius: 100px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    cursor: pointer;
+    font-weight: 600;
+    border: 1px solid var(--ink);
+    background: transparent;
+    color: var(--ink);
+    transition: all 0.15s;
+  }
+  .choose-btn:hover { background: var(--ink); color: var(--bg); }
+  .choose-btn.primary { background: var(--accent); color: white; border-color: var(--accent); }
+  .choose-btn.primary:hover { background: #e8451f; }
+
+  .choose-judge {
+    margin-top: 24px;
+    padding: 24px 26px;
+    border-radius: 8px;
+    background: var(--ink);
+    color: var(--bg);
+    display: none;
+  }
+  .choose-judge.show { display: block; }
+  .choose-judge .verdict { display: inline-block; font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; padding: 3px 10px; border-radius: 100px; }
+  .choose-judge .verdict.win { color: #1f6b3a; background: #d4ecdb; }
+  .choose-judge .verdict.partial { color: #c79f1e; background: #fff3cc; }
+  .choose-judge .verdict.miss { color: var(--accent); background: var(--accent-soft); }
+  .choose-judge h4 { font-family: 'Noto Serif SC', serif; font-size: 22px; margin: 10px 0 14px; color: white; line-height: 1.3; }
+  .choose-judge ul { color: #c8c8d0; margin: 0; padding-left: 20px; font-size: 13px; line-height: 1.75; }
+  .choose-judge ul li + li { margin-top: 10px; }
+  .choose-judge ul strong { color: white; }
+  .choose-judge ul .why { color: #a0a0aa; font-size: 12px; }
+  .choose-judge ul .ok { color: #8fd9a4; font-weight: 700; }
+  .choose-judge ul .no { color: #ff8a6e; font-weight: 700; }
+
+  /* tips */
+  .tips-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 28px; margin-top: 24px; }
+  @media (max-width: 880px) { .tips-grid { grid-template-columns: 1fr; } }
+  .tip { background: var(--paper); border: 1px solid var(--line); border-radius: 6px; padding: 24px; position: relative; }
+  .tip-num { position: absolute; top: -14px; left: 16px; width: 32px; height: 32px; border-radius: 50%; background: var(--obj-color); color: white; display: flex; align-items: center; justify-content: center; font-family: 'Fraunces', serif; font-style: italic; font-weight: 600; font-size: 14px; }
+  .tip h4 { font-family: 'Noto Serif SC', serif; font-size: 18px; margin: 8px 0 10px; font-weight: 700; }
+  .tip p { color: var(--ink-soft); font-size: 14px; line-height: 1.6; margin: 0; }
+  .tip p + p { margin-top: 8px; }
+  .tip-outro {
+    margin-top: 44px;
+    padding: 30px 32px;
+    background: var(--ink);
+    color: var(--bg);
+    border-radius: 8px;
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 28px;
+    align-items: flex-start;
+  }
+  @media (max-width: 720px) { .tip-outro { grid-template-columns: 1fr; gap: 12px; } }
+  .outro-tag { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.1em; color: var(--accent); padding-top: 4px; }
+  .tip-outro p { margin: 0 0 12px; color: #c8c8d0; line-height: 1.65; font-size: 15px; }
+  .tip-outro p:last-child { margin-bottom: 0; }
+  .tip-outro strong { color: white; }
+
+  /* next post */
+  .next-post {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 56px;
+    padding: 32px;
+    background: var(--bg-2);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    text-decoration: none;
+    color: var(--ink);
+    transition: all 0.2s;
+    gap: 24px;
+    flex-wrap: wrap;
+  }
+  .next-post:hover { background: var(--ink); color: var(--bg); }
+  .next-post:hover .np-tag { color: var(--accent); }
+  .next-post:hover .em { color: var(--accent); }
+  .next-post:hover p { color: #c8c8d0; }
+  .np-tag { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.1em; color: var(--ink-mute); margin-bottom: 6px; }
+  .next-post h4 { font-family: 'Noto Serif SC', serif; font-size: 26px; margin: 0 0 8px; font-weight: 700; }
+  .next-post .em { color: var(--obj-color); font-weight: 500; }
+  .next-post p { margin: 0; color: var(--ink-soft); font-size: 14px; max-width: 56ch; }
+  .np-cta { font-family: 'JetBrains Mono', monospace; font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; white-space: nowrap; }
+  .np-cta .arr { display: inline-block; transition: transform .2s; }
+  .next-post:hover .arr { transform: translateX(4px); }
+
+  /* footer */
+  footer { padding: 56px 0 64px; background: var(--bg); color: var(--ink-soft); border-top: 1px solid var(--line); }
+  .byline-group { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; margin-bottom: 32px; padding-bottom: 32px; border-bottom: 1px dashed var(--line); }
+  @media (max-width: 880px) { .byline-group { grid-template-columns: 1fr; } }
+  .byline { display: flex; gap: 16px; align-items: center; }
+  .byline .avatar { width: 56px; height: 56px; border-radius: 50%; object-fit: cover; flex-shrink: 0; }
+  .byline-label { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--accent); letter-spacing: 0.1em; }
+  .byline-label .dot { display: inline-block; width: 6px; height: 6px; background: var(--accent); border-radius: 50%; margin-right: 4px; vertical-align: middle; animation: pulse 2s ease-in-out infinite; }
+  .byline-name { font-family: 'Noto Serif SC', serif; font-weight: 700; font-size: 18px; margin: 4px 0; color: var(--ink); }
+  .byline-name .em { color: var(--accent); font-weight: 500; }
+  .byline-tag { color: var(--ink-soft); font-size: 13px; margin: 0; line-height: 1.5; }
+  .footer-meta { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ink-mute); text-align: center; letter-spacing: 0.05em; }
+  .footer-meta .heart { color: var(--accent); }
+
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="wrap topbar-inner">
+    <div class="brand-block">
+      <a href="book.html#vol-3" class="brand"><span class="brand-arrow">←</span>AI LABBOOK <span class="dot"></span></a>
+      <span class="brand-sep">/</span>
+      <span class="brand-current">X7 · 异常</span>
+    </div>
+    <nav class="nav-links">
+      <a href="book.html#vol-3">路线图</a>
+    </nav>
+  </div>
+</div>
+
+<!-- Hero -->
+<header class="hero">
+  <div class="wrap">
+    <div class="hero-meta">
+      <span class="pill fill">高阶 · ADVANCED</span>
+      <span class="pill purple">STAGE 02 · 任务流</span>
+      <span class="pill">X7 · 异常</span>
+      <span class="label">阅读 ≈ 16 分钟 · 含 3 段互动</span>
+    </div>
+    <div class="hero-grid">
+      <div>
+        <h1>
+          用户不会的事，<br>
+          <span class="display-cn">系统</span>会替他<span class="purple">遇到</span>。
+        </h1>
+        <p class="lede">
+          网断了、接口慢了、两个人同时点同一个按钮、用户连点两次。<br>
+          这 4 件事每天发生千次——稿子里却几乎没人画过。
+        </p>
+      </div>
+      <div class="hero-side">
+        <div class="row"><span class="k">本页讲什么</span><span class="v">异常 = 流程</span></div>
+        <div class="row"><span class="k">三幕</span><span class="v">看见 · 拆开 · 再做</span></div>
+        <div class="row"><span class="k">面向</span><span class="v">B 端 / 后台设计师</span></div>
+        <div class="row"><span class="k">前置</span><span class="v">X5 · 任务流</span></div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- Section 01: 问题 -->
+<section id="problem">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>01</strong> / 问题</div>
+        <h2 class="section-title">异常不是 bug，<br>是<span class="em">任务流的真实路径</span>。</h2>
+      </div>
+      <p class="section-sub">
+        失败 / 超时 / 冲突 / 重复——4 个独立异常类，来源不同、UI 不同、修复策略不同。
+        当作任务流的设计对象去画，稿子的鲁棒性就出来了。
+      </p>
+    </div>
+
+    <div class="problem-grid">
+      <div class="problem-card bad">
+        <span class="tag">Bad · 异常 = BUG</span>
+        <h3>"把异常当 bug"</h3>
+        <p>稿子里只画了 happy path——出错让工程师写个 toast，"自己看着办"。</p>
+        <p><strong>一周后用户骂：</strong>toast 太短看不见、点了没反应、刷新就丢了输入、不知道再点会不会重复下单。</p>
+        <p style="color:var(--accent)"><strong>结果：</strong>客服爆 · 工程背锅 · 设计无感知。</p>
+      </div>
+
+      <div class="problem-card good">
+        <span class="tag">Good · 异常 = 流程</span>
+        <h3>"把异常当流程"</h3>
+        <p>4 种异常各自有 (a) 触发条件 (b) 兜底 UI (c) 用户下一步 (d) 恢复路径。<strong>稿子里 4 种异常都画</strong>。</p>
+        <p><strong>工程师收到：</strong>16 个明确状态 + 恢复策略表，能直接落代码。</p>
+        <p style="color:var(--obj-color)"><strong>用户感受：</strong>系统稳。</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Section 02: 幕一 · 看见 -->
+<section id="look">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <span class="act-tag look">幕一 · 看见</span>
+        <div class="section-num"><strong>02</strong> / 看见</div>
+        <h2 class="section-title"><span class="purple">4 种异常</span>，<br>每天千次。</h2>
+      </div>
+      <p class="section-sub">
+        鼠标移到任一情况上 → 观察用户屏幕里实际发生什么。
+        点 <strong>下一帧 →</strong> 看 3-4 步的动态演示。
+      </p>
+    </div>
+
+    <div class="ex-stage">
+      <div class="ex-grid" id="exGrid">
+
+        <!-- 失败 -->
+        <div class="ex-card" data-ex="failure">
+          <span class="ex-tag">01 · 失败 · FAILURE</span>
+          <div class="ex-head">
+            <span class="ex-name">网络断 / 接口 500</span>
+            <span class="ex-sub">backend down</span>
+          </div>
+          <div class="ex-screen" data-frames="4">
+            <div class="frame active" data-i="0">
+              <div style="font-size:11px;color:var(--ink-mute);margin-bottom:8px">订单确认页</div>
+              <div style="background:white;padding:10px;border-radius:4px;border:1px solid var(--line)">
+                <div style="font-size:12px;margin-bottom:8px"><strong>新订单</strong> · ¥ 1,280</div>
+                <div style="font-size:11px;color:var(--ink-mute);margin-bottom:10px">收货 · 北京海淀</div>
+                <button class="btn-mini">提交订单</button>
+              </div>
+            </div>
+            <div class="frame" data-i="1">
+              <div style="font-size:11px;color:var(--ink-mute);margin-bottom:8px">用户点了提交……</div>
+              <div style="background:white;padding:10px;border-radius:4px;border:1px solid var(--line)">
+                <div style="font-size:12px;margin-bottom:8px"><strong>新订单</strong> · ¥ 1,280</div>
+                <div style="font-size:11px;color:var(--ink-mute);margin-bottom:10px">收货 · 北京海淀</div>
+                <span class="btn-mini disabled loading">提交中</span>
+              </div>
+              <div style="margin-top:8px;font-size:10px;color:var(--ink-mute);font-family:'JetBrains Mono',monospace">▸ POST /orders</div>
+            </div>
+            <div class="frame" data-i="2">
+              <div style="font-size:11px;color:var(--accent);margin-bottom:8px">服务器返回 500……</div>
+              <div style="background:white;padding:10px;border-radius:4px;border:1px solid var(--line);opacity:0.65">
+                <div style="font-size:12px;margin-bottom:8px"><strong>新订单</strong> · ¥ 1,280</div>
+                <div style="font-size:11px;color:var(--ink-mute);margin-bottom:10px">收货 · 北京海淀</div>
+                <span class="btn-mini disabled loading">提交中</span>
+              </div>
+              <div style="margin-top:8px;font-size:10px;color:var(--accent);font-family:'JetBrains Mono',monospace">◀ 500 Internal Server Error</div>
+            </div>
+            <div class="frame" data-i="3">
+              <div style="font-size:11px;color:var(--ink-mute);margin-bottom:8px">用户屏幕：什么都没有……</div>
+              <div style="background:white;padding:10px;border-radius:4px;border:1px solid var(--line);opacity:0.65">
+                <div style="font-size:12px;margin-bottom:8px"><strong>新订单</strong> · ¥ 1,280</div>
+                <div style="font-size:11px;color:var(--ink-mute);margin-bottom:10px">收货 · 北京海淀</div>
+                <span class="btn-mini disabled loading">提交中</span>
+              </div>
+              <div style="margin-top:8px;font-size:10px;color:var(--accent);font-family:'JetBrains Mono',monospace">↻ 30 秒了…该提交吗？</div>
+            </div>
+          </div>
+          <div class="ex-frame-meta">
+            <span class="step-label">第 1 / 4 帧</span>
+            <span class="dots"><span class="d on"></span><span class="d"></span><span class="d"></span><span class="d"></span></span>
+          </div>
+          <button class="ex-step-btn" data-ex-step="failure">下一帧 →</button>
+          <div class="ex-pain">UI 没说错——也没说对。用户不知道：钱扣了吗？要再点吗？刷新会怎样？</div>
+        </div>
+
+        <!-- 超时 -->
+        <div class="ex-card" data-ex="timeout">
+          <span class="ex-tag">02 · 超时 · TIMEOUT</span>
+          <div class="ex-head">
+            <span class="ex-name">接口慢 5s / 10s / 30s</span>
+            <span class="ex-sub">slow response</span>
+          </div>
+          <div class="ex-screen" data-frames="4">
+            <div class="frame active" data-i="0">
+              <div style="font-size:11px;color:var(--ink-mute);margin-bottom:8px">用户点了搜索</div>
+              <div style="background:white;padding:10px;border-radius:4px;border:1px solid var(--line)">
+                <div style="font-size:11px;font-family:'JetBrains Mono',monospace;color:var(--ink-mute);margin-bottom:6px">🔍 搜 "客户 / 张明"</div>
+                <span class="btn-mini disabled loading">搜索中</span>
+              </div>
+              <div style="margin-top:8px;font-size:10px;color:var(--ink-mute);font-family:'JetBrains Mono',monospace">▸ GET /search · 已等 1s</div>
+            </div>
+            <div class="frame" data-i="1">
+              <div style="font-size:11px;color:var(--ink-mute);margin-bottom:8px">5 秒过去……</div>
+              <div style="background:white;padding:10px;border-radius:4px;border:1px solid var(--line)">
+                <div style="font-size:11px;font-family:'JetBrains Mono',monospace;color:var(--ink-mute);margin-bottom:6px">🔍 搜 "客户 / 张明"</div>
+                <span class="btn-mini disabled loading">搜索中</span>
+              </div>
+              <div style="margin-top:8px;font-size:10px;color:var(--ink-mute);font-family:'JetBrains Mono',monospace">▸ 已等 5s · 还在转</div>
+            </div>
+            <div class="frame" data-i="2">
+              <div style="font-size:11px;color:var(--ink-mute);margin-bottom:8px">10 秒了……再按一次？</div>
+              <div style="background:white;padding:10px;border-radius:4px;border:1px solid var(--line);opacity:0.7">
+                <div style="font-size:11px;font-family:'JetBrains Mono',monospace;color:var(--ink-mute);margin-bottom:6px">🔍 搜 "客户 / 张明"</div>
+                <span class="btn-mini disabled loading">搜索中</span>
+              </div>
+              <div style="margin-top:8px;font-size:10px;color:var(--ink-mute);font-family:'JetBrains Mono',monospace">▸ 已等 10s · ?</div>
+            </div>
+            <div class="frame" data-i="3">
+              <div style="font-size:11px;color:var(--accent);margin-bottom:8px">用户怀疑：还在转吗？没在转吗？</div>
+              <div style="background:white;padding:10px;border-radius:4px;border:1px solid var(--line);opacity:0.7">
+                <div style="font-size:11px;font-family:'JetBrains Mono',monospace;color:var(--ink-mute);margin-bottom:6px">🔍 搜 "客户 / 张明"</div>
+                <span class="btn-mini disabled loading">搜索中</span>
+              </div>
+              <div style="margin-top:8px;font-size:10px;color:var(--accent);font-family:'JetBrains Mono',monospace">▸ 用户狂点 ×3</div>
+            </div>
+          </div>
+          <div class="ex-frame-meta">
+            <span class="step-label">第 1 / 4 帧</span>
+            <span class="dots"><span class="d on"></span><span class="d"></span><span class="d"></span><span class="d"></span></span>
+          </div>
+          <button class="ex-step-btn" data-ex-step="timeout">下一帧 →</button>
+          <div class="ex-pain">"转圈" 不变化，用户的耐心和信心一起塌——重复点会触发"重复"异常。</div>
+        </div>
+
+        <!-- 冲突 -->
+        <div class="ex-card" data-ex="conflict">
+          <span class="ex-tag">03 · 冲突 · CONFLICT</span>
+          <div class="ex-head">
+            <span class="ex-name">两人同改一个客户</span>
+            <span class="ex-sub">race condition</span>
+          </div>
+          <div class="ex-screen" data-frames="4">
+            <div class="frame active" data-i="0">
+              <div style="font-size:11px;color:var(--ink-mute);margin-bottom:8px">14:00 · 客户"张明"的电话</div>
+              <div class="input-row"><span class="lbl">原值</span><span class="val">138-0000-0001</span></div>
+              <div style="font-size:10px;color:var(--ink-mute);margin-top:6px">销售 A · 销售 B 同时打开</div>
+            </div>
+            <div class="frame" data-i="1">
+              <div style="font-size:11px;color:var(--ink-mute);margin-bottom:8px">14:02 · 销售 A 改为</div>
+              <div class="input-row"><span class="lbl">A 改</span><span class="val new">138-0000-0002</span></div>
+              <div style="font-size:10px;color:var(--ink-mute);margin-top:6px"><span class="user-pill">销售 A</span> 已保存</div>
+            </div>
+            <div class="frame" data-i="2">
+              <div style="font-size:11px;color:var(--ink-mute);margin-bottom:8px">14:03 · 销售 B（不知道）改为</div>
+              <div class="input-row"><span class="lbl">A 改</span><span class="val was">138-0000-0002</span></div>
+              <div class="input-row"><span class="lbl">B 改</span><span class="val new">139-9999-8888</span></div>
+              <div style="font-size:10px;color:var(--accent);margin-top:6px"><span class="user-pill" style="background:var(--accent-soft);color:var(--accent)">销售 B</span> 直接覆盖了 A 的修改</div>
+            </div>
+            <div class="frame" data-i="3">
+              <div style="font-size:11px;color:var(--accent);margin-bottom:8px">15:00 · 销售 A 打电话——号码不对了</div>
+              <div class="input-row"><span class="lbl">现值</span><span class="val">139-9999-8888</span></div>
+              <div style="font-size:10px;color:var(--accent);margin-top:6px">A 不知道为什么。B 不知道有冲突。</div>
+            </div>
+          </div>
+          <div class="ex-frame-meta">
+            <span class="step-label">第 1 / 4 帧</span>
+            <span class="dots"><span class="d on"></span><span class="d"></span><span class="d"></span><span class="d"></span></span>
+          </div>
+          <button class="ex-step-btn" data-ex-step="conflict">下一帧 →</button>
+          <div class="ex-pain">"无锁覆盖" = 静默数据丢失。两个销售都觉得自己在做对的事——直到出事。</div>
+        </div>
+
+        <!-- 重复 -->
+        <div class="ex-card" data-ex="duplicate">
+          <span class="ex-tag">04 · 重复 · DUPLICATE</span>
+          <div class="ex-head">
+            <span class="ex-name">用户连点 3 次提交</span>
+            <span class="ex-sub">double submit</span>
+          </div>
+          <div class="ex-screen" data-frames="4">
+            <div class="frame active" data-i="0">
+              <div style="font-size:11px;color:var(--ink-mute);margin-bottom:8px">用户点了一次</div>
+              <button class="btn-mini">提交订单</button>
+              <div style="margin-top:8px;font-size:10px;color:var(--ink-mute);font-family:'JetBrains Mono',monospace">▸ POST /orders #1</div>
+            </div>
+            <div class="frame" data-i="1">
+              <div style="font-size:11px;color:var(--ink-mute);margin-bottom:8px">页面没反应，又点了一次</div>
+              <button class="btn-mini">提交订单</button>
+              <div style="margin-top:8px;font-size:10px;color:var(--ink-mute);font-family:'JetBrains Mono',monospace">▸ POST /orders #1<br>▸ POST /orders #2</div>
+            </div>
+            <div class="frame" data-i="2">
+              <div style="font-size:11px;color:var(--accent);margin-bottom:8px">第三次点击……</div>
+              <button class="btn-mini">提交订单</button>
+              <div style="margin-top:8px;font-size:10px;color:var(--accent);font-family:'JetBrains Mono',monospace">▸ POST /orders #1<br>▸ POST /orders #2<br>▸ POST /orders #3</div>
+            </div>
+            <div class="frame" data-i="3">
+              <div style="font-size:11px;color:var(--accent);margin-bottom:8px">后端生成了 3 份订单</div>
+              <div class="order-row dup">order_8821 · ¥1,280 · 新</div>
+              <div class="order-row dup">order_8822 · ¥1,280 · 新</div>
+              <div class="order-row dup">order_8823 · ¥1,280 · 新</div>
+              <div style="margin-top:6px;font-size:10px;color:var(--accent)">客户：我只下了一单……</div>
+            </div>
+          </div>
+          <div class="ex-frame-meta">
+            <span class="step-label">第 1 / 4 帧</span>
+            <span class="dots"><span class="d on"></span><span class="d"></span><span class="d"></span><span class="d"></span></span>
+          </div>
+          <button class="ex-step-btn" data-ex-step="duplicate">下一帧 →</button>
+          <div class="ex-pain">没有视觉反馈 + 没有幂等键 = 灾难三连。退款流程会比下单流程长 10 倍。</div>
+        </div>
+
+      </div>
+    </div>
+
+    <div class="reveal-bar">
+      <div class="msg">
+        这 4 件事<span class="em">每天发生千次</span>。<br>
+        如果稿子没画——工程师只能猜，用户只能骂。
+      </div>
+      <div class="counter">
+        已查看 <strong id="exCount">0</strong> / 4 类异常
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Section 03: 幕二 · 拆开 -->
+<section id="break">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <span class="act-tag break">幕二 · 拆开</span>
+        <div class="section-num"><strong>03</strong> / 拆开</div>
+        <h2 class="section-title"><span class="purple">4 种异常</span>的<br>诊断书。</h2>
+      </div>
+      <p class="section-sub">
+        每种异常都要回答 4 个问题：<strong>什么触发？谁负责？UI 怎样？怎么恢复？</strong>
+        点卡片展开看 4 个槽位 + "不设计会怎样"。
+      </p>
+    </div>
+
+    <div class="diag-stage" id="diagStage">
+
+      <div class="diag-card" data-num="01 · 失败" data-id="failure">
+        <div class="diag-head">
+          <span class="diag-name">失败 <span class="en">Failure</span></span>
+          <span class="diag-toggle"></span>
+        </div>
+        <p class="diag-summary">服务端不可用、网络断开——请求根本没有完成。设计的不是"出错文案"，是"用户的下一步"。</p>
+        <div class="diag-slots">
+          <div class="diag-slot"><span class="slot-k">触发 · TRIGGER</span><span class="slot-v">服务端 500 / 网络断 / API 不可达 / DNS 失败</span></div>
+          <div class="diag-slot"><span class="slot-k">负责 · OWNER</span><span class="slot-v">工程 +/或运维（不应让用户承担责任）· 设计承接体验</span></div>
+          <div class="diag-slot"><span class="slot-k">UI · UI 兜底</span><span class="slot-v">错误 toast / 对话框 + <strong>保留用户输入</strong> + 重试按钮 + 如果可降级则降级（缓存数据 / 离线模式）</span></div>
+          <div class="diag-slot"><span class="slot-k">恢复 · RECOVERY</span><span class="slot-v">自动重试 1-2 次（指数退避）→ 仍失败则让用户决定（重试 / 取消 / 联系客服）</span></div>
+        </div>
+        <div class="diag-pain">不设计这条 → 用户的订单数据全没了，再填一次再点提交，重蹈覆辙。</div>
+      </div>
+
+      <div class="diag-card" data-num="02 · 超时" data-id="timeout">
+        <div class="diag-head">
+          <span class="diag-name">超时 <span class="en">Timeout</span></span>
+          <span class="diag-toggle"></span>
+        </div>
+        <p class="diag-summary">请求还在路上，但用户已经等不动了。"还在转吗"是设计要回答的最常见疑问。</p>
+        <div class="diag-slots">
+          <div class="diag-slot"><span class="slot-k">触发 · TRIGGER</span><span class="slot-v">接口慢于 3 秒（具体阈值看产品 · 移动网络更松）</span></div>
+          <div class="diag-slot"><span class="slot-k">负责 · OWNER</span><span class="slot-v">工程优化（缩短）+ 设计承接（讲清楚状态、提供取消）</span></div>
+          <div class="diag-slot"><span class="slot-k">UI · UI 兜底</span><span class="slot-v">> 1s 显示加载动画；> 3s 显示"还在加载……"文案 + 进度提示；> 10s 给"取消"按钮</span></div>
+          <div class="diag-slot"><span class="slot-k">恢复 · RECOVERY</span><span class="slot-v">超时后<strong>自动取消请求</strong> + 让用户重试 · 切忌静默挂起</span></div>
+        </div>
+        <div class="diag-pain">不设计这条 → 用户狂点 / 关页面 / 投诉"卡死"，并触发"重复"异常。</div>
+      </div>
+
+      <div class="diag-card" data-num="03 · 冲突" data-id="conflict">
+        <div class="diag-head">
+          <span class="diag-name">冲突 <span class="en">Conflict</span></span>
+          <span class="diag-toggle"></span>
+        </div>
+        <p class="diag-summary">两个人同时改同一份资源——谁后保存谁覆盖。但"后改"未必是"对的"。</p>
+        <div class="diag-slots">
+          <div class="diag-slot"><span class="slot-k">触发 · TRIGGER</span><span class="slot-v">两人同时改同一资源，后改的会覆盖前改的（无锁 / 无版本号）</span></div>
+          <div class="diag-slot"><span class="slot-k">负责 · OWNER</span><span class="slot-v">工程（乐观锁 / 悲观锁 / version 字段）+ 设计（冲突 UI 提示）</span></div>
+          <div class="diag-slot"><span class="slot-k">UI · UI 兜底</span><span class="slot-v">保存时检测到"你不是最新版"——提示"小明 2 分钟前改过"，给用户三选一：<strong>看 diff / 强制覆盖 / 取消</strong></span></div>
+          <div class="diag-slot"><span class="slot-k">恢复 · RECOVERY</span><span class="slot-v">基于 diff 让用户合并；或先取消让用户重新载入再决定</span></div>
+        </div>
+        <div class="diag-pain">不设计这条 → 客户电话一直打不通，业务部门和销售互相甩锅。</div>
+      </div>
+
+      <div class="diag-card" data-num="04 · 重复" data-id="duplicate">
+        <div class="diag-head">
+          <span class="diag-name">重复 <span class="en">Duplicate</span></span>
+          <span class="diag-toggle"></span>
+        </div>
+        <p class="diag-summary">用户多次点击 + 后端无幂等保护 = 数据被多次创建。客户端 + 后端要"两道防"。</p>
+        <div class="diag-slots">
+          <div class="diag-slot"><span class="slot-k">触发 · TRIGGER</span><span class="slot-v">用户多次点击（焦躁 / 网络慢 / 误触）+ 后端无幂等键</span></div>
+          <div class="diag-slot"><span class="slot-k">负责 · OWNER</span><span class="slot-v">工程（幂等 idempotency-key）+ 设计（按钮禁用 + 视觉反馈 + 去抖）</span></div>
+          <div class="diag-slot"><span class="slot-k">UI · UI 兜底</span><span class="slot-v">按钮 disabled / Loading 状态、视觉反馈（"提交中……"）、客户端去抖（debounce 500ms）</span></div>
+          <div class="diag-slot"><span class="slot-k">恢复 · RECOVERY</span><span class="slot-v">后端检测到相同 key → 返回同一结果而非创建新单 · 前端提示"已有相同请求，请稍候"</span></div>
+        </div>
+        <div class="diag-pain">不设计这条 → 一次点击产生 3 单 · 退款流程比下单流程长 10 倍 · 用户从此不信任系统。</div>
+      </div>
+
+    </div>
+
+    <div class="reveal-bar" style="margin-top:32px">
+      <div class="msg">
+        4 种异常 × 4 个槽 = <span class="em">16 个决策</span>。<br>
+        设计稿少 1 个，用户就少 1 份信任。
+      </div>
+      <div class="counter">已展开 <strong id="diagCount">0</strong> / 4 张诊断书</div>
+    </div>
+  </div>
+</section>
+
+<!-- Section 04: 幕三 · 再做 -->
+<section id="make">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <span class="act-tag make">幕三 · 再做</span>
+        <div class="section-num"><strong>04</strong> / 再做</div>
+        <h2 class="section-title">轮到你——<br>给「提交订单」的<br><span class="em">4 种异常</span>承接。</h2>
+      </div>
+      <p class="section-sub">
+        下面 4 个异常场景。每个有 3 个候选 UI——你选哪个？再选一下"恢复策略"。
+        提交后会告诉你<strong>每个错的代价</strong>。
+      </p>
+    </div>
+
+    <div class="choose-stage">
+      <div class="choose-head">
+        <h3 class="choose-title">「提交订单」的 4 种异常承接</h3>
+        <div class="choose-progress">已选 <span class="done" id="chooseDone">0</span> / 4 个场景</div>
+      </div>
+
+      <div class="choose-scenes" id="chooseScenes">
+
+        <!-- Scene 1: 失败 -->
+        <div class="choose-scene" data-scene="s1" data-correct-ui="B" data-correct-rec="user-retry">
+          <div class="choose-scene-head">
+            <span class="choose-scene-name"><span class="tag-inline">场景 1 · 失败</span>网络断，用户点提交订单</span>
+            <span class="choose-scene-prog" data-prog="s1">0 / 2</span>
+          </div>
+          <div class="choose-scenario">用户填好订单 · ¥1,280 · 点了"提交订单"——<strong>家里网络断了 5 秒</strong>，请求没发出去。</div>
+          <div class="choose-options" data-group="s1-ui">
+            <div class="choose-opt" data-val="A">
+              <span class="choose-opt-label">A · 选项 A</span>
+              <div class="choose-opt-title">灰按钮 + 短 toast</div>
+              <div class="choose-opt-demo">按钮变灰 · 屏幕底部弹"提交失败" 1 秒后消失。用户输入留在表单里。</div>
+            </div>
+            <div class="choose-opt" data-val="B">
+              <span class="choose-opt-label">B · 选项 B</span>
+              <div class="choose-opt-title">错误对话框 + 保留 + 重试</div>
+              <div class="choose-opt-demo">弹"网络异常，请检查后重试" · <strong>表单数据完整保留</strong> · "重试"按钮在主视觉位。</div>
+            </div>
+            <div class="choose-opt" data-val="C">
+              <span class="choose-opt-label">C · 选项 C</span>
+              <div class="choose-opt-title">跳到错误页 "出错了"</div>
+              <div class="choose-opt-demo">直接跳"500 页面" · 用户输入丢失 · 需要全部重填一遍。</div>
+            </div>
+          </div>
+          <div class="choose-recover">
+            <span class="choose-recover-lbl">恢复策略</span>
+            <select data-group="s1-rec">
+              <option value="">-- 选一个恢复策略 --</option>
+              <option value="auto-retry">自动重试（前端静默重试 3 次）</option>
+              <option value="user-retry">用户重试（让用户点"重试"）</option>
+              <option value="error-page">失败后跳错误页</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Scene 2: 超时 -->
+        <div class="choose-scene" data-scene="s2" data-correct-ui="B" data-correct-rec="user-decide">
+          <div class="choose-scene-head">
+            <span class="choose-scene-name"><span class="tag-inline">场景 2 · 超时</span>接口卡 8 秒</span>
+            <span class="choose-scene-prog" data-prog="s2">0 / 2</span>
+          </div>
+          <div class="choose-scenario">用户点提交后 · 后端 <strong>已经开始处理</strong> · 但响应慢 · 等到 8 秒还没回来。用户开始坐立不安。</div>
+          <div class="choose-options" data-group="s2-ui">
+            <div class="choose-opt" data-val="A">
+              <span class="choose-opt-label">A · 选项 A</span>
+              <div class="choose-opt-title">按钮持续转，不动</div>
+              <div class="choose-opt-demo">从 1 秒到 8 秒——转圈动画都一样 · 没有任何信息变化。用户狂点。</div>
+            </div>
+            <div class="choose-opt" data-val="B">
+              <span class="choose-opt-label">B · 选项 B</span>
+              <div class="choose-opt-title">分级提示 + 取消按钮</div>
+              <div class="choose-opt-demo">> 3s 显示"还在加载……" · > 10s 给"取消"按钮。状态在变化，用户知道系统活着。</div>
+            </div>
+            <div class="choose-opt" data-val="C">
+              <span class="choose-opt-label">C · 选项 C</span>
+              <div class="choose-opt-title">5s 后报"失败"</div>
+              <div class="choose-opt-demo">5 秒倒计时，到时直接报错。<strong>但其实后端在跑</strong>——可能已成功，前端却说失败。</div>
+            </div>
+          </div>
+          <div class="choose-recover">
+            <span class="choose-recover-lbl">恢复策略</span>
+            <select data-group="s2-rec">
+              <option value="">-- 选一个恢复策略 --</option>
+              <option value="auto-cancel">超时即自动取消（前端单方面）</option>
+              <option value="user-decide">超时后取消请求 + 让用户决定</option>
+              <option value="silent-hang">不做处理（继续转圈）</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Scene 3: 冲突 -->
+        <div class="choose-scene" data-scene="s3" data-correct-ui="B" data-correct-rec="user-merge">
+          <div class="choose-scene-head">
+            <span class="choose-scene-name"><span class="tag-inline">场景 3 · 冲突</span>两个销售同时改电话</span>
+            <span class="choose-scene-prog" data-prog="s3">0 / 2</span>
+          </div>
+          <div class="choose-scenario">销售 A · 14:02 改了客户电话 → 销售 B · 14:03 不知道地也改了——<strong>覆盖了 A 的修改</strong>。</div>
+          <div class="choose-options" data-group="s3-ui">
+            <div class="choose-opt" data-val="A">
+              <span class="choose-opt-label">A · 选项 A</span>
+              <div class="choose-opt-title">直接覆盖，无提示</div>
+              <div class="choose-opt-demo">后改的覆盖先改的。A 的修改静默丢失。没人知道有冲突。</div>
+            </div>
+            <div class="choose-opt" data-val="B">
+              <span class="choose-opt-label">B · 选项 B</span>
+              <div class="choose-opt-title">检测冲突 + 展示 diff</div>
+              <div class="choose-opt-demo">B 保存时弹"小明 2 分钟前改过" · 展示两边的值 · 三选一：合并 / 覆盖 / 取消。</div>
+            </div>
+            <div class="choose-opt" data-val="C">
+              <span class="choose-opt-label">C · 选项 C</span>
+              <div class="choose-opt-title">直接拒绝保存</div>
+              <div class="choose-opt-demo">"已被改过，请重新载入" · 安全但粗暴 · B 的输入全部丢失。</div>
+            </div>
+          </div>
+          <div class="choose-recover">
+            <span class="choose-recover-lbl">恢复策略</span>
+            <select data-group="s3-rec">
+              <option value="">-- 选一个恢复策略 --</option>
+              <option value="user-merge">让用户决定（合并 / 覆盖 / 取消）</option>
+              <option value="auto-merge">系统自动合并（按字段合）</option>
+              <option value="force-reload">强制刷新页面</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Scene 4: 重复 -->
+        <div class="choose-scene" data-scene="s4" data-correct-ui="C" data-correct-rec="both">
+          <div class="choose-scene-head">
+            <span class="choose-scene-name"><span class="tag-inline">场景 4 · 重复</span>用户连点 3 次提交订单</span>
+            <span class="choose-scene-prog" data-prog="s4">0 / 2</span>
+          </div>
+          <div class="choose-scenario">用户点提交但没反应（其实在后台跑）→ 又点了 2 次 → 后端收到 3 个相同请求。</div>
+          <div class="choose-options" data-group="s4-ui">
+            <div class="choose-opt" data-val="A">
+              <span class="choose-opt-label">A · 选项 A</span>
+              <div class="choose-opt-title">后端处理 3 次，创建 3 单</div>
+              <div class="choose-opt-demo">客户端不拦 + 后端不拦 = 灾难。客服要花一周退款 + 道歉。</div>
+            </div>
+            <div class="choose-opt" data-val="B">
+              <span class="choose-opt-label">B · 选项 B</span>
+              <div class="choose-opt-title">客户端 disabled 1s + 去抖</div>
+              <div class="choose-opt-demo">按钮点完立刻禁用 1s · debounce 500ms · 但如果用户跨标签 / 跨设备点呢？</div>
+            </div>
+            <div class="choose-opt" data-val="C">
+              <span class="choose-opt-label">C · 选项 C</span>
+              <div class="choose-opt-title">客户端拦 + 后端幂等键</div>
+              <div class="choose-opt-demo">客户端 disabled + 后端按 idempotency-key 去重 · 重复请求返回同一结果。</div>
+            </div>
+          </div>
+          <div class="choose-recover">
+            <span class="choose-recover-lbl">恢复策略</span>
+            <select data-group="s4-rec">
+              <option value="">-- 选一个恢复策略 --</option>
+              <option value="client-only">只在客户端拦</option>
+              <option value="server-only">只在后端拦</option>
+              <option value="both">两者都拦（客户端 + 后端）</option>
+            </select>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="choose-actions">
+        <button class="choose-btn primary" id="chooseSubmit">提交打分</button>
+        <button class="choose-btn" id="chooseReset">清空</button>
+      </div>
+
+      <div class="choose-judge" id="chooseJudge"></div>
+    </div>
+  </div>
+</section>
+
+<!-- Section 05: closing -->
+<section id="closing">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>05</strong> / 把这件事变成习惯</div>
+        <h2 class="section-title">下次画稿，<br>先<span class="em">问 3 个问题</span>。</h2>
+      </div>
+      <p class="section-sub">
+        从这一篇开始，"我假设这不会发生"会从你的设计评审里逐渐消失。
+        异常 = 路径，不是 bug。
+      </p>
+    </div>
+
+    <div class="tips-grid">
+      <div class="tip">
+        <div class="tip-num">i</div>
+        <h4>稿子至少画 4 张"异常态"</h4>
+        <p>失败、超时、冲突、重复，每个一张——哪怕只是文案。</p>
+        <p>没画过 = 工程师靠猜 = 用户骂街。<strong>16 个状态都画清，工程师 0 追问。</strong></p>
+      </div>
+      <div class="tip">
+        <div class="tip-num">ii</div>
+        <h4>错误信息不是给用户看的——是让用户能行动</h4>
+        <p>"网络异常" 不够 → "请检查网络后重试" 才行动；</p>
+        <p>"提交失败" 不够 → <strong>保留输入 + 重试按钮</strong> 才行动。</p>
+      </div>
+      <div class="tip">
+        <div class="tip-num">iii</div>
+        <h4>"我假设这不会发生"是危险句</h4>
+        <p>网络会断、接口会慢、用户会连点、两个人会同时改。</p>
+        <p>规模够大时，每一种<strong>每天都是高频</strong>——千分之一也是上百次。</p>
+      </div>
+    </div>
+
+    <div class="tip-outro">
+      <div class="outro-tag">划重点 · TL;DR</div>
+      <div>
+        <p>异常 ≠ 错位，<strong>异常是路径</strong>。把失败 / 超时 / 冲突 / 重复 这 4 种当任务流的同等公民去画——稿子的鲁棒性就出来了。</p>
+        <p>下次需求评审，试一次——<strong>"happy path 我画了，4 种异常各自的承接是这样……"</strong>。工程师看你的眼神就变了。</p>
+      </div>
+    </div>
+
+    <a href="x8-state-machine.html" class="next-post">
+      <div>
+        <div class="np-tag">下一站 · NEXT · X8 · 高阶</div>
+        <h4>状态机：<span class="em">对象的生命周期</span></h4>
+        <p>前 3 篇讲了主流 + 分支 + 异常——这些都让对象状态在变。下一站把所有"状态变化"画成一张状态机图：对象从生到死经过的所有合法路径。</p>
+      </div>
+      <span class="np-cta">下一篇 <span class="arr">→</span></span>
+    </a>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div class="byline-group">
+      <div class="byline">
+        <img class="avatar" src="author.jpg" alt="范米花儿">
+        <div class="byline-meta">
+          <div class="byline-label"><span class="dot"></span>作者 · WRITTEN BY</div>
+          <div class="byline-name">嗨，我是 <span class="em">范米花儿</span></div>
+          <p class="byline-tag">设计工程师 ——<br>设计 × 代码，两边都做。</p>
+        </div>
+      </div>
+</div>
+    <div class="footer-meta">
+      做于 <span class="mono">2026</span> · 用 <span class="heart">●</span> 写给 <span class="mono">DESIGNERS &amp; DEVELOPERS</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+// ===== Game 1: exception cards — hover-to-highlight + step-frames =====
+(function(){
+  const cards = document.querySelectorAll('.ex-card');
+  const visited = new Set();
+  const counter = document.getElementById('exCount');
+
+  cards.forEach(card => {
+    card.addEventListener('mouseenter', () => {
+      card.classList.add('is-highlight');
+      if (!visited.has(card.dataset.ex)) {
+        visited.add(card.dataset.ex);
+        counter.textContent = visited.size;
+      }
+    });
+    card.addEventListener('mouseleave', () => {
+      card.classList.remove('is-highlight');
+    });
+  });
+
+  // step-frame buttons
+  document.querySelectorAll('.ex-step-btn').forEach(btn => {
+    btn.addEventListener('click', e => {
+      e.stopPropagation();
+      const exId = btn.dataset.exStep;
+      const card = document.querySelector(`.ex-card[data-ex="${exId}"]`);
+      const screen = card.querySelector('.ex-screen');
+      const frames = screen.querySelectorAll('.frame');
+      const total = frames.length;
+      let cur = 0;
+      frames.forEach((f, i) => { if (f.classList.contains('active')) cur = i; });
+      const next = (cur + 1) % total;
+      frames.forEach((f, i) => f.classList.toggle('active', i === next));
+      // dots
+      const dots = card.querySelectorAll('.ex-frame-meta .d');
+      dots.forEach((d, i) => d.classList.toggle('on', i === next));
+      // step-label
+      const lbl = card.querySelector('.step-label');
+      if (lbl) lbl.textContent = `第 ${next + 1} / ${total} 帧`;
+      // also visit
+      if (!visited.has(exId)) {
+        visited.add(exId);
+        counter.textContent = visited.size;
+      }
+    });
+  });
+
+  // auto-advance each card every 4.5s if not hovered
+  cards.forEach(card => {
+    let timer = null;
+    function start() {
+      stop();
+      timer = setInterval(() => {
+        if (card.matches(':hover')) return;
+        const btn = card.querySelector('.ex-step-btn');
+        if (btn) btn.click();
+      }, 4500);
+    }
+    function stop() { if (timer) clearInterval(timer); timer = null; }
+    start();
+    card.addEventListener('mouseenter', stop);
+    card.addEventListener('mouseleave', start);
+  });
+})();
+
+// ===== Game 2: diagnostic cards — click to expand =====
+(function(){
+  const cards = document.querySelectorAll('.diag-card');
+  const opened = new Set();
+  const counter = document.getElementById('diagCount');
+
+  cards.forEach(card => {
+    card.addEventListener('click', () => {
+      card.classList.toggle('is-open');
+      if (card.classList.contains('is-open')) {
+        opened.add(card.dataset.id);
+      } else {
+        opened.delete(card.dataset.id);
+      }
+      counter.textContent = opened.size;
+    });
+  });
+})();
+
+// ===== Game 3: choose-the-UI builder =====
+(function(){
+  const SCENES = ['s1','s2','s3','s4'];
+
+  const SCENE_INFO = {
+    s1: {
+      name: '场景 1 · 失败',
+      title: '网络断，用户点提交订单',
+      correctUI: 'B', correctRec: 'user-retry',
+      uiExplain: {
+        A: '灰按钮 + toast 太轻——用户看不见，下一步无路径。',
+        B: '错误对话框 + 保留输入 + 重试按钮——讲清楚发生了什么，给下一步。',
+        C: '直接跳错误页 = 用户输入丢失 + 没有回到任务流的路径。最差解。'
+      },
+      recExplain: {
+        'auto-retry': '失败时自动重试有效——但 3 次都失败后，必须让用户看到错误状态、决定下一步。不能静默挂起。',
+        'user-retry': '让用户重试——前置自动重试 1-2 次后仍失败，把决定权还给用户。',
+        'error-page': '失败就跳错误页 = 输入丢失 + 离开任务流。糟糕。'
+      }
+    },
+    s2: {
+      name: '场景 2 · 超时',
+      title: '接口卡 8 秒',
+      correctUI: 'B', correctRec: 'user-decide',
+      uiExplain: {
+        A: '按钮持续转 = 用户不知道还在不在转，会狂点导致"重复"异常。',
+        B: '分级提示：> 3s 给文案，> 10s 给取消。状态在变化 = 系统活着。',
+        C: '5s 就报失败——但后端可能正在成功。错误的"失败"比真实的"超时"更危险。'
+      },
+      recExplain: {
+        'auto-cancel': '前端单方面取消 = 后端可能仍在跑，可能成功，前端却说失败。状态错位。',
+        'user-decide': '超时取消 + 让用户决定（重试 / 继续等 / 联系客服）——状态最清晰。',
+        'silent-hang': '不处理 = 用户狂点 = 重复异常爆发。糟糕。'
+      }
+    },
+    s3: {
+      name: '场景 3 · 冲突',
+      title: '两个销售同时改电话',
+      correctUI: 'B', correctRec: 'user-merge',
+      uiExplain: {
+        A: '直接覆盖 = 静默数据丢失。最危险——没人知道有冲突。',
+        B: '展示 diff + 让用户选——把决策权给最了解上下文的人（销售自己）。',
+        C: '直接拒绝 = 安全但粗暴。B 的输入全没了，怨气十足。'
+      },
+      recExplain: {
+        'user-merge': '让用户决定——展示双方修改，由销售看上下文选择。',
+        'auto-merge': '系统自动合并字段——遇到同字段不同值时还是要让用户决定。不能全自动。',
+        'force-reload': '强制刷新 = 用户输入全丢，惩罚后到的人。差解。'
+      }
+    },
+    s4: {
+      name: '场景 4 · 重复',
+      title: '用户连点 3 次提交订单',
+      correctUI: 'C', correctRec: 'both',
+      uiExplain: {
+        A: '前后端都不拦 = 3 单。灾难。',
+        B: '只在客户端拦：跨标签 / 跨设备 / 网络重试时都失效。半解。',
+        C: '客户端 disabled + 后端 idempotency-key 去重——双保险，重复请求返回同一结果。'
+      },
+      recExplain: {
+        'client-only': '只在客户端拦 = 网络重试、跨标签都失效。不够。',
+        'server-only': '只在后端拦 = 用户体验仍然是"按下去没反应又按"，造成困惑。',
+        'both': '客户端给视觉反馈 + 后端给数据保证——两道防线缺一不可。'
+      }
+    }
+  };
+
+  // UI selection
+  document.querySelectorAll('.choose-options').forEach(group => {
+    const groupId = group.dataset.group;
+    group.querySelectorAll('.choose-opt').forEach(opt => {
+      opt.addEventListener('click', () => {
+        group.querySelectorAll('.choose-opt').forEach(o => o.classList.remove('selected'));
+        opt.classList.add('selected');
+        opt.dataset.picked = '1';
+        // remember on group
+        group.dataset.picked = opt.dataset.val;
+        updateProgress();
+      });
+    });
+  });
+
+  document.querySelectorAll('select[data-group]').forEach(sel => {
+    sel.addEventListener('change', () => {
+      sel.dataset.picked = sel.value;
+      updateProgress();
+    });
+  });
+
+  function getPicks(scene) {
+    const uiGroup = document.querySelector(`.choose-options[data-group="${scene}-ui"]`);
+    const recGroup = document.querySelector(`select[data-group="${scene}-rec"]`);
+    return {
+      ui: uiGroup ? uiGroup.dataset.picked || null : null,
+      rec: recGroup ? recGroup.value || null : null
+    };
+  }
+
+  function updateProgress() {
+    let done = 0;
+    SCENES.forEach(s => {
+      const p = getPicks(s);
+      const sc = p.ui ? 1 : 0;
+      const rc = p.rec ? 1 : 0;
+      const prog = document.querySelector(`.choose-scene-prog[data-prog="${s}"]`);
+      if (prog) {
+        prog.textContent = `${sc + rc} / 2`;
+        prog.classList.toggle('ready', sc + rc === 2);
+      }
+      if (sc + rc === 2) done++;
+    });
+    document.getElementById('chooseDone').textContent = done;
+  }
+
+  document.getElementById('chooseSubmit').addEventListener('click', () => {
+    let totalUI = 0, totalRec = 0;
+    let totalCorrect = 0;
+    const lines = [];
+
+    SCENES.forEach(s => {
+      const info = SCENE_INFO[s];
+      const p = getPicks(s);
+      if (!p.ui && !p.rec) {
+        lines.push(`<li><strong>${info.name}</strong>：还没选 — 这题需要 UI + 恢复 两个判断。</li>`);
+        return;
+      }
+
+      const uiOK = p.ui === info.correctUI;
+      const recOK = p.rec === info.correctRec;
+      if (uiOK) totalUI++;
+      if (recOK) totalRec++;
+      if (uiOK && recOK) totalCorrect++;
+
+      let line = `<strong>${info.name}</strong>：`;
+      line += `UI <span class="${uiOK ? 'ok' : 'no'}">${p.ui || '未选'}${uiOK ? ' ✓' : ' ✗'}</span> · `;
+      line += `恢复 <span class="${recOK ? 'ok' : 'no'}">${p.rec || '未选'}${recOK ? ' ✓' : ' ✗'}</span>`;
+      const whys = [];
+      if (p.ui && info.uiExplain[p.ui]) whys.push(info.uiExplain[p.ui]);
+      if (p.rec && info.recExplain[p.rec]) whys.push(info.recExplain[p.rec]);
+      if (!uiOK || !recOK) {
+        line += `<br><span class="why">↳ 正解：UI = <strong style="color:#8fd9a4">${info.correctUI}</strong> · 恢复 = <strong style="color:#8fd9a4">${info.correctRec}</strong></span>`;
+      }
+      if (whys.length) {
+        line += `<br><span class="why">↳ ${whys.join(' / ')}</span>`;
+      }
+      lines.push(`<li>${line}</li>`);
+    });
+
+    const judge = document.getElementById('chooseJudge');
+    let verdictClass, verdictLabel, headline;
+    if (totalCorrect === 4) {
+      verdictClass = 'win';
+      verdictLabel = '完美';
+      headline = '你已经把异常当任务流的一部分来设计了。';
+    } else if (totalCorrect >= 3 || (totalUI >= 3 && totalRec >= 3)) {
+      verdictClass = 'win';
+      verdictLabel = '基本对了';
+      headline = '4 个异常里大部分都判断对——继续把"我假设这不会发生"从口头去掉。';
+    } else if (totalCorrect >= 2 || totalUI >= 2) {
+      verdictClass = 'partial';
+      verdictLabel = '一半一半';
+      headline = '方向有了——再看一次：UI 是让用户行动，恢复是把任务接回来。';
+    } else {
+      verdictClass = 'miss';
+      verdictLabel = '再来一次';
+      headline = '换个角度——异常不是 toast，是 4 个独立流程。每一种都得有 (a) 兜底 UI (b) 让用户下一步的路径。';
+    }
+
+    judge.innerHTML = `<span class="verdict ${verdictClass}">${verdictLabel}</span><h4>${headline}</h4><ul>${lines.join('')}</ul>`;
+    judge.classList.add('show');
+    judge.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  });
+
+  document.getElementById('chooseReset').addEventListener('click', () => {
+    document.querySelectorAll('.choose-options').forEach(g => {
+      g.querySelectorAll('.choose-opt').forEach(o => o.classList.remove('selected'));
+      delete g.dataset.picked;
+    });
+    document.querySelectorAll('select[data-group]').forEach(s => {
+      s.value = '';
+      delete s.dataset.picked;
+    });
+    document.getElementById('chooseJudge').classList.remove('show');
+    updateProgress();
+  });
+
+  updateProgress();
+})();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,1715 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>数据从哪来：本地 / 接口 / 服务端 / 第三方 — AI LABBOOK · X9</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,300..900&family=Geist:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Noto+Sans+SC:wght@300;400;500;700;900&family=Noto+Serif+SC:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f3eee5;
+    --bg-2: #ebe4d4;
+    --ink: #16161d;
+    --ink-soft: #4a4a55;
+    --ink-mute: #8a8a92;
+    --line: #d5cdba;
+    --line-soft: #e3dcca;
+    --accent: #ff4d2e;
+    --accent-soft: #ffe4dc;
+    --blue: #0a4cff;
+    --blue-soft: #dde6ff;
+    --green: #1f6b3a;
+    --green-soft: #d4ecdb;
+    --yellow: #ffcf3d;
+    --yellow-soft: #fff3cc;
+    --paper: #faf7f0;
+    --shadow: 0 1px 0 rgba(0,0,0,0.04), 0 8px 24px rgba(22,22,29,0.06);
+
+    --obj-color: #ff4d2e;
+    --obj-soft: rgba(255,77,46,0.12);
+    --proj-color: #1f6b3a;
+    --proj-soft: rgba(31,107,58,0.12);
+
+    /* source colors */
+    --src-local: #1f6b3a;
+    --src-local-soft: #d4ecdb;
+    --src-api: #0a4cff;
+    --src-api-soft: #dde6ff;
+    --src-push: #ff4d2e;
+    --src-push-soft: rgba(255,77,46,0.14);
+    --src-third: #c79f1e;
+    --src-third-soft: #fff3cc;
+    --src-build: #4a4a55;
+    --src-build-soft: #e3dcca;
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'Geist', 'Noto Sans SC', system-ui, -apple-system, sans-serif;
+    font-size: 16px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    background-image: radial-gradient(circle at 1px 1px, rgba(22,22,29,0.05) 1px, transparent 0);
+    background-size: 24px 24px;
+  }
+
+  .display-cn { font-family: 'Noto Serif SC', 'Fraunces', serif; font-weight: 900; letter-spacing: -0.01em; }
+  .display-en { font-family: 'Fraunces', 'Noto Serif SC', serif; font-weight: 600; font-style: italic; letter-spacing: -0.02em; }
+  .mono { font-family: 'JetBrains Mono', monospace; }
+  .label { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-mute); }
+
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 0 32px; }
+
+  /* Topbar */
+  .topbar {
+    border-bottom: 1px dashed var(--line);
+    padding: 16px 0;
+    background: var(--bg);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .topbar-inner { display: flex; justify-content: space-between; align-items: center; gap: 24px; flex-wrap: wrap; }
+  .brand-block { display: flex; align-items: center; gap: 10px; font-family: 'JetBrains Mono', monospace; font-size: 13px; }
+  .brand { display: inline-flex; align-items: center; gap: 6px; color: var(--ink); text-decoration: none; font-weight: 600; }
+  .brand-arrow { color: var(--ink-mute); transition: transform .2s; }
+  .brand:hover .brand-arrow { transform: translateX(-3px); }
+  .brand .dot { display: inline-block; width: 8px; height: 8px; background: var(--accent); border-radius: 50%; vertical-align: middle; animation: pulse 2s ease-in-out infinite; margin-left: 4px; }
+  .brand-sep { color: var(--ink-mute); }
+  .brand-current { color: var(--ink-soft); }
+  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+  .nav-links { display: flex; gap: 18px; font-size: 13px; flex-wrap: wrap; }
+  .nav-links a { color: var(--ink-soft); text-decoration: none; transition: color 0.2s; }
+  .nav-links a:hover { color: var(--accent); }
+  .nav-links a.current { color: var(--accent); font-weight: 600; }
+
+  /* Hero */
+  .hero { padding: 100px 0 80px; position: relative; overflow: hidden; }
+  .hero-meta { display: flex; gap: 24px; margin-bottom: 32px; align-items: center; flex-wrap: wrap; }
+  .hero-meta .pill { padding: 6px 12px; border: 1px solid var(--ink); border-radius: 100px; font-size: 11px; font-family: 'JetBrains Mono', monospace; letter-spacing: 0.05em; }
+  .hero-meta .pill.fill { background: var(--ink); color: var(--bg); }
+  .hero-meta .pill.purple { background: var(--obj-color); color: white; border-color: var(--obj-color); }
+  .hero h1 {
+    font-family: 'Noto Serif SC', 'Fraunces', serif;
+    font-weight: 900;
+    font-size: clamp(48px, 7vw, 92px);
+    line-height: 0.95;
+    letter-spacing: -0.03em;
+    margin: 0 0 24px;
+  }
+  .hero h1 .em { font-family: 'Noto Serif SC', serif; font-weight: 500; color: var(--accent); }
+  .hero h1 .purple { color: var(--obj-color); font-family: 'Noto Serif SC', serif; font-weight: 500; }
+  .hero p.lede {
+    font-size: 20px;
+    line-height: 1.5;
+    max-width: 640px;
+    color: var(--ink-soft);
+    margin: 0 0 40px;
+  }
+  .hero-grid { display: grid; grid-template-columns: 1.4fr 1fr; gap: 48px; align-items: end; }
+  @media (max-width: 880px) { .hero-grid { grid-template-columns: 1fr; } }
+  .hero-side { border-left: 1px dashed var(--line); padding-left: 24px; font-size: 13px; color: var(--ink-soft); }
+  .hero-side .row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px dashed var(--line); gap: 12px; }
+  .hero-side .row:last-child { border-bottom: none; }
+  .hero-side .row .k { color: var(--ink-mute); font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.05em; text-transform: uppercase; }
+  .hero-side .row .v { font-weight: 500; }
+
+  /* Sections */
+  section { padding: 80px 0; border-top: 1px solid var(--line); position: relative; }
+  .section-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 56px; flex-wrap: wrap; gap: 16px; }
+  .section-num { font-family: 'JetBrains Mono', monospace; font-size: 13px; color: var(--ink-mute); letter-spacing: 0.1em; margin-top: 6px; }
+  .section-num strong { color: var(--accent); }
+  .section-title { font-family: 'Noto Serif SC', serif; font-weight: 900; font-size: clamp(32px, 4.5vw, 52px); line-height: 1.05; letter-spacing: -0.02em; margin: 8px 0 0; max-width: 22ch; }
+  .section-title .em { font-family: 'Noto Serif SC', serif; font-weight: 500; color: var(--accent); }
+  .section-title .purple { color: var(--obj-color); font-family: 'Noto Serif SC', serif; font-weight: 500; }
+  .section-sub { color: var(--ink-soft); font-size: 17px; max-width: 38ch; line-height: 1.55; margin: 0; }
+
+  /* Act tag */
+  .act-tag { display: inline-block; padding: 4px 12px; font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; border-radius: 100px; }
+  .act-tag.look { background: var(--blue-soft); color: var(--blue); }
+  .act-tag.break { background: var(--obj-soft); color: var(--obj-color); }
+  .act-tag.make { background: var(--proj-soft); color: var(--proj-color); }
+
+  /* Problem cards */
+  .problem-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; margin-top: 24px; }
+  @media (max-width: 880px) { .problem-grid { grid-template-columns: 1fr; } }
+  .problem-card { background: var(--paper); border: 1px solid var(--line); border-radius: 6px; padding: 28px; position: relative; }
+  .problem-card.bad { border-color: var(--accent); background: var(--accent-soft); }
+  .problem-card.good { border-color: var(--obj-color); background: var(--obj-soft); }
+  .problem-card .tag { position: absolute; top: -12px; left: 24px; background: var(--bg); padding: 2px 10px; font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.1em; }
+  .problem-card.bad .tag { color: var(--accent); border: 1px solid var(--accent); }
+  .problem-card.good .tag { color: var(--obj-color); border: 1px solid var(--obj-color); }
+  .problem-card h3 { font-family: 'Noto Serif SC', serif; font-size: 22px; margin: 0 0 12px; font-weight: 700; }
+  .problem-card p { margin: 0; color: var(--ink-soft); font-size: 14px; line-height: 1.55; }
+  .problem-card p + p { margin-top: 10px; }
+
+  /* GAME 1: dashboard */
+  .dash-stage {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 32px 28px 28px;
+    position: relative;
+    overflow: hidden;
+  }
+  .dash-stage::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(to right, var(--line-soft) 1px, transparent 1px),
+      linear-gradient(to bottom, var(--line-soft) 1px, transparent 1px);
+    background-size: 24px 24px;
+    opacity: 0.35;
+    pointer-events: none;
+  }
+
+  /* source filter bar */
+  .source-filter {
+    position: relative;
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 22px;
+    align-items: center;
+  }
+  .source-filter .lbl {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--ink-mute);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-right: 6px;
+  }
+  .filter-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    border-radius: 100px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.04em;
+    cursor: pointer;
+    border: 1px solid var(--line);
+    background: white;
+    color: var(--ink-soft);
+    user-select: none;
+    transition: all 0.15s;
+  }
+  .filter-chip .dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--ink-mute);
+  }
+  .filter-chip:hover { border-color: var(--ink); }
+  .filter-chip.active { background: var(--ink); color: white; border-color: var(--ink); }
+  .filter-chip[data-src="local"] .dot { background: var(--src-local); }
+  .filter-chip[data-src="api"] .dot { background: var(--src-api); }
+  .filter-chip[data-src="push"] .dot { background: var(--src-push); }
+  .filter-chip[data-src="third"] .dot { background: var(--src-third); }
+  .filter-chip[data-src="build"] .dot { background: var(--src-build); }
+  .filter-chip.active[data-src="local"] { background: var(--src-local); border-color: var(--src-local); }
+  .filter-chip.active[data-src="api"] { background: var(--src-api); border-color: var(--src-api); }
+  .filter-chip.active[data-src="push"] { background: var(--src-push); border-color: var(--src-push); }
+  .filter-chip.active[data-src="third"] { background: var(--src-third); border-color: var(--src-third); color: var(--ink); }
+  .filter-chip.active[data-src="build"] { background: var(--src-build); border-color: var(--src-build); }
+
+  /* dashboard mock */
+  .dash-mock {
+    position: relative;
+    background: white;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  .dash-top {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 12px 18px;
+    border-bottom: 1px solid var(--line);
+    background: var(--paper);
+  }
+  .dash-logo {
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    font-weight: 700;
+    font-size: 16px;
+    color: var(--ink);
+  }
+  .dash-search {
+    flex: 1;
+    background: var(--bg-2);
+    border-radius: 100px;
+    padding: 5px 12px;
+    font-size: 12px;
+    color: var(--ink-mute);
+    font-family: 'JetBrains Mono', monospace;
+    max-width: 260px;
+  }
+  .dash-top-right { margin-left: auto; display: flex; align-items: center; gap: 12px; }
+  .dash-grid {
+    display: grid;
+    grid-template-columns: 1.1fr 1fr 1fr;
+    grid-template-rows: auto auto;
+    gap: 14px;
+    padding: 16px;
+  }
+  @media (max-width: 880px) { .dash-grid { grid-template-columns: 1fr 1fr; } }
+  @media (max-width: 580px) { .dash-grid { grid-template-columns: 1fr; } }
+
+  .dash-card {
+    background: var(--paper);
+    border: 1px solid var(--line-soft);
+    border-radius: 6px;
+    padding: 14px;
+    position: relative;
+  }
+  .dash-card-title {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--ink-mute);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+  .dash-card.span-2 { grid-column: span 1; }
+
+  /* tagged data points */
+  .data-pt {
+    position: relative;
+    display: inline-flex;
+    align-items: baseline;
+    padding: 1px 4px;
+    border-radius: 4px;
+    cursor: help;
+    transition: all 0.2s;
+    border-bottom: 2px dotted transparent;
+  }
+  .data-pt::after {
+    content: '';
+    position: absolute;
+    left: 50%;
+    top: -4px;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    transform: translateX(-50%);
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+  .data-pt[data-source="local"] { border-bottom-color: var(--src-local); }
+  .data-pt[data-source="api"] { border-bottom-color: var(--src-api); }
+  .data-pt[data-source="push"] { border-bottom-color: var(--src-push); }
+  .data-pt[data-source="third"] { border-bottom-color: var(--src-third); }
+  .data-pt[data-source="build"] { border-bottom-color: var(--src-build); }
+
+  .data-pt[data-source="local"]::after { background: var(--src-local); }
+  .data-pt[data-source="api"]::after { background: var(--src-api); }
+  .data-pt[data-source="push"]::after { background: var(--src-push); }
+  .data-pt[data-source="third"]::after { background: var(--src-third); }
+  .data-pt[data-source="build"]::after { background: var(--src-build); }
+
+  .dash-stage.show-all .data-pt::after { opacity: 1; }
+
+  .data-pt:hover { background: var(--bg-2); }
+  .data-pt.dim { opacity: 0.18; filter: grayscale(80%); }
+  .data-pt.highlight {
+    background: rgba(255,255,255,0.9);
+    box-shadow: 0 0 0 2px currentColor;
+  }
+  .data-pt[data-source="local"].highlight { color: var(--src-local); }
+  .data-pt[data-source="api"].highlight { color: var(--src-api); }
+  .data-pt[data-source="push"].highlight { color: var(--src-push); }
+  .data-pt[data-source="third"].highlight { color: var(--src-third); }
+  .data-pt[data-source="build"].highlight { color: var(--src-build); }
+
+  /* source tooltip (follows pointer) */
+  .src-tip {
+    position: fixed;
+    z-index: 250;
+    pointer-events: none;
+    background: var(--ink);
+    color: var(--bg);
+    padding: 10px 14px;
+    border-radius: 6px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    line-height: 1.5;
+    max-width: 260px;
+    opacity: 0;
+    transform: translateY(4px);
+    transition: opacity 0.15s, transform 0.15s;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.25);
+  }
+  .src-tip.show { opacity: 1; transform: translateY(0); }
+  .src-tip .src-name { display: inline-flex; align-items: center; gap: 6px; padding: 2px 8px; border-radius: 100px; font-weight: 700; letter-spacing: 0.08em; margin-bottom: 6px; }
+  .src-tip .src-name.local { background: var(--src-local-soft); color: var(--src-local); }
+  .src-tip .src-name.api { background: var(--src-api-soft); color: var(--src-api); }
+  .src-tip .src-name.push { background: var(--src-push-soft); color: var(--src-push); }
+  .src-tip .src-name.third { background: var(--src-third-soft); color: var(--src-third); }
+  .src-tip .src-name.build { background: var(--src-build-soft); color: var(--src-build); }
+  .src-tip .src-desc { color: #c8c8d0; font-size: 10.5px; }
+
+  /* dashboard widgets content */
+  .widget-kpi { display: flex; align-items: baseline; gap: 12px; }
+  .widget-kpi .num { font-family: 'Fraunces', serif; font-weight: 700; font-size: 36px; line-height: 1; }
+  .widget-kpi .meta { font-size: 11px; color: var(--ink-mute); }
+
+  .online-list { display: flex; flex-direction: column; gap: 6px; }
+  .online-row { display: flex; align-items: center; gap: 8px; font-size: 12px; }
+  .online-avatar { width: 22px; height: 22px; border-radius: 50%; background: linear-gradient(135deg, #ff8a4a, #ff4d2e); color: white; display: inline-flex; align-items: center; justify-content: center; font-weight: 700; font-size: 10px; position: relative; flex-shrink: 0; }
+  .online-avatar.alt { background: linear-gradient(135deg, #6e9efb, #0a4cff); }
+  .online-avatar.alt2 { background: linear-gradient(135deg, #ff8a6e, #ff4d2e); }
+  .online-avatar::after { content: ''; position: absolute; bottom: -1px; right: -1px; width: 8px; height: 8px; background: var(--green); border-radius: 50%; border: 2px solid white; }
+
+  .weather-row { display: flex; align-items: baseline; gap: 10px; }
+  .weather-row .icon { font-size: 22px; line-height: 1; }
+  .weather-row .temp { font-family: 'Fraunces', serif; font-weight: 700; font-size: 22px; }
+  .weather-row .desc { font-size: 12px; color: var(--ink-mute); }
+
+  .msg-row { display: flex; align-items: center; gap: 8px; font-size: 12px; padding: 4px 0; }
+  .msg-avatar { width: 24px; height: 24px; border-radius: 50%; background: linear-gradient(135deg, #6e9efb, #0a4cff); color: white; display: inline-flex; align-items: center; justify-content: center; font-weight: 700; font-size: 10px; flex-shrink: 0; }
+  .msg-name { font-weight: 600; }
+  .msg-snip { color: var(--ink-mute); font-size: 11px; }
+  .msg-badge {
+    margin-left: auto;
+    background: var(--accent);
+    color: white;
+    border-radius: 100px;
+    padding: 1px 7px;
+    font-size: 10px;
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 700;
+  }
+
+  .me-row { display: flex; align-items: center; gap: 8px; font-size: 12px; }
+  .me-avatar { width: 28px; height: 28px; border-radius: 50%; background: linear-gradient(135deg, #ff8a4a, #ff4d2e); color: white; display: inline-flex; align-items: center; justify-content: center; font-weight: 700; font-size: 11px; flex-shrink: 0; }
+  .me-meta { font-size: 10.5px; color: var(--ink-mute); }
+
+  .fx-row { display: flex; align-items: baseline; gap: 8px; font-size: 12px; }
+  .fx-row .pair { font-family: 'JetBrains Mono', monospace; color: var(--ink-soft); }
+  .fx-row .val { font-family: 'Fraunces', serif; font-weight: 700; font-size: 18px; }
+  .fx-row .delta { color: var(--green); font-family: 'JetBrains Mono', monospace; font-size: 10px; }
+
+  .flag-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 10px;
+    background: white;
+    border: 1px dashed var(--line);
+    border-radius: 4px;
+    font-size: 12px;
+  }
+  .flag-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 9px;
+    background: var(--obj-soft);
+    color: var(--obj-color);
+    border: 1px solid var(--obj-color);
+    border-radius: 4px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    font-weight: 600;
+  }
+
+  /* legend bar */
+  .dash-legend {
+    margin-top: 16px;
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    align-items: center;
+    font-size: 11px;
+    color: var(--ink-mute);
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .dash-legend .lg-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 3px 8px;
+    background: white;
+    border: 1px solid var(--line);
+    border-radius: 100px;
+  }
+  .dash-legend .lg-dot { width: 7px; height: 7px; border-radius: 50%; }
+  .dash-legend .lg-item .ct { background: var(--bg-2); padding: 1px 5px; border-radius: 100px; margin-left: 2px; }
+
+  /* Reveal bar */
+  .reveal-bar {
+    margin-top: 32px;
+    padding: 20px 28px;
+    background: var(--ink);
+    color: var(--bg);
+    border-radius: 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+  .reveal-bar .msg { font-family: 'Noto Serif SC', serif; font-size: 17px; font-weight: 500; line-height: 1.55; }
+  .reveal-bar .msg .em { color: var(--accent); }
+  .reveal-bar .counter { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ink-mute); letter-spacing: 0.05em; }
+  .reveal-bar .counter strong { color: var(--accent); font-size: 14px; }
+
+  /* GAME 2: source diagnosis cards */
+  .src-cards { display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; margin-top: 24px; }
+  @media (max-width: 1080px) { .src-cards { grid-template-columns: 1fr 1fr; } }
+  @media (max-width: 580px) { .src-cards { grid-template-columns: 1fr; } }
+
+  .src-card {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 0;
+    overflow: hidden;
+    cursor: pointer;
+    transition: all 0.25s;
+  }
+  .src-card:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(22,22,29,0.08); }
+  .src-card-head {
+    padding: 14px 16px;
+    color: white;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    border-bottom: 1px solid rgba(255,255,255,0.15);
+  }
+  .src-card.local .src-card-head { background: var(--src-local); }
+  .src-card.api .src-card-head { background: var(--src-api); }
+  .src-card.push .src-card-head { background: var(--src-push); }
+  .src-card.third .src-card-head { background: var(--src-third); color: var(--ink); }
+
+  .src-card-head .src-num { font-family: 'JetBrains Mono', monospace; font-size: 11px; opacity: 0.7; }
+  .src-card-head .src-title { font-family: 'Noto Serif SC', serif; font-weight: 700; font-size: 17px; }
+
+  .src-card-body { padding: 14px 16px; }
+  .src-card-tagline { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ink-mute); margin-bottom: 10px; letter-spacing: 0.05em; }
+
+  .src-slots { display: flex; flex-direction: column; gap: 10px; }
+  .src-slot {
+    border-left: 2px solid var(--line);
+    padding: 6px 0 6px 10px;
+    font-size: 12.5px;
+    line-height: 1.5;
+    transition: border-color 0.2s;
+  }
+  .src-card.local .src-slot:hover { border-left-color: var(--src-local); }
+  .src-card.api .src-slot:hover { border-left-color: var(--src-api); }
+  .src-card.push .src-slot:hover { border-left-color: var(--src-push); }
+  .src-card.third .src-slot:hover { border-left-color: var(--src-third); }
+
+  .src-slot-lbl {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--ink-mute);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 2px;
+  }
+  .src-slot-val { font-weight: 500; color: var(--ink); }
+  .src-slot-val code { font-family: 'JetBrains Mono', monospace; font-size: 11px; background: var(--bg-2); padding: 1px 5px; border-radius: 3px; color: var(--ink-soft); }
+
+  .src-worst {
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px dashed var(--line);
+    font-size: 12px;
+    line-height: 1.55;
+    color: var(--accent);
+  }
+  .src-worst .worst-lbl {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink-mute);
+    display: block;
+    margin-bottom: 4px;
+  }
+  .src-worst strong { color: var(--accent); }
+
+  /* expand indicator */
+  .src-toggle {
+    margin-top: 12px;
+    width: 100%;
+    text-align: center;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    color: var(--ink-mute);
+    text-transform: uppercase;
+    cursor: pointer;
+    padding: 4px 0;
+    border-top: 1px dashed var(--line);
+  }
+
+  .src-extra { display: none; }
+  .src-card.expanded .src-extra { display: block; }
+
+  /* GAME 3: builder */
+  .builder3-stage {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 28px;
+    margin-top: 24px;
+  }
+  .builder3-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+  .builder3-title { font-family: 'Noto Serif SC', serif; font-size: 22px; margin: 0; font-weight: 700; }
+  .builder3-progress { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--ink-mute); }
+  .builder3-progress .done { color: var(--proj-color); font-weight: 700; font-size: 14px; }
+
+  .builder3-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+  @media (max-width: 880px) { .builder3-grid { grid-template-columns: 1fr; } }
+
+  .b3-item {
+    background: white;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 16px;
+    transition: border-color 0.2s;
+  }
+  .b3-item.is-correct { border-color: var(--proj-color); background: var(--proj-soft); }
+  .b3-item.is-wrong { border-color: var(--accent); background: var(--accent-soft); }
+
+  .b3-item-head { display: flex; align-items: baseline; gap: 10px; margin-bottom: 10px; }
+  .b3-item-num {
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    font-weight: 600;
+    font-size: 18px;
+    color: var(--ink-mute);
+    min-width: 24px;
+  }
+  .b3-item.is-correct .b3-item-num { color: var(--proj-color); }
+  .b3-item.is-wrong .b3-item-num { color: var(--accent); }
+  .b3-item-desc { font-weight: 600; font-size: 14px; line-height: 1.45; }
+  .b3-item-hint { font-size: 11px; color: var(--ink-mute); margin: 4px 0 0; line-height: 1.5; }
+
+  .b3-row { display: flex; align-items: center; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+  .b3-row-lbl { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--ink-mute); letter-spacing: 0.06em; text-transform: uppercase; min-width: 60px; }
+
+  .b3-radio {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 10px;
+    border: 1px solid var(--line);
+    border-radius: 100px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    cursor: pointer;
+    user-select: none;
+    background: var(--paper);
+    color: var(--ink-soft);
+    transition: all 0.15s;
+  }
+  .b3-radio .dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--ink-mute);
+  }
+  .b3-radio:hover { border-color: var(--ink); }
+  .b3-radio[data-val="local"] .dot { background: var(--src-local); }
+  .b3-radio[data-val="api"] .dot { background: var(--src-api); }
+  .b3-radio[data-val="push"] .dot { background: var(--src-push); }
+  .b3-radio[data-val="third"] .dot { background: var(--src-third); }
+  .b3-radio.selected[data-val="local"] { background: var(--src-local); color: white; border-color: var(--src-local); }
+  .b3-radio.selected[data-val="api"] { background: var(--src-api); color: white; border-color: var(--src-api); }
+  .b3-radio.selected[data-val="push"] { background: var(--src-push); color: white; border-color: var(--src-push); }
+  .b3-radio.selected[data-val="third"] { background: var(--src-third); color: var(--ink); border-color: var(--src-third); }
+  .b3-radio.selected .dot { background: white; }
+  .b3-radio[data-val="third"].selected .dot { background: var(--ink); }
+
+  .b3-select {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    padding: 4px 10px;
+    border: 1px solid var(--line);
+    border-radius: 100px;
+    background: var(--paper);
+    color: var(--ink);
+    cursor: pointer;
+  }
+  .b3-select:focus { outline: 1px solid var(--ink); }
+
+  .b3-feedback {
+    margin-top: 10px;
+    padding: 10px 12px;
+    border-radius: 6px;
+    background: var(--paper);
+    font-size: 12px;
+    line-height: 1.55;
+    display: none;
+  }
+  .b3-feedback.show { display: block; }
+  .b3-feedback.win { background: var(--green-soft); color: var(--green); border: 1px solid var(--green); }
+  .b3-feedback.lose { background: var(--accent-soft); color: var(--accent); border: 1px solid var(--accent); }
+  .b3-feedback strong { color: inherit; }
+  .b3-feedback .why { display: block; color: var(--ink-soft); margin-top: 4px; font-size: 11px; }
+
+  .builder3-actions { display: flex; gap: 12px; margin-top: 28px; flex-wrap: wrap; align-items: center; }
+  .builder3-btn {
+    padding: 10px 22px;
+    border-radius: 100px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    cursor: pointer;
+    font-weight: 600;
+    border: 1px solid var(--ink);
+    background: transparent;
+    color: var(--ink);
+    transition: all 0.15s;
+  }
+  .builder3-btn:hover { background: var(--ink); color: var(--bg); }
+  .builder3-btn.primary { background: var(--accent); color: white; border-color: var(--accent); }
+  .builder3-btn.primary:hover { background: #e8451f; }
+
+  .builder3-score {
+    margin-top: 24px;
+    padding: 24px 26px;
+    border-radius: 8px;
+    background: var(--ink);
+    color: var(--bg);
+    display: none;
+  }
+  .builder3-score.show { display: block; }
+  .builder3-score .verdict { display: inline-block; font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; padding: 3px 10px; border-radius: 100px; }
+  .builder3-score .verdict.win { color: var(--green); background: var(--green-soft); }
+  .builder3-score .verdict.partial { color: #c79f1e; background: var(--yellow-soft); }
+  .builder3-score .verdict.lose { color: var(--accent); background: var(--accent-soft); }
+  .builder3-score h4 { font-family: 'Noto Serif SC', serif; font-size: 22px; margin: 10px 0 14px; color: white; line-height: 1.3; }
+  .builder3-score .score-row { display: flex; gap: 24px; margin-bottom: 14px; flex-wrap: wrap; }
+  .builder3-score .score-cell { font-size: 13px; color: #c8c8d0; }
+  .builder3-score .score-cell strong { color: white; font-family: 'JetBrains Mono', monospace; font-size: 16px; display: block; }
+
+  /* tips */
+  .tips-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 28px; margin-top: 24px; }
+  @media (max-width: 880px) { .tips-grid { grid-template-columns: 1fr; } }
+  .tip { background: var(--paper); border: 1px solid var(--line); border-radius: 6px; padding: 24px; position: relative; }
+  .tip-num { position: absolute; top: -14px; left: 16px; width: 32px; height: 32px; border-radius: 50%; background: var(--obj-color); color: white; display: flex; align-items: center; justify-content: center; font-family: 'Fraunces', serif; font-style: italic; font-weight: 600; font-size: 14px; }
+  .tip h4 { font-family: 'Noto Serif SC', serif; font-size: 18px; margin: 8px 0 10px; font-weight: 700; }
+  .tip p { color: var(--ink-soft); font-size: 14px; line-height: 1.6; margin: 0; }
+  .tip p + p { margin-top: 8px; }
+  .tip-outro {
+    margin-top: 44px;
+    padding: 30px 32px;
+    background: var(--ink);
+    color: var(--bg);
+    border-radius: 8px;
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 28px;
+    align-items: flex-start;
+  }
+  @media (max-width: 720px) { .tip-outro { grid-template-columns: 1fr; gap: 12px; } }
+  .outro-tag { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.1em; color: var(--accent); padding-top: 4px; }
+  .tip-outro p { margin: 0 0 12px; color: #c8c8d0; line-height: 1.65; font-size: 15px; }
+  .tip-outro p:last-child { margin-bottom: 0; }
+  .tip-outro strong { color: white; }
+
+  /* next post */
+  .next-post {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 56px;
+    padding: 32px;
+    background: var(--bg-2);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    text-decoration: none;
+    color: var(--ink);
+    transition: all 0.2s;
+    gap: 24px;
+    flex-wrap: wrap;
+  }
+  .next-post:hover { background: var(--ink); color: var(--bg); }
+  .next-post:hover .np-tag { color: var(--accent); }
+  .next-post:hover .em { color: var(--accent); }
+  .next-post:hover p { color: #c8c8d0; }
+  .np-tag { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.1em; color: var(--ink-mute); margin-bottom: 6px; }
+  .next-post h4 { font-family: 'Noto Serif SC', serif; font-size: 26px; margin: 0 0 8px; font-weight: 700; }
+  .next-post .em { color: var(--obj-color); font-weight: 500; }
+  .next-post p { margin: 0; color: var(--ink-soft); font-size: 14px; max-width: 56ch; }
+  .np-cta { font-family: 'JetBrains Mono', monospace; font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; white-space: nowrap; }
+  .np-cta .arr { display: inline-block; transition: transform .2s; }
+  .next-post:hover .arr { transform: translateX(4px); }
+
+  /* footer */
+  footer { padding: 56px 0 64px; background: var(--bg); color: var(--ink-soft); border-top: 1px solid var(--line); }
+  .byline-group { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; margin-bottom: 32px; padding-bottom: 32px; border-bottom: 1px dashed var(--line); }
+  @media (max-width: 880px) { .byline-group { grid-template-columns: 1fr; } }
+  .byline { display: flex; gap: 16px; align-items: center; }
+  .byline .avatar { width: 56px; height: 56px; border-radius: 50%; object-fit: cover; flex-shrink: 0; }
+  .byline-label { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--accent); letter-spacing: 0.1em; }
+  .byline-label .dot { display: inline-block; width: 6px; height: 6px; background: var(--accent); border-radius: 50%; margin-right: 4px; vertical-align: middle; animation: pulse 2s ease-in-out infinite; }
+  .byline-name { font-family: 'Noto Serif SC', serif; font-weight: 700; font-size: 18px; margin: 4px 0; color: var(--ink); }
+  .byline-name .em { color: var(--accent); font-weight: 500; }
+  .byline-tag { color: var(--ink-soft); font-size: 13px; margin: 0; line-height: 1.5; }
+  .footer-meta { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ink-mute); text-align: center; letter-spacing: 0.05em; }
+  .footer-meta .heart { color: var(--accent); }
+
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="wrap topbar-inner">
+    <div class="brand-block">
+      <a href="book.html#vol-3" class="brand"><span class="brand-arrow">←</span>AI LABBOOK <span class="dot"></span></a>
+      <span class="brand-sep">/</span>
+      <span class="brand-current">X9 · 数据从哪来</span>
+    </div>
+    <nav class="nav-links">
+      <a href="book.html#vol-3">路线图</a>
+    </nav>
+  </div>
+</div>
+
+<!-- Hero -->
+<header class="hero">
+  <div class="wrap">
+    <div class="hero-meta">
+      <span class="pill fill">高阶 · ADVANCED</span>
+      <span class="pill purple">STAGE 03 · 数据与状态</span>
+      <span class="pill">X9 · 数据来源</span>
+      <span class="label">阅读 ≈ 16 分钟 · 含 3 段互动</span>
+    </div>
+    <div class="hero-grid">
+      <div>
+        <h1>
+          <span class="display-cn">同一个页面</span>，<br>
+          10 块数据，<br>
+          <span class="purple">4 种来源</span>。
+        </h1>
+        <p class="lede">
+          看起来都是字段——其实每一块的数据来自不同的地方。<br>
+          谁是真相、什么时候可以过期、断网后还能不能用——决定它属于哪一类。
+        </p>
+      </div>
+      <div class="hero-side">
+        <div class="row"><span class="k">本页讲什么</span><span class="v">字段 → 数据来源</span></div>
+        <div class="row"><span class="k">三幕</span><span class="v">看见 · 拆开 · 再做</span></div>
+        <div class="row"><span class="k">面向</span><span class="v">B 端 / SaaS 设计师</span></div>
+        <div class="row"><span class="k">前置</span><span class="v">X1 · 不是页面，是对象</span></div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- Section 01: 问题 -->
+<section id="problem">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>01</strong> / 问题</div>
+        <h2 class="section-title">为什么稿子里画的字段，<br>工程师总要<span class="em">挨个追问</span>？</h2>
+      </div>
+      <p class="section-sub">
+        因为你画的是<strong>一锅煮出来的数据</strong>。工程师拿到要落 schema——每一格都要追问：刷一次 / 推一次 / 缓存 / 第三方？
+        语言对不上，每个字段都要 ping 你。
+      </p>
+    </div>
+
+    <div class="problem-grid">
+      <div class="problem-card bad">
+        <span class="tag">把数据当背景 · BAD</span>
+        <h3>"我把字段都画进 mock 了"</h3>
+        <p>稿子里所有字段都画在 mock 里——好像一锅煮出来的。看起来完整。</p>
+        <p><strong>工程师追问：</strong>这个值刷新一次拿吗？还是 push？这个是缓存吗？过期了显示啥？第三方接口挂了显示啥？……</p>
+        <p style="color:var(--accent)"><strong>你：</strong>呃……我没想过这些。</p>
+      </div>
+
+      <div class="problem-card good">
+        <span class="tag">把数据当资源 · GOOD</span>
+        <h3>"我标了每个字段的来源 + 失败兜底"</h3>
+        <p>每个字段标记来源（<strong>local / API / server-push / 3rd-party</strong>）+ stale 行为 + 失败兜底。</p>
+        <p><strong>工程师收到：</strong>一份 data spec。直接对着接口契约写代码，不用追问。</p>
+        <p style="color:var(--obj-color)"><strong>结果：</strong>追问 → 0 次。</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Section 02: 幕一 · 看见 -->
+<section id="look">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <span class="act-tag look">幕一 · 看见</span>
+        <div class="section-num"><strong>02</strong> / 看见</div>
+        <h2 class="section-title">同一块 dashboard，<br><span class="purple">10 个数据</span><br>来自 4 种地方。</h2>
+      </div>
+      <p class="section-sub">
+        鼠标移到任意一块数据上 → 显示它的来源标签。颜色编码 4 种来源。
+        用上面的筛选按钮，只看其中一种——你会发现"哪些字段挂了一起挂"。
+      </p>
+    </div>
+
+    <div class="dash-stage" id="dashStage">
+      <div class="source-filter">
+        <span class="lbl">筛选来源</span>
+        <button class="filter-chip active" data-src="all"><span class="dot"></span>全部</button>
+        <button class="filter-chip" data-src="local"><span class="dot"></span>LOCAL · 本地</button>
+        <button class="filter-chip" data-src="api"><span class="dot"></span>API · 接口</button>
+        <button class="filter-chip" data-src="push"><span class="dot"></span>PUSH · 推送</button>
+        <button class="filter-chip" data-src="third"><span class="dot"></span>3RD · 第三方</button>
+        <button class="filter-chip" data-src="build"><span class="dot"></span>BUILD · 构建期</button>
+      </div>
+
+      <div class="dash-mock">
+        <div class="dash-top">
+          <span class="data-pt" data-source="build" data-src-detail="logo / 主题色 / 站点名 — 在打包时已经决定，每次部署才会变" data-src-name="BUILD-TIME · 构建期">
+            <span class="dash-logo">Atlas<span style="color:var(--obj-color)">·</span>CRM</span>
+          </span>
+          <div class="dash-search">🔍 搜客户、订单、文件…</div>
+          <div class="dash-top-right">
+            <span class="data-pt" data-source="local" data-src-detail="登录后写入 localStorage，关闭浏览器不丢——下次进来直接用" data-src-name="LOCAL · 本地缓存">
+              <span class="me-row">
+                <span class="me-avatar">范</span>
+                <span style="font-size:12px;font-weight:600">范米花儿</span>
+              </span>
+            </span>
+          </div>
+        </div>
+
+        <div class="dash-grid">
+
+          <!-- KPI card: 今日待办 -->
+          <div class="dash-card">
+            <div class="dash-card-title">今日待办</div>
+            <span class="data-pt" data-source="api" data-src-detail="进入页面时调一次 GET /api/todos/today — 之后不变，刷新需要主动重新拉" data-src-name="API · 后端接口拉取">
+              <span class="widget-kpi">
+                <span class="num">17</span>
+                <span class="meta">3 紧急 · 14 普通</span>
+              </span>
+            </span>
+          </div>
+
+          <!-- 团队在线 -->
+          <div class="dash-card">
+            <div class="dash-card-title">团队在线 · 实时</div>
+            <span class="data-pt" data-source="push" data-src-detail="WebSocket 推送 — 成员上线/离线，毫秒级更新，不需要刷新页面" data-src-name="SERVER-PUSH · 实时推送">
+              <span class="online-list">
+                <span class="online-row"><span class="online-avatar">李</span><span>李华</span></span>
+                <span class="online-row"><span class="online-avatar alt">王</span><span>王芳</span></span>
+                <span class="online-row"><span class="online-avatar alt2">陈</span><span>陈强</span></span>
+              </span>
+            </span>
+          </div>
+
+          <!-- 今日天气 -->
+          <div class="dash-card">
+            <div class="dash-card-title">今日天气</div>
+            <span class="data-pt" data-source="third" data-src-detail="第三方天气 API（和风/OpenWeather）— 别人的服务，你只能等他们返回" data-src-name="3RD-PARTY · 第三方服务">
+              <span class="weather-row">
+                <span class="icon">☀️</span>
+                <span class="temp">22°</span>
+                <span class="desc">北京 · 多云</span>
+              </span>
+            </span>
+          </div>
+
+          <!-- 未读消息 -->
+          <div class="dash-card">
+            <div class="dash-card-title">未读消息 · 实时</div>
+            <span class="data-pt" data-source="push" data-src-detail="WebSocket 推送 — 新消息到达瞬间红点跳动，不打接口" data-src-name="SERVER-PUSH · 实时推送">
+              <span class="msg-row">
+                <span class="msg-avatar">王</span>
+                <span style="flex:1;min-width:0">
+                  <span class="msg-name">王芳</span><br>
+                  <span class="msg-snip">合同时间表已发…</span>
+                </span>
+                <span class="msg-badge">3</span>
+              </span>
+            </span>
+          </div>
+
+          <!-- 本月 KPI -->
+          <div class="dash-card">
+            <div class="dash-card-title">本月 KPI</div>
+            <span class="data-pt" data-source="api" data-src-detail="GET /api/kpi/month — 进入页面拉一次，每隔 5 分钟手动 refetch" data-src-name="API · 后端接口拉取">
+              <span class="widget-kpi">
+                <span class="num" style="color:var(--obj-color)">¥ 2.4M</span>
+                <span class="meta">达成 82%</span>
+              </span>
+            </span>
+          </div>
+
+          <!-- 实时汇率 -->
+          <div class="dash-card">
+            <div class="dash-card-title">实时汇率</div>
+            <span class="data-pt" data-source="third" data-src-detail="第三方汇率 API（exchangerate-api）— 缓存到自己的 CDN，避免每次都打他们" data-src-name="3RD-PARTY · 第三方服务">
+              <span class="fx-row">
+                <span class="pair">USD/CNY</span>
+                <span class="val">7.18</span>
+                <span class="delta">+0.03</span>
+              </span>
+            </span>
+          </div>
+
+          <!-- 上次访问 -->
+          <div class="dash-card">
+            <div class="dash-card-title">上次访问</div>
+            <span class="data-pt" data-source="local" data-src-detail="退出登录前写进 cookie / localStorage，下次进来从浏览器读，不打接口" data-src-name="LOCAL · 本地缓存">
+              <span style="font-size:13px;font-weight:600">昨天 18:42</span><br>
+              <span style="font-size:11px;color:var(--ink-mute)">从 Chrome · Mac</span>
+            </span>
+          </div>
+
+          <!-- Feature Flag -->
+          <div class="dash-card">
+            <div class="dash-card-title">新版报表 · 灰度</div>
+            <span class="data-pt" data-source="build" data-src-detail="部分是 build-time（默认配置），部分由 API 拉的灰度开关混合决定" data-src-name="BUILD + API · 混合">
+              <span class="flag-row">
+                <span style="font-size:11px;color:var(--ink-mute);font-family:'JetBrains Mono',monospace">FLAG · beta_reports</span>
+                <span class="flag-btn">试用 →</span>
+              </span>
+            </span>
+          </div>
+
+          <!-- 主题色 -->
+          <div class="dash-card">
+            <div class="dash-card-title">主题色 · 站点定制</div>
+            <span class="data-pt" data-source="build" data-src-detail="部署时写进 :root CSS 变量 — 每个客户的站点颜色不一样，但运行时不会变" data-src-name="BUILD-TIME · 构建期">
+              <span style="display:flex;gap:6px;align-items:center;font-size:12px">
+                <span style="width:14px;height:14px;background:var(--obj-color);border-radius:50%"></span>
+                <span style="font-family:'JetBrains Mono',monospace">#ff4d2e</span>
+                <span style="color:var(--ink-mute);font-size:10px">· brand purple</span>
+              </span>
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <div class="dash-legend" id="dashLegend">
+        <span class="lg-item"><span class="lg-dot" style="background:var(--src-local)"></span>LOCAL <span class="ct" id="ctLocal">2</span></span>
+        <span class="lg-item"><span class="lg-dot" style="background:var(--src-api)"></span>API <span class="ct" id="ctApi">2</span></span>
+        <span class="lg-item"><span class="lg-dot" style="background:var(--src-push)"></span>PUSH <span class="ct" id="ctPush">2</span></span>
+        <span class="lg-item"><span class="lg-dot" style="background:var(--src-third)"></span>3RD <span class="ct" id="ctThird">2</span></span>
+        <span class="lg-item"><span class="lg-dot" style="background:var(--src-build)"></span>BUILD <span class="ct" id="ctBuild">3</span></span>
+        <span style="margin-left:auto">已查看 <strong id="dashVisited" style="color:var(--accent)">0</strong> / 11 个数据点</span>
+      </div>
+    </div>
+
+    <div class="reveal-bar">
+      <div class="msg">
+        10 个字段，<span class="em">4 种来源</span>——<br>
+        任何一种来源挂了，那一格就要单独处理。
+      </div>
+      <div class="counter">悬停每个字段看来源</div>
+    </div>
+  </div>
+</section>
+
+<!-- floating source tooltip -->
+<div class="src-tip" id="srcTip"></div>
+
+<!-- Section 03: 幕二 · 拆开 -->
+<section id="break">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <span class="act-tag break">幕二 · 拆开</span>
+        <div class="section-num"><strong>03</strong> / 拆开</div>
+        <h2 class="section-title"><span class="purple">4 种来源</span>的<br>诊断特征。</h2>
+      </div>
+      <p class="section-sub">
+        每种来源都有 4 个维度：<strong>truth owner / 新鲜度 / 失败模式 / 缓存策略</strong>。
+        点卡片底部"展开"看"如果设计稿不标记来源——最坏情况长这样"。
+      </p>
+    </div>
+
+    <div class="src-cards" id="srcCards">
+
+      <!-- LOCAL -->
+      <div class="src-card local" data-card="local">
+        <div class="src-card-head">
+          <span class="src-num">01</span>
+          <span class="src-title">LOCAL · 本地</span>
+        </div>
+        <div class="src-card-body">
+          <div class="src-card-tagline">浏览器自己存的 — localStorage / sessionStorage / cookie</div>
+          <div class="src-slots">
+            <div class="src-slot">
+              <div class="src-slot-lbl">Truth owner</div>
+              <div class="src-slot-val">客户端浏览器</div>
+            </div>
+            <div class="src-slot">
+              <div class="src-slot-lbl">新鲜度</div>
+              <div class="src-slot-val">永久 / 直到用户清缓存</div>
+            </div>
+            <div class="src-slot">
+              <div class="src-slot-lbl">失败模式</div>
+              <div class="src-slot-val">不存在 → fallback 默认值</div>
+            </div>
+            <div class="src-slot">
+              <div class="src-slot-lbl">缓存策略</div>
+              <div class="src-slot-val"><code>localStorage</code> 永久 · <code>sessionStorage</code> 会话 · <code>cookie</code> 按需</div>
+            </div>
+          </div>
+          <div class="src-toggle" data-toggle="local">展开 · 最坏情况 →</div>
+          <div class="src-extra">
+            <div class="src-worst">
+              <span class="worst-lbl">如果设计稿没标 · WORST CASE</span>
+              工程师每次都打接口 → <strong>性能死</strong>。<br>
+              用户每打开一次页面 → 10 次完全可以走 LOCAL 的请求被推到后端。
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- API -->
+      <div class="src-card api" data-card="api">
+        <div class="src-card-head">
+          <span class="src-num">02</span>
+          <span class="src-title">API · 接口拉取</span>
+        </div>
+        <div class="src-card-body">
+          <div class="src-card-tagline">前端主动调一次 — GET /api/xxx</div>
+          <div class="src-slots">
+            <div class="src-slot">
+              <div class="src-slot-lbl">Truth owner</div>
+              <div class="src-slot-val">服务端 DB</div>
+            </div>
+            <div class="src-slot">
+              <div class="src-slot-lbl">新鲜度</div>
+              <div class="src-slot-val">拉取那一刻的快照</div>
+            </div>
+            <div class="src-slot">
+              <div class="src-slot-lbl">失败模式</div>
+              <div class="src-slot-val">超时 / 5xx → 错误态 + 重试</div>
+            </div>
+            <div class="src-slot">
+              <div class="src-slot-lbl">缓存策略</div>
+              <div class="src-slot-val">客户端 + <code>SWR</code> · CDN · <code>no-cache</code>（按数据）</div>
+            </div>
+          </div>
+          <div class="src-toggle" data-toggle="api">展开 · 最坏情况 →</div>
+          <div class="src-extra">
+            <div class="src-worst">
+              <span class="worst-lbl">如果设计稿没标 · WORST CASE</span>
+              后端不知道什么时候拉 → <strong>数据可能过期</strong>。<br>
+              用户看到一份 30 分钟前的"库存"信息，下单时才发现没货。
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SERVER-PUSH -->
+      <div class="src-card push" data-card="push">
+        <div class="src-card-head">
+          <span class="src-num">03</span>
+          <span class="src-title">SERVER-PUSH</span>
+        </div>
+        <div class="src-card-body">
+          <div class="src-card-tagline">服务端主动推 — WebSocket / SSE / 实时推送</div>
+          <div class="src-slots">
+            <div class="src-slot">
+              <div class="src-slot-lbl">Truth owner</div>
+              <div class="src-slot-val">服务端 + 事件总线</div>
+            </div>
+            <div class="src-slot">
+              <div class="src-slot-lbl">新鲜度</div>
+              <div class="src-slot-val">实时（毫秒级）</div>
+            </div>
+            <div class="src-slot">
+              <div class="src-slot-lbl">失败模式</div>
+              <div class="src-slot-val">断开 → 自动重连 + 期间状态 stale</div>
+            </div>
+            <div class="src-slot">
+              <div class="src-slot-lbl">缓存策略</div>
+              <div class="src-slot-val">最后一次推送的值</div>
+            </div>
+          </div>
+          <div class="src-toggle" data-toggle="push">展开 · 最坏情况 →</div>
+          <div class="src-extra">
+            <div class="src-worst">
+              <span class="worst-lbl">如果设计稿没标 · WORST CASE</span>
+              工程师写成 polling（每 N 秒拉一次） → <strong>延迟差</strong>。<br>
+              "实时聊天"变成"5 秒后才看到对方的消息"——体感像断网。
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 3RD-PARTY -->
+      <div class="src-card third" data-card="third">
+        <div class="src-card-head">
+          <span class="src-num">04</span>
+          <span class="src-title">3RD-PARTY · 第三方</span>
+        </div>
+        <div class="src-card-body">
+          <div class="src-card-tagline">别人的接口 — 天气 / 汇率 / 地图 / 邮件</div>
+          <div class="src-slots">
+            <div class="src-slot">
+              <div class="src-slot-lbl">Truth owner</div>
+              <div class="src-slot-val">别人的系统</div>
+            </div>
+            <div class="src-slot">
+              <div class="src-slot-lbl">新鲜度</div>
+              <div class="src-slot-val">看他们的承诺</div>
+            </div>
+            <div class="src-slot">
+              <div class="src-slot-lbl">失败模式</div>
+              <div class="src-slot-val">服务降级（不可控）→ 必须有 fallback</div>
+            </div>
+            <div class="src-slot">
+              <div class="src-slot-lbl">缓存策略</div>
+              <div class="src-slot-val">你自己做（不要每次都打他们）</div>
+            </div>
+          </div>
+          <div class="src-toggle" data-toggle="third">展开 · 最坏情况 →</div>
+          <div class="src-extra">
+            <div class="src-worst">
+              <span class="worst-lbl">如果设计稿没标 · WORST CASE</span>
+              工程师没做 fallback → <strong>第三方挂全站挂</strong>。<br>
+              和风天气接口挂 → 你的 dashboard 整块白屏 → CEO 看到截图：是不是我们出事了？
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="reveal-bar" style="margin-top:32px">
+      <div class="msg">
+        标记来源 = 给工程师一份 <span class="em">"数据 schema"</span> —— 避免猜。<br>
+        猜不一定对，标记一定对。
+      </div>
+      <div class="counter">已展开 <strong id="srcExpanded">0</strong> / 4 张卡片</div>
+    </div>
+  </div>
+</section>
+
+<!-- Section 04: 幕三 · 再做 -->
+<section id="make">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <span class="act-tag make">幕三 · 再做</span>
+        <div class="section-num"><strong>04</strong> / 再做</div>
+        <h2 class="section-title">轮到你——<br>给新页面 <span class="em">10 个数据点</span> 标来源。</h2>
+      </div>
+      <p class="section-sub">
+        下面 10 个数据点（来自一个 SaaS 产品的首页）。每个有 4 个候选 + 一个 fallback 选项。
+        <strong>你来选</strong>——提交后会逐条判分。
+      </p>
+    </div>
+
+    <div class="builder3-stage">
+      <div class="builder3-head">
+        <h3 class="builder3-title">SaaS 产品首页 · 10 个数据点的来源</h3>
+        <div class="builder3-progress">已填写 <span class="done" id="b3Done">0</span> / 10 项</div>
+      </div>
+
+      <div class="builder3-grid" id="b3Grid">
+        <!-- 10 items inserted by JS -->
+      </div>
+
+      <div class="builder3-actions">
+        <button class="builder3-btn primary" id="b3Submit">提交打分</button>
+        <button class="builder3-btn" id="b3Reset">清空重来</button>
+        <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--ink-mute);margin-left:auto">每题 1 分 来源 · 0.5 分 fallback</span>
+      </div>
+
+      <div class="builder3-score" id="b3Score"></div>
+    </div>
+  </div>
+</section>
+
+<!-- Section 05: closing -->
+<section id="closing">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>05</strong> / 把这件事变成习惯</div>
+        <h2 class="section-title">下次画稿子，<br>每个字段角落<span class="em">标个色</span>。</h2>
+      </div>
+      <p class="section-sub">
+        绿 / 蓝 / 紫 / 黄。从这一篇开始，"字段在哪生"和"字段挂了显示啥"会出现在你每一次评审里。
+      </p>
+    </div>
+
+    <div class="tips-grid">
+      <div class="tip">
+        <div class="tip-num">i</div>
+        <h4>每个字段标来源</h4>
+        <p>设计稿直接标。<strong>LOCAL / API / PUSH / 3RD-PARTY</strong> 一目了然，工程师不用追问。</p>
+        <p>颜色编码比文字描述快 10 倍——绿色的字段不用打接口，蓝色的可以缓存。</p>
+      </div>
+      <div class="tip">
+        <div class="tip-num">ii</div>
+        <h4>fallback 比来源更重要</h4>
+        <p>"拿不到数据时显示啥"是设计决策——不是工程师的锅。</p>
+        <p><strong>错误态 / 上次的值 / 默认值 / 不显示</strong>——4 种语义完全不同。是要让用户看到错误，还是悄悄降级，看产品需求。</p>
+      </div>
+      <div class="tip">
+        <div class="tip-num">iii</div>
+        <h4>第三方必须有降级</h4>
+        <p>别人的服务挂了你也要能活。fallback 不是 nice-to-have——<strong>是 must</strong>。</p>
+        <p>"天气挂了不显示这一块"和"天气挂了整页白屏"差距在你的设计稿。</p>
+      </div>
+    </div>
+
+    <div class="tip-outro">
+      <div class="outro-tag">划重点 · TL;DR</div>
+      <div>
+        <p>下次画稿子，<strong>每个字段角落标个色——绿 / 蓝 / 紫 / 黄</strong>。绿是本地、蓝是接口、紫是推送、黄是第三方。</p>
+        <p>工程师看一眼就知道：这块要不要打接口、要不要写订阅、要不要做 fallback。<strong>你少答 10 个问题，他少踩 10 个坑</strong>。</p>
+      </div>
+    </div>
+
+    <a href="x10-field-awareness.html" class="next-post">
+      <div>
+        <div class="np-tag">下一站 · NEXT · X10 · 高阶 · 规划中</div>
+        <h4>字段意识：<span class="em">必填 / 空值 / 枚举 / 只读 / 计算</span></h4>
+        <p>来源讲完了，下一站讲字段本身的规则——每个字段都有自己的"类型 + 校验 + 显示"三件套。必填还是可空？枚举只能选这几个？只读还是可改？是用户填的还是系统算的？</p>
+      </div>
+      <span class="np-cta">回路线图 <span class="arr">→</span></span>
+    </a>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div class="byline-group">
+      <div class="byline">
+        <img class="avatar" src="author.jpg" alt="范米花儿">
+        <div class="byline-meta">
+          <div class="byline-label"><span class="dot"></span>作者 · WRITTEN BY</div>
+          <div class="byline-name">嗨，我是 <span class="em">范米花儿</span></div>
+          <p class="byline-tag">设计工程师 ——<br>设计 × 代码，两边都做。</p>
+        </div>
+      </div>
+</div>
+    <div class="footer-meta">
+      做于 <span class="mono">2026</span> · 用 <span class="heart">●</span> 写给 <span class="mono">DESIGNERS &amp; DEVELOPERS</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+// ===== Game 1: dashboard data-points hover + filter =====
+(function(){
+  const stage = document.getElementById('dashStage');
+  const points = stage.querySelectorAll('.data-pt');
+  const filterChips = stage.querySelectorAll('.filter-chip');
+  const tip = document.getElementById('srcTip');
+  const visited = new Set();
+  const visitedEl = document.getElementById('dashVisited');
+
+  const SRC_LABEL = {
+    local: 'LOCAL · 本地',
+    api: 'API · 后端接口拉取',
+    push: 'SERVER-PUSH · 实时推送',
+    third: '3RD-PARTY · 第三方服务',
+    build: 'BUILD-TIME · 构建期'
+  };
+
+  let activeFilter = 'all';
+
+  function showTip(pt, e) {
+    const src = pt.dataset.source;
+    const detail = pt.dataset.srcDetail || '';
+    const name = pt.dataset.srcName || SRC_LABEL[src];
+    tip.innerHTML = `<span class="src-name ${src}">● ${name}</span><br><span class="src-desc">${detail}</span>`;
+    tip.classList.add('show');
+    positionTip(e);
+  }
+
+  function positionTip(e) {
+    const margin = 14;
+    const rect = tip.getBoundingClientRect();
+    let x = e.clientX + margin;
+    let y = e.clientY + margin;
+    if (x + rect.width > window.innerWidth - 20) x = e.clientX - rect.width - margin;
+    if (y + rect.height > window.innerHeight - 20) y = e.clientY - rect.height - margin;
+    tip.style.left = x + 'px';
+    tip.style.top = y + 'px';
+  }
+
+  function hideTip() {
+    tip.classList.remove('show');
+  }
+
+  points.forEach(pt => {
+    pt.addEventListener('mouseenter', e => {
+      const src = pt.dataset.source;
+      if (!visited.has(pt)) {
+        visited.add(pt);
+        visitedEl.textContent = visited.size;
+      }
+      showTip(pt, e);
+      // dim others of different source
+      if (activeFilter === 'all') {
+        points.forEach(p => {
+          if (p !== pt && p.dataset.source !== src) p.classList.add('dim');
+        });
+        pt.classList.add('highlight');
+      }
+    });
+    pt.addEventListener('mousemove', e => positionTip(e));
+    pt.addEventListener('mouseleave', () => {
+      hideTip();
+      points.forEach(p => p.classList.remove('dim', 'highlight'));
+      applyFilter();
+    });
+    pt.addEventListener('click', () => {
+      const src = pt.dataset.source;
+      filterChips.forEach(c => c.classList.toggle('active', c.dataset.src === src || (c.dataset.src === 'all' && activeFilter === src)));
+      if (activeFilter === src) {
+        setFilter('all');
+      } else {
+        setFilter(src);
+      }
+    });
+  });
+
+  function setFilter(src) {
+    activeFilter = src;
+    filterChips.forEach(c => c.classList.toggle('active', c.dataset.src === src));
+    applyFilter();
+  }
+
+  function applyFilter() {
+    if (activeFilter === 'all') {
+      stage.classList.remove('show-all');
+      points.forEach(p => p.classList.remove('dim'));
+    } else {
+      stage.classList.add('show-all');
+      points.forEach(p => {
+        p.classList.toggle('dim', p.dataset.source !== activeFilter);
+      });
+    }
+  }
+
+  filterChips.forEach(chip => {
+    chip.addEventListener('click', () => setFilter(chip.dataset.src));
+  });
+})();
+
+// ===== Game 2: source diagnosis card expand =====
+(function(){
+  const cards = document.querySelectorAll('.src-card');
+  const expandedSet = new Set();
+  const expandedEl = document.getElementById('srcExpanded');
+
+  cards.forEach(card => {
+    const toggle = card.querySelector('.src-toggle');
+    toggle.addEventListener('click', () => {
+      const id = card.dataset.card;
+      card.classList.toggle('expanded');
+      if (card.classList.contains('expanded')) {
+        expandedSet.add(id);
+        toggle.textContent = '收起 ↑';
+      } else {
+        expandedSet.delete(id);
+        toggle.textContent = '展开 · 最坏情况 →';
+      }
+      expandedEl.textContent = expandedSet.size;
+    });
+
+    // hover preview: highlight slots in sequence
+    const slots = card.querySelectorAll('.src-slot');
+    card.addEventListener('mouseenter', () => {
+      slots.forEach((s, i) => {
+        setTimeout(() => s.style.borderLeftWidth = '3px', i * 60);
+      });
+    });
+    card.addEventListener('mouseleave', () => {
+      slots.forEach(s => s.style.borderLeftWidth = '2px');
+    });
+  });
+})();
+
+// ===== Game 3: 10 data points builder =====
+(function(){
+  const ITEMS = [
+    {
+      id: 1,
+      desc: '顶部 "项目数" 总计',
+      hint: '页面进入时拉一次，刷新才会变',
+      correct: 'api',
+      fallback_correct: 'last',
+      explain_src: '项目总数变化不频繁，进入页面拉一次就够——这是典型的 API pull。',
+      explain_fb: '错误时显示上次的值，让用户感觉不到接口波动；用错误态会让人焦虑（数字变 ?）。'
+    },
+    {
+      id: 2,
+      desc: '实时 "团队聊天未读" 红点',
+      hint: '消息到达 0.1 秒内要更新',
+      correct: 'push',
+      fallback_correct: 'last',
+      explain_src: '消息要"瞬间显示"，必须 WebSocket 推送。轮询（polling）会有延迟，用户感受不到实时。',
+      explain_fb: '断线后保留上次的数字，比让红点消失更安全——避免用户以为"消息已读了"。'
+    },
+    {
+      id: 3,
+      desc: '用户头像',
+      hint: '登录后基本不变',
+      correct: 'local',
+      fallback_correct: 'default',
+      explain_src: '头像登录后塞进 localStorage，下次直接读；每次访问都拉是浪费带宽。',
+      explain_fb: '读不到头像 → 显示默认头像（首字母 / 灰色圆）。"看不到头像"会让人觉得账号挂了。'
+    },
+    {
+      id: 4,
+      desc: '公司 logo',
+      hint: '部署时已经决定',
+      correct: 'local',
+      fallback_correct: 'default',
+      explain_src: 'logo 跟主题色一样，可以在 build-time 打进 bundle，也可以登录后存 LOCAL。都不该走 API。',
+      explain_fb: 'logo 加载失败 → 显示默认 logo 或文字 placeholder，不能让品牌位空白。'
+    },
+    {
+      id: 5,
+      desc: '"今日订单金额" 数字',
+      hint: '今天才有意义，明天又是新的',
+      correct: 'api',
+      fallback_correct: 'error',
+      explain_src: '金额数字是业务关键数据，必须从服务端拉真实快照——LOCAL 缓存会误导用户。',
+      explain_fb: '金额拉不到时显示错误态（"加载失败 · 重试"），不能用默认值——0 元和"拉不到"语义完全不同。'
+    },
+    {
+      id: 6,
+      desc: '"实时在线人数" 计数',
+      hint: '应该跟着真实在线变化',
+      correct: 'push',
+      fallback_correct: 'hide',
+      explain_src: '"实时"两个字就决定了——必须 server-push。用 API 轮询的话，"实时"二字就是假的。',
+      explain_fb: '断线时显示"--"或直接不显示，比显示"0"或"上次的值"安全——错的数字比没数字更糟。'
+    },
+    {
+      id: 7,
+      desc: '"今日天气提示"',
+      hint: '不是你家的数据，是和风/OpenWeather 的',
+      correct: 'third',
+      fallback_correct: 'hide',
+      explain_src: '天气是典型 3rd-party——你只能等他们返回，不能左右他们的稳定性。',
+      explain_fb: '第三方挂了直接不显示这一格——天气是 nice-to-have，不显示比显示"加载失败"更优雅。'
+    },
+    {
+      id: 8,
+      desc: '"本月汇率换算"',
+      hint: '汇率从 exchangerate-api 来的',
+      correct: 'third',
+      fallback_correct: 'last',
+      explain_src: '汇率是 3rd-party 数据。你应该自己缓存（CDN / 本地）昨日值，不要每次都打他们。',
+      explain_fb: '汇率挂了显示昨日缓存的值——汇率短时间波动小，"上次的值"够用；不显示反而影响业务决策。'
+    },
+    {
+      id: 9,
+      desc: '"上次访问时间"',
+      hint: '退出登录时浏览器自己记的',
+      correct: 'local',
+      fallback_correct: 'hide',
+      explain_src: '只有这个浏览器知道——LOCAL（cookie / localStorage）。打接口拿"我自己上次访问"是绕远路。',
+      explain_fb: '清缓存的用户读不到 → 干脆不显示这一行，不是 critical 信息。'
+    },
+    {
+      id: 10,
+      desc: '仪表盘配置（哪些卡片显示）',
+      hint: '用户在"设置"里调过的偏好',
+      correct: 'api',
+      fallback_correct: 'default',
+      explain_src: '用户偏好要跨设备同步——必须落到服务端 DB，从 API 拉。LOCAL 会导致换设备就丢配置。',
+      explain_fb: '拉不到时显示默认布局，让用户至少能用——而不是空白页或错误态。'
+    }
+  ];
+
+  const FB_LABELS = {
+    default: '默认值',
+    last: '上次的值',
+    error: '错误态',
+    hide: '不显示'
+  };
+
+  const grid = document.getElementById('b3Grid');
+  const state = {};
+
+  ITEMS.forEach(item => {
+    state[item.id] = { src: null, fb: null };
+    const itemEl = document.createElement('div');
+    itemEl.className = 'b3-item';
+    itemEl.dataset.id = item.id;
+    itemEl.innerHTML = `
+      <div class="b3-item-head">
+        <span class="b3-item-num">${String(item.id).padStart(2,'0')}</span>
+        <div>
+          <div class="b3-item-desc">${item.desc}</div>
+          <div class="b3-item-hint">${item.hint}</div>
+        </div>
+      </div>
+      <div class="b3-row" data-row="src">
+        <span class="b3-row-lbl">来源</span>
+        <button class="b3-radio" data-val="local"><span class="dot"></span>LOCAL</button>
+        <button class="b3-radio" data-val="api"><span class="dot"></span>API</button>
+        <button class="b3-radio" data-val="push"><span class="dot"></span>PUSH</button>
+        <button class="b3-radio" data-val="third"><span class="dot"></span>3RD</button>
+      </div>
+      <div class="b3-row" data-row="fb">
+        <span class="b3-row-lbl">Fallback</span>
+        <select class="b3-select" data-fb="${item.id}">
+          <option value="">— 选 fallback —</option>
+          <option value="default">默认值</option>
+          <option value="last">上次的值</option>
+          <option value="error">错误态</option>
+          <option value="hide">不显示</option>
+        </select>
+      </div>
+      <div class="b3-feedback" data-feedback="${item.id}"></div>
+    `;
+    grid.appendChild(itemEl);
+  });
+
+  const doneEl = document.getElementById('b3Done');
+  const scoreEl = document.getElementById('b3Score');
+
+  function updateDone() {
+    const done = Object.values(state).filter(s => s.src && s.fb).length;
+    doneEl.textContent = done;
+  }
+
+  grid.querySelectorAll('.b3-radio').forEach(radio => {
+    radio.addEventListener('click', () => {
+      const item = radio.closest('.b3-item');
+      const id = parseInt(item.dataset.id, 10);
+      const val = radio.dataset.val;
+      state[id].src = val;
+      item.querySelectorAll('.b3-radio').forEach(r => r.classList.toggle('selected', r.dataset.val === val));
+      item.classList.remove('is-correct', 'is-wrong');
+      item.querySelector('[data-feedback]').classList.remove('show');
+      updateDone();
+    });
+  });
+
+  grid.querySelectorAll('.b3-select').forEach(sel => {
+    sel.addEventListener('change', () => {
+      const id = parseInt(sel.dataset.fb, 10);
+      state[id].fb = sel.value || null;
+      const item = sel.closest('.b3-item');
+      item.classList.remove('is-correct', 'is-wrong');
+      item.querySelector('[data-feedback]').classList.remove('show');
+      updateDone();
+    });
+  });
+
+  document.getElementById('b3Submit').addEventListener('click', () => {
+    let srcHits = 0, fbHits = 0, total = ITEMS.length;
+    const wrongSummary = [];
+
+    ITEMS.forEach(item => {
+      const s = state[item.id];
+      const itemEl = grid.querySelector(`.b3-item[data-id="${item.id}"]`);
+      const fbEl = itemEl.querySelector('[data-feedback]');
+      if (!s.src || !s.fb) {
+        fbEl.className = 'b3-feedback show lose';
+        fbEl.innerHTML = `<strong>未填写</strong> · 这一题没选择，跳过。`;
+        itemEl.classList.add('is-wrong');
+        return;
+      }
+      const srcOk = s.src === item.correct;
+      const fbOk = s.fb === item.fallback_correct;
+      if (srcOk) srcHits++;
+      if (fbOk) fbHits++;
+
+      if (srcOk && fbOk) {
+        itemEl.classList.add('is-correct');
+        fbEl.className = 'b3-feedback show win';
+        fbEl.innerHTML = `<strong>✓ 完美</strong> · 来源 = ${item.correct.toUpperCase()} · fallback = ${FB_LABELS[item.fallback_correct]}<br><span class="why">${item.explain_src}</span>`;
+      } else {
+        itemEl.classList.add('is-wrong');
+        fbEl.className = 'b3-feedback show lose';
+        let msg = '';
+        if (!srcOk) msg += `<strong>来源错</strong> · 你选了 ${s.src.toUpperCase()}，正确是 <strong>${item.correct.toUpperCase()}</strong>。`;
+        if (!srcOk && !fbOk) msg += '<br>';
+        if (!fbOk) msg += `<strong>Fallback 错</strong> · 你选了 ${FB_LABELS[s.fb]}，正确是 <strong>${FB_LABELS[item.fallback_correct]}</strong>。`;
+        msg += `<span class="why">${!srcOk ? item.explain_src : item.explain_fb}</span>`;
+        fbEl.innerHTML = msg;
+        wrongSummary.push({ id: item.id, desc: item.desc, srcOk, fbOk });
+      }
+    });
+
+    const points = srcHits + fbHits * 0.5;
+    const maxPoints = total + total * 0.5;
+    const pct = Math.round(points / maxPoints * 100);
+
+    let verdictClass, verdictLabel, headline;
+    if (srcHits === total && fbHits === total) {
+      verdictClass = 'win';
+      verdictLabel = '满分';
+      headline = '10/10 来源 + 10/10 fallback —— 你已经在用 data spec 思维。';
+    } else if (pct >= 80) {
+      verdictClass = 'win';
+      verdictLabel = '基本对了';
+      headline = '大部分对了——细节上还有 1-2 个 fallback 没拿捏住。';
+    } else if (pct >= 50) {
+      verdictClass = 'partial';
+      verdictLabel = '过半';
+      headline = '一半对一半错——回看每个红色卡片，重点是"来源"和"fallback 语义"。';
+    } else {
+      verdictClass = 'lose';
+      verdictLabel = '还差很多';
+      headline = '别灰心——这一题刚好就是要让你"意识到字段不是统一的"。重新试一遍。';
+    }
+
+    scoreEl.innerHTML = `
+      <span class="verdict ${verdictClass}">${verdictLabel}</span>
+      <h4>${headline}</h4>
+      <div class="score-row">
+        <div class="score-cell"><strong>${srcHits}/${total}</strong>来源正确</div>
+        <div class="score-cell"><strong>${fbHits}/${total}</strong>Fallback 正确</div>
+        <div class="score-cell"><strong>${pct}%</strong>总分（来源权重 2x）</div>
+      </div>
+      <div style="color:#c8c8d0;font-size:13px;line-height:1.7">
+        每一题下面有具体解释，绿色卡片 = 完全对，红色卡片 = 至少一项错。
+        ${wrongSummary.length > 0 ? '<br>下次画稿子时——把这 10 个判断变成肌肉记忆：<strong style="color:white">看到字段，先问"它在哪生"，再问"它挂了显示啥"</strong>。' : ''}
+      </div>
+    `;
+    scoreEl.classList.add('show');
+    scoreEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  });
+
+  document.getElementById('b3Reset').addEventListener('click', () => {
+    ITEMS.forEach(item => { state[item.id] = { src: null, fb: null }; });
+    grid.querySelectorAll('.b3-radio').forEach(r => r.classList.remove('selected'));
+    grid.querySelectorAll('.b3-select').forEach(s => s.value = '');
+    grid.querySelectorAll('.b3-item').forEach(i => i.classList.remove('is-correct', 'is-wrong'));
+    grid.querySelectorAll('.b3-feedback').forEach(f => f.classList.remove('show'));
+    scoreEl.classList.remove('show');
+    updateDone();
+  });
+})();
+</script>
+
+</body>
+</html>

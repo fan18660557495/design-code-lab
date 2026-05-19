@@ -1,0 +1,1246 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>组件组合：卡片 / 表格 / 筛选器 / 详情区 — AI LABBOOK · X15</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,300..900&family=Geist:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Noto+Sans+SC:wght@300;400;500;700;900&family=Noto+Serif+SC:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f3eee5; --bg-2: #ebe4d4; --ink: #16161d; --ink-soft: #4a4a55; --ink-mute: #8a8a92;
+    --line: #d5cdba; --line-soft: #e3dcca; --accent: #ff4d2e; --accent-soft: #ffe4dc;
+    --blue: #0a4cff; --blue-soft: #dde6ff; --green: #1f6b3a; --green-soft: #d4ecdb;
+    --yellow: #ffcf3d; --paper: #faf7f0;
+    --shadow: 0 1px 0 rgba(0,0,0,0.04), 0 8px 24px rgba(22,22,29,0.06);
+    --obj-color: #ff4d2e; --obj-soft: rgba(255,77,46,0.12);
+    --proj-color: #1f6b3a; --proj-soft: rgba(31,107,58,0.12);
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--ink); font-family: 'Geist', 'Noto Sans SC', system-ui, -apple-system, sans-serif; font-size: 16px; line-height: 1.6; -webkit-font-smoothing: antialiased; background-image: radial-gradient(circle at 1px 1px, rgba(22,22,29,0.05) 1px, transparent 0); background-size: 24px 24px; }
+  .display-cn { font-family: 'Noto Serif SC', 'Fraunces', serif; font-weight: 900; letter-spacing: -0.01em; }
+  .display-en { font-family: 'Fraunces', 'Noto Serif SC', serif; font-weight: 600; font-style: italic; letter-spacing: -0.02em; }
+  .mono { font-family: 'JetBrains Mono', monospace; }
+  .label { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-mute); }
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 0 32px; }
+
+  /* Topbar */
+  .topbar { border-bottom: 1px dashed var(--line); padding: 16px 0; background: var(--bg); position: sticky; top: 0; z-index: 100; }
+  .topbar-inner { display: flex; justify-content: space-between; align-items: center; gap: 24px; flex-wrap: wrap; }
+  .brand-block { display: flex; align-items: center; gap: 10px; font-family: 'JetBrains Mono', monospace; font-size: 13px; }
+  .brand { display: inline-flex; align-items: center; gap: 6px; color: var(--ink); text-decoration: none; font-weight: 600; }
+  .brand-arrow { color: var(--ink-mute); transition: transform .2s; }
+  .brand:hover .brand-arrow { transform: translateX(-3px); }
+  .brand .dot { display: inline-block; width: 8px; height: 8px; background: var(--accent); border-radius: 50%; vertical-align: middle; animation: pulse 2s ease-in-out infinite; margin-left: 4px; }
+  .brand-sep { color: var(--ink-mute); }
+  .brand-current { color: var(--ink-soft); }
+  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+  .nav-links { display: flex; gap: 18px; font-size: 13px; flex-wrap: wrap; }
+  .nav-links a { color: var(--ink-soft); text-decoration: none; transition: color 0.2s; }
+  .nav-links a:hover { color: var(--accent); }
+
+  /* Hero */
+  .hero { padding: 100px 0 80px; position: relative; overflow: hidden; }
+  .hero-meta { display: flex; gap: 24px; margin-bottom: 32px; align-items: center; flex-wrap: wrap; }
+  .hero-meta .pill { padding: 6px 12px; border: 1px solid var(--ink); border-radius: 100px; font-size: 11px; font-family: 'JetBrains Mono', monospace; letter-spacing: 0.05em; }
+  .hero-meta .pill.fill { background: var(--ink); color: var(--bg); }
+  .hero-meta .pill.purple { background: var(--obj-color); color: white; border-color: var(--obj-color); }
+  .hero h1 { font-family: 'Noto Serif SC', 'Fraunces', serif; font-weight: 900; font-size: clamp(48px, 7vw, 92px); line-height: 0.95; letter-spacing: -0.03em; margin: 0 0 24px; }
+  .hero h1 .em { font-family: 'Noto Serif SC', serif; font-weight: 500; color: var(--accent); }
+  .hero h1 .purple { color: var(--obj-color); font-family: 'Noto Serif SC', serif; font-weight: 500; }
+  .hero p.lede { font-size: 20px; line-height: 1.5; max-width: 640px; color: var(--ink-soft); margin: 0 0 40px; }
+  .hero-grid { display: grid; grid-template-columns: 1.4fr 1fr; gap: 48px; align-items: end; }
+  @media (max-width: 880px) { .hero-grid { grid-template-columns: 1fr; } }
+  .hero-side { border-left: 1px dashed var(--line); padding-left: 24px; font-size: 13px; color: var(--ink-soft); }
+  .hero-side .row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px dashed var(--line); gap: 12px; }
+  .hero-side .row:last-child { border-bottom: none; }
+  .hero-side .row .k { color: var(--ink-mute); font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.05em; text-transform: uppercase; }
+  .hero-side .row .v { font-weight: 500; }
+
+  /* Sections */
+  section { padding: 80px 0; border-top: 1px solid var(--line); position: relative; }
+  .section-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 56px; flex-wrap: wrap; gap: 16px; }
+  .section-num { font-family: 'JetBrains Mono', monospace; font-size: 13px; color: var(--ink-mute); letter-spacing: 0.1em; margin-top: 6px; }
+  .section-num strong { color: var(--accent); }
+  .section-title { font-family: 'Noto Serif SC', serif; font-weight: 900; font-size: clamp(32px, 4.5vw, 52px); line-height: 1.05; letter-spacing: -0.02em; margin: 8px 0 0; max-width: 22ch; }
+  .section-title .em { font-family: 'Noto Serif SC', serif; font-weight: 500; color: var(--accent); }
+  .section-title .purple { color: var(--obj-color); font-family: 'Noto Serif SC', serif; font-weight: 500; }
+  .section-sub { color: var(--ink-soft); font-size: 17px; max-width: 38ch; line-height: 1.55; margin: 0; }
+
+  /* Act tag */
+  .act-tag { display: inline-block; padding: 4px 12px; font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; border-radius: 100px; }
+  .act-tag.look { background: var(--blue-soft); color: var(--blue); }
+  .act-tag.break { background: var(--obj-soft); color: var(--obj-color); }
+  .act-tag.make { background: var(--proj-soft); color: var(--proj-color); }
+
+  /* Problem cards */
+  .problem-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; margin-top: 24px; }
+  @media (max-width: 880px) { .problem-grid { grid-template-columns: 1fr; } }
+  .problem-card { background: var(--paper); border: 1px solid var(--line); border-radius: 6px; padding: 28px; position: relative; }
+  .problem-card.bad { border-color: var(--accent); background: var(--accent-soft); }
+  .problem-card.good { border-color: var(--obj-color); background: var(--obj-soft); }
+  .problem-card .tag { position: absolute; top: -12px; left: 24px; background: var(--bg); padding: 2px 10px; font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.1em; }
+  .problem-card.bad .tag { color: var(--accent); border: 1px solid var(--accent); }
+  .problem-card.good .tag { color: var(--obj-color); border: 1px solid var(--obj-color); }
+  .problem-card h3 { font-family: 'Noto Serif SC', serif; font-size: 22px; margin: 0 0 12px; font-weight: 700; }
+  .problem-card p { margin: 0; color: var(--ink-soft); font-size: 14px; line-height: 1.55; }
+  .problem-card p + p { margin-top: 10px; }
+
+  /* GAME 1: mock page + tree */
+  .compose-stage { background: var(--paper); border: 1px solid var(--line); border-radius: 8px; padding: 28px; position: relative; overflow: hidden; }
+  .compose-stage::before { content: ''; position: absolute; inset: 0; background-image: linear-gradient(to right, var(--line-soft) 1px, transparent 1px), linear-gradient(to bottom, var(--line-soft) 1px, transparent 1px); background-size: 24px 24px; opacity: 0.35; pointer-events: none; }
+  .compose-toolbar { position: relative; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 18px; }
+  .compose-toolbar h5 { font-family: 'Noto Serif SC', serif; font-size: 15px; margin: 0; font-weight: 700; }
+  .compose-toolbar .compose-hint { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ink-mute); letter-spacing: 0.05em; }
+  .flow-toggle { padding: 8px 16px; border-radius: 100px; border: 1px solid var(--obj-color); background: white; color: var(--obj-color); font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.06em; cursor: pointer; transition: all 0.2s; font-weight: 600; }
+  .flow-toggle.is-on { background: var(--obj-color); color: white; }
+  .flow-toggle:hover { transform: translateY(-1px); }
+  .compose-grid { position: relative; display: grid; grid-template-columns: 1.05fr 1fr; gap: 24px; align-items: start; }
+  @media (max-width: 980px) { .compose-grid { grid-template-columns: 1fr; } }
+  .page-mock { position: relative; background: white; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; min-height: 460px; }
+  .pm-zone { cursor: pointer; transition: all 0.2s; position: relative; }
+  .pm-zone.is-hot { outline: 2px solid var(--obj-color); outline-offset: -2px; background: var(--obj-soft); }
+  .pm-zone .pm-badge { display: none; position: absolute; top: 4px; right: 4px; background: var(--obj-color); color: white; font-family: 'JetBrains Mono', monospace; font-size: 9px; letter-spacing: 0.06em; padding: 2px 6px; border-radius: 100px; z-index: 2; }
+  .pm-zone.is-hot .pm-badge { display: inline-block; }
+  .pm-breadcrumb { padding: 8px 14px; border-bottom: 1px solid var(--line-soft); font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--ink-mute); display: flex; align-items: center; gap: 4px; }
+  .pm-breadcrumb .sep { color: var(--line); }
+  .pm-actionbar { padding: 10px 14px; border-bottom: 1px solid var(--line-soft); display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+  .pm-actionbar .ab-title { font-weight: 700; font-size: 13px; font-family: 'Noto Serif SC', serif; }
+  .pm-actionbar .ab-actions { display: flex; gap: 6px; }
+  .pm-actionbar .ab-btn { font-family: 'JetBrains Mono', monospace; font-size: 10px; padding: 4px 8px; border: 1px solid var(--line); border-radius: 4px; background: white; color: var(--ink-soft); }
+  .pm-actionbar .ab-btn.primary { background: var(--accent); color: white; border-color: var(--accent); }
+  .pm-body { display: grid; grid-template-columns: 200px 1fr; min-height: 360px; }
+  @media (max-width: 540px) { .pm-body { grid-template-columns: 1fr; } }
+  .pm-customer { padding: 14px; border-right: 1px solid var(--line-soft); background: var(--bg); }
+  .pm-customer .pmc-head { display: flex; gap: 10px; align-items: center; margin-bottom: 12px; }
+  .pmc-avatar { width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg,#ff8a4a,#ff4d2e); color: white; display: inline-flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px; }
+  .pmc-name { font-weight: 700; font-size: 13px; font-family: 'Noto Serif SC', serif; }
+  .pmc-meta { font-size: 10px; color: var(--ink-mute); }
+  .pmc-row { display: flex; justify-content: space-between; font-size: 10px; padding: 4px 0; border-bottom: 1px dashed var(--line-soft); }
+  .pmc-row:last-child { border-bottom: none; }
+  .pmc-row .k { color: var(--ink-mute); font-family: 'JetBrains Mono', monospace; }
+  .pmc-row .v { font-weight: 600; }
+  .pm-center { display: flex; flex-direction: column; min-width: 0; }
+  .pm-tabs { display: flex; border-bottom: 1px solid var(--line-soft); padding: 0 14px; gap: 4px; }
+  .pm-tab { font-family: 'Noto Sans SC', sans-serif; font-size: 11px; padding: 8px 10px; color: var(--ink-mute); border-bottom: 2px solid transparent; cursor: pointer; }
+  .pm-tab.active { color: var(--ink); border-bottom-color: var(--accent); font-weight: 600; }
+  .pm-filter { padding: 8px 14px; border-bottom: 1px solid var(--line-soft); display: flex; gap: 6px; flex-wrap: wrap; background: var(--paper); }
+  .pm-filter .fpill { font-family: 'JetBrains Mono', monospace; font-size: 9px; padding: 3px 7px; border: 1px solid var(--line); border-radius: 100px; background: white; color: var(--ink-soft); }
+  .pm-filter .fpill.on { background: var(--blue); color: white; border-color: var(--blue); }
+  .pm-table { flex: 1; overflow: hidden; }
+  .pm-table table { width: 100%; border-collapse: collapse; font-size: 10px; }
+  .pm-table th { text-align: left; padding: 6px 10px; color: var(--ink-mute); font-family: 'JetBrains Mono', monospace; font-size: 9px; letter-spacing: 0.05em; text-transform: uppercase; border-bottom: 1px solid var(--line-soft); font-weight: 600; }
+  .pm-table td { padding: 6px 10px; border-bottom: 1px dashed var(--line-soft); font-size: 10px; }
+  .pm-table td .tval { color: var(--green); font-weight: 600; }
+  .pm-table td.amt { color: var(--ink); font-weight: 600; font-family: 'JetBrains Mono', monospace; }
+  .pm-pagination { padding: 8px 14px; border-top: 1px solid var(--line-soft); display: flex; justify-content: space-between; align-items: center; font-size: 10px; color: var(--ink-mute); background: var(--paper); }
+  .pm-pagination .pgnav { display: flex; gap: 4px; font-family: 'JetBrains Mono', monospace; }
+  .pm-pagination .pgnav button { width: 18px; height: 18px; border: 1px solid var(--line); border-radius: 3px; background: white; font-size: 9px; cursor: pointer; color: var(--ink-soft); }
+  .pm-pagination .pgnav button.cur { background: var(--ink); color: white; border-color: var(--ink); }
+  .pm-timeline { padding: 10px 14px; border-top: 1px solid var(--line-soft); background: var(--paper); }
+  .pm-timeline .tl-title { font-family: 'JetBrains Mono', monospace; font-size: 9px; color: var(--ink-mute); letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 6px; }
+  .pm-timeline .tl-row { font-size: 10px; padding: 3px 0; color: var(--ink-soft); display: flex; gap: 6px; align-items: center; }
+  .pm-timeline .tl-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--obj-color); flex-shrink: 0; }
+
+  /* tree pane */
+  .tree-pane { background: var(--ink); color: #c8c8d0; border-radius: 8px; padding: 18px 18px 14px; font-family: 'JetBrains Mono', monospace; font-size: 11px; line-height: 1.7; position: relative; min-height: 460px; }
+  .tree-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; padding-bottom: 10px; border-bottom: 1px dashed var(--line); }
+  .tree-head h6 { font-family: 'Noto Serif SC', serif; font-size: 13px; margin: 0; color: white; font-weight: 600; }
+  .tree-head .tcount { font-size: 9px; color: #888; letter-spacing: 0.06em; }
+  .tree-list { display: flex; flex-direction: column; }
+  .tnode { position: relative; padding: 4px 6px; border-radius: 4px; cursor: pointer; transition: all 0.15s; display: flex; align-items: center; gap: 4px; color: #c8c8d0; }
+  .tnode.is-hot { background: rgba(255,77,46,0.25); color: white; }
+  .tnode .tname { color: #ff9b7a; }
+  .tnode.is-hot .tname { color: #ffdc7a; }
+  .tnode .tprops { color: #888; font-style: italic; }
+  .tnode .tag-flow { display: none; font-size: 9px; padding: 1px 5px; border-radius: 100px; margin-left: 4px; letter-spacing: 0.04em; }
+  .compose-stage.show-flow .tnode .tag-flow { display: inline-block; }
+  .tag-flow.in { background: rgba(10,76,255,0.25); color: #99b6ff; }
+  .tag-flow.out { background: rgba(255,77,46,0.25); color: #ffaa92; }
+  .tag-flow.own { background: rgba(31,107,58,0.35); color: #95e0a4; }
+  .tnode-tooltip { position: absolute; top: -6px; left: calc(100% + 14px); background: var(--bg); color: var(--ink); padding: 10px 12px; border-radius: 6px; font-family: 'JetBrains Mono', monospace; font-size: 10px; line-height: 1.6; min-width: 200px; box-shadow: 0 8px 24px rgba(0,0,0,0.3); pointer-events: none; opacity: 0; transition: opacity 0.15s; z-index: 10; border: 1px solid var(--obj-color); }
+  .tnode.is-hot .tnode-tooltip { opacity: 1; }
+  .tnode-tooltip .tt-row { padding: 2px 0; }
+  .tnode-tooltip .tt-k { color: var(--obj-color); font-weight: 600; }
+  @media (max-width: 980px) { .tnode-tooltip { display: none; } }
+  .indent { display: inline-block; color: #555; user-select: none; margin-right: 2px; }
+  .flow-bar { margin-top: 14px; padding: 10px 14px; background: rgba(255,255,255,0.05); border-radius: 6px; font-size: 10px; color: #b8b8c0; line-height: 1.55; display: none; }
+  .compose-stage.show-flow .flow-bar { display: block; }
+  .flow-bar .fl-row { padding: 3px 0; }
+  .flow-bar .fl-row .arr { color: #ff8a4a; margin: 0 4px; }
+  .flow-bar .fl-row .from { color: #99b6ff; }
+  .flow-bar .fl-row .to { color: #95e0a4; }
+
+  /* Reveal bar */
+  .reveal-bar { margin-top: 32px; padding: 20px 28px; background: var(--ink); color: var(--bg); border-radius: 8px; display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap; }
+  .reveal-bar .msg { font-family: 'Noto Serif SC', serif; font-size: 17px; font-weight: 500; line-height: 1.55; }
+  .reveal-bar .msg .em { color: var(--accent); }
+  .reveal-bar .counter { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ink-mute); letter-spacing: 0.05em; }
+  .reveal-bar .counter strong { color: var(--accent); font-size: 14px; }
+
+  /* GAME 2: 4 rules */
+  .rules-stage { display: grid; grid-template-columns: repeat(2, 1fr); gap: 22px; margin-top: 24px; }
+  @media (max-width: 880px) { .rules-stage { grid-template-columns: 1fr; } }
+  .rule-card { background: var(--paper); border: 1px solid var(--line); border-radius: 8px; padding: 22px; position: relative; cursor: pointer; transition: all 0.2s; }
+  .rule-card:hover { border-color: var(--obj-color); transform: translateY(-2px); box-shadow: 0 8px 24px rgba(255,77,46,0.1); }
+  .rule-card.is-open { border-color: var(--obj-color); background: white; }
+  .rule-head { display: flex; align-items: baseline; gap: 10px; margin-bottom: 12px; }
+  .rule-num { width: 28px; height: 28px; border-radius: 50%; background: var(--obj-color); color: white; display: inline-flex; align-items: center; justify-content: center; font-family: 'Fraunces', serif; font-style: italic; font-weight: 700; font-size: 14px; flex-shrink: 0; }
+  .rule-name { font-family: 'Noto Serif SC', serif; font-weight: 700; font-size: 18px; line-height: 1.2; }
+  .rule-name .en { color: var(--ink-mute); font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 400; letter-spacing: 0.06em; text-transform: uppercase; display: block; margin-top: 2px; }
+  .rule-q { font-size: 14px; color: var(--ink-soft); margin: 0 0 12px; line-height: 1.55; }
+  .rule-toggle { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--obj-color); letter-spacing: 0.06em; text-transform: uppercase; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; background: transparent; border: none; padding: 0; }
+  .rule-toggle .arr { display: inline-block; transition: transform 0.2s; }
+  .rule-card.is-open .rule-toggle .arr { transform: rotate(90deg); }
+  .rule-detail { max-height: 0; overflow: hidden; transition: max-height 0.35s ease, opacity 0.25s ease; opacity: 0; }
+  .rule-card.is-open .rule-detail { max-height: 1200px; opacity: 1; margin-top: 14px; }
+  .rule-anti { font-size: 13px; color: var(--ink-soft); line-height: 1.6; padding: 10px 12px; background: var(--accent-soft); border-left: 3px solid var(--accent); border-radius: 0 4px 4px 0; margin: 8px 0; }
+  .rule-anti strong { color: var(--accent); }
+  .rule-tip { font-size: 13px; color: var(--ink-soft); line-height: 1.6; padding: 10px 12px; background: var(--green-soft); border-left: 3px solid var(--green); border-radius: 0 4px 4px 0; margin: 8px 0; }
+  .rule-tip strong { color: var(--green); }
+  .code-compare { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 14px; }
+  @media (max-width: 540px) { .code-compare { grid-template-columns: 1fr; } }
+  .code-block { background: var(--ink); color: #d4d4d4; border-radius: 6px; padding: 12px; font-family: 'JetBrains Mono', monospace; font-size: 10px; line-height: 1.7; overflow-x: auto; position: relative; }
+  .code-block.bad { border-top: 3px solid var(--accent); }
+  .code-block.good { border-top: 3px solid var(--green); }
+  .code-block .tag-bad, .code-block .tag-good { position: absolute; top: 6px; right: 8px; font-size: 9px; letter-spacing: 0.06em; }
+  .code-block .tag-bad { color: var(--accent); }
+  .code-block .tag-good { color: #95e0a4; }
+  .code-block .tagn { color: #ffd166; }
+  .code-block .com { color: #888; font-style: italic; }
+  .code-block .var { color: #99b6ff; }
+  .code-block .str { color: #95e0a4; }
+
+  /* GAME 3: builder */
+  .builder-stage { background: var(--paper); border: 1px solid var(--line); border-radius: 8px; padding: 32px; margin-top: 24px; }
+  .builder-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 28px; flex-wrap: wrap; gap: 16px; }
+  .builder-title { font-family: 'Noto Serif SC', serif; font-size: 22px; margin: 0; font-weight: 700; }
+  .builder-progress { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--ink-mute); }
+  .builder-progress .done { color: var(--proj-color); font-weight: 700; font-size: 14px; }
+  .builder-grid { display: grid; grid-template-columns: 1fr 1.7fr; gap: 28px; }
+  @media (max-width: 980px) { .builder-grid { grid-template-columns: 1fr; } }
+  .builder-pool { border: 1px dashed var(--obj-color); border-radius: 8px; padding: 18px; background: white; align-self: start; position: sticky; top: 80px; }
+  .builder-pool h5 { font-family: 'Noto Serif SC', serif; font-size: 15px; margin: 0 0 12px; color: var(--obj-color); font-weight: 700; }
+  .builder-pool-hint { font-size: 11px; color: var(--ink-mute); margin: 0 0 14px; line-height: 1.5; }
+  .builder-pool-list { display: flex; flex-direction: column; gap: 5px; }
+  .builder-chip { display: flex; align-items: center; gap: 8px; padding: 7px 12px; background: var(--obj-soft); border: 1px solid var(--obj-color); border-radius: 4px; font-family: 'JetBrains Mono', monospace; font-size: 12px; cursor: pointer; user-select: none; transition: all 0.15s; color: var(--ink); }
+  .builder-chip:hover { background: var(--obj-color); color: white; }
+  .builder-chip.is-active { background: var(--obj-color); color: white; box-shadow: 0 0 0 3px var(--obj-soft); }
+  .builder-chip.is-placed { opacity: 0.45; border-style: dashed; cursor: not-allowed; }
+  .builder-chip.is-placed:hover { background: var(--obj-soft); color: var(--ink); }
+  .builder-chip .chip-add { margin-left: auto; opacity: 0.55; font-size: 14px; }
+  .builder-canvas { background: white; border: 1px solid var(--line); border-radius: 8px; padding: 18px; min-height: 400px; }
+  .builder-canvas-head { display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; padding-bottom: 10px; border-bottom: 1px dashed var(--line); }
+  .builder-canvas-head h6 { margin: 0; font-family: 'Noto Serif SC', serif; font-size: 15px; font-weight: 700; }
+  .builder-canvas-head .hint { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--ink-mute); }
+  .ctree { font-family: 'JetBrains Mono', monospace; font-size: 12px; line-height: 1.85; min-height: 200px; }
+  .cnode { display: flex; align-items: center; gap: 8px; padding: 4px 6px; border-radius: 4px; position: relative; transition: background 0.15s; }
+  .cnode:hover { background: var(--obj-soft); }
+  .cnode.is-target { outline: 2px dashed var(--obj-color); background: var(--obj-soft); }
+  .cnode .cname { color: var(--obj-color); font-weight: 600; }
+  .cnode.is-root .cname { color: var(--ink); font-weight: 700; }
+  .cnode .cindent { color: var(--line); user-select: none; }
+  .cnode .cadd, .cnode .cdel { background: transparent; border: 1px solid var(--line); color: var(--ink-soft); font-size: 10px; padding: 1px 6px; border-radius: 3px; cursor: pointer; font-family: 'JetBrains Mono', monospace; margin-left: auto; }
+  .cnode .cadd:hover { background: var(--obj-color); color: white; border-color: var(--obj-color); }
+  .cnode .cdel:hover { background: var(--accent); color: white; border-color: var(--accent); }
+  .cnode .cdel { margin-left: 4px; }
+  .flow-section { margin-top: 22px; padding-top: 18px; border-top: 1px dashed var(--line); }
+  .flow-section h6 { font-family: 'Noto Serif SC', serif; font-size: 14px; margin: 0 0 12px; font-weight: 700; }
+  .flow-row { display: grid; grid-template-columns: 100px 1fr 24px 1fr; gap: 8px; margin-bottom: 10px; align-items: center; font-family: 'JetBrains Mono', monospace; font-size: 11px; }
+  @media (max-width: 540px) { .flow-row { grid-template-columns: 1fr; gap: 4px; } }
+  .flow-row .fl-label { font-size: 10px; color: var(--ink-mute); letter-spacing: 0.04em; text-transform: uppercase; }
+  .flow-row .fl-label.data { color: var(--blue); font-weight: 600; }
+  .flow-row .fl-label.event { color: var(--accent); font-weight: 600; }
+  .flow-row select { padding: 6px 8px; border: 1px solid var(--line); border-radius: 4px; background: white; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ink); width: 100%; }
+  .flow-row .fl-arr { text-align: center; color: var(--obj-color); font-weight: 700; }
+  .builder-actions { display: flex; gap: 12px; margin-top: 24px; flex-wrap: wrap; }
+  .builder-btn { padding: 10px 22px; border-radius: 100px; font-family: 'JetBrains Mono', monospace; font-size: 12px; letter-spacing: 0.06em; text-transform: uppercase; cursor: pointer; font-weight: 600; border: 1px solid var(--ink); background: transparent; color: var(--ink); transition: all 0.15s; }
+  .builder-btn:hover { background: var(--ink); color: var(--bg); }
+  .builder-btn.primary { background: var(--accent); color: white; border-color: var(--accent); }
+  .builder-btn.primary:hover { background: #e8451f; }
+  .builder-judge { margin-top: 24px; padding: 24px 26px; border-radius: 8px; background: var(--ink); color: var(--bg); display: none; }
+  .builder-judge.show { display: block; }
+  .builder-judge .verdict { display: inline-block; font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; padding: 3px 10px; border-radius: 100px; }
+  .builder-judge .verdict.win { color: #1f6b3a; background: #d4ecdb; }
+  .builder-judge .verdict.partial { color: #c79f1e; background: #fff3cc; }
+  .builder-judge h4 { font-family: 'Noto Serif SC', serif; font-size: 22px; margin: 10px 0 14px; color: white; line-height: 1.3; }
+  .builder-judge ul { color: #c8c8d0; margin: 0; padding-left: 20px; font-size: 13px; line-height: 1.75; }
+  .builder-judge ul li + li { margin-top: 10px; }
+  .builder-judge ul strong { color: white; }
+  .builder-judge ul .why { color: #a0a0aa; font-size: 12px; }
+  .builder-judge code { background: rgba(255,255,255,0.1); padding: 1px 6px; border-radius: 3px; font-size: 11px; }
+
+  /* picker label (floating) */
+  .picker-label { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: var(--ink); color: var(--bg); padding: 12px 20px; border-radius: 100px; font-family: 'JetBrains Mono', monospace; font-size: 12px; letter-spacing: 0.05em; z-index: 200; box-shadow: 0 8px 32px rgba(0,0,0,0.2); display: none; align-items: center; gap: 10px; }
+  .picker-label.show { display: inline-flex; }
+  .picker-label .esc { background: rgba(255,255,255,0.15); padding: 2px 6px; border-radius: 3px; font-size: 10px; }
+
+  /* tips */
+  .tips-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 28px; margin-top: 24px; }
+  @media (max-width: 880px) { .tips-grid { grid-template-columns: 1fr; } }
+  .tip { background: var(--paper); border: 1px solid var(--line); border-radius: 6px; padding: 24px; position: relative; }
+  .tip-num { position: absolute; top: -14px; left: 16px; width: 32px; height: 32px; border-radius: 50%; background: var(--obj-color); color: white; display: flex; align-items: center; justify-content: center; font-family: 'Fraunces', serif; font-style: italic; font-weight: 600; font-size: 14px; }
+  .tip h4 { font-family: 'Noto Serif SC', serif; font-size: 18px; margin: 8px 0 10px; font-weight: 700; }
+  .tip p { color: var(--ink-soft); font-size: 14px; line-height: 1.6; margin: 0; }
+  .tip p + p { margin-top: 8px; }
+  .tip-outro { margin-top: 44px; padding: 30px 32px; background: var(--ink); color: var(--bg); border-radius: 8px; display: grid; grid-template-columns: auto 1fr; gap: 28px; align-items: flex-start; }
+  @media (max-width: 720px) { .tip-outro { grid-template-columns: 1fr; gap: 12px; } }
+  .outro-tag { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.1em; color: var(--accent); padding-top: 4px; }
+  .tip-outro p { margin: 0 0 12px; color: #c8c8d0; line-height: 1.65; font-size: 15px; }
+  .tip-outro p:last-child { margin-bottom: 0; }
+  .tip-outro strong { color: white; }
+
+  /* next post */
+  .next-post { display: flex; justify-content: space-between; align-items: center; margin-top: 56px; padding: 32px; background: var(--bg-2); border: 1px solid var(--line); border-radius: 8px; text-decoration: none; color: var(--ink); transition: all 0.2s; gap: 24px; flex-wrap: wrap; }
+  .next-post:hover { background: var(--ink); color: var(--bg); }
+  .next-post:hover .np-tag { color: var(--accent); }
+  .next-post:hover .em { color: var(--accent); }
+  .next-post:hover p { color: #c8c8d0; }
+  .np-tag { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.1em; color: var(--ink-mute); margin-bottom: 6px; }
+  .next-post h4 { font-family: 'Noto Serif SC', serif; font-size: 26px; margin: 0 0 8px; font-weight: 700; }
+  .next-post .em { color: var(--obj-color); font-weight: 500; }
+  .next-post p { margin: 0; color: var(--ink-soft); font-size: 14px; max-width: 56ch; }
+  .np-cta { font-family: 'JetBrains Mono', monospace; font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; white-space: nowrap; }
+  .np-cta .arr { display: inline-block; transition: transform .2s; }
+  .next-post:hover .arr { transform: translateX(4px); }
+
+  /* footer */
+  footer { padding: 56px 0 64px; background: var(--bg); color: var(--ink-soft); border-top: 1px solid var(--line); }
+  .byline-group { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; margin-bottom: 32px; padding-bottom: 32px; border-bottom: 1px dashed var(--line); }
+  @media (max-width: 880px) { .byline-group { grid-template-columns: 1fr; } }
+  .byline { display: flex; gap: 16px; align-items: center; }
+  .byline .avatar { width: 56px; height: 56px; border-radius: 50%; object-fit: cover; flex-shrink: 0; }
+  .byline-label { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--accent); letter-spacing: 0.1em; }
+  .byline-label .dot { display: inline-block; width: 6px; height: 6px; background: var(--accent); border-radius: 50%; margin-right: 4px; vertical-align: middle; animation: pulse 2s ease-in-out infinite; }
+  .byline-name { font-family: 'Noto Serif SC', serif; font-weight: 700; font-size: 18px; margin: 4px 0; color: var(--ink); }
+  .byline-name .em { color: var(--accent); font-weight: 500; }
+  .byline-tag { color: var(--ink-soft); font-size: 13px; margin: 0; line-height: 1.5; }
+  .footer-meta { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ink-mute); text-align: center; letter-spacing: 0.05em; }
+  .footer-meta .heart { color: var(--accent); }
+
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="wrap topbar-inner">
+    <div class="brand-block">
+      <a href="book.html#vol-3" class="brand"><span class="brand-arrow">←</span>AI LABBOOK <span class="dot"></span></a>
+      <span class="brand-sep">/</span>
+      <span class="brand-current">X15 · 组件组合</span>
+    </div>
+    <nav class="nav-links">
+      <a href="book.html#vol-3">路线图</a>
+    </nav>
+  </div>
+</div>
+
+<!-- Hero -->
+<header class="hero">
+  <div class="wrap">
+    <div class="hero-meta">
+      <span class="pill fill">高阶 · ADVANCED</span>
+      <span class="pill purple">STAGE 04 · 组件契约</span>
+      <span class="pill">X15 · 组件组合</span>
+      <span class="label">阅读 ≈ 16 分钟 · 含 3 段互动</span>
+    </div>
+    <div class="hero-grid">
+      <div>
+        <h1>
+          复杂页面，<br>
+          都是<span class="display-cn">简单组件</span><br>
+          的<span class="purple">组合</span>。
+        </h1>
+        <p class="lede">
+          一个 CRM 详情页 = Tabs + Card + Table + Filter + Pagination + ActionBar。<br>
+          每个都已经存在，问题在"<strong>谁包谁，谁拿数据，谁向上传</strong>"。
+        </p>
+      </div>
+      <div class="hero-side">
+        <div class="row"><span class="k">本页讲什么</span><span class="v">组件树 + 流向</span></div>
+        <div class="row"><span class="k">三幕</span><span class="v">看见 · 拆开 · 再做</span></div>
+        <div class="row"><span class="k">面向</span><span class="v">B 端 / 后台设计师</span></div>
+        <div class="row"><span class="k">前置</span><span class="v">X1 · 不是页面是对象</span></div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- Section 01: 问题 -->
+<section id="problem">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>01</strong> / 问题</div>
+        <h2 class="section-title">为什么"一张大稿子"<br>工程师<span class="em">无从下口</span>？</h2>
+      </div>
+      <p class="section-sub">
+        设计师把"复杂页面"当一个整体去画。其实它是组件组合——已有组件嵌套 + 数据从某层灌进去 + 事件冒泡到某层。
+        <strong>组合规则决定了页面好不好维护。</strong>
+      </p>
+    </div>
+
+    <div class="problem-grid">
+      <div class="problem-card bad">
+        <span class="tag">整页画稿 · BAD</span>
+        <h3>"稿子是一张大图"</h3>
+        <p>所有内容堆在一起。Card、Table、Filter、Pagination、ActionBar 平铺在画板上——看起来像一个完整的产品页面。</p>
+        <p><strong>工程师追问：</strong>Card 是组件吗？还是 div？Filter 改变时 Table 自动 refetch 吗？分页放 Table 里还是外面？切 Tab 后筛选器要不要清空？</p>
+        <p style="color:var(--accent)"><strong>你：</strong>呃……要再画一份组件嵌套关系？</p>
+      </div>
+
+      <div class="problem-card good">
+        <span class="tag">组件树 · GOOD</span>
+        <h3>"稿子右侧标注一棵组件树"</h3>
+        <p>稿子右侧画一棵树：<code class="mono" style="font-size:12px">&lt;Page&gt;&lt;Header/&gt;&lt;Filter onChange=&gt;/&gt;&lt;Table data=/&gt;&lt;Pagination/&gt;&lt;/Page&gt;</code>，旁边箭头标 data 流向、event 冒泡方向。</p>
+        <p><strong>工程师收到：</strong>组件树 + 数据流图。每个组件的 props、events、状态归属一目了然。</p>
+        <p style="color:var(--obj-color)"><strong>结果：</strong>0 追问，直接开搭。</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Section 02: 幕一 · 看见 -->
+<section id="look">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <span class="act-tag look">幕一 · 看见</span>
+        <div class="section-num"><strong>02</strong> / 看见</div>
+        <h2 class="section-title"><span class="purple">同一个详情页</span>，<br>组件树长这样。</h2>
+      </div>
+      <p class="section-sub">
+        鼠标 hover 页面任意区域 → 右侧组件树相应节点高亮，显示该节点的 props/events。
+        点 "<strong>显示数据流</strong>" 按钮，组件树上会叠加 data / event 流向标注。
+      </p>
+    </div>
+
+    <div class="compose-stage" id="composeStage">
+      <div class="compose-toolbar">
+        <h5>CRM · 客户详情页</h5>
+        <span class="compose-hint">hover 左侧区域 ↔ 同步高亮右侧节点</span>
+        <button class="flow-toggle" id="flowToggle">显示数据流</button>
+      </div>
+
+      <div class="compose-grid">
+        <!-- Page Mock -->
+        <div class="page-mock">
+
+          <div class="pm-zone pm-breadcrumb" data-node="breadcrumb">
+            <span class="pm-badge">Breadcrumb</span>
+            <span>客户</span><span class="sep">/</span><span>星河科技</span><span class="sep">/</span><span style="color:var(--ink)">张明</span>
+          </div>
+
+          <div class="pm-zone pm-actionbar" data-node="actionbar">
+            <span class="pm-badge">ActionBar</span>
+            <span class="ab-title">张明 · CTO</span>
+            <span class="ab-actions">
+              <span class="ab-btn">编辑</span>
+              <span class="ab-btn">删除</span>
+              <span class="ab-btn primary">+ 新商机</span>
+            </span>
+          </div>
+
+          <div class="pm-body">
+            <div class="pm-zone pm-customer" data-node="customercard">
+              <span class="pm-badge">CustomerCard</span>
+              <div class="pmc-head">
+                <div class="pmc-avatar">张</div>
+                <div>
+                  <div class="pmc-name">张明</div>
+                  <div class="pmc-meta">星河科技 · CTO</div>
+                </div>
+              </div>
+              <div class="pmc-row"><span class="k">跟进人</span><span class="v">李华</span></div>
+              <div class="pmc-row"><span class="k">状态</span><span class="v" style="color:var(--green)">活跃</span></div>
+              <div class="pmc-row"><span class="k">合作金额</span><span class="v">¥ 480k</span></div>
+              <div class="pmc-row"><span class="k">最近联系</span><span class="v">3 天前</span></div>
+            </div>
+
+            <div class="pm-center">
+              <div class="pm-zone pm-tabs" data-node="tabs">
+                <span class="pm-badge">Tabs</span>
+                <span class="pm-tab active">商机</span>
+                <span class="pm-tab">活动</span>
+                <span class="pm-tab">附件</span>
+              </div>
+
+              <div class="pm-zone pm-filter" data-node="filterbar">
+                <span class="pm-badge">FilterBar</span>
+                <span class="fpill on">全部</span>
+                <span class="fpill">进行中</span>
+                <span class="fpill">已成交</span>
+                <span class="fpill">已失败</span>
+              </div>
+
+              <div class="pm-zone pm-table" data-node="table">
+                <span class="pm-badge">Table</span>
+                <table>
+                  <thead>
+                    <tr><th>商机</th><th>金额</th><th>状态</th></tr>
+                  </thead>
+                  <tbody>
+                    <tr><td>Q1 续约</td><td class="amt">¥480k</td><td><span class="tval">进行中</span></td></tr>
+                    <tr><td>新模块授权</td><td class="amt">¥120k</td><td><span class="tval">进行中</span></td></tr>
+                    <tr><td>培训服务</td><td class="amt">¥45k</td><td><span style="color:var(--ink-mute)">已成交</span></td></tr>
+                    <tr><td>第三方集成</td><td class="amt">¥80k</td><td><span class="tval">进行中</span></td></tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <div class="pm-zone pm-pagination" data-node="pagination">
+                <span class="pm-badge">Pagination</span>
+                <span>共 12 条 · 第 1 / 3 页</span>
+                <span class="pgnav">
+                  <button>‹</button>
+                  <button class="cur">1</button>
+                  <button>2</button>
+                  <button>3</button>
+                  <button>›</button>
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <div class="pm-zone pm-timeline" data-node="timeline">
+            <span class="pm-badge">TimelineCard</span>
+            <div class="tl-title">最近活动</div>
+            <div class="tl-row"><span class="tl-dot"></span>3 天前 · 李华 发起跟进电话</div>
+            <div class="tl-row"><span class="tl-dot"></span>1 周前 · 系统 自动续约提醒</div>
+            <div class="tl-row"><span class="tl-dot"></span>2 周前 · 张明 上传合同 v2.3</div>
+          </div>
+        </div>
+
+        <!-- Tree Pane -->
+        <div class="tree-pane">
+          <div class="tree-head">
+            <h6>组件树 · ComponentTree</h6>
+            <span class="tcount">7 nodes · 5 levels</span>
+          </div>
+
+          <div class="tree-list" id="treeList">
+            <div class="tnode is-root" data-node="page"><span class="indent"></span><span>&lt;<span class="tname">DetailPage</span> <span class="tprops">customerId={id}</span>&gt;</span><span class="tag-flow own">owns</span>
+              <div class="tnode-tooltip"><div class="tt-row"><span class="tt-k">props</span> customerId: string</div><div class="tt-row"><span class="tt-k">owns state</span> tab, filter, page, customer</div><div class="tt-row"><span class="tt-k">role</span> 数据起点 + 路由</div></div>
+            </div>
+            <div class="tnode" data-node="breadcrumb"><span class="indent">├ </span><span>&lt;<span class="tname">Breadcrumb</span> <span class="tprops">path=…</span>/&gt;</span><span class="tag-flow in">data ↓</span>
+              <div class="tnode-tooltip"><div class="tt-row"><span class="tt-k">props</span> path: string[]</div><div class="tt-row"><span class="tt-k">role</span> 纯展示，无状态</div></div>
+            </div>
+            <div class="tnode" data-node="actionbar"><span class="indent">├ </span><span>&lt;<span class="tname">ActionBar</span> <span class="tprops">actions={…}</span>/&gt;</span><span class="tag-flow out">event ↑</span>
+              <div class="tnode-tooltip"><div class="tt-row"><span class="tt-k">props</span> actions: Action[]</div><div class="tt-row"><span class="tt-k">emits</span> onAction(name)</div><div class="tt-row"><span class="tt-k">role</span> 受控按钮组</div></div>
+            </div>
+            <div class="tnode" data-node="customercard"><span class="indent">├ </span><span>&lt;<span class="tname">CustomerCard</span> <span class="tprops">data={customer}</span>/&gt;</span><span class="tag-flow in">data ↓</span>
+              <div class="tnode-tooltip"><div class="tt-row"><span class="tt-k">props</span> data: Customer</div><div class="tt-row"><span class="tt-k">role</span> 纯展示 · X1 投影</div></div>
+            </div>
+            <div class="tnode" data-node="tabs"><span class="indent">├ </span><span>&lt;<span class="tname">Tabs</span> <span class="tprops">value={tab} onChange=…</span>&gt;</span><span class="tag-flow out">event ↑</span>
+              <div class="tnode-tooltip"><div class="tt-row"><span class="tt-k">props</span> value: string</div><div class="tt-row"><span class="tt-k">emits</span> onChange(tab)</div><div class="tt-row"><span class="tt-k">role</span> 受控切换器</div></div>
+            </div>
+            <div class="tnode" data-node="filterbar"><span class="indent"><span style="color:#444">│&nbsp;&nbsp;&nbsp;</span>├ </span><span>&lt;<span class="tname">FilterBar</span> <span class="tprops">value=… onChange=…</span>/&gt;</span><span class="tag-flow out">event ↑</span>
+              <div class="tnode-tooltip"><div class="tt-row"><span class="tt-k">props</span> value: Filter</div><div class="tt-row"><span class="tt-k">emits</span> onChange(filter)</div><div class="tt-row"><span class="tt-k">role</span> 触发 Table refetch</div></div>
+            </div>
+            <div class="tnode" data-node="table"><span class="indent"><span style="color:#444">│&nbsp;&nbsp;&nbsp;</span>├ </span><span>&lt;<span class="tname">Table</span> <span class="tprops">data={opps} columns={…}</span>/&gt;</span><span class="tag-flow in">data ↓</span>
+              <div class="tnode-tooltip"><div class="tt-row"><span class="tt-k">props</span> data: Opp[]</div><div class="tt-row"><span class="tt-k">emits</span> onSort, onRowClick</div><div class="tt-row"><span class="tt-k">role</span> 纯展示，数据来自父</div></div>
+            </div>
+            <div class="tnode" data-node="pagination"><span class="indent"><span style="color:#444">│&nbsp;&nbsp;&nbsp;</span>└ </span><span>&lt;<span class="tname">Pagination</span> <span class="tprops">value={page}</span>/&gt;</span><span class="tag-flow out">event ↑</span>
+              <div class="tnode-tooltip"><div class="tt-row"><span class="tt-k">props</span> value: number</div><div class="tt-row"><span class="tt-k">emits</span> onChange(page)</div><div class="tt-row"><span class="tt-k">role</span> 触发 Tab refetch</div></div>
+            </div>
+            <div class="tnode" data-node="timeline"><span class="indent">└ </span><span>&lt;<span class="tname">TimelineCard</span> <span class="tprops">items={activities}</span>/&gt;</span><span class="tag-flow in">data ↓</span>
+              <div class="tnode-tooltip"><div class="tt-row"><span class="tt-k">props</span> items: Activity[]</div><div class="tt-row"><span class="tt-k">role</span> 纯展示</div></div>
+            </div>
+          </div>
+
+          <div class="flow-bar">
+            <div class="fl-row"><span class="from">customer</span> <span class="arr">→</span> 从 <span class="from">DetailPage</span> 灌入 <span class="to">CustomerCard</span></div>
+            <div class="fl-row"><span class="from">filter / page</span> <span class="arr">→</span> 从 <span class="from">Tabs</span> 灌入 <span class="to">Table</span></div>
+            <div class="fl-row"><span class="from">onSort / onChange</span> <span class="arr">↑</span> 从 <span class="from">Table / Pagination</span> 冒泡到 <span class="to">Tabs</span> → refetch</div>
+            <div class="fl-row"><span class="from">onAction</span> <span class="arr">↑</span> 从 <span class="from">ActionBar</span> 冒泡到 <span class="to">DetailPage</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="reveal-bar">
+      <div class="msg">
+        一张页面 = <span class="em">7 个组件 + 3 条 data 流 + 2 条 event 流</span>。<br>
+        组件树 + 流 = 工程师拿到稿子就能盖。
+      </div>
+      <div class="counter">
+        已 hover <strong id="hoverCount">0</strong> / 7 个节点
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Section 03: 幕二 · 拆开 -->
+<section id="break">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <span class="act-tag break">幕二 · 拆开</span>
+        <div class="section-num"><strong>03</strong> / 拆开</div>
+        <h2 class="section-title"><span class="purple">组合 4 件事</span>。</h2>
+      </div>
+      <p class="section-sub">
+        组件组合时要回答 4 件事——<strong>容纳关系 / 数据下行 / 事件上行 / 状态归属</strong>。
+        点每张卡片展开看坏 vs 好的代码对比。
+      </p>
+    </div>
+
+    <div class="rules-stage" id="rulesStage">
+      <!-- Rule 1 -->
+      <div class="rule-card" data-rule="contain">
+        <div class="rule-head">
+          <span class="rule-num">1</span>
+          <span class="rule-name">容纳关系<span class="en">contain</span></span>
+        </div>
+        <p class="rule-q">谁是父，谁是子？哪些组件该嵌套，哪些该平级？</p>
+        <button class="rule-toggle" type="button">展开 <span class="arr">▶</span></button>
+
+        <div class="rule-detail">
+          <div class="rule-anti">
+            <strong>反例：</strong>把 Filter 放 Table 内部——以后想做"一个 Filter 控制多个 Table"就废了。Filter 和 Table 被绑死，复用性归零。
+          </div>
+          <div class="rule-tip">
+            <strong>经验：</strong>可独立使用的组件分开放（Filter 独立于 Table，便于多 Table 共用一个 Filter，或者 Filter 独立用于地图视图）。
+          </div>
+          <div class="code-compare">
+            <div class="code-block bad"><span class="tag-bad">BAD</span><div><span class="com">// Filter 嵌死在 Table 内</span></div><div>&lt;<span class="tagn">Table</span>&gt;</div><div>&nbsp;&nbsp;&lt;<span class="tagn">Filter</span> /&gt;</div><div>&nbsp;&nbsp;&lt;<span class="tagn">Rows</span> /&gt;</div><div>&lt;/<span class="tagn">Table</span>&gt;</div></div>
+            <div class="code-block good"><span class="tag-good">GOOD</span><div><span class="com">// 平级，独立复用</span></div><div>&lt;<span class="tagn">FilterBar</span> /&gt;</div><div>&lt;<span class="tagn">Table</span> /&gt;</div><div>&lt;<span class="tagn">MapView</span> /&gt;</div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Rule 2 -->
+      <div class="rule-card" data-rule="dataflow">
+        <div class="rule-head">
+          <span class="rule-num">2</span>
+          <span class="rule-name">数据下行<span class="en">data flow down</span></span>
+        </div>
+        <p class="rule-q">数据从哪一层加载？再往下传到哪？</p>
+        <button class="rule-toggle" type="button">展开 <span class="arr">▶</span></button>
+
+        <div class="rule-detail">
+          <div class="rule-anti">
+            <strong>反例：</strong>Card / Table / Timeline 每个子组件自己 fetch——一个页面打 N 个请求（N+1 问题），网络瀑布、数据不一致。
+          </div>
+          <div class="rule-tip">
+            <strong>经验：</strong>找最近的"共同父"——它持有数据，往下传 props。子组件保持"哑组件"（只渲染，不取数）。
+          </div>
+          <div class="code-compare">
+            <div class="code-block bad"><span class="tag-bad">BAD</span><div>&lt;<span class="tagn">Page</span>&gt;</div><div>&nbsp;&nbsp;&lt;<span class="tagn">Card</span>/&gt;&nbsp;&nbsp;<span class="com">// fetch</span></div><div>&nbsp;&nbsp;&lt;<span class="tagn">Table</span>/&gt; <span class="com">// fetch</span></div><div>&nbsp;&nbsp;&lt;<span class="tagn">Tl</span>/&gt;&nbsp;&nbsp;&nbsp;&nbsp;<span class="com">// fetch</span></div><div>&lt;/<span class="tagn">Page</span>&gt;</div></div>
+            <div class="code-block good"><span class="tag-good">GOOD</span><div>&lt;<span class="tagn">Page</span>&gt; <span class="com">// 1 次 fetch</span></div><div>&nbsp;&nbsp;&lt;<span class="tagn">Card</span> <span class="var">data</span>={c}/&gt;</div><div>&nbsp;&nbsp;&lt;<span class="tagn">Table</span> <span class="var">data</span>={opps}/&gt;</div><div>&nbsp;&nbsp;&lt;<span class="tagn">Tl</span> <span class="var">data</span>={acts}/&gt;</div><div>&lt;/<span class="tagn">Page</span>&gt;</div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Rule 3 -->
+      <div class="rule-card" data-rule="events">
+        <div class="rule-head">
+          <span class="rule-num">3</span>
+          <span class="rule-name">事件上行<span class="en">events bubble up</span></span>
+        </div>
+        <p class="rule-q">子组件的事件通知哪一层？谁负责"做出反应"？</p>
+        <button class="rule-toggle" type="button">展开 <span class="arr">▶</span></button>
+
+        <div class="rule-detail">
+          <div class="rule-anti">
+            <strong>反例：</strong>Table 自己处理"删除"按钮 + 自己 refetch——父不知道发生了什么，CustomerCard 显示的还是删除前的客户数。
+          </div>
+          <div class="rule-tip">
+            <strong>经验：</strong>事件冒泡到"拥有 data 的那一层"，由它决定下一步（refetch / 跳转 / 弹窗）。子组件只负责"告诉爸爸"。
+          </div>
+          <div class="code-compare">
+            <div class="code-block bad"><span class="tag-bad">BAD</span><div><span class="com">// Table 自己 refetch</span></div><div>&lt;<span class="tagn">Table</span>&gt;</div><div>&nbsp;&nbsp;onDelete = () =&gt;</div>
+              <div>&nbsp;&nbsp;&nbsp;&nbsp;api.del(); refetch()</div><div>&lt;/<span class="tagn">Table</span>&gt;</div></div>
+            <div class="code-block good"><span class="tag-good">GOOD</span><div><span class="com">// 父决定下一步</span></div><div>&lt;<span class="tagn">Table</span> <span class="var">onDelete</span>=</div><div>&nbsp;&nbsp;{(id) =&gt; {</div><div>&nbsp;&nbsp;&nbsp;&nbsp;api.del(id);</div><div>&nbsp;&nbsp;&nbsp;&nbsp;page.refetch()</div><div>&nbsp;&nbsp;}}/&gt;</div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Rule 4 -->
+      <div class="rule-card" data-rule="ownership">
+        <div class="rule-head">
+          <span class="rule-num">4</span>
+          <span class="rule-name">状态归属<span class="en">state ownership</span></span>
+        </div>
+        <p class="rule-q">哪些状态归子（私有），哪些归父（共享）？</p>
+        <button class="rule-toggle" type="button">展开 <span class="arr">▶</span></button>
+
+        <div class="rule-detail">
+          <div class="rule-anti">
+            <strong>反例：</strong>currentPage 放 Pagination 内部——切 Tab 后又回第 1 页（因为 Pagination 被 unmount 了状态丢了）；想从 URL 同步分页也做不到。
+          </div>
+          <div class="rule-tip">
+            <strong>经验：</strong>跨 tab 共享的状态归 Tab；跨 Tab 不共享的归 Page。"谁要看见这个状态？state 放在能覆盖所有看见的最低祖先。"
+          </div>
+          <div class="code-compare">
+            <div class="code-block bad"><span class="tag-bad">BAD</span><div><span class="com">// page 归 Pagination</span></div><div>&lt;<span class="tagn">Pagination</span>&gt;</div><div>&nbsp;&nbsp;useState(<span class="str">'page'</span>, 1)</div><div>&nbsp;&nbsp;<span class="com">// unmount = 丢</span></div><div>&lt;/<span class="tagn">Pagination</span>&gt;</div></div>
+            <div class="code-block good"><span class="tag-good">GOOD</span><div><span class="com">// page 归 Tab</span></div><div>&lt;<span class="tagn">Tab</span>&gt;</div><div>&nbsp;&nbsp;useState(<span class="str">'page'</span>, 1)</div><div>&nbsp;&nbsp;&lt;<span class="tagn">Pagination</span></div><div>&nbsp;&nbsp;&nbsp;&nbsp;value={page}/&gt;</div><div>&lt;/<span class="tagn">Tab</span>&gt;</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="reveal-bar" style="margin-top:32px">
+      <div class="msg">
+        4 件事每件都是<span class="em">设计决策</span>。<br>
+        决定了组件能不能复用、能不能维护、改一处会不会牵连十处。
+      </div>
+      <div class="counter">已展开 <strong id="rulesCount">0</strong> / 4 条规则</div>
+    </div>
+  </div>
+</section>
+
+<!-- Section 04: 幕三 · 再做 -->
+<section id="make">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <span class="act-tag make">幕三 · 再做</span>
+        <div class="section-num"><strong>04</strong> / 再做</div>
+        <h2 class="section-title">轮到你——<br>给 <span class="em">项目看板页</span><br>设计组件树。</h2>
+      </div>
+      <p class="section-sub">
+        需求：项目看板，左侧筛选、中央卡片列表、右侧详情面板。
+        给你 <strong>8 个候选组件</strong>——拼组件树 + 标 data/event 流向。
+      </p>
+    </div>
+
+    <div class="builder-stage">
+      <div class="builder-head">
+        <h3 class="builder-title">拼出项目看板的组件树 + 流向</h3>
+        <div class="builder-progress">已放置 <span class="done" id="builderDone">1</span> / 8 个组件 · 流向 <span class="done" id="flowDone">0</span> / 3</div>
+      </div>
+
+      <div class="builder-grid">
+        <div class="builder-pool">
+          <h5>候选组件 · 8 个</h5>
+          <p class="builder-pool-hint">点一个组件 → 点目标位置（树上 +）放进去。Esc 取消。</p>
+          <div class="builder-pool-list" id="builderPool">
+            <div class="builder-chip is-placed" data-comp="Page"><span style="font-weight:600">&lt;Page&gt;</span> <span class="chip-add" style="color:var(--green)">✓ 根</span></div>
+            <div class="builder-chip" data-comp="Toolbar">&lt;Toolbar&gt; <span class="chip-add">+</span></div>
+            <div class="builder-chip" data-comp="FilterPanel">&lt;FilterPanel&gt; <span class="chip-add">+</span></div>
+            <div class="builder-chip" data-comp="ProjectCardList">&lt;ProjectCardList&gt; <span class="chip-add">+</span></div>
+            <div class="builder-chip" data-comp="ProjectCard">&lt;ProjectCard&gt; <span class="chip-add">+</span></div>
+            <div class="builder-chip" data-comp="DetailDrawer">&lt;DetailDrawer&gt; <span class="chip-add">+</span></div>
+            <div class="builder-chip" data-comp="Pagination">&lt;Pagination&gt; <span class="chip-add">+</span></div>
+            <div class="builder-chip" data-comp="EmptyState">&lt;EmptyState&gt; <span class="chip-add">+</span></div>
+          </div>
+        </div>
+
+        <div class="builder-canvas">
+          <div class="builder-canvas-head">
+            <h6>组件树画布 · 拖入嵌套</h6>
+            <span class="hint">点 + 添加子；点 × 删除</span>
+          </div>
+
+          <div class="ctree" id="ctree">
+            <!-- rendered by JS -->
+          </div>
+
+          <div class="flow-section">
+            <h6>标 3 条数据 / 事件流</h6>
+            <div class="flow-row">
+              <span class="fl-label data">data · projects</span>
+              <select data-flow="projects-from">
+                <option value="">从哪持有？</option>
+                <option value="Page">&lt;Page&gt;</option>
+                <option value="ProjectCardList">&lt;ProjectCardList&gt;</option>
+                <option value="ProjectCard">&lt;ProjectCard&gt;</option>
+                <option value="FilterPanel">&lt;FilterPanel&gt;</option>
+              </select>
+              <span class="fl-arr">↓</span>
+              <select data-flow="projects-to">
+                <option value="">下行到？</option>
+                <option value="ProjectCardList">&lt;ProjectCardList&gt;</option>
+                <option value="ProjectCard">&lt;ProjectCard&gt;</option>
+                <option value="DetailDrawer">&lt;DetailDrawer&gt;</option>
+                <option value="FilterPanel">&lt;FilterPanel&gt;</option>
+              </select>
+            </div>
+            <div class="flow-row">
+              <span class="fl-label data">data · filter</span>
+              <select data-flow="filter-from">
+                <option value="">从哪持有？</option>
+                <option value="Page">&lt;Page&gt;</option>
+                <option value="FilterPanel">&lt;FilterPanel&gt;</option>
+                <option value="ProjectCardList">&lt;ProjectCardList&gt;</option>
+              </select>
+              <span class="fl-arr">↓</span>
+              <select data-flow="filter-to">
+                <option value="">下行到？</option>
+                <option value="ProjectCardList">&lt;ProjectCardList&gt;</option>
+                <option value="ProjectCard">&lt;ProjectCard&gt;</option>
+                <option value="DetailDrawer">&lt;DetailDrawer&gt;</option>
+              </select>
+            </div>
+            <div class="flow-row">
+              <span class="fl-label event">event · onSelectProject</span>
+              <select data-flow="select-from">
+                <option value="">从哪冒泡？</option>
+                <option value="ProjectCard">&lt;ProjectCard&gt;</option>
+                <option value="ProjectCardList">&lt;ProjectCardList&gt;</option>
+                <option value="DetailDrawer">&lt;DetailDrawer&gt;</option>
+              </select>
+              <span class="fl-arr">↑</span>
+              <select data-flow="select-to">
+                <option value="">谁接收？</option>
+                <option value="Page">&lt;Page&gt;</option>
+                <option value="ProjectCardList">&lt;ProjectCardList&gt;</option>
+                <option value="DetailDrawer">&lt;DetailDrawer&gt;</option>
+                <option value="FilterPanel">&lt;FilterPanel&gt;</option>
+              </select>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <div class="builder-actions">
+        <button class="builder-btn primary" id="builderSubmit">提交打分</button>
+        <button class="builder-btn" id="builderReset">清空重来</button>
+      </div>
+
+      <div class="builder-judge" id="builderJudge"></div>
+    </div>
+  </div>
+</section>
+
+<!-- Section 05: closing -->
+<section id="closing">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>05</strong> / 把这件事变成习惯</div>
+        <h2 class="section-title">下次画稿子，<br>右下角<span class="em">先画一棵树</span>。</h2>
+      </div>
+      <p class="section-sub">
+        从这一篇开始，"整页一张图"和"组件树 + 流向"的差距会出现在你每一次交付的稿子里。
+      </p>
+    </div>
+
+    <div class="tips-grid">
+      <div class="tip">
+        <div class="tip-num">i</div>
+        <h4>稿子右下角画组件树</h4>
+        <p>即使粗略，也比没强。工程师能立即知道嵌套关系——哪些是组件，哪些是 div，哪个组件包哪个。</p>
+        <p><strong>纸上画 30 秒，开发省 30 分钟。</strong></p>
+      </div>
+      <div class="tip">
+        <div class="tip-num">ii</div>
+        <h4>state 归属 = 共享范围</h4>
+        <p>谁要看见这个状态？state 放在<strong>能覆盖所有看见的最低祖先</strong>。</p>
+        <p>不共享就放子内部；共享一个区域就放该区域父；全局共享就放最外层（或 store）。</p>
+      </div>
+      <div class="tip">
+        <div class="tip-num">iii</div>
+        <h4>复用组件先问"能不能独立"</h4>
+        <p>Filter 能不能脱离 Table 单独用？能 = 平级；不能 = 应该嵌套。</p>
+        <p>这一问能避免 80% 的"为什么这个组件改一处坏一处"。</p>
+      </div>
+    </div>
+
+    <div class="tip-outro">
+      <div class="outro-tag">划重点 · TL;DR</div>
+      <div>
+        <p>页面是<strong>组件的舞台</strong>。<strong>组件树画清楚 + 流向标清楚 = 工程师 0 追问</strong>。</p>
+        <p>下次需求评审，试一次——画完页面布局后<strong>顺手在右下角画一棵 5 行的组件树</strong>，标 2 条数据流、1 条事件流。这一动作会让对面工程师的脸由皱变松。</p>
+      </div>
+    </div>
+
+    <a href="x16-responsive-constraints.html" class="next-post">
+      <div>
+        <div class="np-tag">下一站 · NEXT · X16 · 高阶 · 规划中</div>
+        <h4>响应式与<span class="em">约束：换布局 / 截断 / 溢出</span></h4>
+        <p>组件树搭好了——下一站讲：屏幕变小时整棵树怎么变形。哪些组件折叠，哪些隐藏，哪些换布局；文字过长怎么截断；数据太多怎么溢出。</p>
+      </div>
+      <span class="np-cta">回路线图 <span class="arr">→</span></span>
+    </a>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div class="byline-group">
+      <div class="byline">
+        <img class="avatar" src="author.jpg" alt="范米花儿">
+        <div class="byline-meta">
+          <div class="byline-label"><span class="dot"></span>作者 · WRITTEN BY</div>
+          <div class="byline-name">嗨，我是 <span class="em">范米花儿</span></div>
+          <p class="byline-tag">设计工程师 ——<br>设计 × 代码，两边都做。</p>
+        </div>
+      </div>
+</div>
+    <div class="footer-meta">
+      做于 <span class="mono">2026</span> · 用 <span class="heart">●</span> 写给 <span class="mono">DESIGNERS &amp; DEVELOPERS</span>
+    </div>
+  </div>
+</footer>
+
+<div class="picker-label" id="pickerLabel"></div>
+
+<script>
+// ===== Game 1: page mock <-> tree two-way sync =====
+(function(){
+  const stage = document.getElementById('composeStage');
+  const zones = document.querySelectorAll('.pm-zone');
+  const nodes = document.querySelectorAll('.tnode');
+  const visited = new Set();
+  const counter = document.getElementById('hoverCount');
+
+  function highlight(nodeKey) {
+    zones.forEach(z => z.classList.toggle('is-hot', z.dataset.node === nodeKey));
+    nodes.forEach(n => n.classList.toggle('is-hot', n.dataset.node === nodeKey));
+    if (nodeKey && !visited.has(nodeKey)) {
+      visited.add(nodeKey);
+      counter.textContent = Math.min(visited.size, 7);
+    }
+  }
+  function clear() {
+    zones.forEach(z => z.classList.remove('is-hot'));
+    nodes.forEach(n => n.classList.remove('is-hot'));
+  }
+
+  zones.forEach(z => {
+    z.addEventListener('mouseenter', () => highlight(z.dataset.node));
+    z.addEventListener('mouseleave', clear);
+  });
+  nodes.forEach(n => {
+    n.addEventListener('mouseenter', () => highlight(n.dataset.node));
+    n.addEventListener('mouseleave', clear);
+  });
+
+  document.getElementById('flowToggle').addEventListener('click', e => {
+    stage.classList.toggle('show-flow');
+    e.currentTarget.classList.toggle('is-on');
+    e.currentTarget.textContent = stage.classList.contains('show-flow') ? '隐藏数据流' : '显示数据流';
+  });
+})();
+
+// ===== Game 2: rule cards expand =====
+(function(){
+  const cards = document.querySelectorAll('.rule-card');
+  const opened = new Set();
+  const counter = document.getElementById('rulesCount');
+  cards.forEach(card => {
+    card.addEventListener('click', e => {
+      // ignore if clicked inside code block
+      if (e.target.closest('.code-block')) return;
+      card.classList.toggle('is-open');
+      if (card.classList.contains('is-open')) {
+        opened.add(card.dataset.rule);
+      }
+      counter.textContent = opened.size;
+    });
+  });
+})();
+
+// ===== Game 3: tree builder =====
+(function(){
+  // Tree state: {id, comp, children}
+  let nextId = 1;
+  const tree = { id: 0, comp: 'Page', root: true, children: [] };
+  let picked = null;
+  let pickedFromTree = false;
+  let pickTargetId = null; // when adding subnode
+
+  const chips = document.querySelectorAll('.builder-chip');
+  const pickerLabel = document.getElementById('pickerLabel');
+  const treeEl = document.getElementById('ctree');
+  const judge = document.getElementById('builderJudge');
+  const flowSelects = document.querySelectorAll('select[data-flow]');
+
+  // Component allowed-children rules (simplified: only ProjectCard fits inside ProjectCardList as child for ideal answer)
+  // We allow any nesting, judge validates the ideal structure.
+
+  function findNode(node, id) {
+    if (node.id === id) return node;
+    for (const c of node.children) {
+      const r = findNode(c, id);
+      if (r) return r;
+    }
+    return null;
+  }
+  function removeNode(node, id) {
+    for (let i = 0; i < node.children.length; i++) {
+      if (node.children[i].id === id) {
+        node.children.splice(i, 1);
+        return true;
+      }
+      if (removeNode(node.children[i], id)) return true;
+    }
+    return false;
+  }
+
+  function placedComps() {
+    const set = new Set();
+    function walk(n) {
+      set.add(n.comp);
+      n.children.forEach(walk);
+    }
+    walk(tree);
+    return set;
+  }
+
+  function updateChips() {
+    const placed = placedComps();
+    chips.forEach(c => {
+      const comp = c.dataset.comp;
+      // Page is always placed (root)
+      if (comp === 'Page') return;
+      // ProjectCard can be placed multiple times conceptually, but we treat it as single for simplicity
+      c.classList.toggle('is-placed', placed.has(comp) && comp !== 'ProjectCard' ? true : (comp === 'ProjectCard' && placed.has('ProjectCard') ? true : false));
+    });
+  }
+
+  function countNodes() {
+    let n = 0;
+    function walk(node) { n++; node.children.forEach(walk); }
+    walk(tree);
+    return n;
+  }
+
+  function renderTree() {
+    treeEl.innerHTML = '';
+    function renderNode(node, depth) {
+      const wrap = document.createElement('div');
+      wrap.className = 'cnode';
+      if (node.root) wrap.classList.add('is-root');
+      wrap.dataset.id = node.id;
+
+      const indent = '│  '.repeat(Math.max(0, depth - 1)) + (depth > 0 ? '├ ' : '');
+      let html = '';
+      html += `<span class="cindent">${indent}</span>`;
+      html += `<span>&lt;<span class="cname">${node.comp}</span>${node.root ? '' : ' /'}&gt;</span>`;
+      html += `<button class="cadd" data-parent="${node.id}" title="加子节点">+ child</button>`;
+      if (!node.root) html += `<button class="cdel" data-id="${node.id}" title="删除">×</button>`;
+      wrap.innerHTML = html;
+
+      if (pickTargetId === node.id) wrap.classList.add('is-target');
+
+      treeEl.appendChild(wrap);
+      node.children.forEach(c => renderNode(c, depth + 1));
+    }
+    renderNode(tree, 0);
+
+    // counts
+    document.getElementById('builderDone').textContent = countNodes();
+    updateChips();
+    updateFlowDone();
+  }
+
+  function updateFlowDone() {
+    let done = 0;
+    const sel = flowVals();
+    if (sel['projects-from'] && sel['projects-to']) done++;
+    if (sel['filter-from'] && sel['filter-to']) done++;
+    if (sel['select-from'] && sel['select-to']) done++;
+    document.getElementById('flowDone').textContent = done;
+  }
+
+  function flowVals() {
+    const v = {};
+    flowSelects.forEach(s => { v[s.dataset.flow] = s.value; });
+    return v;
+  }
+
+  function showPicker(comp) {
+    picked = comp;
+    pickerLabel.innerHTML = `已选 <strong style="color:var(--accent);margin:0 4px">&lt;${comp}&gt;</strong>——点树上的 <strong style="margin:0 4px">+ child</strong> 放为子节点 <span class="esc">Esc</span> 取消`;
+    pickerLabel.classList.add('show');
+    chips.forEach(c => c.classList.toggle('is-active', c.dataset.comp === comp));
+  }
+
+  function clearPicker() {
+    picked = null;
+    pickTargetId = null;
+    pickerLabel.classList.remove('show');
+    chips.forEach(c => c.classList.remove('is-active'));
+    document.querySelectorAll('.cnode.is-target').forEach(n => n.classList.remove('is-target'));
+  }
+
+  // chip clicks
+  chips.forEach(chip => {
+    chip.addEventListener('click', e => {
+      e.stopPropagation();
+      if (chip.classList.contains('is-placed')) return;
+      const comp = chip.dataset.comp;
+      if (picked === comp) clearPicker();
+      else showPicker(comp);
+    });
+  });
+
+  // tree clicks (delegate)
+  treeEl.addEventListener('click', e => {
+    const addBtn = e.target.closest('.cadd');
+    const delBtn = e.target.closest('.cdel');
+    if (delBtn) {
+      const id = parseInt(delBtn.dataset.id, 10);
+      removeNode(tree, id);
+      renderTree();
+      return;
+    }
+    if (addBtn) {
+      const parentId = parseInt(addBtn.dataset.parent, 10);
+      if (!picked) {
+        pickTargetId = parentId;
+        // Hint to pick a comp
+        pickerLabel.innerHTML = `先从左边点一个组件 → 它会放在选中的位置 <span class="esc">Esc</span> 取消`;
+        pickerLabel.classList.add('show');
+        renderTree();
+        return;
+      }
+      const parent = findNode(tree, parentId);
+      if (parent) {
+        parent.children.push({ id: nextId++, comp: picked, children: [] });
+      }
+      clearPicker();
+      renderTree();
+    }
+  });
+
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape' && (picked || pickTargetId !== null)) clearPicker();
+  });
+
+  flowSelects.forEach(s => {
+    s.addEventListener('change', updateFlowDone);
+  });
+
+  // judge
+  function judgeStructure() {
+    // Ideal:
+    // Page
+    //   Toolbar
+    //   FilterPanel
+    //   ProjectCardList
+    //     ProjectCard
+    //     EmptyState
+    //   Pagination
+    //   DetailDrawer
+    const placed = placedComps();
+    const findIn = (parentComp, childComp) => {
+      const parents = [];
+      function walk(n) { if (n.comp === parentComp) parents.push(n); n.children.forEach(walk); }
+      walk(tree);
+      return parents.some(p => p.children.some(c => c.comp === childComp));
+    };
+
+    const issues = [];
+    const wins = [];
+
+    // 1. All 8 components present?
+    const expected = ['Page','Toolbar','FilterPanel','ProjectCardList','ProjectCard','DetailDrawer','Pagination','EmptyState'];
+    const missing = expected.filter(c => !placed.has(c));
+    if (missing.length) {
+      issues.push({ key: 'missing', text: `<strong>组件没放全</strong>：缺 <code>${missing.join(' / ')}</code><br><span class="why">↳ 8 个候选组件每个都有它的用处。EmptyState 漏了用户会看到空白页；Pagination 漏了一页装不下。</span>` });
+    } else {
+      wins.push(`所有 8 个组件都用上了。`);
+    }
+
+    // 2. ProjectCard inside ProjectCardList?
+    if (placed.has('ProjectCard') && placed.has('ProjectCardList')) {
+      if (findIn('ProjectCardList', 'ProjectCard')) {
+        wins.push(`<code>ProjectCard</code> 嵌在 <code>ProjectCardList</code> 内 — 列表循环渲染卡片，对了。`);
+      } else {
+        issues.push({ key:'card-nest', text:`<strong>嵌套不对</strong>：<code>ProjectCard</code> 应该是 <code>ProjectCardList</code> 的子（列表循环渲染单卡），不能跟它平级。` });
+      }
+    }
+
+    // 3. EmptyState inside ProjectCardList?
+    if (placed.has('EmptyState') && placed.has('ProjectCardList')) {
+      if (findIn('ProjectCardList', 'EmptyState')) {
+        wins.push(`<code>EmptyState</code> 嵌在 <code>ProjectCardList</code> 内 — 列表为空时显示，归属正确。`);
+      } else {
+        issues.push({ key:'empty-nest', text:`<strong>EmptyState 位置</strong>：应该和 <code>ProjectCard</code> 同级，都是 <code>ProjectCardList</code> 的子。<br><span class="why">↳ 它只在"列表为空"时才显示——是列表的内部状态，不属于 Page。</span>` });
+      }
+    }
+
+    // 4. Pagination at Page level (not inside List)?
+    if (placed.has('Pagination')) {
+      if (findIn('Page', 'Pagination')) {
+        wins.push(`<code>Pagination</code> 在 <code>Page</code> 层 — 切 filter 后页码能由 Page 重置。`);
+      } else if (findIn('ProjectCardList', 'Pagination')) {
+        issues.push({ key:'page-nest', text:`<strong>Pagination 位置</strong>：放在 <code>ProjectCardList</code> 内的话，切 filter 重渲染时页码丢失（state 跟着 unmount）。<br><span class="why">↳ Pagination 是 Page 的状态——和 filter 一起重置才合理。</span>` });
+      } else {
+        issues.push({ key:'page-misc', text:`<strong>Pagination 位置</strong>：应该是 <code>Page</code> 的直接子。` });
+      }
+    }
+
+    // 5. DetailDrawer at Page level?
+    if (placed.has('DetailDrawer') && !findIn('Page', 'DetailDrawer')) {
+      issues.push({ key:'drawer', text:`<strong>DetailDrawer 位置</strong>：应该是 <code>Page</code> 的子，而不是嵌在某个卡片里。<br><span class="why">↳ Drawer 显示"被选中的项目"——这个状态归 Page，否则跨列表跳转就废了。</span>` });
+    }
+
+    // 6. Toolbar / FilterPanel at Page level
+    if (placed.has('Toolbar') && !findIn('Page', 'Toolbar')) {
+      issues.push({ key:'toolbar', text:`<strong>Toolbar 位置</strong>：顶部操作栏应该是 <code>Page</code> 的直接子。` });
+    }
+    if (placed.has('FilterPanel') && !findIn('Page', 'FilterPanel')) {
+      issues.push({ key:'filter', text:`<strong>FilterPanel 位置</strong>：左侧筛选应该是 <code>Page</code> 的直接子（和 List 平级），便于以后多视图共用。` });
+    }
+
+    // Flow checks
+    const fl = flowVals();
+    if (fl['projects-from'] === 'Page' && fl['projects-to'] === 'ProjectCardList') {
+      wins.push(`数据流 <code>projects</code>: Page → List ✓`);
+    } else if (fl['projects-from'] || fl['projects-to']) {
+      issues.push({ key:'flow-projects', text:`<strong>data 流 · projects</strong>：正解是 <code>Page</code> 持有 → 下行到 <code>ProjectCardList</code>。<br><span class="why">↳ Page 是最近共同父，统一发 1 个请求，下面所有子组件用同一份数据。</span>` });
+    }
+    if (fl['filter-from'] === 'Page' && fl['filter-to'] === 'ProjectCardList') {
+      wins.push(`数据流 <code>filter</code>: Page → List ✓`);
+    } else if (fl['filter-from'] || fl['filter-to']) {
+      issues.push({ key:'flow-filter', text:`<strong>data 流 · filter</strong>：正解是 <code>Page</code> 持有 filter → 下行到 <code>ProjectCardList</code>，触发 refetch。<br><span class="why">↳ filter 决定 projects 的请求参数，必须和 projects 同源。</span>` });
+    }
+    if (fl['select-from'] === 'ProjectCard' && fl['select-to'] === 'Page') {
+      wins.push(`事件流 <code>onSelectProject</code>: ProjectCard → Page ✓`);
+    } else if (fl['select-from'] || fl['select-to']) {
+      issues.push({ key:'flow-select', text:`<strong>event 流 · onSelectProject</strong>：正解是 <code>ProjectCard</code> 冒泡 → <code>Page</code> 接收（set selectedId 后下行到 DetailDrawer）。<br><span class="why">↳ 选中是跨组件共享状态——子组件只通知，由 Page 决定下一步。</span>` });
+    }
+
+    return { issues, wins };
+  }
+
+  document.getElementById('builderSubmit').addEventListener('click', () => {
+    const { issues, wins } = judgeStructure();
+
+    const lines = [];
+    wins.forEach(w => lines.push(`<li>✓ ${w}</li>`));
+    issues.forEach(i => lines.push(`<li>${i.text}</li>`));
+
+    let verdictClass, verdictLabel, headline;
+    if (issues.length === 0 && wins.length >= 7) {
+      verdictClass = 'win';
+      verdictLabel = '完美组合';
+      headline = '组件树 + 流向都对了——工程师拿这份稿子可以直接开搭。';
+    } else if (issues.length <= 2) {
+      verdictClass = 'win';
+      verdictLabel = '基本对了';
+      headline = '主干对了，差几处嵌套或流向——但思路是对的。';
+    } else {
+      verdictClass = 'partial';
+      verdictLabel = '还差一点';
+      headline = '组件树不是"画出页面就行"——它表达的是"谁包谁、谁拿数据、事件给谁"。';
+    }
+
+    judge.innerHTML = `<span class="verdict ${verdictClass}">${verdictLabel}</span><h4>${headline}</h4><ul>${lines.join('')}</ul>`;
+    judge.classList.add('show');
+    judge.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  });
+
+  document.getElementById('builderReset').addEventListener('click', () => {
+    tree.children = [];
+    nextId = 1;
+    flowSelects.forEach(s => s.value = '');
+    judge.classList.remove('show');
+    clearPicker();
+    renderTree();
+  });
+
+  renderTree();
+})();
+</script>
+
+</body>
+</html>

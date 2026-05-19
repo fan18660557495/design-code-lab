@@ -1,0 +1,1167 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>分支：审批 / 撤回 / 驳回 / 重提 — AI LABBOOK · X6</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,300..900&family=Geist:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Noto+Sans+SC:wght@300;400;500;700;900&family=Noto+Serif+SC:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f3eee5;
+    --bg-2: #ebe4d4;
+    --ink: #16161d;
+    --ink-soft: #4a4a55;
+    --ink-mute: #8a8a92;
+    --line: #d5cdba;
+    --line-soft: #e3dcca;
+    --accent: #ff4d2e;
+    --accent-soft: #ffe4dc;
+    --blue: #0a4cff;
+    --blue-soft: #dde6ff;
+    --green: #1f6b3a;
+    --green-soft: #d4ecdb;
+    --yellow: #ffcf3d;
+    --paper: #faf7f0;
+    --shadow: 0 1px 0 rgba(0,0,0,0.04), 0 8px 24px rgba(22,22,29,0.06);
+
+    --obj-color: #ff4d2e;
+    --obj-soft: rgba(255,77,46,0.12);
+    --proj-color: #1f6b3a;
+    --proj-soft: rgba(31,107,58,0.12);
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'Geist', 'Noto Sans SC', system-ui, -apple-system, sans-serif;
+    font-size: 16px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    background-image: radial-gradient(circle at 1px 1px, rgba(22,22,29,0.05) 1px, transparent 0);
+    background-size: 24px 24px;
+  }
+
+  .display-cn { font-family: 'Noto Serif SC', 'Fraunces', serif; font-weight: 900; letter-spacing: -0.01em; }
+  .display-en { font-family: 'Fraunces', 'Noto Serif SC', serif; font-weight: 600; font-style: italic; letter-spacing: -0.02em; }
+  .mono { font-family: 'JetBrains Mono', monospace; }
+  .label { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-mute); }
+
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 0 32px; }
+
+  /* Topbar */
+  .topbar {
+    border-bottom: 1px dashed var(--line);
+    padding: 16px 0;
+    background: var(--bg);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .topbar-inner { display: flex; justify-content: space-between; align-items: center; gap: 24px; flex-wrap: wrap; }
+  .brand-block { display: flex; align-items: center; gap: 10px; font-family: 'JetBrains Mono', monospace; font-size: 13px; }
+  .brand { display: inline-flex; align-items: center; gap: 6px; color: var(--ink); text-decoration: none; font-weight: 600; }
+  .brand-arrow { color: var(--ink-mute); transition: transform .2s; }
+  .brand:hover .brand-arrow { transform: translateX(-3px); }
+  .brand .dot { display: inline-block; width: 8px; height: 8px; background: var(--accent); border-radius: 50%; vertical-align: middle; animation: pulse 2s ease-in-out infinite; margin-left: 4px; }
+  .brand-sep { color: var(--ink-mute); }
+  .brand-current { color: var(--ink-soft); }
+  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+  .nav-links { display: flex; gap: 18px; font-size: 13px; flex-wrap: wrap; }
+  .nav-links a { color: var(--ink-soft); text-decoration: none; transition: color 0.2s; }
+  .nav-links a:hover { color: var(--accent); }
+  .nav-links a.current { color: var(--accent); font-weight: 600; }
+
+  /* Hero */
+  .hero { padding: 100px 0 80px; position: relative; overflow: hidden; }
+  .hero-meta { display: flex; gap: 24px; margin-bottom: 32px; align-items: center; flex-wrap: wrap; }
+  .hero-meta .pill { padding: 6px 12px; border: 1px solid var(--ink); border-radius: 100px; font-size: 11px; font-family: 'JetBrains Mono', monospace; letter-spacing: 0.05em; }
+  .hero-meta .pill.fill { background: var(--ink); color: var(--bg); }
+  .hero-meta .pill.purple { background: var(--obj-color); color: white; border-color: var(--obj-color); }
+  .hero h1 {
+    font-family: 'Noto Serif SC', 'Fraunces', serif;
+    font-weight: 900;
+    font-size: clamp(48px, 7vw, 92px);
+    line-height: 0.95;
+    letter-spacing: -0.03em;
+    margin: 0 0 24px;
+  }
+  .hero h1 .em { font-family: 'Noto Serif SC', serif; font-weight: 500; color: var(--accent); }
+  .hero h1 .purple { color: var(--obj-color); font-family: 'Noto Serif SC', serif; font-weight: 500; }
+  .hero p.lede {
+    font-size: 20px;
+    line-height: 1.5;
+    max-width: 640px;
+    color: var(--ink-soft);
+    margin: 0 0 40px;
+  }
+  .hero-grid { display: grid; grid-template-columns: 1.4fr 1fr; gap: 48px; align-items: end; }
+  @media (max-width: 880px) { .hero-grid { grid-template-columns: 1fr; } }
+  .hero-side { border-left: 1px dashed var(--line); padding-left: 24px; font-size: 13px; color: var(--ink-soft); }
+  .hero-side .row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px dashed var(--line); gap: 12px; }
+  .hero-side .row:last-child { border-bottom: none; }
+  .hero-side .row .k { color: var(--ink-mute); font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.05em; text-transform: uppercase; }
+  .hero-side .row .v { font-weight: 500; }
+
+  /* Sections */
+  section { padding: 80px 0; border-top: 1px solid var(--line); position: relative; }
+  .section-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 56px; flex-wrap: wrap; gap: 16px; }
+  .section-num { font-family: 'JetBrains Mono', monospace; font-size: 13px; color: var(--ink-mute); letter-spacing: 0.1em; margin-top: 6px; }
+  .section-num strong { color: var(--accent); }
+  .section-title { font-family: 'Noto Serif SC', serif; font-weight: 900; font-size: clamp(32px, 4.5vw, 52px); line-height: 1.05; letter-spacing: -0.02em; margin: 8px 0 0; max-width: 22ch; }
+  .section-title .em { font-family: 'Noto Serif SC', serif; font-weight: 500; color: var(--accent); }
+  .section-title .purple { color: var(--obj-color); font-family: 'Noto Serif SC', serif; font-weight: 500; }
+  .section-sub { color: var(--ink-soft); font-size: 17px; max-width: 38ch; line-height: 1.55; margin: 0; }
+
+  /* Act tag */
+  .act-tag { display: inline-block; padding: 4px 12px; font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; border-radius: 100px; }
+  .act-tag.look { background: var(--blue-soft); color: var(--blue); }
+  .act-tag.break { background: var(--obj-soft); color: var(--obj-color); }
+  .act-tag.make { background: var(--proj-soft); color: var(--proj-color); }
+
+  /* Problem cards */
+  .problem-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; margin-top: 24px; }
+  @media (max-width: 880px) { .problem-grid { grid-template-columns: 1fr; } }
+  .problem-card { background: var(--paper); border: 1px solid var(--line); border-radius: 6px; padding: 28px; position: relative; }
+  .problem-card.bad { border-color: var(--accent); background: var(--accent-soft); }
+  .problem-card.good { border-color: var(--obj-color); background: var(--obj-soft); }
+  .problem-card .tag { position: absolute; top: -12px; left: 24px; background: var(--bg); padding: 2px 10px; font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.1em; }
+  .problem-card.bad .tag { color: var(--accent); border: 1px solid var(--accent); }
+  .problem-card.good .tag { color: var(--obj-color); border: 1px solid var(--obj-color); }
+  .problem-card h3 { font-family: 'Noto Serif SC', serif; font-size: 22px; margin: 0 0 12px; font-weight: 700; }
+  .problem-card p { margin: 0; color: var(--ink-soft); font-size: 14px; line-height: 1.55; }
+  .problem-card p + p { margin-top: 10px; }
+
+  /* ===== GAME 1: timelines ===== */
+  .timeline-stage { background: var(--paper); border: 1px solid var(--line); border-radius: 8px; padding: 32px 28px; position: relative; overflow: hidden; }
+  .timeline-stage::before { content: ''; position: absolute; inset: 0; background-image: linear-gradient(to right, var(--line-soft) 1px, transparent 1px), linear-gradient(to bottom, var(--line-soft) 1px, transparent 1px); background-size: 24px 24px; opacity: 0.4; pointer-events: none; }
+  .timeline-list { position: relative; display: flex; flex-direction: column; gap: 18px; }
+  .timeline-card { background: white; border: 1px solid var(--line); border-radius: 8px; padding: 18px 20px 16px; position: relative; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); cursor: pointer; }
+  .timeline-card:hover { box-shadow: 0 8px 24px rgba(22,22,29,0.08); }
+  .timeline-card.is-highlight { border-color: var(--obj-color); box-shadow: 0 0 0 2px var(--obj-soft), 0 8px 24px rgba(255,77,46,0.18); }
+  .timeline-head { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; flex-wrap: wrap; }
+  .timeline-tag { font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; padding: 3px 9px; border-radius: 100px; background: var(--ink); color: var(--bg); }
+  .timeline-card.is-line .timeline-tag { background: var(--green); }
+  .timeline-card.is-rejected .timeline-tag { background: var(--accent); }
+  .timeline-card.is-withdrawn .timeline-tag { background: var(--blue); }
+  .timeline-card.is-timeout .timeline-tag { background: #c79f1e; }
+  .timeline-card.is-cancelled .timeline-tag { background: var(--obj-color); }
+  .timeline-title { font-family: 'Noto Serif SC', serif; font-weight: 700; font-size: 16px; }
+  .timeline-sub { color: var(--ink-mute); font-family: 'JetBrains Mono', monospace; font-size: 11px; margin-left: auto; }
+  .timeline-rail { position: relative; display: flex; flex-wrap: wrap; gap: 4px 0; align-items: stretch; }
+  .tl-step { display: inline-flex; flex-direction: column; gap: 3px; padding: 8px 12px 8px 14px; background: var(--bg-2); border-left: 2px solid var(--ink); font-size: 12px; flex: 1 1 130px; min-width: 120px; position: relative; transition: background 0.2s; }
+  .tl-step.is-branch { background: var(--accent-soft); border-left-color: var(--accent); }
+  .tl-step.is-branch.is-blue { background: var(--blue-soft); border-left-color: var(--blue); }
+  .tl-step.is-branch.is-yellow { background: #fff3cc; border-left-color: #c79f1e; }
+  .tl-step.is-branch.is-purple { background: var(--obj-soft); border-left-color: var(--obj-color); }
+  .tl-step.is-restart { background: var(--green-soft); border-left-color: var(--green); }
+  .tl-step .ts-time { font-family: 'JetBrains Mono', monospace; font-size: 9px; color: var(--ink-mute); letter-spacing: 0.04em; text-transform: uppercase; }
+  .tl-step .ts-action { font-weight: 600; font-size: 12px; line-height: 1.35; }
+  .tl-step .ts-actor { font-size: 10px; color: var(--ink-mute); font-family: 'JetBrains Mono', monospace; }
+  .tl-step .branch-pin { position: absolute; top: -8px; right: 8px; background: var(--accent); color: white; border-radius: 100px; font-family: 'JetBrains Mono', monospace; font-size: 9px; padding: 1px 7px; letter-spacing: 0.04em; display: none; }
+  .timeline-card.is-highlight .branch-pin { display: inline-block; }
+  .timeline-card .timeline-popup { margin-top: 14px; padding: 12px 14px; background: var(--ink); color: var(--bg); border-radius: 6px; font-size: 12px; line-height: 1.55; display: none; border-left: 3px dashed var(--accent); }
+  .timeline-card.is-highlight .timeline-popup { display: block; }
+  .timeline-popup strong { color: var(--accent); }
+  .timeline-popup .pp-label { font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.06em; color: var(--ink-mute); text-transform: uppercase; display: block; margin-bottom: 4px; }
+
+  /* Reveal bar */
+  .reveal-bar {
+    margin-top: 32px;
+    padding: 20px 28px;
+    background: var(--ink);
+    color: var(--bg);
+    border-radius: 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+  .reveal-bar .msg { font-family: 'Noto Serif SC', serif; font-size: 17px; font-weight: 500; line-height: 1.55; }
+  .reveal-bar .msg .em { color: var(--accent); }
+  .reveal-bar .counter { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ink-mute); letter-spacing: 0.05em; }
+  .reveal-bar .counter strong { color: var(--accent); font-size: 14px; }
+
+  /* ===== GAME 2: branch table ===== */
+  .branch-table-wrap {
+    background: var(--paper);
+    border: 1px solid var(--line); border-radius: 8px; overflow: hidden; margin-top: 24px;
+  }
+  .branch-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .branch-table thead { background: var(--ink); color: var(--bg); }
+  .branch-table th { padding: 14px 16px; text-align: left; font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; font-weight: 600; }
+  .branch-table tbody tr { border-top: 1px solid var(--line); background: white; cursor: pointer; transition: background 0.2s; }
+  .branch-table tbody tr:hover { background: var(--obj-soft); }
+  .branch-table tbody tr.is-open { background: var(--obj-soft); }
+  .branch-table tbody tr.is-open td { border-bottom: none; }
+  .branch-table tr.detail-row { background: var(--ink) !important; cursor: default; }
+  .branch-table tr.detail-row td { padding: 0 16px; color: var(--bg); }
+  .branch-table tr.detail-row .detail-inner { padding: 18px 0 22px; font-size: 13px; line-height: 1.65; }
+  .branch-table tr.detail-row .detail-inner strong { color: var(--accent); }
+  .branch-table tr.detail-row .detail-inner .label { color: var(--ink-mute); display: block; margin-bottom: 6px; }
+  .branch-table tr.detail-row .detail-inner .scenarios { margin-top: 10px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+  @media (max-width: 720px) { .branch-table tr.detail-row .detail-inner .scenarios { grid-template-columns: 1fr; } }
+  .branch-table tr.detail-row .scenario { background: rgba(255,255,255,0.06); border-left: 2px solid var(--accent); padding: 10px 12px; border-radius: 0 4px 4px 0; font-size: 12px; line-height: 1.55; }
+  .branch-table tr.detail-row .scenario b { color: white; display: block; margin-bottom: 4px; }
+  .branch-table td { padding: 14px 16px; vertical-align: middle; }
+  .branch-table td:first-child { font-family: 'Noto Serif SC', serif; font-weight: 700; font-size: 15px; }
+  .branch-table .trigger-pill { display: inline-block; padding: 3px 9px; border-radius: 100px; font-family: 'JetBrains Mono', monospace; font-size: 11px; }
+  .branch-table .trigger-pill.approver { background: var(--accent-soft); color: var(--accent); }
+  .branch-table .trigger-pill.user { background: var(--blue-soft); color: var(--blue); }
+  .branch-table .trigger-pill.both { background: var(--obj-soft); color: var(--obj-color); }
+  .branch-table .state-flow { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ink-soft); }
+  .branch-table .state-flow .arr { color: var(--obj-color); margin: 0 4px; }
+  .branch-table .restart { font-size: 12px; color: var(--ink-soft); }
+  .branch-table .restart.no { color: var(--ink-mute); font-style: italic; }
+  .branch-table .toggle-cell { width: 30px; text-align: right; padding-right: 18px !important; }
+  .branch-table .toggle-cell .twist { display: inline-block; color: var(--ink-mute); transition: transform 0.2s; font-family: 'JetBrains Mono', monospace; }
+  .branch-table tr.is-open .twist { transform: rotate(90deg); color: var(--obj-color); }
+
+  .vs-card { margin-top: 24px; padding: 22px 26px; background: var(--bg-2); border-left: 4px solid var(--obj-color); border-radius: 6px; display: grid; grid-template-columns: auto 1fr; gap: 22px; align-items: center; }
+  @media (max-width: 720px) { .vs-card { grid-template-columns: 1fr; } }
+  .vs-card .vs-tag { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.08em; color: var(--obj-color); text-transform: uppercase; }
+  .vs-card p { margin: 0; font-size: 14px; color: var(--ink-soft); line-height: 1.6; }
+  .vs-card p strong { color: var(--ink); }
+
+  /* ===== GAME 3: builder ===== */
+  .builder-stage { background: var(--paper); border: 1px solid var(--line); border-radius: 8px; padding: 32px; margin-top: 24px; }
+  .builder-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 28px; flex-wrap: wrap; gap: 16px; }
+  .builder-title { font-family: 'Noto Serif SC', serif; font-size: 22px; margin: 0; font-weight: 700; }
+  .builder-progress { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--ink-mute); }
+  .builder-progress .done { color: var(--proj-color); font-weight: 700; font-size: 14px; }
+
+  .branch-card-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 18px; }
+  @media (max-width: 880px) { .branch-card-grid { grid-template-columns: 1fr; } }
+  .branch-card { background: white; border: 1px solid var(--line); border-radius: 8px; padding: 18px 20px; transition: all 0.2s; position: relative; }
+  .branch-card.is-selected { border-color: var(--obj-color); box-shadow: 0 0 0 2px var(--obj-soft); }
+  .branch-card.is-trap { border-color: var(--line); }
+  .branch-card.is-trap.is-selected { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-soft); }
+  .branch-card-head { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 12px; }
+  .branch-check { width: 22px; height: 22px; border-radius: 5px; border: 1.5px solid var(--line); background: white; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 700; color: transparent; flex-shrink: 0; transition: all 0.2s; margin-top: 2px; }
+  .branch-card.is-selected .branch-check { background: var(--obj-color); border-color: var(--obj-color); color: white; }
+  .branch-card.is-trap.is-selected .branch-check { background: var(--accent); border-color: var(--accent); }
+  .branch-card-title { font-family: 'Noto Serif SC', serif; font-weight: 700; font-size: 16px; margin: 0 0 4px; }
+  .branch-card-desc { font-size: 12px; color: var(--ink-soft); line-height: 1.5; margin: 0; }
+  .branch-card-slots { display: flex; flex-direction: column; gap: 8px; margin-top: 14px; padding-top: 14px; border-top: 1px dashed var(--line); opacity: 0.45; pointer-events: none; transition: opacity 0.2s; }
+  .branch-card.is-selected .branch-card-slots { opacity: 1; pointer-events: auto; }
+  .branch-slot-row { display: grid; grid-template-columns: 88px 1fr; gap: 10px; align-items: center; }
+  .branch-slot-label { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--ink-mute); letter-spacing: 0.06em; text-transform: uppercase; }
+  .branch-slot-select { width: 100%; padding: 7px 10px 7px 10px; padding-right: 24px; border: 1px solid var(--line); border-radius: 4px; background: var(--bg); font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ink); cursor: pointer; appearance: none; -webkit-appearance: none; background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath fill='%238a8a92' d='M4 6l4 4 4-4z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 8px center; background-size: 14px; }
+  .branch-slot-select:focus { outline: 2px solid var(--obj-color); outline-offset: 1px; }
+  .branch-slot-select.has-value { color: var(--ink); background-color: white; border-color: var(--obj-color); }
+
+  .builder-actions { display: flex; gap: 12px; margin-top: 28px; flex-wrap: wrap; }
+  .builder-btn { padding: 10px 22px; border-radius: 100px; font-family: 'JetBrains Mono', monospace; font-size: 12px; letter-spacing: 0.06em; text-transform: uppercase; cursor: pointer; font-weight: 600; border: 1px solid var(--ink); background: transparent; color: var(--ink); transition: all 0.15s; }
+  .builder-btn:hover { background: var(--ink); color: var(--bg); }
+  .builder-btn.primary { background: var(--accent); color: white; border-color: var(--accent); }
+  .builder-btn.primary:hover { background: #e8451f; }
+
+  .builder-judge { margin-top: 24px; padding: 24px 26px; border-radius: 8px; background: var(--ink); color: var(--bg); display: none; }
+  .builder-judge.show { display: block; }
+  .builder-judge .verdict { display: inline-block; font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; padding: 3px 10px; border-radius: 100px; }
+  .builder-judge .verdict.win { color: #1f6b3a; background: #d4ecdb; }
+  .builder-judge .verdict.partial { color: #c79f1e; background: #fff3cc; }
+  .builder-judge .verdict.miss { color: var(--accent); background: var(--accent-soft); }
+  .builder-judge h4 { font-family: 'Noto Serif SC', serif; font-size: 22px; margin: 10px 0 14px; color: white; line-height: 1.3; }
+  .builder-judge ul { color: #c8c8d0; margin: 0; padding-left: 20px; font-size: 13px; line-height: 1.75; }
+  .builder-judge ul li + li { margin-top: 10px; }
+  .builder-judge ul strong { color: white; }
+  .builder-judge ul .why { color: #a0a0aa; font-size: 12px; }
+  .builder-judge ul code { background: rgba(255,255,255,0.1); padding: 1px 5px; border-radius: 3px; font-family: 'JetBrains Mono', monospace; font-size: 11px; }
+
+  /* tips */
+  .tips-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 28px; margin-top: 24px; }
+  @media (max-width: 880px) { .tips-grid { grid-template-columns: 1fr; } }
+  .tip { background: var(--paper); border: 1px solid var(--line); border-radius: 6px; padding: 24px; position: relative; }
+  .tip-num { position: absolute; top: -14px; left: 16px; width: 32px; height: 32px; border-radius: 50%; background: var(--obj-color); color: white; display: flex; align-items: center; justify-content: center; font-family: 'Fraunces', serif; font-style: italic; font-weight: 600; font-size: 14px; }
+  .tip h4 { font-family: 'Noto Serif SC', serif; font-size: 18px; margin: 8px 0 10px; font-weight: 700; }
+  .tip p { color: var(--ink-soft); font-size: 14px; line-height: 1.6; margin: 0; }
+  .tip p + p { margin-top: 8px; }
+  .tip-outro {
+    margin-top: 44px;
+    padding: 30px 32px;
+    background: var(--ink);
+    color: var(--bg);
+    border-radius: 8px;
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 28px;
+    align-items: flex-start;
+  }
+  @media (max-width: 720px) { .tip-outro { grid-template-columns: 1fr; gap: 12px; } }
+  .outro-tag { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.1em; color: var(--accent); padding-top: 4px; }
+  .tip-outro p { margin: 0 0 12px; color: #c8c8d0; line-height: 1.65; font-size: 15px; }
+  .tip-outro p:last-child { margin-bottom: 0; }
+  .tip-outro strong { color: white; }
+
+  /* next post */
+  .next-post {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 56px;
+    padding: 32px;
+    background: var(--bg-2);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    text-decoration: none;
+    color: var(--ink);
+    transition: all 0.2s;
+    gap: 24px;
+    flex-wrap: wrap;
+  }
+  .next-post:hover { background: var(--ink); color: var(--bg); }
+  .next-post:hover .np-tag { color: var(--accent); }
+  .next-post:hover .em { color: var(--accent); }
+  .next-post:hover p { color: #c8c8d0; }
+  .np-tag { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.1em; color: var(--ink-mute); margin-bottom: 6px; }
+  .next-post h4 { font-family: 'Noto Serif SC', serif; font-size: 26px; margin: 0 0 8px; font-weight: 700; }
+  .next-post .em { color: var(--obj-color); font-weight: 500; }
+  .next-post p { margin: 0; color: var(--ink-soft); font-size: 14px; max-width: 56ch; }
+  .np-cta { font-family: 'JetBrains Mono', monospace; font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; white-space: nowrap; }
+  .np-cta .arr { display: inline-block; transition: transform .2s; }
+  .next-post:hover .arr { transform: translateX(4px); }
+
+  /* footer */
+  footer { padding: 56px 0 64px; background: var(--bg); color: var(--ink-soft); border-top: 1px solid var(--line); }
+  .byline-group { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; margin-bottom: 32px; padding-bottom: 32px; border-bottom: 1px dashed var(--line); }
+  @media (max-width: 880px) { .byline-group { grid-template-columns: 1fr; } }
+  .byline { display: flex; gap: 16px; align-items: center; }
+  .byline .avatar { width: 56px; height: 56px; border-radius: 50%; object-fit: cover; flex-shrink: 0; }
+  .byline-label { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--accent); letter-spacing: 0.1em; }
+  .byline-label .dot { display: inline-block; width: 6px; height: 6px; background: var(--accent); border-radius: 50%; margin-right: 4px; vertical-align: middle; animation: pulse 2s ease-in-out infinite; }
+  .byline-name { font-family: 'Noto Serif SC', serif; font-weight: 700; font-size: 18px; margin: 4px 0; color: var(--ink); }
+  .byline-name .em { color: var(--accent); font-weight: 500; }
+  .byline-tag { color: var(--ink-soft); font-size: 13px; margin: 0; line-height: 1.5; }
+  .footer-meta { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ink-mute); text-align: center; letter-spacing: 0.05em; }
+  .footer-meta .heart { color: var(--accent); }
+
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="wrap topbar-inner">
+    <div class="brand-block">
+      <a href="book.html#vol-3" class="brand"><span class="brand-arrow">←</span>AI LABBOOK <span class="dot"></span></a>
+      <span class="brand-sep">/</span>
+      <span class="brand-current">X6 · 分支</span>
+    </div>
+    <nav class="nav-links">
+      <a href="book.html#vol-3">路线图</a>
+    </nav>
+  </div>
+</div>
+
+<!-- Hero -->
+<header class="hero">
+  <div class="wrap">
+    <div class="hero-meta">
+      <span class="pill fill">高阶 · ADVANCED</span>
+      <span class="pill purple">STAGE 02 · 任务流</span>
+      <span class="pill">X6 · 分支</span>
+      <span class="label">阅读 ≈ 16 分钟 · 含 3 段互动</span>
+    </div>
+    <div class="hero-grid">
+      <div>
+        <h1>
+          任务流<br>
+          不是<span class="display-cn">一条直线</span>——<br>
+          是<span class="purple">一棵树</span>。
+        </h1>
+        <p class="lede">
+          审批可以驳回、用户可以撤回、状态可以重提、流程可以提前终止。<br>
+          真实任务流长这样：<strong>4 个分支不是 if-else 写几句话，是流程图本身的结构</strong>。
+        </p>
+      </div>
+      <div class="hero-side">
+        <div class="row"><span class="k">本页讲什么</span><span class="v">直线 → 分支</span></div>
+        <div class="row"><span class="k">三幕</span><span class="v">看见 · 拆开 · 再做</span></div>
+        <div class="row"><span class="k">面向</span><span class="v">B 端 / 流程设计师</span></div>
+        <div class="row"><span class="k">前置</span><span class="v">X5 · 任务流</span></div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- Section 01: 问题 -->
+<section id="problem">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>01</strong> / 问题</div>
+        <h2 class="section-title">为什么你的流程图，<br>工程师总要<span class="em">追问"那个怎么办"</span>？</h2>
+      </div>
+      <p class="section-sub">
+        因为你只画了<strong>"一切顺利"</strong>那条线。
+        真实任务有 4 种反向 + 重启的分支——任何一条没画，工程师就得猜。
+      </p>
+    </div>
+
+    <div class="problem-grid">
+      <div class="problem-card bad">
+        <span class="tag">直线思维 · LINEAR</span>
+        <h3>"用户填表 → 提交 → 审批 → 完成"</h3>
+        <p>稿子里画了 4 步直线，每步一张界面。看起来流程闭环了。</p>
+        <p><strong>工程师追问：</strong>被驳回呢？用户改完重提是新单还是同一单？撤回是删数据还是改状态？审批人没回怎么办？提交完发现填错了能改吗？</p>
+        <p style="color:var(--accent)"><strong>你：</strong>呃……我没画这些。</p>
+      </div>
+
+      <div class="problem-card good">
+        <span class="tag">树状思维 · BRANCH</span>
+        <h3>"主流 4 步 + 4 个分支"</h3>
+        <p>稿子里有 <strong>主流时间线</strong>，加上 4 个分支：<strong>驳回</strong>（回退到填表）、<strong>撤回</strong>（用户主动取消未审批的）、<strong>重提</strong>（被驳回后重新提交）、<strong>提前终止</strong>（用户或审批撤销整单）。每个分支带触发条件 + 状态迁移 + UI 入口。</p>
+        <p><strong>工程师收到：</strong>完整流程图——直线主流 + 4 条支线，每条都有出口。</p>
+        <p style="color:var(--obj-color)"><strong>结果：</strong>追问 → 0 次。</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Section 02: 幕一 · 看见 -->
+<section id="look">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <span class="act-tag look">幕一 · 看见</span>
+        <div class="section-num"><strong>02</strong> / 看见</div>
+        <h2 class="section-title">同一份"请假申请"，<br><span class="purple">4 个分支</span>都会真实发生。</h2>
+      </div>
+      <p class="section-sub">
+        下面 5 条历史流水——直线只占第一条。其余 4 条都是分支真实跑出来的轨迹。
+        鼠标移到任意一条 → 高亮该流水里的"分支发生点"，并显示设计说明。
+      </p>
+    </div>
+
+    <div class="timeline-stage">
+      <div class="timeline-list" id="timelineList">
+
+        <div class="timeline-card is-line" data-flow="line" data-label="直线 · HAPPY PATH">
+          <div class="timeline-head">
+            <span class="timeline-tag">01 · 直线 · 一帆风顺</span>
+            <span class="timeline-title">"请假 5/12"</span>
+            <span class="timeline-sub">leave-2049 · 总时长 4h 22m</span>
+          </div>
+          <div class="timeline-rail">
+            <div class="tl-step"><span class="ts-time">09:14 · MON</span><span class="ts-action">提交申请</span><span class="ts-actor">@申请人 · 张明</span></div>
+            <div class="tl-step"><span class="ts-time">11:08 · MON</span><span class="ts-action">直属主管已查看</span><span class="ts-actor">@审批人 · 李华</span></div>
+            <div class="tl-step"><span class="ts-time">13:36 · MON</span><span class="ts-action">审批同意</span><span class="ts-actor">@审批人 · 李华</span></div>
+            <div class="tl-step"><span class="ts-time">13:36 · MON</span><span class="ts-action">完成 · 归档</span><span class="ts-actor">系统</span></div>
+          </div>
+          <div class="timeline-popup">
+            <span class="pp-label">设计说明</span>
+            <strong>这是教科书里的那条线。</strong>稿子里通常只有它——但它<strong>只占真实流水的 1/5</strong>。剩下 4/5 全在下面。
+          </div>
+        </div>
+
+        <div class="timeline-card is-rejected" data-flow="rejected" data-label="驳回 · REJECTED + REOPEN">
+          <div class="timeline-head">
+            <span class="timeline-tag">02 · 驳回 → 重提</span>
+            <span class="timeline-title">"请假 5/13"</span>
+            <span class="timeline-sub">leave-2050 · 总时长 1d 6h</span>
+          </div>
+          <div class="timeline-rail">
+            <div class="tl-step"><span class="ts-time">10:02 · TUE</span><span class="ts-action">提交申请</span><span class="ts-actor">@申请人 · 张明</span></div>
+            <div class="tl-step is-branch"><span class="branch-pin">分支 · 驳回</span><span class="ts-time">15:48 · TUE</span><span class="ts-action">审批驳回（"日期与项目交付冲突"）</span><span class="ts-actor">@审批人 · 李华</span></div>
+            <div class="tl-step is-restart"><span class="ts-time">09:20 · WED</span><span class="ts-action">点"重新编辑" · 改日期</span><span class="ts-actor">@申请人 · 张明</span></div>
+            <div class="tl-step is-restart"><span class="ts-time">09:33 · WED</span><span class="ts-action">重新提交（同单 · 第 2 次）</span><span class="ts-actor">@申请人 · 张明</span></div>
+            <div class="tl-step"><span class="ts-time">11:10 · WED</span><span class="ts-action">审批同意 · 完成</span><span class="ts-actor">@审批人 · 李华</span></div>
+          </div>
+          <div class="timeline-popup">
+            <span class="pp-label">分支发生点</span>
+            驳回不是"删掉重来"——是<strong>同一个单据走到了 rejected 状态</strong>，然后回到 drafting，编号还是 leave-2050。
+            如果稿子没画驳回，工程师只能猜：是新建一单？还是改原单？
+          </div>
+        </div>
+
+        <div class="timeline-card is-withdrawn" data-flow="withdrawn" data-label="撤回 · USER WITHDRAW">
+          <div class="timeline-head">
+            <span class="timeline-tag">03 · 撤回 → 重提</span>
+            <span class="timeline-title">"请假 5/15"</span>
+            <span class="timeline-sub">leave-2052 · 用户主动取消</span>
+          </div>
+          <div class="timeline-rail">
+            <div class="tl-step"><span class="ts-time">08:50 · THU</span><span class="ts-action">提交申请</span><span class="ts-actor">@申请人 · 张明</span></div>
+            <div class="tl-step is-branch is-blue"><span class="branch-pin">分支 · 撤回</span><span class="ts-time">09:02 · THU</span><span class="ts-action">用户撤回（审批人未看到）</span><span class="ts-actor">@申请人 · 张明</span></div>
+            <div class="tl-step is-restart"><span class="ts-time">09:05 · THU</span><span class="ts-action">改半天 → 改成早上半天</span><span class="ts-actor">@申请人 · 张明</span></div>
+            <div class="tl-step is-restart"><span class="ts-time">09:08 · THU</span><span class="ts-action">重新提交（同单 · 第 2 次）</span><span class="ts-actor">@申请人 · 张明</span></div>
+            <div class="tl-step"><span class="ts-time">10:24 · THU</span><span class="ts-action">审批同意 · 完成</span><span class="ts-actor">@审批人 · 李华</span></div>
+          </div>
+          <div class="timeline-popup">
+            <span class="pp-label">分支发生点</span>
+            撤回是<strong>用户在审批人未处理前主动取消</strong>——和驳回完全不同（一个是申请人触发，一个是审批人触发）。
+            稿子要分清楚：撤回了，审批人那边的待办应该<strong>自动消失</strong>，不能让他看到一个已经撤掉的单。
+          </div>
+        </div>
+
+        <div class="timeline-card is-timeout" data-flow="timeout" data-label="超时 · ESCALATE">
+          <div class="timeline-head">
+            <span class="timeline-tag">04 · 超时审批（X7 预告）</span>
+            <span class="timeline-title">"请假 5/16"</span>
+            <span class="timeline-sub">leave-2053 · 总时长 7d 22h</span>
+          </div>
+          <div class="timeline-rail">
+            <div class="tl-step"><span class="ts-time">11:00 · FRI</span><span class="ts-action">提交申请</span><span class="ts-actor">@申请人 · 张明</span></div>
+            <div class="tl-step is-branch is-yellow"><span class="branch-pin">系统触发</span><span class="ts-time">+7 天</span><span class="ts-action">审批人 7 天无响应 · 系统升级</span><span class="ts-actor">系统 · auto-escalate</span></div>
+            <div class="tl-step is-branch is-yellow"><span class="ts-time">同时</span><span class="ts-action">分派给主管的主管</span><span class="ts-actor">@审批人 · 王总</span></div>
+            <div class="tl-step"><span class="ts-time">+2h</span><span class="ts-action">审批同意 · 完成</span><span class="ts-actor">@审批人 · 王总</span></div>
+          </div>
+          <div class="timeline-popup">
+            <span class="pp-label">埋伏 · 见 X7</span>
+            这条<strong>不是用户/审批人触发的分支，是系统触发的异常</strong>——超时升级。
+            X7 会专门讲"分支 vs 异常"：来源不同，承接方式也不同。本篇先点到为止。
+          </div>
+        </div>
+
+        <div class="timeline-card is-cancelled" data-flow="cancelled" data-label="提前终止 · CANCEL">
+          <div class="timeline-head">
+            <span class="timeline-tag">05 · 提前终止</span>
+            <span class="timeline-title">"请假 5/18"</span>
+            <span class="timeline-sub">leave-2055 · 同意后取消</span>
+          </div>
+          <div class="timeline-rail">
+            <div class="tl-step"><span class="ts-time">14:00 · MON</span><span class="ts-action">提交申请</span><span class="ts-actor">@申请人 · 张明</span></div>
+            <div class="tl-step"><span class="ts-time">16:40 · MON</span><span class="ts-action">审批同意</span><span class="ts-actor">@审批人 · 李华</span></div>
+            <div class="tl-step is-branch is-purple"><span class="branch-pin">分支 · 提前终止</span><span class="ts-time">+2 天</span><span class="ts-action">部门变动 · 整单取消</span><span class="ts-actor">@双方协商</span></div>
+            <div class="tl-step"><span class="ts-time">同时</span><span class="ts-action">归档 · 不可重启</span><span class="ts-actor">系统</span></div>
+          </div>
+          <div class="timeline-popup">
+            <span class="pp-label">分支发生点</span>
+            提前终止是<strong>已通过的单据，被用户/审批双方协商撤销</strong>。
+            和驳回/撤回不同的是——这条<strong>不能重启</strong>，单据走到 cancelled 之后就归档了，不会再回 drafting。
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <div class="reveal-bar">
+      <div class="msg">
+        直线只占 <span class="em">1/5</span>。剩下 4/5 是分支。<br>
+        如果稿子只画了第一条，工程师拿到稿子<strong>还得猜剩下 4 条</strong>。
+      </div>
+      <div class="counter">
+        已展开 <strong id="revealCount">0</strong> / 5 条流水
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Section 03: 幕二 · 拆开 -->
+<section id="break">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <span class="act-tag break">幕二 · 拆开</span>
+        <div class="section-num"><strong>03</strong> / 拆开</div>
+        <h2 class="section-title">4 个分支的<br><span class="purple">结构对称性</span>。</h2>
+      </div>
+      <p class="section-sub">
+        每个分支都有 3 件事：<strong>触发方 + 状态迁移 + 重启入口</strong>。
+        把这张表填完，分支就跑通了。点任一行展开"如果稿子不画这条分支"的反例。
+      </p>
+    </div>
+
+    <div class="branch-table-wrap">
+      <table class="branch-table" id="branchTable">
+        <thead>
+          <tr>
+            <th style="width: 16%">分支</th>
+            <th style="width: 17%">触发方</th>
+            <th style="width: 36%">主对象状态迁移</th>
+            <th style="width: 27%">重启入口</th>
+            <th class="toggle-cell">·</th>
+          </tr>
+        </thead>
+        <tbody>
+
+          <tr data-branch="reject">
+            <td>驳回</td>
+            <td><span class="trigger-pill approver">审批人</span></td>
+            <td class="state-flow">submitted <span class="arr">→</span> rejected <span class="arr">→</span> drafting</td>
+            <td class="restart">从原单"再次编辑"按钮</td>
+            <td class="toggle-cell"><span class="twist">▸</span></td>
+          </tr>
+          <tr class="detail-row" data-detail-for="reject">
+            <td colspan="5">
+              <div class="detail-inner">
+                <span class="label">如果设计稿不画"驳回"这条分支——</span>
+                工程师只能猜：<strong>是新建一单？还是改原单？被驳的原因显示在哪？</strong> 3 种猜法 3 种产品。
+                <div class="scenarios">
+                  <div class="scenario"><b>(a) 走"撤回"造假</b>把驳回当撤回处理 → 申请历史污染。</div>
+                  <div class="scenario"><b>(b) 让用户新建一单</b>原单的审批记录断了 → 审计追不回。</div>
+                  <div class="scenario"><b>(c) 干脆不允许重提</b>申请人只能"放弃" → 体验崩塌。</div>
+                </div>
+              </div>
+            </td>
+          </tr>
+
+          <tr data-branch="withdraw">
+            <td>撤回</td>
+            <td><span class="trigger-pill user">申请人</span></td>
+            <td class="state-flow">submitted <span class="arr">→</span> withdrawn <span class="arr">→</span> drafting</td>
+            <td class="restart">从原单"撤回再编辑"</td>
+            <td class="toggle-cell"><span class="twist">▸</span></td>
+          </tr>
+          <tr class="detail-row" data-detail-for="withdraw">
+            <td colspan="5">
+              <div class="detail-inner">
+                <span class="label">如果设计稿不画"撤回"这条分支——</span>
+                工程师可能：
+                <div class="scenarios">
+                  <div class="scenario"><b>(a) 走"驳回"流程造假</b>让申请人自驳？审批记录变假。</div>
+                  <div class="scenario"><b>(b) 让用户"删除"单据</b>污染审计 / 编号断层。</div>
+                  <div class="scenario"><b>(c) 干脆禁止撤回</b>用户提交后只能等审批人驳 → 反人性。</div>
+                </div>
+                <div style="margin-top:10px"><strong>3 种走法 = 3 种产品</strong>——不画稿，3 选 1 就在工程那里发生了。</div>
+              </div>
+            </td>
+          </tr>
+
+          <tr data-branch="resubmit">
+            <td>重提</td>
+            <td><span class="trigger-pill user">申请人</span></td>
+            <td class="state-flow">rejected / drafting <span class="arr">→</span> submitted</td>
+            <td class="restart">"重新提交"按钮</td>
+            <td class="toggle-cell"><span class="twist">▸</span></td>
+          </tr>
+          <tr class="detail-row" data-detail-for="resubmit">
+            <td colspan="5">
+              <div class="detail-inner">
+                <span class="label">如果设计稿不画"重提"这条分支——</span>
+                被驳回的单据停在 rejected 状态<strong>没出口</strong>。用户被迫新建一单。
+                <div class="scenarios">
+                  <div class="scenario"><b>编号断裂</b>同一件事变成两个 ID，审计/统计错乱。</div>
+                  <div class="scenario"><b>审批历史丢失</b>新单看不到上次为什么被驳——申请人会再犯同样的错。</div>
+                  <div class="scenario"><b>审批人困惑</b>"这个人怎么一周提了 3 次假？"</div>
+                </div>
+                <div style="margin-top:10px"><strong>重提 = 驳回的反向出口。</strong>少画就死循环。</div>
+              </div>
+            </td>
+          </tr>
+
+          <tr data-branch="cancel">
+            <td>提前终止</td>
+            <td><span class="trigger-pill both">双方</span></td>
+            <td class="state-flow">any <span class="arr">→</span> cancelled</td>
+            <td class="restart no">不可重启（单据归档）</td>
+            <td class="toggle-cell"><span class="twist">▸</span></td>
+          </tr>
+          <tr class="detail-row" data-detail-for="cancel">
+            <td colspan="5">
+              <div class="detail-inner">
+                <span class="label">如果设计稿不画"提前终止"这条分支——</span>
+                已通过的单据被现实推翻时（人调岗、时间冲突、决策反悔），<strong>系统里那条记录还在"生效"</strong>。
+                <div class="scenarios">
+                  <div class="scenario"><b>HR 系统不一致</b>请假已批准但人已离职 → 工时统计错。</div>
+                  <div class="scenario"><b>申请人手动改</b>把原单时间改成历史日期"假装没请" → 审计造假。</div>
+                  <div class="scenario"><b>开发临时加按钮</b>"删除"按钮强删 → 没有归档证据。</div>
+                </div>
+                <div style="margin-top:10px"><strong>cancelled 是一个独立的终态。</strong>不是 "rejected"，也不是 "completed"——它是"曾经成立但被撤销"。</div>
+              </div>
+            </td>
+          </tr>
+
+        </tbody>
+      </table>
+    </div>
+
+    <div class="vs-card">
+      <span class="vs-tag">分支 vs 状态 · 区分点</span>
+      <p>
+        <strong>分支</strong>是流程图的<strong>边</strong>——从某个状态走另一条边到另一个状态。
+        <strong>状态迁移</strong>是节点之间的方向。
+        分支决定<strong>有几条路</strong>，状态迁移决定<strong>每条路怎么走</strong>。两者一起画，流程才闭合。
+      </p>
+    </div>
+
+    <div class="reveal-bar" style="margin-top:24px">
+      <div class="msg">
+        4 个分支 = <span class="em">4 条新边</span> = 4 个新设计稿。<br>
+        少画一条就少一种工程实现。
+      </div>
+      <div class="counter">点开 <strong id="branchOpenCount">0</strong> / 4 行查看反例</div>
+    </div>
+  </div>
+</section>
+
+<!-- Section 04: 幕三 · 再做 -->
+<section id="make">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <span class="act-tag make">幕三 · 再做</span>
+        <div class="section-num"><strong>04</strong> / 再做</div>
+        <h2 class="section-title">轮到你——<br>给「报销单」的 <span class="em">4 个分支</span>，<br>配触发 + 迁移。</h2>
+      </div>
+      <p class="section-sub">
+        报销单的 4 个分支可能不同（财务有"打回补充"/审计有"查证"）。
+        下面 <strong>6 张分支卡</strong>，其中 4 个是真分支 + 2 个陷阱。
+        勾上分支卡 → 填 3 个槽 → 提交打分。
+      </p>
+    </div>
+
+    <div class="builder-stage">
+      <div class="builder-head">
+        <h3 class="builder-title">「报销单」分支配置</h3>
+        <div class="builder-progress">已勾选 <span class="done" id="builderDone">0</span> / 4 张（建议）</div>
+      </div>
+
+      <div class="branch-card-grid" id="branchCardGrid">
+
+        <div class="branch-card" data-card="reject" data-is-trap="false">
+          <div class="branch-card-head">
+            <span class="branch-check">✓</span>
+            <div>
+              <h4 class="branch-card-title">驳回</h4>
+              <p class="branch-card-desc">财务认为金额或票据有问题，单据被退回。</p>
+            </div>
+          </div>
+          <div class="branch-card-slots">
+            <div class="branch-slot-row"><span class="branch-slot-label">触发方</span><select class="branch-slot-select" data-slot="trigger"></select></div>
+            <div class="branch-slot-row"><span class="branch-slot-label">状态迁移</span><select class="branch-slot-select" data-slot="state"></select></div>
+            <div class="branch-slot-row"><span class="branch-slot-label">重启入口</span><select class="branch-slot-select" data-slot="restart"></select></div>
+          </div>
+        </div>
+
+        <div class="branch-card" data-card="supplement" data-is-trap="false">
+          <div class="branch-card-head">
+            <span class="branch-check">✓</span>
+            <div>
+              <h4 class="branch-card-title">打回补充<span style="font-size:11px;color:var(--ink-mute);font-weight:400;margin-left:6px">· 财务特色</span></h4>
+              <p class="branch-card-desc">不驳回，让用户补充材料（追加发票、补流水）。</p>
+            </div>
+          </div>
+          <div class="branch-card-slots">
+            <div class="branch-slot-row"><span class="branch-slot-label">触发方</span><select class="branch-slot-select" data-slot="trigger"></select></div>
+            <div class="branch-slot-row"><span class="branch-slot-label">状态迁移</span><select class="branch-slot-select" data-slot="state"></select></div>
+            <div class="branch-slot-row"><span class="branch-slot-label">重启入口</span><select class="branch-slot-select" data-slot="restart"></select></div>
+          </div>
+        </div>
+
+        <div class="branch-card" data-card="withdraw" data-is-trap="false">
+          <div class="branch-card-head">
+            <span class="branch-check">✓</span>
+            <div>
+              <h4 class="branch-card-title">撤回</h4>
+              <p class="branch-card-desc">用户主动取消（财务还没看到）。</p>
+            </div>
+          </div>
+          <div class="branch-card-slots">
+            <div class="branch-slot-row"><span class="branch-slot-label">触发方</span><select class="branch-slot-select" data-slot="trigger"></select></div>
+            <div class="branch-slot-row"><span class="branch-slot-label">状态迁移</span><select class="branch-slot-select" data-slot="state"></select></div>
+            <div class="branch-slot-row"><span class="branch-slot-label">重启入口</span><select class="branch-slot-select" data-slot="restart"></select></div>
+          </div>
+        </div>
+
+        <div class="branch-card" data-card="resubmit" data-is-trap="false">
+          <div class="branch-card-head">
+            <span class="branch-check">✓</span>
+            <div>
+              <h4 class="branch-card-title">重提</h4>
+              <p class="branch-card-desc">用户改完重新提交。</p>
+            </div>
+          </div>
+          <div class="branch-card-slots">
+            <div class="branch-slot-row"><span class="branch-slot-label">触发方</span><select class="branch-slot-select" data-slot="trigger"></select></div>
+            <div class="branch-slot-row"><span class="branch-slot-label">状态迁移</span><select class="branch-slot-select" data-slot="state"></select></div>
+            <div class="branch-slot-row"><span class="branch-slot-label">重启入口</span><select class="branch-slot-select" data-slot="restart"></select></div>
+          </div>
+        </div>
+
+        <div class="branch-card is-trap" data-card="partial" data-is-trap="true">
+          <div class="branch-card-head">
+            <span class="branch-check">✗</span>
+            <div>
+              <h4 class="branch-card-title">部分通过<span style="font-size:11px;color:var(--accent);font-weight:400;margin-left:6px">· 看起来像分支</span></h4>
+              <p class="branch-card-desc">金额可以"部分批准"——批了 80%，剩下 20% 待补证明。</p>
+            </div>
+          </div>
+          <div class="branch-card-slots">
+            <div class="branch-slot-row"><span class="branch-slot-label">触发方</span><select class="branch-slot-select" data-slot="trigger"></select></div>
+            <div class="branch-slot-row"><span class="branch-slot-label">状态迁移</span><select class="branch-slot-select" data-slot="state"></select></div>
+            <div class="branch-slot-row"><span class="branch-slot-label">重启入口</span><select class="branch-slot-select" data-slot="restart"></select></div>
+          </div>
+        </div>
+
+        <div class="branch-card is-trap" data-card="draft" data-is-trap="true">
+          <div class="branch-card-head">
+            <span class="branch-check">✗</span>
+            <div>
+              <h4 class="branch-card-title">暂存<span style="font-size:11px;color:var(--accent);font-weight:400;margin-left:6px">· 看起来像分支</span></h4>
+              <p class="branch-card-desc">用户填一半，先存草稿，下次继续。</p>
+            </div>
+          </div>
+          <div class="branch-card-slots">
+            <div class="branch-slot-row"><span class="branch-slot-label">触发方</span><select class="branch-slot-select" data-slot="trigger"></select></div>
+            <div class="branch-slot-row"><span class="branch-slot-label">状态迁移</span><select class="branch-slot-select" data-slot="state"></select></div>
+            <div class="branch-slot-row"><span class="branch-slot-label">重启入口</span><select class="branch-slot-select" data-slot="restart"></select></div>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="builder-actions">
+        <button class="builder-btn primary" id="builderSubmit">提交打分</button>
+        <button class="builder-btn" id="builderReset">清空</button>
+      </div>
+
+      <div class="builder-judge" id="builderJudge"></div>
+    </div>
+  </div>
+</section>
+
+<!-- Section 05: closing -->
+<section id="closing">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>05</strong> / 把这件事变成习惯</div>
+        <h2 class="section-title">下次评审，<br>第一句问<span class="em">"被驳回会怎样"</span>。</h2>
+      </div>
+      <p class="section-sub">
+        从这一篇开始，"直线思维"和"树状思维"的差距会出现在你每一次流程评审的第一句话里。
+      </p>
+    </div>
+
+    <div class="tips-grid">
+      <div class="tip">
+        <div class="tip-num">i</div>
+        <h4>"被驳回怎么样"是评审第一句</h4>
+        <p>任何提交流程评审，第一句问"<strong>被驳回会怎样、用户能不能撤回、撤回算谁的责任</strong>"。</p>
+        <p>少 1 句话 = 多 1 周返工。</p>
+      </div>
+      <div class="tip">
+        <div class="tip-num">ii</div>
+        <h4>重启入口是分支的隐形要求</h4>
+        <p>驳回/撤回后<strong>必须有"重新进入"的路径</strong>，否则单据死在某个状态里——你的产品突然就有了"幽灵单"。</p>
+        <p>每个分支都要问一句："用户怎么重启？"</p>
+      </div>
+      <div class="tip">
+        <div class="tip-num">iii</div>
+        <h4>不是所有"转向"都是分支</h4>
+        <p>"<strong>部分通过</strong>"是状态分裂、"<strong>暂存</strong>"是未提交、"<strong>草稿</strong>"是初始态。</p>
+        <p>分支是"从某状态走<strong>另一条边</strong>到另一状态"——其它都是其它结构。</p>
+      </div>
+    </div>
+
+    <div class="tip-outro">
+      <div class="outro-tag">划重点 · TL;DR</div>
+      <div>
+        <p>需求评审<strong>第一句问"被驳回会怎样"</strong>，<strong>第二句问"有几条分支"</strong>。直线 + 分支一起画的稿子，才叫任务流稿。</p>
+        <p>记得：分支不是 if-else 几句话。是<strong>流程图本身的结构</strong>——是边，是新设计稿，是新状态迁移。</p>
+      </div>
+    </div>
+
+    <a href="x7-exceptions.html" class="next-post">
+      <div>
+        <div class="np-tag">下一站 · NEXT · X7 · 高阶 · 即将上线</div>
+        <h4>X7 · 异常：<span class="em">失败 / 超时 / 冲突 / 重复</span></h4>
+        <p>分支是用户/审批主动触发的转向。异常是系统/网络/并发被动触发的转向。两件事都属于"不在主流"，但来源完全不同。下一站讲：异常 4 种、各自怎么设计承接。</p>
+      </div>
+      <span class="np-cta">回路线图 <span class="arr">→</span></span>
+    </a>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div class="byline-group">
+      <div class="byline">
+        <img class="avatar" src="author.jpg" alt="范米花儿">
+        <div class="byline-meta">
+          <div class="byline-label"><span class="dot"></span>作者 · WRITTEN BY</div>
+          <div class="byline-name">嗨，我是 <span class="em">范米花儿</span></div>
+          <p class="byline-tag">设计工程师 ——<br>设计 × 代码，两边都做。</p>
+        </div>
+      </div>
+</div>
+    <div class="footer-meta">
+      做于 <span class="mono">2026</span> · 用 <span class="heart">●</span> 写给 <span class="mono">DESIGNERS &amp; DEVELOPERS</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+// ===== Game 1: timeline hover reveal =====
+(function(){
+  const cards = document.querySelectorAll('.timeline-card');
+  const visited = new Set();
+  const counter = document.getElementById('revealCount');
+  cards.forEach(card => {
+    const enter = () => {
+      card.classList.add('is-highlight');
+      const id = card.dataset.flow;
+      if (!visited.has(id)) {
+        visited.add(id);
+        counter.textContent = visited.size;
+      }
+    };
+    const leave = () => {
+      card.classList.remove('is-highlight');
+    };
+    card.addEventListener('mouseenter', enter);
+    card.addEventListener('mouseleave', leave);
+    card.addEventListener('focus', enter);
+    card.addEventListener('blur', leave);
+    card.addEventListener('click', () => {
+      // toggle pin on click for touch / kb users
+      card.classList.toggle('is-highlight');
+      const id = card.dataset.flow;
+      if (!visited.has(id)) {
+        visited.add(id);
+        counter.textContent = visited.size;
+      }
+    });
+    card.setAttribute('tabindex', '0');
+  });
+})();
+
+// ===== Game 2: branch table expand =====
+(function(){
+  const rows = document.querySelectorAll('.branch-table tbody tr[data-branch]');
+  const opened = new Set();
+  const counter = document.getElementById('branchOpenCount');
+
+  // Hide all detail rows initially
+  document.querySelectorAll('.branch-table tbody tr.detail-row').forEach(r => {
+    r.style.display = 'none';
+  });
+
+  rows.forEach(row => {
+    row.addEventListener('click', () => {
+      const key = row.dataset.branch;
+      const detail = document.querySelector(`.detail-row[data-detail-for="${key}"]`);
+      const isOpen = row.classList.contains('is-open');
+      if (isOpen) {
+        row.classList.remove('is-open');
+        if (detail) detail.style.display = 'none';
+      } else {
+        row.classList.add('is-open');
+        if (detail) detail.style.display = 'table-row';
+        if (!opened.has(key)) {
+          opened.add(key);
+          counter.textContent = opened.size;
+        }
+      }
+    });
+    row.setAttribute('tabindex', '0');
+    row.addEventListener('keydown', e => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        row.click();
+      }
+    });
+  });
+})();
+
+// ===== Game 3: branch builder =====
+(function(){
+  const cards = document.querySelectorAll('.branch-card');
+  const submitBtn = document.getElementById('builderSubmit');
+  const resetBtn = document.getElementById('builderReset');
+  const judge = document.getElementById('builderJudge');
+  const doneCounter = document.getElementById('builderDone');
+
+  // Card meta
+  const CARD_LABEL = {
+    reject: '驳回',
+    supplement: '打回补充',
+    withdraw: '撤回',
+    resubmit: '重提',
+    partial: '部分通过',
+    draft: '暂存'
+  };
+
+  // Correct answers per branch
+  const CORRECT = {
+    reject:     { trigger: 'approver', state: 'submitted-rejected-drafting', restart: 'origin-edit' },
+    supplement: { trigger: 'approver', state: 'submitted-supplementing',     restart: 'origin-edit' },
+    withdraw:   { trigger: 'user',     state: 'submitted-withdrawn-drafting', restart: 'origin-edit' },
+    resubmit:   { trigger: 'user',     state: 'rejected-submitted',          restart: 'origin-edit' }
+  };
+
+  const TRAP_REASON = {
+    partial: '部分通过<strong>看起来像分支，其实是状态分裂</strong>——单据沿主流走，但"金额字段"被切成两部分（已批准 / 待补充）。这是<strong>数据结构问题</strong>，不是流程边问题。设计稿应该画"金额分块预览"，而不是新画一条流程边。',
+    draft: '暂存是<strong>未提交</strong>——单据还没进入流程，永远停在 drafting。流程根本没启动，何谈分支？把暂存画成分支，会让工程师在状态机里加一个"分支节点"——那个节点和真分支用同一套机制，但行为完全不同，混乱无法收拾。'
+  };
+
+  const SLOT_OPTIONS_TEXT = {
+    trigger: {
+      user: '申请人',
+      approver: '审批人 / 财务',
+      system: '系统',
+      both: '双方'
+    },
+    state: {
+      'submitted-rejected-drafting': 'submitted → rejected → drafting',
+      'submitted-withdrawn-drafting': 'submitted → withdrawn → drafting',
+      'rejected-submitted': 'rejected → submitted',
+      'any-cancelled': 'any → cancelled',
+      'submitted-supplementing': 'submitted → supplementing → submitted',
+      'none-drafting': 'drafting → drafting'
+    },
+    restart: {
+      'origin-edit': '原单"再次编辑"按钮',
+      'new-form': '新建一份单据',
+      'none': '不可重启 · 归档',
+      'email-link': '邮件链接 / 系统通知'
+    }
+  };
+
+  const SLOT_PLACEHOLDER = {
+    trigger: '— 选触发方 —',
+    state: '— 选状态迁移 —',
+    restart: '— 选重启入口 —'
+  };
+
+  // Populate all empty selects with options
+  document.querySelectorAll('.branch-slot-select').forEach(sel => {
+    const slot = sel.dataset.slot;
+    const opts = SLOT_OPTIONS_TEXT[slot];
+    let html = `<option value="">${SLOT_PLACEHOLDER[slot]}</option>`;
+    Object.keys(opts).forEach(k => {
+      html += `<option value="${k}">${opts[k]}</option>`;
+    });
+    sel.innerHTML = html;
+  });
+
+  // State tracking
+  const selected = new Set(); // card keys
+  const slotState = {}; // card -> {trigger, state, restart}
+
+  cards.forEach(card => {
+    slotState[card.dataset.card] = { trigger: '', state: '', restart: '' };
+
+    const check = card.querySelector('.branch-check');
+    const head = card.querySelector('.branch-card-head');
+    head.style.cursor = 'pointer';
+    head.addEventListener('click', e => {
+      // ignore clicks on inner inputs
+      if (e.target.tagName === 'SELECT') return;
+      const key = card.dataset.card;
+      if (selected.has(key)) {
+        selected.delete(key);
+        card.classList.remove('is-selected');
+      } else {
+        selected.add(key);
+        card.classList.add('is-selected');
+      }
+      updateProgress();
+    });
+
+    card.querySelectorAll('.branch-slot-select').forEach(sel => {
+      sel.addEventListener('change', () => {
+        const key = card.dataset.card;
+        const slot = sel.dataset.slot;
+        slotState[key][slot] = sel.value;
+        sel.classList.toggle('has-value', sel.value !== '');
+      });
+      sel.addEventListener('click', e => e.stopPropagation());
+    });
+  });
+
+  function updateProgress() {
+    // Count only non-trap selected cards as "real" progress
+    const realSelected = [...selected].filter(k => {
+      const card = document.querySelector(`.branch-card[data-card="${k}"]`);
+      return card.dataset.isTrap === 'false';
+    }).length;
+    doneCounter.textContent = realSelected;
+  }
+
+  submitBtn.addEventListener('click', () => {
+    const lines = [];
+    let realCorrect = 0;       // real branches selected
+    let realWithSlots = 0;     // real branches selected + all 3 slots filled correctly
+    let trapsAvoided = 0;
+    let trapsSelected = 0;
+
+    // 4 real branches
+    ['reject', 'supplement', 'withdraw', 'resubmit'].forEach(key => {
+      const isSel = selected.has(key);
+      const label = CARD_LABEL[key];
+      if (!isSel) {
+        lines.push(`<li><strong>${label}</strong>：<span style="color:#ffd166">未勾选</span> — 这是真分支，少了它流程图缺一条边。</li>`);
+        return;
+      }
+      realCorrect++;
+      // check slots
+      const state = slotState[key];
+      const expected = CORRECT[key];
+      const triggerOK = state.trigger === expected.trigger;
+      const stateOK   = state.state   === expected.state;
+      const restartOK = state.restart === expected.restart;
+      const allOK = triggerOK && stateOK && restartOK;
+
+      if (allOK) {
+        realWithSlots++;
+        lines.push(`<li>✓ <strong>${label}</strong>：3 个槽全对 — 触发 <code>${SLOT_OPTIONS_TEXT.trigger[expected.trigger]}</code> · 迁移 <code>${SLOT_OPTIONS_TEXT.state[expected.state]}</code> · 重启 <code>${SLOT_OPTIONS_TEXT.restart[expected.restart]}</code></li>`);
+      } else {
+        const issues = [];
+        if (!triggerOK) issues.push(`触发方应该是 <code>${SLOT_OPTIONS_TEXT.trigger[expected.trigger]}</code>${state.trigger ? `（你填了 <code>${SLOT_OPTIONS_TEXT.trigger[state.trigger]}</code>）` : '（你没填）'}`);
+        if (!stateOK)   issues.push(`状态迁移应该是 <code>${SLOT_OPTIONS_TEXT.state[expected.state]}</code>${state.state ? `（你填了 <code>${SLOT_OPTIONS_TEXT.state[state.state]}</code>）` : '（你没填）'}`);
+        if (!restartOK) issues.push(`重启入口应该是 <code>${SLOT_OPTIONS_TEXT.restart[expected.restart]}</code>${state.restart ? `（你填了 <code>${SLOT_OPTIONS_TEXT.restart[state.restart]}</code>）` : '（你没填）'}`);
+        lines.push(`<li><strong>${label}</strong>：${issues.join('；')}<br><span class="why">↳ 这条边没画清楚——工程师会随机选一种走法。</span></li>`);
+      }
+    });
+
+    // 2 traps
+    ['partial', 'draft'].forEach(key => {
+      const label = CARD_LABEL[key];
+      if (!selected.has(key)) {
+        trapsAvoided++;
+        lines.push(`<li>✓ <strong>${label}</strong>：正确——你识别出这不是分支。</li>`);
+      } else {
+        trapsSelected++;
+        lines.push(`<li>✗ <strong>${label}</strong>（陷阱）：<br><span class="why">↳ ${TRAP_REASON[key]}</span></li>`);
+      }
+    });
+
+    let verdictClass, verdictLabel, headline;
+    if (realWithSlots === 4 && trapsAvoided === 2) {
+      verdictClass = 'win';
+      verdictLabel = '完美';
+      headline = '你已经会把分支当流程图的边来画了。';
+    } else if (realCorrect >= 3 && trapsSelected <= 1 && realWithSlots >= 2) {
+      verdictClass = 'win';
+      verdictLabel = '基本对了';
+      headline = '分支识别基本到位——再补一两个槽就可以交付了。';
+    } else if (realCorrect >= 2 && realWithSlots >= 1) {
+      verdictClass = 'partial';
+      verdictLabel = '还差一点';
+      headline = '分支和状态没完全分清楚——下面有逐条提示。';
+    } else {
+      verdictClass = 'miss';
+      verdictLabel = '需要再读一遍幕二';
+      headline = '回到幕二，对照表格的 3 件事：触发方 + 状态迁移 + 重启入口。';
+    }
+
+    judge.innerHTML = `<span class="verdict ${verdictClass}">${verdictLabel}</span><h4>${headline}</h4><ul>${lines.join('')}</ul>`;
+    judge.classList.add('show');
+    judge.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  });
+
+  resetBtn.addEventListener('click', () => {
+    selected.clear();
+    cards.forEach(card => {
+      card.classList.remove('is-selected');
+      const key = card.dataset.card;
+      slotState[key] = { trigger: '', state: '', restart: '' };
+      card.querySelectorAll('.branch-slot-select').forEach(sel => {
+        sel.value = '';
+        sel.classList.remove('has-value');
+      });
+    });
+    judge.classList.remove('show');
+    doneCounter.textContent = '0';
+  });
+})();
+</script>
+
+</body>
+</html>

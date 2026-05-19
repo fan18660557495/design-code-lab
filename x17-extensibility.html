@@ -1,0 +1,1288 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>扩展性：新增字段 / 角色 / 流程 — AI LABBOOK · X17</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,300..900&family=Geist:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Noto+Sans+SC:wght@300;400;500;700;900&family=Noto+Serif+SC:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f3eee5;
+    --bg-2: #ebe4d4;
+    --ink: #16161d;
+    --ink-soft: #4a4a55;
+    --ink-mute: #8a8a92;
+    --line: #d5cdba;
+    --line-soft: #e3dcca;
+    --accent: #ff4d2e;
+    --accent-soft: #ffe4dc;
+    --blue: #0a4cff;
+    --blue-soft: #dde6ff;
+    --green: #1f6b3a;
+    --green-soft: #d4ecdb;
+    --yellow: #ffcf3d;
+    --paper: #faf7f0;
+    --shadow: 0 1px 0 rgba(0,0,0,0.04), 0 8px 24px rgba(22,22,29,0.06);
+
+    --obj-color: #ff4d2e;
+    --obj-soft: rgba(255,77,46,0.12);
+    --proj-color: #1f6b3a;
+    --proj-soft: rgba(31,107,58,0.12);
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'Geist', 'Noto Sans SC', system-ui, -apple-system, sans-serif;
+    font-size: 16px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    background-image: radial-gradient(circle at 1px 1px, rgba(22,22,29,0.05) 1px, transparent 0);
+    background-size: 24px 24px;
+  }
+
+  .display-cn { font-family: 'Noto Serif SC', 'Fraunces', serif; font-weight: 900; letter-spacing: -0.01em; }
+  .display-en { font-family: 'Fraunces', 'Noto Serif SC', serif; font-weight: 600; font-style: italic; letter-spacing: -0.02em; }
+  .mono { font-family: 'JetBrains Mono', monospace; }
+  .label { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-mute); }
+
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 0 32px; }
+
+  /* Topbar */
+  .topbar {
+    border-bottom: 1px dashed var(--line);
+    padding: 16px 0;
+    background: var(--bg);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .topbar-inner { display: flex; justify-content: space-between; align-items: center; gap: 24px; flex-wrap: wrap; }
+  .brand-block { display: flex; align-items: center; gap: 10px; font-family: 'JetBrains Mono', monospace; font-size: 13px; }
+  .brand { display: inline-flex; align-items: center; gap: 6px; color: var(--ink); text-decoration: none; font-weight: 600; }
+  .brand-arrow { color: var(--ink-mute); transition: transform .2s; }
+  .brand:hover .brand-arrow { transform: translateX(-3px); }
+  .brand .dot { display: inline-block; width: 8px; height: 8px; background: var(--accent); border-radius: 50%; vertical-align: middle; animation: pulse 2s ease-in-out infinite; margin-left: 4px; }
+  .brand-sep { color: var(--ink-mute); }
+  .brand-current { color: var(--ink-soft); }
+  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+  .nav-links { display: flex; gap: 18px; font-size: 13px; flex-wrap: wrap; }
+  .nav-links a { color: var(--ink-soft); text-decoration: none; transition: color 0.2s; }
+  .nav-links a:hover { color: var(--accent); }
+  .nav-links a.current { color: var(--accent); font-weight: 600; }
+
+  /* Hero */
+  .hero { padding: 100px 0 80px; position: relative; overflow: hidden; }
+  .hero-meta { display: flex; gap: 24px; margin-bottom: 32px; align-items: center; flex-wrap: wrap; }
+  .hero-meta .pill { padding: 6px 12px; border: 1px solid var(--ink); border-radius: 100px; font-size: 11px; font-family: 'JetBrains Mono', monospace; letter-spacing: 0.05em; }
+  .hero-meta .pill.fill { background: var(--ink); color: var(--bg); }
+  .hero-meta .pill.purple { background: var(--obj-color); color: white; border-color: var(--obj-color); }
+  .hero h1 {
+    font-family: 'Noto Serif SC', 'Fraunces', serif;
+    font-weight: 900;
+    font-size: clamp(48px, 7vw, 92px);
+    line-height: 0.95;
+    letter-spacing: -0.03em;
+    margin: 0 0 24px;
+  }
+  .hero h1 .em { font-family: 'Noto Serif SC', serif; font-weight: 500; color: var(--accent); }
+  .hero h1 .purple { color: var(--obj-color); font-family: 'Noto Serif SC', serif; font-weight: 500; }
+  .hero p.lede {
+    font-size: 20px;
+    line-height: 1.5;
+    max-width: 640px;
+    color: var(--ink-soft);
+    margin: 0 0 40px;
+  }
+  .hero-grid { display: grid; grid-template-columns: 1.4fr 1fr; gap: 48px; align-items: end; }
+  @media (max-width: 880px) { .hero-grid { grid-template-columns: 1fr; } }
+  .hero-side { border-left: 1px dashed var(--line); padding-left: 24px; font-size: 13px; color: var(--ink-soft); }
+  .hero-side .row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px dashed var(--line); gap: 12px; }
+  .hero-side .row:last-child { border-bottom: none; }
+  .hero-side .row .k { color: var(--ink-mute); font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.05em; text-transform: uppercase; }
+  .hero-side .row .v { font-weight: 500; }
+
+  /* Sections */
+  section { padding: 80px 0; border-top: 1px solid var(--line); position: relative; }
+  .section-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 56px; flex-wrap: wrap; gap: 16px; }
+  .section-num { font-family: 'JetBrains Mono', monospace; font-size: 13px; color: var(--ink-mute); letter-spacing: 0.1em; margin-top: 6px; }
+  .section-num strong { color: var(--accent); }
+  .section-title { font-family: 'Noto Serif SC', serif; font-weight: 900; font-size: clamp(32px, 4.5vw, 52px); line-height: 1.05; letter-spacing: -0.02em; margin: 8px 0 0; max-width: 22ch; }
+  .section-title .em { font-family: 'Noto Serif SC', serif; font-weight: 500; color: var(--accent); }
+  .section-title .purple { color: var(--obj-color); font-family: 'Noto Serif SC', serif; font-weight: 500; }
+  .section-sub { color: var(--ink-soft); font-size: 17px; max-width: 38ch; line-height: 1.55; margin: 0; }
+
+  /* Act tag */
+  .act-tag { display: inline-block; padding: 4px 12px; font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; border-radius: 100px; }
+  .act-tag.look { background: var(--blue-soft); color: var(--blue); }
+  .act-tag.break { background: var(--obj-soft); color: var(--obj-color); }
+  .act-tag.make { background: var(--proj-soft); color: var(--proj-color); }
+
+  /* Problem cards */
+  .problem-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; margin-top: 24px; }
+  @media (max-width: 880px) { .problem-grid { grid-template-columns: 1fr; } }
+  .problem-card { background: var(--paper); border: 1px solid var(--line); border-radius: 6px; padding: 28px; position: relative; }
+  .problem-card.bad { border-color: var(--accent); background: var(--accent-soft); }
+  .problem-card.good { border-color: var(--obj-color); background: var(--obj-soft); }
+  .problem-card .tag { position: absolute; top: -12px; left: 24px; background: var(--bg); padding: 2px 10px; font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.1em; }
+  .problem-card.bad .tag { color: var(--accent); border: 1px solid var(--accent); }
+  .problem-card.good .tag { color: var(--obj-color); border: 1px solid var(--obj-color); }
+  .problem-card h3 { font-family: 'Noto Serif SC', serif; font-size: 22px; margin: 0 0 12px; font-weight: 700; }
+  .problem-card p { margin: 0; color: var(--ink-soft); font-size: 14px; line-height: 1.55; }
+  .problem-card p + p { margin-top: 10px; }
+
+  /* GAME 1: timeline compare (now vs 2 years later) */
+  .timeline-stage { background: var(--paper); border: 1px solid var(--line); border-radius: 8px; padding: 32px 28px; position: relative; overflow: hidden; }
+  .timeline-stage::before { content: ''; position: absolute; inset: 0; background-image: linear-gradient(to right, var(--line-soft) 1px, transparent 1px), linear-gradient(to bottom, var(--line-soft) 1px, transparent 1px); background-size: 24px 24px; opacity: 0.4; pointer-events: none; }
+  .timeline-method-tabs { position: relative; display: flex; gap: 8px; margin-bottom: 24px; flex-wrap: wrap; }
+  .timeline-tab { padding: 10px 18px; background: white; border: 1px solid var(--line); border-radius: 100px; font-family: 'JetBrains Mono', monospace; font-size: 12px; cursor: pointer; transition: all 0.2s; color: var(--ink-soft); font-weight: 500; }
+  .timeline-tab:hover { border-color: var(--obj-color); color: var(--obj-color); }
+  .timeline-tab.is-active { background: var(--obj-color); color: white; border-color: var(--obj-color); }
+  .timeline-tab .tab-tag { font-size: 10px; opacity: 0.7; margin-right: 4px; }
+  .timeline-tab.is-active .tab-tag { opacity: 0.85; }
+  .timeline-cols { position: relative; display: grid; grid-template-columns: 1fr auto 1fr; gap: 18px; align-items: stretch; }
+  @media (max-width: 880px) { .timeline-cols { grid-template-columns: 1fr; } }
+  .timeline-col { background: white; border: 1px solid var(--line); border-radius: 8px; padding: 20px 18px; min-height: 280px; position: relative; transition: border-color 0.25s; }
+  .timeline-col.now { border-color: var(--proj-color); }
+  .timeline-col.future { border-color: var(--accent); }
+  .timeline-col h5 { font-family: 'Noto Serif SC', serif; font-size: 16px; margin: 0 0 14px; font-weight: 700; display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+  .timeline-col .when { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ink-mute); letter-spacing: 0.06em; text-transform: uppercase; }
+  .timeline-col.now h5 .when { color: var(--proj-color); }
+  .timeline-col.future h5 .when { color: var(--accent); }
+  .timeline-stat { display: grid; grid-template-columns: 1fr auto; gap: 6px 12px; padding: 8px 10px; border: 1px dashed var(--line); border-radius: 4px; margin-bottom: 6px; font-size: 13px; align-items: center; transition: all 0.3s; }
+  .timeline-stat .lbl { color: var(--ink-soft); font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.04em; }
+  .timeline-stat .val { font-family: 'JetBrains Mono', monospace; font-weight: 700; color: var(--ink); }
+  .timeline-col.future .timeline-stat .val { color: var(--accent); }
+  .timeline-stat .delta { font-size: 10px; color: var(--ink-mute); margin-left: 4px; }
+  .timeline-col.future .timeline-stat .delta { color: var(--accent); font-weight: 600; }
+  .timeline-arrow { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 0 4px; color: var(--ink-mute); font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.1em; gap: 6px; }
+  .timeline-arrow .arr { width: 32px; height: 32px; border-radius: 50%; background: var(--bg-2); color: var(--ink); display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 700; }
+  @media (max-width: 880px) { .timeline-arrow { transform: rotate(90deg); } }
+  .timeline-cost { margin-top: 22px; padding: 18px 20px; background: white; border: 1px solid var(--line); border-radius: 8px; display: grid; grid-template-columns: auto 1fr 1fr 1fr; gap: 10px 20px; align-items: center; }
+  @media (max-width: 880px) { .timeline-cost { grid-template-columns: 1fr 1fr; } }
+  .timeline-cost-label { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-mute); }
+  .timeline-cost-metric { display: flex; flex-direction: column; gap: 2px; }
+  .timeline-cost-metric .mk { font-size: 10px; color: var(--ink-mute); font-family: 'JetBrains Mono', monospace; letter-spacing: 0.05em; text-transform: uppercase; }
+  .timeline-cost-metric .mv { font-family: 'Noto Serif SC', serif; font-size: 19px; font-weight: 700; color: var(--ink); transition: color 0.25s; }
+  .timeline-cost-metric .mv.warn { color: var(--accent); }
+  .timeline-cost-metric .mv.ok { color: var(--proj-color); }
+  .timeline-cost-metric .mv.mid { color: #c79f1e; }
+
+  /* Reveal bar */
+  .reveal-bar {
+    margin-top: 32px;
+    padding: 20px 28px;
+    background: var(--ink);
+    color: var(--bg);
+    border-radius: 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+  .reveal-bar .msg { font-family: 'Noto Serif SC', serif; font-size: 17px; font-weight: 500; line-height: 1.55; }
+  .reveal-bar .msg .em { color: var(--accent); }
+  .reveal-bar .counter { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ink-mute); letter-spacing: 0.05em; }
+  .reveal-bar .counter strong { color: var(--accent); font-size: 14px; }
+
+  /* GAME 2: extension points cards */
+  .ext-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 22px; margin-top: 32px; }
+  @media (max-width: 880px) { .ext-grid { grid-template-columns: 1fr; } }
+  .ext-card { background: var(--paper); border: 1px solid var(--line); border-radius: 8px; padding: 24px; cursor: pointer; transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1); position: relative; overflow: hidden; }
+  .ext-card:hover { border-color: var(--obj-color); transform: translateY(-2px); box-shadow: 0 8px 24px rgba(255,77,46,0.12); }
+  .ext-card.is-active { border-color: var(--obj-color); background: white; box-shadow: 0 0 0 2px var(--obj-soft); }
+  .ext-card-num { position: absolute; top: 16px; right: 18px; font-family: 'Fraunces', serif; font-style: italic; font-size: 32px; color: var(--line); line-height: 1; font-weight: 500; transition: color 0.25s; }
+  .ext-card.is-active .ext-card-num { color: var(--obj-color); }
+  .ext-card-tag { display: inline-block; font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; padding: 3px 9px; background: var(--bg-2); color: var(--ink-soft); border-radius: 100px; margin-bottom: 10px; transition: all 0.25s; }
+  .ext-card.is-active .ext-card-tag { background: var(--obj-color); color: white; }
+  .ext-card h4 { font-family: 'Noto Serif SC', serif; font-size: 21px; margin: 0 0 6px; font-weight: 700; }
+  .ext-card .ext-en { font-family: 'Fraunces', serif; font-style: italic; font-size: 13px; color: var(--ink-mute); margin: 0 0 14px; }
+  .ext-card .ext-summary { margin: 0 0 14px; font-size: 13px; color: var(--ink-soft); line-height: 1.6; }
+  .ext-card .ext-summary strong { color: var(--ink); }
+  .ext-detail { max-height: 0; overflow: hidden; transition: max-height 0.4s ease; }
+  .ext-card.is-active .ext-detail { max-height: 720px; }
+  .ext-mock { background: var(--bg); border: 1px solid var(--line); border-radius: 6px; padding: 14px; margin-bottom: 14px; }
+  .ext-mock-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 10px; }
+  .ext-mock-title { font-size: 12px; font-weight: 700; font-family: 'JetBrains Mono', monospace; color: var(--obj-color); letter-spacing: 0.05em; text-transform: uppercase; }
+  .ext-mock-meta { font-size: 11px; color: var(--ink-mute); font-family: 'JetBrains Mono', monospace; }
+  .ext-mock-field { display: grid; grid-template-columns: auto 1fr auto; gap: 10px; align-items: center; padding: 6px 8px; background: white; border: 1px solid var(--line-soft); border-radius: 4px; font-family: 'JetBrains Mono', monospace; font-size: 11px; margin-bottom: 4px; }
+  .ext-mock-field .ff-name { font-weight: 700; color: var(--ink); }
+  .ext-mock-field .ff-type { color: var(--ink-mute); }
+  .ext-mock-field .ff-vis { color: var(--obj-color); font-size: 10px; }
+  .ext-mock-field.is-new { border-color: var(--obj-color); background: var(--obj-soft); animation: slideIn 0.4s ease; }
+  @keyframes slideIn { from { transform: translateX(-12px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+  .ext-matrix { display: grid; gap: 3px; margin-top: 8px; }
+  .ext-matrix-row { display: grid; grid-template-columns: 80px repeat(4, 1fr); gap: 3px; font-family: 'JetBrains Mono', monospace; font-size: 11px; }
+  .ext-matrix-row.head .mc { color: var(--ink-mute); font-size: 10px; padding: 4px 6px; }
+  .ext-matrix-row .mc { padding: 6px 8px; background: white; border: 1px solid var(--line-soft); border-radius: 3px; text-align: center; }
+  .ext-matrix-row .mc.role { background: var(--bg-2); font-weight: 700; text-align: left; color: var(--ink); }
+  .ext-matrix-row .mc.y { background: var(--proj-soft); color: var(--proj-color); font-weight: 700; }
+  .ext-matrix-row .mc.n { color: var(--ink-mute); }
+  .ext-matrix-row.is-new .mc { animation: slideIn 0.4s ease; }
+  .ext-matrix-row.is-new .mc.role { background: var(--obj-soft); color: var(--obj-color); }
+  .ext-flow { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; padding: 12px; background: white; border: 1px solid var(--line-soft); border-radius: 4px; margin-top: 6px; }
+  .ext-flow-node { padding: 6px 10px; background: var(--bg-2); border: 1px solid var(--line); border-radius: 4px; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ink-soft); }
+  .ext-flow-node.is-new { background: var(--obj-color); color: white; border-color: var(--obj-color); animation: slideIn 0.4s ease; }
+  .ext-flow-arr { color: var(--ink-mute); font-size: 12px; }
+  .ext-theme { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-top: 6px; }
+  .ext-theme-token { background: white; border: 1px solid var(--line-soft); border-radius: 4px; padding: 8px 6px; text-align: center; font-family: 'JetBrains Mono', monospace; font-size: 10px; }
+  .ext-theme-token .swatch { width: 100%; height: 24px; border-radius: 3px; margin-bottom: 4px; border: 1px solid var(--line-soft); }
+  .ext-theme-token .tk-name { color: var(--ink); font-weight: 700; font-size: 10px; }
+  .ext-theme-token .tk-val { color: var(--ink-mute); font-size: 9px; }
+  .ext-cost-table { margin-top: 14px; background: white; border: 1px solid var(--line); border-radius: 6px; overflow: hidden; font-size: 12px; }
+  .ext-cost-row { display: grid; grid-template-columns: 1.4fr 1fr 1fr; gap: 0; border-bottom: 1px solid var(--line-soft); }
+  .ext-cost-row:last-child { border-bottom: none; }
+  .ext-cost-row.head { background: var(--bg-2); font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-mute); }
+  .ext-cost-row .cc { padding: 8px 12px; }
+  .ext-cost-row .cc.label { background: var(--paper); font-weight: 500; color: var(--ink); }
+  .ext-cost-row .cc.bad { color: var(--accent); font-weight: 600; }
+  .ext-cost-row .cc.good { color: var(--proj-color); font-weight: 600; }
+  .ext-toggle-btn { margin-top: 12px; padding: 8px 16px; font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.05em; text-transform: uppercase; border: 1px solid var(--obj-color); background: transparent; color: var(--obj-color); border-radius: 100px; cursor: pointer; transition: all 0.2s; font-weight: 600; }
+  .ext-toggle-btn:hover { background: var(--obj-color); color: white; }
+  .ext-toggle-btn.is-fired { background: var(--obj-color); color: white; }
+
+  /* GAME 3: designer decision quiz */
+  .quiz-stage { background: var(--paper); border: 1px solid var(--line); border-radius: 8px; padding: 32px; margin-top: 24px; }
+  .quiz-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 24px; flex-wrap: wrap; gap: 16px; }
+  .quiz-title { font-family: 'Noto Serif SC', serif; font-size: 22px; margin: 0; font-weight: 700; }
+  .quiz-progress { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--ink-mute); }
+  .quiz-progress .done { color: var(--proj-color); font-weight: 700; font-size: 14px; }
+  .quiz-brief { background: white; border-left: 3px solid var(--obj-color); padding: 16px 20px; border-radius: 0 6px 6px 0; margin-bottom: 24px; font-size: 14px; line-height: 1.65; }
+  .quiz-brief .brief-tag { display: inline-block; font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--obj-color); margin-bottom: 6px; }
+  .quiz-brief strong { color: var(--ink); }
+  .quiz-designs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 28px; }
+  @media (max-width: 880px) { .quiz-designs { grid-template-columns: 1fr; } }
+  .quiz-design { background: white; border: 1px solid var(--line); border-radius: 8px; padding: 18px; position: relative; transition: all 0.2s; }
+  .quiz-design.is-selected { border-color: var(--obj-color); background: var(--obj-soft); }
+  .quiz-design-letter { position: absolute; top: -12px; left: 16px; width: 28px; height: 28px; border-radius: 50%; background: var(--ink); color: white; display: flex; align-items: center; justify-content: center; font-family: 'Fraunces', serif; font-style: italic; font-weight: 700; font-size: 14px; }
+  .quiz-design.A .quiz-design-letter { background: var(--accent); }
+  .quiz-design.B .quiz-design-letter { background: #c79f1e; }
+  .quiz-design.C .quiz-design-letter { background: var(--proj-color); }
+  .quiz-design h5 { font-family: 'Noto Serif SC', serif; font-size: 16px; margin: 6px 0 10px; font-weight: 700; }
+  .quiz-design .qd-summary { font-size: 12px; color: var(--ink-soft); line-height: 1.6; margin: 0 0 10px; }
+  .quiz-design ul { font-size: 12px; color: var(--ink-soft); margin: 0; padding-left: 16px; line-height: 1.65; }
+  .quiz-design ul li + li { margin-top: 4px; }
+  .quiz-design .qd-cost { margin-top: 10px; padding-top: 10px; border-top: 1px dashed var(--line); font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ink-mute); }
+  .quiz-design .qd-cost strong { color: var(--ink); }
+  .quiz-questions { display: flex; flex-direction: column; gap: 18px; }
+  .quiz-q { background: white; border: 1px solid var(--line); border-radius: 8px; padding: 20px; }
+  .quiz-q-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 14px; gap: 10px; flex-wrap: wrap; }
+  .quiz-q-num { font-family: 'Fraunces', serif; font-style: italic; font-weight: 600; color: var(--obj-color); font-size: 13px; }
+  .quiz-q-prompt { font-family: 'Noto Serif SC', serif; font-size: 16px; margin: 0; font-weight: 700; line-height: 1.4; flex: 1; }
+  .quiz-q-context { font-size: 12px; color: var(--ink-mute); margin: 0 0 12px; line-height: 1.5; }
+  .quiz-choices { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  @media (max-width: 720px) { .quiz-choices { grid-template-columns: 1fr; } }
+  .quiz-choice { padding: 10px 14px; background: var(--bg-2); border: 1px solid var(--line); border-radius: 6px; cursor: pointer; transition: all 0.15s; font-size: 12px; line-height: 1.5; color: var(--ink-soft); text-align: left; font-family: inherit; }
+  .quiz-choice:hover { border-color: var(--obj-color); }
+  .quiz-choice .qc-let { font-family: 'JetBrains Mono', monospace; font-weight: 700; color: var(--ink); margin-right: 6px; }
+  .quiz-choice .qc-text { color: var(--ink-soft); }
+  .quiz-choice.is-selected { background: var(--obj-color); color: white; border-color: var(--obj-color); }
+  .quiz-choice.is-selected .qc-let, .quiz-choice.is-selected .qc-text { color: white; }
+  .quiz-choice.is-right { background: var(--proj-soft); border-color: var(--proj-color); color: var(--proj-color); font-weight: 600; }
+  .quiz-choice.is-right .qc-let, .quiz-choice.is-right .qc-text { color: var(--proj-color); }
+  .quiz-choice.is-wrong { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
+  .quiz-choice.is-wrong .qc-let, .quiz-choice.is-wrong .qc-text { color: var(--accent); }
+  .quiz-feedback { margin-top: 12px; padding: 12px 14px; background: var(--bg-2); border-radius: 6px; font-size: 12px; color: var(--ink-soft); line-height: 1.6; display: none; }
+  .quiz-feedback.show { display: block; }
+  .quiz-feedback strong { color: var(--ink); }
+  .quiz-feedback .fb-em { color: var(--obj-color); font-weight: 700; }
+  .quiz-actions { display: flex; gap: 12px; margin-top: 24px; flex-wrap: wrap; }
+  .quiz-btn { padding: 10px 22px; border-radius: 100px; font-family: 'JetBrains Mono', monospace; font-size: 12px; letter-spacing: 0.06em; text-transform: uppercase; cursor: pointer; font-weight: 600; border: 1px solid var(--ink); background: transparent; color: var(--ink); transition: all 0.15s; }
+  .quiz-btn:hover { background: var(--ink); color: var(--bg); }
+  .quiz-btn.primary { background: var(--accent); color: white; border-color: var(--accent); }
+  .quiz-btn.primary:hover { background: #e8451f; }
+  .quiz-verdict { margin-top: 24px; padding: 24px 26px; border-radius: 8px; background: var(--ink); color: var(--bg); display: none; }
+  .quiz-verdict.show { display: block; }
+  .quiz-verdict .v-tag { display: inline-block; font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; padding: 3px 10px; border-radius: 100px; }
+  .quiz-verdict .v-tag.win { color: #1f6b3a; background: #d4ecdb; }
+  .quiz-verdict .v-tag.partial { color: #c79f1e; background: #fff3cc; }
+  .quiz-verdict .v-tag.miss { color: var(--accent); background: var(--accent-soft); }
+  .quiz-verdict h4 { font-family: 'Noto Serif SC', serif; font-size: 22px; margin: 10px 0 14px; color: white; line-height: 1.3; }
+  .quiz-verdict ul { color: #c8c8d0; margin: 0; padding-left: 20px; font-size: 13px; line-height: 1.75; }
+  .quiz-verdict ul li + li { margin-top: 10px; }
+  .quiz-verdict ul strong { color: white; }
+  .quiz-verdict ul .why { color: #a0a0aa; font-size: 12px; }
+
+  /* tips */
+  .tips-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 28px; margin-top: 24px; }
+  @media (max-width: 880px) { .tips-grid { grid-template-columns: 1fr; } }
+  .tip { background: var(--paper); border: 1px solid var(--line); border-radius: 6px; padding: 24px; position: relative; }
+  .tip-num { position: absolute; top: -14px; left: 16px; width: 32px; height: 32px; border-radius: 50%; background: var(--obj-color); color: white; display: flex; align-items: center; justify-content: center; font-family: 'Fraunces', serif; font-style: italic; font-weight: 600; font-size: 14px; }
+  .tip h4 { font-family: 'Noto Serif SC', serif; font-size: 18px; margin: 8px 0 10px; font-weight: 700; }
+  .tip p { color: var(--ink-soft); font-size: 14px; line-height: 1.6; margin: 0; }
+  .tip p + p { margin-top: 8px; }
+  .tip-outro { margin-top: 44px; padding: 30px 32px; background: var(--ink); color: var(--bg); border-radius: 8px; display: grid; grid-template-columns: auto 1fr; gap: 28px; align-items: flex-start; }
+  @media (max-width: 720px) { .tip-outro { grid-template-columns: 1fr; gap: 12px; } }
+  .outro-tag { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.1em; color: var(--accent); padding-top: 4px; }
+  .tip-outro p { margin: 0 0 12px; color: #c8c8d0; line-height: 1.65; font-size: 15px; }
+  .tip-outro p:last-child { margin-bottom: 0; }
+  .tip-outro strong { color: white; }
+
+  /* next post */
+  .next-post { display: flex; justify-content: space-between; align-items: center; margin-top: 56px; padding: 32px; background: var(--bg-2); border: 1px solid var(--line); border-radius: 8px; text-decoration: none; color: var(--ink); transition: all 0.2s; gap: 24px; flex-wrap: wrap; }
+  .next-post:hover { background: var(--ink); color: var(--bg); }
+  .next-post:hover .np-tag { color: var(--accent); }
+  .next-post:hover .em { color: var(--accent); }
+  .next-post:hover p { color: #c8c8d0; }
+  .np-tag { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.1em; color: var(--ink-mute); margin-bottom: 6px; }
+  .next-post h4 { font-family: 'Noto Serif SC', serif; font-size: 26px; margin: 0 0 8px; font-weight: 700; }
+  .next-post .em { color: var(--obj-color); font-weight: 500; }
+  .next-post p { margin: 0; color: var(--ink-soft); font-size: 14px; max-width: 56ch; }
+  .np-cta { font-family: 'JetBrains Mono', monospace; font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; white-space: nowrap; }
+  .np-cta .arr { display: inline-block; transition: transform .2s; }
+  .next-post:hover .arr { transform: translateX(4px); }
+
+  /* footer */
+  footer { padding: 56px 0 64px; background: var(--bg); color: var(--ink-soft); border-top: 1px solid var(--line); }
+  .byline-group { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; margin-bottom: 32px; padding-bottom: 32px; border-bottom: 1px dashed var(--line); }
+  @media (max-width: 880px) { .byline-group { grid-template-columns: 1fr; } }
+  .byline { display: flex; gap: 16px; align-items: center; }
+  .byline .avatar { width: 56px; height: 56px; border-radius: 50%; object-fit: cover; flex-shrink: 0; }
+  .byline-label { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--accent); letter-spacing: 0.1em; }
+  .byline-label .dot { display: inline-block; width: 6px; height: 6px; background: var(--accent); border-radius: 50%; margin-right: 4px; vertical-align: middle; animation: pulse 2s ease-in-out infinite; }
+  .byline-name { font-family: 'Noto Serif SC', serif; font-weight: 700; font-size: 18px; margin: 4px 0; color: var(--ink); }
+  .byline-name .em { color: var(--accent); font-weight: 500; }
+  .byline-tag { color: var(--ink-soft); font-size: 13px; margin: 0; line-height: 1.5; }
+  .footer-meta { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ink-mute); text-align: center; letter-spacing: 0.05em; }
+  .footer-meta .heart { color: var(--accent); }
+
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="wrap topbar-inner">
+    <div class="brand-block">
+      <a href="book.html#vol-3" class="brand"><span class="brand-arrow">←</span>AI LABBOOK <span class="dot"></span></a>
+      <span class="brand-sep">/</span>
+      <span class="brand-current">X17 · 扩展性</span>
+    </div>
+    <nav class="nav-links">
+      <a href="book.html#vol-3">路线图</a>
+    </nav>
+  </div>
+</div>
+
+<!-- Hero -->
+<header class="hero">
+  <div class="wrap">
+    <div class="hero-meta">
+      <span class="pill fill">高阶 · ADVANCED</span>
+      <span class="pill purple">STAGE 05 · 系统演进</span>
+      <span class="pill">X17 · 扩展性</span>
+      <span class="label">阅读 ≈ 16 分钟 · 含 3 段互动</span>
+    </div>
+    <div class="hero-grid">
+      <div>
+        <h1>
+          <span class="display-cn">2 年后</span>，<br>
+          这版还能<br>
+          <span class="purple">扛得住</span>吗？
+        </h1>
+        <p class="lede">
+          新增 30 个字段、5 个角色、8 个审批流——是 B 端产品的日常。<br>
+          有扩展点的设计：加字段 = 配 JSON。<strong>没扩展点的设计：加字段 = 重画整页</strong>。
+        </p>
+      </div>
+      <div class="hero-side">
+        <div class="row"><span class="k">本页讲什么</span><span class="v">字段 / 角色 / 流程 扩展</span></div>
+        <div class="row"><span class="k">三幕</span><span class="v">看见 · 拆开 · 再做</span></div>
+        <div class="row"><span class="k">面向</span><span class="v">B 端 / 中后台设计师</span></div>
+        <div class="row"><span class="k">前置</span><span class="v">X1 · 不是页面是对象</span></div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- Section 01: 问题 -->
+<section id="problem">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>01</strong> / 问题</div>
+        <h2 class="section-title">为什么半年后的需求，<br>会让团队<span class="em">推翻重做</span>？</h2>
+      </div>
+      <p class="section-sub">
+        因为第一版稿子里——角色、字段、流程<strong>全是写死的</strong>。
+        加一个新角色，就要改 50 个页面、200 处代码。设计师以为"做完一版"是终点，其实每一版都要回答"未来怎么改"。
+      </p>
+    </div>
+
+    <div class="problem-grid">
+      <div class="problem-card bad">
+        <span class="tag">固化设计 · HARDCODED</span>
+        <h3>"先把现在的需求做完再说"</h3>
+        <p>稿子里硬编码 5 个角色：admin / sales / finance / cs / customer。所有 if-else 写在页面里。每个角色一张稿、每个字段一个 Input、每条流程一条路径——清清楚楚、稳稳当当。</p>
+        <p><strong>半年后产品要加"审计员"角色</strong>：改 50 个页面、改 200 处代码、改 14 个权限判断。开发说"做不动了"，设计师重画整套。</p>
+        <p style="color:var(--accent)"><strong>真相：</strong>你不是在设计产品——你是在替自己挖坑。</p>
+      </div>
+
+      <div class="problem-card good">
+        <span class="tag">注册表设计 · REGISTRY</span>
+        <h3>"先把'未来会变的'识别出来"</h3>
+        <p>稿子里画一张<strong>"角色 × 权限矩阵"</strong>——角色是数据，不是代码。一张表 + 一个角色管理后台，新增角色 = 加一行配置。</p>
+        <p><strong>半年后加"审计员"</strong>：业务方自己在后台加一行；设计师不需要再画一稿；开发不需要再发布一次。</p>
+        <p style="color:var(--obj-color)"><strong>结果：</strong>新角色上线 → 0 工程师介入。</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Section 02: 幕一 · 看见 -->
+<section id="look">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <span class="act-tag look">幕一 · 看见</span>
+        <div class="section-num"><strong>02</strong> / 看见</div>
+        <h2 class="section-title"><span class="purple">同一个 CRM</span>，<br>2 年后变成这样。</h2>
+      </div>
+      <p class="section-sub">
+        看左 → 当前版本 vs 看右 → 2 年后版本。<strong>同样的稿子结构能不能扛？</strong>
+        切换下面三种设计方法的标签——看每种方法面对未来变化的代价。
+      </p>
+    </div>
+
+    <div class="timeline-stage">
+      <div class="timeline-method-tabs" id="methodTabs">
+        <div class="timeline-tab is-active" data-method="A"><span class="tab-tag">方法 A</span>硬编码</div>
+        <div class="timeline-tab" data-method="B"><span class="tab-tag">方法 B</span>配置驱动</div>
+        <div class="timeline-tab" data-method="C"><span class="tab-tag">方法 C</span>混合（核心硬 + 边缘配）</div>
+      </div>
+
+      <div class="timeline-cols">
+        <div class="timeline-col now">
+          <h5>现在 · 第 1 版上线 <span class="when">T0</span></h5>
+          <div class="timeline-stat"><span class="lbl">角色</span><span class="val">5 个</span></div>
+          <div class="timeline-stat"><span class="lbl">字段</span><span class="val">12 个</span></div>
+          <div class="timeline-stat"><span class="lbl">审批流</span><span class="val">3 个</span></div>
+          <div class="timeline-stat"><span class="lbl">状态</span><span class="val">4 个</span></div>
+          <div class="timeline-stat"><span class="lbl">页面数</span><span class="val">28 屏</span></div>
+          <div style="margin-top:14px;font-size:12px;color:var(--ink-mute);line-height:1.55">
+            第一版稿子用<strong style="color:var(--proj-color)">任何方法</strong>看起来都差不多。
+            差距在<strong>下一版</strong>才显现。
+          </div>
+        </div>
+
+        <div class="timeline-arrow">
+          <span>2 年</span>
+          <div class="arr">→</div>
+          <span>需求加倍</span>
+        </div>
+
+        <div class="timeline-col future">
+          <h5>2 年后 · 持续迭代 <span class="when">T+24m</span></h5>
+          <div class="timeline-stat"><span class="lbl">角色</span><span class="val">12 个<span class="delta">+7</span></span></div>
+          <div class="timeline-stat"><span class="lbl">字段</span><span class="val">47 个<span class="delta">+35</span></span></div>
+          <div class="timeline-stat"><span class="lbl">审批流</span><span class="val">11 个<span class="delta">+8</span></span></div>
+          <div class="timeline-stat"><span class="lbl">状态</span><span class="val">9 个<span class="delta">+5</span></span></div>
+          <div class="timeline-stat"><span class="lbl">页面数</span><span class="val" id="futurePages">?? 屏</span></div>
+          <div style="margin-top:14px;font-size:12px;color:var(--ink-mute);line-height:1.55" id="futureNote">
+            <strong style="color:var(--accent)">硬编码</strong>下：每个角色一张页面、每个字段一个 Input、每个流程一段判断。
+            页面数会跟着<strong>线性</strong>甚至<strong>指数</strong>增长。
+          </div>
+        </div>
+      </div>
+
+      <div class="timeline-cost">
+        <div class="timeline-cost-label">未来变化的代价 ↓</div>
+        <div class="timeline-cost-metric">
+          <span class="mk">修改文件数</span>
+          <span class="mv warn" id="costFiles">~200 处</span>
+        </div>
+        <div class="timeline-cost-metric">
+          <span class="mk">上线周期</span>
+          <span class="mv warn" id="costTime">2-3 周</span>
+        </div>
+        <div class="timeline-cost-metric">
+          <span class="mk">风险等级</span>
+          <span class="mv warn" id="costRisk">高 · 易回归</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="reveal-bar">
+      <div class="msg">
+        硬编码<span class="em">当下省事</span>——但 2 年后会让团队卡死。<br>
+        每一次"先简单点"的决定，都是在<strong>给未来的自己挖坑</strong>。
+      </div>
+      <div class="counter">
+        已查看 <strong id="methodCount">1</strong> / 3 种方法
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Section 03: 幕二 · 拆开 -->
+<section id="break">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <span class="act-tag break">幕二 · 拆开</span>
+        <div class="section-num"><strong>03</strong> / 拆开</div>
+        <h2 class="section-title"><span class="purple">4 个扩展点</span>。</h2>
+      </div>
+      <p class="section-sub">
+        设计稿要预留这 4 个扩展点——<strong>加新内容时不动布局</strong>。
+        点开每张卡片，看它在设计稿上长什么样，以及"反例"是怎么把未来钉死的。
+      </p>
+    </div>
+
+    <div class="ext-grid" id="extGrid">
+
+      <div class="ext-card" data-ext="1">
+        <span class="ext-card-num">01</span>
+        <span class="ext-card-tag">FIELD REGISTRY</span>
+        <h4>字段注册表</h4>
+        <div class="ext-en">— Every field is a row of config, not a hardcoded input.</div>
+        <p class="ext-summary"><strong>是什么：</strong>每个字段一条配置 <span class="mono">{name, type, label, validation, visible_to: [roles]}</span>。</p>
+        <p class="ext-summary"><strong>设计稿表现：</strong>表单 / 详情区显示"字段渲染区"——里面字段从配置渲染，不是手画 Input。</p>
+        <p class="ext-summary"><strong>反例：</strong>硬编码 12 个 <span class="mono">&lt;Input&gt;</span> → 加字段要改组件、改样式、改校验、改权限——4 处联动。</p>
+
+        <div class="ext-detail">
+          <div class="ext-mock">
+            <div class="ext-mock-head">
+              <span class="ext-mock-title">customer · fields</span>
+              <span class="ext-mock-meta" id="ext1Count">12 字段</span>
+            </div>
+            <div id="ext1List">
+              <div class="ext-mock-field"><span class="ff-name">name</span><span class="ff-type">string</span><span class="ff-vis">all</span></div>
+              <div class="ext-mock-field"><span class="ff-name">company</span><span class="ff-type">string</span><span class="ff-vis">all</span></div>
+              <div class="ext-mock-field"><span class="ff-name">deal_value</span><span class="ff-type">money</span><span class="ff-vis">sales,finance</span></div>
+              <div class="ext-mock-field"><span class="ff-name">owner</span><span class="ff-type">user</span><span class="ff-vis">all</span></div>
+              <div class="ext-mock-field"><span class="ff-name">status</span><span class="ff-type">enum</span><span class="ff-vis">all</span></div>
+            </div>
+          </div>
+          <button class="ext-toggle-btn" data-action="add-field">+ 加一个字段 "tax_id"</button>
+          <div class="ext-cost-table">
+            <div class="ext-cost-row head"><span class="cc">操作</span><span class="cc">硬编码代价</span><span class="cc">注册表代价</span></div>
+            <div class="ext-cost-row"><span class="cc label">加 1 个字段</span><span class="cc bad">改组件 + 改校验</span><span class="cc good">加一行 JSON</span></div>
+            <div class="ext-cost-row"><span class="cc label">改字段权限</span><span class="cc bad">改 5 处页面</span><span class="cc good">改 visible_to 数组</span></div>
+            <div class="ext-cost-row"><span class="cc label">加 30 个字段</span><span class="cc bad">改 30 个组件</span><span class="cc good">加 30 行 JSON</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="ext-card" data-ext="2">
+        <span class="ext-card-num">02</span>
+        <span class="ext-card-tag">ROLE MATRIX</span>
+        <h4>角色矩阵</h4>
+        <div class="ext-en">— Roles × actions, two-dimensional. Add a row, not a page.</div>
+        <p class="ext-summary"><strong>是什么：</strong>角色 × 字段 / 角色 × 操作的二维表。<strong>角色是行</strong>，能力是列。</p>
+        <p class="ext-summary"><strong>设计稿表现：</strong>UI 元素带 <span class="mono">role-required</span> 标记，runtime 隐藏 / 显示——不是为每个角色画一张稿。</p>
+        <p class="ext-summary"><strong>反例：</strong>每个角色一个独立的页面 / 路由 → 5 角色 = 5 倍工作；加 1 角色 = 重写一遍。</p>
+
+        <div class="ext-detail">
+          <div class="ext-mock">
+            <div class="ext-mock-head">
+              <span class="ext-mock-title">roles × permissions</span>
+              <span class="ext-mock-meta" id="ext2Count">3 角色</span>
+            </div>
+            <div class="ext-matrix" id="ext2Matrix">
+              <div class="ext-matrix-row head">
+                <div class="mc">角色</div>
+                <div class="mc">查看</div>
+                <div class="mc">编辑</div>
+                <div class="mc">审批</div>
+                <div class="mc">导出</div>
+              </div>
+              <div class="ext-matrix-row">
+                <div class="mc role">admin</div>
+                <div class="mc y">✓</div><div class="mc y">✓</div><div class="mc y">✓</div><div class="mc y">✓</div>
+              </div>
+              <div class="ext-matrix-row">
+                <div class="mc role">sales</div>
+                <div class="mc y">✓</div><div class="mc y">✓</div><div class="mc n">—</div><div class="mc n">—</div>
+              </div>
+              <div class="ext-matrix-row">
+                <div class="mc role">customer</div>
+                <div class="mc y">✓</div><div class="mc n">—</div><div class="mc n">—</div><div class="mc n">—</div>
+              </div>
+            </div>
+          </div>
+          <button class="ext-toggle-btn" data-action="add-role">+ 加一个角色 "auditor"</button>
+          <div class="ext-cost-table">
+            <div class="ext-cost-row head"><span class="cc">操作</span><span class="cc">独立页面</span><span class="cc">矩阵</span></div>
+            <div class="ext-cost-row"><span class="cc label">加 1 个角色</span><span class="cc bad">重画 28 屏</span><span class="cc good">加 1 行</span></div>
+            <div class="ext-cost-row"><span class="cc label">调整角色权限</span><span class="cc bad">改 N 个页面</span><span class="cc good">勾选格子</span></div>
+            <div class="ext-cost-row"><span class="cc label">12 个角色总成本</span><span class="cc bad">12× 工作量</span><span class="cc good">12 行配置</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="ext-card" data-ext="3">
+        <span class="ext-card-num">03</span>
+        <span class="ext-card-tag">FLOW TEMPLATE</span>
+        <h4>流程模板</h4>
+        <div class="ext-en">— Approval / notify / trigger flows as visual templates.</div>
+        <p class="ext-summary"><strong>是什么：</strong>审批 / 通知 / 触发流程做成可配模板——节点 + 连线 + 条件。</p>
+        <p class="ext-summary"><strong>设计稿表现：</strong>流程编辑器界面（拖节点、连线、设条件），业务方自己配。</p>
+        <p class="ext-summary"><strong>反例：</strong>每个流程硬编码 if-else 在代码里 → 业务方想加一个流程要等开发排期 2 周。</p>
+
+        <div class="ext-detail">
+          <div class="ext-mock">
+            <div class="ext-mock-head">
+              <span class="ext-mock-title">报销审批流</span>
+              <span class="ext-mock-meta" id="ext3Count">3 节点</span>
+            </div>
+            <div class="ext-flow" id="ext3Flow">
+              <span class="ext-flow-node">提交</span>
+              <span class="ext-flow-arr">→</span>
+              <span class="ext-flow-node">直属审批</span>
+              <span class="ext-flow-arr">→</span>
+              <span class="ext-flow-node">财务审批</span>
+              <span class="ext-flow-arr">→</span>
+              <span class="ext-flow-node">完成</span>
+            </div>
+          </div>
+          <button class="ext-toggle-btn" data-action="add-flow">+ 在中间插一个 "部门审批" 节点</button>
+          <div class="ext-cost-table">
+            <div class="ext-cost-row head"><span class="cc">操作</span><span class="cc">代码流程</span><span class="cc">模板</span></div>
+            <div class="ext-cost-row"><span class="cc label">插入新节点</span><span class="cc bad">改流程代码</span><span class="cc good">拖一个节点</span></div>
+            <div class="ext-cost-row"><span class="cc label">业务方加流程</span><span class="cc bad">等开发 2 周</span><span class="cc good">自己配 10 分钟</span></div>
+            <div class="ext-cost-row"><span class="cc label">8 个不同流程</span><span class="cc bad">8 段代码维护</span><span class="cc good">8 个模板</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="ext-card" data-ext="4">
+        <span class="ext-card-num">04</span>
+        <span class="ext-card-tag">THEME · TOKEN</span>
+        <h4>主题 / 品牌</h4>
+        <div class="ext-en">— Colors, fonts, spacing all pull from named tokens.</div>
+        <p class="ext-summary"><strong>是什么：</strong>颜色 / 字体 / 圆角 / spacing 都从 <span class="mono">token</span> 拉，不写具体值。</p>
+        <p class="ext-summary"><strong>设计稿表现：</strong>稿子里标 <span class="mono">color/primary</span> 而不是 <span class="mono">#FF4D2E</span>——颜色绑名字。</p>
+        <p class="ext-summary"><strong>反例：</strong>颜色硬编码 <span class="mono">#FF4D2E</span> 写在 100 处 → 接了第二个品牌（白标）= 全找全改。</p>
+
+        <div class="ext-detail">
+          <div class="ext-mock">
+            <div class="ext-mock-head">
+              <span class="ext-mock-title">brand tokens</span>
+              <span class="ext-mock-meta" id="ext4Brand">brand · default</span>
+            </div>
+            <div class="ext-theme" id="ext4Theme">
+              <div class="ext-theme-token">
+                <div class="swatch" style="background:#ff4d2e"></div>
+                <div class="tk-name">primary</div>
+                <div class="tk-val">#ff4d2e</div>
+              </div>
+              <div class="ext-theme-token">
+                <div class="swatch" style="background:#16161d"></div>
+                <div class="tk-name">ink</div>
+                <div class="tk-val">#16161d</div>
+              </div>
+              <div class="ext-theme-token">
+                <div class="swatch" style="background:#f3eee5"></div>
+                <div class="tk-name">bg</div>
+                <div class="tk-val">#f3eee5</div>
+              </div>
+              <div class="ext-theme-token">
+                <div class="swatch" style="background:#1f6b3a"></div>
+                <div class="tk-name">success</div>
+                <div class="tk-val">#1f6b3a</div>
+              </div>
+            </div>
+          </div>
+          <button class="ext-toggle-btn" data-action="switch-brand">→ 切换到 "白标客户 Acme"</button>
+          <div class="ext-cost-table">
+            <div class="ext-cost-row head"><span class="cc">操作</span><span class="cc">硬编码颜色</span><span class="cc">token</span></div>
+            <div class="ext-cost-row"><span class="cc label">改主品牌色</span><span class="cc bad">找 100+ 处</span><span class="cc good">改 1 个 token</span></div>
+            <div class="ext-cost-row"><span class="cc label">接白标客户</span><span class="cc bad">复制一份重做</span><span class="cc good">换一套 token</span></div>
+            <div class="ext-cost-row"><span class="cc label">深色模式</span><span class="cc bad">几乎做不动</span><span class="cc good">一组 token 切换</span></div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="reveal-bar" style="margin-top:32px">
+      <div class="msg">
+        4 个扩展点 = <span class="em">4 个"未来不动"的承诺</span>。<br>
+        把"变化的部分"和"不变的部分"分开——变化的部分做成<strong>数据 / 配置 / 注册表</strong>。
+      </div>
+      <div class="counter">已展开 <strong id="extCount">0</strong> / 4 个扩展点</div>
+    </div>
+  </div>
+</section>
+
+<!-- Section 04: 幕三 · 再做 -->
+<section id="make">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <span class="act-tag make">幕三 · 再做</span>
+        <div class="section-num"><strong>04</strong> / 再做</div>
+        <h2 class="section-title">轮到你——<br>给 <span class="em">设计稿</span><br>识别 4 个扩展点。</h2>
+      </div>
+      <p class="section-sub">
+        下面给一段需求 + 3 段设计描述（同一个功能，不同设计方式）。
+        判断：哪种设计留了扩展点？<strong>3 个 quiz 答完看你给"未来"打几分</strong>。
+      </p>
+    </div>
+
+    <div class="quiz-stage">
+      <div class="quiz-head">
+        <h3 class="quiz-title">需求评审：报销审批功能</h3>
+        <div class="quiz-progress">已回答 <span class="done" id="quizDone">0</span> / 3 题</div>
+      </div>
+
+      <div class="quiz-brief">
+        <div class="brief-tag">需求 · BRIEF</div>
+        <strong>做一个"报销审批"功能。</strong>当前要 3 类报销（差旅、餐饮、办公）、3 级审批（直属 → 部门 → 财务）。
+        产品方还说："未来还会加 5 种报销类型 + 不同分公司可能审批级数不同。"
+      </div>
+
+      <div class="quiz-designs" id="quizDesigns">
+        <div class="quiz-design A" data-design="A">
+          <div class="quiz-design-letter">A</div>
+          <h5>全硬编码</h5>
+          <p class="qd-summary">三段路径写死，看起来最稳。</p>
+          <ul>
+            <li>3 个独立表单页面（差旅 / 餐饮 / 办公）</li>
+            <li>3 级审批路径在代码里写死</li>
+            <li>审批人按职级查表硬绑定</li>
+          </ul>
+          <div class="qd-cost"><strong>预设：</strong>稳定、可控、可读性高</div>
+        </div>
+        <div class="quiz-design B" data-design="B">
+          <div class="quiz-design-letter">B</div>
+          <h5>部分扩展</h5>
+          <p class="qd-summary">关键变量做枚举，其他写死。</p>
+          <ul>
+            <li>1 个表单 + 报销类型 dropdown</li>
+            <li>类型决定显示哪些字段（字段注册表）</li>
+            <li>3 级审批做成 enum，可改顺序</li>
+            <li>审批人按部门 + 职级查表</li>
+          </ul>
+          <div class="qd-cost"><strong>预设：</strong>当下 + 未来 1 年均衡</div>
+        </div>
+        <div class="quiz-design C" data-design="C">
+          <div class="quiz-design-letter">C</div>
+          <h5>全配置</h5>
+          <p class="qd-summary">业务方在后台自由组装。</p>
+          <ul>
+            <li>1 个表单 + "报销类型"配置</li>
+            <li>审批流做成可视化编辑器</li>
+            <li>字段 / 流程 / 规则全在后台配</li>
+            <li>分公司可独立配置</li>
+          </ul>
+          <div class="qd-cost"><strong>预设：</strong>前期投入大，后期自由度高</div>
+        </div>
+      </div>
+
+      <div class="quiz-questions" id="quizQuestions">
+
+        <div class="quiz-q" data-q="1" data-right="C">
+          <div class="quiz-q-head">
+            <span class="quiz-q-num">Q1 / 03</span>
+            <h4 class="quiz-q-prompt">哪个设计加"医疗报销"最便宜？</h4>
+          </div>
+          <p class="quiz-q-context">产品新需求：除了差旅 / 餐饮 / 办公，再加一种"医疗报销"。字段不同、审批级数不同。</p>
+          <div class="quiz-choices">
+            <button class="quiz-choice" data-choice="A"><span class="qc-let">A.</span><span class="qc-text">重画一页 + 加一段代码</span></button>
+            <button class="quiz-choice" data-choice="B"><span class="qc-let">B.</span><span class="qc-text">加 enum + 字段配置</span></button>
+            <button class="quiz-choice" data-choice="C"><span class="qc-let">C.</span><span class="qc-text">后台配置一下，不发版</span></button>
+          </div>
+          <div class="quiz-feedback"></div>
+        </div>
+
+        <div class="quiz-q" data-q="2" data-right="C">
+          <div class="quiz-q-head">
+            <span class="quiz-q-num">Q2 / 03</span>
+            <h4 class="quiz-q-prompt">哪个加"4 级审批"最便宜？</h4>
+          </div>
+          <p class="quiz-q-context">某分公司要求"直属 → 部门 → 分管副总 → 财务"四级审批。其他公司还是 3 级。</p>
+          <div class="quiz-choices">
+            <button class="quiz-choice" data-choice="A"><span class="qc-let">A.</span><span class="qc-text">改 5 处代码 + 单独分支</span></button>
+            <button class="quiz-choice" data-choice="B"><span class="qc-let">B.</span><span class="qc-text">改 enum + 改流程逻辑</span></button>
+            <button class="quiz-choice" data-choice="C"><span class="qc-let">C.</span><span class="qc-text">拖编辑器加一个节点</span></button>
+          </div>
+          <div class="quiz-feedback"></div>
+        </div>
+
+        <div class="quiz-q" data-q="3" data-right="*">
+          <div class="quiz-q-head">
+            <span class="quiz-q-num">Q3 / 03</span>
+            <h4 class="quiz-q-prompt">当前需求<strong style="color:var(--obj-color)">适合</strong>哪个？</h4>
+          </div>
+          <p class="quiz-q-context">回到需求评审现场——开始就该选 A / B / C 哪个？这题<strong>没有标准答案</strong>，看产品语境和团队成熟度。任何选择都有反馈。</p>
+          <div class="quiz-choices">
+            <button class="quiz-choice" data-choice="A"><span class="qc-let">A.</span><span class="qc-text">A · 简单粗暴够用</span></button>
+            <button class="quiz-choice" data-choice="B"><span class="qc-let">B.</span><span class="qc-text">B · MVP 时的合理平衡</span></button>
+            <button class="quiz-choice" data-choice="C"><span class="qc-let">C.</span><span class="qc-text">C · 给 2 年后留地</span></button>
+          </div>
+          <div class="quiz-feedback"></div>
+        </div>
+
+      </div>
+
+      <div class="quiz-actions">
+        <button class="quiz-btn primary" id="quizSubmit">提交打分</button>
+        <button class="quiz-btn" id="quizReset">清空重来</button>
+      </div>
+
+      <div class="quiz-verdict" id="quizVerdict"></div>
+    </div>
+  </div>
+</section>
+
+<!-- Section 05: closing -->
+<section id="closing">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>05</strong> / 把这件事变成习惯</div>
+        <h2 class="section-title">下次评审，<br>多<span class="em">问一句</span>：<br>"2 年后这块怎么变？"</h2>
+      </div>
+      <p class="section-sub">
+        扩展性不是"过度设计"——是把"会变的"和"不会变的"<strong>提前分开</strong>。
+        分开成本低，混在一起回头改成本巨高。
+      </p>
+    </div>
+
+    <div class="tips-grid">
+      <div class="tip">
+        <div class="tip-num">i</div>
+        <h4>稿子要标"扩展点"</h4>
+        <p>哪些地方将来会加内容——<strong>明示出来</strong>。注上 "<span class="mono">// extension point</span>"，工程师就知道这块要做成配置而不是硬编码。</p>
+        <p>不标注，工程师就照着画稿做——做完了才发现"加一行要重写"。</p>
+      </div>
+      <div class="tip">
+        <div class="tip-num">ii</div>
+        <h4>过度配置也是坑</h4>
+        <p>不是所有都该配。"<strong>3 年内不会变</strong>"的可以硬编码——比如登录页结构、品牌名。</p>
+        <p>"半年内可能变"的该配——比如角色、字段、流程、文案、阈值。识别清楚再下手。</p>
+      </div>
+      <div class="tip">
+        <div class="tip-num">iii</div>
+        <h4>算清楚 break-even point</h4>
+        <p>配置<strong>前期贵后期省</strong>，编码反之。算清楚多久回本——3 个月内不会改的，先编码；3 个月内会改 ≥3 次的，做配置。</p>
+        <p>不是凭感觉——是算账。</p>
+      </div>
+    </div>
+
+    <div class="tip-outro">
+      <div class="outro-tag">划重点 · TL;DR</div>
+      <div>
+        <p>扩展性 = <strong>把"变化的部分"和"不变的部分"分开</strong>，把变化的部分做成数据 / 配置 / 注册表。设计稿要标出 4 个扩展点：<strong>字段注册表、角色矩阵、流程模板、主题 token</strong>。</p>
+        <p>需求评审最后一问：<strong>"未来 2 年这块会怎么变？"</strong>答案决定哪里要做扩展点。答得出 → 设计稿带配置；答不出 → 再问一遍产品经理。</p>
+      </div>
+    </div>
+
+    <a href="x18-consistency.html" class="next-post">
+      <div>
+        <div class="np-tag">下一站 · NEXT · X18 · 高阶 · 规划中</div>
+        <h4>多团队 / 多页面如何<span class="em">不失控</span></h4>
+        <p>扩展性讲"未来怎么扩"——下一站讲"多团队同时扩"怎么保持一致。同一个对象在 3 个团队手里被加了 3 套不同字段，怎么避免变成 3 个产品？</p>
+      </div>
+      <span class="np-cta">阅读 X18 <span class="arr">→</span></span>
+    </a>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div class="byline-group">
+      <div class="byline">
+        <img class="avatar" src="author.jpg" alt="范米花儿">
+        <div class="byline-meta">
+          <div class="byline-label"><span class="dot"></span>作者 · WRITTEN BY</div>
+          <div class="byline-name">嗨，我是 <span class="em">范米花儿</span></div>
+          <p class="byline-tag">设计工程师 ——<br>设计 × 代码，两边都做。</p>
+        </div>
+      </div>
+</div>
+    <div class="footer-meta">
+      做于 <span class="mono">2026</span> · 用 <span class="heart">●</span> 写给 <span class="mono">DESIGNERS &amp; DEVELOPERS</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+// ===== Game 1: method tabs (timeline cost compare) =====
+(function(){
+  const tabs = document.querySelectorAll('.timeline-tab');
+  const methodSeen = new Set();
+  const counter = document.getElementById('methodCount');
+
+  const DATA = {
+    A: {
+      pages: '120+ 屏',
+      note: '<strong style="color:var(--accent)">硬编码</strong>下：每个角色一张页面、每个字段一个 Input、每个流程一段判断。页面数会跟着<strong>线性</strong>甚至<strong>指数</strong>增长。',
+      files: '~200 处',
+      filesClass: 'warn',
+      time: '2-3 周',
+      timeClass: 'warn',
+      risk: '高 · 易回归',
+      riskClass: 'warn'
+    },
+    B: {
+      pages: '34 屏',
+      note: '<strong style="color:var(--proj-color)">配置驱动</strong>下：角色 / 字段 / 流程都是 JSON / DB 配置。<strong>新角色 = 加配置</strong>，组件不动，页面不增。',
+      files: '~5 处',
+      filesClass: 'ok',
+      time: '< 1 天',
+      timeClass: 'ok',
+      risk: '低 · 可灰度',
+      riskClass: 'ok'
+    },
+    C: {
+      pages: '52 屏',
+      note: '<strong style="color:#c79f1e">混合</strong>下：核心结构硬编码（稳定 + 可读），边缘可变项（角色 / 字段 / 流程）做成配置。<strong>务实的工程现实</strong>。',
+      files: '~40 处',
+      filesClass: 'mid',
+      time: '3-5 天',
+      timeClass: 'mid',
+      risk: '中 · 局部回归',
+      riskClass: 'mid'
+    }
+  };
+
+  function activate(method) {
+    tabs.forEach(t => t.classList.toggle('is-active', t.dataset.method === method));
+    const d = DATA[method];
+    document.getElementById('futurePages').textContent = d.pages;
+    document.getElementById('futureNote').innerHTML = d.note;
+    const costFiles = document.getElementById('costFiles');
+    const costTime = document.getElementById('costTime');
+    const costRisk = document.getElementById('costRisk');
+    costFiles.textContent = d.files;
+    costFiles.className = 'mv ' + d.filesClass;
+    costTime.textContent = d.time;
+    costTime.className = 'mv ' + d.timeClass;
+    costRisk.textContent = d.risk;
+    costRisk.className = 'mv ' + d.riskClass;
+    methodSeen.add(method);
+    counter.textContent = methodSeen.size;
+  }
+
+  tabs.forEach(t => t.addEventListener('click', () => activate(t.dataset.method)));
+  activate('A');
+  methodSeen.add('A');
+  counter.textContent = methodSeen.size;
+})();
+
+// ===== Game 2: extension cards expand + interactive demos =====
+(function(){
+  const cards = document.querySelectorAll('.ext-card');
+  const opened = new Set();
+  const counter = document.getElementById('extCount');
+
+  cards.forEach(card => {
+    card.addEventListener('click', e => {
+      // don't toggle if user clicked a button inside detail
+      if (e.target.closest('.ext-toggle-btn')) return;
+      const wasActive = card.classList.contains('is-active');
+      cards.forEach(c => c.classList.remove('is-active'));
+      if (!wasActive) {
+        card.classList.add('is-active');
+        opened.add(card.dataset.ext);
+        counter.textContent = opened.size;
+      }
+    });
+  });
+
+  // Ext 1 · add a field
+  let ext1State = false;
+  document.querySelector('[data-action="add-field"]').addEventListener('click', e => {
+    e.stopPropagation();
+    const btn = e.currentTarget;
+    const list = document.getElementById('ext1List');
+    const count = document.getElementById('ext1Count');
+    if (!ext1State) {
+      const row = document.createElement('div');
+      row.className = 'ext-mock-field is-new';
+      row.innerHTML = '<span class="ff-name">tax_id</span><span class="ff-type">string</span><span class="ff-vis">finance</span>';
+      list.appendChild(row);
+      count.textContent = '13 字段';
+      btn.textContent = '× 撤销 (新字段已加)';
+      btn.classList.add('is-fired');
+      ext1State = true;
+    } else {
+      list.lastElementChild.remove();
+      count.textContent = '12 字段';
+      btn.textContent = '+ 加一个字段 "tax_id"';
+      btn.classList.remove('is-fired');
+      ext1State = false;
+    }
+  });
+
+  // Ext 2 · add a role row
+  let ext2State = false;
+  document.querySelector('[data-action="add-role"]').addEventListener('click', e => {
+    e.stopPropagation();
+    const btn = e.currentTarget;
+    const matrix = document.getElementById('ext2Matrix');
+    const count = document.getElementById('ext2Count');
+    if (!ext2State) {
+      const row = document.createElement('div');
+      row.className = 'ext-matrix-row is-new';
+      row.innerHTML = '<div class="mc role">auditor</div><div class="mc y">✓</div><div class="mc n">—</div><div class="mc n">—</div><div class="mc y">✓</div>';
+      matrix.appendChild(row);
+      count.textContent = '4 角色';
+      btn.textContent = '× 撤销 (auditor 已加)';
+      btn.classList.add('is-fired');
+      ext2State = true;
+    } else {
+      matrix.lastElementChild.remove();
+      count.textContent = '3 角色';
+      btn.textContent = '+ 加一个角色 "auditor"';
+      btn.classList.remove('is-fired');
+      ext2State = false;
+    }
+  });
+
+  // Ext 3 · insert a flow node
+  let ext3State = false;
+  document.querySelector('[data-action="add-flow"]').addEventListener('click', e => {
+    e.stopPropagation();
+    const btn = e.currentTarget;
+    const flow = document.getElementById('ext3Flow');
+    const count = document.getElementById('ext3Count');
+    if (!ext3State) {
+      const arr = document.createElement('span');
+      arr.className = 'ext-flow-arr';
+      arr.textContent = '→';
+      const node = document.createElement('span');
+      node.className = 'ext-flow-node is-new';
+      node.textContent = '部门审批';
+      // insert before "财务审批"
+      const all = flow.children;
+      // 提交 → 直属审批 → 财务审批 → 完成
+      // indices: 0:提交, 1:→, 2:直属审批, 3:→, 4:财务审批
+      const target = all[4]; // 财务审批
+      flow.insertBefore(node, target);
+      flow.insertBefore(arr, target);
+      count.textContent = '4 节点';
+      btn.textContent = '× 撤销 (节点已插入)';
+      btn.classList.add('is-fired');
+      ext3State = true;
+    } else {
+      const nodes = flow.querySelectorAll('.ext-flow-node');
+      const newOne = flow.querySelector('.is-new');
+      if (newOne) {
+        // remove the arr right before it
+        const prev = newOne.previousElementSibling;
+        const next = newOne.nextElementSibling;
+        if (prev && prev.classList.contains('ext-flow-arr')) prev.remove();
+        else if (next && next.classList.contains('ext-flow-arr')) next.remove();
+        newOne.remove();
+      }
+      count.textContent = '3 节点';
+      btn.textContent = '+ 在中间插一个 "部门审批" 节点';
+      btn.classList.remove('is-fired');
+      ext3State = false;
+    }
+  });
+
+  // Ext 4 · switch brand tokens
+  const BRAND_DEFAULT = [
+    { name: 'primary', val: '#ff4d2e' },
+    { name: 'ink', val: '#16161d' },
+    { name: 'bg', val: '#f3eee5' },
+    { name: 'success', val: '#1f6b3a' }
+  ];
+  const BRAND_ACME = [
+    { name: 'primary', val: '#0a4cff' },
+    { name: 'ink', val: '#0e1a2b' },
+    { name: 'bg', val: '#f4f7fb' },
+    { name: 'success', val: '#0e7f5a' }
+  ];
+
+  let ext4State = false;
+  function renderTheme(tokens, label) {
+    const stage = document.getElementById('ext4Theme');
+    document.getElementById('ext4Brand').textContent = label;
+    stage.innerHTML = tokens.map(t => `
+      <div class="ext-theme-token">
+        <div class="swatch" style="background:${t.val}"></div>
+        <div class="tk-name">${t.name}</div>
+        <div class="tk-val">${t.val}</div>
+      </div>
+    `).join('');
+  }
+
+  document.querySelector('[data-action="switch-brand"]').addEventListener('click', e => {
+    e.stopPropagation();
+    const btn = e.currentTarget;
+    if (!ext4State) {
+      renderTheme(BRAND_ACME, 'brand · acme');
+      btn.textContent = '← 切回 "默认品牌"';
+      btn.classList.add('is-fired');
+      ext4State = true;
+    } else {
+      renderTheme(BRAND_DEFAULT, 'brand · default');
+      btn.textContent = '→ 切换到 "白标客户 Acme"';
+      btn.classList.remove('is-fired');
+      ext4State = false;
+    }
+  });
+})();
+
+// ===== Game 3: design quiz =====
+(function(){
+  const answers = { 1: null, 2: null, 3: null };
+  const designs = document.querySelectorAll('.quiz-design');
+  const questions = document.querySelectorAll('.quiz-q');
+  const doneEl = document.getElementById('quizDone');
+  const verdict = document.getElementById('quizVerdict');
+
+  const FB = {
+    1: {
+      A: { kind: 'wrong', text: '<strong>A · 全硬编码</strong>：加"医疗报销"= 再画一页 + 写一段新代码 + 部署。<span class="fb-em">代价最贵</span>。' },
+      B: { kind: 'partial', text: '<strong>B · 部分扩展</strong>：加 enum 值 + 配字段——动到代码但范围小。<span class="fb-em">中等代价</span>。' },
+      C: { kind: 'right', text: '<strong>C · 全配置</strong>：业务方在后台加个类型 + 配字段 + 配流程，<span class="fb-em">不发版</span>。' }
+    },
+    2: {
+      A: { kind: 'wrong', text: '<strong>A · 全硬编码</strong>：4 级审批意味着改 5 处代码、给一个分公司开特殊分支。<span class="fb-em">代价最贵</span>。' },
+      B: { kind: 'partial', text: '<strong>B · 部分扩展</strong>：enum 改了，但流程逻辑还要动。中等代价。' },
+      C: { kind: 'right', text: '<strong>C · 全配置</strong>：拖一个节点到分公司的流程模板上，<span class="fb-em">不动代码</span>。' }
+    },
+    3: {
+      A: { kind: 'partial', text: '<strong>选 A · 短期省事</strong>——半年后会被骂。需求说"会加 5 种 + 分公司不同审批级数"，这是<span class="fb-em">明确的变化信号</span>，硬编码风险高。' },
+      B: { kind: 'partial', text: '<strong>选 B · 务实的平衡</strong>——适合当前需求 + 未来 1 年。如果团队还在 MVP 阶段、未必能维护可视化编辑器，B 是合理选择。<span class="fb-em">建议起步选 B，1 年后看流量再升 C</span>。' },
+      C: { kind: 'right', text: '<strong>选 C · 长远视角</strong>——适合 2 年后，但前期投入大。如果是长期产品 + 团队有能力维护编辑器，<span class="fb-em">长远账更省</span>。需求里"分公司可能不同"几乎是 C 的呼唤。' }
+    }
+  };
+
+  function selectDesign(letter) {
+    designs.forEach(d => d.classList.toggle('is-selected', d.dataset.design === letter));
+  }
+
+  function refreshSelection() {
+    // sync design highlight to most-recent answer that is set
+    const last = [3,2,1].map(n => answers[n]).find(v => v != null);
+    if (last) selectDesign(last);
+    else designs.forEach(d => d.classList.remove('is-selected'));
+  }
+
+  questions.forEach(q => {
+    const qNum = parseInt(q.dataset.q, 10);
+    const choices = q.querySelectorAll('.quiz-choice');
+    choices.forEach(c => {
+      c.addEventListener('click', () => {
+        const letter = c.dataset.choice;
+        answers[qNum] = letter;
+        // mark this choice selected within question
+        choices.forEach(o => {
+          o.classList.remove('is-selected', 'is-right', 'is-wrong');
+        });
+        c.classList.add('is-selected');
+        // show feedback for this question
+        const fb = q.querySelector('.quiz-feedback');
+        fb.classList.add('show');
+        const meta = FB[qNum][letter];
+        fb.innerHTML = meta.text;
+        // count done
+        doneEl.textContent = Object.values(answers).filter(v => v != null).length;
+        refreshSelection();
+      });
+    });
+  });
+
+  designs.forEach(d => {
+    d.addEventListener('click', () => {
+      selectDesign(d.dataset.design);
+    });
+  });
+
+  document.getElementById('quizSubmit').addEventListener('click', () => {
+    let q1 = answers[1], q2 = answers[2], q3 = answers[3];
+    const lines = [];
+
+    // q1
+    if (!q1) {
+      lines.push('<li><strong>Q1 · 加"医疗报销"</strong>：还没答——快试试。</li>');
+    } else if (q1 === 'C') {
+      lines.push('<li>✓ <strong>Q1</strong>：选 C 正解 — 全配置下加类型零代码。');
+      // mark visually
+      const choices = document.querySelector('[data-q="1"]').querySelectorAll('.quiz-choice');
+      choices.forEach(c => {
+        if (c.dataset.choice === 'C') c.classList.add('is-right');
+        else if (c.dataset.choice === q1) c.classList.add('is-wrong');
+      });
+    } else {
+      lines.push(`<li>× <strong>Q1</strong>：你选了 ${q1}，<span class="why">正解是 C — 全配置下加类型零代码，A/B 都要动代码。</span></li>`);
+      const choices = document.querySelector('[data-q="1"]').querySelectorAll('.quiz-choice');
+      choices.forEach(c => {
+        if (c.dataset.choice === 'C') c.classList.add('is-right');
+        else if (c.dataset.choice === q1) c.classList.add('is-wrong');
+      });
+    }
+
+    // q2
+    if (!q2) {
+      lines.push('<li><strong>Q2 · 加"4 级审批"</strong>：还没答——快试试。</li>');
+    } else if (q2 === 'C') {
+      lines.push('<li>✓ <strong>Q2</strong>：选 C 正解 — 流程模板让分公司自己配级数。</li>');
+      const choices = document.querySelector('[data-q="2"]').querySelectorAll('.quiz-choice');
+      choices.forEach(c => {
+        if (c.dataset.choice === 'C') c.classList.add('is-right');
+        else if (c.dataset.choice === q2) c.classList.add('is-wrong');
+      });
+    } else {
+      lines.push(`<li>× <strong>Q2</strong>：你选了 ${q2}，<span class="why">正解是 C — 拖一个节点比改代码便宜数量级。</span></li>`);
+      const choices = document.querySelector('[data-q="2"]').querySelectorAll('.quiz-choice');
+      choices.forEach(c => {
+        if (c.dataset.choice === 'C') c.classList.add('is-right');
+        else if (c.dataset.choice === q2) c.classList.add('is-wrong');
+      });
+    }
+
+    // q3 — no standard answer; give context-aware feedback
+    if (!q3) {
+      lines.push('<li><strong>Q3 · 当前适合哪个</strong>：还没答——这题没标准答案，给一个选择体会一下。</li>');
+    } else {
+      const map = {
+        A: '<strong>Q3 · 你选 A</strong>：<span class="why">需求方明说"未来会加 5 种 + 分公司差异"——硬编码 = 半年后骂。建议至少 B。</span>',
+        B: '<strong>Q3 · 你选 B</strong>：<span class="why">务实之选 — 适合 MVP 阶段。等业务方第三次提"再加一种"时，再升 C 不晚。</span>',
+        C: '<strong>Q3 · 你选 C</strong>：<span class="why">长远账好——但前期要建可视化编辑器，团队要有能力维护。如果未来明确变 → C 是对的。</span>'
+      };
+      lines.push(`<li>${map[q3]}</li>`);
+    }
+
+    // verdict
+    const correct = (q1 === 'C' ? 1 : 0) + (q2 === 'C' ? 1 : 0);
+    let vClass, vLabel, headline;
+    if (correct === 2 && q3) {
+      vClass = 'win';
+      vLabel = '理解到位';
+      headline = '你已经在用"扩展点"语言做设计判断了。';
+    } else if (correct === 1) {
+      vClass = 'partial';
+      vLabel = '差一点';
+      headline = '对了一半——再想一遍"未来的代价"是怎么算的。';
+    } else if (correct === 0 && (q1 || q2)) {
+      vClass = 'miss';
+      vLabel = '再想想';
+      headline = '换个视角：题目不问"现在最简单"——问"未来加东西最便宜"。';
+    } else {
+      vClass = 'partial';
+      vLabel = '先答 Q1 / Q2';
+      headline = '前两题有标准答案——答完再来看整体判断。';
+    }
+
+    verdict.innerHTML = `<span class="v-tag ${vClass}">${vLabel}</span><h4>${headline}</h4><ul>${lines.join('')}</ul>`;
+    verdict.classList.add('show');
+    verdict.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  });
+
+  document.getElementById('quizReset').addEventListener('click', () => {
+    answers[1] = answers[2] = answers[3] = null;
+    doneEl.textContent = 0;
+    document.querySelectorAll('.quiz-choice').forEach(c => c.classList.remove('is-selected', 'is-right', 'is-wrong'));
+    document.querySelectorAll('.quiz-feedback').forEach(f => { f.classList.remove('show'); f.innerHTML = ''; });
+    designs.forEach(d => d.classList.remove('is-selected'));
+    verdict.classList.remove('show');
+    verdict.innerHTML = '';
+  });
+})();
+</script>
+
+</body>
+</html>

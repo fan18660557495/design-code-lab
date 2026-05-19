@@ -1,0 +1,2533 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>最终交付：工程能接住的设计说明 — AI LABBOOK · X22</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,300..900&family=Geist:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Noto+Sans+SC:wght@300;400;500;700;900&family=Noto+Serif+SC:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f3eee5;
+    --bg-2: #ebe4d4;
+    --ink: #16161d;
+    --ink-soft: #4a4a55;
+    --ink-mute: #8a8a92;
+    --line: #d5cdba;
+    --line-soft: #e3dcca;
+    --accent: #ff4d2e;
+    --accent-soft: #ffe4dc;
+    --blue: #0a4cff;
+    --blue-soft: #dde6ff;
+    --green: #1f6b3a;
+    --green-soft: #d4ecdb;
+    --yellow: #ffcf3d;
+    --paper: #faf7f0;
+    --shadow: 0 1px 0 rgba(0,0,0,0.04), 0 8px 24px rgba(22,22,29,0.06);
+
+    --obj-color: #ff4d2e;
+    --obj-soft: rgba(255,77,46,0.12);
+    --proj-color: #1f6b3a;
+    --proj-soft: rgba(31,107,58,0.12);
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'Geist', 'Noto Sans SC', system-ui, -apple-system, sans-serif;
+    font-size: 16px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    background-image: radial-gradient(circle at 1px 1px, rgba(22,22,29,0.05) 1px, transparent 0);
+    background-size: 24px 24px;
+  }
+
+  .display-cn { font-family: 'Noto Serif SC', 'Fraunces', serif; font-weight: 900; letter-spacing: -0.01em; }
+  .display-en { font-family: 'Fraunces', 'Noto Serif SC', serif; font-weight: 600; font-style: italic; letter-spacing: -0.02em; }
+  .mono { font-family: 'JetBrains Mono', monospace; }
+  .label { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-mute); }
+
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 0 32px; }
+
+  /* Topbar */
+  .topbar {
+    border-bottom: 1px dashed var(--line);
+    padding: 16px 0;
+    background: var(--bg);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .topbar-inner { display: flex; justify-content: space-between; align-items: center; gap: 24px; flex-wrap: wrap; }
+  .brand-block { display: flex; align-items: center; gap: 10px; font-family: 'JetBrains Mono', monospace; font-size: 13px; }
+  .brand { display: inline-flex; align-items: center; gap: 6px; color: var(--ink); text-decoration: none; font-weight: 600; }
+  .brand-arrow { color: var(--ink-mute); transition: transform .2s; }
+  .brand:hover .brand-arrow { transform: translateX(-3px); }
+  .brand .dot { display: inline-block; width: 8px; height: 8px; background: var(--accent); border-radius: 50%; vertical-align: middle; animation: pulse 2s ease-in-out infinite; margin-left: 4px; }
+  .brand-sep { color: var(--ink-mute); }
+  .brand-current { color: var(--ink-soft); }
+  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+  .nav-links { display: flex; gap: 18px; font-size: 13px; flex-wrap: wrap; }
+  .nav-links a { color: var(--ink-soft); text-decoration: none; transition: color 0.2s; }
+  .nav-links a:hover { color: var(--accent); }
+  .nav-links a.current { color: var(--accent); font-weight: 600; }
+
+  /* Hero */
+  .hero { padding: 100px 0 80px; position: relative; overflow: hidden; }
+  .hero-meta { display: flex; gap: 24px; margin-bottom: 32px; align-items: center; flex-wrap: wrap; }
+  .hero-meta .pill { padding: 6px 12px; border: 1px solid var(--ink); border-radius: 100px; font-size: 11px; font-family: 'JetBrains Mono', monospace; letter-spacing: 0.05em; }
+  .hero-meta .pill.fill { background: var(--ink); color: var(--bg); }
+  .hero-meta .pill.purple { background: var(--obj-color); color: white; border-color: var(--obj-color); }
+  .hero-meta .pill.finale { background: var(--accent); color: white; border-color: var(--accent); }
+  .hero h1 {
+    font-family: 'Noto Serif SC', 'Fraunces', serif;
+    font-weight: 900;
+    font-size: clamp(48px, 7vw, 92px);
+    line-height: 0.95;
+    letter-spacing: -0.03em;
+    margin: 0 0 24px;
+  }
+  .hero h1 .em { font-family: 'Noto Serif SC', serif; font-weight: 500; color: var(--accent); }
+  .hero h1 .purple { color: var(--obj-color); font-family: 'Noto Serif SC', serif; font-weight: 500; }
+  .hero p.lede {
+    font-size: 20px;
+    line-height: 1.5;
+    max-width: 640px;
+    color: var(--ink-soft);
+    margin: 0 0 40px;
+  }
+  .hero-grid { display: grid; grid-template-columns: 1.4fr 1fr; gap: 48px; align-items: end; }
+  @media (max-width: 880px) { .hero-grid { grid-template-columns: 1fr; } }
+  .hero-side { border-left: 1px dashed var(--line); padding-left: 24px; font-size: 13px; color: var(--ink-soft); }
+  .hero-side .row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px dashed var(--line); gap: 12px; }
+  .hero-side .row:last-child { border-bottom: none; }
+  .hero-side .row .k { color: var(--ink-mute); font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.05em; text-transform: uppercase; }
+  .hero-side .row .v { font-weight: 500; }
+
+  /* Sections */
+  section { padding: 80px 0; border-top: 1px solid var(--line); position: relative; }
+  .section-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 56px; flex-wrap: wrap; gap: 16px; }
+  .section-num { font-family: 'JetBrains Mono', monospace; font-size: 13px; color: var(--ink-mute); letter-spacing: 0.1em; margin-top: 6px; }
+  .section-num strong { color: var(--accent); }
+  .section-title { font-family: 'Noto Serif SC', serif; font-weight: 900; font-size: clamp(32px, 4.5vw, 52px); line-height: 1.05; letter-spacing: -0.02em; margin: 8px 0 0; max-width: 22ch; }
+  .section-title .em { font-family: 'Noto Serif SC', serif; font-weight: 500; color: var(--accent); }
+  .section-title .purple { color: var(--obj-color); font-family: 'Noto Serif SC', serif; font-weight: 500; }
+  .section-sub { color: var(--ink-soft); font-size: 17px; max-width: 38ch; line-height: 1.55; margin: 0; }
+
+  /* Act tag */
+  .act-tag { display: inline-block; padding: 4px 12px; font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; border-radius: 100px; }
+  .act-tag.look { background: var(--blue-soft); color: var(--blue); }
+  .act-tag.break { background: var(--obj-soft); color: var(--obj-color); }
+  .act-tag.make { background: var(--proj-soft); color: var(--proj-color); }
+
+  /* Problem cards */
+  .problem-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; margin-top: 24px; }
+  @media (max-width: 880px) { .problem-grid { grid-template-columns: 1fr; } }
+  .problem-card { background: var(--paper); border: 1px solid var(--line); border-radius: 6px; padding: 28px; position: relative; }
+  .problem-card.bad { border-color: var(--accent); background: var(--accent-soft); }
+  .problem-card.good { border-color: var(--obj-color); background: var(--obj-soft); }
+  .problem-card .tag { position: absolute; top: -12px; left: 24px; background: var(--bg); padding: 2px 10px; font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.1em; }
+  .problem-card.bad .tag { color: var(--accent); border: 1px solid var(--accent); }
+  .problem-card.good .tag { color: var(--obj-color); border: 1px solid var(--obj-color); }
+  .problem-card h3 { font-family: 'Noto Serif SC', serif; font-size: 22px; margin: 0 0 12px; font-weight: 700; }
+  .problem-card p { margin: 0; color: var(--ink-soft); font-size: 14px; line-height: 1.55; }
+  .problem-card p + p { margin-top: 10px; }
+  .problem-card .timeline-bar {
+    margin: 14px 0 8px;
+    display: flex;
+    gap: 2px;
+    align-items: center;
+  }
+  .problem-card .tb-week {
+    flex: 1;
+    height: 14px;
+    border-radius: 2px;
+    background: var(--bg-2);
+    border: 1px solid var(--line);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--ink-mute);
+  }
+  .problem-card.bad .tb-week.w-on { background: var(--accent); color: white; border-color: var(--accent); }
+  .problem-card.bad .tb-week.w-drag { background: repeating-linear-gradient(45deg, var(--accent-soft), var(--accent-soft) 4px, var(--bg) 4px, var(--bg) 8px); color: var(--accent); border-color: var(--accent); }
+  .problem-card.good .tb-week.w-on { background: var(--obj-color); color: white; border-color: var(--obj-color); }
+  .problem-card .tb-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--ink-mute);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+
+  /* GAME 1: spec TOC */
+  .spec-stage {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 28px;
+    position: relative;
+  }
+  .spec-grid {
+    display: grid;
+    grid-template-columns: 1fr 1.4fr;
+    gap: 32px;
+  }
+  @media (max-width: 980px) { .spec-grid { grid-template-columns: 1fr; } }
+
+  .spec-toc {
+    background: white;
+    border: 1px solid var(--obj-color);
+    border-radius: 8px;
+    padding: 22px 18px 18px;
+    position: relative;
+    align-self: start;
+  }
+  .spec-toc::before {
+    content: 'SPEC · TABLE OF CONTENTS';
+    position: absolute;
+    top: -10px;
+    left: 14px;
+    background: var(--obj-color);
+    color: white;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    padding: 2px 10px;
+    border-radius: 100px;
+  }
+  .spec-toc-title {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 16px;
+    font-weight: 700;
+    margin: 0 0 6px;
+  }
+  .spec-toc-version {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--ink-mute);
+    margin-bottom: 14px;
+    padding-bottom: 12px;
+    border-bottom: 1px dashed var(--line);
+  }
+  .spec-toc-tree {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    line-height: 1.4;
+  }
+  .toc-group { margin-bottom: 8px; }
+  .toc-group:last-child { margin-bottom: 0; }
+  .toc-h {
+    font-weight: 700;
+    font-size: 13px;
+    color: var(--ink);
+    padding: 4px 0;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .toc-h .toc-h-num {
+    color: var(--obj-color);
+    font-weight: 700;
+  }
+  .toc-h .toc-h-name {
+    flex: 1;
+  }
+  .toc-h .toc-h-count {
+    color: var(--ink-mute);
+    font-size: 10px;
+    font-weight: 400;
+  }
+  .toc-sub {
+    margin: 2px 0 0 14px;
+    padding-left: 8px;
+    border-left: 1px dashed var(--line);
+  }
+  .toc-item {
+    padding: 4px 8px;
+    margin: 2px 0;
+    border-radius: 3px;
+    cursor: pointer;
+    color: var(--ink-soft);
+    font-size: 11.5px;
+    transition: all 0.15s;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .toc-item:hover {
+    background: var(--obj-soft);
+    color: var(--obj-color);
+  }
+  .toc-item .toc-i-num {
+    color: var(--ink-mute);
+    font-size: 10px;
+    flex-shrink: 0;
+  }
+  .toc-item .toc-i-name {
+    flex: 1;
+  }
+  .toc-item.is-active {
+    background: var(--obj-color);
+    color: white;
+  }
+  .toc-item.is-active .toc-i-num {
+    color: rgba(255,255,255,0.7);
+  }
+  .toc-item.is-visited::after {
+    content: '';
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--proj-color);
+    display: inline-block;
+    flex-shrink: 0;
+  }
+  .toc-item.is-active.is-visited::after {
+    background: white;
+  }
+
+  .spec-content {
+    background: white;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 24px;
+    min-height: 460px;
+    position: relative;
+  }
+  .spec-content-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    padding-bottom: 14px;
+    margin-bottom: 18px;
+    border-bottom: 1px dashed var(--line);
+    gap: 12px;
+  }
+  .spec-content-title {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 18px;
+    font-weight: 700;
+    margin: 0;
+  }
+  .spec-content-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--obj-color);
+    background: var(--obj-soft);
+    padding: 3px 9px;
+    border-radius: 100px;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    flex-shrink: 0;
+  }
+  .spec-content-body {
+    font-size: 13px;
+    line-height: 1.7;
+    color: var(--ink-soft);
+  }
+  .spec-empty {
+    color: var(--ink-mute);
+    font-style: italic;
+    font-size: 13px;
+    padding: 80px 20px;
+    text-align: center;
+  }
+  .spec-empty .arrow {
+    display: block;
+    font-size: 24px;
+    margin-bottom: 10px;
+    color: var(--obj-color);
+  }
+
+  /* spec content samples */
+  .sc-list { margin: 0; padding: 0; list-style: none; }
+  .sc-list li {
+    padding: 6px 0;
+    border-bottom: 1px dashed var(--line-soft);
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+    font-size: 13px;
+  }
+  .sc-list li:last-child { border-bottom: none; }
+  .sc-list li .k {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--ink-mute);
+    min-width: 88px;
+    flex-shrink: 0;
+  }
+  .sc-list li .v { flex: 1; color: var(--ink); }
+  .sc-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 11.5px;
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .sc-table th, .sc-table td {
+    padding: 6px 8px;
+    text-align: left;
+    border-bottom: 1px dashed var(--line-soft);
+    vertical-align: top;
+  }
+  .sc-table th {
+    background: var(--bg-2);
+    color: var(--ink-mute);
+    font-weight: 600;
+    font-size: 10px;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    border-bottom: 1px solid var(--line);
+  }
+  .sc-table td.fname { color: var(--obj-color); font-weight: 600; }
+  .sc-table td .ck-y { color: var(--proj-color); }
+  .sc-table td .ck-n { color: var(--ink-mute); }
+  .sc-shots {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+  }
+  .sc-shot {
+    background: var(--bg);
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    padding: 8px;
+    height: 86px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    font-size: 10px;
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--ink-mute);
+    text-align: center;
+  }
+  .sc-shot .sc-icon { font-size: 18px; color: var(--obj-color); }
+  .sc-shot .sc-name { font-weight: 600; color: var(--ink); text-transform: uppercase; letter-spacing: 0.05em; font-size: 9px; }
+  .sc-shot.empty { background: repeating-linear-gradient(45deg, var(--bg-2), var(--bg-2) 4px, var(--bg) 4px, var(--bg) 8px); }
+  .sc-shot.error { background: var(--accent-soft); color: var(--accent); }
+  .sc-fsm {
+    background: var(--bg);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 18px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+    justify-content: center;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+  }
+  .fsm-node {
+    padding: 6px 12px;
+    border: 1px solid var(--obj-color);
+    background: white;
+    border-radius: 4px;
+    color: var(--obj-color);
+    font-weight: 600;
+  }
+  .fsm-arrow {
+    color: var(--ink-mute);
+  }
+  .sc-given {
+    background: var(--bg);
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    padding: 10px 12px;
+    margin: 6px 0;
+    font-size: 12px;
+    line-height: 1.55;
+  }
+  .sc-given .gw {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--obj-color);
+    font-weight: 700;
+    display: inline-block;
+    width: 50px;
+  }
+  .sc-given.boundary { border-color: var(--accent); background: var(--accent-soft); }
+  .sc-given.boundary .gw { color: var(--accent); }
+  .sc-perf-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 6px 10px;
+    border-bottom: 1px dashed var(--line-soft);
+    font-size: 12px;
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .sc-perf-row .perf-k { color: var(--ink-soft); }
+  .sc-perf-row .perf-v { color: var(--proj-color); font-weight: 700; }
+  .sc-tree {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    line-height: 1.55;
+    background: var(--bg);
+    padding: 14px;
+    border-radius: 4px;
+    border: 1px solid var(--line);
+    color: var(--ink-soft);
+    white-space: pre;
+    overflow-x: auto;
+  }
+  .sc-tree .tn { color: var(--ink); font-weight: 600; }
+  .sc-tree .tt { color: var(--obj-color); }
+  .sc-api {
+    background: var(--ink);
+    color: #c8c8d0;
+    border-radius: 4px;
+    padding: 14px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    line-height: 1.6;
+    white-space: pre;
+    overflow-x: auto;
+  }
+  .sc-api .verb { color: var(--accent); font-weight: 700; }
+  .sc-api .key { color: var(--yellow); }
+  .sc-api .str { color: #97e1c1; }
+  .sc-api .num { color: #ffb673; }
+  .sc-api .com { color: #8a8a92; }
+  .sc-roles {
+    display: grid;
+    grid-template-columns: 100px repeat(4, 1fr);
+    gap: 4px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+  }
+  .sc-roles .rc {
+    padding: 5px 7px;
+    border-radius: 3px;
+    text-align: center;
+  }
+  .sc-roles .rc.head { background: var(--bg-2); color: var(--ink-mute); font-size: 10px; letter-spacing: 0.05em; text-transform: uppercase; }
+  .sc-roles .rc.role { background: var(--obj-soft); color: var(--obj-color); font-weight: 600; text-align: left; }
+  .sc-roles .rc.y { background: var(--green-soft); color: var(--green); font-weight: 600; }
+  .sc-roles .rc.n { background: var(--bg-2); color: var(--ink-mute); }
+  .sc-roles .rc.r { background: var(--blue-soft); color: var(--blue); font-weight: 600; }
+  .sc-flow {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 10px 12px;
+    background: var(--bg);
+    border-radius: 4px;
+    border: 1px solid var(--line);
+    margin: 6px 0;
+    flex-wrap: wrap;
+    font-size: 12px;
+  }
+  .sc-flow .fn { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--obj-color); font-weight: 700; min-width: 56px; }
+  .sc-flow .step { padding: 3px 8px; background: white; border: 1px solid var(--line); border-radius: 3px; font-family: 'JetBrains Mono', monospace; font-size: 11px; }
+  .sc-flow .sep { color: var(--ink-mute); }
+  .sc-comp {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .sc-comp .cp {
+    padding: 4px 10px;
+    background: var(--obj-soft);
+    color: var(--obj-color);
+    border-radius: 3px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    font-weight: 600;
+  }
+  .sc-comp .cp.shared {
+    background: var(--blue-soft);
+    color: var(--blue);
+  }
+  .sc-source-row {
+    display: flex;
+    gap: 10px;
+    padding: 6px 8px;
+    border-radius: 3px;
+    margin: 3px 0;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+  }
+  .sc-source-row.local { background: var(--green-soft); color: var(--green); }
+  .sc-source-row.api { background: var(--blue-soft); color: var(--blue); }
+  .sc-source-row.push { background: var(--accent-soft); color: var(--accent); }
+  .sc-source-row.third { background: var(--obj-soft); color: var(--obj-color); }
+  .sc-source-row .sn { min-width: 90px; font-weight: 700; }
+
+  /* spec progress */
+  .spec-progress {
+    margin-top: 18px;
+    padding: 14px 18px;
+    background: var(--bg-2);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 14px;
+    flex-wrap: wrap;
+    font-size: 12px;
+  }
+  .spec-progress .pl { font-family: 'JetBrains Mono', monospace; color: var(--ink-mute); letter-spacing: 0.05em; text-transform: uppercase; font-size: 11px; }
+  .spec-progress .pn {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14px;
+    color: var(--obj-color);
+    font-weight: 700;
+  }
+  .spec-bar {
+    flex: 1;
+    height: 8px;
+    background: white;
+    border-radius: 100px;
+    overflow: hidden;
+    border: 1px solid var(--line);
+    min-width: 200px;
+  }
+  .spec-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--obj-color), var(--accent));
+    width: 0%;
+    transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .spec-progress-msg {
+    font-size: 12px;
+    color: var(--ink-soft);
+    font-style: italic;
+  }
+  .spec-progress-msg.win {
+    color: var(--proj-color);
+    font-weight: 600;
+    font-style: normal;
+  }
+
+  /* Reveal bar */
+  .reveal-bar {
+    margin-top: 32px;
+    padding: 20px 28px;
+    background: var(--ink);
+    color: var(--bg);
+    border-radius: 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+  .reveal-bar .msg { font-family: 'Noto Serif SC', serif; font-size: 17px; font-weight: 500; line-height: 1.55; }
+  .reveal-bar .msg .em { color: var(--accent); }
+  .reveal-bar .counter { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ink-mute); letter-spacing: 0.05em; }
+  .reveal-bar .counter strong { color: var(--accent); font-size: 14px; }
+
+  /* GAME 2: role cards */
+  .roles-stage {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 22px;
+    margin-top: 32px;
+  }
+  @media (max-width: 980px) { .roles-stage { grid-template-columns: 1fr; } }
+  .role-card {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 24px;
+    cursor: pointer;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+  }
+  .role-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 32px rgba(22,22,29,0.08);
+  }
+  .role-card.is-open {
+    background: white;
+    border-color: var(--obj-color);
+    box-shadow: 0 12px 32px rgba(255,77,46,0.15);
+  }
+  .role-card-head {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 14px;
+  }
+  .role-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    font-weight: 700;
+    color: white;
+    font-family: 'JetBrains Mono', monospace;
+    flex-shrink: 0;
+  }
+  .role-icon.eng { background: var(--blue); }
+  .role-icon.qa { background: var(--green); }
+  .role-icon.pm { background: var(--accent); }
+  .role-card-meta { flex: 1; min-width: 0; }
+  .role-card-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    color: var(--ink-mute);
+    text-transform: uppercase;
+  }
+  .role-card-name {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 22px;
+    font-weight: 700;
+    margin: 2px 0 0;
+  }
+  .role-card-tldr {
+    font-size: 13px;
+    color: var(--ink-soft);
+    line-height: 1.55;
+    margin: 0 0 14px;
+  }
+  .role-card-toggle {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--obj-color);
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    cursor: pointer;
+    user-select: none;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .role-card-toggle .toggle-arrow {
+    transition: transform 0.2s;
+    display: inline-block;
+  }
+  .role-card.is-open .toggle-arrow {
+    transform: rotate(90deg);
+  }
+  .role-detail {
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px dashed var(--line);
+    display: none;
+    animation: slideDown 0.3s ease-out;
+  }
+  .role-card.is-open .role-detail { display: block; }
+  @keyframes slideDown {
+    from { opacity: 0; transform: translateY(-8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .role-detail h5 {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--obj-color);
+    margin: 0 0 8px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+  .role-detail h5:not(:first-child) { margin-top: 14px; }
+  .role-uses {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .role-uses li {
+    padding: 5px 0;
+    border-bottom: 1px dashed var(--line-soft);
+    font-size: 12.5px;
+    color: var(--ink-soft);
+    display: flex;
+    gap: 8px;
+    line-height: 1.5;
+  }
+  .role-uses li:last-child { border-bottom: none; }
+  .role-uses li .ru-task {
+    color: var(--ink);
+    font-weight: 600;
+    flex: 1;
+    min-width: 0;
+  }
+  .role-uses li .ru-ref {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--obj-color);
+    background: var(--obj-soft);
+    padding: 2px 6px;
+    border-radius: 3px;
+    flex-shrink: 0;
+    white-space: nowrap;
+  }
+  .role-bad {
+    margin-top: 14px;
+    padding: 12px 14px;
+    background: var(--accent-soft);
+    border-left: 3px solid var(--accent);
+    border-radius: 4px;
+    font-size: 12px;
+    color: var(--ink-soft);
+    line-height: 1.55;
+  }
+  .role-bad .rb-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--accent);
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    font-weight: 700;
+    display: block;
+    margin-bottom: 4px;
+  }
+  .role-bad strong { color: var(--ink); }
+
+  .roles-progress {
+    margin-top: 26px;
+    padding: 16px 22px;
+    background: var(--bg-2);
+    border-radius: 6px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+    font-size: 12px;
+  }
+  .roles-progress .rpl { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ink-mute); letter-spacing: 0.05em; text-transform: uppercase; }
+  .roles-progress .rpc strong { font-family: 'JetBrains Mono', monospace; color: var(--proj-color); font-size: 14px; }
+
+  /* GAME 3: checklist */
+  .checklist-stage {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 32px;
+    margin-top: 24px;
+  }
+  .checklist-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+  .checklist-title {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 22px;
+    margin: 0;
+    font-weight: 700;
+  }
+  .checklist-meta {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--ink-mute);
+  }
+  .checklist-meta .cl-done { color: var(--proj-color); font-weight: 700; font-size: 14px; }
+
+  .check-groups { display: flex; flex-direction: column; gap: 20px; }
+  .check-group {
+    background: white;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 22px;
+  }
+  .check-group-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 16px;
+    padding-bottom: 12px;
+    border-bottom: 1px dashed var(--line);
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .check-group-title {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 17px;
+    font-weight: 700;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .check-group-num {
+    width: 28px;
+    height: 28px;
+    background: var(--obj-color);
+    color: white;
+    border-radius: 6px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+  .check-group-score {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--ink-mute);
+    letter-spacing: 0.05em;
+  }
+  .check-group-score .cgs-y { color: var(--proj-color); font-weight: 700; }
+  .check-group-score .cgs-p { color: #c79f1e; font-weight: 700; }
+  .check-group-score .cgs-n { color: var(--accent); font-weight: 700; }
+
+  .check-rows { display: flex; flex-direction: column; gap: 6px; }
+  .check-row {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 16px;
+    padding: 10px 12px;
+    background: var(--bg);
+    border-radius: 4px;
+    border: 1px solid var(--line-soft);
+    align-items: center;
+    transition: all 0.15s;
+  }
+  .check-row.is-set { border-color: var(--line); background: white; }
+  .check-row-label {
+    font-size: 13px;
+    color: var(--ink);
+    line-height: 1.5;
+  }
+  .check-row-label .desc {
+    display: block;
+    font-size: 11px;
+    color: var(--ink-mute);
+    margin-top: 2px;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  .check-options {
+    display: inline-flex;
+    gap: 4px;
+    background: var(--bg-2);
+    padding: 3px;
+    border-radius: 100px;
+  }
+  .check-opt {
+    padding: 5px 12px;
+    background: transparent;
+    border: none;
+    border-radius: 100px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--ink-soft);
+    cursor: pointer;
+    transition: all 0.15s;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    user-select: none;
+  }
+  .check-opt:hover { background: white; }
+  .check-opt.sel-y.is-on { background: var(--proj-color); color: white; }
+  .check-opt.sel-p.is-on { background: #c79f1e; color: white; }
+  .check-opt.sel-n.is-on { background: var(--accent); color: white; }
+  .check-opt .opt-mark { font-weight: 700; }
+
+  .checklist-actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 24px;
+    flex-wrap: wrap;
+  }
+  .checklist-btn {
+    padding: 10px 22px;
+    border-radius: 100px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    cursor: pointer;
+    font-weight: 600;
+    border: 1px solid var(--ink);
+    background: transparent;
+    color: var(--ink);
+    transition: all 0.15s;
+  }
+  .checklist-btn:hover { background: var(--ink); color: var(--bg); }
+  .checklist-btn.primary { background: var(--accent); color: white; border-color: var(--accent); }
+  .checklist-btn.primary:hover { background: #e8451f; }
+
+  .verdict-card {
+    margin-top: 28px;
+    padding: 28px 32px;
+    border-radius: 10px;
+    background: var(--ink);
+    color: var(--bg);
+    display: none;
+  }
+  .verdict-card.show { display: block; }
+  .verdict-row {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 28px;
+    align-items: center;
+  }
+  @media (max-width: 720px) {
+    .verdict-row { grid-template-columns: 1fr; gap: 18px; }
+  }
+  .verdict-meter {
+    width: 140px;
+    height: 140px;
+    border-radius: 50%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: conic-gradient(var(--accent) 0deg, var(--ink-soft) 0deg);
+    position: relative;
+    flex-shrink: 0;
+    transition: background 0.6s ease-out;
+  }
+  .verdict-meter::before {
+    content: '';
+    position: absolute;
+    inset: 8px;
+    background: var(--ink);
+    border-radius: 50%;
+  }
+  .verdict-meter-num {
+    position: relative;
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    font-weight: 600;
+    font-size: 38px;
+    line-height: 1;
+    color: white;
+  }
+  .verdict-meter-pct {
+    position: relative;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--accent);
+    margin-top: 4px;
+    letter-spacing: 0.08em;
+  }
+  .verdict-body h4 {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 22px;
+    margin: 0 0 8px;
+    color: white;
+    line-height: 1.3;
+  }
+  .verdict-body p {
+    margin: 0;
+    color: #c8c8d0;
+    font-size: 14px;
+    line-height: 1.6;
+  }
+  .verdict-body .v-tag {
+    display: inline-block;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 3px 10px;
+    border-radius: 100px;
+    margin-bottom: 10px;
+  }
+  .verdict-body .v-tag.full { background: var(--proj-soft); color: #b3e0bf; }
+  .verdict-body .v-tag.most { background: rgba(255,207,61,0.18); color: var(--yellow); }
+  .verdict-body .v-tag.low { background: var(--accent-soft); color: var(--accent); }
+
+  .verdict-next {
+    margin-top: 22px;
+    padding-top: 22px;
+    border-top: 1px dashed rgba(255,255,255,0.15);
+  }
+  .verdict-next h5 {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--accent);
+    margin: 0 0 12px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+  .verdict-list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+  @media (max-width: 720px) {
+    .verdict-list { grid-template-columns: 1fr; }
+  }
+  .verdict-list li {
+    background: rgba(255,255,255,0.05);
+    padding: 10px 14px;
+    border-radius: 6px;
+    font-size: 12.5px;
+    color: #c8c8d0;
+    line-height: 1.5;
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+  }
+  .verdict-list li strong { color: white; }
+  .verdict-list li .v-sec {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--accent);
+    background: rgba(255,77,46,0.15);
+    padding: 2px 6px;
+    border-radius: 3px;
+    flex-shrink: 0;
+  }
+  .verdict-list li .v-eff {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--yellow);
+    margin-left: auto;
+    flex-shrink: 0;
+  }
+
+  /* tips */
+  .tips-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 28px; margin-top: 24px; }
+  @media (max-width: 880px) { .tips-grid { grid-template-columns: 1fr; } }
+  .tip { background: var(--paper); border: 1px solid var(--line); border-radius: 6px; padding: 24px; position: relative; }
+  .tip-num { position: absolute; top: -14px; left: 16px; width: 32px; height: 32px; border-radius: 50%; background: var(--obj-color); color: white; display: flex; align-items: center; justify-content: center; font-family: 'Fraunces', serif; font-style: italic; font-weight: 600; font-size: 14px; }
+  .tip h4 { font-family: 'Noto Serif SC', serif; font-size: 18px; margin: 8px 0 10px; font-weight: 700; }
+  .tip p { color: var(--ink-soft); font-size: 14px; line-height: 1.6; margin: 0; }
+  .tip p + p { margin-top: 8px; }
+  .tip-outro {
+    margin-top: 44px;
+    padding: 30px 32px;
+    background: var(--ink);
+    color: var(--bg);
+    border-radius: 8px;
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 28px;
+    align-items: flex-start;
+  }
+  @media (max-width: 720px) { .tip-outro { grid-template-columns: 1fr; gap: 12px; } }
+  .outro-tag { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.1em; color: var(--accent); padding-top: 4px; }
+  .tip-outro p { margin: 0 0 12px; color: #c8c8d0; line-height: 1.65; font-size: 15px; }
+  .tip-outro p:last-child { margin-bottom: 0; }
+  .tip-outro strong { color: white; }
+
+  /* recap stripe (22-article retrospective) */
+  .recap-stripe {
+    margin: 36px 0 0;
+    padding: 26px 28px;
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+  }
+  .recap-stripe-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+  .recap-title {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 18px;
+    font-weight: 700;
+    margin: 0;
+  }
+  .recap-meta {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--accent);
+    letter-spacing: 0.1em;
+  }
+  .recap-list {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 14px;
+  }
+  @media (max-width: 880px) { .recap-list { grid-template-columns: 1fr; } }
+  .recap-stage {
+    background: white;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 14px 16px;
+    font-size: 12px;
+    color: var(--ink-soft);
+    line-height: 1.55;
+  }
+  .recap-stage .rs-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--obj-color);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    display: block;
+    margin-bottom: 4px;
+  }
+  .recap-stage .rs-title {
+    font-family: 'Noto Serif SC', serif;
+    font-weight: 700;
+    color: var(--ink);
+    font-size: 14px;
+    display: block;
+    margin-bottom: 4px;
+  }
+
+  /* next post */
+  .next-post {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 56px;
+    padding: 32px;
+    background: var(--bg-2);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    text-decoration: none;
+    color: var(--ink);
+    transition: all 0.2s;
+    gap: 24px;
+    flex-wrap: wrap;
+  }
+  .next-post:hover { background: var(--ink); color: var(--bg); }
+  .next-post:hover .np-tag { color: var(--accent); }
+  .next-post:hover .em { color: var(--accent); }
+  .next-post:hover p { color: #c8c8d0; }
+  .np-tag { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.1em; color: var(--ink-mute); margin-bottom: 6px; }
+  .next-post h4 { font-family: 'Noto Serif SC', serif; font-size: 26px; margin: 0 0 8px; font-weight: 700; }
+  .next-post .em { color: var(--obj-color); font-weight: 500; }
+  .next-post p { margin: 0; color: var(--ink-soft); font-size: 14px; max-width: 56ch; }
+  .np-cta { font-family: 'JetBrains Mono', monospace; font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; white-space: nowrap; }
+  .np-cta .arr { display: inline-block; transition: transform .2s; }
+  .next-post:hover .arr { transform: translateX(4px); }
+
+  /* footer */
+  footer { padding: 56px 0 64px; background: var(--bg); color: var(--ink-soft); border-top: 1px solid var(--line); }
+  .byline-group { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; margin-bottom: 32px; padding-bottom: 32px; border-bottom: 1px dashed var(--line); }
+  @media (max-width: 880px) { .byline-group { grid-template-columns: 1fr; } }
+  .byline { display: flex; gap: 16px; align-items: center; }
+  .byline .avatar { width: 56px; height: 56px; border-radius: 50%; object-fit: cover; flex-shrink: 0; }
+  .byline-label { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--accent); letter-spacing: 0.1em; }
+  .byline-label .dot { display: inline-block; width: 6px; height: 6px; background: var(--accent); border-radius: 50%; margin-right: 4px; vertical-align: middle; animation: pulse 2s ease-in-out infinite; }
+  .byline-name { font-family: 'Noto Serif SC', serif; font-weight: 700; font-size: 18px; margin: 4px 0; color: var(--ink); }
+  .byline-name .em { color: var(--accent); font-weight: 500; }
+  .byline-tag { color: var(--ink-soft); font-size: 13px; margin: 0; line-height: 1.5; }
+  .footer-meta { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ink-mute); text-align: center; letter-spacing: 0.05em; }
+  .footer-meta .heart { color: var(--accent); }
+
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="wrap topbar-inner">
+    <div class="brand-block">
+      <a href="book.html#vol-3" class="brand"><span class="brand-arrow">←</span>AI LABBOOK <span class="dot"></span></a>
+      <span class="brand-sep">/</span>
+      <span class="brand-current">X22 · 最终交付 · 工程能接住的设计说明</span>
+    </div>
+    <nav class="nav-links">
+      <a href="book.html#vol-3">路线图</a>
+    </nav>
+  </div>
+</div>
+
+<!-- Hero -->
+<header class="hero">
+  <div class="wrap">
+    <div class="hero-meta">
+      <span class="pill fill">高阶 · ADVANCED</span>
+      <span class="pill purple">STAGE 06 · 完整案例</span>
+      <span class="pill finale">X22 · 案例 3/3 · 终章</span>
+      <span class="label">阅读 ≈ 20 分钟 · 含 3 段互动</span>
+    </div>
+    <div class="hero-grid">
+      <div>
+        <h1>
+          最终<br>
+          <span class="display-cn">交付物</span>——<br>
+          <span class="purple">工程能接住</span>。
+        </h1>
+        <p class="lede">
+          Spec 文档 = 视觉稿 + 4 张架构图 + 数据契约 + 验收清单 + 边界场景。<br>
+          读完 1 次 → 工程能开始写代码 + QA 能开始写测试 + 产品能开始算工期。
+        </p>
+      </div>
+      <div class="hero-side">
+        <div class="row"><span class="k">本页讲什么</span><span class="v">把整套设计组装成 spec</span></div>
+        <div class="row"><span class="k">三幕</span><span class="v">看见 · 拆开 · 再做</span></div>
+        <div class="row"><span class="k">案例</span><span class="v">张明客户详情页 · v1.0</span></div>
+        <div class="row"><span class="k">前置</span><span class="v">X20 / X21 · 案例 1-2</span></div>
+        <div class="row"><span class="k">本篇位置</span><span class="v">22 / 22 · 高阶完结</span></div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- Section 01: 问题 -->
+<section id="problem">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>01</strong> / 问题</div>
+        <h2 class="section-title">3 周的事，<br>怎么<span class="em">拖成 6 周</span>？</h2>
+      </div>
+      <p class="section-sub">
+        交付物决定项目走多快。<strong>稿子 + 标注 + 几条聊天记录</strong> 的"交付"，工程要追问、QA 测不了、PM 估不出。
+        换成<strong>一份完整 spec</strong>——三个角色独立工作，时间就压回来。
+      </p>
+    </div>
+
+    <div class="problem-grid">
+      <div class="problem-card bad">
+        <span class="tag">交付 · 稿 + 标注 + 链接</span>
+        <h3>"我把 Figma 链接发你了"</h3>
+        <p><strong>工程师：</strong>每周 3 次追问——这个字段空时显示什么？没权限呢？删除是软删吗？10000 条数据怎么分页？</p>
+        <p><strong>QA：</strong>写不出测试用例——稿子上没写边界，不知道什么算"通过"。</p>
+        <p><strong>PM：</strong>估不出工期——只看到一张稿，看不到 6 态、4 流程、5 角色矩阵的隐藏成本。</p>
+        <div class="tb-label">原计划 → 实际</div>
+        <div class="timeline-bar">
+          <div class="tb-week w-on">W1</div>
+          <div class="tb-week w-on">W2</div>
+          <div class="tb-week w-on">W3</div>
+          <div class="tb-week w-drag">+1</div>
+          <div class="tb-week w-drag">+2</div>
+          <div class="tb-week w-drag">+3</div>
+        </div>
+        <p style="color:var(--accent)"><strong>结果：</strong>3 周拖成 6 周——一半时间在追问 / 等回复 / 改稿子。</p>
+      </div>
+
+      <div class="problem-card good">
+        <span class="tag">交付 · 完整 spec</span>
+        <h3>"这是 spec v1.0，17 节"</h3>
+        <p><strong>工程师：</strong>独立读 1 次——schema / API / 状态机 / RBAC / 错误处理全都在里面。追问 → 0 次。</p>
+        <p><strong>QA：</strong>直接出测试用例——Given/When/Then 都写好了，边界场景也列了。</p>
+        <p><strong>PM：</strong>直接出 milestones——看组件复用度估 UI、看状态机估逻辑、看异常处理估 QA。</p>
+        <div class="tb-label">原计划 = 实际</div>
+        <div class="timeline-bar">
+          <div class="tb-week w-on">W1</div>
+          <div class="tb-week w-on">W2</div>
+          <div class="tb-week w-on">W3</div>
+          <div class="tb-week">·</div>
+          <div class="tb-week">·</div>
+          <div class="tb-week">·</div>
+        </div>
+        <p style="color:var(--obj-color)"><strong>结果：</strong>3 周事就是 3 周——交付一次到位，团队各自开工。</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Section 02: 幕一 · 看见 -->
+<section id="look">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <span class="act-tag look">幕一 · 看见</span>
+        <div class="section-num"><strong>02</strong> / 看见</div>
+        <h2 class="section-title"><span class="purple">完整 spec</span><br>长什么样。</h2>
+      </div>
+      <p class="section-sub">
+        下面是张明详情页的完整 spec 目录。<strong>点任意一节查看内容样本</strong>——这是真正的交付物。
+        7 个主章节、17 个子节，每节是工程 / QA / PM 直接能用的内容。
+      </p>
+    </div>
+
+    <div class="spec-stage">
+      <div class="spec-grid">
+        <div class="spec-toc">
+          <h4 class="spec-toc-title">张明客户详情页 · spec</h4>
+          <div class="spec-toc-version">v1.0 · 2026-05 · 17 sections</div>
+          <div class="spec-toc-tree" id="specToc">
+
+            <div class="toc-group">
+              <div class="toc-h"><span class="toc-h-num">1.</span><span class="toc-h-name">概述</span><span class="toc-h-count">3 节</span></div>
+              <div class="toc-sub">
+                <div class="toc-item" data-key="1.1"><span class="toc-i-num">1.1</span><span class="toc-i-name">业务目标</span></div>
+                <div class="toc-item" data-key="1.2"><span class="toc-i-num">1.2</span><span class="toc-i-name">核心用户</span></div>
+                <div class="toc-item" data-key="1.3"><span class="toc-i-num">1.3</span><span class="toc-i-name">KPI</span></div>
+              </div>
+            </div>
+
+            <div class="toc-group">
+              <div class="toc-h"><span class="toc-h-num">2.</span><span class="toc-h-name">视觉 · Visuals</span><span class="toc-h-count">3 节</span></div>
+              <div class="toc-sub">
+                <div class="toc-item" data-key="2.1"><span class="toc-i-num">2.1</span><span class="toc-i-name">Figma 链接</span></div>
+                <div class="toc-item" data-key="2.2"><span class="toc-i-num">2.2</span><span class="toc-i-name">6 态截图</span></div>
+                <div class="toc-item" data-key="2.3"><span class="toc-i-num">2.3</span><span class="toc-i-name">响应式 3 屏</span></div>
+              </div>
+            </div>
+
+            <div class="toc-group">
+              <div class="toc-h"><span class="toc-h-num">3.</span><span class="toc-h-name">数据 · Data Layer</span><span class="toc-h-count">4 节</span></div>
+              <div class="toc-sub">
+                <div class="toc-item" data-key="3.1"><span class="toc-i-num">3.1</span><span class="toc-i-name">对象图</span></div>
+                <div class="toc-item" data-key="3.2"><span class="toc-i-num">3.2</span><span class="toc-i-name">字段 schema</span></div>
+                <div class="toc-item" data-key="3.3"><span class="toc-i-num">3.3</span><span class="toc-i-name">数据来源</span></div>
+                <div class="toc-item" data-key="3.4"><span class="toc-i-num">3.4</span><span class="toc-i-name">API 契约</span></div>
+              </div>
+            </div>
+
+            <div class="toc-group">
+              <div class="toc-h"><span class="toc-h-num">4.</span><span class="toc-h-name">行为 · Behavior</span><span class="toc-h-count">4 节</span></div>
+              <div class="toc-sub">
+                <div class="toc-item" data-key="4.1"><span class="toc-i-num">4.1</span><span class="toc-i-name">任务流</span></div>
+                <div class="toc-item" data-key="4.2"><span class="toc-i-num">4.2</span><span class="toc-i-name">状态机</span></div>
+                <div class="toc-item" data-key="4.3"><span class="toc-i-num">4.3</span><span class="toc-i-name">角色矩阵</span></div>
+                <div class="toc-item" data-key="4.4"><span class="toc-i-num">4.4</span><span class="toc-i-name">异常处理</span></div>
+              </div>
+            </div>
+
+            <div class="toc-group">
+              <div class="toc-h"><span class="toc-h-num">5.</span><span class="toc-h-name">组件 · UI Layer</span><span class="toc-h-count">4 节</span></div>
+              <div class="toc-sub">
+                <div class="toc-item" data-key="5.1"><span class="toc-i-num">5.1</span><span class="toc-i-name">组件树</span></div>
+                <div class="toc-item" data-key="5.2"><span class="toc-i-num">5.2</span><span class="toc-i-name">共享组件清单</span></div>
+                <div class="toc-item" data-key="5.3"><span class="toc-i-num">5.3</span><span class="toc-i-name">design token 引用</span></div>
+                <div class="toc-item" data-key="5.4"><span class="toc-i-num">5.4</span><span class="toc-i-name">响应式策略</span></div>
+              </div>
+            </div>
+
+            <div class="toc-group">
+              <div class="toc-h"><span class="toc-h-num">6.</span><span class="toc-h-name">验收 · Acceptance</span><span class="toc-h-count">3 节</span></div>
+              <div class="toc-sub">
+                <div class="toc-item" data-key="6.1"><span class="toc-i-num">6.1</span><span class="toc-i-name">用户场景 G/W/T</span></div>
+                <div class="toc-item" data-key="6.2"><span class="toc-i-num">6.2</span><span class="toc-i-name">边界场景</span></div>
+                <div class="toc-item" data-key="6.3"><span class="toc-i-num">6.3</span><span class="toc-i-name">性能要求</span></div>
+              </div>
+            </div>
+
+            <div class="toc-group">
+              <div class="toc-h"><span class="toc-h-num">7.</span><span class="toc-h-name">扩展点 · Future</span><span class="toc-h-count">2 节</span></div>
+              <div class="toc-sub">
+                <div class="toc-item" data-key="7.1"><span class="toc-i-num">7.1</span><span class="toc-i-name">字段注册表</span></div>
+                <div class="toc-item" data-key="7.2"><span class="toc-i-num">7.2</span><span class="toc-i-name">角色注册表</span></div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <div class="spec-content" id="specContent">
+          <div class="spec-empty">
+            <span class="arrow">←</span>
+            点左侧任意一节查看真实内容样本
+          </div>
+        </div>
+      </div>
+
+      <div class="spec-progress">
+        <span class="pl">spec 浏览进度</span>
+        <span class="pn"><span id="specVisited">0</span> / 17 节</span>
+        <div class="spec-bar"><div class="spec-bar-fill" id="specBarFill"></div></div>
+        <span class="spec-progress-msg" id="specMsg">点开任意一节开始浏览</span>
+      </div>
+    </div>
+
+    <div class="reveal-bar">
+      <div class="msg">
+        17 节 = <span class="em">工程 / QA / PM 都能拿这份文档独立工作</span>。<br>
+        这就是 spec 的功能——不是给设计师存档，是给团队开工。
+      </div>
+      <div class="counter">
+        点过 <strong id="revealCount">0</strong> / 17 节
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Section 03: 幕二 · 拆开 -->
+<section id="break">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <span class="act-tag break">幕二 · 拆开</span>
+        <div class="section-num"><strong>03</strong> / 拆开</div>
+        <h2 class="section-title"><span class="purple">3 个角色</span><br>怎么用这份 spec。</h2>
+      </div>
+      <p class="section-sub">
+        Spec 不是写给设计师看的——是写给<strong>工程 / QA / PM</strong> 看的。
+        点开每张卡片，看每个角色具体看哪几节、缺哪节会卡住、抱怨"spec 不全"时具体指什么。
+      </p>
+    </div>
+
+    <div class="roles-stage" id="rolesStage">
+
+      <div class="role-card" data-role="eng">
+        <div class="role-card-head">
+          <div class="role-icon eng">ENG</div>
+          <div class="role-card-meta">
+            <div class="role-card-tag">视角 01 · 工程师</div>
+            <h3 class="role-card-name">工程师怎么用</h3>
+          </div>
+        </div>
+        <p class="role-card-tldr">把 spec 当作"实现说明书"——从视觉到 schema 到状态机，每一步要落代码的东西，都能直接对位到 spec 里的一节。</p>
+        <span class="role-card-toggle"><span class="toggle-arrow">▶</span>展开看 6 项使用</span>
+
+        <div class="role-detail">
+          <h5>开工时先翻这几节</h5>
+          <ul class="role-uses">
+            <li><span class="ru-task">布局 / UI 组件实现</span><span class="ru-ref">2.1 + 5.1 + 5.2</span></li>
+            <li><span class="ru-task">数据模型 / schema 落库</span><span class="ru-ref">3.1 + 3.2</span></li>
+            <li><span class="ru-task">路由 / 页面状态机</span><span class="ru-ref">4.1 + 4.2</span></li>
+            <li><span class="ru-task">权限 / RBAC 实现</span><span class="ru-ref">4.3</span></li>
+            <li><span class="ru-task">错误 / 边界处理</span><span class="ru-ref">4.4 + 6.2</span></li>
+            <li><span class="ru-task">API 调用 / mock</span><span class="ru-ref">3.3 + 3.4</span></li>
+          </ul>
+          <div class="role-bad">
+            <span class="rb-label">⚠ 工程师抱怨 "spec 不全"</span>
+            <strong>= 3.2 schema、3.4 API 契约、或 4.4 异常处理</strong> 任一节空白——他没办法独立开始写代码。
+          </div>
+        </div>
+      </div>
+
+      <div class="role-card" data-role="qa">
+        <div class="role-card-head">
+          <div class="role-icon qa">QA</div>
+          <div class="role-card-meta">
+            <div class="role-card-tag">视角 02 · 测试</div>
+            <h3 class="role-card-name">QA 怎么用</h3>
+          </div>
+        </div>
+        <p class="role-card-tldr">把 spec 当作"测试大纲"——每一条 Given/When/Then 就是一条 case，每一个边界场景就是一条 negative case，每一项性能指标就是一道验收门。</p>
+        <span class="role-card-toggle"><span class="toggle-arrow">▶</span>展开看 5 项使用</span>
+
+        <div class="role-detail">
+          <h5>开工时先翻这几节</h5>
+          <ul class="role-uses">
+            <li><span class="ru-task">正向测试用例</span><span class="ru-ref">6.1</span></li>
+            <li><span class="ru-task">负向 / 边界用例</span><span class="ru-ref">6.2 + 4.4</span></li>
+            <li><span class="ru-task">自动化 mock 数据</span><span class="ru-ref">3.3 + 3.4</span></li>
+            <li><span class="ru-task">性能 / 响应式验收</span><span class="ru-ref">5.4 + 6.3</span></li>
+            <li><span class="ru-task">权限 / 角色覆盖</span><span class="ru-ref">4.3</span></li>
+          </ul>
+          <div class="role-bad">
+            <span class="rb-label">⚠ QA 抱怨 "测不了"</span>
+            <strong>= 6.1 用户场景 或 6.2 边界场景</strong> 没写——只能去问产品 / 设计补，case 写不全。
+          </div>
+        </div>
+      </div>
+
+      <div class="role-card" data-role="pm">
+        <div class="role-card-head">
+          <div class="role-icon pm">PM</div>
+          <div class="role-card-meta">
+            <div class="role-card-tag">视角 03 · 产品</div>
+            <h3 class="role-card-name">PM 怎么用</h3>
+          </div>
+        </div>
+        <p class="role-card-tldr">把 spec 当作"工期 / 取舍说明书"——组件复用度决定 UI 多少天、状态机决定逻辑多少天、扩展点决定能不能砍范围保 milestone。</p>
+        <span class="role-card-toggle"><span class="toggle-arrow">▶</span>展开看 5 项使用</span>
+
+        <div class="role-detail">
+          <h5>开工时先翻这几节</h5>
+          <ul class="role-uses">
+            <li><span class="ru-task">工期估算 · UI</span><span class="ru-ref">5.1 + 5.2</span></li>
+            <li><span class="ru-task">工期估算 · 逻辑</span><span class="ru-ref">4.2 + 4.4</span></li>
+            <li><span class="ru-task">范围取舍 · MVP vs 完整</span><span class="ru-ref">6.1 + 7</span></li>
+            <li><span class="ru-task">沟通对齐 · 干系人</span><span class="ru-ref">1.1 + 1.2</span></li>
+            <li><span class="ru-task">上线后跟进 · 指标</span><span class="ru-ref">1.3</span></li>
+          </ul>
+          <div class="role-bad">
+            <span class="rb-label">⚠ PM 抱怨 "看不懂"</span>
+            <strong>= 1.1 业务目标 或 1.2 核心用户</strong> 没写——他无法对外讲"这玩意为啥要做"，也估不出 ROI。
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="roles-progress">
+      <span class="rpl">3 角色卡 — 全部展开看完一遍才算理解</span>
+      <span class="rpc">已展开 <strong id="rolesOpened">0</strong> / 3</span>
+    </div>
+
+    <div class="reveal-bar" style="margin-top:32px">
+      <div class="msg">
+        三个角色都能从 <span class="em">1 份 spec</span> 里独立工作 = spec 真的成立。<br>
+        其中任何一个还在追问你 = spec 缺了那个角色要的那一节。
+      </div>
+      <div class="counter">"独立工作" 是判断 spec 是否合格的唯一标准</div>
+    </div>
+  </div>
+</section>
+
+<!-- Section 04: 幕三 · 再做 -->
+<section id="make">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <span class="act-tag make">幕三 · 再做</span>
+        <div class="section-num"><strong>04</strong> / 再做</div>
+        <h2 class="section-title">轮到你——<br>写 <span class="em">张明详情页</span><br>的 Spec 大纲。</h2>
+      </div>
+      <p class="section-sub">
+        我们已经为你准备了空大纲——5 个主章节，每章节 3-4 个子节点。
+        给每个子节点点一个 <strong>✓ 有 / ⚠ 部分 / ✗ 无</strong>。最后提交，给你一个 spec 成熟度评分。
+      </p>
+    </div>
+
+    <div class="checklist-stage">
+      <div class="checklist-head">
+        <h3 class="checklist-title">Spec 成熟度自查</h3>
+        <div class="checklist-meta">已勾选 <span class="cl-done" id="clDone">0</span> / 17 项</div>
+      </div>
+
+      <div class="check-groups" id="checkGroups">
+
+        <div class="check-group" data-group="1">
+          <div class="check-group-head">
+            <h4 class="check-group-title"><span class="check-group-num">1</span>视觉</h4>
+            <div class="check-group-score">
+              <span class="cgs-y" id="g1y">0</span> ✓ ·
+              <span class="cgs-p" id="g1p">0</span> ⚠ ·
+              <span class="cgs-n" id="g1n">0</span> ✗
+            </div>
+          </div>
+          <div class="check-rows">
+            <div class="check-row" data-key="v-figma">
+              <div class="check-row-label">Figma 链接<span class="desc">指向最新 frame · 权限可读 · 含 frame 命名</span></div>
+              <div class="check-options">
+                <button class="check-opt sel-y" data-val="y"><span class="opt-mark">✓</span> 有</button>
+                <button class="check-opt sel-p" data-val="p"><span class="opt-mark">⚠</span> 部分</button>
+                <button class="check-opt sel-n" data-val="n"><span class="opt-mark">✗</span> 无</button>
+              </div>
+            </div>
+            <div class="check-row" data-key="v-states">
+              <div class="check-row-label">6 态截图<span class="desc">default · hover · loading · empty · error · no-perm</span></div>
+              <div class="check-options">
+                <button class="check-opt sel-y" data-val="y"><span class="opt-mark">✓</span> 有</button>
+                <button class="check-opt sel-p" data-val="p"><span class="opt-mark">⚠</span> 部分</button>
+                <button class="check-opt sel-n" data-val="n"><span class="opt-mark">✗</span> 无</button>
+              </div>
+            </div>
+            <div class="check-row" data-key="v-responsive">
+              <div class="check-row-label">响应式 3 屏<span class="desc">desktop · tablet · mobile 各 1 张</span></div>
+              <div class="check-options">
+                <button class="check-opt sel-y" data-val="y"><span class="opt-mark">✓</span> 有</button>
+                <button class="check-opt sel-p" data-val="p"><span class="opt-mark">⚠</span> 部分</button>
+                <button class="check-opt sel-n" data-val="n"><span class="opt-mark">✗</span> 无</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="check-group" data-group="2">
+          <div class="check-group-head">
+            <h4 class="check-group-title"><span class="check-group-num">2</span>数据</h4>
+            <div class="check-group-score">
+              <span class="cgs-y" id="g2y">0</span> ✓ ·
+              <span class="cgs-p" id="g2p">0</span> ⚠ ·
+              <span class="cgs-n" id="g2n">0</span> ✗
+            </div>
+          </div>
+          <div class="check-rows">
+            <div class="check-row" data-key="d-object">
+              <div class="check-row-label">对象图<span class="desc">customer + 邻居（contact / deal / company）</span></div>
+              <div class="check-options">
+                <button class="check-opt sel-y" data-val="y"><span class="opt-mark">✓</span> 有</button>
+                <button class="check-opt sel-p" data-val="p"><span class="opt-mark">⚠</span> 部分</button>
+                <button class="check-opt sel-n" data-val="n"><span class="opt-mark">✗</span> 无</button>
+              </div>
+            </div>
+            <div class="check-row" data-key="d-schema">
+              <div class="check-row-label">字段 schema (5 维度)<span class="desc">name · type · required · 空态 · 来源</span></div>
+              <div class="check-options">
+                <button class="check-opt sel-y" data-val="y"><span class="opt-mark">✓</span> 有</button>
+                <button class="check-opt sel-p" data-val="p"><span class="opt-mark">⚠</span> 部分</button>
+                <button class="check-opt sel-n" data-val="n"><span class="opt-mark">✗</span> 无</button>
+              </div>
+            </div>
+            <div class="check-row" data-key="d-source">
+              <div class="check-row-label">数据来源标记<span class="desc">LOCAL / API / PUSH / 3rd-party 每字段标一个</span></div>
+              <div class="check-options">
+                <button class="check-opt sel-y" data-val="y"><span class="opt-mark">✓</span> 有</button>
+                <button class="check-opt sel-p" data-val="p"><span class="opt-mark">⚠</span> 部分</button>
+                <button class="check-opt sel-n" data-val="n"><span class="opt-mark">✗</span> 无</button>
+              </div>
+            </div>
+            <div class="check-row" data-key="d-api">
+              <div class="check-row-label">API 契约<span class="desc">endpoint · req · res · errors 完整</span></div>
+              <div class="check-options">
+                <button class="check-opt sel-y" data-val="y"><span class="opt-mark">✓</span> 有</button>
+                <button class="check-opt sel-p" data-val="p"><span class="opt-mark">⚠</span> 部分</button>
+                <button class="check-opt sel-n" data-val="n"><span class="opt-mark">✗</span> 无</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="check-group" data-group="3">
+          <div class="check-group-head">
+            <h4 class="check-group-title"><span class="check-group-num">3</span>行为</h4>
+            <div class="check-group-score">
+              <span class="cgs-y" id="g3y">0</span> ✓ ·
+              <span class="cgs-p" id="g3p">0</span> ⚠ ·
+              <span class="cgs-n" id="g3n">0</span> ✗
+            </div>
+          </div>
+          <div class="check-rows">
+            <div class="check-row" data-key="b-flow">
+              <div class="check-row-label">任务流（至少 3 个典型）<span class="desc">看名片 · 录跟进 · 加联系人 / 改字段 / 转交</span></div>
+              <div class="check-options">
+                <button class="check-opt sel-y" data-val="y"><span class="opt-mark">✓</span> 有</button>
+                <button class="check-opt sel-p" data-val="p"><span class="opt-mark">⚠</span> 部分</button>
+                <button class="check-opt sel-n" data-val="n"><span class="opt-mark">✗</span> 无</button>
+              </div>
+            </div>
+            <div class="check-row" data-key="b-fsm">
+              <div class="check-row-label">状态机<span class="desc">lead → active → dormant → archived 流转规则</span></div>
+              <div class="check-options">
+                <button class="check-opt sel-y" data-val="y"><span class="opt-mark">✓</span> 有</button>
+                <button class="check-opt sel-p" data-val="p"><span class="opt-mark">⚠</span> 部分</button>
+                <button class="check-opt sel-n" data-val="n"><span class="opt-mark">✗</span> 无</button>
+              </div>
+            </div>
+            <div class="check-row" data-key="b-roles">
+              <div class="check-row-label">角色矩阵<span class="desc">5 角色 × 字段 × 操作（看 / 编 / 审 / 导出 / 转）</span></div>
+              <div class="check-options">
+                <button class="check-opt sel-y" data-val="y"><span class="opt-mark">✓</span> 有</button>
+                <button class="check-opt sel-p" data-val="p"><span class="opt-mark">⚠</span> 部分</button>
+                <button class="check-opt sel-n" data-val="n"><span class="opt-mark">✗</span> 无</button>
+              </div>
+            </div>
+            <div class="check-row" data-key="b-error">
+              <div class="check-row-label">异常处理（4 种）<span class="desc">失败 · 超时 · 冲突 · 重复</span></div>
+              <div class="check-options">
+                <button class="check-opt sel-y" data-val="y"><span class="opt-mark">✓</span> 有</button>
+                <button class="check-opt sel-p" data-val="p"><span class="opt-mark">⚠</span> 部分</button>
+                <button class="check-opt sel-n" data-val="n"><span class="opt-mark">✗</span> 无</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="check-group" data-group="4">
+          <div class="check-group-head">
+            <h4 class="check-group-title"><span class="check-group-num">4</span>组件</h4>
+            <div class="check-group-score">
+              <span class="cgs-y" id="g4y">0</span> ✓ ·
+              <span class="cgs-p" id="g4p">0</span> ⚠ ·
+              <span class="cgs-n" id="g4n">0</span> ✗
+            </div>
+          </div>
+          <div class="check-rows">
+            <div class="check-row" data-key="c-tree">
+              <div class="check-row-label">组件树<span class="desc">Page → Header → KPI → Tabs → Table 层级清楚</span></div>
+              <div class="check-options">
+                <button class="check-opt sel-y" data-val="y"><span class="opt-mark">✓</span> 有</button>
+                <button class="check-opt sel-p" data-val="p"><span class="opt-mark">⚠</span> 部分</button>
+                <button class="check-opt sel-n" data-val="n"><span class="opt-mark">✗</span> 无</button>
+              </div>
+            </div>
+            <div class="check-row" data-key="c-shared">
+              <div class="check-row-label">共享组件清单<span class="desc">StatusBadge / KPICard / Tabs / Table / Drawer 标记</span></div>
+              <div class="check-options">
+                <button class="check-opt sel-y" data-val="y"><span class="opt-mark">✓</span> 有</button>
+                <button class="check-opt sel-p" data-val="p"><span class="opt-mark">⚠</span> 部分</button>
+                <button class="check-opt sel-n" data-val="n"><span class="opt-mark">✗</span> 无</button>
+              </div>
+            </div>
+            <div class="check-row" data-key="c-responsive">
+              <div class="check-row-label">响应式策略<span class="desc">每区块标 reflow / hide / collapse 三选一</span></div>
+              <div class="check-options">
+                <button class="check-opt sel-y" data-val="y"><span class="opt-mark">✓</span> 有</button>
+                <button class="check-opt sel-p" data-val="p"><span class="opt-mark">⚠</span> 部分</button>
+                <button class="check-opt sel-n" data-val="n"><span class="opt-mark">✗</span> 无</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="check-group" data-group="5">
+          <div class="check-group-head">
+            <h4 class="check-group-title"><span class="check-group-num">5</span>验收</h4>
+            <div class="check-group-score">
+              <span class="cgs-y" id="g5y">0</span> ✓ ·
+              <span class="cgs-p" id="g5p">0</span> ⚠ ·
+              <span class="cgs-n" id="g5n">0</span> ✗
+            </div>
+          </div>
+          <div class="check-rows">
+            <div class="check-row" data-key="a-gwt">
+              <div class="check-row-label">用户场景 (Given / When / Then)<span class="desc">至少 5 条覆盖核心路径</span></div>
+              <div class="check-options">
+                <button class="check-opt sel-y" data-val="y"><span class="opt-mark">✓</span> 有</button>
+                <button class="check-opt sel-p" data-val="p"><span class="opt-mark">⚠</span> 部分</button>
+                <button class="check-opt sel-n" data-val="n"><span class="opt-mark">✗</span> 无</button>
+              </div>
+            </div>
+            <div class="check-row" data-key="a-edge">
+              <div class="check-row-label">边界场景<span class="desc">empty · max · unauthorized · network fail 都列</span></div>
+              <div class="check-options">
+                <button class="check-opt sel-y" data-val="y"><span class="opt-mark">✓</span> 有</button>
+                <button class="check-opt sel-p" data-val="p"><span class="opt-mark">⚠</span> 部分</button>
+                <button class="check-opt sel-n" data-val="n"><span class="opt-mark">✗</span> 无</button>
+              </div>
+            </div>
+            <div class="check-row" data-key="a-perf">
+              <div class="check-row-label">性能要求<span class="desc">首屏 &lt; 1.5s · 交互 &lt; 100ms · 列表分页阈值</span></div>
+              <div class="check-options">
+                <button class="check-opt sel-y" data-val="y"><span class="opt-mark">✓</span> 有</button>
+                <button class="check-opt sel-p" data-val="p"><span class="opt-mark">⚠</span> 部分</button>
+                <button class="check-opt sel-n" data-val="n"><span class="opt-mark">✗</span> 无</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="checklist-actions">
+        <button class="checklist-btn primary" id="clSubmit">提交打分</button>
+        <button class="checklist-btn" id="clAllY">全选 ✓（仅看示例）</button>
+        <button class="checklist-btn" id="clReset">清空</button>
+      </div>
+
+      <div class="verdict-card" id="verdict"></div>
+    </div>
+  </div>
+</section>
+
+<!-- Section 05: closing -->
+<section id="closing">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>05</strong> / 收尾</div>
+        <h2 class="section-title">22 篇下来，<br>你长出了<br><span class="em">一套语言</span>。</h2>
+      </div>
+      <p class="section-sub">
+        高阶篇到此收尾。但语言一旦换了，团队跟着换——下一份真实需求，你就能感到差别。
+      </p>
+    </div>
+
+    <div class="tips-grid">
+      <div class="tip">
+        <div class="tip-num">i</div>
+        <h4>从 "设计师" 长成 "产品架构师"</h4>
+        <p>完成 22 篇后，你已经能从 5 个阶段（对象 / 流程 / 状态 / 组件 / 演进）+ 案例 3 部曲来看产品。每一篇都有可识别的 "理解时刻"——回去翻你的 5 个月前的稿子，会觉得不像自己画的。</p>
+      </div>
+      <div class="tip">
+        <div class="tip-num">ii</div>
+        <h4>评审第一句话变了</h4>
+        <p>下次需求评审，从 "我打算这么画" 变成 <strong>"这是个什么对象，它的角色矩阵 / 状态机 / 任务流 / 组件树各是怎样"</strong>——整套语言换了，整个团队跟着换。工程师听到这种讨论会眼睛亮。</p>
+      </div>
+      <div class="tip">
+        <div class="tip-num">iii</div>
+        <h4>稿子从图变成了 schema</h4>
+        <p>工程师不再追问，QA 能直接测试，PM 能直接排期。设计这个角色，从"装饰"晋升到"骨架"——你定义产品的<strong>结构</strong>，不只是它的<strong>样子</strong>。</p>
+      </div>
+    </div>
+
+    <div class="recap-stripe">
+      <div class="recap-stripe-head">
+        <h4 class="recap-title">高阶 22 篇 · 6 个阶段一览</h4>
+        <span class="recap-meta">22 / 22 · COMPLETE</span>
+      </div>
+      <div class="recap-list">
+        <div class="recap-stage">
+          <span class="rs-tag">Stage 01 · X1-X4</span>
+          <span class="rs-title">对象关系</span>
+          对象 / 字段 / 引用 / 信息层级 / 角色权限——把页面拆成数据模型。
+        </div>
+        <div class="recap-stage">
+          <span class="rs-tag">Stage 02 · X5-X7</span>
+          <span class="rs-title">任务与流程</span>
+          任务流 / 分支 / 异常——把"用户做什么"拆出来。
+        </div>
+        <div class="recap-stage">
+          <span class="rs-tag">Stage 03 · X8-X12</span>
+          <span class="rs-title">状态与数据</span>
+          状态机 / 数据来源 / 字段感知 / 页面 6 态 / 状态归属——同步与异步的边界。
+        </div>
+        <div class="recap-stage">
+          <span class="rs-tag">Stage 04 · X13-X16</span>
+          <span class="rs-title">组件与契约</span>
+          组件契约 / props·events·slots / 组合 / 响应式——组件成为接口。
+        </div>
+        <div class="recap-stage">
+          <span class="rs-tag">Stage 05 · X17-X19</span>
+          <span class="rs-title">演进与扩展</span>
+          扩展点 / 重构 / 迁移——给未来留口子。
+        </div>
+        <div class="recap-stage">
+          <span class="rs-tag">Stage 06 · X20-X22</span>
+          <span class="rs-title">完整案例（你在这）</span>
+          张明详情页 3 部曲：对象 → 4 张图 → spec。把全套语言用起来。
+        </div>
+      </div>
+    </div>
+
+    <div class="tip-outro">
+      <div class="outro-tag">划重点 · TL;DR</div>
+      <div>
+        <p>高阶 22 篇到这里收尾。但真正的开始是回到你下一份需求——把这套语言用上去。</p>
+        <p>3 个月后回来看：<strong>你交付的稿子已经长成 spec 了</strong>——工程师不再追问，QA 直接出 case，PM 直接排期。"设计师" 这个标签，从装饰晋升到骨架。</p>
+      </div>
+    </div>
+
+    <a href="book.html#vol-3" class="next-post">
+      <div>
+        <div class="np-tag">完结 · 22/22 · 高阶 ADVANCED</div>
+        <h4>🎉 22/22 · 高阶完结 · <span class="em">回到路线图</span></h4>
+        <p>走完整个高阶篇，你已经在用"<strong>对象 / 流程 / 状态 / 组件 / 演进 / 交付</strong>"6 个维度思考产品系统了。回到路线图选下一篇重读，或者把这套语言用到你下一份真实需求上。</p>
+      </div>
+      <span class="np-cta">回路线图 <span class="arr">→</span></span>
+    </a>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div class="byline-group">
+      <div class="byline">
+        <img class="avatar" src="author.jpg" alt="范米花儿">
+        <div class="byline-meta">
+          <div class="byline-label"><span class="dot"></span>作者 · WRITTEN BY</div>
+          <div class="byline-name">嗨，我是 <span class="em">范米花儿</span></div>
+          <p class="byline-tag">设计工程师 ——<br>设计 × 代码，两边都做。</p>
+        </div>
+      </div>
+</div>
+    <div class="footer-meta">
+      做于 <span class="mono">2026</span> · 用 <span class="heart">●</span> 写给 <span class="mono">DESIGNERS &amp; DEVELOPERS</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+// ===== Game 1: spec TOC viewer =====
+(function(){
+  const TOC = {
+    '1.1': {
+      tag: 'overview',
+      title: '1.1 业务目标',
+      body: `
+        <ul class="sc-list">
+          <li><span class="k">为什么做</span><span class="v">销售在外勤时打开详情页 0.5 秒就要看到关键决策信息——目前打开要 4 秒，错过最优联系窗口。</span></li>
+          <li><span class="k">业务北极星</span><span class="v">销售签约转化率 +12% · 平均跟进周期 −3 天</span></li>
+          <li><span class="k">不做什么</span><span class="v">不做 CRM 全量改版 · 不动联系人 / 商机详情页 · 仅 customer 单一对象详情</span></li>
+          <li><span class="k">边界</span><span class="v">支持 web + tablet · 不发 iOS 客户端 · 仅中文版</span></li>
+        </ul>
+      `
+    },
+    '1.2': {
+      tag: 'overview',
+      title: '1.2 核心用户',
+      body: `
+        <ul class="sc-list">
+          <li><span class="k">P0 角色</span><span class="v"><strong>外勤销售</strong>（80% 日活）——手机 / iPad 上看，路上 1 手操作</span></li>
+          <li><span class="k">P1 角色</span><span class="v"><strong>销售总监</strong>（15%）——大屏看团队聚合 + 钻取明细</span></li>
+          <li><span class="k">P2 角色</span><span class="v"><strong>财务 / 法务</strong>（5%）——只读，看合同金额 + 风控字段</span></li>
+          <li><span class="k">非用户</span><span class="v">客户本人不登录 · 客户对接人不登录</span></li>
+        </ul>
+      `
+    },
+    '1.3': {
+      tag: 'overview',
+      title: '1.3 KPI',
+      body: `
+        <div class="sc-perf-row"><span class="perf-k">详情页打开 → 完整渲染</span><span class="perf-v">&lt; 1.5s · P95</span></div>
+        <div class="sc-perf-row"><span class="perf-k">"录跟进" 表单提交成功率</span><span class="perf-v">&gt; 99.5%</span></div>
+        <div class="sc-perf-row"><span class="perf-k">"录跟进" 表单完成时长</span><span class="perf-v">&lt; 18s · 中位数</span></div>
+        <div class="sc-perf-row"><span class="perf-k">8 周后销售人均跟进次数</span><span class="perf-v">+30%</span></div>
+        <div class="sc-perf-row"><span class="perf-k">客户从 lead → active 时间</span><span class="perf-v">−3 天 · 中位数</span></div>
+      `
+    },
+    '2.1': {
+      tag: 'visuals',
+      title: '2.1 Figma 链接',
+      body: `
+        <ul class="sc-list">
+          <li><span class="k">主稿</span><span class="v">figma.com/file/abc/customer-detail · frame "v1.0-final"</span></li>
+          <li><span class="k">权限</span><span class="v">org 内全员可读 · 设计组可编辑</span></li>
+          <li><span class="k">命名规则</span><span class="v">{对象}/{页面}/{状态}/{屏幕} · 例: customer/detail/empty/mobile</span></li>
+          <li><span class="k">同步 token</span><span class="v">绑定 design-system v3.2 · color · spacing · type · radius 全引用</span></li>
+        </ul>
+      `
+    },
+    '2.2': {
+      tag: 'visuals',
+      title: '2.2 6 态截图',
+      body: `
+        <div class="sc-shots">
+          <div class="sc-shot"><span class="sc-icon">●</span><span class="sc-name">DEFAULT</span><span>正常加载完成</span></div>
+          <div class="sc-shot"><span class="sc-icon">◐</span><span class="sc-name">HOVER</span><span>鼠标悬停 / focus</span></div>
+          <div class="sc-shot"><span class="sc-icon">◌</span><span class="sc-name">LOADING</span><span>骨架屏 1.2s</span></div>
+          <div class="sc-shot empty"><span class="sc-icon">○</span><span class="sc-name">EMPTY</span><span>无跟进记录</span></div>
+          <div class="sc-shot error"><span class="sc-icon">!</span><span class="sc-name">ERROR</span><span>接口失败 / 超时</span></div>
+          <div class="sc-shot"><span class="sc-icon">⊘</span><span class="sc-name">NO-PERM</span><span>跨部门访问</span></div>
+        </div>
+        <p style="margin:14px 0 0;font-size:12px;color:var(--ink-mute)">每态在 Figma 都是独立 frame · 文件名后缀对齐 component state · 工程可直接对位。</p>
+      `
+    },
+    '2.3': {
+      tag: 'visuals',
+      title: '2.3 响应式 3 屏',
+      body: `
+        <ul class="sc-list">
+          <li><span class="k">desktop</span><span class="v">≥ 1280px · 两列 · KPI 4 张并排 · 跟进时间线右侧固定</span></li>
+          <li><span class="k">tablet</span><span class="v">768 - 1279px · 单列 · KPI 2×2 折叠 · Tabs 替代右侧栏</span></li>
+          <li><span class="k">mobile</span><span class="v">&lt; 768px · 全部 reflow · KPI 横滚 · 底栏快速操作 · 跟进进 Drawer</span></li>
+        </ul>
+        <p style="margin:14px 0 0;font-size:12px;color:var(--ink-mute)">每屏在 Figma 都有完整稿——不是缩放，而是<strong>重排策略</strong>。</p>
+      `
+    },
+    '3.1': {
+      tag: 'data',
+      title: '3.1 对象图',
+      body: `
+        <div class="sc-tree"><span class="tn">customer</span>           · 主对象
+├ <span class="tn">company</span>       · belongs-to · 1
+├ <span class="tn">owner</span>         · belongs-to · 1 · user
+├ <span class="tn">contacts[]</span>    · has-many · 0..n · contact
+├ <span class="tn">deals[]</span>       · has-many · 0..n · deal
+├ <span class="tn">activities[]</span>  · has-many · 0..n · activity / 跟进
+└ <span class="tn">tags[]</span>        · many-to-many · 0..n · tag</div>
+        <p style="margin:14px 0 0;font-size:12px;color:var(--ink-mute)">客户对象在系统里同时被 9 个表面订阅（详情 / 列表 / @mention / 通知 / 搜索 / 仪表盘 / 卡片 / 邮件 / 筛选）——见 X1。</p>
+      `
+    },
+    '3.2': {
+      tag: 'data',
+      title: '3.2 字段 schema',
+      body: `
+        <table class="sc-table">
+          <thead><tr><th>name</th><th>type</th><th>req</th><th>empty</th><th>来源</th></tr></thead>
+          <tbody>
+            <tr><td class="fname">name</td><td>string · 2-64</td><td><span class="ck-y">Y</span></td><td>—</td><td>LOCAL</td></tr>
+            <tr><td class="fname">company</td><td>fk → company</td><td><span class="ck-y">Y</span></td><td>—</td><td>LOCAL</td></tr>
+            <tr><td class="fname">title</td><td>string · 0-32</td><td><span class="ck-n">N</span></td><td>"未填写"</td><td>LOCAL</td></tr>
+            <tr><td class="fname">owner</td><td>fk → user</td><td><span class="ck-y">Y</span></td><td>—</td><td>LOCAL</td></tr>
+            <tr><td class="fname">status</td><td>enum 4</td><td><span class="ck-y">Y</span></td><td>—</td><td>LOCAL</td></tr>
+            <tr><td class="fname">last_contact</td><td>datetime</td><td><span class="ck-n">N</span></td><td>"未联系"</td><td>API</td></tr>
+            <tr><td class="fname">deal_value</td><td>money</td><td><span class="ck-n">N</span></td><td>"—"</td><td>API · aggregate</td></tr>
+            <tr><td class="fname">interactions</td><td>number</td><td><span class="ck-n">N</span></td><td>"0 次"</td><td>API · count</td></tr>
+            <tr><td class="fname">phone</td><td>string · 11</td><td><span class="ck-n">N</span></td><td>"未填"</td><td>LOCAL · masked</td></tr>
+            <tr><td class="fname">tags</td><td>fk[] → tag</td><td><span class="ck-n">N</span></td><td>"无标签"</td><td>LOCAL</td></tr>
+            <tr><td class="fname">notes</td><td>text · 0-2k</td><td><span class="ck-n">N</span></td><td>"暂无备注"</td><td>LOCAL</td></tr>
+            <tr><td class="fname">credit_score</td><td>number 0-100</td><td><span class="ck-n">N</span></td><td>"评估中"</td><td>3rd · 风控</td></tr>
+          </tbody>
+        </table>
+      `
+    },
+    '3.3': {
+      tag: 'data',
+      title: '3.3 数据来源',
+      body: `
+        <div class="sc-source-row local"><span class="sn">LOCAL</span><span>name · company · title · owner · status · phone · tags · notes — 自家 DB</span></div>
+        <div class="sc-source-row api"><span class="sn">API</span><span>last_contact · deal_value · interactions — 聚合接口 · cache 60s</span></div>
+        <div class="sc-source-row push"><span class="sn">PUSH</span><span>activity_added · status_changed — WebSocket 推送，实时刷新右侧时间线</span></div>
+        <div class="sc-source-row third"><span class="sn">3rd</span><span>credit_score — 接征信平台 SDK · 异步 · 失败降级 "评估中"</span></div>
+        <p style="margin:14px 0 0;font-size:12px;color:var(--ink-mute)">每字段标注一个来源 = 工程能直接拆 API · QA 能直接 mock · 失败降级路径明确。</p>
+      `
+    },
+    '3.4': {
+      tag: 'data',
+      title: '3.4 API 契约',
+      body: `
+        <div class="sc-api"><span class="com"># 详情主接口</span>
+<span class="verb">GET</span> /api/v3/customers/:id
+<span class="com"># Response 200</span>
+{
+  <span class="key">"id"</span>: <span class="str">"cus_88e2"</span>,
+  <span class="key">"name"</span>: <span class="str">"张明"</span>,
+  <span class="key">"company"</span>: { <span class="key">"id"</span>: <span class="str">"co_x1"</span>, <span class="key">"name"</span>: <span class="str">"星河科技"</span> },
+  <span class="key">"status"</span>: <span class="str">"active"</span>,
+  <span class="key">"owner"</span>: { <span class="key">"id"</span>: <span class="str">"u_lh"</span>, <span class="key">"name"</span>: <span class="str">"李华"</span> },
+  <span class="key">"deal_value"</span>: <span class="num">480000</span>,
+  <span class="key">"_perm"</span>: [<span class="str">"read"</span>, <span class="str">"edit"</span>]
+}
+<span class="com"># Errors</span>
+<span class="num">401</span> · 未登录   <span class="num">403</span> · 无权限
+<span class="num">404</span> · 不存在   <span class="num">5xx</span> · 服务异常 / 降级</div>
+      `
+    },
+    '4.1': {
+      tag: 'behavior',
+      title: '4.1 任务流',
+      body: `
+        <div class="sc-flow"><span class="fn">FLOW 1</span><span class="step">收到 @mention</span><span class="sep">→</span><span class="step">打开详情</span><span class="sep">→</span><span class="step">扫 KPI</span><span class="sep">→</span><span class="step">看跟进</span></div>
+        <div class="sc-flow"><span class="fn">FLOW 2</span><span class="step">详情</span><span class="sep">→</span><span class="step">点 "录跟进"</span><span class="sep">→</span><span class="step">表单 4 字段</span><span class="sep">→</span><span class="step">提交</span><span class="sep">→</span><span class="step">回详情</span></div>
+        <div class="sc-flow"><span class="fn">FLOW 3</span><span class="step">详情</span><span class="sep">→</span><span class="step">Tabs 联系人</span><span class="sep">→</span><span class="step">+ 加联系人</span><span class="sep">→</span><span class="step">Drawer</span><span class="sep">→</span><span class="step">保存</span></div>
+        <div class="sc-flow"><span class="fn">FLOW 4</span><span class="step">详情</span><span class="sep">→</span><span class="step">状态 dropdown</span><span class="sep">→</span><span class="step">选 dormant</span><span class="sep">→</span><span class="step">必填理由</span><span class="sep">→</span><span class="step">确认</span></div>
+      `
+    },
+    '4.2': {
+      tag: 'behavior',
+      title: '4.2 状态机',
+      body: `
+        <div class="sc-fsm">
+          <span class="fsm-node">lead</span>
+          <span class="fsm-arrow">→ 录第 1 次跟进 →</span>
+          <span class="fsm-node">active</span>
+          <span class="fsm-arrow">→ 30 天无跟进 →</span>
+          <span class="fsm-node">dormant</span>
+          <span class="fsm-arrow">→ 手动归档 →</span>
+          <span class="fsm-node">archived</span>
+        </div>
+        <ul class="sc-list" style="margin-top:14px">
+          <li><span class="k">lead → active</span><span class="v">触发：第 1 次跟进 · 自动 · 不可逆向回 lead</span></li>
+          <li><span class="k">active → dormant</span><span class="v">触发：30 天无跟进 · cron 自动 · 可手动恢复 active</span></li>
+          <li><span class="k">→ archived</span><span class="v">仅 owner / admin · 必填归档理由 · 不可恢复</span></li>
+        </ul>
+      `
+    },
+    '4.3': {
+      tag: 'behavior',
+      title: '4.3 角色矩阵',
+      body: `
+        <div class="sc-roles">
+          <div class="rc head">角色</div><div class="rc head">看</div><div class="rc head">编</div><div class="rc head">导出</div><div class="rc head">归档</div>
+          <div class="rc role">admin</div><div class="rc y">✓</div><div class="rc y">✓</div><div class="rc y">✓</div><div class="rc y">✓</div>
+          <div class="rc role">director</div><div class="rc y">✓</div><div class="rc y">✓</div><div class="rc y">✓</div><div class="rc n">—</div>
+          <div class="rc role">sales · owner</div><div class="rc y">✓</div><div class="rc y">✓</div><div class="rc n">—</div><div class="rc y">✓</div>
+          <div class="rc role">sales · other</div><div class="rc r">脱敏</div><div class="rc n">—</div><div class="rc n">—</div><div class="rc n">—</div>
+          <div class="rc role">finance</div><div class="rc r">部分</div><div class="rc n">—</div><div class="rc y">✓</div><div class="rc n">—</div>
+        </div>
+        <p style="margin:14px 0 0;font-size:12px;color:var(--ink-mute)">"脱敏" = 手机号显示 138****1234 · "部分" = 只看金额相关字段。</p>
+      `
+    },
+    '4.4': {
+      tag: 'behavior',
+      title: '4.4 异常处理',
+      body: `
+        <ul class="sc-list">
+          <li><span class="k">失败 · network</span><span class="v">显示 ERROR 态 · "重试" 按钮 · 3 次后建议刷新</span></li>
+          <li><span class="k">超时 · timeout</span><span class="v">骨架屏 8s 仍未返回 → 切 ERROR · 后台仍 retry · 静默更新</span></li>
+          <li><span class="k">冲突 · 并发编辑</span><span class="v">提交检 etag · 失败弹 "他人已修改" diff · 选 keep mine / theirs / merge</span></li>
+          <li><span class="k">重复 · 提交</span><span class="v">按钮提交期间 disable · client idempotency-key · 服务端 30s 去重</span></li>
+        </ul>
+      `
+    },
+    '5.1': {
+      tag: 'ui',
+      title: '5.1 组件树',
+      body: `
+        <div class="sc-tree"><span class="tn">CustomerDetailPage</span>
+├ <span class="tn">PageHeader</span>
+│   ├ <span class="tn">AvatarBlock</span>
+│   ├ <span class="tn">StatusBadge</span>      <span class="tt">[shared]</span>
+│   └ <span class="tn">QuickActions</span>
+├ <span class="tn">KPIStrip</span>
+│   └ <span class="tn">KPICard</span> × 4       <span class="tt">[shared]</span>
+├ <span class="tn">Tabs</span>                <span class="tt">[shared]</span>
+│   ├ <span class="tn">OverviewPane</span>     · 字段表
+│   ├ <span class="tn">ContactsPane</span>     · Table  <span class="tt">[shared]</span>
+│   ├ <span class="tn">DealsPane</span>        · Table  <span class="tt">[shared]</span>
+│   └ <span class="tn">ActivitiesPane</span>   · 时间线
+└ <span class="tn">RightRail</span>          (desktop only)
+    └ <span class="tn">ActivityFeed</span></div>
+      `
+    },
+    '5.2': {
+      tag: 'ui',
+      title: '5.2 共享组件清单',
+      body: `
+        <div class="sc-comp">
+          <span class="cp shared">StatusBadge</span>
+          <span class="cp shared">KPICard</span>
+          <span class="cp shared">Tabs</span>
+          <span class="cp shared">Table</span>
+          <span class="cp shared">Drawer</span>
+          <span class="cp shared">Avatar</span>
+          <span class="cp shared">EmptyState</span>
+          <span class="cp">QuickActions</span>
+          <span class="cp">ActivityFeed</span>
+        </div>
+        <p style="margin:14px 0 0;font-size:12px;color:var(--ink-mute)">蓝色 = 已存在共享组件，直接复用 · 紫色 = 本页特化，可考虑下沉到 lib。</p>
+      `
+    },
+    '5.3': {
+      tag: 'ui',
+      title: '5.3 design token 引用',
+      body: `
+        <ul class="sc-list">
+          <li><span class="k">color</span><span class="v">仅引用 token：color.bg / color.ink / color.accent / color.status.*</span></li>
+          <li><span class="k">spacing</span><span class="v">仅用 4 / 8 / 12 / 16 / 24 / 32 · 不写自由值</span></li>
+          <li><span class="k">type</span><span class="v">text.display / text.title / text.body / text.label · 全部用 type token</span></li>
+          <li><span class="k">radius</span><span class="v">radius.sm 4 · radius.md 6 · radius.lg 8 · 不混用</span></li>
+          <li><span class="k">shadow</span><span class="v">shadow.card / shadow.popover 两档 · 其他全部用 border</span></li>
+        </ul>
+      `
+    },
+    '5.4': {
+      tag: 'ui',
+      title: '5.4 响应式策略',
+      body: `
+        <ul class="sc-list">
+          <li><span class="k">PageHeader</span><span class="v"><strong>reflow</strong> · tablet 起头像缩小 · mobile 隐 owner block</span></li>
+          <li><span class="k">KPIStrip</span><span class="v"><strong>reflow</strong> · tablet 2×2 · mobile 横滚</span></li>
+          <li><span class="k">RightRail</span><span class="v"><strong>hide</strong> · tablet 起隐藏 · 进 Tabs 第 4 个 "动态"</span></li>
+          <li><span class="k">Tabs</span><span class="v"><strong>collapse</strong> · mobile 切 Drawer · 顶部 segment</span></li>
+          <li><span class="k">QuickActions</span><span class="v"><strong>reflow</strong> · mobile 进底部 FAB · desktop 横排</span></li>
+        </ul>
+      `
+    },
+    '6.1': {
+      tag: 'acceptance',
+      title: '6.1 用户场景 G/W/T',
+      body: `
+        <div class="sc-given"><span class="gw">GIVEN</span>销售已登录，且自己是张明的 owner<br><span class="gw">WHEN</span>从列表点张明的名字<br><span class="gw">THEN</span>1.5s 内完整渲染详情页，且 4 个 KPI 全部显示数字</div>
+        <div class="sc-given"><span class="gw">GIVEN</span>详情页已渲染<br><span class="gw">WHEN</span>点 "录跟进" 按钮，填 3 字段后提交<br><span class="gw">THEN</span>右侧时间线立刻多出 1 条 · 表单关闭 · status 若是 lead 则切 active</div>
+        <div class="sc-given"><span class="gw">GIVEN</span>销售非 owner，且无管理员权限<br><span class="gw">WHEN</span>从 @mention 跳到张明详情<br><span class="gw">THEN</span>页面渲染 · 手机号显示 138****1234 · "编辑" 按钮置灰</div>
+      `
+    },
+    '6.2': {
+      tag: 'acceptance',
+      title: '6.2 边界场景',
+      body: `
+        <div class="sc-given boundary"><span class="gw">EMPTY</span>客户尚无任何跟进记录 → 跟进时间线显示 EmptyState："还没和客户聊过，去录第一次跟进"</div>
+        <div class="sc-given boundary"><span class="gw">MAX</span>客户挂 500+ 联系人 → Tabs 联系人首屏 50 条 · 滚动到底加载 · 不阻塞详情主体</div>
+        <div class="sc-given boundary"><span class="gw">NO-PERM</span>财务点别人的客户 → 渲染脱敏版 · 顶部蓝条提示 "你以财务身份访问"</div>
+        <div class="sc-given boundary"><span class="gw">NET-FAIL</span>主接口 5xx → 显示 ERROR 态 + "重试" + 暴露 trace_id · cache 数据保留显示 · 不黑屏</div>
+        <div class="sc-given boundary"><span class="gw">404</span>客户已被归档 / 删除 → 跳 "客户不存在或已归档" 占位页 · 提供 "联系负责人" 链接</div>
+      `
+    },
+    '6.3': {
+      tag: 'acceptance',
+      title: '6.3 性能要求',
+      body: `
+        <div class="sc-perf-row"><span class="perf-k">首屏完整渲染 (P95)</span><span class="perf-v">&lt; 1.5s</span></div>
+        <div class="sc-perf-row"><span class="perf-k">Tabs 切换 (任意 → 任意)</span><span class="perf-v">&lt; 100ms</span></div>
+        <div class="sc-perf-row"><span class="perf-k">"录跟进" 表单打开</span><span class="perf-v">&lt; 80ms · 无网络等待</span></div>
+        <div class="sc-perf-row"><span class="perf-k">"录跟进" 提交 → 时间线更新</span><span class="perf-v">&lt; 500ms · optimistic</span></div>
+        <div class="sc-perf-row"><span class="perf-k">联系人 Table · 加载 50 条</span><span class="perf-v">&lt; 600ms</span></div>
+        <div class="sc-perf-row"><span class="perf-k">Lighthouse 性能分</span><span class="perf-v">&gt; 90</span></div>
+      `
+    },
+    '7.1': {
+      tag: 'future',
+      title: '7.1 字段注册表',
+      body: `
+        <ul class="sc-list">
+          <li><span class="k">字段不硬编码</span><span class="v">12 个字段读自 customer_fields.json · 每条 {name, type, label, validation, visible_to}</span></li>
+          <li><span class="k">加 1 个字段</span><span class="v">加一行 JSON · UI 自动渲染 · 不动组件 · 不动校验</span></li>
+          <li><span class="k">权限改</span><span class="v">改 visible_to 数组 · 详情 / 列表 / 卡片 / @mention 全部联动</span></li>
+          <li><span class="k">配套</span><span class="v">详见 X17 · 扩展点</span></li>
+        </ul>
+      `
+    },
+    '7.2': {
+      tag: 'future',
+      title: '7.2 角色注册表',
+      body: `
+        <ul class="sc-list">
+          <li><span class="k">角色不硬编码</span><span class="v">5 角色读自 roles.json · 每条 {role, fields_visible, actions}</span></li>
+          <li><span class="k">加 1 个角色</span><span class="v">加一行 JSON · UI runtime 渲染 · 不画新页面 / 不写新路由</span></li>
+          <li><span class="k">改字段权限</span><span class="v">改 fields_visible 数组 · 全部地方同时生效</span></li>
+          <li><span class="k">配套</span><span class="v">详见 X4 · 角色权限 / X17 · 扩展点</span></li>
+        </ul>
+      `
+    }
+  };
+
+  const tocItems = document.querySelectorAll('.toc-item');
+  const content = document.getElementById('specContent');
+  const counter = document.getElementById('revealCount');
+  const counterPN = document.getElementById('specVisited');
+  const barFill = document.getElementById('specBarFill');
+  const msg = document.getElementById('specMsg');
+  const visited = new Set();
+  const TOTAL = tocItems.length;
+
+  function renderEmpty() {
+    content.innerHTML = `<div class="spec-empty"><span class="arrow">←</span>点左侧任意一节查看真实内容样本</div>`;
+  }
+
+  function show(key, el) {
+    const data = TOC[key];
+    if (!data) return;
+    tocItems.forEach(t => t.classList.remove('is-active'));
+    el.classList.add('is-active');
+    el.classList.add('is-visited');
+    visited.add(key);
+    counter.textContent = visited.size;
+    counterPN.textContent = visited.size;
+    const pct = Math.round((visited.size / TOTAL) * 100);
+    barFill.style.width = pct + '%';
+    if (visited.size === TOTAL) {
+      msg.textContent = '✓ 全部 17 节都看过了——这就是 spec 的体量';
+      msg.classList.add('win');
+    } else if (visited.size >= TOTAL * 0.5) {
+      msg.textContent = `已读 ${pct}% · 继续翻 · 每节都是工程能直接用的内容`;
+      msg.classList.remove('win');
+    } else {
+      msg.textContent = `已读 ${pct}% · 点开越多越能感受 spec 的厚度`;
+      msg.classList.remove('win');
+    }
+    content.innerHTML = `
+      <div class="spec-content-head">
+        <h4 class="spec-content-title">${data.title}</h4>
+        <span class="spec-content-tag">${data.tag}</span>
+      </div>
+      <div class="spec-content-body">${data.body}</div>
+    `;
+  }
+
+  tocItems.forEach(item => {
+    item.addEventListener('click', () => show(item.dataset.key, item));
+  });
+
+  renderEmpty();
+})();
+
+// ===== Game 2: role cards =====
+(function(){
+  const cards = document.querySelectorAll('.role-card');
+  const opened = new Set();
+  const counter = document.getElementById('rolesOpened');
+  cards.forEach(card => {
+    card.addEventListener('click', e => {
+      if (e.target.closest('.role-uses li') || e.target.closest('.role-bad')) return;
+      card.classList.toggle('is-open');
+      if (card.classList.contains('is-open')) {
+        opened.add(card.dataset.role);
+      } else {
+        opened.delete(card.dataset.role);
+      }
+      counter.textContent = opened.size;
+    });
+  });
+})();
+
+// ===== Game 3: checklist =====
+(function(){
+  const GROUPS = {
+    1: ['v-figma', 'v-states', 'v-responsive'],
+    2: ['d-object', 'd-schema', 'd-source', 'd-api'],
+    3: ['b-flow', 'b-fsm', 'b-roles', 'b-error'],
+    4: ['c-tree', 'c-shared', 'c-responsive'],
+    5: ['a-gwt', 'a-edge', 'a-perf']
+  };
+  const TOTAL = Object.values(GROUPS).reduce((a, b) => a + b.length, 0);
+
+  const SECTION_OF = {
+    'v-figma': '2.1',
+    'v-states': '2.2',
+    'v-responsive': '2.3',
+    'd-object': '3.1',
+    'd-schema': '3.2',
+    'd-source': '3.3',
+    'd-api': '3.4',
+    'b-flow': '4.1',
+    'b-fsm': '4.2',
+    'b-roles': '4.3',
+    'b-error': '4.4',
+    'c-tree': '5.1',
+    'c-shared': '5.2',
+    'c-responsive': '5.4',
+    'a-gwt': '6.1',
+    'a-edge': '6.2',
+    'a-perf': '6.3'
+  };
+
+  const LABEL = {
+    'v-figma': 'Figma 链接',
+    'v-states': '6 态截图',
+    'v-responsive': '响应式 3 屏',
+    'd-object': '对象图',
+    'd-schema': '字段 schema',
+    'd-source': '数据来源',
+    'd-api': 'API 契约',
+    'b-flow': '任务流',
+    'b-fsm': '状态机',
+    'b-roles': '角色矩阵',
+    'b-error': '异常处理',
+    'c-tree': '组件树',
+    'c-shared': '共享组件清单',
+    'c-responsive': '响应式策略',
+    'a-gwt': '用户场景',
+    'a-edge': '边界场景',
+    'a-perf': '性能要求'
+  };
+
+  const EFFORT = {
+    'v-figma': '5 分钟',
+    'v-states': '半天',
+    'v-responsive': '半天',
+    'd-object': '1 小时',
+    'd-schema': '半天',
+    'd-source': '1 小时',
+    'd-api': '半天 · 配工程',
+    'b-flow': '半天',
+    'b-fsm': '半天',
+    'b-roles': '1 天',
+    'b-error': '半天',
+    'c-tree': '1 小时',
+    'c-shared': '1 小时',
+    'c-responsive': '半天',
+    'a-gwt': '半天',
+    'a-edge': '半天',
+    'a-perf': '半天 · 配工程'
+  };
+
+  const answers = {};
+  const rows = document.querySelectorAll('.check-row');
+  const doneEl = document.getElementById('clDone');
+  const verdict = document.getElementById('verdict');
+
+  function recountGroups() {
+    Object.keys(GROUPS).forEach(g => {
+      let y = 0, p = 0, n = 0;
+      GROUPS[g].forEach(k => {
+        const v = answers[k];
+        if (v === 'y') y++;
+        else if (v === 'p') p++;
+        else if (v === 'n') n++;
+      });
+      document.getElementById('g' + g + 'y').textContent = y;
+      document.getElementById('g' + g + 'p').textContent = p;
+      document.getElementById('g' + g + 'n').textContent = n;
+    });
+    doneEl.textContent = Object.keys(answers).length;
+  }
+
+  rows.forEach(row => {
+    const opts = row.querySelectorAll('.check-opt');
+    opts.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const key = row.dataset.key;
+        const val = btn.dataset.val;
+        if (answers[key] === val) {
+          delete answers[key];
+          opts.forEach(o => o.classList.remove('is-on'));
+          row.classList.remove('is-set');
+        } else {
+          answers[key] = val;
+          opts.forEach(o => o.classList.toggle('is-on', o === btn));
+          row.classList.add('is-set');
+        }
+        recountGroups();
+      });
+    });
+  });
+
+  function score() {
+    // 1.0 for y, 0.5 for p, 0 for n / unanswered
+    let total = 0;
+    Object.keys(GROUPS).forEach(g => {
+      GROUPS[g].forEach(k => {
+        const v = answers[k];
+        if (v === 'y') total += 1;
+        else if (v === 'p') total += 0.5;
+      });
+    });
+    return Math.round((total / TOTAL) * 100);
+  }
+
+  function gaps() {
+    const gaps = [];
+    Object.keys(GROUPS).forEach(g => {
+      GROUPS[g].forEach(k => {
+        const v = answers[k];
+        if (v !== 'y') {
+          gaps.push({
+            key: k,
+            sev: v === 'p' ? 'partial' : 'missing'
+          });
+        }
+      });
+    });
+    return gaps;
+  }
+
+  function renderVerdict() {
+    const pct = score();
+    const gapList = gaps();
+    const totalGaps = gapList.length;
+    const fullyMissing = gapList.filter(g => g.sev === 'missing').length;
+
+    let tagClass, tagLabel, headline, message;
+    if (pct === 100) {
+      tagClass = 'full';
+      tagLabel = '完美 · 100%';
+      headline = '工程团队拿这份能 0 追问独立交付。';
+      message = '17 节全部 ✓。工程 / QA / PM 任意一个角色都能不找你独立工作——这就是合格 spec 的样子。剩下的事是把这套模式带到下一份需求。';
+    } else if (pct >= 80) {
+      tagClass = 'full';
+      tagLabel = `可交付 · ${pct}%`;
+      headline = `可交付——但工程会问 ${totalGaps} 个问题。`;
+      message = `大部分 ✓，但还有 ${totalGaps} 项不完整。把下面缺的那几节补到 ✓——基本上每节 0.5~1 天工作量。补完就是真正的 0 追问交付。`;
+    } else if (pct >= 50) {
+      tagClass = 'most';
+      tagLabel = `半成品 · ${pct}%`;
+      headline = `半成品——工程会反复回来追问 ${fullyMissing} 个核心问题。`;
+      message = `补的方向不对。优先补 "数据 / 行为 / 验收" 这三组——它们是工程 / QA 直接工作的依据。视觉和组件可以稍后。`;
+    } else {
+      tagClass = 'low';
+      tagLabel = `${pct}% · 不是 spec`;
+      headline = '这份还不是 spec，只是一张 Figma 链接。';
+      message = `${fullyMissing} 节完全空白。这种交付物送到工程手里 = 每天 3 次 ping 你。先去画对象图 (3.1) + 字段 schema (3.2)，是 spec 的"骨头"，再补其他。`;
+    }
+
+    // angle for conic gradient
+    const angle = (pct / 100) * 360;
+
+    let nextItems = '';
+    if (gapList.length > 0) {
+      nextItems = gapList.slice(0, 6).map(g => {
+        return `<li><span class="v-sec">${SECTION_OF[g.key]}</span><span><strong>${LABEL[g.key]}</strong>${g.sev === 'partial' ? '（部分）' : '（缺）'}</span><span class="v-eff">${EFFORT[g.key]}</span></li>`;
+      }).join('');
+    }
+
+    verdict.innerHTML = `
+      <div class="verdict-row">
+        <div class="verdict-meter" style="background:conic-gradient(var(--accent) ${angle}deg, var(--ink-soft) ${angle}deg)">
+          <span class="verdict-meter-num">${pct}</span>
+          <span class="verdict-meter-pct">SPEC 成熟度</span>
+        </div>
+        <div class="verdict-body">
+          <span class="v-tag ${tagClass}">${tagLabel}</span>
+          <h4>${headline}</h4>
+          <p>${message}</p>
+        </div>
+      </div>
+      ${nextItems ? `
+      <div class="verdict-next">
+        <h5>补这几节优先 · 按工程价值排序</h5>
+        <ul class="verdict-list">${nextItems}</ul>
+      </div>` : ''}
+    `;
+    verdict.classList.add('show');
+    verdict.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+
+  document.getElementById('clSubmit').addEventListener('click', renderVerdict);
+
+  document.getElementById('clAllY').addEventListener('click', () => {
+    rows.forEach(row => {
+      const key = row.dataset.key;
+      answers[key] = 'y';
+      const opts = row.querySelectorAll('.check-opt');
+      opts.forEach(o => o.classList.toggle('is-on', o.dataset.val === 'y'));
+      row.classList.add('is-set');
+    });
+    recountGroups();
+    renderVerdict();
+  });
+
+  document.getElementById('clReset').addEventListener('click', () => {
+    Object.keys(answers).forEach(k => delete answers[k]);
+    rows.forEach(row => {
+      row.querySelectorAll('.check-opt').forEach(o => o.classList.remove('is-on'));
+      row.classList.remove('is-set');
+    });
+    recountGroups();
+    verdict.classList.remove('show');
+    verdict.innerHTML = '';
+  });
+})();
+</script>
+
+</body>
+</html>

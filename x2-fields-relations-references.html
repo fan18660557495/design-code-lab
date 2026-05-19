@@ -1,0 +1,1331 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>对象的字段、关系、引用 — AI LABBOOK · X2</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,300..900&family=Geist:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Noto+Sans+SC:wght@300;400;500;700;900&family=Noto+Serif+SC:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f3eee5;
+    --bg-2: #ebe4d4;
+    --ink: #16161d;
+    --ink-soft: #4a4a55;
+    --ink-mute: #8a8a92;
+    --line: #d5cdba;
+    --line-soft: #e3dcca;
+    --accent: #ff4d2e;
+    --accent-soft: #ffe4dc;
+    --blue: #0a4cff;
+    --blue-soft: #dde6ff;
+    --green: #1f6b3a;
+    --green-soft: #d4ecdb;
+    --yellow: #ffcf3d;
+    --paper: #faf7f0;
+    --shadow: 0 1px 0 rgba(0,0,0,0.04), 0 8px 24px rgba(22,22,29,0.06);
+
+    --obj-color: #ff4d2e;
+    --obj-soft: rgba(255,77,46,0.12);
+    --proj-color: #1f6b3a;
+    --proj-soft: rgba(31,107,58,0.12);
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'Geist', 'Noto Sans SC', system-ui, -apple-system, sans-serif;
+    font-size: 16px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    background-image: radial-gradient(circle at 1px 1px, rgba(22,22,29,0.05) 1px, transparent 0);
+    background-size: 24px 24px;
+  }
+
+  .display-cn { font-family: 'Noto Serif SC', 'Fraunces', serif; font-weight: 900; letter-spacing: -0.01em; }
+  .display-en { font-family: 'Fraunces', 'Noto Serif SC', serif; font-weight: 600; font-style: italic; letter-spacing: -0.02em; }
+  .mono { font-family: 'JetBrains Mono', monospace; }
+  .label { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-mute); }
+
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 0 32px; }
+
+  /* Topbar */
+  .topbar {
+    border-bottom: 1px dashed var(--line);
+    padding: 16px 0;
+    background: var(--bg);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .topbar-inner { display: flex; justify-content: space-between; align-items: center; gap: 24px; flex-wrap: wrap; }
+  .brand-block { display: flex; align-items: center; gap: 10px; font-family: 'JetBrains Mono', monospace; font-size: 13px; }
+  .brand { display: inline-flex; align-items: center; gap: 6px; color: var(--ink); text-decoration: none; font-weight: 600; }
+  .brand-arrow { color: var(--ink-mute); transition: transform .2s; }
+  .brand:hover .brand-arrow { transform: translateX(-3px); }
+  .brand .dot { display: inline-block; width: 8px; height: 8px; background: var(--accent); border-radius: 50%; vertical-align: middle; animation: pulse 2s ease-in-out infinite; margin-left: 4px; }
+  .brand-sep { color: var(--ink-mute); }
+  .brand-current { color: var(--ink-soft); }
+  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+  .nav-links { display: flex; gap: 18px; font-size: 13px; flex-wrap: wrap; }
+  .nav-links a { color: var(--ink-soft); text-decoration: none; transition: color 0.2s; }
+  .nav-links a:hover { color: var(--accent); }
+  .nav-links a.current { color: var(--accent); font-weight: 600; }
+
+  /* Hero */
+  .hero { padding: 100px 0 80px; position: relative; overflow: hidden; }
+  .hero-meta { display: flex; gap: 24px; margin-bottom: 32px; align-items: center; flex-wrap: wrap; }
+  .hero-meta .pill { padding: 6px 12px; border: 1px solid var(--ink); border-radius: 100px; font-size: 11px; font-family: 'JetBrains Mono', monospace; letter-spacing: 0.05em; }
+  .hero-meta .pill.fill { background: var(--ink); color: var(--bg); }
+  .hero-meta .pill.purple { background: var(--obj-color); color: white; border-color: var(--obj-color); }
+  .hero h1 {
+    font-family: 'Noto Serif SC', 'Fraunces', serif;
+    font-weight: 900;
+    font-size: clamp(48px, 7vw, 92px);
+    line-height: 0.95;
+    letter-spacing: -0.03em;
+    margin: 0 0 24px;
+  }
+  .hero h1 .em { font-family: 'Noto Serif SC', serif; font-weight: 500; color: var(--accent); }
+  .hero h1 .purple { color: var(--obj-color); font-family: 'Noto Serif SC', serif; font-weight: 500; }
+  .hero p.lede {
+    font-size: 20px;
+    line-height: 1.5;
+    max-width: 640px;
+    color: var(--ink-soft);
+    margin: 0 0 40px;
+  }
+  .hero-grid { display: grid; grid-template-columns: 1.4fr 1fr; gap: 48px; align-items: end; }
+  @media (max-width: 880px) { .hero-grid { grid-template-columns: 1fr; } }
+  .hero-side { border-left: 1px dashed var(--line); padding-left: 24px; font-size: 13px; color: var(--ink-soft); }
+  .hero-side .row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px dashed var(--line); gap: 12px; }
+  .hero-side .row:last-child { border-bottom: none; }
+  .hero-side .row .k { color: var(--ink-mute); font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.05em; text-transform: uppercase; }
+  .hero-side .row .v { font-weight: 500; }
+
+  /* Sections */
+  section { padding: 80px 0; border-top: 1px solid var(--line); position: relative; }
+  .section-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 56px; flex-wrap: wrap; gap: 16px; }
+  .section-num { font-family: 'JetBrains Mono', monospace; font-size: 13px; color: var(--ink-mute); letter-spacing: 0.1em; margin-top: 6px; }
+  .section-num strong { color: var(--accent); }
+  .section-title { font-family: 'Noto Serif SC', serif; font-weight: 900; font-size: clamp(32px, 4.5vw, 52px); line-height: 1.05; letter-spacing: -0.02em; margin: 8px 0 0; max-width: 22ch; }
+  .section-title .em { font-family: 'Noto Serif SC', serif; font-weight: 500; color: var(--accent); }
+  .section-title .purple { color: var(--obj-color); font-family: 'Noto Serif SC', serif; font-weight: 500; }
+  .section-sub { color: var(--ink-soft); font-size: 17px; max-width: 38ch; line-height: 1.55; margin: 0; }
+
+  /* Act tag */
+  .act-tag { display: inline-block; padding: 4px 12px; font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; border-radius: 100px; }
+  .act-tag.look { background: var(--blue-soft); color: var(--blue); }
+  .act-tag.break { background: var(--obj-soft); color: var(--obj-color); }
+  .act-tag.make { background: var(--proj-soft); color: var(--proj-color); }
+
+  /* Problem cards */
+  .problem-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; margin-top: 24px; }
+  @media (max-width: 880px) { .problem-grid { grid-template-columns: 1fr; } }
+  .problem-card { background: var(--paper); border: 1px solid var(--line); border-radius: 6px; padding: 28px; position: relative; }
+  .problem-card.bad { border-color: var(--accent); background: var(--accent-soft); }
+  .problem-card.good { border-color: var(--obj-color); background: var(--obj-soft); }
+  .problem-card .tag { position: absolute; top: -12px; left: 24px; background: var(--bg); padding: 2px 10px; font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.1em; }
+  .problem-card.bad .tag { color: var(--accent); border: 1px solid var(--accent); }
+  .problem-card.good .tag { color: var(--obj-color); border: 1px solid var(--obj-color); }
+  .problem-card h3 { font-family: 'Noto Serif SC', serif; font-size: 22px; margin: 0 0 12px; font-weight: 700; }
+  .problem-card p { margin: 0; color: var(--ink-soft); font-size: 14px; line-height: 1.55; }
+  .problem-card p + p { margin-top: 10px; }
+
+  /* GAME 1: surfaces */
+  .surfaces-stage {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 40px 28px;
+    position: relative;
+    overflow: hidden;
+  }
+  .surfaces-stage::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(to right, var(--line-soft) 1px, transparent 1px),
+      linear-gradient(to bottom, var(--line-soft) 1px, transparent 1px);
+    background-size: 24px 24px;
+    opacity: 0.4;
+    pointer-events: none;
+  }
+  .surfaces-grid {
+    position: relative;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 22px;
+  }
+  @media (max-width: 880px) { .surfaces-grid { grid-template-columns: 1fr; } }
+  .surface-card {
+    background: white;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 16px 16px 14px;
+    position: relative;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    cursor: pointer;
+    min-height: 160px;
+  }
+  .surface-card:hover { box-shadow: 0 8px 24px rgba(22,22,29,0.08); }
+  .surface-card.is-highlight {
+    border-color: var(--obj-color);
+    box-shadow: 0 0 0 2px var(--obj-soft), 0 8px 24px rgba(255,77,46,0.18);
+    transform: translateY(-3px);
+  }
+  .surface-tag {
+    position: absolute;
+    top: -10px;
+    left: 12px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    background: var(--ink);
+    color: var(--bg);
+    padding: 2px 8px;
+    border-radius: 100px;
+    transition: background 0.3s;
+  }
+  .surface-card.is-highlight .surface-tag { background: var(--obj-color); }
+
+  .surface-mini-avatar { width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, #ff8a4a, #ff4d2e); color: white; display: inline-flex; align-items: center; justify-content: center; font-weight: 700; font-size: 13px; flex-shrink: 0; }
+  .surface-chip { display: inline-flex; align-items: center; gap: 6px; background: var(--blue-soft); color: var(--blue); padding: 3px 9px; border-radius: 100px; font-size: 12px; font-weight: 500; }
+  .surface-chip .ch-avatar { width: 16px; height: 16px; border-radius: 50%; background: linear-gradient(135deg, #ff8a4a, #ff4d2e); color: white; font-size: 9px; display: inline-flex; align-items: center; justify-content: center; font-weight: 700; }
+  .surface-search-hit { padding: 6px 0; border-bottom: 1px dashed var(--line-soft); }
+  .surface-search-hit:last-child { border-bottom: none; }
+  .surface-search-hit mark { background: var(--yellow); padding: 0 2px; border-radius: 2px; color: var(--ink); font-weight: 700; }
+  .detail-mini { padding: 4px 0 0; }
+  .detail-mini-head { display: flex; align-items: center; gap: 10px; padding-bottom: 10px; border-bottom: 1px dashed var(--line); margin-bottom: 10px; }
+  .detail-mini-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 14px; font-size: 11px; }
+  .detail-mini-lbl { font-family: 'JetBrains Mono', monospace; font-size: 9px; color: var(--ink-mute); letter-spacing: 0.06em; text-transform: uppercase; }
+  .detail-mini-val { font-size: 12px; font-weight: 500; margin-top: 1px; }
+
+  /* Reference markers (X2 — for game 1) */
+  .ref-mark { position: relative; display: inline-flex; align-items: center; gap: 3px; padding: 1px 5px; border-radius: 3px; transition: all 0.25s; cursor: help; }
+  .surface-card.is-highlight .ref-mark { background: var(--obj-soft); box-shadow: 0 0 0 1px var(--obj-color); }
+  .ref-mark::before { content: '→'; font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--obj-color); opacity: 0; transition: opacity 0.25s; }
+  .surface-card.is-highlight .ref-mark::before { opacity: 1; }
+  .ref-mark.back::before { content: '←'; }
+  .ref-tip { position: absolute; bottom: 10px; right: 12px; font-family: 'JetBrains Mono', monospace; font-size: 9px; color: var(--obj-color); letter-spacing: 0.05em; text-transform: uppercase; opacity: 0; transition: opacity 0.25s; padding: 2px 6px; background: var(--obj-soft); border-radius: 3px; }
+  .surface-card.is-highlight .ref-tip { opacity: 1; }
+
+  /* Reveal bar */
+  .reveal-bar {
+    margin-top: 32px;
+    padding: 20px 28px;
+    background: var(--ink);
+    color: var(--bg);
+    border-radius: 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+  .reveal-bar .msg { font-family: 'Noto Serif SC', serif; font-size: 17px; font-weight: 500; line-height: 1.55; }
+  .reveal-bar .msg .em { color: var(--accent); }
+  .reveal-bar .counter { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ink-mute); letter-spacing: 0.05em; }
+  .reveal-bar .counter strong { color: var(--accent); font-size: 14px; }
+
+  /* GAME 2: object graph */
+  .graph-stage { display: grid; grid-template-columns: 1.5fr 1fr; gap: 28px; margin-top: 32px; }
+  @media (max-width: 980px) { .graph-stage { grid-template-columns: 1fr; } }
+  .graph-canvas { background: var(--paper); border: 1px solid var(--line); border-radius: 8px; padding: 24px; position: relative; min-height: 480px; }
+  .graph-canvas::before { content: 'CRM · OBJECT GRAPH'; position: absolute; top: -10px; left: 16px; background: var(--obj-color); color: white; font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.1em; padding: 2px 10px; border-radius: 100px; }
+  .graph-svg { width: 100%; height: auto; display: block; }
+
+  .gnode-rect { fill: white; stroke: var(--line); stroke-width: 1.5; cursor: pointer; transition: all 0.2s; }
+  .gnode-rect:hover, .gnode.is-active .gnode-rect { fill: var(--obj-soft); stroke: var(--obj-color); stroke-width: 2; }
+  .gnode-name { font-family: 'Noto Serif SC', serif; font-size: 13px; font-weight: 700; fill: var(--ink); pointer-events: none; text-anchor: middle; }
+  .gnode-sub { font-family: 'JetBrains Mono', monospace; font-size: 9px; fill: var(--ink-mute); pointer-events: none; text-anchor: middle; letter-spacing: 0.05em; }
+  .gnode.is-active .gnode-name { fill: var(--obj-color); }
+
+  .gedge-line { stroke: var(--ink-mute); stroke-width: 1.5; fill: none; transition: all 0.2s; cursor: pointer; }
+  .gedge.is-active .gedge-line, .gedge:hover .gedge-line { stroke: var(--obj-color); stroke-width: 2.5; }
+  .gedge-card-bg { fill: var(--bg); stroke: var(--line); stroke-width: 1; transition: all 0.2s; cursor: pointer; }
+  .gedge.is-active .gedge-card-bg, .gedge:hover .gedge-card-bg { fill: var(--obj-color); stroke: var(--obj-color); }
+  .gedge-card-text { font-family: 'JetBrains Mono', monospace; font-size: 10px; fill: var(--ink); pointer-events: none; text-anchor: middle; font-weight: 600; letter-spacing: 0.04em; }
+  .gedge.is-active .gedge-card-text, .gedge:hover .gedge-card-text { fill: white; }
+  .gedge-arrow { fill: var(--ink-mute); transition: fill 0.2s; }
+  .gedge.is-active .gedge-arrow, .gedge:hover .gedge-arrow { fill: var(--obj-color); }
+
+  .graph-detail { background: var(--paper); border: 1px solid var(--obj-color); border-radius: 8px; padding: 22px 22px 20px; position: sticky; top: 80px; align-self: start; min-height: 380px; }
+  .graph-detail-tag { display: inline-block; font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; padding: 2px 9px; background: var(--obj-color); color: white; border-radius: 100px; margin-bottom: 12px; }
+  .graph-detail h4 { font-family: 'Noto Serif SC', serif; font-size: 22px; margin: 0 0 6px; font-weight: 700; }
+  .graph-detail .sub { font-size: 12px; color: var(--ink-mute); font-family: 'JetBrains Mono', monospace; letter-spacing: 0.04em; margin: 0 0 16px; }
+  .graph-fields-table { display: flex; flex-direction: column; gap: 4px; }
+  .graph-field-row { display: flex; align-items: center; gap: 10px; padding: 6px 10px; background: white; border: 1px solid var(--line); border-radius: 4px; font-family: 'JetBrains Mono', monospace; font-size: 11px; }
+  .graph-field-row.is-ref { border-color: var(--blue); background: var(--blue-soft); }
+  .graph-field-row.is-ref .gfield-arrow { color: var(--blue); font-weight: 700; }
+  .gfield-name { flex: 1; font-weight: 600; color: var(--ink); }
+  .gfield-type { color: var(--ink-mute); font-size: 10px; }
+  .gfield-arrow { font-size: 11px; color: var(--ink-mute); margin-right: 2px; }
+  .graph-edge-detail { padding: 14px; background: white; border: 1px solid var(--line); border-radius: 6px; margin-top: 12px; font-size: 13px; line-height: 1.6; color: var(--ink-soft); }
+  .graph-edge-detail .lbl { display: inline-block; font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--obj-color); letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 6px; }
+  .graph-edge-detail strong { color: var(--ink); }
+  .graph-edge-detail .ex { margin-top: 8px; padding-top: 8px; border-top: 1px dashed var(--line); font-size: 12px; color: var(--ink-mute); }
+  .graph-legend { margin-top: 16px; padding-top: 14px; border-top: 1px dashed var(--line); font-size: 11px; color: var(--ink-mute); line-height: 1.7; }
+  .graph-legend code { color: var(--obj-color); background: var(--obj-soft); padding: 1px 5px; border-radius: 3px; font-size: 10px; }
+
+  /* GAME 3: builder */
+  .builder-stage { background: var(--paper); border: 1px solid var(--line); border-radius: 8px; padding: 32px; margin-top: 24px; }
+  .builder-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 28px; flex-wrap: wrap; gap: 16px; }
+  .builder-title { font-family: 'Noto Serif SC', serif; font-size: 22px; margin: 0; font-weight: 700; }
+  .builder-progress { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--ink-mute); }
+  .builder-progress .done { color: var(--proj-color); font-weight: 700; font-size: 14px; }
+  .builder-grid { display: grid; grid-template-columns: 1fr 1.4fr; gap: 28px; }
+  @media (max-width: 980px) { .builder-grid { grid-template-columns: 1fr; } }
+  .builder-pool { border: 1px dashed var(--obj-color); border-radius: 8px; padding: 18px; background: white; align-self: start; }
+  .builder-pool h5 { font-family: 'Noto Serif SC', serif; font-size: 15px; margin: 0 0 12px; color: var(--obj-color); font-weight: 700; }
+  .builder-pool-hint { font-size: 11px; color: var(--ink-mute); margin: 0 0 14px; line-height: 1.5; }
+  .builder-pool-list { display: flex; flex-direction: column; gap: 5px; }
+  .builder-chip { display: flex; align-items: center; gap: 8px; padding: 8px 12px; background: var(--obj-soft); border: 1px solid var(--obj-color); border-radius: 4px; font-family: 'JetBrains Mono', monospace; font-size: 12px; cursor: pointer; user-select: none; transition: all 0.15s; color: var(--ink); }
+  .builder-chip:hover { background: var(--obj-color); color: white; }
+  .builder-chip.is-trap { background: rgba(255,77,46,0.08); border-color: var(--accent); }
+  .builder-chip.is-trap:hover { background: var(--accent); color: white; }
+  .builder-chip.is-used { opacity: 0.4; cursor: not-allowed; text-decoration: line-through; }
+  .builder-chip.is-used:hover { background: var(--obj-soft); color: var(--ink); }
+  .builder-chip.is-trap.is-used:hover { background: rgba(255,77,46,0.08); color: var(--ink); }
+  .builder-chip .chip-cn { color: var(--ink-mute); font-size: 11px; font-family: 'Geist','Noto Sans SC',sans-serif; }
+  .builder-chip .chip-add { margin-left: auto; opacity: 0.55; font-size: 14px; }
+
+  .builder-canvas { background: white; border: 1px solid var(--line); border-radius: 8px; padding: 22px 22px 18px; position: relative; }
+  .builder-canvas-head { display: flex; justify-content: space-between; align-items: center; padding-bottom: 12px; border-bottom: 1px dashed var(--line); margin-bottom: 16px; }
+  .builder-canvas-name { font-family: 'Noto Serif SC', serif; font-size: 17px; font-weight: 700; }
+  .builder-canvas-name .lbl { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--obj-color); margin-left: 6px; letter-spacing: 0.08em; }
+  .builder-refs-list { min-height: 140px; display: flex; flex-direction: column; gap: 8px; }
+  .builder-refs-empty { color: var(--ink-mute); font-size: 13px; font-style: italic; padding: 30px 8px; text-align: center; border: 1px dashed var(--line); border-radius: 6px; }
+  .builder-ref-row { display: flex; align-items: center; gap: 12px; padding: 10px 14px; background: var(--paper); border: 1px solid var(--line); border-radius: 6px; font-size: 13px; }
+  .builder-ref-row.is-trap-claimed { border-color: var(--green); background: var(--green-soft); }
+  .builder-ref-row.is-trap-as-ref { border-color: var(--accent); background: var(--accent-soft); }
+  .builder-ref-row .ref-arrow { font-family: 'JetBrains Mono', monospace; color: var(--obj-color); font-size: 13px; font-weight: 700; }
+  .builder-ref-row .ref-name { font-family: 'JetBrains Mono', monospace; font-weight: 600; color: var(--ink); }
+  .builder-ref-row .ref-cn { color: var(--ink-mute); font-size: 12px; }
+  .builder-ref-row .ref-card { margin-left: auto; font-family: 'JetBrains Mono', monospace; font-size: 11px; padding: 3px 10px; background: var(--obj-color); color: white; border-radius: 100px; letter-spacing: 0.05em; }
+  .builder-ref-row.is-trap-claimed .ref-card { background: var(--green); }
+  .builder-ref-row .ref-remove { background: var(--bg); border: 1px solid var(--line); width: 22px; height: 22px; border-radius: 50%; color: var(--ink-soft); font-size: 12px; line-height: 1; cursor: pointer; padding: 0; display: inline-flex; align-items: center; justify-content: center; transition: all 0.15s; }
+  .builder-ref-row .ref-remove:hover { background: var(--accent); color: white; border-color: var(--accent); }
+
+  /* cardinality picker modal */
+  .card-modal { position: fixed; inset: 0; background: rgba(22,22,29,0.5); display: none; align-items: center; justify-content: center; z-index: 200; padding: 20px; }
+  .card-modal.show { display: flex; }
+  .card-modal-inner { background: var(--bg); border-radius: 12px; padding: 32px; max-width: 540px; width: 100%; box-shadow: 0 20px 60px rgba(0,0,0,0.25); }
+  .card-modal-q { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.08em; color: var(--obj-color); margin: 0 0 8px; }
+  .card-modal h4 { font-family: 'Noto Serif SC', serif; font-size: 22px; margin: 0 0 6px; font-weight: 700; }
+  .card-modal-sub { color: var(--ink-soft); font-size: 13px; margin: 0 0 22px; line-height: 1.55; }
+  .card-modal-sub strong { color: var(--ink); }
+  .card-options { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 16px; }
+  @media (max-width: 540px) { .card-options { grid-template-columns: 1fr; } }
+  .card-opt { padding: 14px 16px; border: 1px solid var(--line); border-radius: 6px; cursor: pointer; background: var(--paper); transition: all 0.15s; text-align: left; }
+  .card-opt:hover { border-color: var(--obj-color); background: var(--obj-soft); transform: translateY(-1px); }
+  .card-opt-code { font-family: 'JetBrains Mono', monospace; font-weight: 700; font-size: 16px; color: var(--obj-color); margin-bottom: 4px; }
+  .card-opt-desc { font-size: 12px; color: var(--ink-soft); line-height: 1.45; }
+  .card-opt.not-ref { grid-column: span 2; background: rgba(255,77,46,0.05); border-color: var(--accent); }
+  .card-opt.not-ref:hover { background: var(--accent-soft); border-color: var(--accent); }
+  .card-opt.not-ref .card-opt-code { color: var(--accent); font-size: 13px; }
+  .card-modal-cancel { width: 100%; background: transparent; border: 1px solid var(--line); color: var(--ink-soft); padding: 10px; border-radius: 6px; cursor: pointer; font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; }
+  .card-modal-cancel:hover { background: var(--bg-2); }
+
+  .builder-actions { display: flex; gap: 12px; margin-top: 24px; flex-wrap: wrap; }
+  .builder-btn { padding: 10px 22px; border-radius: 100px; font-family: 'JetBrains Mono', monospace; font-size: 12px; letter-spacing: 0.06em; text-transform: uppercase; cursor: pointer; font-weight: 600; border: 1px solid var(--ink); background: transparent; color: var(--ink); transition: all 0.15s; }
+  .builder-btn:hover { background: var(--ink); color: var(--bg); }
+  .builder-btn.primary { background: var(--accent); color: white; border-color: var(--accent); }
+  .builder-btn.primary:hover { background: #e8451f; }
+
+  .builder-judge { margin-top: 24px; padding: 24px 26px; border-radius: 8px; background: var(--ink); color: var(--bg); display: none; }
+  .builder-judge.show { display: block; }
+  .builder-judge .verdict { display: inline-block; font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; padding: 3px 10px; border-radius: 100px; }
+  .builder-judge .verdict.win { color: #1f6b3a; background: #d4ecdb; }
+  .builder-judge .verdict.partial { color: #c79f1e; background: #fff3cc; }
+  .builder-judge .verdict.miss { color: var(--accent); background: var(--accent-soft); }
+  .builder-judge h4 { font-family: 'Noto Serif SC', serif; font-size: 22px; margin: 10px 0 14px; color: white; line-height: 1.3; }
+  .builder-judge ul { color: #c8c8d0; margin: 0; padding-left: 20px; font-size: 13px; line-height: 1.75; }
+  .builder-judge ul li + li { margin-top: 10px; }
+  .builder-judge ul strong { color: white; }
+  .builder-judge ul .why { color: #a0a0aa; font-size: 12px; }
+  .builder-judge ul code { color: #ffd166; font-family: 'JetBrains Mono', monospace; font-size: 12px; padding: 0 4px; }
+
+  /* tips */
+  .tips-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 28px; margin-top: 24px; }
+  @media (max-width: 880px) { .tips-grid { grid-template-columns: 1fr; } }
+  .tip { background: var(--paper); border: 1px solid var(--line); border-radius: 6px; padding: 24px; position: relative; }
+  .tip-num { position: absolute; top: -14px; left: 16px; width: 32px; height: 32px; border-radius: 50%; background: var(--obj-color); color: white; display: flex; align-items: center; justify-content: center; font-family: 'Fraunces', serif; font-style: italic; font-weight: 600; font-size: 14px; }
+  .tip h4 { font-family: 'Noto Serif SC', serif; font-size: 18px; margin: 8px 0 10px; font-weight: 700; }
+  .tip p { color: var(--ink-soft); font-size: 14px; line-height: 1.6; margin: 0; }
+  .tip p + p { margin-top: 8px; }
+  .tip-outro {
+    margin-top: 44px;
+    padding: 30px 32px;
+    background: var(--ink);
+    color: var(--bg);
+    border-radius: 8px;
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 28px;
+    align-items: flex-start;
+  }
+  @media (max-width: 720px) { .tip-outro { grid-template-columns: 1fr; gap: 12px; } }
+  .outro-tag { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.1em; color: var(--accent); padding-top: 4px; }
+  .tip-outro p { margin: 0 0 12px; color: #c8c8d0; line-height: 1.65; font-size: 15px; }
+  .tip-outro p:last-child { margin-bottom: 0; }
+  .tip-outro strong { color: white; }
+
+  /* next post */
+  .next-post {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 56px;
+    padding: 32px;
+    background: var(--bg-2);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    text-decoration: none;
+    color: var(--ink);
+    transition: all 0.2s;
+    gap: 24px;
+    flex-wrap: wrap;
+  }
+  .next-post:hover { background: var(--ink); color: var(--bg); }
+  .next-post:hover .np-tag { color: var(--accent); }
+  .next-post:hover .em { color: var(--accent); }
+  .next-post:hover p { color: #c8c8d0; }
+  .np-tag { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.1em; color: var(--ink-mute); margin-bottom: 6px; }
+  .next-post h4 { font-family: 'Noto Serif SC', serif; font-size: 26px; margin: 0 0 8px; font-weight: 700; }
+  .next-post .em { color: var(--obj-color); font-weight: 500; }
+  .next-post p { margin: 0; color: var(--ink-soft); font-size: 14px; max-width: 56ch; }
+  .np-cta { font-family: 'JetBrains Mono', monospace; font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; white-space: nowrap; }
+  .np-cta .arr { display: inline-block; transition: transform .2s; }
+  .next-post:hover .arr { transform: translateX(4px); }
+
+  /* footer */
+  footer { padding: 56px 0 64px; background: var(--bg); color: var(--ink-soft); border-top: 1px solid var(--line); }
+  .byline-group { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; margin-bottom: 32px; padding-bottom: 32px; border-bottom: 1px dashed var(--line); }
+  @media (max-width: 880px) { .byline-group { grid-template-columns: 1fr; } }
+  .byline { display: flex; gap: 16px; align-items: center; }
+  .byline .avatar { width: 56px; height: 56px; border-radius: 50%; object-fit: cover; flex-shrink: 0; }
+  .byline-label { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--accent); letter-spacing: 0.1em; }
+  .byline-label .dot { display: inline-block; width: 6px; height: 6px; background: var(--accent); border-radius: 50%; margin-right: 4px; vertical-align: middle; animation: pulse 2s ease-in-out infinite; }
+  .byline-name { font-family: 'Noto Serif SC', serif; font-weight: 700; font-size: 18px; margin: 4px 0; color: var(--ink); }
+  .byline-name .em { color: var(--accent); font-weight: 500; }
+  .byline-tag { color: var(--ink-soft); font-size: 13px; margin: 0; line-height: 1.5; }
+  .footer-meta { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ink-mute); text-align: center; letter-spacing: 0.05em; }
+  .footer-meta .heart { color: var(--accent); }
+
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="wrap topbar-inner">
+    <div class="brand-block">
+      <a href="book.html#vol-3" class="brand"><span class="brand-arrow">←</span>AI LABBOOK <span class="dot"></span></a>
+      <span class="brand-sep">/</span>
+      <span class="brand-current">X2 · 对象的字段、关系、引用</span>
+    </div>
+    <nav class="nav-links">
+      <a href="book.html#vol-3">路线图</a>
+    </nav>
+  </div>
+</div>
+
+<!-- Hero -->
+<header class="hero">
+  <div class="wrap">
+    <div class="hero-meta">
+      <span class="pill fill">高阶 · ADVANCED</span>
+      <span class="pill purple">STAGE 01 · 对象关系</span>
+      <span class="pill">X2 · 引用与关系</span>
+      <span class="label">阅读 ≈ 16 分钟 · 含 3 段互动</span>
+    </div>
+    <div class="hero-grid">
+      <div>
+        <h1>
+          对象不是孤岛，<br>
+          它们<span class="purple">互相引用</span>。
+        </h1>
+        <p class="lede">
+          客户详情页里的"合同列表"？那不是详情页里的一块。<br>
+          那是另一个对象（合同）通过引用指向了客户。<br>
+          整张引用图，才是工程师真正在搭建的东西。
+        </p>
+      </div>
+      <div class="hero-side">
+        <div class="row"><span class="k">本页讲什么</span><span class="v">对象 → 引用图</span></div>
+        <div class="row"><span class="k">三幕</span><span class="v">看见 · 拆开 · 再做</span></div>
+        <div class="row"><span class="k">面向</span><span class="v">B 端 / 后台设计师</span></div>
+        <div class="row"><span class="k">前置</span><span class="v">X1 · 不是页面，是对象</span></div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- Section 01: 问题 -->
+<section id="problem">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>01</strong> / 问题</div>
+        <h2 class="section-title">"详情页里的一块"，<br>其实是<span class="em">另一个对象</span>。</h2>
+      </div>
+      <p class="section-sub">
+        客户详情页里那个"相关合同 section"——你画稿时把它当成详情页的一部分。
+        工程师看到这一块的瞬间想的是：<strong>这是哪个对象，怎么挂回来的，删了会同步删吗？</strong>
+      </p>
+    </div>
+
+    <div class="problem-grid">
+      <div class="problem-card bad">
+        <span class="tag">页面思维 · PAGE</span>
+        <h3>"我在详情页里加了'相关合同'"</h3>
+        <p>稿子上画了一个 section：3 行合同，每行有金额、状态、日期。看起来挺完整。</p>
+        <p><strong>工程师追问：</strong>这"合同"是什么？是把字段复制一份过来？还是引用 Contract 对象？删一个合同会不会同步把客户上的引用也删掉？合同列表页的同一行 UI 要不要复用？</p>
+        <p style="color:var(--accent)"><strong>你：</strong>呃……我没想这么细。</p>
+      </div>
+
+      <div class="problem-card good">
+        <span class="tag">对象思维 · OBJECT</span>
+        <h3>"客户 has-many 合同，反向引用挂回来"</h3>
+        <p>稿子配一句话：<strong>Customer has-many Contract</strong>，通过 <code class="mono" style="background:white;padding:1px 5px;border-radius:3px;color:var(--obj-color)">Contract.customer_id</code> 反向引用。</p>
+        <p><strong>工程师收到：</strong>schema 直接落——一张 contracts 表带外键，详情页 section 只是 <code class="mono" style="background:white;padding:1px 5px;border-radius:3px;color:var(--obj-color)">Contract.where(customer_id=X)</code> 渲染。删客户的级联策略是另一道决策。</p>
+        <p style="color:var(--obj-color)"><strong>结果：</strong>追问 → 0 次，外加你赢得了"懂数据模型"的标签。</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Section 02: 幕一 · 看见 -->
+<section id="look">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <span class="act-tag look">幕一 · 看见</span>
+        <div class="section-num"><strong>02</strong> / 看见</div>
+        <h2 class="section-title">同一份"客户→合同"关系，<br><span class="purple">6 个地方都在用引用</span>。</h2>
+      </div>
+      <p class="section-sub">
+        下面 6 个 UI 都来自同一个 CRM。每一个都暗藏一个跨对象引用——
+        鼠标移到任一卡片，所有"引用点"同时发光。
+      </p>
+    </div>
+
+    <div class="surfaces-stage">
+      <div class="surfaces-grid" id="surfacesGrid">
+
+        <div class="surface-card" data-surface="customer-detail">
+          <span class="surface-tag">01 · 客户详情页</span>
+          <div class="detail-mini">
+            <div class="detail-mini-head">
+              <div class="surface-mini-avatar" style="width:36px;height:36px;font-size:14px">星</div>
+              <div>
+                <div style="font-family:'Noto Serif SC',serif;font-size:14px;font-weight:700">星河科技</div>
+                <div style="color:var(--ink-mute);font-size:10px">客户 · CUSTOMER</div>
+              </div>
+            </div>
+            <div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--ink-mute);letter-spacing:0.06em;text-transform:uppercase;margin-bottom:6px">相关合同 (3)</div>
+            <div style="font-size:11px;line-height:1.55">
+              <div style="padding:5px 0;border-bottom:1px dashed var(--line-soft)">
+                <span class="ref-mark" data-ref="contract">C-2401</span> · ¥480k
+              </div>
+              <div style="padding:5px 0;border-bottom:1px dashed var(--line-soft)">
+                <span class="ref-mark" data-ref="contract">C-2402</span> · ¥120k
+              </div>
+              <div style="padding:5px 0">
+                <span class="ref-mark" data-ref="contract">C-2403</span> · ¥240k
+              </div>
+            </div>
+          </div>
+          <div class="ref-tip">→ Contract 反向引用</div>
+        </div>
+
+        <div class="surface-card" data-surface="contract-detail">
+          <span class="surface-tag">02 · 合同详情页</span>
+          <div style="margin-top:4px">
+            <div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--ink-mute);margin-bottom:8px">
+              <span class="ref-mark" data-ref="customer">星河科技</span> / 合同 #C-2401
+            </div>
+            <div style="font-family:'Noto Serif SC',serif;font-size:15px;font-weight:700;margin-bottom:6px">企业 SaaS 年度授权</div>
+            <div class="detail-mini-grid" style="margin-top:8px">
+              <div><div class="detail-mini-lbl">客户</div><div class="detail-mini-val"><span class="ref-mark" data-ref="customer">星河科技</span></div></div>
+              <div><div class="detail-mini-lbl">金额</div><div class="detail-mini-val">¥ 480k</div></div>
+              <div><div class="detail-mini-lbl">状态</div><div class="detail-mini-val" style="color:var(--green)">生效中</div></div>
+              <div><div class="detail-mini-lbl">到期</div><div class="detail-mini-val">2026-12</div></div>
+            </div>
+          </div>
+          <div class="ref-tip">← Customer 正向引用</div>
+        </div>
+
+        <div class="surface-card" data-surface="contract-list">
+          <span class="surface-tag">03 · 合同列表</span>
+          <div style="margin-top:4px">
+            <div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--ink-mute);letter-spacing:0.06em;text-transform:uppercase;display:grid;grid-template-columns:1fr 1.4fr;gap:8px;padding:4px 0;border-bottom:1px solid var(--line)">
+              <div>合同号</div><div>客户</div>
+            </div>
+            <div style="font-size:11px;display:grid;grid-template-columns:1fr 1.4fr;gap:8px;padding:6px 0;border-bottom:1px dashed var(--line-soft)">
+              <div><strong>C-2401</strong></div>
+              <div><span class="ref-mark" data-ref="customer">星河科技</span></div>
+            </div>
+            <div style="font-size:11px;display:grid;grid-template-columns:1fr 1.4fr;gap:8px;padding:6px 0;border-bottom:1px dashed var(--line-soft)">
+              <div><strong>C-2402</strong></div>
+              <div><span class="ref-mark" data-ref="customer">辰宇集团</span></div>
+            </div>
+            <div style="font-size:11px;display:grid;grid-template-columns:1fr 1.4fr;gap:8px;padding:6px 0">
+              <div><strong>C-2403</strong></div>
+              <div><span class="ref-mark" data-ref="customer">长青资本</span></div>
+            </div>
+          </div>
+          <div class="ref-tip">→ Customer 投影列</div>
+        </div>
+
+        <div class="surface-card" data-surface="mention">
+          <span class="surface-tag">04 · @ 评论</span>
+          <div style="margin-top:8px;padding:11px;background:var(--bg-2);border-radius:6px;font-size:12px;line-height:1.65">
+            <div style="color:var(--ink-mute);font-size:10px;margin-bottom:6px">李华 · 2 小时前</div>
+            <span class="ref-mark" data-ref="customer">
+              <span class="surface-chip"><span class="ch-avatar">张</span>@张明</span>
+            </span> 这周和星河的合同要更新。
+          </div>
+          <div style="margin-top:8px;padding:11px;background:var(--bg-2);border-radius:6px;font-size:12px;line-height:1.65">
+            <div style="color:var(--ink-mute);font-size:10px;margin-bottom:6px">王芳 · 30 分钟前</div>
+            <span class="ref-mark" data-ref="customer">
+              <span class="surface-chip" style="background:var(--green-soft);color:var(--green)"><span class="ch-avatar" style="background:linear-gradient(135deg,#4dbf6e,#1f6b3a)">华</span>@李华</span>
+            </span> 收到，明早过。
+          </div>
+          <div class="ref-tip">→ User 引用 chip</div>
+        </div>
+
+        <div class="surface-card" data-surface="dashboard">
+          <span class="surface-tag">05 · 仪表盘</span>
+          <div style="margin-top:6px">
+            <div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--ink-mute);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:8px">本月签约 Top 5</div>
+            <div style="font-size:11px;line-height:1.5">
+              <div style="display:flex;align-items:center;gap:8px;padding:4px 0;border-bottom:1px dashed var(--line-soft)">
+                <span style="font-family:'JetBrains Mono',monospace;color:var(--obj-color);font-weight:700">1</span>
+                <span class="ref-mark" data-ref="customer"><strong>星河科技</strong></span>
+                <span style="margin-left:auto;font-family:'JetBrains Mono',monospace;color:var(--ink-mute)">¥840k</span>
+              </div>
+              <div style="display:flex;align-items:center;gap:8px;padding:4px 0;border-bottom:1px dashed var(--line-soft)">
+                <span style="font-family:'JetBrains Mono',monospace;color:var(--obj-color);font-weight:700">2</span>
+                <span class="ref-mark" data-ref="customer"><strong>辰宇集团</strong></span>
+                <span style="margin-left:auto;font-family:'JetBrains Mono',monospace;color:var(--ink-mute)">¥620k</span>
+              </div>
+              <div style="display:flex;align-items:center;gap:8px;padding:4px 0">
+                <span style="font-family:'JetBrains Mono',monospace;color:var(--obj-color);font-weight:700">3</span>
+                <span class="ref-mark" data-ref="customer"><strong>长青资本</strong></span>
+                <span style="margin-left:auto;font-family:'JetBrains Mono',monospace;color:var(--ink-mute)">¥410k</span>
+              </div>
+            </div>
+          </div>
+          <div class="ref-tip">→ Customer 引用</div>
+        </div>
+
+        <div class="surface-card" data-surface="search">
+          <span class="surface-tag">06 · 搜索</span>
+          <div style="margin-top:6px">
+            <div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--ink-mute);margin-bottom:8px">🔍 "<mark style="background:var(--yellow);padding:0 3px">张</mark>"</div>
+            <div class="surface-search-hit">
+              <div style="font-weight:600;font-size:12px;display:flex;align-items:center;gap:6px">
+                <span class="ref-mark" data-ref="customer"><mark>张</mark>明</span>
+                <span style="color:var(--ink-mute);font-weight:400;font-size:10px">
+                  （在 <span class="ref-mark back" data-ref="contract"><strong style="color:var(--obj-color)">4 个合同</strong></span> 里出现）
+                </span>
+              </div>
+              <div style="color:var(--ink-mute);font-size:10px;margin-top:2px">星河科技 · CTO</div>
+            </div>
+            <div class="surface-search-hit" style="opacity:0.55">
+              <div style="font-weight:600;font-size:12px"><mark>张</mark>雅琪</div>
+              <div style="color:var(--ink-mute);font-size:10px;margin-top:2px">瀚海传媒 · 创始人</div>
+            </div>
+          </div>
+          <div class="ref-tip">← 反向引用计数</div>
+        </div>
+
+      </div>
+    </div>
+
+    <div class="reveal-bar">
+      <div class="msg">
+        数一数刚才看到的引用——<span class="em">一个客户对象</span>，被 6 个表面用到。<br>
+        这就是为什么改一个客户名 → 6 个地方同步更新。
+      </div>
+      <div class="counter">
+        已访问 <strong id="revealCount">0</strong> / 6 个表面
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Section 03: 幕二 · 拆开 -->
+<section id="break">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <span class="act-tag break">幕二 · 拆开</span>
+        <div class="section-num"><strong>03</strong> / 拆开</div>
+        <h2 class="section-title">把所有引用画出来，<br>就是一张<br><span class="purple">对象关系图</span>。</h2>
+      </div>
+      <p class="section-sub">
+        页面只是图的一个截面。<strong>点节点</strong>看字段（引用字段用蓝色 → 标记），
+        <strong>点边</strong>看 cardinality 的业务含义。
+      </p>
+    </div>
+
+    <div class="graph-stage">
+      <div class="graph-canvas">
+        <svg class="graph-svg" viewBox="0 0 600 480" preserveAspectRatio="xMidYMid meet" aria-label="CRM 对象关系图">
+          <!-- Edges (drawn first so nodes render on top) -->
+          <defs>
+            <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+              <path d="M0,0 L10,5 L0,10 z" class="gedge-arrow"/>
+            </marker>
+            <marker id="arr-bi-l" viewBox="0 0 10 10" refX="1" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+              <path d="M10,0 L0,5 L10,10 z" class="gedge-arrow"/>
+            </marker>
+          </defs>
+
+          <!-- E1: Customer ↔ Contact (M:N) -->
+          <g class="gedge" data-edge="cust-contact">
+            <line class="gedge-line" x1="120" y1="120" x2="120" y2="240" />
+            <rect class="gedge-card-bg" x="92" y="170" width="56" height="20" rx="10"/>
+            <text class="gedge-card-text" x="120" y="184">M : N</text>
+          </g>
+
+          <!-- E2: Customer → Opportunity (1:N) -->
+          <g class="gedge" data-edge="cust-opp">
+            <line class="gedge-line" x1="200" y1="100" x2="380" y2="100" marker-end="url(#arr)"/>
+            <rect class="gedge-card-bg" x="262" y="84" width="56" height="20" rx="10"/>
+            <text class="gedge-card-text" x="290" y="98">1 : N</text>
+          </g>
+
+          <!-- E3: Opportunity → Contract (1:N) -->
+          <g class="gedge" data-edge="opp-contract">
+            <line class="gedge-line" x1="460" y1="130" x2="460" y2="240" marker-end="url(#arr)"/>
+            <rect class="gedge-card-bg" x="432" y="175" width="56" height="20" rx="10"/>
+            <text class="gedge-card-text" x="460" y="189">1 : N</text>
+          </g>
+
+          <!-- E4: Opportunity → Contact (N:1 主联系人) -->
+          <g class="gedge" data-edge="opp-contact">
+            <line class="gedge-line" x1="380" y1="140" x2="220" y2="260" marker-end="url(#arr)"/>
+            <rect class="gedge-card-bg" x="270" y="190" width="56" height="20" rx="10"/>
+            <text class="gedge-card-text" x="298" y="204">N : 1</text>
+          </g>
+
+          <!-- E5: Contract → Product (N:1) -->
+          <g class="gedge" data-edge="contract-product">
+            <line class="gedge-line" x1="460" y1="320" x2="460" y2="400" marker-end="url(#arr)"/>
+            <rect class="gedge-card-bg" x="432" y="350" width="56" height="20" rx="10"/>
+            <text class="gedge-card-text" x="460" y="364">N : 1</text>
+          </g>
+
+          <!-- E6: Customer → Activity (1:N) -->
+          <g class="gedge" data-edge="cust-activity">
+            <line class="gedge-line" x1="160" y1="130" x2="240" y2="400" marker-end="url(#arr)"/>
+            <rect class="gedge-card-bg" x="172" y="248" width="56" height="20" rx="10"/>
+            <text class="gedge-card-text" x="200" y="262">1 : N</text>
+          </g>
+
+          <!-- Nodes -->
+          <g class="gnode" data-node="customer">
+            <rect class="gnode-rect" x="70" y="60" width="130" height="60" rx="6"/>
+            <text class="gnode-name" x="135" y="88">客户</text>
+            <text class="gnode-sub" x="135" y="106">CUSTOMER</text>
+          </g>
+          <g class="gnode" data-node="contact">
+            <rect class="gnode-rect" x="70" y="240" width="130" height="60" rx="6"/>
+            <text class="gnode-name" x="135" y="268">联系人</text>
+            <text class="gnode-sub" x="135" y="286">CONTACT</text>
+          </g>
+          <g class="gnode" data-node="opportunity">
+            <rect class="gnode-rect" x="380" y="60" width="160" height="60" rx="6"/>
+            <text class="gnode-name" x="460" y="88">商机</text>
+            <text class="gnode-sub" x="460" y="106">OPPORTUNITY</text>
+          </g>
+          <g class="gnode" data-node="contract">
+            <rect class="gnode-rect" x="380" y="240" width="160" height="60" rx="6"/>
+            <text class="gnode-name" x="460" y="268">合同</text>
+            <text class="gnode-sub" x="460" y="286">CONTRACT</text>
+          </g>
+          <g class="gnode" data-node="product">
+            <rect class="gnode-rect" x="380" y="400" width="160" height="60" rx="6"/>
+            <text class="gnode-name" x="460" y="428">产品</text>
+            <text class="gnode-sub" x="460" y="446">PRODUCT</text>
+          </g>
+          <g class="gnode" data-node="activity">
+            <rect class="gnode-rect" x="170" y="400" width="140" height="60" rx="6"/>
+            <text class="gnode-name" x="240" y="428">活动</text>
+            <text class="gnode-sub" x="240" y="446">ACTIVITY</text>
+          </g>
+        </svg>
+
+        <div class="graph-legend">
+          线上的 <code>1 : N</code> / <code>M : N</code> 是 cardinality（基数）——左边能挂几个右边的、右边能挂几个左边的。
+          点节点看字段，点边看含义。
+        </div>
+      </div>
+
+      <div class="graph-detail" id="graphDetail">
+        <span class="graph-detail-tag">CUSTOMER · OBJECT</span>
+        <h4>客户</h4>
+        <p class="sub">customers · 1 张表 · 6 个字段</p>
+        <div class="graph-fields-table">
+          <div class="graph-field-row"><span class="gfield-name">id</span><span class="gfield-type">uuid</span></div>
+          <div class="graph-field-row"><span class="gfield-name">name</span><span class="gfield-type">string</span></div>
+          <div class="graph-field-row"><span class="gfield-name">industry</span><span class="gfield-type">enum</span></div>
+          <div class="graph-field-row is-ref"><span class="gfield-arrow">→</span><span class="gfield-name">owner_id</span><span class="gfield-type">User</span></div>
+          <div class="graph-field-row"><span class="gfield-name">tier</span><span class="gfield-type">enum</span></div>
+          <div class="graph-field-row"><span class="gfield-name">created_at</span><span class="gfield-type">timestamp</span></div>
+        </div>
+        <div class="graph-legend">
+          蓝色 <code style="color:var(--blue);background:var(--blue-soft)">→</code> 标记的是引用字段——一个对象指向另一个对象。
+        </div>
+      </div>
+    </div>
+
+    <div class="reveal-bar" style="margin-top:32px">
+      <div class="msg">
+        页面只是这张图的一个截面。<span class="em">改一个对象 → 整张图变化</span>，<br>
+        要传到所有用它的表面。
+      </div>
+      <div class="counter">点节点 / 点边 看引用走向</div>
+    </div>
+  </div>
+</section>
+
+<!-- Section 04: 幕三 · 再做 -->
+<section id="make">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <span class="act-tag make">幕三 · 再做</span>
+        <div class="section-num"><strong>04</strong> / 再做</div>
+        <h2 class="section-title">轮到你——<br>给「项目」对象，<br><span class="em">设计它的引用</span>。</h2>
+      </div>
+      <p class="section-sub">
+        新需求来了，CRM 要加"项目"对象。它会引用什么？以什么 cardinality？
+        候选里有几个陷阱——<strong>不是所有看起来像引用的都是引用</strong>。
+      </p>
+    </div>
+
+    <div class="builder-stage">
+      <div class="builder-head">
+        <h3 class="builder-title">给"项目 Project"配引用</h3>
+        <div class="builder-progress">已配置 <span class="done" id="builderDone">0</span> 个候选</div>
+      </div>
+
+      <div class="builder-grid">
+        <div class="builder-pool">
+          <h5>候选池 · 9 项</h5>
+          <p class="builder-pool-hint">点一个候选 → 选 cardinality（或"不是引用"）→ 加进项目卡。9 个里有 3 个陷阱。</p>
+          <div class="builder-pool-list" id="builderPool">
+            <div class="builder-chip" data-field="customer" data-type="ref"><span>Customer</span><span class="chip-cn">客户</span><span class="chip-add">+</span></div>
+            <div class="builder-chip" data-field="owner" data-type="ref"><span>User</span><span class="chip-cn">主负责人</span><span class="chip-add">+</span></div>
+            <div class="builder-chip" data-field="team" data-type="ref"><span>Users[]</span><span class="chip-cn">团队成员</span><span class="chip-add">+</span></div>
+            <div class="builder-chip" data-field="opportunity" data-type="ref"><span>Opportunity</span><span class="chip-cn">关联商机</span><span class="chip-add">+</span></div>
+            <div class="builder-chip" data-field="parent" data-type="ref"><span>Project</span><span class="chip-cn">上游项目</span><span class="chip-add">+</span></div>
+            <div class="builder-chip" data-field="contract" data-type="ref"><span>Contract[]</span><span class="chip-cn">关联合同</span><span class="chip-add">+</span></div>
+            <div class="builder-chip is-trap" data-field="stage" data-type="trap"><span>Stage</span><span class="chip-cn">阶段</span><span class="chip-add">+</span></div>
+            <div class="builder-chip is-trap" data-field="tags" data-type="trap"><span>Tags</span><span class="chip-cn">标签</span><span class="chip-add">+</span></div>
+            <div class="builder-chip is-trap" data-field="status_color" data-type="trap"><span>StatusColor</span><span class="chip-cn">状态颜色</span><span class="chip-add">+</span></div>
+          </div>
+        </div>
+
+        <div class="builder-canvas">
+          <div class="builder-canvas-head">
+            <div class="builder-canvas-name">项目 Project <span class="lbl">PROJECT · OBJECT</span></div>
+            <div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--ink-mute)">
+              引用 <span style="color:var(--obj-color);font-weight:700" id="canvasRefCount">0</span> 个 · 排除 <span style="color:var(--green);font-weight:700" id="canvasTrapCount">0</span> 个
+            </div>
+          </div>
+
+          <div class="builder-refs-list" id="builderRefsList">
+            <div class="builder-refs-empty" id="builderRefsEmpty">空着——从左边点候选配置引用</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="builder-actions">
+        <button class="builder-btn primary" id="builderSubmit">提交判分</button>
+        <button class="builder-btn" id="builderReset">清空重来</button>
+      </div>
+
+      <div class="builder-judge" id="builderJudge"></div>
+    </div>
+  </div>
+</section>
+
+<!-- Card modal -->
+<div class="card-modal" id="cardModal">
+  <div class="card-modal-inner">
+    <div class="card-modal-q">配 CARDINALITY · 选关系基数</div>
+    <h4 id="cardModalTitle">客户 Customer</h4>
+    <p class="card-modal-sub" id="cardModalSub">一个<strong>项目</strong>和这个对象的关系是什么？</p>
+    <div class="card-options">
+      <button class="card-opt" data-card="1:1">
+        <div class="card-opt-code">1 : 1</div>
+        <div class="card-opt-desc">一对一——每个项目最多一个，每个那个最多一个项目</div>
+      </button>
+      <button class="card-opt" data-card="1:N">
+        <div class="card-opt-code">1 : N</div>
+        <div class="card-opt-desc">一对多——一个项目挂多个，但每个那个只属于这一个项目</div>
+      </button>
+      <button class="card-opt" data-card="N:1">
+        <div class="card-opt-code">N : 1</div>
+        <div class="card-opt-desc">多对一——多个项目共享一个，但每个项目只挂一个</div>
+      </button>
+      <button class="card-opt" data-card="M:N">
+        <div class="card-opt-code">M : N</div>
+        <div class="card-opt-desc">多对多——一个项目可以挂多个，每个也可以属于多个项目</div>
+      </button>
+      <button class="card-opt not-ref" data-card="not-ref">
+        <div class="card-opt-code">✗ 不是引用 · NOT A REFERENCE</div>
+        <div class="card-opt-desc">这其实不是一个独立对象——它是 enum / 字符串数组 / 派生值 / 内嵌字段</div>
+      </button>
+    </div>
+    <button class="card-modal-cancel" id="cardModalCancel">取消</button>
+  </div>
+</div>
+
+<!-- Section 05: closing -->
+<section id="closing">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>05</strong> / 把这件事变成习惯</div>
+        <h2 class="section-title">下次看到"列表"、"相关"，<br><span class="em">先问引用问题</span>。</h2>
+      </div>
+      <p class="section-sub">
+        从这一篇开始，需求评审里出现"列表"、"相关"、"关联"这些词，
+        你脑子里的第一反应应该是引用图，不是 section 布局。
+      </p>
+    </div>
+
+    <div class="tips-grid">
+      <div class="tip">
+        <div class="tip-num">i</div>
+        <h4>看到列表先问"这是谁的列表"</h4>
+        <p>一个 section 显示 N 条记录——先问：这 N 条是<strong>什么对象</strong>？通过<strong>什么字段</strong>反向引用回来？</p>
+        <p>两个问题没问之前不画稿子。问完再画，工程师不需要追问。</p>
+      </div>
+      <div class="tip">
+        <div class="tip-num">ii</div>
+        <h4>Cardinality 是设计决策，不只是数据问题</h4>
+        <p>1:N 还是 M:N 直接影响 UI：单选还是多选？能不能撤销关联？删一个会不会同步删？</p>
+        <p>需求评审的第一句直接问 <strong>cardinality</strong> ——比"按钮在哪、什么色"重要 10 倍。</p>
+      </div>
+      <div class="tip">
+        <div class="tip-num">iii</div>
+        <h4>self-reference 不是 bug，是常见模式</h4>
+        <p>任务有子任务、组织有上级组织、项目有依赖项目。看到"层级"或"依赖"两个词，立刻想 <strong>self-reference</strong>。</p>
+        <p>设计时要画清楚：哪些是父、哪些是子，能不能多个父，循环依赖怎么挡。</p>
+      </div>
+    </div>
+
+    <div class="tip-outro">
+      <div class="outro-tag">划重点 · TL;DR</div>
+      <div>
+        <p>需求里出现"列表"或"相关"，立即问：<strong>这是另一个对象吗？它怎么引用回来？基数是几比几？</strong></p>
+        <p>语言一变，整个对话就不一样了——你不再是在描述"详情页里有什么"，你是在<strong>设计一张可被工程师直接落 schema 的引用图</strong>。</p>
+      </div>
+    </div>
+
+    <a href="x3-info-hierarchy.html" class="next-post">
+      <div>
+        <div class="np-tag">下一站 · NEXT · X3 · 高阶</div>
+        <h4>信息层级：<span class="em">主对象与附属</span></h4>
+        <p>页面是引用图的一个截面——但截面要选"谁是主"。下一站讲：在任何一个画面里，谁是主对象、谁是附属信息、URL/面包屑/标题/back 都从这件事派生。</p>
+      </div>
+      <span class="np-cta">继续 <span class="arr">→</span></span>
+    </a>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div class="byline-group">
+      <div class="byline">
+        <img class="avatar" src="author.jpg" alt="范米花儿">
+        <div class="byline-meta">
+          <div class="byline-label"><span class="dot"></span>作者 · WRITTEN BY</div>
+          <div class="byline-name">嗨，我是 <span class="em">范米花儿</span></div>
+          <p class="byline-tag">设计工程师 ——<br>设计 × 代码，两边都做。</p>
+        </div>
+      </div>
+</div>
+    <div class="footer-meta">
+      做于 <span class="mono">2026</span> · 用 <span class="heart">●</span> 写给 <span class="mono">DESIGNERS &amp; DEVELOPERS</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+// ===== Game 1: surfaces hover all =====
+(function(){
+  const surfaces = document.querySelectorAll('.surface-card');
+  const visited = new Set();
+  const counter = document.getElementById('revealCount');
+  surfaces.forEach(card => {
+    card.addEventListener('mouseenter', () => {
+      surfaces.forEach(s => s.classList.add('is-highlight'));
+      if (!visited.has(card.dataset.surface)) {
+        visited.add(card.dataset.surface);
+        counter.textContent = visited.size;
+      }
+    });
+    card.addEventListener('mouseleave', () => {
+      surfaces.forEach(s => s.classList.remove('is-highlight'));
+    });
+  });
+})();
+
+// ===== Game 2: object graph =====
+(function(){
+  const N = (n, t) => ({ name: n, type: t, ref: false });
+  const NODE_DATA = {
+    customer:    { name: '客户 Customer', sub: 'customers · 1 张表 · 6 个字段', fields: [N('id','uuid'),N('name','string'),N('industry','enum'),{name:'owner_id',type:'User',ref:true},N('tier','enum'),N('created_at','timestamp')] },
+    contact:     { name: '联系人 Contact', sub: 'contacts · 1 张表 · 7 个字段', fields: [N('id','uuid'),N('name','string'),N('title','string'),N('email','string'),N('phone','string'),{name:'customer_id',type:'Customer (M:N)',ref:true},N('created_at','timestamp')] },
+    opportunity: { name: '商机 Opportunity', sub: 'opportunities · 1 张表 · 8 个字段', fields: [N('id','uuid'),N('name','string'),{name:'customer_id',type:'Customer',ref:true},{name:'primary_contact_id',type:'Contact',ref:true},N('amount','money'),N('stage','enum'),N('close_date','date'),{name:'owner_id',type:'User',ref:true}] },
+    contract:    { name: '合同 Contract', sub: 'contracts · 1 张表 · 7 个字段', fields: [N('id','uuid'),N('code','string'),{name:'opportunity_id',type:'Opportunity',ref:true},{name:'product_id',type:'Product',ref:true},N('amount','money'),N('status','enum'),N('expires_at','date')] },
+    product:     { name: '产品 Product', sub: 'products · 1 张表 · 5 个字段', fields: [N('id','uuid'),N('sku','string'),N('name','string'),N('unit_price','money'),N('is_active','bool')] },
+    activity:    { name: '活动 Activity', sub: 'activities · 1 张表 · 6 个字段', fields: [N('id','uuid'),N('type','enum (call/meeting/email)'),{name:'customer_id',type:'Customer',ref:true},{name:'contact_id',type:'Contact',ref:true},{name:'owner_id',type:'User',ref:true},N('occurred_at','timestamp')] }
+  };
+
+  const EDGE_DATA = {
+    'cust-contact':     { title: '客户 ↔ 联系人',   card: 'M : N', meaning: '一个客户公司有多个联系人；一个联系人也可能为多家客户工作（销售常一人对多家）。', example: '星河科技 → 张明 / 李芸 / 王越；张明也同时挂在星河 + 子公司星河云上。' },
+    'cust-opp':         { title: '客户 → 商机',     card: '1 : N', meaning: '一个客户可以有多个商机；商机只属于一个客户。', example: '星河科技下有"年度续约"、"新产品试点"、"加购席位"3 个并行商机。' },
+    'opp-contract':     { title: '商机 → 合同',     card: '1 : N', meaning: '一个商机成交后会产生 1 个或多个合同（主合同 + 补充协议）；合同只对应一个商机。', example: '"年度续约"商机 → 主合同 C-2401 + 服务补充合同 C-2401-S。' },
+    'opp-contact':      { title: '商机 → 主联系人', card: 'N : 1', meaning: '从 M:N 的联系人池里挑一个作为"决策人 / 主联系"。多个商机共享同一个主联系人很常见。', example: '张明作为 CTO，是"年度续约"和"新产品试点"两个商机的主联系人。' },
+    'contract-product': { title: '合同 → 产品',     card: 'N : 1', meaning: '一份合同对应一个 SKU（多 SKU 拆成多份合同）；一个产品被很多合同卖出。', example: 'C-2401 卖的是 "SaaS-Pro 年度授权"；该产品被本月 28 份合同引用。' },
+    'cust-activity':    { title: '客户 → 活动',     card: '1 : N', meaning: '客户名下记录所有电话、会议、邮件——历史互动流。活动只属于一个客户。', example: '星河科技下：12 月 3 日电话、12 月 5 日会议、12 月 8 日邮件……' }
+  };
+
+  const detail = document.getElementById('graphDetail');
+  const nodes = document.querySelectorAll('.gnode');
+  const edges = document.querySelectorAll('.gedge');
+
+  function renderNode(key) {
+    const d = NODE_DATA[key];
+    if (!d) return;
+    const fieldsHtml = d.fields.map(f => {
+      const refCls = f.ref ? ' is-ref' : '';
+      const arrow = f.ref ? '<span class="gfield-arrow">→</span>' : '';
+      return `<div class="graph-field-row${refCls}">${arrow}<span class="gfield-name">${f.name}</span><span class="gfield-type">${f.type}</span></div>`;
+    }).join('');
+    detail.innerHTML = `
+      <span class="graph-detail-tag">${d.name.split(' ')[1] || ''} · OBJECT</span>
+      <h4>${d.name}</h4>
+      <p class="sub">${d.sub}</p>
+      <div class="graph-fields-table">${fieldsHtml}</div>
+      <div class="graph-legend">
+        蓝色 <code style="color:var(--blue);background:var(--blue-soft)">→</code> 标记的是引用字段——一个对象指向另一个对象。
+      </div>
+    `;
+  }
+
+  function renderEdge(key) {
+    const e = EDGE_DATA[key];
+    if (!e) return;
+    detail.innerHTML = `
+      <span class="graph-detail-tag" style="background:var(--blue);">EDGE · CARDINALITY</span>
+      <h4>${e.title}</h4>
+      <p class="sub">基数 · <strong style="color:var(--obj-color);font-weight:700">${e.card}</strong></p>
+      <div class="graph-edge-detail">
+        <div class="lbl">业务含义</div>
+        ${e.meaning}
+        <div class="ex"><strong>示例：</strong>${e.example}</div>
+      </div>
+      <div class="graph-legend">
+        Cardinality 的两边都要问——左边能挂几个右边的？右边能挂几个左边的？
+      </div>
+    `;
+  }
+
+  function clearActive() {
+    nodes.forEach(n => n.classList.remove('is-active'));
+    edges.forEach(e => e.classList.remove('is-active'));
+  }
+
+  nodes.forEach(n => {
+    const key = n.dataset.node;
+    const rect = n.querySelector('.gnode-rect');
+    rect.addEventListener('click', () => {
+      clearActive();
+      n.classList.add('is-active');
+      // also highlight edges touching this node
+      edges.forEach(e => {
+        if (e.dataset.edge.includes(key.slice(0, 4))) {
+          // soft highlight (only on direct match)
+        }
+      });
+      renderNode(key);
+    });
+    rect.addEventListener('mouseenter', () => {
+      // soft hover-only — do not clear active
+    });
+  });
+
+  edges.forEach(e => {
+    const handler = () => {
+      clearActive();
+      e.classList.add('is-active');
+      renderEdge(e.dataset.edge);
+    };
+    e.querySelectorAll('line, rect, text').forEach(el => {
+      el.addEventListener('click', handler);
+    });
+  });
+
+  // default: render customer
+  renderNode('customer');
+  document.querySelector('.gnode[data-node="customer"]').classList.add('is-active');
+})();
+
+// ===== Game 3: builder =====
+(function(){
+  const FIELD_META = {
+    customer:    { code: 'Customer',    cn: '客户',     type: 'ref',  ideal: 'N:1' },
+    owner:       { code: 'User',        cn: '主负责人', type: 'ref',  ideal: 'N:1' },
+    team:        { code: 'Users[]',     cn: '团队成员', type: 'ref',  ideal: 'M:N' },
+    opportunity: { code: 'Opportunity', cn: '关联商机', type: 'ref',  ideal: 'N:1' },
+    parent:      { code: 'Project',     cn: '上游项目', type: 'ref',  ideal: 'N:1', self: true },
+    contract:    { code: 'Contract[]',  cn: '关联合同', type: 'ref',  ideal: '1:N' },
+    stage:       { code: 'Stage',       cn: '阶段',     type: 'trap', ideal: 'not-ref', trapWhy: 'Stage 没有自己的详情页和生命周期。它只是项目对象上的一个 enum 字段。问自己"点 Stage 能跳走吗？"不能就不是引用。' },
+    tags:        { code: 'Tags',        cn: '标签',     type: 'trap', ideal: 'not-ref', trapWhy: 'Tags 是字符串数组（或者最多是个 Label 表的关联），不是独立对象。标签不会有自己的详情页、负责人、生命周期。' },
+    status_color:{ code: 'StatusColor', cn: '状态颜色', type: 'trap', ideal: 'not-ref', trapWhy: 'StatusColor 是从 status 派生出来的——红 = 落后、绿 = 正常。它是计算字段，不是引用。引用了它，工程师会一脸问号。' }
+  };
+
+  const CARD_EXPLAIN = {
+    customer: {
+      'N:1': '对：一个项目属于一个客户；一个客户可以挂多个项目。',
+      '1:N': '反了——一个项目能属于多家客户吗？业务上一般不能。挑 N:1。',
+      'M:N': '太松——这会允许"一个项目同时属于 3 家客户"，业务上不合理。挑 N:1。',
+      '1:1': '太紧——一家客户只能有一个项目？显然不对。挑 N:1。'
+    },
+    owner:    { 'N:1': '对：每个项目只有一个主负责人；一个人可以负责多个项目。', 'M:N': '太松——这变成"多人共同负责"，那是团队成员，不是"主负责人"。挑 N:1。' },
+    team:     { 'M:N': '对：一个项目多个成员；一个人也可以在多个项目里。', 'N:1': '反了——团队成员是多人，不是一人。挑 M:N。' },
+    opportunity: {
+      'N:1': '对（默认）：一个项目对应一个商机；同一商机可以拆出多个项目交付。M:N 在某些业务也合理，但默认 N:1 更紧。',
+      'M:N': '可以接受——某些业务里一个项目跨多个商机交付。如果不确定，先选 N:1 更安全。',
+      '1:N': '反了——商机是源头，项目是后续交付物。挑 N:1。'
+    },
+    parent: {
+      'N:1': '对：项目可以有一个上游项目（依赖关系）；一个上游可以有多个下游。Self-reference 经典 N:1。',
+      'M:N': '太松——一个项目同时是多个上游的下游，会让依赖图变成 DAG，复杂度激增。先选 N:1。',
+      '1:1': '太紧——上游下游只能一对一会让"分叉的依赖"画不出来。挑 N:1。'
+    },
+    contract: {
+      '1:N': '对：项目可以产出多个合同（主合同 + 补充）；合同只属于一个项目。这是反向关系。',
+      'N:1': '反了——一个项目挂多个合同，不是一个合同挂多个项目。挑 1:N。',
+      'M:N': '太松——合同对应单一项目，不要让它变成 M:N。'
+    },
+    stage: {
+      'not-ref': '对！Stage 是 enum，不是独立对象——没有详情页、没有生命周期。',
+      'N:1': '陷阱：把 enum 当成引用。Stage 选 N:1 → 工程师会建一张 stages 表，但表里只有 5 行死数据。这是过度建模。',
+      '1:N': '陷阱：把 enum 当成引用。Stage 没有"下属对象"，它是一个单选枚举值。',
+      'M:N': '陷阱：把 enum 当成引用。', '1:1': '陷阱：把 enum 当成引用。'
+    },
+    tags: {
+      'not-ref': '对！Tags 是 string[]（或最多一张 join 表的轻关联），不需要当成独立对象建模。',
+      'N:1': '陷阱：Tags 不是单选，是多选——选 N:1 也不对。',
+      '1:N': '陷阱：Tags 没有自己的属性、负责人、生命周期。它就是几个字符串。',
+      'M:N': '陷阱：虽然结构上像 M:N，但 Tags 没有独立详情页——它是分类，不是对象。识别成"不是引用"更合适。',
+      '1:1': '陷阱：Tags 是多选。'
+    },
+    status_color: {
+      'not-ref': '对！StatusColor 是从 status 派生出来的——红 = 落后、绿 = 正常。它是计算字段。',
+      'N:1': '陷阱：颜色是显示规则，不是对象。', '1:N': '陷阱：颜色是显示规则，不是对象。',
+      'M:N': '陷阱：颜色是显示规则，不是对象。', '1:1': '陷阱：颜色是显示规则，不是对象。'
+    }
+  };
+
+  let selections = {}; // field -> {card, ts}
+  let pendingField = null;
+
+  const pool = document.getElementById('builderPool');
+  const refsList = document.getElementById('builderRefsList');
+  const refsEmpty = document.getElementById('builderRefsEmpty');
+  const modal = document.getElementById('cardModal');
+  const modalTitle = document.getElementById('cardModalTitle');
+  const modalSub = document.getElementById('cardModalSub');
+  const modalCancel = document.getElementById('cardModalCancel');
+  const cardOpts = document.querySelectorAll('.card-opt');
+  const judge = document.getElementById('builderJudge');
+
+  function openModal(field) {
+    pendingField = field;
+    const m = FIELD_META[field];
+    modalTitle.textContent = `${m.code} · ${m.cn}`;
+    modalSub.innerHTML = `一个<strong>项目</strong>和「${m.cn}」的关系是什么？<br><span style="color:var(--ink-mute);font-size:12px">提示：先问自己"${m.cn}是一个独立对象吗？有自己的详情页吗？"</span>`;
+    modal.classList.add('show');
+  }
+
+  function closeModal() {
+    pendingField = null;
+    modal.classList.remove('show');
+  }
+
+  function renderRefs() {
+    const keys = Object.keys(selections);
+    if (keys.length === 0) {
+      refsList.innerHTML = '<div class="builder-refs-empty" id="builderRefsEmpty">空着——从左边点候选配置引用</div>';
+    } else {
+      refsList.innerHTML = keys.map(f => {
+        const m = FIELD_META[f];
+        const sel = selections[f];
+        const isNotRef = sel.card === 'not-ref';
+        const isTrap = m.type === 'trap';
+        // visual: if trap correctly identified as not-ref → green; if trap incorrectly given a card → red
+        let cls = '';
+        if (isTrap && isNotRef) cls = ' is-trap-claimed';
+        if (isTrap && !isNotRef) cls = ' is-trap-as-ref';
+        const cardLbl = isNotRef ? '不是引用' : sel.card;
+        const arrow = isNotRef ? '✗' : (m.self ? '↻' : '→');
+        return `<div class="builder-ref-row${cls}" data-row="${f}">
+          <span class="ref-arrow">${arrow}</span>
+          <span class="ref-name">${m.code}</span>
+          <span class="ref-cn">${m.cn}${m.self ? ' · self' : ''}</span>
+          <span class="ref-card">${cardLbl}</span>
+          <button class="ref-remove" data-rm="${f}" aria-label="移除">×</button>
+        </div>`;
+      }).join('');
+    }
+    // count
+    const refsCount = keys.filter(f => selections[f].card !== 'not-ref').length;
+    const trapsExcluded = keys.filter(f => selections[f].card === 'not-ref').length;
+    document.getElementById('canvasRefCount').textContent = refsCount;
+    document.getElementById('canvasTrapCount').textContent = trapsExcluded;
+    document.getElementById('builderDone').textContent = keys.length;
+    // update chip used state
+    document.querySelectorAll('.builder-chip').forEach(c => {
+      c.classList.toggle('is-used', !!selections[c.dataset.field]);
+    });
+  }
+
+  pool.addEventListener('click', e => {
+    const chip = e.target.closest('.builder-chip');
+    if (!chip) return;
+    if (selections[chip.dataset.field]) return; // already used
+    openModal(chip.dataset.field);
+  });
+
+  cardOpts.forEach(opt => {
+    opt.addEventListener('click', () => {
+      if (!pendingField) return;
+      selections[pendingField] = { card: opt.dataset.card };
+      renderRefs();
+      closeModal();
+    });
+  });
+
+  modalCancel.addEventListener('click', closeModal);
+  modal.addEventListener('click', e => {
+    if (e.target === modal) closeModal();
+  });
+
+  refsList.addEventListener('click', e => {
+    const rm = e.target.closest('button[data-rm]');
+    if (rm) {
+      delete selections[rm.dataset.rm];
+      renderRefs();
+    }
+  });
+
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape' && modal.classList.contains('show')) closeModal();
+  });
+
+  document.getElementById('builderSubmit').addEventListener('click', () => {
+    const lines = [];
+    let perfectRefs = 0;     // ref correctly identified AND correct cardinality
+    let okRefs = 0;          // ref identified as ref (any card)
+    let trapsRight = 0;      // trap correctly identified as not-ref
+    let trapsWrong = 0;      // trap incorrectly given a card
+    let refsMisCard = 0;     // ref identified as ref but wrong card
+    let refsAsNotRef = 0;    // ref incorrectly marked as not-ref
+    let missing = [];        // not selected at all
+
+    Object.keys(FIELD_META).forEach(f => {
+      const m = FIELD_META[f];
+      const sel = selections[f];
+      if (!sel) {
+        missing.push(f);
+        return;
+      }
+      const isTrap = m.type === 'trap';
+      const idealCard = m.ideal;
+      if (isTrap) {
+        if (sel.card === 'not-ref') {
+          trapsRight++;
+          lines.push(`<li>✓ <strong>${m.code} · ${m.cn}</strong>：识别为"不是引用" — 对！<span class="why">↳ ${m.trapWhy}</span></li>`);
+        } else {
+          trapsWrong++;
+          lines.push(`<li>✗ <strong>${m.code} · ${m.cn}</strong>：你选了 <code>${sel.card}</code>，但这是<strong>陷阱</strong>。<span class="why">↳ ${m.trapWhy}</span></li>`);
+        }
+      } else {
+        if (sel.card === idealCard) {
+          perfectRefs++;
+          okRefs++;
+          const sub = CARD_EXPLAIN[f][sel.card] || '';
+          lines.push(`<li>✓ <strong>${m.code} · ${m.cn}</strong>：<code>${sel.card}</code> — 对！<span class="why">↳ ${sub}</span></li>`);
+        } else if (sel.card === 'not-ref') {
+          refsAsNotRef++;
+          lines.push(`<li>✗ <strong>${m.code} · ${m.cn}</strong>：你选了"不是引用"，但 ${m.cn} 确实是独立对象（有自己的详情页和生命周期）。<span class="why">↳ 应选 <code>${idealCard}</code>。</span></li>`);
+        } else {
+          okRefs++;
+          refsMisCard++;
+          const sub = CARD_EXPLAIN[f][sel.card] || `应选 ${idealCard}。`;
+          lines.push(`<li>~ <strong>${m.code} · ${m.cn}</strong>：你选了 <code>${sel.card}</code>，识别为引用方向对，但 cardinality 偏了。<span class="why">↳ ${sub}</span></li>`);
+        }
+      }
+    });
+
+    if (missing.length > 0) {
+      const labels = missing.map(f => FIELD_META[f].cn).join(' / ');
+      lines.unshift(`<li><strong>还没判过：</strong>${labels} — 每一项都要给一个答案（包括"不是引用"）。</li>`);
+    }
+
+    const totalRefs = Object.values(FIELD_META).filter(m => m.type === 'ref').length; // 6
+    const totalTraps = Object.values(FIELD_META).filter(m => m.type === 'trap').length; // 3
+
+    let verdictClass, verdictLabel, headline;
+    if (perfectRefs === totalRefs && trapsRight === totalTraps) {
+      verdictClass = 'win';
+      verdictLabel = '完美';
+      headline = '你已经会把对象图当成设计的起点了。';
+    } else if (okRefs >= totalRefs - 1 && trapsRight >= totalTraps - 1 && missing.length === 0) {
+      verdictClass = 'win';
+      verdictLabel = '基本对了';
+      headline = '识别引用的判断都对——cardinality 是细活，再过一遍就稳了。';
+    } else if (missing.length > 0) {
+      verdictClass = 'partial';
+      verdictLabel = '还没完';
+      headline = '把候选都判一遍——9 个里没有一个能跳过。';
+    } else {
+      verdictClass = 'miss';
+      verdictLabel = '还差一点';
+      headline = '重申一下"什么是引用"：一个对象指向另一个，被指的对象有自己的详情页和生命周期。';
+    }
+
+    judge.innerHTML = `<span class="verdict ${verdictClass}">${verdictLabel}</span><h4>${headline}</h4><ul>${lines.join('')}</ul>`;
+    judge.classList.add('show');
+    judge.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  });
+
+  document.getElementById('builderReset').addEventListener('click', () => {
+    selections = {};
+    renderRefs();
+    judge.classList.remove('show');
+  });
+
+  renderRefs();
+})();
+</script>
+
+</body>
+</html>

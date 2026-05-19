@@ -1,0 +1,1139 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>字段意识：必填 / 空值 / 枚举 / 只读 / 计算 — AI LABBOOK · X10</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,300..900&family=Geist:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Noto+Sans+SC:wght@300;400;500;700;900&family=Noto+Serif+SC:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f3eee5;
+    --bg-2: #ebe4d4;
+    --ink: #16161d;
+    --ink-soft: #4a4a55;
+    --ink-mute: #8a8a92;
+    --line: #d5cdba;
+    --line-soft: #e3dcca;
+    --accent: #ff4d2e;
+    --accent-soft: #ffe4dc;
+    --blue: #0a4cff;
+    --blue-soft: #dde6ff;
+    --green: #1f6b3a;
+    --green-soft: #d4ecdb;
+    --yellow: #ffcf3d;
+    --paper: #faf7f0;
+    --shadow: 0 1px 0 rgba(0,0,0,0.04), 0 8px 24px rgba(22,22,29,0.06);
+
+    --obj-color: #ff4d2e;
+    --obj-soft: rgba(255,77,46,0.12);
+    --proj-color: #1f6b3a;
+    --proj-soft: rgba(31,107,58,0.12);
+
+    /* 5 dimension colors */
+    --d-required: #ff4d2e;
+    --d-required-soft: rgba(255,77,46,0.12);
+    --d-null: #0a4cff;
+    --d-null-soft: rgba(10,76,255,0.12);
+    --d-enum: #ff4d2e;
+    --d-enum-soft: rgba(255,77,46,0.12);
+    --d-mut: #c79f1e;
+    --d-mut-soft: rgba(199,159,30,0.16);
+    --d-comp: #1f6b3a;
+    --d-comp-soft: rgba(31,107,58,0.14);
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'Geist', 'Noto Sans SC', system-ui, -apple-system, sans-serif;
+    font-size: 16px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    background-image: radial-gradient(circle at 1px 1px, rgba(22,22,29,0.05) 1px, transparent 0);
+    background-size: 24px 24px;
+  }
+
+  .display-cn { font-family: 'Noto Serif SC', 'Fraunces', serif; font-weight: 900; letter-spacing: -0.01em; }
+  .display-en { font-family: 'Fraunces', 'Noto Serif SC', serif; font-weight: 600; font-style: italic; letter-spacing: -0.02em; }
+  .mono { font-family: 'JetBrains Mono', monospace; }
+  .label { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-mute); }
+
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 0 32px; }
+
+  /* Topbar */
+  .topbar {
+    border-bottom: 1px dashed var(--line);
+    padding: 16px 0;
+    background: var(--bg);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .topbar-inner { display: flex; justify-content: space-between; align-items: center; gap: 24px; flex-wrap: wrap; }
+  .brand-block { display: flex; align-items: center; gap: 10px; font-family: 'JetBrains Mono', monospace; font-size: 13px; }
+  .brand { display: inline-flex; align-items: center; gap: 6px; color: var(--ink); text-decoration: none; font-weight: 600; }
+  .brand-arrow { color: var(--ink-mute); transition: transform .2s; }
+  .brand:hover .brand-arrow { transform: translateX(-3px); }
+  .brand .dot { display: inline-block; width: 8px; height: 8px; background: var(--accent); border-radius: 50%; vertical-align: middle; animation: pulse 2s ease-in-out infinite; margin-left: 4px; }
+  .brand-sep { color: var(--ink-mute); }
+  .brand-current { color: var(--ink-soft); }
+  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+  .nav-links { display: flex; gap: 18px; font-size: 13px; flex-wrap: wrap; }
+  .nav-links a { color: var(--ink-soft); text-decoration: none; transition: color 0.2s; }
+  .nav-links a:hover { color: var(--accent); }
+  .nav-links a.current { color: var(--accent); font-weight: 600; }
+
+  /* Hero */
+  .hero { padding: 100px 0 80px; position: relative; overflow: hidden; }
+  .hero-meta { display: flex; gap: 24px; margin-bottom: 32px; align-items: center; flex-wrap: wrap; }
+  .hero-meta .pill { padding: 6px 12px; border: 1px solid var(--ink); border-radius: 100px; font-size: 11px; font-family: 'JetBrains Mono', monospace; letter-spacing: 0.05em; }
+  .hero-meta .pill.fill { background: var(--ink); color: var(--bg); }
+  .hero-meta .pill.purple { background: var(--obj-color); color: white; border-color: var(--obj-color); }
+  .hero h1 {
+    font-family: 'Noto Serif SC', 'Fraunces', serif;
+    font-weight: 900;
+    font-size: clamp(48px, 7vw, 92px);
+    line-height: 0.95;
+    letter-spacing: -0.03em;
+    margin: 0 0 24px;
+  }
+  .hero h1 .em { font-family: 'Noto Serif SC', serif; font-weight: 500; color: var(--accent); }
+  .hero h1 .purple { color: var(--obj-color); font-family: 'Noto Serif SC', serif; font-weight: 500; }
+  .hero p.lede {
+    font-size: 20px;
+    line-height: 1.5;
+    max-width: 640px;
+    color: var(--ink-soft);
+    margin: 0 0 40px;
+  }
+  .hero-grid { display: grid; grid-template-columns: 1.4fr 1fr; gap: 48px; align-items: end; }
+  @media (max-width: 880px) { .hero-grid { grid-template-columns: 1fr; } }
+  .hero-side { border-left: 1px dashed var(--line); padding-left: 24px; font-size: 13px; color: var(--ink-soft); }
+  .hero-side .row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px dashed var(--line); gap: 12px; }
+  .hero-side .row:last-child { border-bottom: none; }
+  .hero-side .row .k { color: var(--ink-mute); font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.05em; text-transform: uppercase; }
+  .hero-side .row .v { font-weight: 500; }
+
+  /* Sections */
+  section { padding: 80px 0; border-top: 1px solid var(--line); position: relative; }
+  .section-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 56px; flex-wrap: wrap; gap: 16px; }
+  .section-num { font-family: 'JetBrains Mono', monospace; font-size: 13px; color: var(--ink-mute); letter-spacing: 0.1em; margin-top: 6px; }
+  .section-num strong { color: var(--accent); }
+  .section-title { font-family: 'Noto Serif SC', serif; font-weight: 900; font-size: clamp(32px, 4.5vw, 52px); line-height: 1.05; letter-spacing: -0.02em; margin: 8px 0 0; max-width: 22ch; }
+  .section-title .em { font-family: 'Noto Serif SC', serif; font-weight: 500; color: var(--accent); }
+  .section-title .purple { color: var(--obj-color); font-family: 'Noto Serif SC', serif; font-weight: 500; }
+  .section-sub { color: var(--ink-soft); font-size: 17px; max-width: 38ch; line-height: 1.55; margin: 0; }
+
+  /* Act tag */
+  .act-tag { display: inline-block; padding: 4px 12px; font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; border-radius: 100px; }
+  .act-tag.look { background: var(--blue-soft); color: var(--blue); }
+  .act-tag.break { background: var(--obj-soft); color: var(--obj-color); }
+  .act-tag.make { background: var(--proj-soft); color: var(--proj-color); }
+
+  /* Problem cards */
+  .problem-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; margin-top: 24px; }
+  @media (max-width: 880px) { .problem-grid { grid-template-columns: 1fr; } }
+  .problem-card { background: var(--paper); border: 1px solid var(--line); border-radius: 6px; padding: 28px; position: relative; }
+  .problem-card.bad { border-color: var(--accent); background: var(--accent-soft); }
+  .problem-card.good { border-color: var(--obj-color); background: var(--obj-soft); }
+  .problem-card .tag { position: absolute; top: -12px; left: 24px; background: var(--bg); padding: 2px 10px; font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.1em; }
+  .problem-card.bad .tag { color: var(--accent); border: 1px solid var(--accent); }
+  .problem-card.good .tag { color: var(--obj-color); border: 1px solid var(--obj-color); }
+  .problem-card h3 { font-family: 'Noto Serif SC', serif; font-size: 22px; margin: 0 0 12px; font-weight: 700; }
+  .problem-card p { margin: 0; color: var(--ink-soft); font-size: 14px; line-height: 1.55; }
+  .problem-card p + p { margin-top: 10px; }
+  .problem-card .quoted { background: white; border: 1px dashed var(--line); border-radius: 4px; padding: 10px 12px; margin-top: 10px; font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--ink); line-height: 1.55; }
+  .problem-card.good .quoted { border-style: solid; border-color: var(--obj-color); background: white; }
+
+  /* === GAME 1 · field form === */
+  .form-stage { background: var(--paper); border: 1px solid var(--line); border-radius: 8px; padding: 36px 32px; position: relative; overflow: hidden; }
+  .form-stage::before { content: ''; position: absolute; inset: 0; background-image: linear-gradient(to right, var(--line-soft) 1px, transparent 1px), linear-gradient(to bottom, var(--line-soft) 1px, transparent 1px); background-size: 24px 24px; opacity: 0.4; pointer-events: none; }
+  .form-head { position: relative; display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 20px; flex-wrap: wrap; gap: 12px; }
+  .form-title { font-family: 'Noto Serif SC', serif; font-weight: 700; font-size: 18px; margin: 0; }
+  .form-title-tag { display: inline-block; background: var(--obj-color); color: white; font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.08em; padding: 2px 8px; border-radius: 100px; margin-right: 8px; vertical-align: middle; }
+  .form-hint { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ink-mute); letter-spacing: 0.05em; }
+  .form-grid { position: relative; display: grid; grid-template-columns: 1fr 1fr; gap: 14px 28px; }
+  @media (max-width: 720px) { .form-grid { grid-template-columns: 1fr; } }
+  .field { background: white; border: 1px solid var(--line); border-radius: 6px; padding: 10px 14px 12px; position: relative; cursor: pointer; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); }
+  .field:hover { border-color: var(--obj-color); box-shadow: 0 6px 18px rgba(255,77,46,0.12); transform: translateY(-2px); }
+  .field.is-open { border-color: var(--obj-color); box-shadow: 0 0 0 2px var(--obj-soft); }
+  .field-label { display: flex; align-items: baseline; gap: 6px; font-size: 12px; color: var(--ink-mute); margin-bottom: 5px; font-family: 'JetBrains Mono', monospace; letter-spacing: 0.04em; }
+  .field-label .req { color: var(--accent); font-weight: 700; }
+  .field-label .name-en { color: var(--ink-soft); font-size: 11px; opacity: 0.7; }
+  .field-input { height: 28px; border-bottom: 1px solid var(--line); display: flex; align-items: center; font-size: 13px; color: var(--ink); gap: 8px; font-weight: 500; }
+  .field-input.empty { color: var(--ink-mute); font-style: italic; }
+  .field-input.readonly { background: var(--bg-2); padding: 0 8px; margin: 0 -8px; border-bottom-color: transparent; border-radius: 3px; color: var(--ink-soft); }
+  .field-input.computed { color: var(--proj-color); font-family: 'JetBrains Mono', monospace; font-size: 12px; }
+  .field-input.computed::before { content: 'fn'; font-family: 'JetBrains Mono', monospace; font-size: 9px; background: var(--proj-color); color: white; padding: 1px 5px; border-radius: 3px; letter-spacing: 0.04em; }
+  .field-input select { border: none; background: transparent; font-size: 13px; font-weight: 500; color: var(--ink); width: 100%; font-family: inherit; outline: none; cursor: pointer; }
+  .field-input .caret { color: var(--ink-mute); }
+
+  /* hover-sticker */
+  .sticker { position: absolute; z-index: 50; background: var(--ink); color: var(--bg); border-radius: 8px; padding: 14px 16px; font-size: 12px; line-height: 1.55; min-width: 240px; max-width: 280px; box-shadow: 0 16px 40px rgba(0,0,0,0.25); opacity: 0; pointer-events: none; transform: translateY(8px); transition: opacity 0.2s, transform 0.2s; }
+  .sticker.show { opacity: 1; transform: translateY(0); }
+  .sticker::before { content: ''; position: absolute; top: -6px; left: 24px; width: 12px; height: 12px; background: var(--ink); transform: rotate(45deg); }
+  .sticker .sticker-head { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ink-mute); letter-spacing: 0.08em; margin-bottom: 8px; padding-bottom: 8px; border-bottom: 1px dashed var(--line); }
+  .sticker .sticker-head strong { color: white; font-family: inherit; }
+  .sticker-row { display: grid; grid-template-columns: 60px 1fr; gap: 8px; padding: 5px 0; align-items: baseline; }
+  .sticker-row + .sticker-row { border-top: 1px dashed rgba(255,255,255,0.1); }
+  .sticker-dim { font-family: 'JetBrains Mono', monospace; font-size: 9px; letter-spacing: 0.04em; color: var(--ink-mute); text-transform: uppercase; }
+  .sticker-val { color: white; font-size: 12px; line-height: 1.45; }
+  .sticker-val .pill-mini { display: inline-block; padding: 1px 6px; font-size: 10px; border-radius: 3px; font-family: 'JetBrains Mono', monospace; }
+  .sticker-val .pill-mini.req { background: var(--d-required); color: white; }
+  .sticker-val .pill-mini.opt { background: rgba(255,255,255,0.15); color: white; }
+  .sticker-val .pill-mini.auto { background: var(--yellow); color: var(--ink); }
+
+  .form-legend { margin-top: 22px; padding: 14px 16px; background: white; border: 1px dashed var(--line); border-radius: 6px; display: flex; gap: 10px 24px; flex-wrap: wrap; font-size: 12px; color: var(--ink-soft); position: relative; }
+  .legend-item { display: inline-flex; align-items: center; gap: 6px; }
+  .legend-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+  .legend-dot.d1 { background: var(--d-required); } .legend-dot.d2 { background: var(--d-null); } .legend-dot.d3 { background: var(--d-enum); } .legend-dot.d4 { background: var(--d-mut); } .legend-dot.d5 { background: var(--d-comp); }
+
+  /* Reveal bar */
+  .reveal-bar {
+    margin-top: 32px;
+    padding: 20px 28px;
+    background: var(--ink);
+    color: var(--bg);
+    border-radius: 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+  .reveal-bar .msg { font-family: 'Noto Serif SC', serif; font-size: 17px; font-weight: 500; line-height: 1.55; }
+  .reveal-bar .msg .em { color: var(--accent); }
+  .reveal-bar .counter { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ink-mute); letter-spacing: 0.05em; }
+  .reveal-bar .counter strong { color: var(--accent); font-size: 14px; }
+
+  /* === GAME 2 · 5-dim deep cards === */
+  .dim-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 14px; margin-top: 32px; }
+  @media (max-width: 980px) { .dim-grid { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 600px) { .dim-grid { grid-template-columns: 1fr; } }
+  .dim-card { background: var(--paper); border: 1px solid var(--line); border-radius: 8px; padding: 18px 16px 16px; cursor: pointer; transition: all 0.2s; position: relative; overflow: hidden; }
+  .dim-card:hover { transform: translateY(-3px); box-shadow: 0 12px 28px rgba(22,22,29,0.08); }
+  .dim-card.is-active { background: white; box-shadow: 0 16px 36px rgba(22,22,29,0.12); }
+  .dim-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px; }
+  .dim-card[data-dim="required"]::before { background: var(--d-required); }
+  .dim-card[data-dim="null"]::before { background: var(--d-null); }
+  .dim-card[data-dim="enum"]::before { background: var(--d-enum); }
+  .dim-card[data-dim="mut"]::before { background: var(--d-mut); }
+  .dim-card[data-dim="comp"]::before { background: var(--d-comp); }
+  .dim-num { font-family: 'Fraunces', serif; font-style: italic; font-weight: 600; font-size: 32px; line-height: 1; margin-bottom: 8px; margin-top: 4px; }
+  .dim-card[data-dim="required"] .dim-num { color: var(--d-required); }
+  .dim-card[data-dim="null"] .dim-num { color: var(--d-null); }
+  .dim-card[data-dim="enum"] .dim-num { color: var(--d-enum); }
+  .dim-card[data-dim="mut"] .dim-num { color: var(--d-mut); }
+  .dim-card[data-dim="comp"] .dim-num { color: var(--d-comp); }
+  .dim-name { font-family: 'Noto Serif SC', serif; font-weight: 700; font-size: 16px; margin: 0 0 4px; line-height: 1.25; }
+  .dim-key { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--ink-mute); letter-spacing: 0.05em; }
+  .dim-card-foot { margin-top: 12px; padding-top: 10px; border-top: 1px dashed var(--line); font-size: 11px; color: var(--ink-mute); font-family: 'JetBrains Mono', monospace; letter-spacing: 0.04em; }
+  .dim-card .open-arr { display: inline-block; transition: transform 0.2s; margin-left: 4px; }
+  .dim-card.is-active .open-arr { transform: rotate(90deg); }
+
+  .dim-panel { background: var(--ink); color: var(--bg); border-radius: 8px; margin-top: 18px; padding: 28px 30px; display: none; }
+  .dim-panel.show { display: block; }
+  .dim-panel-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 22px; flex-wrap: wrap; gap: 12px; padding-bottom: 16px; border-bottom: 1px dashed var(--line); }
+  .dim-panel-head h4 { font-family: 'Noto Serif SC', serif; font-weight: 700; font-size: 24px; margin: 0; color: white; }
+  .dim-panel-head h4 .key { font-family: 'JetBrains Mono', monospace; font-size: 13px; color: var(--ink-mute); font-weight: 400; margin-left: 8px; letter-spacing: 0.06em; }
+  .dim-panel-close { background: rgba(255,255,255,0.1); border: none; color: var(--bg); padding: 6px 14px; border-radius: 100px; font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.05em; cursor: pointer; }
+  .dim-panel-close:hover { background: rgba(255,255,255,0.2); }
+  .dim-impact-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+  @media (max-width: 880px) { .dim-impact-grid { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 540px) { .dim-impact-grid { grid-template-columns: 1fr; } }
+  .impact-card { background: rgba(255,255,255,0.05); border-radius: 6px; padding: 14px; border: 1px solid rgba(255,255,255,0.08); }
+  .impact-card .impact-lbl { font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--accent); margin-bottom: 6px; }
+  .impact-card p { margin: 0; font-size: 12px; line-height: 1.6; color: #c8c8d0; }
+  .dim-pitfall { margin-top: 18px; padding: 14px 18px; background: rgba(255,77,46,0.12); border-left: 3px solid var(--accent); border-radius: 4px; font-size: 12px; line-height: 1.6; color: #ffd2c4; }
+  .dim-pitfall strong { color: white; }
+  .dim-pitfall .lbl { display: inline-block; font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--accent); letter-spacing: 0.08em; margin-right: 6px; text-transform: uppercase; }
+
+  /* === GAME 3 · builder table === */
+  .qz-stage { background: var(--paper); border: 1px solid var(--line); border-radius: 8px; padding: 32px; margin-top: 24px; }
+  .qz-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 22px; flex-wrap: wrap; gap: 16px; }
+  .qz-title { font-family: 'Noto Serif SC', serif; font-size: 22px; margin: 0; font-weight: 700; }
+  .qz-progress { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--ink-mute); }
+  .qz-progress .done { color: var(--proj-color); font-weight: 700; font-size: 14px; }
+  .qz-table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 6px; background: white; }
+  table.qz-table { width: 100%; min-width: 720px; border-collapse: collapse; font-size: 13px; }
+  table.qz-table th { text-align: left; padding: 12px 12px 11px; font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-mute); background: var(--bg-2); border-bottom: 1px solid var(--line); font-weight: 600; vertical-align: bottom; }
+  table.qz-table th .dim-marker { display: inline-block; width: 6px; height: 6px; border-radius: 50%; margin-right: 6px; vertical-align: middle; }
+  table.qz-table th .dim-marker.d1 { background: var(--d-required); } table.qz-table th .dim-marker.d2 { background: var(--d-null); } table.qz-table th .dim-marker.d3 { background: var(--d-enum); } table.qz-table th .dim-marker.d4 { background: var(--d-mut); } table.qz-table th .dim-marker.d5 { background: var(--d-comp); }
+  table.qz-table td { padding: 10px 10px; border-bottom: 1px dashed var(--line-soft); vertical-align: middle; }
+  table.qz-table tr:last-child td { border-bottom: none; }
+  table.qz-table tr:hover { background: var(--bg); }
+  table.qz-table .row-num { font-family: 'JetBrains Mono', monospace; color: var(--ink-mute); font-size: 11px; width: 26px; }
+  table.qz-table .row-name { font-weight: 700; font-size: 13px; min-width: 100px; }
+  table.qz-table .row-name .en { display: block; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ink-mute); font-weight: 400; margin-top: 1px; }
+  table.qz-table select { border: 1px solid var(--line); background: var(--paper); border-radius: 4px; padding: 6px 8px; font-size: 12px; font-family: 'Geist', 'Noto Sans SC', sans-serif; color: var(--ink); width: 100%; cursor: pointer; transition: all 0.15s; outline: none; }
+  table.qz-table select:hover { border-color: var(--obj-color); }
+  table.qz-table select:focus { border-color: var(--obj-color); box-shadow: 0 0 0 2px var(--obj-soft); }
+  table.qz-table select.right { border-color: var(--proj-color); background: var(--proj-soft); color: var(--proj-color); font-weight: 600; }
+  table.qz-table select.wrong { border-color: var(--accent); background: var(--accent-soft); color: var(--accent); font-weight: 600; }
+  table.qz-table select.empty-ans { border-color: var(--ink-mute); background: white; }
+  .qz-rowscore { width: 30px; text-align: center; font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 700; color: var(--ink-mute); }
+  .qz-rowscore .full { color: var(--proj-color); } .qz-rowscore .partial { color: var(--d-mut); } .qz-rowscore .zero { color: var(--accent); }
+  .qz-actions { display: flex; gap: 12px; margin-top: 24px; flex-wrap: wrap; }
+  .qz-btn { padding: 10px 22px; border-radius: 100px; font-family: 'JetBrains Mono', monospace; font-size: 12px; letter-spacing: 0.06em; text-transform: uppercase; cursor: pointer; font-weight: 600; border: 1px solid var(--ink); background: transparent; color: var(--ink); transition: all 0.15s; }
+  .qz-btn:hover { background: var(--ink); color: var(--bg); }
+  .qz-btn.primary { background: var(--accent); color: white; border-color: var(--accent); }
+  .qz-btn.primary:hover { background: #e8451f; }
+  .qz-judge { margin-top: 24px; padding: 26px 30px; border-radius: 8px; background: var(--ink); color: var(--bg); display: none; }
+  .qz-judge.show { display: block; }
+  .qz-judge .verdict { display: inline-block; font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; padding: 3px 10px; border-radius: 100px; }
+  .qz-judge .verdict.win { color: #1f6b3a; background: #d4ecdb; }
+  .qz-judge .verdict.partial { color: #c79f1e; background: #fff3cc; }
+  .qz-judge .verdict.miss { color: var(--accent); background: var(--accent-soft); }
+  .qz-judge h4 { font-family: 'Noto Serif SC', serif; font-size: 22px; margin: 10px 0 14px; color: white; line-height: 1.35; }
+  .qz-judge .score-line { display: flex; gap: 24px; flex-wrap: wrap; margin: 12px 0 18px; padding: 12px 0; border-top: 1px dashed rgba(255,255,255,0.18); border-bottom: 1px dashed var(--line); }
+  .qz-judge .score-line .sk { display: flex; flex-direction: column; gap: 2px; }
+  .qz-judge .score-line .sk .lk { font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-mute); }
+  .qz-judge .score-line .sk .vk { font-family: 'JetBrains Mono', monospace; font-size: 22px; font-weight: 700; color: white; }
+  .qz-judge .score-line .sk .vk .of { color: var(--ink-mute); font-size: 13px; font-weight: 400; }
+  .qz-judge ul { color: #c8c8d0; margin: 0; padding-left: 20px; font-size: 13px; line-height: 1.75; }
+  .qz-judge ul li + li { margin-top: 10px; }
+  .qz-judge ul strong { color: white; }
+  .qz-judge ul .why { color: #a0a0aa; font-size: 12px; }
+  .qz-judge ul code { font-family: 'JetBrains Mono', monospace; background: rgba(255,255,255,0.08); padding: 0 4px; border-radius: 3px; font-size: 11px; }
+  .qz-judge ul code.wrong { color: #ffae9a; } .qz-judge ul code.right { color: #b5e6c2; }
+
+  /* tips */
+  .tips-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 28px; margin-top: 24px; }
+  @media (max-width: 880px) { .tips-grid { grid-template-columns: 1fr; } }
+  .tip { background: var(--paper); border: 1px solid var(--line); border-radius: 6px; padding: 24px; position: relative; }
+  .tip-num { position: absolute; top: -14px; left: 16px; width: 32px; height: 32px; border-radius: 50%; background: var(--obj-color); color: white; display: flex; align-items: center; justify-content: center; font-family: 'Fraunces', serif; font-style: italic; font-weight: 600; font-size: 14px; }
+  .tip h4 { font-family: 'Noto Serif SC', serif; font-size: 18px; margin: 8px 0 10px; font-weight: 700; }
+  .tip p { color: var(--ink-soft); font-size: 14px; line-height: 1.6; margin: 0; }
+  .tip p + p { margin-top: 8px; }
+  .tip-outro {
+    margin-top: 44px;
+    padding: 30px 32px;
+    background: var(--ink);
+    color: var(--bg);
+    border-radius: 8px;
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 28px;
+    align-items: flex-start;
+  }
+  @media (max-width: 720px) { .tip-outro { grid-template-columns: 1fr; gap: 12px; } }
+  .outro-tag { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.1em; color: var(--accent); padding-top: 4px; }
+  .tip-outro p { margin: 0 0 12px; color: #c8c8d0; line-height: 1.65; font-size: 15px; }
+  .tip-outro p:last-child { margin-bottom: 0; }
+  .tip-outro strong { color: white; }
+
+  /* next post */
+  .next-post {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 56px;
+    padding: 32px;
+    background: var(--bg-2);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    text-decoration: none;
+    color: var(--ink);
+    transition: all 0.2s;
+    gap: 24px;
+    flex-wrap: wrap;
+  }
+  .next-post:hover { background: var(--ink); color: var(--bg); }
+  .next-post:hover .np-tag { color: var(--accent); }
+  .next-post:hover .em { color: var(--accent); }
+  .next-post:hover p { color: #c8c8d0; }
+  .np-tag { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.1em; color: var(--ink-mute); margin-bottom: 6px; }
+  .next-post h4 { font-family: 'Noto Serif SC', serif; font-size: 26px; margin: 0 0 8px; font-weight: 700; }
+  .next-post .em { color: var(--obj-color); font-weight: 500; }
+  .next-post p { margin: 0; color: var(--ink-soft); font-size: 14px; max-width: 56ch; }
+  .np-cta { font-family: 'JetBrains Mono', monospace; font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; white-space: nowrap; }
+  .np-cta .arr { display: inline-block; transition: transform .2s; }
+  .next-post:hover .arr { transform: translateX(4px); }
+
+  /* footer */
+  footer { padding: 56px 0 64px; background: var(--bg); color: var(--ink-soft); border-top: 1px solid var(--line); }
+  .byline-group { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; margin-bottom: 32px; padding-bottom: 32px; border-bottom: 1px dashed var(--line); }
+  @media (max-width: 880px) { .byline-group { grid-template-columns: 1fr; } }
+  .byline { display: flex; gap: 16px; align-items: center; }
+  .byline .avatar { width: 56px; height: 56px; border-radius: 50%; object-fit: cover; flex-shrink: 0; }
+  .byline-label { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--accent); letter-spacing: 0.1em; }
+  .byline-label .dot { display: inline-block; width: 6px; height: 6px; background: var(--accent); border-radius: 50%; margin-right: 4px; vertical-align: middle; animation: pulse 2s ease-in-out infinite; }
+  .byline-name { font-family: 'Noto Serif SC', serif; font-weight: 700; font-size: 18px; margin: 4px 0; color: var(--ink); }
+  .byline-name .em { color: var(--accent); font-weight: 500; }
+  .byline-tag { color: var(--ink-soft); font-size: 13px; margin: 0; line-height: 1.5; }
+  .footer-meta { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ink-mute); text-align: center; letter-spacing: 0.05em; }
+  .footer-meta .heart { color: var(--accent); }
+
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="wrap topbar-inner">
+    <div class="brand-block">
+      <a href="book.html#vol-3" class="brand"><span class="brand-arrow">←</span>AI LABBOOK <span class="dot"></span></a>
+      <span class="brand-sep">/</span>
+      <span class="brand-current">X10 · 字段意识</span>
+    </div>
+    <nav class="nav-links">
+      <a href="book.html#vol-3">路线图</a>
+    </nav>
+  </div>
+</div>
+
+<!-- Hero -->
+<header class="hero">
+  <div class="wrap">
+    <div class="hero-meta">
+      <span class="pill fill">高阶 · ADVANCED</span>
+      <span class="pill purple">STAGE 03 · 数据与状态</span>
+      <span class="pill">X10 · 字段意识</span>
+      <span class="label">阅读 ≈ 15 分钟 · 含 3 段互动</span>
+    </div>
+    <div class="hero-grid">
+      <div>
+        <h1>
+          字段不是<br>
+          <span class="display-cn">一个值</span>——<br>
+          是<span class="purple">5 件事</span>。
+        </h1>
+        <p class="lede">
+          必填、空值、枚举、只读、计算——同一个"状态"字段，<br>
+          5 种规则中的不同组合决定它的 UI、校验和工程实现完全不同。
+        </p>
+      </div>
+      <div class="hero-side">
+        <div class="row"><span class="k">本页讲什么</span><span class="v">字段的 5 维度</span></div>
+        <div class="row"><span class="k">三幕</span><span class="v">看见 · 拆开 · 再做</span></div>
+        <div class="row"><span class="k">面向</span><span class="v">B 端 / 后台设计师</span></div>
+        <div class="row"><span class="k">前置</span><span class="v">X9 · 列表/详情/编辑</span></div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- Section 01: 问题 -->
+<section id="problem">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>01</strong> / 问题</div>
+        <h2 class="section-title">"加个下拉框"<br>背后藏着<span class="em">5 个问题</span>。</h2>
+      </div>
+      <p class="section-sub">
+        设计师以为字段 = "一个输入框 + 一个标签"。其实字段 = <strong>必填? + 空值含义 + 取值范围 + 可改性 + 是否派生</strong> 5 维度。
+        少标一维 = 工程师猜 1 次。
+      </p>
+    </div>
+
+    <div class="problem-grid">
+      <div class="problem-card bad">
+        <span class="tag">字段当输入 · INPUT</span>
+        <h3>"稿子里有个'状态'下拉框"</h3>
+        <p>设计稿画了一个 dropdown，4 个选项。看起来清楚。</p>
+        <div class="quoted">
+          <strong style="color:var(--accent)">工程师：</strong>必填吗？null 时显示啥？这 4 个选项是写死还是从后端取？运营能加新选项吗？status 能改吗（已发货还能改回未支付吗）？是计算字段（从其它字段派生）吗？
+        </div>
+        <p style="color:var(--accent);margin-top:12px"><strong>设计师：</strong>呃……我再回去问下产品。</p>
+      </div>
+
+      <div class="problem-card good">
+        <span class="tag">字段当 SCHEMA</span>
+        <h3>"状态字段，规则如下"</h3>
+        <p>5 维度全部标清楚——工程师直接落 schema。</p>
+        <div class="quoted">
+          状态 status: <strong>enum</strong> (4 选项 + 1 个 not-set) · <strong>必填</strong> · 空值显示"未设置" · 运营可加但要后台 · <strong>只读</strong>（只能通过状态机迁移）· <strong>不是计算</strong>。
+        </div>
+        <p style="color:var(--obj-color);margin-top:12px"><strong>结果：</strong>追问 → 0 次。</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Section 02: 幕一 · 看见 -->
+<section id="look">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <span class="act-tag look">幕一 · 看见</span>
+        <div class="section-num"><strong>02</strong> / 看见</div>
+        <h2 class="section-title">同一个 form，<br><span class="purple">10 字段</span>，<br>10 套规则。</h2>
+      </div>
+      <p class="section-sub">
+        看下面一个"添加客户"表单——10 个字段，每个的 5 维度都不同。
+        <strong>鼠标悬停字段</strong>，会浮出它的"规则贴纸"。
+      </p>
+    </div>
+
+    <div class="form-stage">
+      <div class="form-head">
+        <h3 class="form-title"><span class="form-title-tag">FORM</span>添加客户 / Customer</h3>
+        <span class="form-hint" id="hoverCount">已查看 0 / 10 字段</span>
+      </div>
+
+      <div class="form-grid" id="formGrid">
+
+        <div class="field" data-field="name" data-dim-req="必填" data-dim-null="不允许 — 提交报错" data-dim-enum="自由文本 (1–30 字)" data-dim-mut="永远可改" data-dim-comp="非计算">
+          <div class="field-label"><span class="req">*</span>客户姓名 <span class="name-en">name · string</span></div>
+          <div class="field-input">张明</div>
+        </div>
+
+        <div class="field" data-field="phone" data-dim-req="选填" data-dim-null="显示 '—'" data-dim-enum="正则 /^1[3-9]\d{9}$/" data-dim-mut="永远可改" data-dim-comp="非计算">
+          <div class="field-label">手机号 <span class="name-en">phone · string</span></div>
+          <div class="field-input empty">未填</div>
+        </div>
+
+        <div class="field" data-field="email" data-dim-req="必填" data-dim-null="不允许 — 提交报错" data-dim-enum="email 正则" data-dim-mut="可改 (需邮箱验证)" data-dim-comp="非计算">
+          <div class="field-label"><span class="req">*</span>邮箱 <span class="name-en">email · string</span></div>
+          <div class="field-input">m.zhang@xinghe.com</div>
+        </div>
+
+        <div class="field" data-field="type" data-dim-req="必填" data-dim-null="不允许 — 默认 '个人'" data-dim-enum="enum: 个人 / 企业" data-dim-mut="创建后只读" data-dim-comp="非计算">
+          <div class="field-label"><span class="req">*</span>客户类型 <span class="name-en">type · enum</span></div>
+          <div class="field-input"><select disabled><option>企业</option></select></div>
+        </div>
+
+        <div class="field" data-field="status" data-dim-req="自动" data-dim-null="默认 'draft'" data-dim-enum="enum: 草稿 / 跟进 / 成交 / 流失" data-dim-mut="只通过状态机迁移" data-dim-comp="非计算">
+          <div class="field-label">状态 <span class="name-en">status · enum</span></div>
+          <div class="field-input readonly">跟进中 <span class="caret">▾ 仅状态机</span></div>
+        </div>
+
+        <div class="field" data-field="created_at" data-dim-req="自动" data-dim-null="不存在 — 必有" data-dim-enum="timestamp ISO-8601" data-dim-mut="只读 — 系统写入" data-dim-comp="系统生成">
+          <div class="field-label">创建时间 <span class="name-en">created_at · timestamp</span></div>
+          <div class="field-input readonly">2026-05-12 14:23</div>
+        </div>
+
+        <div class="field" data-field="last_contact" data-dim-req="选填" data-dim-null="显示 '未联系'" data-dim-enum="date" data-dim-mut="可改" data-dim-comp="计算 — 从活动表派生">
+          <div class="field-label">最后联系日期 <span class="name-en">last_contact · date</span></div>
+          <div class="field-input computed">activities.max(date)</div>
+        </div>
+
+        <div class="field" data-field="owner" data-dim-req="必填" data-dim-null="不允许 — 默认当前用户" data-dim-enum="ref → User" data-dim-mut="可改 (需 admin 权限)" data-dim-comp="非计算">
+          <div class="field-label"><span class="req">*</span>跟进人 <span class="name-en">owner · ref User</span></div>
+          <div class="field-input">李华 ▾</div>
+        </div>
+
+        <div class="field" data-field="deal_value" data-dim-req="选填" data-dim-null="显示 '—'" data-dim-enum="money ≥ 0" data-dim-mut="只读 (需财务权限改)" data-dim-comp="计算 — 合同总和">
+          <div class="field-label">合作金额 <span class="name-en">deal_value · money</span></div>
+          <div class="field-input computed">SUM(contracts.amount)</div>
+        </div>
+
+        <div class="field" data-field="risk" data-dim-req="选填" data-dim-null="显示 '未评估'" data-dim-enum="enum: 低 / 中 / 高" data-dim-mut="只读 — AI 模型生成" data-dim-comp="计算 — 风险模型">
+          <div class="field-label">风险等级 <span class="name-en">risk · enum</span></div>
+          <div class="field-input computed">risk_model(this)</div>
+        </div>
+
+      </div>
+
+      <div class="form-legend">
+        <span class="legend-item"><span class="legend-dot d1"></span>必填 required</span>
+        <span class="legend-item"><span class="legend-dot d2"></span>空值含义 null-meaning</span>
+        <span class="legend-item"><span class="legend-dot d3"></span>取值范围 enum / range</span>
+        <span class="legend-item"><span class="legend-dot d4"></span>可改性 mutability</span>
+        <span class="legend-item"><span class="legend-dot d5"></span>是否计算 computed</span>
+      </div>
+
+      <div class="sticker" id="sticker">
+        <div class="sticker-head"><strong id="stkName">—</strong> <span id="stkKey"></span></div>
+        <div class="sticker-row"><span class="sticker-dim">必填</span><span class="sticker-val" id="stkReq">—</span></div>
+        <div class="sticker-row"><span class="sticker-dim">空值</span><span class="sticker-val" id="stkNull">—</span></div>
+        <div class="sticker-row"><span class="sticker-dim">范围</span><span class="sticker-val" id="stkEnum">—</span></div>
+        <div class="sticker-row"><span class="sticker-dim">可改</span><span class="sticker-val" id="stkMut">—</span></div>
+        <div class="sticker-row"><span class="sticker-dim">计算</span><span class="sticker-val" id="stkComp">—</span></div>
+      </div>
+    </div>
+
+    <div class="reveal-bar">
+      <div class="msg">
+        10 字段 × 5 维度 = <span class="em">50 个决策</span>。<br>
+        设计稿少一个，<strong>工程师猜一次</strong>。
+      </div>
+      <div class="counter">
+        鼠标移过字段 <strong id="hoverNumA">0</strong> / 10
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Section 03: 幕二 · 拆开 -->
+<section id="break">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <span class="act-tag break">幕二 · 拆开</span>
+        <div class="section-num"><strong>03</strong> / 拆开</div>
+        <h2 class="section-title"><span class="purple">5 维度</span>各自的<br>连锁影响。</h2>
+      </div>
+      <p class="section-sub">
+        每一维都不是孤立的——它会反过来影响 <strong>UI / 校验 / API / migration</strong> 4 件事。
+        点下面的维度卡，看它"伸到哪里"。
+      </p>
+    </div>
+
+    <div class="dim-grid" id="dimGrid">
+
+      <div class="dim-card" data-dim="required">
+        <div class="dim-num">i</div>
+        <div class="dim-name">必填</div>
+        <div class="dim-key">required · bool</div>
+        <div class="dim-card-foot">点开看 4 件事 <span class="open-arr">→</span></div>
+      </div>
+
+      <div class="dim-card" data-dim="null">
+        <div class="dim-num">ii</div>
+        <div class="dim-name">空值含义</div>
+        <div class="dim-key">null-meaning</div>
+        <div class="dim-card-foot">点开看 4 件事 <span class="open-arr">→</span></div>
+      </div>
+
+      <div class="dim-card" data-dim="enum">
+        <div class="dim-num">iii</div>
+        <div class="dim-name">取值范围</div>
+        <div class="dim-key">enum / range</div>
+        <div class="dim-card-foot">点开看 4 件事 <span class="open-arr">→</span></div>
+      </div>
+
+      <div class="dim-card" data-dim="mut">
+        <div class="dim-num">iv</div>
+        <div class="dim-name">可改性</div>
+        <div class="dim-key">mutability</div>
+        <div class="dim-card-foot">点开看 4 件事 <span class="open-arr">→</span></div>
+      </div>
+
+      <div class="dim-card" data-dim="comp">
+        <div class="dim-num">v</div>
+        <div class="dim-name">是否计算</div>
+        <div class="dim-key">computed</div>
+        <div class="dim-card-foot">点开看 4 件事 <span class="open-arr">→</span></div>
+      </div>
+
+    </div>
+
+    <div class="dim-panel" id="dimPanel">
+      <div class="dim-panel-head">
+        <h4 id="dimPanelTitle">必填 <span class="key">required</span></h4>
+        <button class="dim-panel-close" id="dimPanelClose">收起 ESC</button>
+      </div>
+      <div class="dim-impact-grid" id="dimImpactGrid"></div>
+      <div class="dim-pitfall" id="dimPitfall"></div>
+    </div>
+
+    <div class="reveal-bar">
+      <div class="msg">
+        5 维度 × 4 件事 = <span class="em">20 个隐藏决策</span>。<br>
+        每个字段都有这 20 件事——<strong>别让它们空白</strong>。
+      </div>
+      <div class="counter">已看 <strong id="dimVisited">0</strong> / 5 维度</div>
+    </div>
+  </div>
+</section>
+
+<!-- Section 04: 幕三 · 再做 -->
+<section id="make">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <span class="act-tag make">幕三 · 再做</span>
+        <div class="section-num"><strong>04</strong> / 再做</div>
+        <h2 class="section-title">轮到你——<br>给「<span class="em">项目对象</span>」<br>8 字段填规则。</h2>
+      </div>
+      <p class="section-sub">
+        下面 8 个字段。每个有 5 维度——你按 dropdown 选。
+        某些维度有最佳实践，你看看自己有没有"想错"。
+      </p>
+    </div>
+
+    <div class="qz-stage">
+      <div class="qz-head">
+        <h3 class="qz-title">项目 / Project · schema 填空</h3>
+        <div class="qz-progress">已填 <span class="done" id="qzDone">0</span> / 40 维度</div>
+      </div>
+
+      <div class="qz-table-wrap">
+        <table class="qz-table" id="qzTable">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>字段</th>
+              <th><span class="dim-marker d1"></span>必填</th>
+              <th><span class="dim-marker d2"></span>空值</th>
+              <th><span class="dim-marker d3"></span>范围</th>
+              <th><span class="dim-marker d4"></span>可改</th>
+              <th><span class="dim-marker d5"></span>计算</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="qzBody"></tbody>
+        </table>
+      </div>
+
+      <div class="qz-actions">
+        <button class="qz-btn primary" id="qzSubmit">提交打分</button>
+        <button class="qz-btn" id="qzReset">清空</button>
+      </div>
+
+      <div class="qz-judge" id="qzJudge"></div>
+    </div>
+  </div>
+</section>
+
+<!-- Section 05: closing -->
+<section id="closing">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>05</strong> / 把这件事变成习惯</div>
+        <h2 class="section-title">下次需求评审，<br>第一句问<span class="em">这 5 件事</span>。</h2>
+      </div>
+      <p class="section-sub">
+        从这一篇开始，"输入框思维"和"schema 思维"的差距会出现在每一次字段定义里。
+      </p>
+    </div>
+
+    <div class="tips-grid">
+      <div class="tip">
+        <div class="tip-num">i</div>
+        <h4>每个字段标 5 维度</h4>
+        <p>必填? · 空值含义 · 取值范围 · 可改性 · 是否计算。</p>
+        <p><strong>不画 = 工程师追问 5 次。</strong></p>
+      </div>
+      <div class="tip">
+        <div class="tip-num">ii</div>
+        <h4>"空"不是"没有"——是设计语言</h4>
+        <p>空可以显示 "—" / "未设置" / "0" / 隐藏 / "未联系"。每种语义不同。</p>
+        <p><strong>"空"是一种字段状态，要被设计。</strong></p>
+      </div>
+      <div class="tip">
+        <div class="tip-num">iii</div>
+        <h4>"计算字段"不出现在 form 里</h4>
+        <p>计算字段不该有 input — 它是派生的，写入毫无意义。</p>
+        <p><strong>看到 form 里包计算字段，是 schema 设计错。</strong></p>
+      </div>
+    </div>
+
+    <div class="tip-outro">
+      <div class="outro-tag">划重点 · TL;DR</div>
+      <div>
+        <p>需求评审拿到字段，第一句问 5 维度——<strong>必填、空值含义、范围、可改性、是否计算</strong>。</p>
+        <p>把这 5 件事写进稿子，工程师能直接落 schema。否则你交付的不是设计稿——是<strong>5 个未解之谜</strong>。</p>
+      </div>
+    </div>
+
+    <a href="x11-page-states.html" class="next-post">
+      <div>
+        <div class="np-tag">下一站 · NEXT · X11 · 高阶 · 规划中</div>
+        <h4>页面状态：<span class="em">loading / empty / error / stale</span></h4>
+        <p>字段讲完了，整个页面也有自己的状态：加载中 / 空 / 报错 / 过期。下一站讲：5 种页面状态各自要怎么设计——别只画"理想态"那一张稿。</p>
+      </div>
+      <span class="np-cta">下一篇 <span class="arr">→</span></span>
+    </a>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div class="byline-group">
+      <div class="byline">
+        <img class="avatar" src="author.jpg" alt="范米花儿">
+        <div class="byline-meta">
+          <div class="byline-label"><span class="dot"></span>作者 · WRITTEN BY</div>
+          <div class="byline-name">嗨，我是 <span class="em">范米花儿</span></div>
+          <p class="byline-tag">设计工程师 ——<br>设计 × 代码，两边都做。</p>
+        </div>
+      </div>
+</div>
+    <div class="footer-meta">
+      做于 <span class="mono">2026</span> · 用 <span class="heart">●</span> 写给 <span class="mono">DESIGNERS &amp; DEVELOPERS</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+// ===== Game 1: form fields hover sticker =====
+(function(){
+  const fields = document.querySelectorAll('.field');
+  const sticker = document.getElementById('sticker');
+  const stkName = document.getElementById('stkName');
+  const stkKey = document.getElementById('stkKey');
+  const stkReq = document.getElementById('stkReq');
+  const stkNull = document.getElementById('stkNull');
+  const stkEnum = document.getElementById('stkEnum');
+  const stkMut = document.getElementById('stkMut');
+  const stkComp = document.getElementById('stkComp');
+  const hovered = new Set();
+  const countEl = document.getElementById('hoverCount');
+  const counterA = document.getElementById('hoverNumA');
+  const stage = document.querySelector('.form-stage');
+
+  function pillFor(text, kind) {
+    if (kind === 'req' && text === '必填') return `<span class="pill-mini req">必填</span>`;
+    if (kind === 'req' && text === '选填') return `<span class="pill-mini opt">选填</span>`;
+    if (kind === 'req' && text === '自动') return `<span class="pill-mini auto">自动</span>`;
+    return text;
+  }
+
+  function placeSticker(card) {
+    const rect = card.getBoundingClientRect();
+    const stageRect = stage.getBoundingClientRect();
+    const x = rect.left - stageRect.left;
+    const y = rect.bottom - stageRect.top + 8;
+    const stickerW = 268;
+    const maxX = stageRect.width - stickerW - 12;
+    sticker.style.left = Math.min(Math.max(x, 12), maxX) + 'px';
+    sticker.style.top = y + 'px';
+  }
+
+  fields.forEach(card => {
+    card.addEventListener('mouseenter', () => {
+      card.classList.add('is-open');
+      stkName.textContent = (card.querySelector('.field-label').textContent || '').replace('*','').split(/[a-z]/)[0].trim();
+      const en = card.querySelector('.name-en');
+      stkKey.textContent = en ? en.textContent : '';
+      stkReq.innerHTML = pillFor(card.dataset.dimReq, 'req');
+      stkNull.textContent = card.dataset.dimNull;
+      stkEnum.textContent = card.dataset.dimEnum;
+      stkMut.textContent = card.dataset.dimMut;
+      stkComp.textContent = card.dataset.dimComp;
+      placeSticker(card);
+      sticker.classList.add('show');
+      if (!hovered.has(card.dataset.field)) {
+        hovered.add(card.dataset.field);
+        countEl.textContent = `已查看 ${hovered.size} / 10 字段`;
+        counterA.textContent = hovered.size;
+      }
+    });
+    card.addEventListener('mouseleave', () => {
+      card.classList.remove('is-open');
+      sticker.classList.remove('show');
+    });
+  });
+})();
+
+// ===== Game 2: 5-dim deep dive =====
+(function(){
+  const cards = document.querySelectorAll('.dim-card');
+  const panel = document.getElementById('dimPanel');
+  const title = document.getElementById('dimPanelTitle');
+  const impactGrid = document.getElementById('dimImpactGrid');
+  const pitfall = document.getElementById('dimPitfall');
+  const closeBtn = document.getElementById('dimPanelClose');
+  const visited = new Set();
+  const visEl = document.getElementById('dimVisited');
+
+  const DIM_DATA = {
+    required: {
+      title: '必填 <span class="key">required · bool</span>',
+      impacts: [
+        { lbl: 'UI', text: '红 * + "必填"提示；提交时未填高亮红框 + 错误文案。' },
+        { lbl: '校验', text: '前端立即校验 + 后端 not-null 兜底。两端都不能少。' },
+        { lbl: 'API', text: 'schema 里 NOT NULL；缺字段 → 400 拒收。' },
+        { lbl: 'Migration', text: '加必填字段时已有数据怎么办？默认值？让用户重填？回填脚本？' }
+      ],
+      pitfall: '<span class="lbl">设计稿没说时工程师可能猜：</span>"看上去重要——加 NOT NULL 吧"。结果<strong>线上已有的旧数据全 null</strong>，migration 直接失败。或反过来——你以为必填，工程师做成 nullable，用户漏填也能提交。'
+    },
+    null: {
+      title: '空值含义 <span class="key">null-meaning</span>',
+      impacts: [
+        { lbl: 'UI', text: '空时显示什么？"—" / "未设置" / "0" / 隐藏 / 占位文案 / 灰色 dash。每种都有语义。' },
+        { lbl: '校验', text: 'null 是合法值还是错误？"未填" vs "明确填了空" 怎么区分？' },
+        { lbl: 'API', text: 'null vs 缺字段 (presence vs absence)。`{x: null}` 和 `{}` 不一样。' },
+        { lbl: 'Migration', text: '迁移老数据时，旧空字符串、空字符、undefined 都规整成什么？' }
+      ],
+      pitfall: '<span class="lbl">设计稿没说时工程师可能猜：</span>"空着就显示一个 dash 吧"。结果用户看到 `—` 不知道是<strong>"没填" 还是 "填了 0" 还是 "未授权看到"</strong>。空态语义错位 = 用户认知错位。'
+    },
+    enum: {
+      title: '取值范围 <span class="key">enum / range</span>',
+      impacts: [
+        { lbl: 'UI', text: 'dropdown vs input vs slider vs radio——选项数和心智决定控件。' },
+        { lbl: '校验', text: '输入只能在白名单内；超出 → 错误提示具体说"只能填 X / Y / Z"。' },
+        { lbl: 'API', text: '类型约束：enum vs string。后端 schema 强制白名单还是放任。' },
+        { lbl: 'Migration', text: '新增枚举值时旧数据怎么办？删除时旧记录的该值怎么处理？' }
+      ],
+      pitfall: '<span class="lbl">设计稿没说时工程师可能猜：</span>"4 个选项—— enum 吧"。结果运营第二周说"再加一个'已暂停'"——发版才能加。或反过来——你以为可扩展，工程师做成 enum，新增要发版。'
+    },
+    mut: {
+      title: '可改性 <span class="key">mutability</span>',
+      impacts: [
+        { lbl: 'UI', text: '显示 edit 按钮？disable 但可见？完全藏起来？读态和写态分开还是一体？' },
+        { lbl: '校验', text: '后端拒绝未授权修改；返回 403 vs 400 的区分。' },
+        { lbl: 'API', text: '是否暴露在 update endpoint 里；PUT 全字段更新 vs PATCH 部分更新。' },
+        { lbl: 'Migration', text: '"历史只读 + 新值可改"是常见模式——比如 status 只能通过状态机迁移。' }
+      ],
+      pitfall: '<span class="lbl">设计稿没说时工程师可能猜：</span>"看起来普通字段，加个 input 吧"。结果发货状态被运营手动改回"未付款"——审计日志一团乱。<strong>谁能改 / 怎么改 / 改完触发什么</strong>，3 件事必须明说。'
+    },
+    comp: {
+      title: '是否计算 <span class="key">computed</span>',
+      impacts: [
+        { lbl: 'UI', text: '永远不显示 input；只显示结果，可能标 "auto" / "fn" 小图标。' },
+        { lbl: '校验', text: '不需要——派生而来。但要校验<strong>来源字段</strong>是否完整。' },
+        { lbl: 'API', text: '只读字段 — 不接受写入；POST/PUT 带这字段 → 后端忽略或报错。' },
+        { lbl: 'Migration', text: '公式变了，旧数据需要重算？批量回填 job？还是只新数据生效？' }
+      ],
+      pitfall: '<span class="lbl">设计稿没说时工程师可能猜：</span>"用户能填——做成 input"。结果用户改了之后<strong>下一次刷新被计算覆盖</strong>，写入直接丢失。计算字段最容易被画成 input——形式像，本质完全不同。'
+    }
+  };
+
+  function open(dim) {
+    const data = DIM_DATA[dim];
+    title.innerHTML = data.title;
+    impactGrid.innerHTML = data.impacts.map(i => `<div class="impact-card"><div class="impact-lbl">${i.lbl}</div><p>${i.text}</p></div>`).join('');
+    pitfall.innerHTML = data.pitfall;
+    cards.forEach(c => c.classList.toggle('is-active', c.dataset.dim === dim));
+    panel.classList.add('show');
+    if (!visited.has(dim)) { visited.add(dim); visEl.textContent = visited.size; }
+    setTimeout(() => panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 50);
+  }
+
+  function close() {
+    panel.classList.remove('show');
+    cards.forEach(c => c.classList.remove('is-active'));
+  }
+
+  cards.forEach(card => {
+    card.addEventListener('click', () => {
+      if (card.classList.contains('is-active')) close();
+      else open(card.dataset.dim);
+    });
+  });
+
+  closeBtn.addEventListener('click', close);
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape' && panel.classList.contains('show')) close();
+  });
+})();
+
+// ===== Game 3: project field quiz =====
+(function(){
+  const ROWS = [
+    {
+      key: 'name', label: '项目名', en: 'name · string',
+      ideal: { req: 'required', nul: 'forbidden', rng: 'free', mut: 'always', cmp: 'no' }
+    },
+    {
+      key: 'customer', label: '客户', en: 'customer_id · ref',
+      ideal: { req: 'required', nul: 'forbidden', rng: 'ref', mut: 'never', cmp: 'no' },
+      pitfall: '陷阱：很多人选"可改"——但<strong>项目归属一旦定下来</strong>就不该改（否则 owner 历史、报表都错位）。常见模式是创建后只读。'
+    },
+    {
+      key: 'budget', label: '预算', en: 'budget · money',
+      ideal: { req: 'optional', nul: 'unset', rng: 'money', mut: 'always', cmp: 'no' }
+    },
+    {
+      key: 'start_date', label: '开始日期', en: 'start_date · date',
+      ideal: { req: 'required', nul: 'forbidden', rng: 'date', mut: 'cond', cmp: 'no' },
+      pitfall: '可改 = "项目未开始才可改"——已开始的项目改 start_date 会让历史报表瞬间错位。<strong>条件可改</strong>比"永远可改"更安全。'
+    },
+    {
+      key: 'end_date', label: '结束日期', en: 'end_date · date',
+      ideal: { req: 'optional', nul: 'ongoing', rng: 'date', mut: 'always', cmp: 'no' },
+      pitfall: '空值意义是关键——"未填" vs "进行中" 是两件事。"未填"是疏忽，"进行中"是<strong>明确的项目状态</strong>。这里选"进行中"语义更准。'
+    },
+    {
+      key: 'status', label: '状态', en: 'status · enum',
+      ideal: { req: 'auto', nul: 'draft', rng: 'enum', mut: 'sm', cmp: 'no' }
+    },
+    {
+      key: 'spend', label: '实际支出', en: 'spend · money',
+      ideal: { req: 'auto', nul: 'zero', rng: 'money', mut: 'never', cmp: 'yes' },
+      pitfall: '常见错误：以为支出"手填"。<strong>实际支出 = SUM(费用单)</strong>，是计算字段。如果做成 input 用户填了之后下次刷新被覆盖。'
+    },
+    {
+      key: 'health', label: '健康度', en: 'health · enum',
+      ideal: { req: 'auto', nul: 'na', rng: 'enum', mut: 'never', cmp: 'yes' },
+      pitfall: '健康度看似简单 enum，其实是<strong>多字段派生</strong>——进度延期 + 预算超支 + 风险事件触发。如果做成手填，没人会去更新，永远绿色。'
+    }
+  ];
+
+  const OPTIONS = {
+    req: [
+      ['', '—'],
+      ['required', '必填'],
+      ['optional', '选填'],
+      ['auto', '系统自动']
+    ],
+    nul: [
+      ['', '—'],
+      ['forbidden', '不允许 (报错)'],
+      ['unset', '显示 "未定"'],
+      ['ongoing', '显示 "进行中"'],
+      ['zero', '显示 "0"'],
+      ['draft', '默认 draft'],
+      ['na', '显示 "未评估"']
+    ],
+    rng: [
+      ['', '—'],
+      ['free', '自由文本'],
+      ['date', 'date'],
+      ['money', 'money ≥ 0'],
+      ['enum', 'enum (固定)'],
+      ['ref', '引用 (ref)']
+    ],
+    mut: [
+      ['', '—'],
+      ['always', '永远可改'],
+      ['cond', '条件可改'],
+      ['sm', '只通过状态机'],
+      ['never', '只读 / 创建后不可改']
+    ],
+    cmp: [
+      ['', '—'],
+      ['no', '非计算 (用户填)'],
+      ['yes', '计算 (派生)']
+    ]
+  };
+
+  const DIM_LABEL = {
+    req: '必填',
+    nul: '空值',
+    rng: '范围',
+    mut: '可改',
+    cmp: '计算'
+  };
+
+  const tbody = document.getElementById('qzBody');
+  const doneEl = document.getElementById('qzDone');
+  const judge = document.getElementById('qzJudge');
+
+  const state = {};
+  ROWS.forEach(r => { state[r.key] = { req: '', nul: '', rng: '', mut: '', cmp: '' }; });
+
+  function buildSelect(rowKey, dimKey) {
+    const opts = OPTIONS[dimKey];
+    return `<select data-row="${rowKey}" data-dim="${dimKey}" class="empty-ans">${opts.map(o => `<option value="${o[0]}">${o[1]}</option>`).join('')}</select>`;
+  }
+
+  function buildRow(r, idx) {
+    return `<tr data-row="${r.key}">
+      <td class="row-num">${String(idx+1).padStart(2,'0')}</td>
+      <td class="row-name">${r.label}<span class="en">${r.en}</span></td>
+      <td>${buildSelect(r.key, 'req')}</td>
+      <td>${buildSelect(r.key, 'nul')}</td>
+      <td>${buildSelect(r.key, 'rng')}</td>
+      <td>${buildSelect(r.key, 'mut')}</td>
+      <td>${buildSelect(r.key, 'cmp')}</td>
+      <td class="qz-rowscore" id="rs-${r.key}">—</td>
+    </tr>`;
+  }
+
+  tbody.innerHTML = ROWS.map(buildRow).join('');
+
+  function updateDone() {
+    let filled = 0;
+    Object.values(state).forEach(s => {
+      ['req','nul','rng','mut','cmp'].forEach(k => { if (s[k]) filled++; });
+    });
+    doneEl.textContent = filled;
+  }
+
+  tbody.querySelectorAll('select').forEach(sel => {
+    sel.addEventListener('change', e => {
+      const row = e.target.dataset.row;
+      const dim = e.target.dataset.dim;
+      state[row][dim] = e.target.value;
+      e.target.classList.remove('right','wrong');
+      e.target.classList.add('empty-ans');
+      document.getElementById('rs-' + row).innerHTML = '—';
+      updateDone();
+    });
+  });
+
+  document.getElementById('qzSubmit').addEventListener('click', () => {
+    let totalHits = 0;
+    const lines = [];
+    const total = ROWS.length * 5;
+
+    ROWS.forEach(r => {
+      let hits = 0;
+      const wrongs = [];
+      ['req','nul','rng','mut','cmp'].forEach(dim => {
+        const sel = tbody.querySelector(`select[data-row="${r.key}"][data-dim="${dim}"]`);
+        const ans = state[r.key][dim];
+        sel.classList.remove('right','wrong','empty-ans');
+        if (ans === r.ideal[dim]) {
+          sel.classList.add('right');
+          hits++;
+        } else if (ans === '') {
+          sel.classList.add('empty-ans');
+          wrongs.push({ dim, want: r.ideal[dim], got: '(未填)' });
+        } else {
+          sel.classList.add('wrong');
+          wrongs.push({ dim, want: r.ideal[dim], got: ans });
+        }
+      });
+      totalHits += hits;
+      const rs = document.getElementById('rs-' + r.key);
+      if (hits === 5) rs.innerHTML = '<span class="full">5</span>';
+      else if (hits >= 3) rs.innerHTML = `<span class="partial">${hits}</span>`;
+      else rs.innerHTML = `<span class="zero">${hits}</span>`;
+
+      // build line for judge
+      if (hits === 5) {
+        lines.push(`<li>✓ <strong>${r.label}</strong>：5/5 完美 — ${optLabel('req', r.ideal.req)} · ${optLabel('nul', r.ideal.nul)} · ${optLabel('rng', r.ideal.rng)} · ${optLabel('mut', r.ideal.mut)} · ${optLabel('cmp', r.ideal.cmp)}</li>`);
+      } else {
+        const wrongHtml = wrongs.map(w => `<code class="wrong">${DIM_LABEL[w.dim]}</code>=应选 <code class="right">${optLabel(w.dim, w.want)}</code>`).join('；');
+        let line = `<strong>${r.label}</strong> · ${hits}/5：${wrongHtml}`;
+        if (r.pitfall) line += `<br><span class="why">↳ ${r.pitfall}</span>`;
+        lines.push(`<li>${line}</li>`);
+      }
+    });
+
+    let verdictClass, verdictLabel, headline;
+    if (totalHits === total) {
+      verdictClass = 'win';
+      verdictLabel = '完美';
+      headline = '你已经把字段当 schema 来设计了。';
+    } else if (totalHits >= total - 5) {
+      verdictClass = 'win';
+      verdictLabel = '基本对了';
+      headline = '差几个 — 但判断方向是对的。看下面错的几处，多在<strong>"可改性"和"是否计算"</strong>这两栏。';
+    } else if (totalHits >= total / 2) {
+      verdictClass = 'partial';
+      verdictLabel = '还差一点';
+      headline = '一半左右——大部分人在"<strong>空值含义</strong>"和"<strong>计算字段</strong>"这两栏踩坑。看 pitfall 说明。';
+    } else {
+      verdictClass = 'miss';
+      verdictLabel = '再来一次';
+      headline = '换个角度——字段不是"用户填什么"，是<strong>"系统要保证什么"</strong>。从必填和计算开始问，会顺很多。';
+    }
+
+    judge.innerHTML = `<span class="verdict ${verdictClass}">${verdictLabel}</span><h4>${headline}</h4>
+      <div class="score-line">
+        <div class="sk"><div class="lk">总分</div><div class="vk">${totalHits}<span class="of"> / ${total}</span></div></div>
+        <div class="sk"><div class="lk">满分字段</div><div class="vk">${ROWS.filter(r => allCorrect(r)).length}<span class="of"> / ${ROWS.length}</span></div></div>
+        <div class="sk"><div class="lk">准确率</div><div class="vk">${Math.round(totalHits/total*100)}<span class="of"> %</span></div></div>
+      </div>
+      <ul>${lines.join('')}</ul>`;
+    judge.classList.add('show');
+    judge.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  });
+
+  function allCorrect(r) {
+    return ['req','nul','rng','mut','cmp'].every(d => state[r.key][d] === r.ideal[d]);
+  }
+
+  function optLabel(dim, val) {
+    const opt = OPTIONS[dim].find(o => o[0] === val);
+    return opt ? opt[1] : val;
+  }
+
+  document.getElementById('qzReset').addEventListener('click', () => {
+    ROWS.forEach(r => { state[r.key] = { req: '', nul: '', rng: '', mut: '', cmp: '' }; });
+    tbody.querySelectorAll('select').forEach(sel => {
+      sel.value = '';
+      sel.classList.remove('right','wrong');
+      sel.classList.add('empty-ans');
+    });
+    ROWS.forEach(r => { document.getElementById('rs-' + r.key).innerHTML = '—'; });
+    judge.classList.remove('show');
+    judge.innerHTML = '';
+    updateDone();
+  });
+})();
+</script>
+
+</body>
+</html>

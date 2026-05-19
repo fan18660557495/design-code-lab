@@ -1,0 +1,1841 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>拆对象、流程、状态、组件 — AI LABBOOK · X21</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,300..900&family=Geist:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Noto+Sans+SC:wght@300;400;500;700;900&family=Noto+Serif+SC:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f3eee5;
+    --bg-2: #ebe4d4;
+    --ink: #16161d;
+    --ink-soft: #4a4a55;
+    --ink-mute: #8a8a92;
+    --line: #d5cdba;
+    --line-soft: #e3dcca;
+    --accent: #ff4d2e;
+    --accent-soft: #ffe4dc;
+    --blue: #0a4cff;
+    --blue-soft: #dde6ff;
+    --green: #1f6b3a;
+    --green-soft: #d4ecdb;
+    --yellow: #ffcf3d;
+    --paper: #faf7f0;
+    --shadow: 0 1px 0 rgba(0,0,0,0.04), 0 8px 24px rgba(22,22,29,0.06);
+
+    --obj-color: #ff4d2e;
+    --obj-soft: rgba(255,77,46,0.12);
+    --proj-color: #1f6b3a;
+    --proj-soft: rgba(31,107,58,0.12);
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'Geist', 'Noto Sans SC', system-ui, -apple-system, sans-serif;
+    font-size: 16px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    background-image: radial-gradient(circle at 1px 1px, rgba(22,22,29,0.05) 1px, transparent 0);
+    background-size: 24px 24px;
+  }
+
+  .display-cn { font-family: 'Noto Serif SC', 'Fraunces', serif; font-weight: 900; letter-spacing: -0.01em; }
+  .display-en { font-family: 'Fraunces', 'Noto Serif SC', serif; font-weight: 600; font-style: italic; letter-spacing: -0.02em; }
+  .mono { font-family: 'JetBrains Mono', monospace; }
+  .label { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-mute); }
+
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 0 32px; }
+
+  /* Topbar */
+  .topbar { border-bottom: 1px dashed var(--line); padding: 16px 0; background: var(--bg); position: sticky; top: 0; z-index: 100; }
+  .topbar-inner { display: flex; justify-content: space-between; align-items: center; gap: 24px; flex-wrap: wrap; }
+  .brand-block { display: flex; align-items: center; gap: 10px; font-family: 'JetBrains Mono', monospace; font-size: 13px; }
+  .brand { display: inline-flex; align-items: center; gap: 6px; color: var(--ink); text-decoration: none; font-weight: 600; }
+  .brand-arrow { color: var(--ink-mute); transition: transform .2s; }
+  .brand:hover .brand-arrow { transform: translateX(-3px); }
+  .brand .dot { display: inline-block; width: 8px; height: 8px; background: var(--accent); border-radius: 50%; vertical-align: middle; animation: pulse 2s ease-in-out infinite; margin-left: 4px; }
+  .brand-sep { color: var(--ink-mute); }
+  .brand-current { color: var(--ink-soft); }
+  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+  .nav-links { display: flex; gap: 18px; font-size: 13px; flex-wrap: wrap; }
+  .nav-links a { color: var(--ink-soft); text-decoration: none; transition: color 0.2s; }
+  .nav-links a:hover { color: var(--accent); }
+  .nav-links a.current { color: var(--accent); font-weight: 600; }
+
+  /* Hero */
+  .hero { padding: 100px 0 80px; position: relative; overflow: hidden; }
+  .hero-meta { display: flex; gap: 24px; margin-bottom: 32px; align-items: center; flex-wrap: wrap; }
+  .hero-meta .pill { padding: 6px 12px; border: 1px solid var(--ink); border-radius: 100px; font-size: 11px; font-family: 'JetBrains Mono', monospace; letter-spacing: 0.05em; }
+  .hero-meta .pill.fill { background: var(--ink); color: var(--bg); }
+  .hero-meta .pill.purple { background: var(--obj-color); color: white; border-color: var(--obj-color); }
+  .hero h1 { font-family: 'Noto Serif SC', 'Fraunces', serif; font-weight: 900; font-size: clamp(48px, 7vw, 92px); line-height: 0.95; letter-spacing: -0.03em; margin: 0 0 24px; }
+  .hero h1 .em { font-family: 'Noto Serif SC', serif; font-weight: 500; color: var(--accent); }
+  .hero h1 .purple { color: var(--obj-color); font-family: 'Noto Serif SC', serif; font-weight: 500; }
+  .hero p.lede { font-size: 20px; line-height: 1.5; max-width: 640px; color: var(--ink-soft); margin: 0 0 40px; }
+  .hero-grid { display: grid; grid-template-columns: 1.4fr 1fr; gap: 48px; align-items: end; }
+  @media (max-width: 880px) { .hero-grid { grid-template-columns: 1fr; } }
+  .hero-side { border-left: 1px dashed var(--line); padding-left: 24px; font-size: 13px; color: var(--ink-soft); }
+  .hero-side .row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px dashed var(--line); gap: 12px; }
+  .hero-side .row:last-child { border-bottom: none; }
+  .hero-side .row .k { color: var(--ink-mute); font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.05em; text-transform: uppercase; }
+  .hero-side .row .v { font-weight: 500; }
+
+  /* Sections */
+  section { padding: 80px 0; border-top: 1px solid var(--line); position: relative; }
+  .section-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 56px; flex-wrap: wrap; gap: 16px; }
+  .section-num { font-family: 'JetBrains Mono', monospace; font-size: 13px; color: var(--ink-mute); letter-spacing: 0.1em; margin-top: 6px; }
+  .section-num strong { color: var(--accent); }
+  .section-title { font-family: 'Noto Serif SC', serif; font-weight: 900; font-size: clamp(32px, 4.5vw, 52px); line-height: 1.05; letter-spacing: -0.02em; margin: 8px 0 0; max-width: 22ch; }
+  .section-title .em { font-family: 'Noto Serif SC', serif; font-weight: 500; color: var(--accent); }
+  .section-title .purple { color: var(--obj-color); font-family: 'Noto Serif SC', serif; font-weight: 500; }
+  .section-sub { color: var(--ink-soft); font-size: 17px; max-width: 38ch; line-height: 1.55; margin: 0; }
+
+  /* Act tag */
+  .act-tag { display: inline-block; padding: 4px 12px; font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; border-radius: 100px; }
+  .act-tag.look { background: var(--blue-soft); color: var(--blue); }
+  .act-tag.break { background: var(--obj-soft); color: var(--obj-color); }
+  .act-tag.make { background: var(--proj-soft); color: var(--proj-color); }
+
+  /* Problem cards */
+  .problem-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; margin-top: 24px; }
+  @media (max-width: 880px) { .problem-grid { grid-template-columns: 1fr; } }
+  .problem-card { background: var(--paper); border: 1px solid var(--line); border-radius: 6px; padding: 28px; position: relative; }
+  .problem-card.bad { border-color: var(--accent); background: var(--accent-soft); }
+  .problem-card.good { border-color: var(--obj-color); background: var(--obj-soft); }
+  .problem-card .tag { position: absolute; top: -12px; left: 24px; background: var(--bg); padding: 2px 10px; font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.1em; }
+  .problem-card.bad .tag { color: var(--accent); border: 1px solid var(--accent); }
+  .problem-card.good .tag { color: var(--obj-color); border: 1px solid var(--obj-color); }
+  .problem-card h3 { font-family: 'Noto Serif SC', serif; font-size: 22px; margin: 0 0 12px; font-weight: 700; }
+  .problem-card p { margin: 0; color: var(--ink-soft); font-size: 14px; line-height: 1.55; }
+  .problem-card p + p { margin-top: 10px; }
+
+  /* GAME 1: tabs + diagram viewer */
+  .diagram-stage { background: var(--paper); border: 1px solid var(--line); border-radius: 8px; padding: 24px; position: relative; overflow: hidden; }
+  .diagram-tabs { display: flex; gap: 6px; margin-bottom: 20px; flex-wrap: wrap; padding-bottom: 16px; border-bottom: 1px dashed var(--line); }
+  .dtab { padding: 8px 14px; background: white; border: 1px solid var(--line); border-radius: 100px; font-family: 'JetBrains Mono', monospace; font-size: 12px; letter-spacing: 0.04em; cursor: pointer; color: var(--ink-soft); transition: all 0.2s; user-select: none; }
+  .dtab:hover { border-color: var(--obj-color); color: var(--obj-color); }
+  .dtab.active { background: var(--obj-color); color: white; border-color: var(--obj-color); }
+  .dtab .dtab-emoji { margin-right: 5px; }
+  .diagram-canvas { position: relative; background: white; border: 1px solid var(--line); border-radius: 6px; padding: 20px; min-height: 460px; overflow: hidden; }
+  .diagram-canvas::before { content: ''; position: absolute; inset: 0; background-image: linear-gradient(to right, var(--line-soft) 1px, transparent 1px), linear-gradient(to bottom, var(--line-soft) 1px, transparent 1px); background-size: 24px 24px; opacity: 0.4; pointer-events: none; }
+  .diagram-pane { display: none; position: relative; }
+  .diagram-pane.active { display: block; }
+  .diagram-cap { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 12px; flex-wrap: wrap; gap: 8px; position: relative; z-index: 2; }
+  .diagram-cap-title { font-family: 'Noto Serif SC', serif; font-weight: 700; font-size: 16px; }
+  .diagram-cap-hint { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ink-mute); letter-spacing: 0.04em; }
+
+  /* mock screen (tab 1) */
+  .mock-screen { background: white; border: 1px solid var(--line); border-radius: 6px; overflow: hidden; box-shadow: 0 4px 12px rgba(22,22,29,0.05); max-width: 880px; margin: 0 auto; position: relative; z-index: 2; }
+  .mock-bar { display: flex; align-items: center; gap: 12px; padding: 10px 14px; background: var(--bg-2); border-bottom: 1px solid var(--line); font-size: 12px; color: var(--ink-soft); font-family: 'JetBrains Mono', monospace; }
+  .mock-bar .crumb { font-size: 11px; color: var(--ink-mute); }
+  .mock-bar .crumb .cur { color: var(--ink); }
+  .mock-bar .actions { margin-left: auto; display: flex; gap: 8px; }
+  .mock-btn { padding: 4px 10px; border: 1px solid var(--line); background: white; border-radius: 4px; font-size: 11px; color: var(--ink); cursor: pointer; font-family: 'JetBrains Mono', monospace; }
+  .mock-btn.primary { background: var(--accent); color: white; border-color: var(--accent); }
+  .mock-body { display: grid; grid-template-columns: 1.7fr 1fr; gap: 14px; padding: 16px; }
+  @media (max-width: 720px) { .mock-body { grid-template-columns: 1fr; } }
+  .mock-main { display: flex; flex-direction: column; gap: 14px; }
+  .mock-card { border: 1px solid var(--line); border-radius: 6px; padding: 14px; background: var(--paper); }
+  .mock-card-head { display: flex; gap: 12px; align-items: center; margin-bottom: 10px; }
+  .mock-avatar { width: 44px; height: 44px; border-radius: 50%; background: linear-gradient(135deg,#ff8a4a,#ff4d2e); color: white; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 16px; }
+  .mock-name { font-family: 'Noto Serif SC', serif; font-size: 16px; font-weight: 700; }
+  .mock-sub { color: var(--ink-mute); font-size: 11px; }
+  .mock-card-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 14px; font-size: 11px; }
+  .mock-card-lbl { font-family: 'JetBrains Mono', monospace; font-size: 9px; color: var(--ink-mute); letter-spacing: 0.06em; text-transform: uppercase; }
+  .mock-card-val { font-size: 12px; font-weight: 500; }
+  .mock-tabs { display: flex; gap: 6px; border-bottom: 1px solid var(--line); }
+  .mock-tab { padding: 6px 10px; font-size: 11px; color: var(--ink-soft); border-bottom: 2px solid transparent; }
+  .mock-tab.active { color: var(--accent); border-color: var(--accent); font-weight: 600; }
+  .mock-list-row { padding: 8px 0; border-bottom: 1px dashed var(--line-soft); font-size: 11px; display: flex; gap: 8px; }
+  .mock-list-row:last-child { border-bottom: none; }
+  .mock-list-row .mlr-k { color: var(--ink-mute); width: 60px; flex-shrink: 0; }
+  .mock-side { display: flex; flex-direction: column; gap: 10px; }
+  .mock-side-card { border: 1px solid var(--line); border-radius: 6px; padding: 12px; background: white; font-size: 11px; }
+  .mock-side-head { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--ink-mute); letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 6px; }
+
+  /* SVG diagrams base */
+  .svg-diagram { width: 100%; height: auto; display: block; position: relative; z-index: 2; }
+  .svg-diagram .node-rect { fill: white; stroke: var(--ink); stroke-width: 1.5; transition: all 0.2s; cursor: pointer; }
+  .svg-diagram .node-rect.center { fill: var(--obj-soft); stroke: var(--obj-color); stroke-width: 2; }
+  .svg-diagram .node-rect:hover { stroke: var(--accent); stroke-width: 2; }
+  .svg-diagram .node-rect.hl { stroke: var(--accent); stroke-width: 2; fill: var(--accent-soft); }
+  .svg-diagram .node-title { font-family: 'Noto Serif SC', serif; font-weight: 700; font-size: 13px; pointer-events: none; }
+  .svg-diagram .node-fields { font-family: 'JetBrains Mono', monospace; font-size: 9px; fill: var(--ink-mute); pointer-events: none; }
+  .svg-diagram .edge { fill: none; stroke: var(--ink-mute); stroke-width: 1.5; transition: all 0.2s; cursor: pointer; }
+  .svg-diagram .edge:hover { stroke: var(--accent); stroke-width: 2.5; }
+  .svg-diagram .edge.hl { stroke: var(--accent); stroke-width: 2.5; }
+  .svg-diagram .edge-label { font-family: 'JetBrains Mono', monospace; font-size: 10px; fill: var(--ink-soft); pointer-events: none; }
+  .svg-diagram .edge-label.hl { fill: var(--accent); font-weight: 700; }
+  .svg-diagram .arrow { fill: var(--ink-mute); }
+  .svg-diagram .arrow.hl { fill: var(--accent); }
+
+  /* diagram tooltip */
+  .diagram-tip { position: absolute; background: var(--ink); color: var(--bg); padding: 10px 14px; border-radius: 6px; font-size: 12px; line-height: 1.5; max-width: 260px; z-index: 30; pointer-events: none; box-shadow: 0 6px 16px rgba(0,0,0,0.2); opacity: 0; transition: opacity 0.15s; }
+  .diagram-tip.show { opacity: 1; }
+  .diagram-tip strong { color: var(--accent); font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; display: block; margin-bottom: 3px; }
+
+  /* Task flow */
+  .flow-row { display: flex; align-items: stretch; gap: 8px; overflow-x: auto; padding: 8px 0 14px; position: relative; z-index: 2; }
+  .flow-row + .flow-row { border-top: 1px dashed var(--line); margin-top: 8px; padding-top: 16px; }
+  .flow-row-label { flex-shrink: 0; width: 120px; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--obj-color); padding-top: 16px; letter-spacing: 0.04em; }
+  .flow-row-label .ttl { display: block; font-family: 'Noto Serif SC', serif; font-size: 13px; color: var(--ink); font-weight: 700; margin-bottom: 2px; }
+  .flow-step { flex: 1; min-width: 100px; background: white; border: 1px solid var(--line); border-radius: 6px; padding: 10px 12px; font-size: 11px; position: relative; cursor: pointer; transition: all 0.2s; }
+  .flow-step:hover { border-color: var(--accent); transform: translateY(-2px); }
+  .flow-step.hl { border-color: var(--accent); background: var(--accent-soft); }
+  .flow-step.branch { border-style: dashed; background: var(--bg-2); }
+  .flow-step.err { border-color: #c79f1e; background: #fff7d6; }
+  .flow-step .fs-num { font-family: 'JetBrains Mono', monospace; font-size: 9px; color: var(--ink-mute); letter-spacing: 0.06em; }
+  .flow-step .fs-name { font-weight: 700; margin-top: 3px; font-size: 12px; }
+  .flow-step .fs-note { color: var(--ink-mute); font-size: 10px; margin-top: 4px; line-height: 1.4; }
+  .flow-step::after { content: '→'; position: absolute; right: -10px; top: 50%; transform: translateY(-50%); color: var(--ink-mute); font-size: 12px; z-index: 2; }
+  .flow-step:last-child::after { display: none; }
+
+  /* State machine */
+  .sm-canvas { position: relative; z-index: 2; }
+
+  /* Component tree */
+  .tree-wrap { position: relative; z-index: 2; font-family: 'JetBrains Mono', monospace; font-size: 12px; line-height: 1.9; }
+  .tree-node { position: relative; padding-left: 24px; cursor: pointer; transition: all 0.15s; }
+  .tree-node.indent-1 { padding-left: 48px; }
+  .tree-node.indent-2 { padding-left: 72px; }
+  .tree-node.indent-3 { padding-left: 96px; }
+  .tree-node::before { content: '├'; position: absolute; left: 12px; color: var(--ink-mute); }
+  .tree-node.indent-1::before { left: 36px; }
+  .tree-node.indent-2::before { left: 60px; }
+  .tree-node.indent-3::before { left: 84px; }
+  .tree-node.root::before { display: none; }
+  .tree-tag { color: var(--obj-color); font-weight: 700; }
+  .tree-tag.leaf { color: var(--proj-color); }
+  .tree-flow { color: var(--ink-mute); font-size: 10px; margin-left: 8px; }
+  .tree-flow.in { color: var(--blue); }
+  .tree-flow.out { color: var(--accent); }
+  .tree-node:hover { background: var(--obj-soft); border-radius: 4px; }
+  .tree-node.hl { background: var(--accent-soft); border-radius: 4px; }
+
+  /* Reveal bar */
+  .reveal-bar { margin-top: 32px; padding: 20px 28px; background: var(--ink); color: var(--bg); border-radius: 8px; display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap; }
+  .reveal-bar .msg { font-family: 'Noto Serif SC', serif; font-size: 17px; font-weight: 500; line-height: 1.55; }
+  .reveal-bar .msg .em { color: var(--accent); }
+  .reveal-bar .counter { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ink-mute); letter-spacing: 0.05em; }
+  .reveal-bar .counter strong { color: var(--accent); font-size: 14px; }
+
+  /* GAME 2: 4 expandable cards */
+  .four-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 32px; }
+  @media (max-width: 880px) { .four-cards { grid-template-columns: 1fr; } }
+  .fc-card { background: var(--paper); border: 1px solid var(--line); border-radius: 8px; padding: 22px; position: relative; transition: all 0.2s; cursor: pointer; }
+  .fc-card:hover { border-color: var(--obj-color); }
+  .fc-card.expanded { border-color: var(--obj-color); background: white; }
+  .fc-num { position: absolute; top: -14px; left: 16px; width: 30px; height: 30px; border-radius: 50%; background: var(--obj-color); color: white; display: flex; align-items: center; justify-content: center; font-family: 'Fraunces', serif; font-style: italic; font-weight: 600; font-size: 14px; }
+  .fc-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 12px; gap: 12px; }
+  .fc-title { font-family: 'Noto Serif SC', serif; font-size: 19px; margin: 0; font-weight: 700; }
+  .fc-en { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ink-mute); letter-spacing: 0.06em; }
+  .fc-sub { color: var(--ink-soft); font-size: 13px; margin: 0 0 14px; line-height: 1.55; }
+  .fc-row { display: flex; gap: 8px; padding: 8px 0; border-top: 1px dashed var(--line); font-size: 12px; }
+  .fc-row-k { font-family: 'JetBrains Mono', monospace; color: var(--ink-mute); font-size: 10px; width: 70px; flex-shrink: 0; letter-spacing: 0.04em; padding-top: 1px; text-transform: uppercase; }
+  .fc-row-v { color: var(--ink); line-height: 1.55; }
+  .fc-row-v code { background: var(--bg-2); padding: 1px 5px; border-radius: 3px; font-size: 11px; }
+  .fc-detail { display: none; margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--line); }
+  .fc-card.expanded .fc-detail { display: block; }
+  .fc-warn { margin-top: 12px; padding: 10px 12px; background: var(--accent-soft); border-left: 3px solid var(--accent); border-radius: 4px; font-size: 12px; color: var(--ink-soft); line-height: 1.55; }
+  .fc-warn strong { color: var(--accent); }
+  .fc-toggle { display: inline-flex; align-items: center; gap: 4px; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--obj-color); cursor: pointer; user-select: none; }
+  .fc-toggle .arr { transition: transform 0.2s; }
+  .fc-card.expanded .fc-toggle .arr { transform: rotate(90deg); }
+
+  /* GAME 3: 4 mini builders */
+  .builders-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-top: 24px; }
+  @media (max-width: 980px) { .builders-grid { grid-template-columns: 1fr; } }
+  .mini-builder { background: var(--paper); border: 1px solid var(--line); border-radius: 8px; padding: 22px; }
+  .mini-builder-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 16px; flex-wrap: wrap; gap: 8px; }
+  .mini-builder-title { font-family: 'Noto Serif SC', serif; font-size: 17px; margin: 0; font-weight: 700; }
+  .mini-builder-tag { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--obj-color); letter-spacing: 0.06em; padding: 2px 8px; background: var(--obj-soft); border-radius: 100px; }
+  .mini-builder-sub { color: var(--ink-soft); font-size: 12px; margin: 0 0 14px; line-height: 1.5; }
+  .mini-pool { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 12px; padding: 10px; background: white; border: 1px dashed var(--obj-color); border-radius: 6px; }
+  .mini-pool-title { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--obj-color); letter-spacing: 0.06em; text-transform: uppercase; width: 100%; margin-bottom: 4px; }
+  .mini-chip { padding: 4px 9px; background: var(--obj-soft); border: 1px solid var(--obj-color); border-radius: 100px; font-family: 'JetBrains Mono', monospace; font-size: 11px; cursor: pointer; user-select: none; color: var(--ink); transition: all 0.15s; }
+  .mini-chip:hover { background: var(--obj-color); color: white; }
+  .mini-chip.is-active { background: var(--obj-color); color: white; box-shadow: 0 0 0 3px var(--obj-soft); }
+  .mini-chip.is-used { opacity: 0.4; pointer-events: none; }
+
+  /* Builder A: object diagram */
+  .b-obj-canvas { position: relative; height: 280px; background: white; border: 1px solid var(--line); border-radius: 6px; overflow: hidden; }
+  .b-obj-canvas::before { content: ''; position: absolute; inset: 0; background-image: linear-gradient(to right, var(--line-soft) 1px, transparent 1px), linear-gradient(to bottom, var(--line-soft) 1px, transparent 1px); background-size: 24px 24px; opacity: 0.3; }
+  .b-obj-svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+  .b-obj-slot { position: absolute; width: 88px; height: 56px; background: var(--bg); border: 2px dashed var(--ink-mute); border-radius: 6px; display: flex; align-items: center; justify-content: center; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ink-mute); cursor: pointer; text-align: center; line-height: 1.2; transition: all 0.15s; z-index: 5; }
+  .b-obj-slot.is-target { border-color: var(--obj-color); background: var(--obj-soft); }
+  .b-obj-slot.is-filled { background: white; border-style: solid; border-color: var(--ink); color: var(--ink); font-weight: 700; }
+  .b-obj-slot .card { font-size: 9px; color: var(--ink-mute); display: block; margin-top: 2px; }
+  .b-obj-center { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 96px; height: 60px; background: var(--obj-soft); border: 2px solid var(--obj-color); border-radius: 6px; display: flex; flex-direction: column; align-items: center; justify-content: center; font-family: 'Noto Serif SC', serif; font-weight: 700; z-index: 10; }
+  .b-obj-center .small { font-size: 9px; color: var(--ink-mute); font-family: 'JetBrains Mono', monospace; font-weight: 400; }
+  .b-obj-card-picker { position: absolute; background: var(--ink); color: var(--bg); border-radius: 6px; padding: 8px 10px; z-index: 20; display: none; box-shadow: 0 8px 16px rgba(0,0,0,0.25); }
+  .b-obj-card-picker.show { display: block; }
+  .b-obj-card-picker .pck-row { display: flex; gap: 4px; flex-wrap: wrap; }
+  .b-obj-card-picker button { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: white; padding: 3px 8px; border-radius: 3px; cursor: pointer; font-family: 'JetBrains Mono', monospace; font-size: 10px; }
+  .b-obj-card-picker button:hover { background: var(--accent); border-color: var(--accent); }
+  .b-obj-card-picker .pck-label { font-size: 10px; color: #a0a0aa; margin-bottom: 4px; font-family: 'JetBrains Mono', monospace; letter-spacing: 0.06em; }
+
+  /* Builder B: task flow steps */
+  .b-flow-slots { display: flex; flex-direction: column; gap: 8px; }
+  .b-flow-slot { display: flex; align-items: center; gap: 10px; padding: 10px 12px; background: white; border: 1px dashed var(--line); border-radius: 6px; font-size: 12px; transition: all 0.15s; cursor: pointer; }
+  .b-flow-slot.is-target { border-color: var(--obj-color); background: var(--obj-soft); }
+  .b-flow-slot.is-filled { border-style: solid; border-color: var(--proj-color); background: var(--proj-soft); }
+  .b-flow-slot-num { width: 24px; height: 24px; border-radius: 50%; background: var(--bg-2); display: flex; align-items: center; justify-content: center; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ink-soft); font-weight: 700; flex-shrink: 0; }
+  .b-flow-slot.is-filled .b-flow-slot-num { background: var(--proj-color); color: white; }
+  .b-flow-slot-name { flex: 1; min-width: 0; color: var(--ink-mute); font-style: italic; font-size: 11px; }
+  .b-flow-slot.is-filled .b-flow-slot-name { color: var(--ink); font-style: normal; font-weight: 600; font-family: 'JetBrains Mono', monospace; }
+  .b-flow-slot-clear { background: transparent; border: none; color: var(--ink-mute); cursor: pointer; font-size: 14px; padding: 0 4px; display: none; }
+  .b-flow-slot.is-filled .b-flow-slot-clear { display: block; }
+  .b-flow-slot-clear:hover { color: var(--accent); }
+
+  /* Builder C: state machine */
+  .b-state-canvas { position: relative; height: 180px; background: white; border: 1px solid var(--line); border-radius: 6px; overflow: hidden; }
+  .b-state-canvas::before { content: ''; position: absolute; inset: 0; background-image: linear-gradient(to right, var(--line-soft) 1px, transparent 1px), linear-gradient(to bottom, var(--line-soft) 1px, transparent 1px); background-size: 24px 24px; opacity: 0.3; }
+  .b-state-svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+  .b-state-node { position: absolute; padding: 6px 10px; background: var(--obj-soft); border: 2px solid var(--obj-color); border-radius: 100px; font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; color: var(--obj-color); z-index: 5; }
+  .b-state-edge-label { position: absolute; background: var(--bg); border: 1px dashed var(--ink-mute); border-radius: 4px; padding: 4px 8px; font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--ink-mute); cursor: pointer; z-index: 6; transition: all 0.15s; white-space: nowrap;
+  }
+  .b-state-edge-label.is-target { border-color: var(--obj-color); background: var(--obj-soft); color: var(--obj-color); }
+  .b-state-edge-label.is-filled {
+    border-style: solid;
+    border-color: var(--proj-color);
+    background: var(--proj-soft);
+    color: var(--proj-color);
+    font-weight: 700;
+  }
+
+  /* Builder D: component tree */
+  .b-tree-canvas { background: white; border: 1px solid var(--line); border-radius: 6px; padding: 14px 18px; font-family: 'JetBrains Mono', monospace; font-size: 12px; line-height: 2; min-height: 240px; }
+  .b-tree-line { display: flex; align-items: center; gap: 8px; padding: 2px 0; }
+  .b-tree-line .pad { flex-shrink: 0; color: var(--ink-mute); }
+  .b-tree-slot { display: inline-flex; align-items: center; gap: 6px; padding: 3px 8px; background: var(--bg); border: 1px dashed var(--line); border-radius: 4px; min-width: 120px; cursor: pointer; font-size: 11px; color: var(--ink-mute); transition: all 0.15s; }
+  .b-tree-slot.is-target { border-color: var(--obj-color); background: var(--obj-soft); color: var(--obj-color); }
+  .b-tree-slot.is-filled { border-style: solid; border-color: var(--proj-color); background: var(--proj-soft); color: var(--proj-color); font-weight: 700; }
+  .b-tree-slot.is-fixed { border: none; background: transparent; color: var(--obj-color); font-weight: 700; cursor: default; padding: 0; }
+  .b-tree-slot-clear { background: transparent; border: none; color: var(--ink-mute); cursor: pointer; font-size: 12px; padding: 0 2px; display: none; }
+  .b-tree-slot.is-filled .b-tree-slot-clear { display: inline; }
+
+  .mini-actions { display: flex; gap: 10px; margin-top: 14px; flex-wrap: wrap; }
+  .mini-btn { padding: 8px 16px; border-radius: 100px; font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; cursor: pointer; font-weight: 600; border: 1px solid var(--ink); background: transparent; color: var(--ink); transition: all 0.15s; }
+  .mini-btn:hover { background: var(--ink); color: var(--bg); }
+  .mini-btn.primary { background: var(--accent); color: white; border-color: var(--accent); }
+  .mini-btn.primary:hover { background: #e8451f; }
+
+  .mini-judge { margin-top: 14px; padding: 14px 16px; border-radius: 6px; background: var(--ink); color: var(--bg); display: none; font-size: 12px; line-height: 1.65; }
+  .mini-judge.show { display: block; }
+  .mini-judge .verdict { display: inline-block; font-family: 'JetBrains Mono', monospace; font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase; padding: 2px 8px; border-radius: 100px; margin-bottom: 8px; }
+  .mini-judge .verdict.win { color: #1f6b3a; background: #d4ecdb; }
+  .mini-judge .verdict.partial { color: #c79f1e; background: #fff3cc; }
+  .mini-judge h5 { font-family: 'Noto Serif SC', serif; font-size: 14px; margin: 4px 0 8px; color: white; line-height: 1.4; }
+  .mini-judge ul { color: #c8c8d0; margin: 0; padding-left: 18px; font-size: 11px; line-height: 1.7; }
+  .mini-judge ul .why { color: #a0a0aa; font-size: 10px; }
+  .mini-judge ul strong { color: white; }
+
+  /* roll-up summary */
+  .rollup { margin-top: 36px; padding: 28px 32px; background: var(--ink); color: var(--bg); border-radius: 10px; display: grid; grid-template-columns: auto 1fr; gap: 24px; align-items: center; }
+  @media (max-width: 720px) { .rollup { grid-template-columns: 1fr; } }
+  .rollup-score { font-family: 'Fraunces', serif; font-style: italic; font-size: 56px; font-weight: 700; color: var(--accent); line-height: 1; text-align: center; padding: 0 10px; }
+  .rollup-score .total { color: var(--ink-mute); font-size: 32px; }
+  .rollup-msg p { margin: 0 0 8px; color: #c8c8d0; font-size: 14px; line-height: 1.6; }
+  .rollup-msg p:last-child { margin-bottom: 0; }
+  .rollup-msg strong { color: white; }
+  .rollup-msg .accent { color: var(--accent); }
+
+  /* picker label (floating) */
+  .picker-label { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: var(--ink); color: var(--bg); padding: 12px 20px; border-radius: 100px; font-family: 'JetBrains Mono', monospace; font-size: 12px; letter-spacing: 0.05em; z-index: 200; box-shadow: 0 8px 32px rgba(0,0,0,0.2); display: none; align-items: center; gap: 10px; }
+  .picker-label.show { display: inline-flex; }
+  .picker-label .esc { background: rgba(255,255,255,0.15); padding: 2px 6px; border-radius: 3px; font-size: 10px; }
+
+  /* tips */
+  .tips-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 28px; margin-top: 24px; }
+  @media (max-width: 880px) { .tips-grid { grid-template-columns: 1fr; } }
+  .tip { background: var(--paper); border: 1px solid var(--line); border-radius: 6px; padding: 24px; position: relative; }
+  .tip-num { position: absolute; top: -14px; left: 16px; width: 32px; height: 32px; border-radius: 50%; background: var(--obj-color); color: white; display: flex; align-items: center; justify-content: center; font-family: 'Fraunces', serif; font-style: italic; font-weight: 600; font-size: 14px; }
+  .tip h4 { font-family: 'Noto Serif SC', serif; font-size: 18px; margin: 8px 0 10px; font-weight: 700; }
+  .tip p { color: var(--ink-soft); font-size: 14px; line-height: 1.6; margin: 0; }
+  .tip p + p { margin-top: 8px; }
+  .tip-outro { margin-top: 44px; padding: 30px 32px; background: var(--ink); color: var(--bg); border-radius: 8px; display: grid; grid-template-columns: auto 1fr; gap: 28px; align-items: flex-start; }
+  @media (max-width: 720px) { .tip-outro { grid-template-columns: 1fr; gap: 12px; } }
+  .outro-tag { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.1em; color: var(--accent); padding-top: 4px; }
+  .tip-outro p { margin: 0 0 12px; color: #c8c8d0; line-height: 1.65; font-size: 15px; }
+  .tip-outro p:last-child { margin-bottom: 0; }
+  .tip-outro strong { color: white; }
+
+  /* next post */
+  .next-post { display: flex; justify-content: space-between; align-items: center; margin-top: 56px; padding: 32px; background: var(--bg-2); border: 1px solid var(--line); border-radius: 8px; text-decoration: none; color: var(--ink); transition: all 0.2s; gap: 24px; flex-wrap: wrap; }
+  .next-post:hover { background: var(--ink); color: var(--bg); }
+  .next-post:hover .np-tag { color: var(--accent); }
+  .next-post:hover .em { color: var(--accent); }
+  .next-post:hover p { color: #c8c8d0; }
+  .np-tag { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.1em; color: var(--ink-mute); margin-bottom: 6px; }
+  .next-post h4 { font-family: 'Noto Serif SC', serif; font-size: 26px; margin: 0 0 8px; font-weight: 700; }
+  .next-post .em { color: var(--obj-color); font-weight: 500; }
+  .next-post p { margin: 0; color: var(--ink-soft); font-size: 14px; max-width: 56ch; }
+  .np-cta { font-family: 'JetBrains Mono', monospace; font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; white-space: nowrap; }
+  .np-cta .arr { display: inline-block; transition: transform .2s; }
+  .next-post:hover .arr { transform: translateX(4px); }
+
+  /* footer */
+  footer { padding: 56px 0 64px; background: var(--bg); color: var(--ink-soft); border-top: 1px solid var(--line); }
+  .byline-group { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; margin-bottom: 32px; padding-bottom: 32px; border-bottom: 1px dashed var(--line); }
+  @media (max-width: 880px) { .byline-group { grid-template-columns: 1fr; } }
+  .byline { display: flex; gap: 16px; align-items: center; }
+  .byline .avatar { width: 56px; height: 56px; border-radius: 50%; object-fit: cover; flex-shrink: 0; }
+  .byline-label { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--accent); letter-spacing: 0.1em; }
+  .byline-label .dot { display: inline-block; width: 6px; height: 6px; background: var(--accent); border-radius: 50%; margin-right: 4px; vertical-align: middle; animation: pulse 2s ease-in-out infinite; }
+  .byline-name { font-family: 'Noto Serif SC', serif; font-weight: 700; font-size: 18px; margin: 4px 0; color: var(--ink); }
+  .byline-name .em { color: var(--accent); font-weight: 500; }
+  .byline-tag { color: var(--ink-soft); font-size: 13px; margin: 0; line-height: 1.5; }
+  .footer-meta { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ink-mute); text-align: center; letter-spacing: 0.05em; }
+  .footer-meta .heart { color: var(--accent); }
+
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="wrap topbar-inner">
+    <div class="brand-block">
+      <a href="book.html#vol-3" class="brand"><span class="brand-arrow">←</span>AI LABBOOK <span class="dot"></span></a>
+      <span class="brand-sep">/</span>
+      <span class="brand-current">X21 · 拆对象、流程、状态、组件</span>
+    </div>
+    <nav class="nav-links">
+      <a href="x20-case-design.html">← X20</a>
+      <a href="book.html#vol-3">路线图</a>
+      <a href="x22-case-spec.html">X22 →</a>
+    </nav>
+  </div>
+</div>
+
+<!-- Hero -->
+<header class="hero">
+  <div class="wrap">
+    <div class="hero-meta">
+      <span class="pill fill">高阶 · ADVANCED</span>
+      <span class="pill purple">STAGE 06 · 完整案例</span>
+      <span class="pill">X21 · 案例 2/3</span>
+      <span class="label">阅读 ≈ 18 分钟 · 含 3 段互动</span>
+    </div>
+    <div class="hero-grid">
+      <div>
+        <h1>
+          把那张稿，<br>
+          拆成<span class="display-cn">4 张</span><br>
+          <span class="purple">架构图</span>。
+        </h1>
+        <p class="lede">
+          对象图、任务流、状态机、组件树。<br>
+          4 张图都画出来 → 设计稿就升级成了 <strong>spec</strong>。
+        </p>
+      </div>
+      <div class="hero-side">
+        <div class="row"><span class="k">本页讲什么</span><span class="v">1 张稿 → 4 张图</span></div>
+        <div class="row"><span class="k">三幕</span><span class="v">看见 · 拆开 · 再做</span></div>
+        <div class="row"><span class="k">面向</span><span class="v">想做架构的设计师</span></div>
+        <div class="row"><span class="k">前置</span><span class="v">X20 · 案例 1/3</span></div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- Section 01: 问题 -->
+<section id="problem">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>01</strong> / 问题</div>
+        <h2 class="section-title">"稿子就是<br>全部交付"<span class="em"> ——</span><br>问题就出在这。</h2>
+      </div>
+      <p class="section-sub">
+        一张高保真稿背后藏着 <strong>4 张架构图</strong>——对象图、任务流、状态机、组件树。
+        设计师不画 → 工程师自己脑补 → 每个工程师补的都不一样。
+      </p>
+    </div>
+
+    <div class="problem-grid">
+      <div class="problem-card bad">
+        <span class="tag">稿就是全部 · DRAFT-ONLY</span>
+        <h3>"我给了 Figma 链接 + 标注"</h3>
+        <p>一张漂亮的客户详情页稿。Figma 注释满满。视觉无懈可击。</p>
+        <p><strong>工程师拿到后：</strong>自己画 4 张图——前端画一版组件树、后端画一版对象图、PM 画一版任务流……每个人脑补的<strong>都不一样</strong>。</p>
+        <p style="color:var(--accent)"><strong>结果：</strong>同一个稿，3 种实施方案，开会 5 次还对不齐。</p>
+      </div>
+
+      <div class="problem-card good">
+        <span class="tag">稿 + 4 张图 · SPEC</span>
+        <h3>"稿 + 对象图 + 任务流 + 状态机 + 组件树"</h3>
+        <p>稿是<strong>视觉</strong>。另外 4 张：对象图 = 数据模型；任务流 = 用户路径；状态机 = 时间维度；组件树 = 代码结构。</p>
+        <p><strong>工程师收到：</strong>5 份交付。每张图都能<strong>独立读懂</strong>，工程团队不再脑补——每张图都是一份合同。</p>
+        <p style="color:var(--obj-color)"><strong>结果：</strong>对齐会议 → 0 次。</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Section 02: 幕一 · 看见 -->
+<section id="look">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <span class="act-tag look">幕一 · 看见</span>
+        <div class="section-num"><strong>02</strong> / 看见</div>
+        <h2 class="section-title"><span class="purple">同一张稿</span>，<br>拆出 4 张图。</h2>
+      </div>
+      <p class="section-sub">
+        切换上方 tab → 看张明详情页背后的 4 张架构图。
+        <strong>每张都能脱离稿子单独读懂</strong>——这才是它们叫"架构图"的原因。
+      </p>
+    </div>
+
+    <div class="diagram-stage">
+      <div class="diagram-tabs" id="diagramTabs">
+        <div class="dtab active" data-pane="screen"><span class="dtab-emoji">📋</span>设计稿</div>
+        <div class="dtab" data-pane="obj"><span class="dtab-emoji">🧱</span>对象图</div>
+        <div class="dtab" data-pane="flow"><span class="dtab-emoji">🌊</span>任务流</div>
+        <div class="dtab" data-pane="state"><span class="dtab-emoji">⚙️</span>状态机</div>
+        <div class="dtab" data-pane="tree"><span class="dtab-emoji">🌳</span>组件树</div>
+      </div>
+
+      <div class="diagram-canvas" id="diagramCanvas">
+        <!-- Pane 1: 设计稿 -->
+        <div class="diagram-pane active" data-pane="screen">
+          <div class="diagram-cap">
+            <div class="diagram-cap-title">客户详情页 · 张明</div>
+            <div class="diagram-cap-hint">高保真稿 · 工程师拿到的全部</div>
+          </div>
+          <div class="mock-screen">
+            <div class="mock-bar">
+              <span class="crumb">CRM / 客户 / <span class="cur">张明</span></span>
+              <div class="actions">
+                <button class="mock-btn">编辑</button>
+                <button class="mock-btn">转分配</button>
+                <button class="mock-btn primary">+ 新跟进</button>
+              </div>
+            </div>
+            <div class="mock-body">
+              <div class="mock-main">
+                <div class="mock-card">
+                  <div class="mock-card-head">
+                    <div class="mock-avatar">张</div>
+                    <div>
+                      <div class="mock-name">张明</div>
+                      <div class="mock-sub">星河科技 · CTO · 活跃</div>
+                    </div>
+                  </div>
+                  <div class="mock-card-grid">
+                    <div><div class="mock-card-lbl">跟进人</div><div class="mock-card-val">李华</div></div>
+                    <div><div class="mock-card-lbl">最近联系</div><div class="mock-card-val">3 天前</div></div>
+                    <div><div class="mock-card-lbl">合作金额</div><div class="mock-card-val">¥ 480k</div></div>
+                    <div><div class="mock-card-lbl">阶段</div><div class="mock-card-val" style="color:var(--green)">已签约</div></div>
+                  </div>
+                </div>
+                <div>
+                  <div class="mock-tabs">
+                    <span class="mock-tab active">概览</span>
+                    <span class="mock-tab">商机 (3)</span>
+                    <span class="mock-tab">联系人 (5)</span>
+                    <span class="mock-tab">活动 (24)</span>
+                    <span class="mock-tab">合同 (2)</span>
+                  </div>
+                  <div style="padding:6px 0">
+                    <div class="mock-list-row"><span class="mlr-k">商机</span>云平台升级 · ¥320k · 谈判中</div>
+                    <div class="mock-list-row"><span class="mlr-k">活动</span>3 天前电话回访 · 完成</div>
+                    <div class="mock-list-row"><span class="mlr-k">联系人</span>张明 + 李刚 + 王娟…</div>
+                    <div class="mock-list-row"><span class="mlr-k">合同</span>2024-Q1 主合同 · 有效</div>
+                  </div>
+                </div>
+              </div>
+              <div class="mock-side">
+                <div class="mock-side-card">
+                  <div class="mock-side-head">健康度</div>
+                  <div style="font-size:24px;font-weight:700;color:var(--green)">82</div>
+                  <div style="color:var(--ink-mute);font-size:10px">↑ 比上月 +6</div>
+                </div>
+                <div class="mock-side-card">
+                  <div class="mock-side-head">下一步</div>
+                  <div style="font-size:11px;color:var(--ink-soft);line-height:1.5">本周内安排技术方案对齐会议；催收 2 月发票。</div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div style="text-align:center;margin-top:14px;color:var(--ink-mute);font-size:11px;font-family:'JetBrains Mono',monospace;position:relative;z-index:2">
+            ↑ 这是工程师收到的"全部交付物"——他们要从这里反推出后面 4 张图。
+          </div>
+        </div>
+
+        <!-- Pane 2: 对象图 -->
+        <div class="diagram-pane" data-pane="obj">
+          <div class="diagram-cap">
+            <div class="diagram-cap-title">对象图 · Customer 的关系</div>
+            <div class="diagram-cap-hint">点节点 / 点边 · 看它对应稿上的哪一块</div>
+          </div>
+          <svg class="svg-diagram" viewBox="0 0 880 420" id="objSvg">
+            <!-- edges -->
+            <g>
+              <path class="edge" data-edge="opp" d="M 440 200 L 660 90" />
+              <text class="edge-label" data-edge-label="opp" x="565" y="135">1 : N</text>
+              <path class="edge" data-edge="contact" d="M 440 200 L 720 200" />
+              <text class="edge-label" data-edge-label="contact" x="555" y="190">M : N</text>
+              <path class="edge" data-edge="activity" d="M 440 200 L 660 310" />
+              <text class="edge-label" data-edge-label="activity" x="555" y="270">1 : N</text>
+              <path class="edge" data-edge="contract" d="M 440 200 L 220 90" />
+              <text class="edge-label" data-edge-label="contract" x="285" y="135">1 : N</text>
+              <path class="edge" data-edge="note" d="M 440 200 L 220 310" />
+              <text class="edge-label" data-edge-label="note" x="285" y="270">1 : N</text>
+            </g>
+            <!-- nodes -->
+            <g>
+              <rect class="node-rect center" data-node="customer" x="370" y="160" width="140" height="80" rx="6" />
+              <text class="node-title" x="440" y="190" text-anchor="middle">Customer</text>
+              <text class="node-fields" x="440" y="207" text-anchor="middle">name · owner · status</text>
+              <text class="node-fields" x="440" y="222" text-anchor="middle">company · health</text>
+            </g>
+            <g>
+              <rect class="node-rect" data-node="opp" x="610" y="50" width="160" height="80" rx="6" />
+              <text class="node-title" x="690" y="78" text-anchor="middle">Opportunity</text>
+              <text class="node-fields" x="690" y="95" text-anchor="middle">stage · value · close_date</text>
+              <text class="node-fields" x="690" y="110" text-anchor="middle">owner · forecast_prob</text>
+            </g>
+            <g>
+              <rect class="node-rect" data-node="contact" x="670" y="160" width="160" height="80" rx="6" />
+              <text class="node-title" x="750" y="190" text-anchor="middle">Contact</text>
+              <text class="node-fields" x="750" y="207" text-anchor="middle">name · role · email</text>
+              <text class="node-fields" x="750" y="222" text-anchor="middle">phone · is_primary</text>
+            </g>
+            <g>
+              <rect class="node-rect" data-node="activity" x="610" y="270" width="160" height="80" rx="6" />
+              <text class="node-title" x="690" y="298" text-anchor="middle">Activity</text>
+              <text class="node-fields" x="690" y="315" text-anchor="middle">type · date · author</text>
+              <text class="node-fields" x="690" y="330" text-anchor="middle">summary · attachments</text>
+            </g>
+            <g>
+              <rect class="node-rect" data-node="contract" x="110" y="50" width="160" height="80" rx="6" />
+              <text class="node-title" x="190" y="78" text-anchor="middle">Contract</text>
+              <text class="node-fields" x="190" y="95" text-anchor="middle">number · amount · term</text>
+              <text class="node-fields" x="190" y="110" text-anchor="middle">signed_at · status</text>
+            </g>
+            <g>
+              <rect class="node-rect" data-node="note" x="110" y="270" width="160" height="80" rx="6" />
+              <text class="node-title" x="190" y="298" text-anchor="middle">Note</text>
+              <text class="node-fields" x="190" y="315" text-anchor="middle">body · author · pinned</text>
+              <text class="node-fields" x="190" y="330" text-anchor="middle">created_at</text>
+            </g>
+          </svg>
+          <div class="diagram-tip" id="objTip"></div>
+        </div>
+
+        <!-- Pane 3: 任务流 -->
+        <div class="diagram-pane" data-pane="flow">
+          <div class="diagram-cap">
+            <div class="diagram-cap-title">任务流 · 4 个典型路径</div>
+            <div class="diagram-cap-hint">点步骤 · 看它在稿上对应哪个按钮</div>
+          </div>
+          <div class="flow-row" data-flow="create">
+            <div class="flow-row-label"><span class="ttl">创建客户</span>NEW · 4 步</div>
+            <div class="flow-step" data-step="create-1"><div class="fs-num">01</div><div class="fs-name">点 + 新建</div><div class="fs-note">列表页右上角</div></div>
+            <div class="flow-step" data-step="create-2"><div class="fs-num">02</div><div class="fs-name">填表单</div><div class="fs-note">name / company / phone</div></div>
+            <div class="flow-step branch" data-step="create-3"><div class="fs-num">03</div><div class="fs-name">查重</div><div class="fs-note">系统检查 · 重了 → 合并</div></div>
+            <div class="flow-step" data-step="create-4"><div class="fs-num">04</div><div class="fs-name">进详情页</div><div class="fs-note">→ status: lead</div></div>
+          </div>
+          <div class="flow-row" data-flow="addContact">
+            <div class="flow-row-label"><span class="ttl">添加联系人</span>ADD · 4 步</div>
+            <div class="flow-step" data-step="addc-1"><div class="fs-num">01</div><div class="fs-name">详情页 · 联系人 tab</div><div class="fs-note">+ 新增按钮</div></div>
+            <div class="flow-step" data-step="addc-2"><div class="fs-num">02</div><div class="fs-name">填联系人卡</div><div class="fs-note">role / phone / email</div></div>
+            <div class="flow-step branch" data-step="addc-3"><div class="fs-num">03</div><div class="fs-name">设为主要？</div><div class="fs-note">如是 → 替换原 primary</div></div>
+            <div class="flow-step" data-step="addc-4"><div class="fs-num">04</div><div class="fs-name">写入</div><div class="fs-note">→ contact list +1</div></div>
+          </div>
+          <div class="flow-row" data-flow="reassign">
+            <div class="flow-row-label"><span class="ttl">转分配</span>REASSIGN · 5 步</div>
+            <div class="flow-step" data-step="reas-1"><div class="fs-num">01</div><div class="fs-name">原 owner · 启动</div><div class="fs-note">详情页 · 转分配按钮</div></div>
+            <div class="flow-step branch" data-step="reas-2"><div class="fs-num">02</div><div class="fs-name">系统检查负载</div><div class="fs-note">超载 → 弹窗确认</div></div>
+            <div class="flow-step" data-step="reas-3"><div class="fs-num">03</div><div class="fs-name">提交转分配</div><div class="fs-note">pending 状态</div></div>
+            <div class="flow-step" data-step="reas-4"><div class="fs-num">04</div><div class="fs-name">新 owner · 接受</div><div class="fs-note">收到通知 → 点确认</div></div>
+            <div class="flow-step" data-step="reas-5"><div class="fs-num">05</div><div class="fs-name">通知双方+主管</div><div class="fs-note">→ owner 字段更新</div></div>
+          </div>
+          <div class="flow-row" data-flow="lost">
+            <div class="flow-row-label"><span class="ttl">标记流失</span>LOST · 4 步</div>
+            <div class="flow-step" data-step="lost-1"><div class="fs-num">01</div><div class="fs-name">详情页 · 更多菜单</div><div class="fs-note">标记流失</div></div>
+            <div class="flow-step err" data-step="lost-2"><div class="fs-num">02</div><div class="fs-name">填流失原因</div><div class="fs-note">必填 · 选项 6 个</div></div>
+            <div class="flow-step branch" data-step="lost-3"><div class="fs-num">03</div><div class="fs-name">是否有未完成商机？</div><div class="fs-note">有 → 一并关闭</div></div>
+            <div class="flow-step" data-step="lost-4"><div class="fs-num">04</div><div class="fs-name">归档</div><div class="fs-note">→ status: lost · 只读</div></div>
+          </div>
+          <div class="diagram-tip" id="flowTip"></div>
+        </div>
+
+        <!-- Pane 4: 状态机 -->
+        <div class="diagram-pane" data-pane="state">
+          <div class="diagram-cap">
+            <div class="diagram-cap-title">状态机 · Customer.status</div>
+            <div class="diagram-cap-hint">点状态节点 / 点边 · 看 trigger + 副作用</div>
+          </div>
+          <svg class="svg-diagram" viewBox="0 0 880 360" id="stateSvg">
+            <defs>
+              <marker id="arrA" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+                <path d="M 0 0 L 10 5 L 0 10 z" class="arrow" />
+              </marker>
+            </defs>
+            <!-- forward edges -->
+            <g>
+              <path class="edge" data-sedge="lead-prospect" d="M 110 160 C 170 110, 240 110, 290 160" marker-end="url(#arrA)" />
+              <text class="edge-label" data-sedge-label="lead-prospect" x="200" y="100" text-anchor="middle">首次拨打</text>
+
+              <path class="edge" data-sedge="prospect-active" d="M 370 160 C 430 110, 500 110, 550 160" marker-end="url(#arrA)" />
+              <text class="edge-label" data-sedge-label="prospect-active" x="460" y="100" text-anchor="middle">签约</text>
+
+              <path class="edge" data-sedge="active-dormant" d="M 630 160 C 690 110, 760 110, 810 160" marker-end="url(#arrA)" />
+              <text class="edge-label" data-sedge-label="active-dormant" x="720" y="100" text-anchor="middle">30 天无互动</text>
+
+              <path class="edge" data-sedge="dormant-lost" d="M 770 230 C 690 290, 500 320, 440 290" marker-end="url(#arrA)" />
+              <text class="edge-label" data-sedge-label="dormant-lost" x="630" y="335" text-anchor="middle">90 天无互动 / 主动归档</text>
+
+              <!-- dormant → active backedge -->
+              <path class="edge" data-sedge="dormant-active" d="M 770 195 C 750 235, 670 235, 630 200" marker-end="url(#arrA)" stroke-dasharray="4 4" />
+              <text class="edge-label" data-sedge-label="dormant-active" x="700" y="260" text-anchor="middle">新互动 (重激活)</text>
+            </g>
+            <!-- nodes -->
+            <g>
+              <rect class="node-rect" data-snode="lead" x="40" y="135" width="120" height="50" rx="25" />
+              <text class="node-title" x="100" y="166" text-anchor="middle">lead</text>
+
+              <rect class="node-rect" data-snode="prospect" x="290" y="135" width="120" height="50" rx="25" />
+              <text class="node-title" x="350" y="166" text-anchor="middle">prospect</text>
+
+              <rect class="node-rect" data-snode="active" x="550" y="135" width="120" height="50" rx="25" />
+              <text class="node-title" x="610" y="166" text-anchor="middle">active</text>
+
+              <rect class="node-rect" data-snode="dormant" x="710" y="170" width="120" height="50" rx="25" />
+              <text class="node-title" x="770" y="200" text-anchor="middle">dormant</text>
+
+              <rect class="node-rect" data-snode="lost" x="320" y="270" width="120" height="50" rx="25" />
+              <text class="node-title" x="380" y="300" text-anchor="middle">lost</text>
+            </g>
+          </svg>
+          <div class="diagram-tip" id="stateTip"></div>
+        </div>
+
+        <!-- Pane 5: 组件树 -->
+        <div class="diagram-pane" data-pane="tree">
+          <div class="diagram-cap">
+            <div class="diagram-cap-title">组件树 · &lt;CustomerDetail&gt;</div>
+            <div class="diagram-cap-hint">点节点 · 看它在稿上是哪个区域 · 箭头 = 数据流</div>
+          </div>
+          <div class="tree-wrap">
+            <div class="tree-node root" data-tnode="root"><span class="tree-tag">&lt;CustomerDetail&gt;</span><span class="tree-flow in">← customerId</span></div>
+            <div class="tree-node indent-1" data-tnode="header"><span class="tree-tag">&lt;Header&gt;</span></div>
+            <div class="tree-node indent-2" data-tnode="breadcrumb"><span class="tree-tag leaf">&lt;Breadcrumb /&gt;</span></div>
+            <div class="tree-node indent-2" data-tnode="actionbar"><span class="tree-tag">&lt;ActionBar&gt;</span><span class="tree-flow out">→ onAction</span></div>
+            <div class="tree-node indent-3" data-tnode="btn-edit"><span class="tree-tag leaf">&lt;Button "编辑" /&gt;</span></div>
+            <div class="tree-node indent-3" data-tnode="btn-reassign"><span class="tree-tag leaf">&lt;Button "转分配" /&gt;</span></div>
+            <div class="tree-node indent-3" data-tnode="btn-new"><span class="tree-tag leaf">&lt;Button "新跟进" primary /&gt;</span></div>
+            <div class="tree-node indent-1" data-tnode="body"><span class="tree-tag">&lt;Body&gt;</span></div>
+            <div class="tree-node indent-2" data-tnode="card"><span class="tree-tag">&lt;CustomerCard&gt;</span><span class="tree-flow in">← customer</span></div>
+            <div class="tree-node indent-3" data-tnode="card-head"><span class="tree-tag leaf">&lt;Avatar + Name + Tags /&gt;</span></div>
+            <div class="tree-node indent-3" data-tnode="card-grid"><span class="tree-tag leaf">&lt;FieldGrid /&gt;</span></div>
+            <div class="tree-node indent-2" data-tnode="tabs"><span class="tree-tag">&lt;Tabs&gt;</span><span class="tree-flow out">→ onTabChange</span></div>
+            <div class="tree-node indent-3" data-tnode="overview"><span class="tree-tag leaf">&lt;OverviewTab /&gt;</span></div>
+            <div class="tree-node indent-3" data-tnode="opps"><span class="tree-tag leaf">&lt;OppTab /&gt;</span></div>
+            <div class="tree-node indent-3" data-tnode="contacts"><span class="tree-tag leaf">&lt;ContactTab /&gt;</span></div>
+            <div class="tree-node indent-3" data-tnode="activities"><span class="tree-tag leaf">&lt;ActivityTab /&gt;</span></div>
+            <div class="tree-node indent-3" data-tnode="contracts"><span class="tree-tag leaf">&lt;ContractTab /&gt;</span></div>
+            <div class="tree-node indent-1" data-tnode="sidebar"><span class="tree-tag">&lt;Sidebar&gt;</span></div>
+            <div class="tree-node indent-2" data-tnode="health"><span class="tree-tag leaf">&lt;HealthScore /&gt;</span></div>
+            <div class="tree-node indent-2" data-tnode="next"><span class="tree-tag leaf">&lt;NextStep /&gt;</span></div>
+          </div>
+          <div class="diagram-tip" id="treeTip"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="reveal-bar">
+      <div class="msg">
+        <span class="em">4 张图 + 设计稿 = 5 份交付物。</span><br>
+        任何一份缺，工程师就要自己补——补的版本一定不一样。
+      </div>
+      <div class="counter">
+        已查看 <strong id="viewedCount">1</strong> / 5 张图
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Section 03: 幕二 · 拆开 -->
+<section id="break">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <span class="act-tag break">幕二 · 拆开</span>
+        <div class="section-num"><strong>03</strong> / 拆开</div>
+        <h2 class="section-title"><span class="purple">4 张图</span>，<br>每张的画法。</h2>
+      </div>
+      <p class="section-sub">
+        每张图都有自己的"最小要素"。会画这 4 张 = <strong>你不只是设计师，是架构师</strong>。
+        点卡片展开看每张图的画法 + 缺这张时工程师怎么搞。
+      </p>
+    </div>
+
+    <div class="four-cards" id="fourCards">
+      <div class="fc-card" data-fc="obj">
+        <span class="fc-num">1</span>
+        <div class="fc-head">
+          <h3 class="fc-title">对象图</h3>
+          <span class="fc-en">Object Model</span>
+        </div>
+        <p class="fc-sub">数据维度——这个系统有哪些对象、谁引用谁、谁是 1:N。</p>
+        <div class="fc-row">
+          <div class="fc-row-k">最小要素</div>
+          <div class="fc-row-v">节点（对象名）+ 边（cardinality）+ 字段（核心 5–10 个）</div>
+        </div>
+        <div class="fc-row">
+          <div class="fc-row-k">工具</div>
+          <div class="fc-row-v"><code>SVG</code> · <code>Mermaid</code> · <code>dbdiagram.io</code> · <code>Whimsical</code></div>
+        </div>
+        <div class="fc-row">
+          <div class="fc-row-k">用途</div>
+          <div class="fc-row-v">工程师拿来直接落 <strong>DB schema</strong> · 后端建表 · 写接口</div>
+        </div>
+        <div class="fc-toggle" data-fc-toggle="obj">展开看缺它时怎么搞 <span class="arr">→</span></div>
+        <div class="fc-detail">
+          <div class="fc-warn">
+            <strong>如果缺这张：</strong>后端自己看稿瞎猜——"详情页上写了'合同 (2)'，所以合同应该是 customer 的子表？还是另存？联系人和合同共用一个表吗？"<br>
+            <strong>结果：</strong>DB schema 改 3 版才稳定，前期写的接口全得重写。
+          </div>
+        </div>
+      </div>
+
+      <div class="fc-card" data-fc="flow">
+        <span class="fc-num">2</span>
+        <div class="fc-head">
+          <h3 class="fc-title">任务流</h3>
+          <span class="fc-en">Task Flow</span>
+        </div>
+        <p class="fc-sub">行为维度——用户要做的几件事，每件事的步骤 / 分支 / 异常。</p>
+        <div class="fc-row">
+          <div class="fc-row-k">最小要素</div>
+          <div class="fc-row-v">步骤 + 用户/系统行动 + 分支 + 异常 + 状态迁移注解</div>
+        </div>
+        <div class="fc-row">
+          <div class="fc-row-k">工具</div>
+          <div class="fc-row-v"><code>Figma</code> · <code>Whimsical</code> · <code>Mermaid</code> · <code>FigJam</code></div>
+        </div>
+        <div class="fc-row">
+          <div class="fc-row-k">用途</div>
+          <div class="fc-row-v">工程师拿来设计<strong>路由</strong>+ 写测试 + 产品讨论 · QA 拿来写用例</div>
+        </div>
+        <div class="fc-toggle" data-fc-toggle="flow">展开看缺它时怎么搞 <span class="arr">→</span></div>
+        <div class="fc-detail">
+          <div class="fc-warn">
+            <strong>如果缺这张：</strong>前端只能看稿上有几个按钮反推路径——"转分配"按钮后面接什么？需要确认弹窗吗？接收方接受前 owner 字段是不是已经变了？<br>
+            <strong>结果：</strong>关键路径漏分支、漏异常态，上线后才发现一堆 corner case，回炉。
+          </div>
+        </div>
+      </div>
+
+      <div class="fc-card" data-fc="state">
+        <span class="fc-num">3</span>
+        <div class="fc-head">
+          <h3 class="fc-title">状态机</h3>
+          <span class="fc-en">State Machine</span>
+        </div>
+        <p class="fc-sub">时间维度——对象有几个状态、什么 trigger 让它跳转。</p>
+        <div class="fc-row">
+          <div class="fc-row-k">最小要素</div>
+          <div class="fc-row-v">状态节点 + 边 + 触发条件 + 副作用（写入 / 通知 / UI 变）</div>
+        </div>
+        <div class="fc-row">
+          <div class="fc-row-k">工具</div>
+          <div class="fc-row-v"><code>XState</code> · <code>Mermaid</code> · 手画拍照（足够好）</div>
+        </div>
+        <div class="fc-row">
+          <div class="fc-row-k">用途</div>
+          <div class="fc-row-v">工程师拿来写 <strong>enum</strong> + transition logic + UI 显隐规则</div>
+        </div>
+        <div class="fc-toggle" data-fc-toggle="state">展开看缺它时怎么搞 <span class="arr">→</span></div>
+        <div class="fc-detail">
+          <div class="fc-warn">
+            <strong>如果缺这张：</strong>前端定义 enum 时凭感觉——dormant 是不是和 inactive 一回事？lost 之后还能不能重新激活？标签颜色用什么？<br>
+            <strong>结果：</strong>不同模块对同一状态名理解不一致，列表筛选、详情页徽章、邮件通知里的状态都对不上。
+          </div>
+        </div>
+      </div>
+
+      <div class="fc-card" data-fc="tree">
+        <span class="fc-num">4</span>
+        <div class="fc-head">
+          <h3 class="fc-title">组件树</h3>
+          <span class="fc-en">Component Tree</span>
+        </div>
+        <p class="fc-sub">代码结构维度——稿上每一块对应哪个组件、嵌套层级、数据流方向。</p>
+        <div class="fc-row">
+          <div class="fc-row-k">最小要素</div>
+          <div class="fc-row-v">节点（组件名）+ 嵌套关系 + 数据/事件流箭头</div>
+        </div>
+        <div class="fc-row">
+          <div class="fc-row-k">工具</div>
+          <div class="fc-row-v">手画 · <code>Figma frame</code> · <code>Storybook hierarchy</code></div>
+        </div>
+        <div class="fc-row">
+          <div class="fc-row-k">用途</div>
+          <div class="fc-row-v">工程师拿来定<strong>文件结构</strong>+ props 接口 + state 归属</div>
+        </div>
+        <div class="fc-toggle" data-fc-toggle="tree">展开看缺它时怎么搞 <span class="arr">→</span></div>
+        <div class="fc-detail">
+          <div class="fc-warn">
+            <strong>如果缺这张：</strong>前端自己拆——是把 ActionBar 放在 Header 里还是和 Card 平级？state 放在 CustomerDetail 还是 Tabs 内？<br>
+            <strong>结果：</strong>state 放错层级 → 切 tab 数据清空、转分配后页面不刷新、组件复用率为 0，2 周后整个详情页要重构。
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="reveal-bar" style="margin-top:32px">
+      <div class="msg">
+        4 张图 = <span class="em">4 份独立合同</span>。<br>
+        任何一份能<strong>脱离设计稿被工程师读懂</strong>——这才是"架构图"的标准。
+      </div>
+      <div class="counter">点卡片展开看反例</div>
+    </div>
+  </div>
+</section>
+
+<!-- Section 04: 幕三 · 再做 -->
+<section id="make">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <span class="act-tag make">幕三 · 再做</span>
+        <div class="section-num"><strong>04</strong> / 再做</div>
+        <h2 class="section-title">轮到你——<br>给 <span class="em">张明详情页</span><br>填 4 张图。</h2>
+      </div>
+      <p class="section-sub">
+        4 张图都给了<strong>骨架 + 选项池</strong>。你来连。
+        每个 builder 独立 submit · 全对 → "你的交付已经是工程级 spec 了"。
+      </p>
+    </div>
+
+    <div class="builders-grid">
+
+      <!-- Builder A: Object diagram -->
+      <div class="mini-builder" data-builder="A">
+        <div class="mini-builder-head">
+          <h4 class="mini-builder-title">A · 对象图</h4>
+          <span class="mini-builder-tag">Customer 邻居 · 4 槽位</span>
+        </div>
+        <p class="mini-builder-sub">中央 <strong>Customer</strong> 固定。从池里选 4 个邻居 + 标 cardinality。Project 是干扰项。</p>
+        <div class="mini-pool" id="poolA">
+          <span class="mini-pool-title">对象池 · 6 个（含 1 个干扰）</span>
+          <span class="mini-chip" data-pool="A" data-id="Opportunity">Opportunity</span>
+          <span class="mini-chip" data-pool="A" data-id="Contact">Contact</span>
+          <span class="mini-chip" data-pool="A" data-id="Activity">Activity</span>
+          <span class="mini-chip" data-pool="A" data-id="Contract">Contract</span>
+          <span class="mini-chip" data-pool="A" data-id="Note">Note</span>
+          <span class="mini-chip" data-pool="A" data-id="Project">Project</span>
+        </div>
+        <div class="b-obj-canvas" id="objCanvas">
+          <div class="b-obj-center">Customer<span class="small">(center)</span></div>
+          <svg class="b-obj-svg" viewBox="0 0 100 100" preserveAspectRatio="none">
+            <line x1="50" y1="50" x2="14" y2="20" stroke="#d5cdba" stroke-dasharray="3 2" stroke-width="0.4" />
+            <line x1="50" y1="50" x2="86" y2="20" stroke="#d5cdba" stroke-dasharray="3 2" stroke-width="0.4" />
+            <line x1="50" y1="50" x2="14" y2="80" stroke="#d5cdba" stroke-dasharray="3 2" stroke-width="0.4" />
+            <line x1="50" y1="50" x2="86" y2="80" stroke="#d5cdba" stroke-dasharray="3 2" stroke-width="0.4" />
+          </svg>
+          <div class="b-obj-slot" data-bslot="A-NW" style="top:14%;left:6%">空<span class="card">点 cardinality</span></div>
+          <div class="b-obj-slot" data-bslot="A-NE" style="top:14%;right:6%">空<span class="card">点 cardinality</span></div>
+          <div class="b-obj-slot" data-bslot="A-SW" style="bottom:14%;left:6%">空<span class="card">点 cardinality</span></div>
+          <div class="b-obj-slot" data-bslot="A-SE" style="bottom:14%;right:6%">空<span class="card">点 cardinality</span></div>
+          <div class="b-obj-card-picker" id="objPicker">
+            <div class="pck-label">Cardinality</div>
+            <div class="pck-row">
+              <button data-card="1:1">1:1</button>
+              <button data-card="1:N">1:N</button>
+              <button data-card="M:N">M:N</button>
+              <button data-card="X">清除</button>
+            </div>
+          </div>
+        </div>
+        <div class="mini-actions">
+          <button class="mini-btn primary" data-submit="A">提交打分</button>
+          <button class="mini-btn" data-reset="A">清空</button>
+        </div>
+        <div class="mini-judge" id="judgeA"></div>
+      </div>
+
+      <!-- Builder B: Task flow -->
+      <div class="mini-builder" data-builder="B">
+        <div class="mini-builder-head">
+          <h4 class="mini-builder-title">B · 任务流</h4>
+          <span class="mini-builder-tag">"转分配客户" · 5 步</span>
+        </div>
+        <p class="mini-builder-sub">5 个步骤的占位，从行动池选填进去。顺序也算分。"主管审批 / cancel" 是干扰项。</p>
+        <div class="mini-pool" id="poolB">
+          <span class="mini-pool-title">行动池 · 7 个（含 2 个干扰）</span>
+          <span class="mini-chip" data-pool="B" data-id="原 owner 触发">原 owner 触发</span>
+          <span class="mini-chip" data-pool="B" data-id="新 owner 触发">新 owner 触发</span>
+          <span class="mini-chip" data-pool="B" data-id="系统检查负载">系统检查负载</span>
+          <span class="mini-chip" data-pool="B" data-id="提交">提交</span>
+          <span class="mini-chip" data-pool="B" data-id="新 owner 接受">新 owner 接受</span>
+          <span class="mini-chip" data-pool="B" data-id="通知双方+主管">通知双方+主管</span>
+          <span class="mini-chip" data-pool="B" data-id="主管审批">主管审批</span>
+          <span class="mini-chip" data-pool="B" data-id="cancel">cancel</span>
+        </div>
+        <div class="b-flow-slots" id="flowSlots">
+          <div class="b-flow-slot" data-bslot="B-1"><div class="b-flow-slot-num">1</div><div class="b-flow-slot-name">启动 · 等待行动</div><button class="b-flow-slot-clear" data-bclear="B-1">✕</button></div>
+          <div class="b-flow-slot" data-bslot="B-2"><div class="b-flow-slot-num">2</div><div class="b-flow-slot-name">系统检查 · 等待行动</div><button class="b-flow-slot-clear" data-bclear="B-2">✕</button></div>
+          <div class="b-flow-slot" data-bslot="B-3"><div class="b-flow-slot-num">3</div><div class="b-flow-slot-name">提交 · 等待行动</div><button class="b-flow-slot-clear" data-bclear="B-3">✕</button></div>
+          <div class="b-flow-slot" data-bslot="B-4"><div class="b-flow-slot-num">4</div><div class="b-flow-slot-name">接收方接受 · 等待行动</div><button class="b-flow-slot-clear" data-bclear="B-4">✕</button></div>
+          <div class="b-flow-slot" data-bslot="B-5"><div class="b-flow-slot-num">5</div><div class="b-flow-slot-name">完成 · 等待行动</div><button class="b-flow-slot-clear" data-bclear="B-5">✕</button></div>
+        </div>
+        <div class="mini-actions">
+          <button class="mini-btn primary" data-submit="B">提交打分</button>
+          <button class="mini-btn" data-reset="B">清空</button>
+        </div>
+        <div class="mini-judge" id="judgeB"></div>
+      </div>
+
+      <!-- Builder C: State machine -->
+      <div class="mini-builder" data-builder="C">
+        <div class="mini-builder-head">
+          <h4 class="mini-builder-title">C · 状态机</h4>
+          <span class="mini-builder-tag">Customer · 5 条边</span>
+        </div>
+        <p class="mini-builder-sub">5 个状态固定，5 条边等你贴 trigger。两个干扰项："90 天无互动" 别贴到错的边上。</p>
+        <div class="mini-pool" id="poolC">
+          <span class="mini-pool-title">Trigger 池 · 7 个</span>
+          <span class="mini-chip" data-pool="C" data-id="首次拨打">首次拨打</span>
+          <span class="mini-chip" data-pool="C" data-id="签约">签约</span>
+          <span class="mini-chip" data-pool="C" data-id="30 天无互动">30 天无互动</span>
+          <span class="mini-chip" data-pool="C" data-id="90 天无互动">90 天无互动</span>
+          <span class="mini-chip" data-pool="C" data-id="新互动">新互动</span>
+          <span class="mini-chip" data-pool="C" data-id="用户主动归档">用户主动归档</span>
+          <span class="mini-chip" data-pool="C" data-id="自动重新激活">自动重新激活</span>
+        </div>
+        <div class="b-state-canvas" id="stateCanvas">
+          <svg class="b-state-svg" viewBox="0 0 100 100" preserveAspectRatio="none">
+            <line x1="10" y1="50" x2="30" y2="50" stroke="#8a8a92" stroke-width="0.4" />
+            <line x1="42" y1="50" x2="58" y2="50" stroke="#8a8a92" stroke-width="0.4" />
+            <line x1="70" y1="50" x2="85" y2="50" stroke="#8a8a92" stroke-width="0.4" />
+            <line x1="88" y1="58" x2="62" y2="86" stroke="#8a8a92" stroke-width="0.4" />
+            <line x1="80" y1="58" x2="68" y2="72" stroke="#8a8a92" stroke-width="0.4" stroke-dasharray="2 2" />
+          </svg>
+          <div class="b-state-node" style="top:42%;left:1%">lead</div>
+          <div class="b-state-node" style="top:42%;left:30%">prospect</div>
+          <div class="b-state-node" style="top:42%;left:58%">active</div>
+          <div class="b-state-node" style="top:42%;right:1%">dormant</div>
+          <div class="b-state-node" style="bottom:6%;left:54%">lost</div>
+
+          <div class="b-state-edge-label" data-bslot="C-e1" style="top:22%;left:15%">边 1</div>
+          <div class="b-state-edge-label" data-bslot="C-e2" style="top:22%;left:43%">边 2</div>
+          <div class="b-state-edge-label" data-bslot="C-e3" style="top:22%;left:72%">边 3</div>
+          <div class="b-state-edge-label" data-bslot="C-e4" style="bottom:18%;left:73%">边 4</div>
+          <div class="b-state-edge-label" data-bslot="C-e5" style="top:62%;left:67%">边 5</div>
+        </div>
+        <div style="font-size:10px;color:var(--ink-mute);margin-top:6px;font-family:'JetBrains Mono',monospace;line-height:1.6">
+          边 1 = lead→prospect · 边 2 = prospect→active · 边 3 = active→dormant<br>
+          边 4 = dormant→lost · 边 5 = dormant→active (重激活)
+        </div>
+        <div class="mini-actions">
+          <button class="mini-btn primary" data-submit="C">提交打分</button>
+          <button class="mini-btn" data-reset="C">清空</button>
+        </div>
+        <div class="mini-judge" id="judgeC"></div>
+      </div>
+
+      <!-- Builder D: Component tree -->
+      <div class="mini-builder" data-builder="D">
+        <div class="mini-builder-head">
+          <h4 class="mini-builder-title">D · 组件树</h4>
+          <span class="mini-builder-tag">CustomerDetail · 8 槽位</span>
+        </div>
+        <p class="mini-builder-sub">CustomerDetail 固定。把 8 个槽位填上。"EmptyState / Toolbar" 是干扰项——不该出现在这层。</p>
+        <div class="mini-pool" id="poolD">
+          <span class="mini-pool-title">组件池 · 10 个（含 2 个干扰）</span>
+          <span class="mini-chip" data-pool="D" data-id="Header">Header</span>
+          <span class="mini-chip" data-pool="D" data-id="Breadcrumb">Breadcrumb</span>
+          <span class="mini-chip" data-pool="D" data-id="ActionBar">ActionBar</span>
+          <span class="mini-chip" data-pool="D" data-id="Body">Body</span>
+          <span class="mini-chip" data-pool="D" data-id="CustomerCard">CustomerCard</span>
+          <span class="mini-chip" data-pool="D" data-id="Tabs">Tabs</span>
+          <span class="mini-chip" data-pool="D" data-id="OverviewTab">OverviewTab</span>
+          <span class="mini-chip" data-pool="D" data-id="OppTab">OppTab</span>
+          <span class="mini-chip" data-pool="D" data-id="Sidebar">Sidebar</span>
+          <span class="mini-chip" data-pool="D" data-id="EmptyState">EmptyState</span>
+          <span class="mini-chip" data-pool="D" data-id="Toolbar">Toolbar</span>
+        </div>
+        <div class="b-tree-canvas" id="treeCanvas">
+          <div class="b-tree-line"><span class="b-tree-slot is-fixed">&lt;CustomerDetail&gt;</span></div>
+          <div class="b-tree-line"><span class="pad">├ </span><span class="b-tree-slot" data-bslot="D-1">空槽 1 (层 1)<button class="b-tree-slot-clear" data-bclear="D-1">✕</button></span></div>
+          <div class="b-tree-line"><span class="pad">│  ├ </span><span class="b-tree-slot" data-bslot="D-2">空槽 2 (层 2)<button class="b-tree-slot-clear" data-bclear="D-2">✕</button></span></div>
+          <div class="b-tree-line"><span class="pad">│  └ </span><span class="b-tree-slot" data-bslot="D-3">空槽 3 (层 2)<button class="b-tree-slot-clear" data-bclear="D-3">✕</button></span></div>
+          <div class="b-tree-line"><span class="pad">├ </span><span class="b-tree-slot" data-bslot="D-4">空槽 4 (层 1)<button class="b-tree-slot-clear" data-bclear="D-4">✕</button></span></div>
+          <div class="b-tree-line"><span class="pad">│  ├ </span><span class="b-tree-slot" data-bslot="D-5">空槽 5 (层 2)<button class="b-tree-slot-clear" data-bclear="D-5">✕</button></span></div>
+          <div class="b-tree-line"><span class="pad">│  └ </span><span class="b-tree-slot" data-bslot="D-6">空槽 6 (层 2)<button class="b-tree-slot-clear" data-bclear="D-6">✕</button></span></div>
+          <div class="b-tree-line"><span class="pad">│     ├ </span><span class="b-tree-slot" data-bslot="D-7">空槽 7 (层 3)<button class="b-tree-slot-clear" data-bclear="D-7">✕</button></span></div>
+          <div class="b-tree-line"><span class="pad">│     └ </span><span class="b-tree-slot" data-bslot="D-8">空槽 8 (层 3)<button class="b-tree-slot-clear" data-bclear="D-8">✕</button></span></div>
+        </div>
+        <div class="mini-actions">
+          <button class="mini-btn primary" data-submit="D">提交打分</button>
+          <button class="mini-btn" data-reset="D">清空</button>
+        </div>
+        <div class="mini-judge" id="judgeD"></div>
+      </div>
+
+    </div>
+
+    <div class="rollup" id="rollup">
+      <div class="rollup-score"><span id="rollupHits">0</span><span class="total"> / 4</span></div>
+      <div class="rollup-msg" id="rollupMsg">
+        <p>4 个 builder 都<strong>独立 submit</strong>——每答对一题 +1 分。</p>
+        <p class="accent">4 / 4 满分 = 你的设计交付已经是<strong>工程级 spec</strong> 了。</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Section 05: closing -->
+<section id="closing">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-num"><strong>05</strong> / 把这件事变成习惯</div>
+        <h2 class="section-title">下次交付前，<br>先<span class="em">画 4 张图</span>。</h2>
+      </div>
+      <p class="section-sub">
+        画不出 = 设计还没想完。画出来 = 你已经在做架构师做的事。
+      </p>
+    </div>
+
+    <div class="tips-grid">
+      <div class="tip">
+        <div class="tip-num">i</div>
+        <h4>稿 + 4 张图 = 最终交付</h4>
+        <p>不要再发"Figma 链接 + 标注"——加上对象图、任务流、状态机、组件树。</p>
+        <p><strong>工程团队体感天差地别。</strong></p>
+      </div>
+      <div class="tip">
+        <div class="tip-num">ii</div>
+        <h4>工具不重要，画出来就行</h4>
+        <p>Mermaid 文本、Whimsical 拖拽、Figma frame、甚至手画拍照——<strong>只要工程师能读懂</strong>就够了。</p>
+        <p>不要为了画图本身陷进工具选择。</p>
+      </div>
+      <div class="tip">
+        <div class="tip-num">iii</div>
+        <h4>画的过程就是发现盲点</h4>
+        <p>画对象图发现少了一个关系；画状态机发现忘了"流失重激活"；画组件树发现 state 放错了层。</p>
+        <p><strong>画的过程，就是 review 的过程。</strong></p>
+      </div>
+    </div>
+
+    <div class="tip-outro">
+      <div class="outro-tag">划重点 · TL;DR</div>
+      <div>
+        <p>一张设计稿背后藏着 4 张架构图。设计师只画稿——工程师必须自己重画 4 张，每个工程师补的版本都不一样。</p>
+        <p>设计师如果<strong>直接画好 4 张 + 稿</strong>——工程师拿到当合同直接落。<span style="color:var(--accent)">这 4 张图就是设计师 → 架构师的实际产出。</span></p>
+        <p>下次设计交付前，<strong>先自己画 4 张图</strong>。画不出 = 设计还没想完。</p>
+      </div>
+    </div>
+
+    <a href="x22-case-spec.html" class="next-post">
+      <div>
+        <div class="np-tag">下一站 · NEXT · X22 · 案例 3/3</div>
+        <h4>最终交付：<span class="em">工程能接住</span>的设计说明</h4>
+        <p>4 张图画完——下一篇把它们 + 稿 + 验收清单组装成一份"工程能直接接住"的完整 spec 文档。从此交付的不是图，是合同。</p>
+      </div>
+      <span class="np-cta">继续 X22 <span class="arr">→</span></span>
+    </a>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div class="byline-group">
+      <div class="byline">
+        <img class="avatar" src="author.jpg" alt="范米花儿">
+        <div class="byline-meta">
+          <div class="byline-label"><span class="dot"></span>作者 · WRITTEN BY</div>
+          <div class="byline-name">嗨，我是 <span class="em">范米花儿</span></div>
+          <p class="byline-tag">设计工程师 ——<br>设计 × 代码，两边都做。</p>
+        </div>
+      </div>
+</div>
+    <div class="footer-meta">
+      做于 <span class="mono">2026</span> · 用 <span class="heart">●</span> 写给 <span class="mono">DESIGNERS &amp; DEVELOPERS</span>
+    </div>
+  </div>
+</footer>
+
+<div class="picker-label" id="pickerLabel"></div>
+
+<script>
+// ===== Game 1: tabs + diagram interactions =====
+(function(){
+  const tabs = document.querySelectorAll('.dtab');
+  const panes = document.querySelectorAll('.diagram-pane');
+  const viewedCount = document.getElementById('viewedCount');
+  const viewed = new Set(['screen']);
+
+  tabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+      const target = tab.dataset.pane;
+      tabs.forEach(t => t.classList.toggle('active', t === tab));
+      panes.forEach(p => p.classList.toggle('active', p.dataset.pane === target));
+      if (!viewed.has(target)) {
+        viewed.add(target);
+        viewedCount.textContent = viewed.size;
+      }
+    });
+  });
+
+  // Generic hover-tooltip helper for all 4 diagrams
+  function attachHoverTip(els, tipEl, getKey, lookup, hlSelector) {
+    function show(e, el) {
+      const key = getKey(el);
+      const c = lookup[key];
+      if (!c) return;
+      const label = typeof c === 'string' ? '' : c.label;
+      const text = typeof c === 'string' ? c : c.text;
+      tipEl.innerHTML = label ? `<strong>${label}</strong>${text}` : text;
+      const rect = tipEl.parentElement.getBoundingClientRect();
+      tipEl.style.left = Math.min(e.clientX - rect.left + 12, rect.width - 280) + 'px';
+      tipEl.style.top = Math.max(e.clientY - rect.top - 60, 10) + 'px';
+      tipEl.classList.add('show');
+      if (hlSelector) {
+        document.querySelectorAll(hlSelector).forEach(o => { if (getKey(o) === key) o.classList.add('hl'); });
+      } else {
+        el.classList.add('hl');
+      }
+    }
+    function hide(el) {
+      tipEl.classList.remove('show');
+      if (hlSelector) document.querySelectorAll(hlSelector + '.hl').forEach(o => o.classList.remove('hl'));
+      else el.classList.remove('hl');
+    }
+    els.forEach(el => {
+      el.addEventListener('mouseenter', e => show(e, el));
+      el.addEventListener('mousemove', e => show(e, el));
+      el.addEventListener('mouseleave', () => hide(el));
+    });
+  }
+
+  // ----- Object diagram -----
+  const objSvg = document.getElementById('objSvg');
+  if (objSvg) {
+    const objTips = {
+      'opp': { label: 'Customer → Opportunity', text: '1 个客户对应多个商机。稿上：详情页"商机 (3)" tab + 头部"合作金额"。' },
+      'contact': { label: 'Customer ↔ Contact', text: '多对多——一个客户多个联系人，一个联系人可能挂在多个公司。稿上：联系人 tab。' },
+      'activity': { label: 'Customer → Activity', text: '1 个客户对应多个活动记录。稿上：活动 tab + 头部"最近联系 3 天前"。' },
+      'contract': { label: 'Customer → Contract', text: '1 个客户对应多个合同。稿上：合同 tab + 头部"已签约"徽章。' },
+      'note': { label: 'Customer → Note', text: '1 个客户对应多个笔记。稿上：侧栏"下一步"区域。' },
+      'customer': { label: 'Customer · 主对象', text: '稿子里头部那张大卡 + 整个页面的所有数据都挂在它上面。' }
+    };
+    attachHoverTip(objSvg.querySelectorAll('.edge, .edge-label, .node-rect'),
+      document.getElementById('objTip'),
+      el => el.dataset.edge || el.dataset.edgeLabel || el.dataset.node,
+      objTips,
+      '#objSvg .edge, #objSvg .edge-label, #objSvg .node-rect');
+  }
+
+  // ----- Flow steps -----
+  const flowMap = {
+    'create-1': '稿上：列表页右上角的 "+ 新建" 按钮',
+    'create-2': '稿上：弹出表单 modal · 必填字段 name / company / phone',
+    'create-3': '后端逻辑 · 不在稿上 · 但工程师必须知道这个分支存在',
+    'create-4': '稿上：跳转到详情页 · 头部徽章显示 "lead"',
+    'addc-1': '稿上：详情页 "联系人 (5)" tab 右上 + 按钮',
+    'addc-2': '稿上：右侧 drawer 滑出 · 联系人卡表单',
+    'addc-3': '稿上：表单底部 "设为主要" toggle',
+    'addc-4': '稿上：drawer 关闭 · 列表行 +1',
+    'reas-1': '稿上：详情页头部 "转分配" 按钮',
+    'reas-2': '系统行为 · 不在稿上 · 但工程师必须实现负载检查',
+    'reas-3': '稿上：转分配弹窗 "提交" 按钮 · status 变为 pending',
+    'reas-4': '稿上 · 在另一个用户视角 · 通知中心 + 接受按钮',
+    'reas-5': '稿上：通知 + owner 字段刷新',
+    'lost-1': '稿上：详情页头部 "更多" 菜单下 "标记流失"',
+    'lost-2': '稿上：流失原因弹窗 · 6 个 radio',
+    'lost-3': '业务规则 · 不在稿上 · 但工程师必须处理',
+    'lost-4': '稿上：详情页变只读 · 头部徽章 "已流失"'
+  };
+  attachHoverTip(document.querySelectorAll('[data-step]'),
+    document.getElementById('flowTip'),
+    el => el.dataset.step,
+    Object.fromEntries(Object.entries(flowMap).map(([k, v]) => [k, { label: '步骤', text: v }])),
+    null);
+
+  // ----- State machine -----
+  const stateSvg = document.getElementById('stateSvg');
+  if (stateSvg) {
+    const stateTips = {
+      'lead-prospect': { label: 'trigger: 首次拨打', text: '副作用：写入 first_contact_at · 通知 owner · 详情页徽章变蓝。' },
+      'prospect-active': { label: 'trigger: 签约', text: '副作用：创建 Contract 对象 · 写入 first_contract_at · 徽章变绿。' },
+      'active-dormant': { label: 'trigger: 30 天无互动 (cron)', text: '副作用：每天扫描 last_contact · 自动迁移 · 不通知 owner。' },
+      'dormant-lost': { label: 'trigger: 90 天无互动 / 主动归档', text: '副作用：变只读 · 不出现在仪表盘 · 列表默认筛选过滤掉。' },
+      'dormant-active': { label: 'trigger: 新互动 (重激活)', text: '副作用：自动回 active · 通知 owner · 邮件总结 dormant 期发生的事。' },
+      'lead': { label: 'lead', text: '新建状态 · 还没拨过电话 · 浅灰徽章 · 不计入活跃统计。' },
+      'prospect': { label: 'prospect', text: '已联系但还没签约 · 详情页头部 "潜在客户"。' },
+      'active': { label: 'active', text: '已签约 · 健康度计算只针对这个状态。' },
+      'dormant': { label: 'dormant', text: '休眠 · 还可以重激活 · 仪表盘不显示。' },
+      'lost': { label: 'lost', text: '终态 · 详情页变只读 · 头部按钮全部禁用。' }
+    };
+    attachHoverTip(stateSvg.querySelectorAll('.edge, .edge-label, .node-rect'),
+      document.getElementById('stateTip'),
+      el => el.dataset.sedge || el.dataset.sedgeLabel || el.dataset.snode,
+      stateTips,
+      '#stateSvg .edge, #stateSvg .edge-label, #stateSvg .node-rect');
+  }
+
+  // ----- Component tree -----
+  const treeMap = {
+    'root': { label: '根组件', text: '接收 customerId · 内部 fetch 整个 customer 对象 · state 归属在这里。' },
+    'header': { label: 'Header', text: '顶部条 · 仅布局组件 · 无 state。' },
+    'breadcrumb': { label: 'Breadcrumb', text: '面包屑 · 接收 path 数组 · 稿上是 "CRM / 客户 / 张明"。' },
+    'actionbar': { label: 'ActionBar', text: '操作按钮组 · 接收 customer · 发射 onAction 事件给 root。' },
+    'btn-edit': { label: 'Button', text: '稿上："编辑" 按钮。' },
+    'btn-reassign': { label: 'Button', text: '稿上："转分配" 按钮。' },
+    'btn-new': { label: 'Button', text: '稿上："+ 新跟进" 主按钮。' },
+    'body': { label: 'Body', text: '主体两列布局 · 仅 layout · 无 state。' },
+    'card': { label: 'CustomerCard', text: '稿上：头部那张大卡 (Avatar + Name + 字段网格)。' },
+    'card-head': { label: 'Card head', text: 'Avatar + Name + Tags 子区域。' },
+    'card-grid': { label: 'FieldGrid', text: '字段网格 · 跟进人 / 最近联系 / 合作金额 / 阶段。' },
+    'tabs': { label: 'Tabs', text: '稿上：概览 / 商机 / 联系人 / 活动 / 合同 · 发射 onTabChange。' },
+    'overview': { label: 'OverviewTab', text: '默认展示 · 接收 customer · 渲染 4 行 list。' },
+    'opps': { label: 'OppTab', text: '商机列表 · 单独 fetch opportunities。' },
+    'contacts': { label: 'ContactTab', text: '联系人列表 · 单独 fetch contacts。' },
+    'activities': { label: 'ActivityTab', text: '活动时间线 · 单独 fetch activities。' },
+    'contracts': { label: 'ContractTab', text: '合同列表 · 单独 fetch contracts。' },
+    'sidebar': { label: 'Sidebar', text: '右侧边栏 · layout 组件。' },
+    'health': { label: 'HealthScore', text: '稿上：健康度卡 (82 + 比上月 +6)。' },
+    'next': { label: 'NextStep', text: '稿上：下一步卡 (本周内安排…)。' }
+  };
+  attachHoverTip(document.querySelectorAll('[data-tnode]'),
+    document.getElementById('treeTip'),
+    el => el.dataset.tnode,
+    treeMap,
+    null);
+})();
+
+// ===== Game 2: 4 expandable cards =====
+(function(){
+  const cards = document.querySelectorAll('.fc-card');
+  cards.forEach(card => {
+    card.addEventListener('click', e => {
+      if (e.target.closest('.fc-toggle')) {
+        card.classList.toggle('expanded');
+        return;
+      }
+      card.classList.toggle('expanded');
+    });
+  });
+})();
+
+// ===== Game 3: 4 mini builders =====
+(function(){
+  const state = {
+    A: { 'A-NW': null, 'A-NE': null, 'A-SW': null, 'A-SE': null },
+    B: { 'B-1': null, 'B-2': null, 'B-3': null, 'B-4': null, 'B-5': null },
+    C: { 'C-e1': null, 'C-e2': null, 'C-e3': null, 'C-e4': null, 'C-e5': null },
+    D: { 'D-1': null, 'D-2': null, 'D-3': null, 'D-4': null, 'D-5': null, 'D-6': null, 'D-7': null, 'D-8': null }
+  };
+  // For builder A, also track cardinality on each slot
+  const cardA = { 'A-NW': null, 'A-NE': null, 'A-SW': null, 'A-SE': null };
+
+  const submittedCorrect = { A: false, B: false, C: false, D: false };
+
+  let picked = null; // { pool, id, label }
+  const pickerLabel = document.getElementById('pickerLabel');
+
+  // pool chip click
+  document.querySelectorAll('.mini-chip').forEach(chip => {
+    chip.addEventListener('click', e => {
+      e.stopPropagation();
+      const pool = chip.dataset.pool;
+      const id = chip.dataset.id;
+      if (chip.classList.contains('is-used')) return;
+      if (picked && picked.pool === pool && picked.id === id) {
+        clearPicker();
+      } else {
+        showPicker({ pool, id, label: chip.textContent.trim() });
+      }
+    });
+  });
+
+  function showPicker(p) {
+    picked = p;
+    pickerLabel.innerHTML = `已选 <strong style="color:var(--accent);margin:0 4px">${p.label}</strong> (Builder ${p.pool}) — 点对应槽位 <span class="esc">Esc</span> 取消`;
+    pickerLabel.classList.add('show');
+    document.querySelectorAll('.mini-chip').forEach(c => {
+      c.classList.toggle('is-active', c.dataset.pool === p.pool && c.dataset.id === p.id);
+    });
+    // highlight targets for that builder
+    if (p.pool === 'A') {
+      document.querySelectorAll('[data-bslot^="A-"]').forEach(s => {
+        if (!s.classList.contains('is-filled')) s.classList.add('is-target');
+      });
+    } else if (p.pool === 'B') {
+      document.querySelectorAll('[data-bslot^="B-"]').forEach(s => s.classList.add('is-target'));
+    } else if (p.pool === 'C') {
+      document.querySelectorAll('[data-bslot^="C-"]').forEach(s => s.classList.add('is-target'));
+    } else if (p.pool === 'D') {
+      document.querySelectorAll('[data-bslot^="D-"]').forEach(s => s.classList.add('is-target'));
+    }
+  }
+
+  function clearPicker() {
+    picked = null;
+    pickerLabel.classList.remove('show');
+    document.querySelectorAll('.mini-chip').forEach(c => c.classList.remove('is-active'));
+    document.querySelectorAll('.is-target').forEach(t => t.classList.remove('is-target'));
+  }
+
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape' && picked) clearPicker();
+  });
+
+  // ----- Builder A: slot click handling + cardinality picker -----
+  const objPicker = document.getElementById('objPicker');
+  let pickerForSlot = null;
+
+  document.querySelectorAll('[data-bslot^="A-"]').forEach(slot => {
+    slot.addEventListener('click', e => {
+      e.stopPropagation();
+      const key = slot.dataset.bslot;
+      if (picked && picked.pool === 'A') {
+        // Fill slot with object name
+        state.A[key] = { obj: picked.id, card: cardA[key] };
+        renderSlotA(key);
+        markChipUsed('A');
+        clearPicker();
+      } else if (state.A[key]) {
+        // open cardinality picker
+        pickerForSlot = key;
+        const rect = slot.getBoundingClientRect();
+        const parentRect = slot.closest('.b-obj-canvas').getBoundingClientRect();
+        objPicker.style.left = (rect.left - parentRect.left) + 'px';
+        objPicker.style.top = (rect.bottom - parentRect.top + 4) + 'px';
+        objPicker.classList.add('show');
+      }
+    });
+  });
+
+  objPicker.querySelectorAll('button').forEach(btn => {
+    btn.addEventListener('click', e => {
+      e.stopPropagation();
+      if (!pickerForSlot) return;
+      const card = btn.dataset.card;
+      if (card === 'X') {
+        // clear slot
+        state.A[pickerForSlot] = null;
+        cardA[pickerForSlot] = null;
+      } else {
+        cardA[pickerForSlot] = card;
+        if (state.A[pickerForSlot]) state.A[pickerForSlot].card = card;
+      }
+      renderSlotA(pickerForSlot);
+      markChipUsed('A');
+      objPicker.classList.remove('show');
+      pickerForSlot = null;
+    });
+  });
+
+  document.addEventListener('click', e => {
+    if (!e.target.closest('.b-obj-card-picker') && !e.target.closest('[data-bslot^="A-"]')) {
+      objPicker.classList.remove('show');
+      pickerForSlot = null;
+    }
+  });
+
+  function renderSlotA(key) {
+    const slot = document.querySelector(`[data-bslot="${key}"]`);
+    const v = state.A[key];
+    if (v && v.obj) {
+      slot.classList.add('is-filled');
+      slot.innerHTML = `${v.obj}<span class="card">${v.card || '点设 cardinality'}</span>`;
+    } else {
+      slot.classList.remove('is-filled');
+      slot.innerHTML = `空<span class="card">点 cardinality</span>`;
+    }
+  }
+
+  // ----- Builder B: 5 ordered slot click handling -----
+  document.querySelectorAll('[data-bslot^="B-"]').forEach(slot => {
+    slot.addEventListener('click', e => {
+      if (e.target.closest('.b-flow-slot-clear')) return;
+      e.stopPropagation();
+      const key = slot.dataset.bslot;
+      if (picked && picked.pool === 'B') {
+        state.B[key] = picked.id;
+        renderSlotB(key);
+        markChipUsed('B');
+        clearPicker();
+      }
+    });
+  });
+  document.querySelectorAll('[data-bclear^="B-"]').forEach(btn => {
+    btn.addEventListener('click', e => {
+      e.stopPropagation();
+      const key = btn.dataset.bclear;
+      state.B[key] = null;
+      renderSlotB(key);
+      markChipUsed('B');
+    });
+  });
+  const flowLabels = {
+    'B-1': '启动 · 等待行动',
+    'B-2': '系统检查 · 等待行动',
+    'B-3': '提交 · 等待行动',
+    'B-4': '接收方接受 · 等待行动',
+    'B-5': '完成 · 等待行动'
+  };
+  function renderSlotB(key) {
+    const slot = document.querySelector(`[data-bslot="${key}"]`);
+    const v = state.B[key];
+    const nameEl = slot.querySelector('.b-flow-slot-name');
+    if (v) {
+      slot.classList.add('is-filled');
+      nameEl.textContent = v;
+    } else {
+      slot.classList.remove('is-filled');
+      nameEl.textContent = flowLabels[key];
+    }
+  }
+
+  // ----- Builder C: 5 state edges -----
+  document.querySelectorAll('[data-bslot^="C-"]').forEach(slot => {
+    slot.addEventListener('click', e => {
+      e.stopPropagation();
+      const key = slot.dataset.bslot;
+      if (picked && picked.pool === 'C') {
+        state.C[key] = picked.id;
+        renderSlotC(key);
+        markChipUsed('C');
+        clearPicker();
+      } else if (state.C[key]) {
+        state.C[key] = null;
+        renderSlotC(key);
+        markChipUsed('C');
+      }
+    });
+  });
+  const cLabels = { 'C-e1': '边 1', 'C-e2': '边 2', 'C-e3': '边 3', 'C-e4': '边 4', 'C-e5': '边 5' };
+  function renderSlotC(key) {
+    const slot = document.querySelector(`[data-bslot="${key}"]`);
+    const v = state.C[key];
+    if (v) {
+      slot.classList.add('is-filled');
+      slot.textContent = v;
+    } else {
+      slot.classList.remove('is-filled');
+      slot.textContent = cLabels[key];
+    }
+  }
+
+  // ----- Builder D: tree slots -----
+  document.querySelectorAll('[data-bslot^="D-"]').forEach(slot => {
+    slot.addEventListener('click', e => {
+      if (e.target.closest('.b-tree-slot-clear')) return;
+      e.stopPropagation();
+      const key = slot.dataset.bslot;
+      if (picked && picked.pool === 'D') {
+        state.D[key] = picked.id;
+        renderSlotD(key);
+        markChipUsed('D');
+        clearPicker();
+      }
+    });
+  });
+  document.querySelectorAll('[data-bclear^="D-"]').forEach(btn => {
+    btn.addEventListener('click', e => {
+      e.stopPropagation();
+      const key = btn.dataset.bclear;
+      state.D[key] = null;
+      renderSlotD(key);
+      markChipUsed('D');
+    });
+  });
+  const dLayer = { 'D-1': 1, 'D-2': 2, 'D-3': 2, 'D-4': 1, 'D-5': 2, 'D-6': 2, 'D-7': 3, 'D-8': 3 };
+  function renderSlotD(key) {
+    const slot = document.querySelector(`[data-bslot="${key}"]`);
+    const v = state.D[key];
+    if (v) {
+      slot.classList.add('is-filled');
+      slot.innerHTML = `&lt;${v}&gt;<button class="b-tree-slot-clear" data-bclear="${key}">✕</button>`;
+      slot.querySelector('.b-tree-slot-clear').addEventListener('click', e => {
+        e.stopPropagation();
+        state.D[key] = null;
+        renderSlotD(key);
+        markChipUsed('D');
+      });
+    } else {
+      slot.classList.remove('is-filled');
+      slot.innerHTML = `空槽 ${key.split('-')[1]} (层 ${dLayer[key]})<button class="b-tree-slot-clear" data-bclear="${key}">✕</button>`;
+    }
+  }
+
+  function markChipUsed(pool) {
+    const used = new Set(Object.values(state[pool]).map(v => pool === 'A' && v ? v.obj : v).filter(Boolean));
+    document.querySelectorAll(`.mini-chip[data-pool="${pool}"]`).forEach(c => {
+      c.classList.toggle('is-used', used.has(c.dataset.id));
+    });
+  }
+
+  // ----- Judging -----
+  const IDEAL_A = {
+    Opportunity: '1:N',
+    Contact: 'M:N',
+    Activity: '1:N',
+    Contract: '1:N'
+  };
+  const DISTRACT_A = ['Project', 'Note']; // Note also acceptable but per spec primary 4 are above
+  const EXPLAIN_A = {
+    Project: '"Project" 不是 CRM 的核心邻居——这是项目管理工具的概念，混入会污染数据模型。',
+    Note: 'Note 也是邻居，但本题取最核心的 4 个：Opportunity / Contact / Activity / Contract。'
+  };
+
+  const IDEAL_B = ['原 owner 触发', '系统检查负载', '提交', '新 owner 接受', '通知双方+主管'];
+  const EXPLAIN_B = {
+    '主管审批': '本流程没有"主管审批"环节——主管只在 step5 收到通知，不卡审批。',
+    'cancel': '"cancel" 是异常分支，不是正向 5 步的一员。'
+  };
+
+  const IDEAL_C = {
+    'C-e1': '首次拨打',
+    'C-e2': '签约',
+    'C-e3': '30 天无互动',
+    'C-e4': '90 天无互动',
+    'C-e5': '新互动'
+  };
+  // "用户主动归档" also valid on e4
+  const C_ALT_E4 = '用户主动归档';
+  // "自动重新激活" alternative for e5
+  const C_ALT_E5 = '自动重新激活';
+  const EXPLAIN_C = {
+    'C-e3': '30 天无互动是 active → dormant 的 trigger（节流）。90 天才会再退到 lost。',
+    'C-e4': '90 天无互动 或 用户主动归档 都可以让 dormant → lost。两个都正确。',
+    'C-e5': '新互动（包括手动重激活、自动重新激活）都触发 dormant → active。',
+    'C-e1': '首次拨打是 lead → prospect 的触发——这是 lead 进入"已联系"的标志。',
+    'C-e2': '签约是 prospect → active 的触发——客户开始真正合作。'
+  };
+
+  const IDEAL_D = {
+    'D-1': 'Header',
+    'D-2': 'Breadcrumb',
+    'D-3': 'ActionBar',
+    'D-4': 'Body',
+    'D-5': 'CustomerCard',
+    'D-6': 'Tabs',
+    'D-7': 'OverviewTab',
+    'D-8': 'OppTab'
+  };
+  const DISTRACT_D = ['EmptyState', 'Toolbar'];
+  const EXPLAIN_D = {
+    'D-1': 'Header 是 1 级——稿上的顶部条。',
+    'D-4': 'Body 是 1 级——和 Header / Sidebar 平级。',
+    'D-6': 'Tabs 是 2 级——在 Body 内 · Tabs 内再装多个 Tab。',
+    EmptyState: 'EmptyState 是单个 tab 内部空态时的占位，不是详情页骨架的一部分。',
+    Toolbar: 'Toolbar 通常是列表页才有的 UI，详情页没有这个区域。',
+    Sidebar: '稿子右侧有 Sidebar——8 个槽位的最优解里要包含它（注意：Sidebar 这一支不在示意框架，但工程师必须知道它存在）。'
+  };
+
+  function judgeA() {
+    const slots = state.A;
+    const filled = Object.values(slots).filter(v => v && v.obj);
+    const objs = filled.map(v => v.obj);
+    const dup = new Set(objs).size !== objs.length;
+    let hits = 0, misses = [], wrongCard = [], missing = [];
+    const ideal = Object.keys(IDEAL_A);
+    ideal.forEach(name => {
+      const found = filled.find(v => v.obj === name);
+      if (found) {
+        if (found.card === IDEAL_A[name]) hits++;
+        else wrongCard.push(`${name} 应该是 ${IDEAL_A[name]}（你填了 ${found.card || '空'}）`);
+      } else {
+        missing.push(name);
+      }
+    });
+    filled.forEach(v => {
+      if (DISTRACT_A.includes(v.obj)) misses.push(v.obj);
+    });
+    const lines = [];
+    if (filled.length === 0) {
+      lines.push('<li>还没填——4 个槽位都点一下试试。</li>');
+    } else {
+      if (hits === 4 && misses.length === 0 && wrongCard.length === 0 && !dup) {
+        lines.push('<li>✓ 4 个核心邻居 + cardinality 全对。</li>');
+      } else {
+        if (missing.length) lines.push(`<li>缺：<strong>${missing.join(' / ')}</strong></li>`);
+        if (wrongCard.length) wrongCard.forEach(w => lines.push(`<li>cardinality 错：${w}</li>`));
+        if (misses.length) {
+          misses.forEach(m => lines.push(`<li>多了：<strong>${m}</strong><br><span class="why">↳ ${EXPLAIN_A[m] || '不是核心邻居'}</span></li>`));
+        }
+        if (dup) lines.push('<li>有重复对象——同一个邻居不要填两次。</li>');
+      }
+    }
+    const correct = hits === 4 && misses.length === 0 && wrongCard.length === 0 && !dup;
+    return { correct, lines, hits, total: 4 };
+  }
+
+  function judgeB() {
+    const order = ['B-1','B-2','B-3','B-4','B-5'].map(k => state.B[k]);
+    if (order.every(v => v === null)) {
+      return { correct: false, lines: ['<li>还没填——5 步都试一下。</li>'], hits: 0, total: 5 };
+    }
+    let hits = 0;
+    const lines = [];
+    order.forEach((v, idx) => {
+      if (v === IDEAL_B[idx]) {
+        hits++;
+      } else if (v && IDEAL_B.includes(v)) {
+        lines.push(`<li>第 ${idx+1} 步顺序错：<strong>${v}</strong> 不在这里 · 正解是 <strong>${IDEAL_B[idx]}</strong></li>`);
+      } else if (v) {
+        lines.push(`<li>第 ${idx+1} 步：<strong>${v}</strong> 不属于正向流程<br><span class="why">↳ ${EXPLAIN_B[v] || '请重选'}</span></li>`);
+      } else {
+        lines.push(`<li>第 ${idx+1} 步：空 · 正解 <strong>${IDEAL_B[idx]}</strong></li>`);
+      }
+    });
+    if (hits === 5) {
+      return { correct: true, lines: [`<li>✓ 5 步顺序全对：${IDEAL_B.join(' → ')}</li>`], hits, total: 5 };
+    }
+    return { correct: false, lines, hits, total: 5 };
+  }
+
+  function judgeC() {
+    const slots = state.C;
+    if (Object.values(slots).every(v => v === null)) {
+      return { correct: false, lines: ['<li>还没贴——5 条边都试一下。</li>'], hits: 0, total: 5 };
+    }
+    let hits = 0;
+    const lines = [];
+    Object.keys(IDEAL_C).forEach(edge => {
+      const v = slots[edge];
+      const ideal = IDEAL_C[edge];
+      let ok = v === ideal;
+      // accept alternates
+      if (edge === 'C-e4' && v === C_ALT_E4) ok = true;
+      if (edge === 'C-e5' && v === C_ALT_E5) ok = true;
+      if (ok) {
+        hits++;
+      } else if (v) {
+        lines.push(`<li>${edge}（${cEdgeName(edge)}）错：<strong>${v}</strong><br><span class="why">↳ ${EXPLAIN_C[edge]}</span></li>`);
+      } else {
+        lines.push(`<li>${edge}（${cEdgeName(edge)}）：空 · 正解 <strong>${ideal}</strong></li>`);
+      }
+    });
+    if (hits === 5) {
+      return { correct: true, lines: ['<li>✓ 5 条 trigger 全对 · 包括 dormant→active 重激活边。</li>'], hits, total: 5 };
+    }
+    return { correct: false, lines, hits, total: 5 };
+  }
+
+  function cEdgeName(edge) {
+    return {
+      'C-e1': 'lead→prospect',
+      'C-e2': 'prospect→active',
+      'C-e3': 'active→dormant',
+      'C-e4': 'dormant→lost',
+      'C-e5': 'dormant→active'
+    }[edge];
+  }
+
+  function judgeD() {
+    const slots = state.D;
+    if (Object.values(slots).every(v => v === null)) {
+      return { correct: false, lines: ['<li>还没填——8 个槽位都点一下试试。</li>'], hits: 0, total: 8 };
+    }
+    let hits = 0;
+    const lines = [];
+    Object.keys(IDEAL_D).forEach(k => {
+      const v = slots[k];
+      if (v === IDEAL_D[k]) {
+        hits++;
+      } else if (v && DISTRACT_D.includes(v)) {
+        lines.push(`<li>${k}：填了 <strong>${v}</strong><br><span class="why">↳ ${EXPLAIN_D[v] || '不属于详情页骨架'}</span></li>`);
+      } else if (v) {
+        lines.push(`<li>${k}（层 ${dLayer[k]}）：<strong>${v}</strong> 嵌套错了——正解 <strong>${IDEAL_D[k]}</strong></li>`);
+      } else {
+        lines.push(`<li>${k}（层 ${dLayer[k]}）：空 · 正解 <strong>${IDEAL_D[k]}</strong></li>`);
+      }
+    });
+    if (hits === 8) {
+      return { correct: true, lines: ['<li>✓ 8 层嵌套全对 · 你已经掌握组件树的画法。</li>'], hits, total: 8 };
+    }
+    return { correct: false, lines, hits, total: 8 };
+  }
+
+  const judgers = { A: judgeA, B: judgeB, C: judgeC, D: judgeD };
+  const judgeHead = {
+    A: { good: '对象图 · 完美 — Customer 的 4 个邻居和 cardinality 都对。', bad: '对象图 — 再调一下，看 cardinality 和池里的干扰项。' },
+    B: { good: '任务流 · 完美 — 转分配的 5 步顺序全对。', bad: '任务流 — 步骤或顺序还有问题。' },
+    C: { good: '状态机 · 完美 — 5 条 trigger 包括重激活边都对。', bad: '状态机 — 边贴错了或漏了重激活。' },
+    D: { good: '组件树 · 完美 — 8 层嵌套都画对。', bad: '组件树 — 嵌套层级或干扰组件还要再调。' }
+  };
+
+  document.querySelectorAll('[data-submit]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const builder = btn.dataset.submit;
+      const result = judgers[builder]();
+      submittedCorrect[builder] = result.correct;
+      const j = document.getElementById('judge' + builder);
+      const head = result.correct ? judgeHead[builder].good : judgeHead[builder].bad;
+      j.innerHTML = `
+        <span class="verdict ${result.correct ? 'win' : 'partial'}">${result.correct ? '完美' : `命中 ${result.hits} / ${result.total}`}</span>
+        <h5>${head}</h5>
+        <ul>${result.lines.join('')}</ul>
+      `;
+      j.classList.add('show');
+      updateRollup();
+    });
+  });
+
+  document.querySelectorAll('[data-reset]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const builder = btn.dataset.reset;
+      Object.keys(state[builder]).forEach(k => { state[builder][k] = null; });
+      if (builder === 'A') Object.keys(cardA).forEach(k => { cardA[k] = null; });
+      // re-render slots
+      if (builder === 'A') Object.keys(state.A).forEach(renderSlotA);
+      if (builder === 'B') Object.keys(state.B).forEach(renderSlotB);
+      if (builder === 'C') Object.keys(state.C).forEach(renderSlotC);
+      if (builder === 'D') Object.keys(state.D).forEach(renderSlotD);
+      markChipUsed(builder);
+      submittedCorrect[builder] = false;
+      const j = document.getElementById('judge' + builder);
+      j.classList.remove('show');
+      updateRollup();
+      clearPicker();
+    });
+  });
+
+  function updateRollup() {
+    const hits = Object.values(submittedCorrect).filter(Boolean).length;
+    document.getElementById('rollupHits').textContent = hits;
+    const msg = document.getElementById('rollupMsg');
+    if (hits === 4) {
+      msg.innerHTML = `
+        <p>4 / 4 — <strong>你的设计交付已经是工程级 spec 了</strong>。</p>
+        <p class="accent">下一步：把它们组装成完整 spec 文档 → X22。</p>
+      `;
+    } else if (hits >= 2) {
+      msg.innerHTML = `
+        <p>${hits} / 4 — 半数以上的图能独立交付。<strong>剩下的再练练就行</strong>。</p>
+        <p>架构图不是天赋，是肌肉记忆。</p>
+      `;
+    } else if (hits >= 1) {
+      msg.innerHTML = `
+        <p>${hits} / 4 — 第一张图打通了。<strong>4 张图各有节奏</strong>，不必一次到位。</p>
+        <p class="accent">从你最熟的那张开始 → 一张张攻。</p>
+      `;
+    } else {
+      msg.innerHTML = `
+        <p>4 个 builder 都<strong>独立 submit</strong>——每答对一题 +1 分。</p>
+        <p class="accent">4 / 4 满分 = 你的设计交付已经是<strong>工程级 spec</strong> 了。</p>
+      `;
+    }
+  }
+})();
+</script>
+
+</body>
+</html>
