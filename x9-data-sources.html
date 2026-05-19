@@ -464,6 +464,37 @@
   .reveal-bar .counter { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ink-mute); letter-spacing: 0.05em; }
   .reveal-bar .counter strong { color: var(--accent); font-size: 14px; }
 
+  /* ====== Orthogonal decomposition: location × sync ====== */
+  .ortho-intro { color: var(--ink-soft); font-size: 15px; line-height: 1.7; max-width: 64ch; margin: 0 0 24px; }
+  .ortho-intro strong { color: var(--ink); }
+  .ortho-intro code { font-family: 'JetBrains Mono', monospace; font-size: 12px; background: var(--bg-2); padding: 1px 6px; border-radius: 3px; }
+  .ortho-wrap { background: var(--paper); border: 1px solid var(--line); border-radius: 8px; padding: 26px 28px; margin-top: 4px; }
+  .ortho-table-wrap { overflow-x: auto; }
+  .ortho-table { width: 100%; border-collapse: separate; border-spacing: 4px; min-width: 540px; }
+  .ortho-table th, .ortho-table td { padding: 12px 10px; text-align: center; border-radius: 6px; vertical-align: middle; }
+  .ortho-table thead th { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ink-mute); letter-spacing: 0.06em; background: var(--bg-2); }
+  .ortho-table thead th.axis-corner { background: transparent; color: var(--accent); font-weight: 700; text-align: left; }
+  .ortho-table tbody th { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--ink); letter-spacing: 0.04em; background: var(--bg-2); text-align: left; padding-left: 14px; min-width: 130px; font-weight: 600; }
+  .ortho-table td { background: white; border: 1px dashed var(--line); color: var(--ink-mute); font-size: 12px; }
+  .ortho-table td.has { border-style: solid; }
+  .ortho-table td.has-local { background: var(--src-local-soft); border-color: var(--src-local); color: var(--src-local); font-weight: 700; }
+  .ortho-table td.has-api { background: var(--src-api-soft); border-color: var(--src-api); color: var(--src-api); font-weight: 700; }
+  .ortho-table td.has-push { background: var(--src-push-soft); border-color: var(--src-push); color: var(--src-push); font-weight: 700; }
+  .ortho-table td.has-third { background: var(--src-third-soft); border-color: #b58200; color: #8a6a13; font-weight: 700; }
+  .ortho-table td.has-build { background: var(--src-build-soft); border-color: var(--src-build); color: var(--src-build); font-weight: 700; }
+  .ortho-table td.na { color: var(--ink-mute); background: var(--bg); border-style: dotted; opacity: 0.55; }
+  .ortho-axes { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-bottom: 22px; }
+  @media (max-width: 720px) { .ortho-axes { grid-template-columns: 1fr; } }
+  .axis-card { background: var(--bg-2); border: 1px solid var(--line); border-radius: 6px; padding: 16px 18px; }
+  .axis-card h5 { font-family: 'Noto Serif SC', serif; font-size: 16px; margin: 0 0 4px; font-weight: 700; color: var(--ink); }
+  .axis-card .ak { font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.08em; color: var(--accent); margin-bottom: 8px; display: block; }
+  .axis-card p { font-size: 12px; color: var(--ink-soft); margin: 0; line-height: 1.6; }
+  .axis-card p strong { color: var(--ink); }
+  .ortho-foot { margin-top: 22px; padding-top: 18px; border-top: 1px dashed var(--line); font-size: 13px; color: var(--ink-soft); line-height: 1.7; }
+  .ortho-foot strong { color: var(--ink); }
+  .ortho-foot .em { color: var(--obj-color); font-weight: 700; }
+  .ortho-foot code { font-family: 'JetBrains Mono', monospace; font-size: 11px; background: var(--bg-2); padding: 1px 6px; border-radius: 3px; }
+
   /* GAME 2: source diagnosis cards */
   .src-cards { display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; margin-top: 24px; }
   @media (max-width: 1080px) { .src-cards { grid-template-columns: 1fr 1fr; } }
@@ -1022,7 +1053,7 @@
 
     <div class="reveal-bar">
       <div class="msg">
-        10 个字段，<span class="em">4 种来源</span>——<br>
+        11 个字段，<span class="em">5 种来源标签</span>——<br>
         任何一种来源挂了，那一格就要单独处理。
       </div>
       <div class="counter">悬停每个字段看来源</div>
@@ -1032,6 +1063,94 @@
 
 <!-- floating source tooltip -->
 <div class="src-tip" id="srcTip"></div>
+
+<!-- Section 02.5: 正交分解 · 位置 × 同步 -->
+<section id="ortho">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <span class="act-tag look">幕一.5 · 想清楚</span>
+        <div class="section-num"><strong>02.5</strong> / 想清楚</div>
+        <h2 class="section-title">"5 种标签"其实是<br><span class="purple">2 个维度</span>的合并。</h2>
+      </div>
+      <p class="section-sub">
+        <code>local / api / push / 3rd / build</code> 是<strong>经验切片</strong>——好记、好上手、能直接标在稿子上。
+        但底下其实是 <strong>位置 × 同步</strong> 两个正交维度的交点。看一眼 2D 图，下面 4 张诊断 card 就更明白。
+      </p>
+    </div>
+
+    <p class="ortho-intro">
+      "API"和"PUSH"<strong>都是从你家服务端来的</strong>——区别在<strong>同步方式</strong>（一个拉、一个推）。
+      "LOCAL"和"BUILD"<strong>都不打接口</strong>——区别在<strong>什么时候定下来</strong>（运行时存的 vs 编译时打包的）。
+      把这两件事拆开看，5 个标签是 5 个交点，不是 5 个分类。
+    </p>
+
+    <div class="ortho-wrap">
+
+      <div class="ortho-axes">
+        <div class="axis-card">
+          <span class="ak">维度 1 · 纵轴</span>
+          <h5>位置 · WHERE</h5>
+          <p>这个值的<strong>真理 (truth) 在谁家</strong>？决定了：失败时谁负责兜底、改字段要找谁、合规风险归谁。</p>
+        </div>
+        <div class="axis-card">
+          <span class="ak">维度 2 · 横轴</span>
+          <h5>同步 · HOW</h5>
+          <p>值<strong>怎么到达前端</strong>？决定了：什么时候刷、loading 怎么画、stale 怎么标、断线怎么办。</p>
+        </div>
+      </div>
+
+      <div class="ortho-table-wrap">
+        <table class="ortho-table">
+          <thead>
+            <tr>
+              <th class="axis-corner">位置 ↓ / 同步 →</th>
+              <th>pull · 主动拉</th>
+              <th>push · 推送</th>
+              <th>static · 一次性</th>
+              <th>computed · 派生</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <th>浏览器本地</th>
+              <td class="na">读 localStorage</td>
+              <td class="na">storage event</td>
+              <td class="has has-local">LOCAL ✓</td>
+              <td class="na">本地派生</td>
+            </tr>
+            <tr>
+              <th>自家服务端</th>
+              <td class="has has-api">API ✓</td>
+              <td class="has has-push">PUSH ✓</td>
+              <td class="na">—</td>
+              <td class="na">服务端派生</td>
+            </tr>
+            <tr>
+              <th>第三方服务端</th>
+              <td class="has has-third">3RD ✓</td>
+              <td class="na">少见</td>
+              <td class="na">—</td>
+              <td class="na">—</td>
+            </tr>
+            <tr>
+              <th>构建产物</th>
+              <td class="na">—</td>
+              <td class="na">—</td>
+              <td class="has has-build">BUILD ✓</td>
+              <td class="na">—</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="ortho-foot">
+        <strong>怎么用：</strong>下面 4 张诊断 card 用 5 个标签教你<strong>"在稿子上标个色"</strong>——这是入门动作，记 5 个色就行。<br>
+        <span class="em">深一层：</span>当你想清楚为什么 <code>API</code> 和 <code>PUSH</code> 的 "truth owner" 一样但"失败模式"完全不同——是因为它们位置同、同步异。所有的 <strong>stale 行为、fallback 策略、降级方案</strong>都从这个 2D 图来。
+      </div>
+    </div>
+  </div>
+</section>
 
 <!-- Section 03: 幕二 · 拆开 -->
 <section id="break">

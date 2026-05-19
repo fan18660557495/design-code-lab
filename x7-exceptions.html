@@ -414,6 +414,47 @@
   }
   .diag-card.is-open .diag-pain { display: block; }
 
+  /* ====== Implicit vs Explicit exception handling ====== */
+  .impl-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-top: 26px; }
+  @media (max-width: 880px) { .impl-grid { grid-template-columns: 1fr; } }
+  .impl-card { background: var(--paper); border: 1px solid var(--line); border-radius: 8px; padding: 26px 24px 22px; position: relative; }
+  .impl-card.bad { border-left: 3px solid var(--accent); }
+  .impl-card.good { border-left: 3px solid var(--obj-color); }
+  .impl-tag { position: absolute; top: -11px; left: 20px; padding: 2px 10px; font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.1em; background: var(--bg); border-radius: 4px; }
+  .impl-card.bad .impl-tag { color: var(--accent); border: 1px solid var(--accent); }
+  .impl-card.good .impl-tag { color: var(--obj-color); border: 1px solid var(--obj-color); }
+  .impl-card h3 { font-family: 'Noto Serif SC', serif; font-size: 21px; margin: 6px 0 4px; font-weight: 700; }
+  .impl-card .alt { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ink-mute); letter-spacing: 0.04em; margin-bottom: 12px; }
+  .impl-code { background: var(--ink); color: var(--bg); border-radius: 6px; padding: 12px 14px; font-family: 'JetBrains Mono', monospace; font-size: 11px; line-height: 1.7; margin: 10px 0 12px; overflow-x: auto; white-space: pre; }
+  .impl-code .k { color: #ff8b6b; }
+  .impl-code .s { color: #ffd166; }
+  .impl-code .c { color: #6a737d; font-style: italic; }
+  .impl-code .v { color: #5dd39e; }
+  .impl-card .desc { font-size: 13px; color: var(--ink-soft); line-height: 1.65; margin: 0 0 10px; }
+  .impl-card .desc strong { color: var(--ink); }
+  .impl-card .you-can { padding: 10px 12px; background: white; border: 1px solid var(--line); border-radius: 6px; font-size: 12px; color: var(--ink-soft); line-height: 1.6; }
+  .impl-card.bad .you-can { border-color: var(--accent); }
+  .impl-card.good .you-can { border-color: var(--obj-color); }
+  .impl-card .you-can .yc-tag { display: block; font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.08em; color: var(--ink-mute); margin-bottom: 4px; }
+  .impl-card .you-can strong { color: var(--ink); }
+  .impl-card.bad .you-can strong { color: var(--accent); }
+  .impl-card.good .you-can strong { color: var(--obj-color); }
+
+  .nest-box { margin-top: 26px; background: var(--ink); color: var(--bg); border-radius: 8px; padding: 24px 28px; }
+  .nest-tag { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.1em; color: var(--accent); margin-bottom: 8px; }
+  .nest-box h4 { font-family: 'Noto Serif SC', serif; font-size: 20px; margin: 0 0 14px; color: white; line-height: 1.35; font-weight: 700; }
+  .nest-chain { display: grid; grid-template-columns: 1fr 12px 1fr 12px 1fr; gap: 10px; align-items: center; margin: 16px 0; }
+  @media (max-width: 720px) { .nest-chain { grid-template-columns: 1fr; } .nest-chain .nest-arr { display: none; } }
+  .nest-step { background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.15); border-radius: 6px; padding: 10px 12px; }
+  .nest-step .ns-i { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--accent); letter-spacing: 0.08em; margin-bottom: 4px; }
+  .nest-step .ns-t { font-size: 13px; color: white; font-weight: 600; }
+  .nest-step .ns-s { font-size: 11px; color: #c8c8d0; margin-top: 2px; }
+  .nest-step.fail { border-color: var(--accent); background: rgba(255,77,46,0.12); }
+  .nest-arr { color: var(--ink-mute); font-family: 'JetBrains Mono', monospace; text-align: center; }
+  .nest-q { background: rgba(255,255,255,0.06); border-left: 3px solid var(--accent); padding: 12px 16px; border-radius: 4px; margin-top: 14px; font-size: 13px; line-height: 1.7; color: #c8c8d0; }
+  .nest-q strong { color: white; }
+  .nest-q .pick { color: var(--accent); font-weight: 600; }
+
   /* GAME 3: choose-the-UI builder */
   .choose-stage {
     background: var(--paper);
@@ -1022,6 +1063,89 @@
   </div>
 </section>
 
+<!-- Section 03.5: 异常的语义层 -->
+<section id="semantics">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <span class="act-tag break">幕二.5 · 拆开</span>
+        <div class="section-num"><strong>03.5</strong> / 拆开</div>
+        <h2 class="section-title">为什么错误态长得<br><span class="em">都一样</span>？</h2>
+      </div>
+      <p class="section-sub">
+        答案不在设计稿——在<strong>工程师怎么处理异常</strong>。
+        异常被吞 → 你只能画"出错了请重试"。异常被显式表达 → 你能画 7 张精准的错误态。
+      </p>
+    </div>
+
+    <div class="impl-grid">
+
+      <div class="impl-card bad">
+        <span class="impl-tag">隐式 · IMPLICIT</span>
+        <h3>throw / try-catch / 500 一兜了之</h3>
+        <div class="alt">异常被吞，<strong>UI 拿不到原因</strong></div>
+        <div class="impl-code"><span class="k">try</span> {
+  <span class="k">await</span> submitOrder(data);
+} <span class="k">catch</span> (e) {
+  <span class="c">// 啥都不分，500 抛给前端</span>
+  toast(<span class="s">"出错了，请重试"</span>);
+}</div>
+        <p class="desc">失败的<strong>真实原因丢失</strong>了——库存不足？支付被风控？地址超区？前端只知道"有错"。所以错误态长得都一样：一句"出错了"+ 一个重试按钮。</p>
+        <div class="you-can">
+          <span class="yc-tag">设计可做的</span>
+          只能画 <strong>1 张</strong>通用错误态。看到 try-catch 把所有失败都 catch 成一句话——<strong>你的素材已经丢了</strong>。
+        </div>
+      </div>
+
+      <div class="impl-card good">
+        <span class="impl-tag">显式 · EXPLICIT</span>
+        <h3>typed Result&lt;Ok, Err&gt;</h3>
+        <div class="alt"><strong>每种失败都有名字</strong>，调用方必须分支处理</div>
+        <div class="impl-code"><span class="k">type</span> SubmitErr =
+  | <span class="v">"OUT_OF_STOCK"</span>
+  | <span class="v">"PAYMENT_BLOCKED"</span>
+  | <span class="v">"ADDRESS_UNSUPPORTED"</span>
+  | <span class="v">"PROMO_EXPIRED"</span>;
+
+<span class="k">const</span> r = <span class="k">await</span> submitOrder(data);
+<span class="k">if</span> (r.ok) ...
+<span class="k">else switch</span> (r.err) { ... }</div>
+        <p class="desc">每个失败有 <strong>typed reason</strong>。调用方拿到 `OUT_OF_STOCK` 还是 `PROMO_EXPIRED` 是两条完全不同的代码路径——也是两张完全不同的错误态。这是 <code style="font-family:'JetBrains Mono',monospace;font-size:11px;background:var(--bg-2);padding:1px 6px;border-radius:3px">result-ts</code> / <code style="font-family:'JetBrains Mono',monospace;font-size:11px;background:var(--bg-2);padding:1px 6px;border-radius:3px">effect-ts</code> 这类库的思路。</p>
+        <div class="you-can">
+          <span class="yc-tag">设计可做的</span>
+          可以画 <strong>N 张</strong>错误态——每个 typed reason 对应一种 UI、一种"用户的下一步"。<strong>异常变成了交互的素材</strong>。
+        </div>
+      </div>
+
+    </div>
+
+    <div class="nest-box">
+      <div class="nest-tag">嵌套异常 · NESTED EXCEPTIONS</div>
+      <h4>异常会沿着链路传递——传到 UI 时，<br>展开 or 折叠？</h4>
+      <p class="desc" style="color:#c8c8d0;font-size:13px;line-height:1.7;margin:0 0 6px">B 端流程里一个动作背后是一串调用。中间任何一步失败，最外层都看得到——但 UI 应该说哪一层的话？</p>
+      <div class="nest-chain">
+        <div class="nest-step"><div class="ns-i">STEP 1</div><div class="ns-t">提交订单</div><div class="ns-s">用户点击</div></div>
+        <div class="nest-arr">→</div>
+        <div class="nest-step"><div class="ns-i">STEP 2</div><div class="ns-t">校验库存</div><div class="ns-s">通过</div></div>
+        <div class="nest-arr">→</div>
+        <div class="nest-step fail"><div class="ns-i">STEP 3</div><div class="ns-t">调用支付</div><div class="ns-s">失败 · 风控拦截</div></div>
+      </div>
+      <div class="nest-q">
+        UI 应该说 <span class="pick">"提交订单失败"</span>（最外层）—— 还是 <span class="pick">"支付被拦截"</span>（最内层）—— 还是 <span class="pick">"订单已暂存，支付未通过 · 请联系风控"</span>（展开链路）？<br>
+        <strong>三种说法对应三种用户下一步</strong>。设计要主动告诉工程师："这个错给我嵌套结构，别压平"——否则你拿到的永远是最外层那句空话。
+      </div>
+    </div>
+
+    <div class="reveal-bar" style="margin-top:30px">
+      <div class="msg">
+        交互上我们普遍缺"某件事是否能做 / 是否做成功 / 为什么没成"的表达。<br>
+        <span class="em">背后是异常被弄丢了</span>——设计要主动跟工程师讨"typed reason + 嵌套结构"。
+      </div>
+      <div class="counter">异常 = 交互素材</div>
+    </div>
+  </div>
+</section>
+
 <!-- Section 04: 幕三 · 再做 -->
 <section id="make">
   <div class="wrap">
@@ -1236,7 +1360,8 @@
       <div class="outro-tag">划重点 · TL;DR</div>
       <div>
         <p>异常 ≠ 错位，<strong>异常是路径</strong>。把失败 / 超时 / 冲突 / 重复 这 4 种当任务流的同等公民去画——稿子的鲁棒性就出来了。</p>
-        <p>下次需求评审，试一次——<strong>"happy path 我画了，4 种异常各自的承接是这样……"</strong>。工程师看你的眼神就变了。</p>
+        <p>更深一层——异常要 <strong>typed reason + 嵌套结构</strong>。看到工程师用 try-catch 一句"出错了"兜底，立刻喊停——<strong>那是你的素材在丢</strong>。</p>
+        <p>下次需求评审，试一次——<strong>"happy path 我画了，4 种异常各自的承接是这样，每种 reason 一个画面……"</strong>。工程师看你的眼神就变了。</p>
       </div>
     </div>
 

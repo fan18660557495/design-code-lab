@@ -147,6 +147,27 @@
   .reveal-bar .counter strong { color: var(--accent); font-size: 14px; }
 
   /* GAME 2: matrix */
+  /* ====== 3 layers of permission ====== */
+  .layer-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; margin-top: 26px; }
+  @media (max-width: 980px) { .layer-grid { grid-template-columns: 1fr; } }
+  .layer-card { background: var(--paper); border: 1px solid var(--line); border-radius: 8px; padding: 24px 22px 20px; position: relative; transition: all 0.2s; }
+  .layer-card:hover { border-color: var(--obj-color); box-shadow: 0 6px 18px rgba(255,77,46,0.1); transform: translateY(-2px); }
+  .layer-step { position: absolute; top: -11px; left: 18px; background: var(--ink); color: var(--bg); padding: 2px 10px; border-radius: 100px; font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.08em; }
+  .layer-card h3 { font-family: 'Noto Serif SC', serif; font-size: 21px; margin: 6px 0 4px; font-weight: 700; }
+  .layer-card .key { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--obj-color); letter-spacing: 0.04em; margin-bottom: 12px; display: block; }
+  .layer-card .desc { font-size: 13px; color: var(--ink-soft); line-height: 1.65; margin: 0 0 14px; }
+  .layer-card .desc strong { color: var(--ink); }
+  .layer-card .ex { background: white; border: 1px solid var(--line); border-radius: 6px; padding: 10px 12px; font-size: 12px; color: var(--ink-soft); line-height: 1.6; margin-bottom: 10px; }
+  .layer-card .ex .ex-tag { display: block; font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.08em; color: var(--ink-mute); margin-bottom: 4px; }
+  .layer-card .ex strong { color: var(--ink); }
+  .layer-card .ex code { font-family: 'JetBrains Mono', monospace; font-size: 11px; background: var(--bg-2); padding: 1px 5px; border-radius: 3px; color: var(--accent); }
+  .layer-card .tech { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--ink-mute); letter-spacing: 0.04em; padding-top: 10px; border-top: 1px dashed var(--line); line-height: 1.65; }
+  .layer-card .tech strong { color: var(--ink-soft); }
+
+  .layer-bridge { margin-top: 24px; padding: 20px 26px; background: var(--bg-2); border: 1px solid var(--line); border-left: 3px solid var(--obj-color); border-radius: 6px; font-family: 'Noto Serif SC', serif; font-size: 15px; line-height: 1.75; color: var(--ink); }
+  .layer-bridge .em { color: var(--obj-color); font-weight: 700; }
+  .layer-bridge code { font-family: 'JetBrains Mono', monospace; font-size: 12px; background: white; border: 1px solid var(--line); padding: 1px 7px; border-radius: 4px; }
+
   .matrix-stage { background: var(--paper); border: 1px solid var(--line); border-radius: 8px; padding: 22px; overflow-x: auto; margin-top: 24px; }
   .matrix-table { width: 100%; border-collapse: separate; border-spacing: 6px; min-width: 880px; }
   .matrix-table th, .matrix-table td { text-align: left; vertical-align: top; }
@@ -420,6 +441,75 @@
   </div>
 </section>
 
+<!-- Section 02.5: 权限三层 -->
+<section id="layers">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <span class="act-tag look">幕一.5 · 想清楚</span>
+        <div class="section-num"><strong>02.5</strong> / 想清楚</div>
+        <h2 class="section-title">权限有 <span class="purple">三层</span>，<br>不只是"显示/隐藏"。</h2>
+      </div>
+      <p class="section-sub">
+        看到 4 张稿不一样之后，先抽出一层概念——
+        <strong>可见 / 行 / 列</strong>，这三层决定了下面那张矩阵里每一格到底是怎么"不一样"。
+      </p>
+    </div>
+
+    <div class="layer-grid">
+
+      <div class="layer-card">
+        <span class="layer-step">第 1 层 · WHO CAN SEE IT</span>
+        <h3>可见性</h3>
+        <span class="key">visibility · 看得到 / 看不到</span>
+        <p class="desc">最粗的一层——<strong>整块东西的有无</strong>。导航条、菜单、卡片、按钮，对某些角色根本不存在。</p>
+        <div class="ex">
+          <span class="ex-tag">UI 表现</span>
+          客服界面里压根没有<strong>"成单分析"</strong>这个模块；客户本人界面里没有<code>删除客户</code>按钮——不是 disabled，是<strong>不渲染</strong>。
+        </div>
+        <div class="tech">
+          <strong>背后：</strong>route 守卫 / nav 项隐藏 / 按钮 unmount。设计稿要列出每个角色的"入口清单"。
+        </div>
+      </div>
+
+      <div class="layer-card">
+        <span class="layer-step">第 2 层 · WHICH ROWS</span>
+        <h3>行权限 · 筛选</h3>
+        <span class="key">row-level · 看哪些条</span>
+        <p class="desc">你看得到这个列表，但<strong>只能看到属于你的那些行</strong>。同一个客户列表页，销售只看自己的客户，老板看全公司。</p>
+        <div class="ex">
+          <span class="ex-tag">UI 表现</span>
+          列表数量（"我的客户 12"vs"全部客户 4,820"）、<strong>空态文案</strong>（"暂无属于你的客户"vs"全公司没有客户"——两件事差别巨大）。
+        </div>
+        <div class="tech">
+          <strong>背后：</strong>query <code>WHERE owner_id = me</code> / RLS / filter middleware。设计稿要画"我的视角"的<strong>空态、计数、默认筛选</strong>。
+        </div>
+      </div>
+
+      <div class="layer-card">
+        <span class="layer-step">第 3 层 · WHICH FIELDS</span>
+        <h3>列权限 · 裁切</h3>
+        <span class="key">column-level · 看哪些字段</span>
+        <p class="desc">你看得到这条记录，但<strong>有些字段被遮罩、脱敏、或整个不显</strong>。详情页里那个 `—` 可能是"没填" / "*** 脱敏" / "你没权限看"——三件事。</p>
+        <div class="ex">
+          <span class="ex-tag">UI 表现</span>
+          客服看到客户电话 <code>138****1234</code>（脱敏）；销售看到完整 <code>13812341234</code>；普通访客这一字段<strong>整行消失</strong>——三种语义，三种 UI。
+        </div>
+        <div class="tech">
+          <strong>背后：</strong>field-level 过滤 / mask 函数 / API select 黑名单。设计稿要明说<strong>每个字段在每个角色下的呈现</strong>，别留给"前端按需隐藏"。
+        </div>
+      </div>
+
+    </div>
+
+    <div class="layer-bridge">
+      下面那张矩阵的每一格，背后都是这三层的组合——<br>
+      <code>能看的字段</code> = 列权限 + 可见性 · <code>能做的操作</code> = 可见性 + 行权限 · <code>空态文案</code> = 行权限的不同结果集。<br>
+      <span class="em">三层是骨架，矩阵是展开图</span>。先画三层，再填矩阵——别把"加个隐藏开关"当作权限设计。
+    </div>
+  </div>
+</section>
+
 <!-- Section 03: 幕二 · 拆开 -->
 <section id="break">
   <div class="wrap">
@@ -430,7 +520,8 @@
         <h2 class="section-title">把每个角色的<br><span class="purple">差异矩阵</span> 画出来。</h2>
       </div>
       <p class="section-sub">
-        5 个维度 × 4 个角色 = 一张设计矩阵。每一格都是设计决策。
+        5 个维度 × 4 个角色 = 一张设计矩阵。每一格都是设计决策——
+        但每一格背后是上面<strong>三层</strong>中的某一种或几种。
         点开任意格子，看<strong>这一格具体长什么样</strong>，以及"如果稿子只写了管理员视图，这格会怎么错"。
       </p>
     </div>

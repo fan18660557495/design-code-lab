@@ -606,6 +606,53 @@
   .anatomy-row.warn .k { color: var(--accent); }
   .anatomy-row.warn .v { color: var(--ink); }
 
+  /* ====== Page type × state set matrix ====== */
+  .pst-intro { color: var(--ink-soft); font-size: 15px; line-height: 1.7; max-width: 60ch; margin: 0 0 28px; }
+  .pst-intro strong { color: var(--ink); }
+  .pst-grid { display: grid; grid-template-columns: 1fr; gap: 16px; }
+  .pst-row { background: var(--paper); border: 1px solid var(--line); border-radius: 8px; padding: 22px 24px; display: grid; grid-template-columns: 220px 1fr; gap: 24px; align-items: flex-start; }
+  @media (max-width: 880px) { .pst-row { grid-template-columns: 1fr; gap: 14px; } }
+  .pst-meta { display: flex; flex-direction: column; gap: 4px; }
+  .pst-type { font-family: 'Noto Serif SC', serif; font-size: 20px; font-weight: 700; color: var(--ink); }
+  .pst-url { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ink-mute); letter-spacing: 0.04em; background: var(--bg-2); padding: 3px 8px; border-radius: 4px; align-self: flex-start; }
+  .pst-essence { font-size: 12px; color: var(--ink-soft); font-style: italic; line-height: 1.5; margin-top: 6px; }
+  .pst-states { display: flex; flex-direction: column; gap: 8px; }
+  .pst-chips { display: flex; gap: 6px; flex-wrap: wrap; }
+  .pst-chip { display: inline-flex; align-items: center; gap: 5px; padding: 4px 10px; border-radius: 100px; font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.03em; font-weight: 600; }
+  .pst-chip .dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+  .pst-chip.s-loading { background: rgba(10,76,255,0.1); color: var(--blue); }
+  .pst-chip.s-loading .dot { background: var(--blue); }
+  .pst-chip.s-empty { background: var(--bg-2); color: var(--ink-soft); }
+  .pst-chip.s-empty .dot { background: var(--ink-mute); }
+  .pst-chip.s-error { background: var(--accent-soft); color: var(--accent); }
+  .pst-chip.s-error .dot { background: var(--accent); }
+  .pst-chip.s-stale { background: rgba(199,159,30,0.16); color: #8a6a13; }
+  .pst-chip.s-stale .dot { background: #c79f1e; }
+  .pst-chip.s-noperm { background: rgba(31,107,58,0.12); color: var(--green); }
+  .pst-chip.s-noperm .dot { background: var(--green); }
+  .pst-chip.s-404 { background: var(--accent-soft); color: var(--accent); border: 1px dashed var(--accent); }
+  .pst-chip.s-404 .dot { background: var(--accent); }
+  .pst-chip.s-blank { background: var(--bg-2); color: var(--ink); border: 1px dashed var(--line); }
+  .pst-chip.s-blank .dot { background: var(--ink-mute); }
+  .pst-chip.s-draft { background: rgba(199,159,30,0.16); color: #8a6a13; }
+  .pst-chip.s-draft .dot { background: #c79f1e; }
+  .pst-chip.s-submitting, .pst-chip.s-saving { background: rgba(10,76,255,0.1); color: var(--blue); }
+  .pst-chip.s-submitting .dot, .pst-chip.s-saving .dot { background: var(--blue); }
+  .pst-chip.s-success, .pst-chip.s-saved { background: rgba(31,107,58,0.12); color: var(--green); }
+  .pst-chip.s-success .dot, .pst-chip.s-saved .dot { background: var(--green); }
+  .pst-chip.s-dirty { background: var(--obj-soft); color: var(--obj-color); }
+  .pst-chip.s-dirty .dot { background: var(--obj-color); }
+  .pst-chip.s-conflict { background: var(--accent-soft); color: var(--accent); border: 1px solid var(--accent); }
+  .pst-chip.s-conflict .dot { background: var(--accent); }
+  .pst-key { font-size: 12px; color: var(--ink-soft); line-height: 1.6; padding-top: 6px; border-top: 1px dashed var(--line); margin-top: 2px; }
+  .pst-key strong { color: var(--ink); }
+  .pst-key code { font-family: 'JetBrains Mono', monospace; font-size: 11px; background: var(--bg-2); padding: 1px 6px; border-radius: 3px; }
+
+  .pst-takeaway { margin-top: 28px; padding: 22px 26px; background: var(--ink); color: var(--bg); border-radius: 8px; font-size: 14px; line-height: 1.75; }
+  .pst-takeaway strong { color: white; }
+  .pst-takeaway .em { color: var(--accent); font-weight: 600; }
+  .pst-takeaway code { font-family: 'JetBrains Mono', monospace; font-size: 12px; background: rgba(255,255,255,0.1); padding: 1px 7px; border-radius: 4px; color: #ffd166; }
+
   /* GAME 3: state quiz */
   .quiz-stage {
     background: var(--paper);
@@ -1312,6 +1359,112 @@
         漏一个 → 工程师猜 → 用户买单。
       </div>
       <div class="counter">已展开 <strong id="anatomyCount">0</strong> / 5 个状态</div>
+    </div>
+  </div>
+</section>
+
+<!-- Section 03.5: 页面类型 × 状态集 -->
+<section id="pagetypes">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <span class="act-tag break">幕二.5 · 拆开</span>
+        <div class="section-num"><strong>03.5</strong> / 拆开</div>
+        <h2 class="section-title"><span class="purple">不同页面</span>，<br>不一样的状态集。</h2>
+      </div>
+      <p class="section-sub">
+        上面 5 态是从"列表页"视角讲的。换成<strong>详情 / 创建 / 编辑</strong>——状态集就变了。
+        状态 ≠ 页面的属性，是 <strong>(页面类型 × 数据生命周期)</strong> 的笛卡尔积。
+      </p>
+    </div>
+
+    <p class="pst-intro">
+      下面 4 种页面类型——每行是它"会真实进入的状态"。<strong>空 (empty)</strong> 在列表页是"没记录"，到详情页就变成 <strong>404 找不到</strong>；
+      <strong>编辑页</strong> 还多出"未保存 / 冲突 / 已保存"这种<strong>表单生命周期</strong>的状态。画稿前先看自己在哪一行。
+    </p>
+
+    <div class="pst-grid">
+
+      <div class="pst-row">
+        <div class="pst-meta">
+          <div class="pst-type">列表页 · table</div>
+          <div class="pst-url">/customers</div>
+          <div class="pst-essence">读多条记录</div>
+        </div>
+        <div class="pst-states">
+          <div class="pst-chips">
+            <span class="pst-chip s-loading"><span class="dot"></span>loading</span>
+            <span class="pst-chip s-empty"><span class="dot"></span>empty</span>
+            <span class="pst-chip s-error"><span class="dot"></span>error</span>
+            <span class="pst-chip s-stale"><span class="dot"></span>stale</span>
+            <span class="pst-chip s-noperm"><span class="dot"></span>no-perm</span>
+          </div>
+          <div class="pst-key">这就是上面讲的 5 态，<strong>"列表的标准模板"</strong>。<code>empty</code> 是 "0 条记录"——配引导 CTA。</div>
+        </div>
+      </div>
+
+      <div class="pst-row">
+        <div class="pst-meta">
+          <div class="pst-type">详情页 · detail</div>
+          <div class="pst-url">/customers/:id</div>
+          <div class="pst-essence">读单条记录</div>
+        </div>
+        <div class="pst-states">
+          <div class="pst-chips">
+            <span class="pst-chip s-loading"><span class="dot"></span>loading</span>
+            <span class="pst-chip s-404"><span class="dot"></span>404 not-found</span>
+            <span class="pst-chip s-error"><span class="dot"></span>error</span>
+            <span class="pst-chip s-stale"><span class="dot"></span>stale</span>
+            <span class="pst-chip s-noperm"><span class="dot"></span>no-perm</span>
+          </div>
+          <div class="pst-key"><code>empty</code> 在详情页<strong>不存在</strong>——记录要么有要么没有。"没有"是 <code>404</code>，UI 完全不同：不是"创建第一个"，是"找不到，或已被删除"。</div>
+        </div>
+      </div>
+
+      <div class="pst-row">
+        <div class="pst-meta">
+          <div class="pst-type">创建页 · new</div>
+          <div class="pst-url">/customers/new</div>
+          <div class="pst-essence">写一条新记录</div>
+        </div>
+        <div class="pst-states">
+          <div class="pst-chips">
+            <span class="pst-chip s-blank"><span class="dot"></span>blank</span>
+            <span class="pst-chip s-draft"><span class="dot"></span>draft 草稿恢复</span>
+            <span class="pst-chip s-submitting"><span class="dot"></span>submitting</span>
+            <span class="pst-chip s-error"><span class="dot"></span>error 提交失败</span>
+            <span class="pst-chip s-success"><span class="dot"></span>success 跳转</span>
+          </div>
+          <div class="pst-key">完全不一样的一组——以"表单生命周期"为轴。<strong>没有 <code>empty</code> 和 <code>stale</code></strong>，但有 <code>draft</code>（之前没填完）、<code>submitting</code>（正在提交）、<code>success</code>（提交完跳哪）。</div>
+        </div>
+      </div>
+
+      <div class="pst-row">
+        <div class="pst-meta">
+          <div class="pst-type">编辑页 · edit</div>
+          <div class="pst-url">/customers/:id/edit</div>
+          <div class="pst-essence">改一条已有记录</div>
+        </div>
+        <div class="pst-states">
+          <div class="pst-chips">
+            <span class="pst-chip s-loading"><span class="dot"></span>loading 初始</span>
+            <span class="pst-chip s-dirty"><span class="dot"></span>dirty 未保存</span>
+            <span class="pst-chip s-saving"><span class="dot"></span>saving</span>
+            <span class="pst-chip s-saved"><span class="dot"></span>saved</span>
+            <span class="pst-chip s-conflict"><span class="dot"></span>conflict 版本冲突</span>
+            <span class="pst-chip s-error"><span class="dot"></span>error</span>
+            <span class="pst-chip s-noperm"><span class="dot"></span>no-perm</span>
+          </div>
+          <div class="pst-key">最复杂的一组——读 + 写都有。<code>dirty</code>（"未保存离开会丢"）和 <code>conflict</code>（"别人也改了"）是编辑页独有，但稿子最常漏画的两态。</div>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="pst-takeaway">
+      <strong>"每张稿都画 5 态"是入门，<span class="em">"先看自己在哪一行"是进阶</span></strong>。<br>
+      创建页画 <code>empty</code> 是错的（它本来就是空的），详情页画 <code>empty</code> 也是错的（应该画 <code>404</code>）。编辑页只画 5 态会漏 <code>dirty / saving / conflict</code>——线上事故经常从这里来。<br>
+      下次画稿前，第一个问题：<span class="em">"这是哪一种页面？"</span> ——然后再从这一行抄状态集。
     </div>
   </div>
 </section>

@@ -262,6 +262,35 @@
   .anti-card p { margin: 0; font-size: 12.5px; line-height: 1.55; color: var(--ink-soft); }
   .anti-card p strong { color: var(--accent); }
 
+  /* ====== Deeper layer: orthogonal dimensions + decision tree ====== */
+  .deeper-intro { color: var(--ink-soft); font-size: 15px; line-height: 1.7; max-width: 62ch; margin: 0 0 28px; }
+  .deeper-intro strong { color: var(--ink); }
+  .deeper-intro code { font-family: 'JetBrains Mono', monospace; font-size: 12px; background: var(--bg-2); padding: 1px 6px; border-radius: 3px; }
+  .dim4-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-top: 22px; }
+  @media (max-width: 980px) { .dim4-grid { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 560px) { .dim4-grid { grid-template-columns: 1fr; } }
+  .dim4-card { background: var(--paper); border: 1px solid var(--line); border-radius: 8px; padding: 18px 18px 16px; position: relative; }
+  .dim4-card h5 { font-family: 'Noto Serif SC', serif; font-size: 16px; margin: 0 0 4px; font-weight: 700; }
+  .dim4-card .dk { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--obj-color); letter-spacing: 0.06em; margin-bottom: 10px; display: block; }
+  .dim4-card .dq { font-size: 12px; color: var(--ink-soft); line-height: 1.55; }
+  .dim4-card .dq strong { color: var(--ink); }
+  .dim4-card .dv { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ink-mute); margin-top: 8px; line-height: 1.6; }
+
+  .tree { background: var(--ink); color: var(--bg); border-radius: 8px; padding: 26px 30px; margin-top: 30px; }
+  .tree-tag { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.1em; color: var(--accent); margin-bottom: 8px; }
+  .tree h4 { font-family: 'Noto Serif SC', serif; font-size: 22px; margin: 0 0 18px; color: white; line-height: 1.35; font-weight: 700; }
+  .tree-rows { display: grid; gap: 10px; }
+  .tree-row { display: grid; grid-template-columns: 28px 1fr auto; gap: 14px; align-items: center; padding: 12px 16px; background: rgba(255,255,255,0.05); border-radius: 6px; }
+  .tree-q-num { width: 26px; height: 26px; border-radius: 50%; background: var(--accent); color: white; font-family: 'Fraunces', serif; font-style: italic; font-weight: 600; font-size: 13px; display: flex; align-items: center; justify-content: center; }
+  .tree-q { font-size: 14px; color: white; line-height: 1.45; }
+  .tree-q strong { color: var(--accent); }
+  .tree-out { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #c8c8d0; letter-spacing: 0.04em; white-space: nowrap; }
+  .tree-out .yes { color: #5dd39e; font-weight: 700; }
+  .tree-out .no { color: var(--ink-mute); font-weight: 600; }
+  .tree-foot { margin-top: 16px; font-size: 13px; color: #c8c8d0; line-height: 1.7; padding-top: 14px; border-top: 1px dashed rgba(255,255,255,0.1); }
+  .tree-foot strong { color: white; }
+  .tree-foot code { font-family: 'JetBrains Mono', monospace; font-size: 11px; background: rgba(255,255,255,0.1); padding: 1px 7px; border-radius: 4px; color: #ffd166; }
+
   /* ===== Game 3: Quiz ===== */
   .quiz-stage { background: var(--paper); border: 1px solid var(--line); border-radius: 8px; padding: 32px; margin-top: 24px; }
   .quiz-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 24px; flex-wrap: wrap; gap: 16px; }
@@ -738,6 +767,86 @@
         设计住址 = 设计行为。状态写在哪 = 它能不能被分享、能不能跨设备、能不能后退。
       </div>
       <div class="counter">点行展开看反例</div>
+    </div>
+  </div>
+</section>
+
+<!-- Section 03.5: 再深一层 -->
+<section id="deeper">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <span class="act-tag break">幕二.5 · 再深一层</span>
+        <div class="section-num"><strong>03.5</strong> / 再深一层</div>
+        <h2 class="section-title">"4 种住址"其实是<br><span class="purple">组合标签</span>。</h2>
+      </div>
+      <p class="section-sub">
+        <code>组件 / 本页 / URL / 服务端</code> 是<strong>经验切片</strong>——好记好上手。
+        但底下其实是 4 个正交维度的组合。看一眼就行，<strong>真正画稿时还是按 4 种住址来决策</strong>。
+      </p>
+    </div>
+
+    <p class="deeper-intro">
+      每个状态值其实可以从 <strong>4 个维度</strong>独立描述：它<strong>放在哪</strong>、能<strong>活多久</strong>、<strong>谁能看到</strong>、<strong>怎么更新</strong>。
+      <code>URL</code> 之所以"刷新不丢、可分享" = 它在 <strong>位置=浏览器历史 · 持久=会话 · 作用域=链接谁谁能看 · 同步=本地直改</strong> 的组合点上。
+    </p>
+
+    <div class="dim4-grid">
+      <div class="dim4-card">
+        <h5>位置 · WHERE</h5>
+        <span class="dk">stored-in</span>
+        <div class="dq"><strong>这个值物理上在哪</strong>？</div>
+        <div class="dv">内存 / URL / localStorage / cookie / IndexedDB / 服务端 DB</div>
+      </div>
+      <div class="dim4-card">
+        <h5>持久 · HOW LONG</h5>
+        <span class="dk">lifetime</span>
+        <div class="dq"><strong>什么时候会消失</strong>？</div>
+        <div class="dv">关组件就忘 / 关 tab 就忘 / 浏览器清空才没 / 换设备才没 / 永久</div>
+      </div>
+      <div class="dim4-card">
+        <h5>作用域 · WHO SEES</h5>
+        <span class="dk">scope</span>
+        <div class="dq"><strong>谁能共享这个值</strong>？</div>
+        <div class="dv">单组件 / 单页面 / 单 tab / 跨 tab / 跨设备 / 跨用户</div>
+      </div>
+      <div class="dim4-card">
+        <h5>同步 · HOW UPDATED</h5>
+        <span class="dk">sync</span>
+        <div class="dq"><strong>值怎么更新</strong>？</div>
+        <div class="dv">本地直改 / pull on demand / push 订阅 / 写穿 / 缓存失效</div>
+      </div>
+    </div>
+
+    <div class="tree">
+      <div class="tree-tag">决策树 · WHICH-HOME</div>
+      <h4>稿子上一个状态拿不准住哪——按顺序问 4 个问题。</h4>
+      <div class="tree-rows">
+        <div class="tree-row">
+          <div class="tree-q-num">1</div>
+          <div class="tree-q">关 tab 之后<strong>还要存在</strong>吗？需要跨设备访问？</div>
+          <div class="tree-out"><span class="yes">YES → 服务端</span></div>
+        </div>
+        <div class="tree-row">
+          <div class="tree-q-num">2</div>
+          <div class="tree-q">刷新页面<strong>不能丢</strong>？需要分享 / 后退按钮能回到这个视图？</div>
+          <div class="tree-out"><span class="yes">YES → URL</span></div>
+        </div>
+        <div class="tree-row">
+          <div class="tree-q-num">3</div>
+          <div class="tree-q">这台设备本地<strong>记一下偏好</strong>就行？跨页面但只这台机器？</div>
+          <div class="tree-out"><span class="yes">YES → 本页 / localStorage</span></div>
+        </div>
+        <div class="tree-row">
+          <div class="tree-q-num">4</div>
+          <div class="tree-q">关组件就忘也无所谓？纯 UI 临时态？</div>
+          <div class="tree-out"><span class="yes">YES → 组件 / useState</span></div>
+        </div>
+      </div>
+      <p class="tree-foot">
+        从上到下问，<strong>第一个 YES 就是住址</strong>。同一个状态如果上面 YES 了下面就别再考虑——比如筛选条件 Q2 已经命中 URL，就不要再纠结"要不要存 localStorage"。<br>
+        住址决定了"同步方式"的选择空间：<code>服务端</code>住址 → 必须 pull 或 push；<code>URL</code> → 只能本地直改；<code>组件</code> → 本地直改。<strong>位置定了，同步方式跟着定</strong>。
+      </p>
     </div>
   </div>
 </section>

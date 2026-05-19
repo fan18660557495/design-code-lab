@@ -273,6 +273,42 @@
   .graph-legend { margin-top: 16px; padding-top: 14px; border-top: 1px dashed var(--line); font-size: 11px; color: var(--ink-mute); line-height: 1.7; }
   .graph-legend code { color: var(--obj-color); background: var(--obj-soft); padding: 1px 5px; border-radius: 3px; font-size: 10px; }
 
+  /* ====== Strong vs weak reference cards ====== */
+  .strength-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-top: 28px; }
+  @media (max-width: 880px) { .strength-grid { grid-template-columns: 1fr; } }
+  .strength-card { background: var(--paper); border: 1px solid var(--line); border-radius: 8px; padding: 28px 26px; position: relative; }
+  .strength-card.weak { border-left: 3px solid var(--blue); }
+  .strength-card.strong { border-left: 3px solid var(--obj-color); }
+  .strength-tag { position: absolute; top: -11px; left: 22px; padding: 2px 10px; font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.1em; background: var(--bg); border-radius: 4px; }
+  .strength-card.weak .strength-tag { color: var(--blue); border: 1px solid var(--blue); }
+  .strength-card.strong .strength-tag { color: var(--obj-color); border: 1px solid var(--obj-color); }
+  .strength-card h3 { font-family: 'Noto Serif SC', serif; font-size: 22px; margin: 6px 0 4px; font-weight: 700; }
+  .strength-card .alt { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ink-mute); letter-spacing: 0.04em; margin-bottom: 14px; }
+  .strength-card .ex { background: white; border: 1px solid var(--line); border-radius: 6px; padding: 12px 14px; margin: 10px 0 14px; line-height: 1.6; font-size: 13px; color: var(--ink-soft); }
+  .strength-card.weak .ex { border-color: var(--blue); }
+  .strength-card.strong .ex { border-color: var(--obj-color); }
+  .strength-card .ex .ex-tag { display: block; font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.08em; color: var(--ink-mute); margin-bottom: 4px; }
+  .strength-card .ex strong { color: var(--ink); }
+  .strength-card .ex code { font-family: 'JetBrains Mono', monospace; font-size: 11px; background: var(--bg-2); padding: 1px 6px; border-radius: 3px; }
+  .strength-card ul { margin: 8px 0 0; padding-left: 18px; color: var(--ink-soft); font-size: 13px; line-height: 1.7; }
+  .strength-card li { margin: 3px 0; }
+  .strength-card li strong { color: var(--ink); }
+
+  /* 3-question test */
+  .test3 { margin-top: 28px; background: var(--ink); color: var(--bg); border-radius: 8px; padding: 26px 30px; }
+  .test3-head { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.1em; color: var(--accent); margin-bottom: 8px; }
+  .test3 h4 { font-family: 'Noto Serif SC', serif; font-size: 22px; margin: 0 0 18px; color: white; line-height: 1.35; font-weight: 700; }
+  .test3-rows { display: grid; grid-template-columns: 1fr; gap: 10px; }
+  .test3-row { display: grid; grid-template-columns: 28px 1fr auto; gap: 14px; align-items: center; padding: 11px 16px; background: rgba(255,255,255,0.05); border-radius: 6px; }
+  .test3-q-num { width: 24px; height: 24px; border-radius: 50%; background: var(--accent); color: white; font-family: 'Fraunces', serif; font-style: italic; font-weight: 600; font-size: 12px; display: flex; align-items: center; justify-content: center; }
+  .test3-q { font-size: 14px; color: white; line-height: 1.45; }
+  .test3-q strong { color: var(--accent); }
+  .test3-yn { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--ink-mute); letter-spacing: 0.06em; }
+  .test3-foot { margin-top: 16px; font-size: 13px; color: #c8c8d0; line-height: 1.7; }
+  .test3-foot strong { color: white; }
+  .test3-foot .yes { color: var(--accent); font-weight: 600; }
+  .test3-foot .no { color: #5dd39e; font-weight: 600; }
+
   /* GAME 3: builder */
   .builder-stage { background: var(--paper); border: 1px solid var(--line); border-radius: 8px; padding: 32px; margin-top: 24px; }
   .builder-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 28px; flex-wrap: wrap; gap: 16px; }
@@ -798,6 +834,93 @@
   </div>
 </section>
 
+<!-- Section 03.5: 强弱引用 -->
+<section id="strength">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <span class="act-tag break">幕二.5 · 拆开</span>
+        <div class="section-num"><strong>03.5</strong> / 拆开</div>
+        <h2 class="section-title">引用还分 <span class="purple">强弱</span>。</h2>
+      </div>
+      <p class="section-sub">
+        cardinality 讲<strong>多少个</strong>。强弱讲另一件事——<strong>它能不能脱离父对象独立活着</strong>。两者是引用的两个正交维度。
+      </p>
+    </div>
+
+    <div class="strength-grid">
+
+      <div class="strength-card weak">
+        <span class="strength-tag">弱引用 · WEAK / ASSOCIATION</span>
+        <h3>客户 → 合同</h3>
+        <div class="alt">两端各有<strong>独立生命周期</strong></div>
+        <div class="ex">
+          <span class="ex-tag">EXAMPLE</span>
+          客户「星河科技」可以归档，<strong>合同仍然存在</strong>（只是变成了"归档客户"的合同）。合同有自己的列表页 <code>/contracts</code>、自己的详情页、自己的筛选轴。
+        </div>
+        <ul>
+          <li><strong>有独立详情页</strong>——/contracts/c-2401 能单独打开</li>
+          <li><strong>有独立列表/筛选</strong>——按金额、状态、签约时间筛</li>
+          <li><strong>父对象删除时</strong>能保留（设为 archived 或 reassign）</li>
+          <li>典型：客户↔合同、用户↔订单、文档↔评论</li>
+        </ul>
+      </div>
+
+      <div class="strength-card strong">
+        <span class="strength-tag">强引用 · STRONG / COMPOSITION</span>
+        <h3>订单 → 订单行</h3>
+        <div class="alt">寄生在父对象上，<strong>没有独立生命周期</strong></div>
+        <div class="ex">
+          <span class="ex-tag">EXAMPLE</span>
+          订单的"订单行 / 子订单"<strong>不能脱离订单单独提交</strong>。后台没有 <code>/order-lines</code> 列表，也没有"全公司订单行"这种页面——删订单它们级联跟着没。
+        </div>
+        <ul>
+          <li><strong>没有独立详情页</strong>——只在父对象详情里展开</li>
+          <li><strong>没有独立列表</strong>——不存在跨父的全量页面</li>
+          <li><strong>父对象删除时级联删除</strong>（cascade delete）</li>
+          <li>典型：订单→订单行、表单→表单字段、问卷→题目</li>
+        </ul>
+      </div>
+
+    </div>
+
+    <div class="test3">
+      <div class="test3-head">3 问判断 · IS-IT-STRONG TEST</div>
+      <h4>看到一个对象拿不准强还是弱——问 3 个问题。</h4>
+      <div class="test3-rows">
+        <div class="test3-row">
+          <div class="test3-q-num">1</div>
+          <div class="test3-q">它有<strong>独立的详情页</strong>吗？<span style="opacity:0.55"> /foo/123 能直接打开？</span></div>
+          <div class="test3-yn">YES / NO</div>
+        </div>
+        <div class="test3-row">
+          <div class="test3-q-num">2</div>
+          <div class="test3-q">它能被<strong>列表页单独筛选/查询</strong>吗？<span style="opacity:0.55"> "所有 foo" 的页面存在？</span></div>
+          <div class="test3-yn">YES / NO</div>
+        </div>
+        <div class="test3-row">
+          <div class="test3-q-num">3</div>
+          <div class="test3-q">父对象删除时，它会<strong>跟着没</strong>吗？<span style="opacity:0.55"> cascade delete？</span></div>
+          <div class="test3-yn">YES / NO</div>
+        </div>
+      </div>
+      <p class="test3-foot">
+        前两个 <span class="yes">YES</span> + 第三个 <span class="no">NO</span> = <strong>弱引用</strong>——必须配独立列表 + 详情 + 反向筛选。
+        前两个 <span class="no">NO</span> + 第三个 <span class="yes">YES</span> = <strong>强引用</strong>——画在父对象详情页里就行，没有独立入口。
+        混着出现的？很可能你建模建错了——回去重审"它到底是不是一个对象"。
+      </p>
+    </div>
+
+    <div class="reveal-bar" style="margin-top:30px">
+      <div class="msg">
+        强引用的子对象——<span class="em">几乎不可能成为主对象</span>（接<a href="x3-info-hierarchy.html" style="color:#fff;text-decoration:underline">X3 主对象选择</a>）；<br>
+        弱引用的子对象——换个视角，它就能当主对象。
+      </div>
+      <div class="counter">3 问 → 1 个结论</div>
+    </div>
+  </div>
+</section>
+
 <!-- Section 04: 幕三 · 再做 -->
 <section id="make">
   <div class="wrap">
@@ -930,7 +1053,7 @@
     <div class="tip-outro">
       <div class="outro-tag">划重点 · TL;DR</div>
       <div>
-        <p>需求里出现"列表"或"相关"，立即问：<strong>这是另一个对象吗？它怎么引用回来？基数是几比几？</strong></p>
+        <p>需求里出现"列表"或"相关"，立即问 <strong>3 件事</strong>：是另一个对象吗？怎么引用回来？<strong>cardinality（几比几）+ 强弱（能不能独立活）</strong>？</p>
         <p>语言一变，整个对话就不一样了——你不再是在描述"详情页里有什么"，你是在<strong>设计一张可被工程师直接落 schema 的引用图</strong>。</p>
       </div>
     </div>

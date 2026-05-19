@@ -213,6 +213,27 @@
   .reveal-bar .counter { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ink-mute); letter-spacing: 0.05em; }
   .reveal-bar .counter strong { color: var(--accent); font-size: 14px; }
 
+  /* ====== Context cards (why-pick-main-object) ====== */
+  .ctx-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-top: 24px; }
+  @media (max-width: 980px) { .ctx-grid { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 560px) { .ctx-grid { grid-template-columns: 1fr; } }
+  .ctx-card { background: var(--paper); border: 1px solid var(--line); border-radius: 8px; padding: 22px 20px 18px; display: flex; flex-direction: column; gap: 10px; position: relative; transition: all 0.2s; min-height: 100%; }
+  .ctx-card:hover { border-color: var(--obj-color); box-shadow: 0 6px 18px rgba(255,77,46,0.1); transform: translateY(-2px); }
+  .ctx-step { position: absolute; top: -11px; left: 18px; background: var(--ink); color: var(--bg); padding: 2px 10px; border-radius: 100px; font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.08em; }
+  .ctx-root { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ink-mute); letter-spacing: 0.04em; }
+  .ctx-root .em { color: var(--obj-color); font-weight: 700; }
+  .ctx-story { font-family: 'Noto Serif SC', serif; font-size: 15px; font-weight: 700; line-height: 1.45; color: var(--ink); margin: 2px 0; }
+  .ctx-story .hi { color: var(--obj-color); }
+  .ctx-url { font-family: 'JetBrains Mono', monospace; font-size: 11px; background: var(--bg-2); color: var(--ink); padding: 6px 10px; border-radius: 4px; word-break: break-all; line-height: 1.5; }
+  .ctx-url .host { color: var(--ink-mute); }
+  .ctx-url .em { color: var(--obj-color); font-weight: 600; }
+  .ctx-mean { font-size: 12px; color: var(--ink-soft); line-height: 1.55; padding-top: 8px; border-top: 1px dashed var(--line); margin-top: 2px; }
+  .ctx-mean strong { color: var(--ink); }
+  .ctx-bound { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--obj-color); letter-spacing: 0.04em; padding: 3px 8px; background: var(--obj-soft); border-radius: 4px; align-self: flex-start; }
+  .ctx-takeaway { margin-top: 28px; padding: 22px 26px; background: var(--bg-2); border: 1px solid var(--line); border-left: 3px solid var(--obj-color); border-radius: 6px; font-family: 'Noto Serif SC', serif; font-size: 16px; line-height: 1.7; color: var(--ink); }
+  .ctx-takeaway .em { color: var(--obj-color); font-weight: 700; }
+  .ctx-takeaway .mono { font-family: 'JetBrains Mono', monospace; font-weight: 500; font-size: 14px; }
+
   /* ====== GAME 2: 5 rules expandable ====== */
   .rules-list {
     display: grid;
@@ -548,6 +569,67 @@
       <div class="counter">
         已切换 <strong id="tabVisited">1</strong> / 3 种主对象
       </div>
+    </div>
+  </div>
+</section>
+
+<!-- Section 02.5: 为什么 · 主对象 = 上下文 -->
+<section id="why">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <span class="act-tag look">幕一.5 · 想清楚</span>
+        <div class="section-num"><strong>02.5</strong> / 想清楚</div>
+        <h2 class="section-title">选主对象 = <br><span class="em">固定一个上下文</span>。</h2>
+      </div>
+      <p class="section-sub">
+        山上的庙里，老和尚给小和尚讲故事——这一句话里藏着 <strong>4 个不同的主对象</strong>。每换一个根，业务语义就换一套。
+      </p>
+    </div>
+
+    <div class="ctx-grid">
+
+      <div class="ctx-card">
+        <span class="ctx-step">根 · ROOT 1</span>
+        <div class="ctx-root">主对象 = <span class="em">老和尚</span></div>
+        <div class="ctx-story">老和尚<span class="hi">什么时候都</span>讲故事。</div>
+        <div class="ctx-url"><span class="host">app.com</span>/<span class="em">monks</span>/old-master</div>
+        <span class="ctx-bound">上下文：无</span>
+        <p class="ctx-mean">详情页讲的是<strong>老和尚这个人</strong>，故事是他的属性。听众、地点、天气都跟主题无关——它们最多是过滤条件，不影响"故事存不存在"。</p>
+      </div>
+
+      <div class="ctx-card">
+        <span class="ctx-step">根 · ROOT 2</span>
+        <div class="ctx-root">主对象 = <span class="em">讲故事这一次</span></div>
+        <div class="ctx-story">需要<span class="hi">小和尚在场</span>，老和尚才讲。</div>
+        <div class="ctx-url"><span class="host">app.com</span>/<span class="em">sessions</span>/s-2026-04-19</div>
+        <span class="ctx-bound">上下文：听众</span>
+        <p class="ctx-mean">详情页讲的是<strong>一次互动</strong>——老和尚 + 小和尚 + 这一次。没有听众这次"讲"就不成立。一对一的事件型对象，跟通话记录、订单类似。</p>
+      </div>
+
+      <div class="ctx-card">
+        <span class="ctx-step">根 · ROOT 3</span>
+        <div class="ctx-root">主对象 = <span class="em">庙</span></div>
+        <div class="ctx-story">他只在<span class="hi">庙里</span>讲。</div>
+        <div class="ctx-url"><span class="host">app.com</span>/<span class="em">temples</span>/t-123/talks</div>
+        <span class="ctx-bound">上下文：地点</span>
+        <p class="ctx-mean">详情页讲的是<strong>这座庙</strong>，老和尚和故事都是它的"内容"。同一个老和尚换庙就是另一份记录——多租户、场地预定、园区管理常见这种切法。</p>
+      </div>
+
+      <div class="ctx-card">
+        <span class="ctx-step">根 · ROOT 4</span>
+        <div class="ctx-root">主对象 = <span class="em">山上的庙</span></div>
+        <div class="ctx-story">他只在<span class="hi">山上</span>的庙讲，<br>河边的庙不讲。</div>
+        <div class="ctx-url"><span class="host">app.com</span>/<span class="em">mountains</span>/wutai/temples/t-123</div>
+        <span class="ctx-bound">上下文：嵌套地点</span>
+        <p class="ctx-mean">详情页要嵌套上下文——<strong>"山"是庙的容器</strong>。换成河边的庙，业务语义完全不同。集团-公司-部门、组织-项目-任务都是这种嵌套层级。</p>
+      </div>
+
+    </div>
+
+    <div class="ctx-takeaway">
+      四个根 = 四套业务语义 = 四个完全不同的对象。<br>
+      <span class="em">选主对象 = 选你愿意被绑死的那个上下文</span>。"一张大页面塞所有东西"危险的真实原因——你拒绝绑定上下文，所以业务语义全是糊的。
     </div>
   </div>
 </section>

@@ -593,7 +593,7 @@
       <div class="dim-card" data-dim="enum">
         <div class="dim-num">iii</div>
         <div class="dim-name">取值范围</div>
-        <div class="dim-key">enum / range</div>
+        <div class="dim-key">domain · 枚举/字典/引用/区间</div>
         <div class="dim-card-foot">点开看 4 件事 <span class="open-arr">→</span></div>
       </div>
 
@@ -704,7 +704,7 @@
       <div class="tip">
         <div class="tip-num">ii</div>
         <h4>"空"不是"没有"——是设计语言</h4>
-        <p>空可以显示 "—" / "未设置" / "0" / 隐藏 / "未联系"。每种语义不同。</p>
+        <p>"—" / "未设置" / "0" / 隐藏 / "未联系"——每种语义不同。<strong>null（没填）和 0（填了零）必须分开画</strong>——库存 null vs 库存 0，决策完全两回事。</p>
         <p><strong>"空"是一种字段状态，要被设计。</strong></p>
       </div>
       <div class="tip">
@@ -836,24 +836,24 @@
       pitfall: '<span class="lbl">设计稿没说时工程师可能猜：</span>"看上去重要——加 NOT NULL 吧"。结果<strong>线上已有的旧数据全 null</strong>，migration 直接失败。或反过来——你以为必填，工程师做成 nullable，用户漏填也能提交。'
     },
     null: {
-      title: '空值含义 <span class="key">null-meaning</span>',
+      title: '空值含义 <span class="key">null vs 零值 · null-meaning</span>',
       impacts: [
-        { lbl: 'UI', text: '空时显示什么？"—" / "未设置" / "0" / 隐藏 / 占位文案 / 灰色 dash。每种都有语义。' },
-        { lbl: '校验', text: 'null 是合法值还是错误？"未填" vs "明确填了空" 怎么区分？' },
-        { lbl: 'API', text: 'null vs 缺字段 (presence vs absence)。`{x: null}` 和 `{}` 不一样。' },
-        { lbl: 'Migration', text: '迁移老数据时，旧空字符串、空字符、undefined 都规整成什么？' }
+        { lbl: 'null vs 零值', text: '<strong>null</strong> = "没填 / 不知道 / 不适用"（缺席）；<strong>0 / "" / [] / false</strong> = "填了，但是零的值"（在场）。库存 null = "没查到"，库存 0 = "卖光了"——这俩 UI 必须分开画，糊一次用户决策就错一次。' },
+        { lbl: 'UI', text: '"—" / "未设置" / "0" / 隐藏 / 占位文案——每种语义不同。"未填" 显示 `—`、"填了 0" 显示 `0`、"没权限看到" 显示 `***`——三件事在前端就要分开。' },
+        { lbl: '校验 / API', text: '三值逻辑：填了真值 / 显式 null / 字段不存在。`{x: null}` ≠ `{}` ≠ `{x: 0}`——前端传不全，后端就解不准。' },
+        { lbl: 'Migration', text: '迁移老数据时，旧空字符串、空字符、undefined、0 都规整成什么？要先想清楚再跑脚本。<strong>"统一规整成 null"</strong>是常见但错的偷懒。' }
       ],
-      pitfall: '<span class="lbl">设计稿没说时工程师可能猜：</span>"空着就显示一个 dash 吧"。结果用户看到 `—` 不知道是<strong>"没填" 还是 "填了 0" 还是 "未授权看到"</strong>。空态语义错位 = 用户认知错位。'
+      pitfall: '<span class="lbl">设计稿没说时工程师可能猜：</span>"空着就显示一个 dash 吧"。结果用户看到 `—` 不知道是<strong>"没填" 还是 "填了 0" 还是 "没权限看到"</strong>。<strong>null vs 零值</strong> 是 B 端最常被画糊的一对——库存、欠款、得分、进度这类数字字段，糊一次就是决策错一次。'
     },
     enum: {
-      title: '取值范围 <span class="key">enum / range</span>',
+      title: '取值范围 <span class="key">domain · 枚举/字典/引用/区间/unique</span>',
       impacts: [
-        { lbl: 'UI', text: 'dropdown vs input vs slider vs radio——选项数和心智决定控件。' },
-        { lbl: '校验', text: '输入只能在白名单内；超出 → 错误提示具体说"只能填 X / Y / Z"。' },
-        { lbl: 'API', text: '类型约束：enum vs string。后端 schema 强制白名单还是放任。' },
-        { lbl: 'Migration', text: '新增枚举值时旧数据怎么办？删除时旧记录的该值怎么处理？' }
+        { lbl: '3 种"长法"', text: '<strong>静态枚举</strong>（写死在前端、不变。例：订单状态）/ <strong>字典表</strong>（运营维护、查接口。例：行业、来源）/ <strong>动态关联</strong>（指向另一张表、总数无限。例：负责人、部门）。判断分水岭——<strong>"这一格会随另一张表的增删而变吗"</strong>。' },
+        { lbl: '连续值域 / 区间', text: '不是离散选项而是区间——金额 ≥ 0 / 日期范围 / 评分 0–10。控件从 dropdown 变成 input + slider + min/max。<strong>区间 = 离散白名单的连续版</strong>，校验逻辑同构。' },
+        { lbl: 'unique', text: '值域里每个值"只能被用一次"——手机号、订单号、SKU。前端必须实时查重提示，后端必须 unique 索引兜底。<strong>重复字段必出 race condition</strong>——两人同时填同一个手机号，谁赢？' },
+        { lbl: '查询 / 筛选 / 排序', text: '值域决定能不能筛——枚举可多选、区间可拉条、引用可级联、free-text 只能搜索。<strong>筛选 = 在值域上画子集</strong>，是同一个抽象。设计稿里的"筛选 + 搜索 + 排序"三件事，全部从值域来。' }
       ],
-      pitfall: '<span class="lbl">设计稿没说时工程师可能猜：</span>"4 个选项—— enum 吧"。结果运营第二周说"再加一个'已暂停'"——发版才能加。或反过来——你以为可扩展，工程师做成 enum，新增要发版。'
+      pitfall: '<span class="lbl">设计稿没说时工程师可能猜：</span>"4 个选项—— 枚举吧"。结果第二周运营说"再加一个 已暂停"——发版才能加。或反过来——你以为是<strong>动态关联</strong>（负责人可任意选），工程师做成<strong>静态枚举</strong>（5 个写死的人）。值域选错 = 三个月后整套筛选/搜索/迁移全部重写。'
     },
     mut: {
       title: '可改性 <span class="key">mutability</span>',
