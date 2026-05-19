@@ -135,6 +135,41 @@
   .problem-card p { margin: 0; color: var(--ink-soft); font-size: 14px; line-height: 1.55; }
   .problem-card p + p { margin-top: 10px; }
 
+  /* ====== Visual-first opening: 4 exception state mockups ====== */
+  .viz-stage { background: var(--paper); border: 1px solid var(--line); border-radius: 12px; padding: 28px; margin-top: 16px; position: relative; }
+  .viz-hint { text-align: center; font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--ink-mute); margin: 18px 0 0; letter-spacing: 0.04em; }
+  .viz-hint strong { color: var(--obj-color); }
+  .x7-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; }
+  @media (max-width: 720px) { .x7-grid { grid-template-columns: 1fr; } }
+  .x7-mock { background: white; border: 1.5px solid var(--accent); border-radius: 9px; overflow: hidden; box-shadow: 0 4px 14px rgba(22,22,29,0.06); position: relative; }
+  .x7-tag { padding: 8px 12px; background: var(--accent); color: white; font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.08em; }
+  .x7-body { padding: 14px 16px 16px; }
+  .x7-name { font-family: 'Noto Serif SC', serif; font-size: 16px; font-weight: 700; margin-bottom: 8px; }
+  .x7-state { background: var(--accent-soft); border: 1px solid var(--accent); border-radius: 6px; padding: 10px 12px; font-size: 12px; color: var(--ink); line-height: 1.55; margin: 8px 0; min-height: 56px; }
+  .x7-state strong { color: var(--accent); }
+  .x7-state code { font-family: 'JetBrains Mono', monospace; font-size: 11px; background: white; padding: 1px 5px; border-radius: 3px; }
+  .x7-q { font-size: 11px; color: var(--ink-mute); font-family: 'JetBrains Mono', monospace; line-height: 1.55; padding-top: 6px; border-top: 1px dashed var(--line); }
+  .x7-q strong { color: var(--accent); }
+
+  .sticky-wrap { margin-top: 28px; display: flex; gap: 22px; align-items: center; flex-wrap: wrap; justify-content: center; }
+  .sticky { background: #fff8c4; border: 1px solid #e5d98a; border-radius: 3px; padding: 16px 22px 18px; position: relative; transform: rotate(-1.5deg); box-shadow: 0 6px 14px rgba(22,22,29,0.12), 0 1px 3px rgba(22,22,29,0.08); font-size: 14px; color: var(--ink); line-height: 1.65; max-width: 380px; text-align: center; }
+  .sticky-pin { position: absolute; top: -8px; left: 50%; transform: translateX(-50%); width: 14px; height: 14px; background: var(--accent); border-radius: 50%; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+  .sticky strong { display: block; margin-top: 4px; font-family: 'Noto Serif SC', serif; font-size: 17px; color: var(--accent); line-height: 1.4; }
+
+  /* Section 04 demo */
+  .demo-x7 { display: flex; flex-direction: column; gap: 18px; margin-top: 24px; }
+  .demo-x7-card { background: var(--paper); border: 1px solid var(--line); border-left: 3px solid var(--obj-color); border-radius: 10px; padding: 22px 26px 20px; }
+  .demo-x7-head { display: flex; gap: 14px; align-items: baseline; margin-bottom: 12px; flex-wrap: wrap }
+  .demo-x7-num { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--obj-color); letter-spacing: 0.08em; font-weight: 700; }
+  .demo-x7-name { font-family: 'Noto Serif SC', serif; font-size: 19px; font-weight: 700; margin: 0; }
+  .demo-x7-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+  @media (max-width: 880px) { .demo-x7-grid { grid-template-columns: 1fr; } }
+  .demo-x7-col { background: white; border: 1px solid var(--line); border-radius: 6px; padding: 12px 14px; }
+  .demo-x7-col h6 { font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.06em; color: var(--obj-color); text-transform: uppercase; margin: 0 0 8px; font-weight: 700; }
+  .demo-x7-col p { font-size: 12px; color: var(--ink-soft); margin: 0; line-height: 1.6; }
+  .demo-x7-col p strong { color: var(--ink); }
+  .demo-x7-col code { font-family: 'JetBrains Mono', monospace; font-size: 11px; background: var(--bg-2); padding: 1px 5px; border-radius: 3px; color: var(--ink); }
+
   /* GAME 1: exception scenes (live demos) */
   .ex-stage {
     background: var(--paper);
@@ -715,8 +750,8 @@
           <span class="display-cn">系统</span>会替他<span class="purple">遇到</span>。
         </h1>
         <p class="lede">
-          网断了、接口慢了、两个人同时点同一个按钮、用户连点两次。<br>
-          这 4 件事每天发生千次——稿子里却几乎没人画过。
+          你画了 <strong>happy path</strong> 那 1 张。<br>
+          但每天 <strong style="color:var(--accent)">网会断 / 接口会慢 / 会撞数据 / 用户会连点</strong>——4 张异常态稿子，工程师靠猜。
         </p>
       </div>
       <div class="hero-side">
@@ -729,35 +764,76 @@
   </div>
 </header>
 
-<!-- Section 01: 问题 -->
+<!-- Section 01: 看见 -->
 <section id="problem">
   <div class="wrap">
     <div class="section-head">
       <div>
-        <div class="section-num"><strong>01</strong> / 问题</div>
-        <h2 class="section-title">异常不是 bug，<br>是<span class="em">任务流的真实路径</span>。</h2>
+        <div class="section-num"><strong>01</strong> / 看见</div>
+        <h2 class="section-title">先看图。</h2>
       </div>
       <p class="section-sub">
-        失败 / 超时 / 冲突 / 重复——4 个独立异常类，来源不同、UI 不同、修复策略不同。
-        当作任务流的设计对象去画，稿子的鲁棒性就出来了。
+        用户每天会撞到的 <strong>4 种异常态</strong>——稿子里通常 1 张都没有。下面是真实样子。
       </p>
     </div>
 
-    <div class="problem-grid">
-      <div class="problem-card bad">
-        <span class="tag">Bad · 异常 = BUG</span>
-        <h3>"把异常当 bug"</h3>
-        <p>稿子里只画了 happy path——出错让工程师写个 toast，"自己看着办"。</p>
-        <p><strong>一周后用户骂：</strong>toast 太短看不见、点了没反应、刷新就丢了输入、不知道再点会不会重复下单。</p>
-        <p style="color:var(--accent)"><strong>结果：</strong>客服爆 · 工程背锅 · 设计无感知。</p>
-      </div>
+    <div class="viz-stage">
+      <div class="x7-grid">
 
-      <div class="problem-card good">
-        <span class="tag">Good · 异常 = 流程</span>
-        <h3>"把异常当流程"</h3>
-        <p>4 种异常各自有 (a) 触发条件 (b) 兜底 UI (c) 用户下一步 (d) 恢复路径。<strong>稿子里 4 种异常都画</strong>。</p>
-        <p><strong>工程师收到：</strong>16 个明确状态 + 恢复策略表，能直接落代码。</p>
-        <p style="color:var(--obj-color)"><strong>用户感受：</strong>系统稳。</p>
+        <div class="x7-mock">
+          <div class="x7-tag">异常 01 · 失败 · FAILURE</div>
+          <div class="x7-body">
+            <div class="x7-name">网断了 / 服务挂了</div>
+            <div class="x7-state">
+              用户填好订单 <code>¥ 1,280</code> 点提交——<br>
+              <strong>3 秒后页面回到原表单，输入还在 ✓</strong>，顶部红条："网络问题，已为你保留。<u>重试</u> · <u>稍后再说</u>"
+            </div>
+            <div class="x7-q">不画 → 工程师默认<strong>跳错误页 + 数据丢</strong> → 用户重填一遍</div>
+          </div>
+        </div>
+
+        <div class="x7-mock">
+          <div class="x7-tag">异常 02 · 超时 · TIMEOUT</div>
+          <div class="x7-body">
+            <div class="x7-name">接口卡 8 秒</div>
+            <div class="x7-state">
+              <strong>1s 显示 spinner</strong> → <strong>3s 文案变 "还在加载…"</strong> → <strong>10s 给"取消"按钮</strong>。<br>用户始终知道<strong>系统活着 + 自己能干嘛</strong>。
+            </div>
+            <div class="x7-q">不画 → 转圈不变 → 用户狂点 → 触发"重复"异常</div>
+          </div>
+        </div>
+
+        <div class="x7-mock">
+          <div class="x7-tag">异常 03 · 冲突 · CONFLICT</div>
+          <div class="x7-body">
+            <div class="x7-name">两个销售同时改电话</div>
+            <div class="x7-state">
+              B 销售保存时看到弹窗："<strong>小明 2 分钟前改过</strong> · 138 1234 5678 (你) vs 138 9999 8888 (小明)"<br>三选一：<strong>看 diff / 强制覆盖 / 取消</strong>
+            </div>
+            <div class="x7-q">不画 → 后改覆盖先改 → A 销售 1 周后才发现客户电话不对</div>
+          </div>
+        </div>
+
+        <div class="x7-mock">
+          <div class="x7-tag">异常 04 · 重复 · DUPLICATE</div>
+          <div class="x7-body">
+            <div class="x7-name">用户连点 3 次提交</div>
+            <div class="x7-state">
+              第 1 次点 → 按钮立刻 <strong>disabled + Loading</strong>，文案变"提交中…"<br>第 2、3 次点击<strong>视觉无响应</strong>（系统知道但不再发请求）
+            </div>
+            <div class="x7-q">不画 → 1 次点击产生 3 单 → 退款流程比下单长 10 倍</div>
+          </div>
+        </div>
+
+      </div>
+      <p class="viz-hint">4 张异常态稿 = <strong>系统抗不抗操</strong> 的素材</p>
+    </div>
+
+    <div class="sticky-wrap">
+      <div class="sticky">
+        <div class="sticky-pin"></div>
+        画了 happy path 1 张 ≠ 设计完了。<br>
+        <strong>4 张异常态稿 + 每张的"用户下一步"</strong>
       </div>
     </div>
   </div>
@@ -1146,24 +1222,111 @@
   </div>
 </section>
 
-<!-- Section 04: 幕三 · 再做 -->
+<!-- Section 04: 幕三 · 看更多 -->
 <section id="make">
   <div class="wrap">
     <div class="section-head">
       <div>
-        <span class="act-tag make">幕三 · 再做</span>
-        <div class="section-num"><strong>04</strong> / 再做</div>
-        <h2 class="section-title">轮到你——<br>给「提交订单」的<br><span class="em">4 种异常</span>承接。</h2>
+        <span class="act-tag make">幕三 · 看更多</span>
+        <div class="section-num"><strong>04</strong> / 看更多</div>
+        <h2 class="section-title">「提交订单」的 <span class="em">4 种异常</span>——<br>看人家怎么承接。</h2>
       </div>
       <p class="section-sub">
-        下面 4 个异常场景。每个有 3 个候选 UI——你选哪个？再选一下"恢复策略"。
-        提交后会告诉你<strong>每个错的代价</strong>。
+        每种异常给你 <strong>触发 → UI 兜底 → 恢复策略</strong> 三栏，每一栏都讲明白为什么。
       </p>
     </div>
 
-    <div class="choose-stage">
+    <div class="demo-x7">
+
+      <div class="demo-x7-card">
+        <div class="demo-x7-head">
+          <span class="demo-x7-num">场景 01 · 失败</span>
+          <h3 class="demo-x7-name">网络断，用户点提交订单</h3>
+        </div>
+        <div class="demo-x7-grid">
+          <div class="demo-x7-col">
+            <h6>触发</h6>
+            <p>用户填好订单 <code>¥1,280</code>，点提交——<strong>家里网络断了 5 秒</strong>，请求没发出去。</p>
+          </div>
+          <div class="demo-x7-col">
+            <h6>UI 兜底</h6>
+            <p>红条 toast："网络问题，<strong>已为你保留</strong>"。<strong>表单输入不清空</strong>，按钮恢复可点，<u>重试</u> + <u>稍后再说</u> 两个去向。</p>
+          </div>
+          <div class="demo-x7-col">
+            <h6>恢复策略</h6>
+            <p>系统<strong>不要自动重试</strong>——用户在场要让他决定。自动重试可能在他切了 wifi 后误提交。<strong>用户主动重试</strong>最稳。</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="demo-x7-card">
+        <div class="demo-x7-head">
+          <span class="demo-x7-num">场景 02 · 超时</span>
+          <h3 class="demo-x7-name">接口卡 8 秒</h3>
+        </div>
+        <div class="demo-x7-grid">
+          <div class="demo-x7-col">
+            <h6>触发</h6>
+            <p>用户点提交后，<strong>后端已经开始处理</strong>，但响应慢——8 秒还没回。用户开始坐立不安。</p>
+          </div>
+          <div class="demo-x7-col">
+            <h6>UI 兜底</h6>
+            <p><strong>分级提示</strong>：&gt; 3s 显示"还在加载…" + 进度条。&gt; 10s 给"取消"按钮。<strong>状态在变化</strong>，让用户知道系统活着。</p>
+          </div>
+          <div class="demo-x7-col">
+            <h6>恢复策略</h6>
+            <p>超时后<strong>取消前端请求</strong>（释放 UI），但<strong>不能粗暴报错</strong>——后端可能成功了。提示："请求已超时，<u>查一下我的订单</u>"让用户自己核对。</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="demo-x7-card">
+        <div class="demo-x7-head">
+          <span class="demo-x7-num">场景 03 · 冲突</span>
+          <h3 class="demo-x7-name">两个销售同时改电话</h3>
+        </div>
+        <div class="demo-x7-grid">
+          <div class="demo-x7-col">
+            <h6>触发</h6>
+            <p>销售 A 14:02 改了客户电话 → 销售 B 14:03 不知道也改了——<strong>版本号已经变</strong>。</p>
+          </div>
+          <div class="demo-x7-col">
+            <h6>UI 兜底</h6>
+            <p>B 保存时弹"<strong>小明 2 分钟前改过</strong>" + diff 对照。<strong>三选一</strong>：合并 / 强制覆盖 / 取消。<strong>不要静默覆盖</strong>。</p>
+          </div>
+          <div class="demo-x7-col">
+            <h6>恢复策略</h6>
+            <p>合并 = 让用户基于 diff 做决定。<strong>"强制覆盖" 必须留审计日志</strong>——A 销售周后能看到 B 覆盖了他的修改，才不至于背锅。</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="demo-x7-card">
+        <div class="demo-x7-head">
+          <span class="demo-x7-num">场景 04 · 重复</span>
+          <h3 class="demo-x7-name">用户连点 3 次提交</h3>
+        </div>
+        <div class="demo-x7-grid">
+          <div class="demo-x7-col">
+            <h6>触发</h6>
+            <p>用户焦躁 / 网慢 / 误触，<strong>0.5 秒内点了 3 次</strong>提交按钮。</p>
+          </div>
+          <div class="demo-x7-col">
+            <h6>UI 兜底</h6>
+            <p>第 1 次点 → 按钮立即 <strong>disabled + Loading + 文案变"提交中…"</strong>。第 2、3 次点击<strong>视觉无响应</strong>（系统识别但不发请求）。</p>
+          </div>
+          <div class="demo-x7-col">
+            <h6>恢复策略</h6>
+            <p><strong>客户端 + 后端双拦</strong>。客户端用 debounce + button disabled；后端用<strong>幂等键</strong>（idempotency-key）——同一个请求重复发，后端只生效一次。</p>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <div style="display:none" class="choose-stage">
       <div class="choose-head">
-        <h3 class="choose-title">「提交订单」的 4 种异常承接</h3>
+        <h3 class="choose-title">obsolete · 隐藏</h3>
         <div class="choose-progress">已选 <span class="done" id="chooseDone">0</span> / 4 个场景</div>
       </div>
 
@@ -1478,194 +1641,6 @@
   });
 })();
 
-// ===== Game 3: choose-the-UI builder =====
-(function(){
-  const SCENES = ['s1','s2','s3','s4'];
-
-  const SCENE_INFO = {
-    s1: {
-      name: '场景 1 · 失败',
-      title: '网络断，用户点提交订单',
-      correctUI: 'B', correctRec: 'user-retry',
-      uiExplain: {
-        A: '灰按钮 + toast 太轻——用户看不见，下一步无路径。',
-        B: '错误对话框 + 保留输入 + 重试按钮——讲清楚发生了什么，给下一步。',
-        C: '直接跳错误页 = 用户输入丢失 + 没有回到任务流的路径。最差解。'
-      },
-      recExplain: {
-        'auto-retry': '失败时自动重试有效——但 3 次都失败后，必须让用户看到错误状态、决定下一步。不能静默挂起。',
-        'user-retry': '让用户重试——前置自动重试 1-2 次后仍失败，把决定权还给用户。',
-        'error-page': '失败就跳错误页 = 输入丢失 + 离开任务流。糟糕。'
-      }
-    },
-    s2: {
-      name: '场景 2 · 超时',
-      title: '接口卡 8 秒',
-      correctUI: 'B', correctRec: 'user-decide',
-      uiExplain: {
-        A: '按钮持续转 = 用户不知道还在不在转，会狂点导致"重复"异常。',
-        B: '分级提示：> 3s 给文案，> 10s 给取消。状态在变化 = 系统活着。',
-        C: '5s 就报失败——但后端可能正在成功。错误的"失败"比真实的"超时"更危险。'
-      },
-      recExplain: {
-        'auto-cancel': '前端单方面取消 = 后端可能仍在跑，可能成功，前端却说失败。状态错位。',
-        'user-decide': '超时取消 + 让用户决定（重试 / 继续等 / 联系客服）——状态最清晰。',
-        'silent-hang': '不处理 = 用户狂点 = 重复异常爆发。糟糕。'
-      }
-    },
-    s3: {
-      name: '场景 3 · 冲突',
-      title: '两个销售同时改电话',
-      correctUI: 'B', correctRec: 'user-merge',
-      uiExplain: {
-        A: '直接覆盖 = 静默数据丢失。最危险——没人知道有冲突。',
-        B: '展示 diff + 让用户选——把决策权给最了解上下文的人（销售自己）。',
-        C: '直接拒绝 = 安全但粗暴。B 的输入全没了，怨气十足。'
-      },
-      recExplain: {
-        'user-merge': '让用户决定——展示双方修改，由销售看上下文选择。',
-        'auto-merge': '系统自动合并字段——遇到同字段不同值时还是要让用户决定。不能全自动。',
-        'force-reload': '强制刷新 = 用户输入全丢，惩罚后到的人。差解。'
-      }
-    },
-    s4: {
-      name: '场景 4 · 重复',
-      title: '用户连点 3 次提交订单',
-      correctUI: 'C', correctRec: 'both',
-      uiExplain: {
-        A: '前后端都不拦 = 3 单。灾难。',
-        B: '只在客户端拦：跨标签 / 跨设备 / 网络重试时都失效。半解。',
-        C: '客户端 disabled + 后端 idempotency-key 去重——双保险，重复请求返回同一结果。'
-      },
-      recExplain: {
-        'client-only': '只在客户端拦 = 网络重试、跨标签都失效。不够。',
-        'server-only': '只在后端拦 = 用户体验仍然是"按下去没反应又按"，造成困惑。',
-        'both': '客户端给视觉反馈 + 后端给数据保证——两道防线缺一不可。'
-      }
-    }
-  };
-
-  // UI selection
-  document.querySelectorAll('.choose-options').forEach(group => {
-    const groupId = group.dataset.group;
-    group.querySelectorAll('.choose-opt').forEach(opt => {
-      opt.addEventListener('click', () => {
-        group.querySelectorAll('.choose-opt').forEach(o => o.classList.remove('selected'));
-        opt.classList.add('selected');
-        opt.dataset.picked = '1';
-        // remember on group
-        group.dataset.picked = opt.dataset.val;
-        updateProgress();
-      });
-    });
-  });
-
-  document.querySelectorAll('select[data-group]').forEach(sel => {
-    sel.addEventListener('change', () => {
-      sel.dataset.picked = sel.value;
-      updateProgress();
-    });
-  });
-
-  function getPicks(scene) {
-    const uiGroup = document.querySelector(`.choose-options[data-group="${scene}-ui"]`);
-    const recGroup = document.querySelector(`select[data-group="${scene}-rec"]`);
-    return {
-      ui: uiGroup ? uiGroup.dataset.picked || null : null,
-      rec: recGroup ? recGroup.value || null : null
-    };
-  }
-
-  function updateProgress() {
-    let done = 0;
-    SCENES.forEach(s => {
-      const p = getPicks(s);
-      const sc = p.ui ? 1 : 0;
-      const rc = p.rec ? 1 : 0;
-      const prog = document.querySelector(`.choose-scene-prog[data-prog="${s}"]`);
-      if (prog) {
-        prog.textContent = `${sc + rc} / 2`;
-        prog.classList.toggle('ready', sc + rc === 2);
-      }
-      if (sc + rc === 2) done++;
-    });
-    document.getElementById('chooseDone').textContent = done;
-  }
-
-  document.getElementById('chooseSubmit').addEventListener('click', () => {
-    let totalUI = 0, totalRec = 0;
-    let totalCorrect = 0;
-    const lines = [];
-
-    SCENES.forEach(s => {
-      const info = SCENE_INFO[s];
-      const p = getPicks(s);
-      if (!p.ui && !p.rec) {
-        lines.push(`<li><strong>${info.name}</strong>：还没选 — 这题需要 UI + 恢复 两个判断。</li>`);
-        return;
-      }
-
-      const uiOK = p.ui === info.correctUI;
-      const recOK = p.rec === info.correctRec;
-      if (uiOK) totalUI++;
-      if (recOK) totalRec++;
-      if (uiOK && recOK) totalCorrect++;
-
-      let line = `<strong>${info.name}</strong>：`;
-      line += `UI <span class="${uiOK ? 'ok' : 'no'}">${p.ui || '未选'}${uiOK ? ' ✓' : ' ✗'}</span> · `;
-      line += `恢复 <span class="${recOK ? 'ok' : 'no'}">${p.rec || '未选'}${recOK ? ' ✓' : ' ✗'}</span>`;
-      const whys = [];
-      if (p.ui && info.uiExplain[p.ui]) whys.push(info.uiExplain[p.ui]);
-      if (p.rec && info.recExplain[p.rec]) whys.push(info.recExplain[p.rec]);
-      if (!uiOK || !recOK) {
-        line += `<br><span class="why">↳ 正解：UI = <strong style="color:#8fd9a4">${info.correctUI}</strong> · 恢复 = <strong style="color:#8fd9a4">${info.correctRec}</strong></span>`;
-      }
-      if (whys.length) {
-        line += `<br><span class="why">↳ ${whys.join(' / ')}</span>`;
-      }
-      lines.push(`<li>${line}</li>`);
-    });
-
-    const judge = document.getElementById('chooseJudge');
-    let verdictClass, verdictLabel, headline;
-    if (totalCorrect === 4) {
-      verdictClass = 'win';
-      verdictLabel = '完美';
-      headline = '你已经把异常当任务流的一部分来设计了。';
-    } else if (totalCorrect >= 3 || (totalUI >= 3 && totalRec >= 3)) {
-      verdictClass = 'win';
-      verdictLabel = '基本对了';
-      headline = '4 个异常里大部分都判断对——继续把"我假设这不会发生"从口头去掉。';
-    } else if (totalCorrect >= 2 || totalUI >= 2) {
-      verdictClass = 'partial';
-      verdictLabel = '一半一半';
-      headline = '方向有了——再看一次：UI 是让用户行动，恢复是把任务接回来。';
-    } else {
-      verdictClass = 'miss';
-      verdictLabel = '再来一次';
-      headline = '换个角度——异常不是 toast，是 4 个独立流程。每一种都得有 (a) 兜底 UI (b) 让用户下一步的路径。';
-    }
-
-    judge.innerHTML = `<span class="verdict ${verdictClass}">${verdictLabel}</span><h4>${headline}</h4><ul>${lines.join('')}</ul>`;
-    judge.classList.add('show');
-    judge.scrollIntoView({ behavior: 'smooth', block: 'center' });
-  });
-
-  document.getElementById('chooseReset').addEventListener('click', () => {
-    document.querySelectorAll('.choose-options').forEach(g => {
-      g.querySelectorAll('.choose-opt').forEach(o => o.classList.remove('selected'));
-      delete g.dataset.picked;
-    });
-    document.querySelectorAll('select[data-group]').forEach(s => {
-      s.value = '';
-      delete s.dataset.picked;
-    });
-    document.getElementById('chooseJudge').classList.remove('show');
-    updateProgress();
-  });
-
-  updateProgress();
-})();
 </script>
 
 </body>

@@ -95,6 +95,57 @@
   .problem-card.bad code { background: rgba(255,77,46,0.18); color: var(--accent); }
   .problem-card.good code { background: rgba(255,77,46,0.18); color: var(--obj-color); }
 
+  /* ====== Visual-first opening: dropdown vs state machine ====== */
+  .viz-stage { background: var(--paper); border: 1px solid var(--line); border-radius: 12px; padding: 28px; margin-top: 16px; position: relative; }
+  .viz-hint { text-align: center; font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--ink-mute); margin: 18px 0 0; letter-spacing: 0.04em; }
+  .viz-hint strong { color: var(--obj-color); }
+  .x8-split { display: grid; grid-template-columns: 1fr 2.2fr; gap: 22px; align-items: stretch; }
+  @media (max-width: 880px) { .x8-split { grid-template-columns: 1fr; } }
+  .x8-dropdown { background: white; border: 1.5px solid var(--accent); border-radius: 8px; padding: 18px 20px; display: flex; flex-direction: column; gap: 10px; }
+  .x8-dropdown .tag { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--accent); letter-spacing: 0.08em; font-weight: 700; }
+  .x8-dropdown .nm { font-family: 'Noto Serif SC', serif; font-size: 16px; font-weight: 700; }
+  .x8-dropdown .field-label { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--ink-mute); text-transform: uppercase; letter-spacing: 0.06em; }
+  .x8-dropdown .field { background: var(--bg-2); border: 1px solid var(--line); border-radius: 5px; padding: 8px 12px; font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--ink); display: flex; justify-content: space-between; align-items: center; }
+  .x8-dropdown .field .caret { color: var(--ink-mute); }
+  .x8-dropdown .enum-list { background: var(--bg-2); border-radius: 5px; padding: 8px 12px; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ink-soft); line-height: 1.7; }
+  .x8-dropdown .miss { padding: 8px 10px; border-top: 1px dashed var(--line); margin-top: auto; font-size: 12px; color: var(--accent); font-family: 'Noto Serif SC', serif; line-height: 1.5; }
+
+  .x8-states { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+  @media (max-width: 1180px) { .x8-states { grid-template-columns: repeat(3, 1fr); } }
+  @media (max-width: 720px) { .x8-states { grid-template-columns: repeat(2, 1fr); } }
+  .x8-mini { background: white; border: 1.5px solid var(--obj-color); border-radius: 7px; padding: 9px 10px 10px; display: flex; flex-direction: column; gap: 5px; min-height: 110px; }
+  .x8-mini .stt { font-family: 'JetBrains Mono', monospace; font-size: 9px; color: var(--obj-color); letter-spacing: 0.06em; font-weight: 700; }
+  .x8-mini .ttl { font-family: 'Noto Serif SC', serif; font-size: 12px; font-weight: 700; color: var(--ink); }
+  .x8-mini .btn-row { display: flex; gap: 3px; flex-wrap: wrap; margin-top: auto; padding-top: 6px; border-top: 1px dashed var(--line); }
+  .x8-mini .btn { padding: 2px 6px; font-family: 'JetBrains Mono', monospace; font-size: 8px; letter-spacing: 0.04em; border-radius: 3px; }
+  .x8-mini .btn.p { background: var(--obj-color); color: white; }
+  .x8-mini .btn.s { background: var(--bg-2); color: var(--ink-soft); }
+  .x8-mini .btn.d { background: var(--bg-2); color: var(--ink-mute); opacity: 0.5; text-decoration: line-through; }
+  .x8-mini .note { font-size: 10px; color: var(--ink-soft); line-height: 1.4; }
+
+  .sticky-wrap { margin-top: 28px; display: flex; gap: 22px; align-items: center; flex-wrap: wrap; justify-content: center; }
+  .sticky { background: #fff8c4; border: 1px solid #e5d98a; border-radius: 3px; padding: 16px 22px 18px; position: relative; transform: rotate(-1.5deg); box-shadow: 0 6px 14px rgba(22,22,29,0.12), 0 1px 3px rgba(22,22,29,0.08); font-size: 14px; color: var(--ink); line-height: 1.65; max-width: 380px; text-align: center; }
+  .sticky-pin { position: absolute; top: -8px; left: 50%; transform: translateX(-50%); width: 14px; height: 14px; background: var(--accent); border-radius: 50%; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+  .sticky strong { display: block; margin-top: 4px; font-family: 'Noto Serif SC', serif; font-size: 17px; color: var(--accent); line-height: 1.4; }
+
+  /* Section 04 demo */
+  .demo-x8 { background: var(--paper); border: 1px solid var(--line); border-left: 3px solid var(--obj-color); border-radius: 10px; padding: 26px 28px 24px; margin-top: 24px; }
+  .demo-x8 h3 { font-family: 'Noto Serif SC', serif; font-size: 20px; font-weight: 700; margin: 0 0 10px; }
+  .demo-x8 .sub { font-size: 13px; color: var(--ink-soft); margin: 0 0 18px; line-height: 1.6; }
+  .sm-graph { background: white; border: 1px solid var(--line); border-radius: 8px; padding: 20px; overflow-x: auto; }
+  .sm-row { display: flex; gap: 12px; align-items: center; flex-wrap: nowrap; min-width: max-content; }
+  .sm-node { background: var(--bg-2); border: 1.5px solid var(--ink); border-radius: 8px; padding: 8px 14px; font-family: 'Noto Serif SC', serif; font-weight: 700; font-size: 13px; color: var(--ink); min-width: 70px; text-align: center; flex-shrink: 0; }
+  .sm-node.start { background: var(--obj-soft); border-color: var(--obj-color); }
+  .sm-node.end { background: var(--green-soft); border-color: var(--green); }
+  .sm-arr { color: var(--obj-color); font-family: 'JetBrains Mono', monospace; font-size: 14px; font-weight: 700; flex-shrink: 0; }
+  .sm-arr .label { display: block; font-size: 9px; color: var(--ink-mute); letter-spacing: 0.04em; margin-top: 2px; text-align: center; font-weight: 400; }
+  .demo-x8-tbl { width: 100%; border-collapse: separate; border-spacing: 4px; margin-top: 18px; }
+  .demo-x8-tbl th, .demo-x8-tbl td { padding: 10px 12px; text-align: left; border-radius: 5px; vertical-align: top; font-size: 12px; }
+  .demo-x8-tbl thead th { font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.06em; color: var(--ink-mute); background: var(--bg-2); text-transform: uppercase; }
+  .demo-x8-tbl tbody td { background: white; border: 1px solid var(--line); color: var(--ink-soft); line-height: 1.6; }
+  .demo-x8-tbl tbody td.lbl { font-family: 'JetBrains Mono', monospace; color: var(--obj-color); font-weight: 700; background: var(--bg-2); }
+  .demo-x8-tbl tbody td code { font-family: 'JetBrains Mono', monospace; font-size: 11px; background: var(--bg-2); padding: 1px 5px; border-radius: 3px; color: var(--ink); }
+
   /* GAME 1: timeline + mock */
   .timeline-stage { background: var(--paper); border: 1px solid var(--line); border-radius: 8px; padding: 32px 28px 28px; position: relative; overflow: hidden; }
   .timeline-stage::before { content: ''; position: absolute; inset: 0; background-image: linear-gradient(to right, var(--line-soft) 1px, transparent 1px), linear-gradient(to bottom, var(--line-soft) 1px, transparent 1px); background-size: 24px 24px; opacity: 0.4; pointer-events: none; }
@@ -372,8 +423,8 @@
     </div>
     <div class="hero-grid">
       <div>
-        <h1>对象的<br><span class="display-cn">一生</span>，<br>是<span class="purple">一张状态机</span>。</h1>
-        <p class="lede">从草稿到归档之间，对象经过的所有合法路径。<br>知道这张图，<strong>UI / 权限 / 操作可见性</strong> 全都能从图里查出来。</p>
+        <h1>稿子上是<br><span class="display-cn">1 个下拉框</span>，<br>背后是<span class="purple">7 张稿</span>。</h1>
+        <p class="lede">"订单状态" 看着是 1 个字段 = 5 个枚举。<br>实际上每个状态<strong style="color:var(--obj-color)">都是完全不同的页面</strong>——按钮变、文案变、颜色变。</p>
       </div>
       <div class="hero-side">
         <div class="row"><span class="k">本页讲什么</span><span class="v">状态 + 迁移</span></div>
@@ -385,37 +436,95 @@
   </div>
 </header>
 
-<!-- Section 01: 问题 -->
+<!-- Section 01: 看见 -->
 <section id="problem">
   <div class="wrap">
     <div class="section-head">
       <div>
-        <div class="section-num"><strong>01</strong> / 问题</div>
-        <h2 class="section-title">为什么<br>"状态字段"<br>永远<span class="em">说不清</span>？</h2>
+        <div class="section-num"><strong>01</strong> / 看见</div>
+        <h2 class="section-title">先看图。</h2>
       </div>
-      <p class="section-sub">因为状态<strong>不是一个字段</strong>。它是一张<strong>有节点、有边、有守卫</strong>的图。把它当字段写，工程师永远在追问"那这个状态能跳到那个状态吗"。</p>
-    </div>
-    <div class="problem-grid">
-      <div class="problem-card bad">
-        <span class="tag">状态当字段 · BAD</span>
-        <h3>"订单状态下拉框：5 个枚举"</h3>
-        <p>稿子里写了一个下拉：<code>未支付 / 已支付 / 已发货 / 已完成 / 已退款</code>。看起来很清楚。</p>
-        <p><strong>工程师追问：</strong>已发货后能改回未支付吗？已支付后用户能取消吗？已完成的还能退货吗？哪个状态显示"申请退款"，哪个不显示？超时未付款会自动关闭吗？</p>
-        <p style="color:var(--accent)"><strong>你：</strong>啊……我画的时候没想过这些……</p>
-      </div>
-      <div class="problem-card good">
-        <span class="tag">状态当机器 · GOOD</span>
-        <h3>"订单状态机：7 节点 + 9 条迁移"</h3>
-        <p>稿子里给出一张状态机图：<code>draft → submitted → paid → shipped → delivered → completed / returned</code>。每条迁移标注：<strong>触发方 + 条件 + 副作用 + 是否可逆</strong>。</p>
-        <p><strong>工程师收到：</strong>状态机 schema 直接落 enum + transition logic，每个 UI 形态对应一种状态。</p>
-        <p style="color:var(--obj-color)"><strong>结果：</strong>追问 → 0 次。</p>
-      </div>
+      <p class="section-sub">
+        左边是<strong style="color:var(--accent)">你画的那 1 个下拉</strong>。右边是<strong style="color:var(--obj-color)">背后真实的 7 张稿</strong>——每个状态的页面都长得完全不同。
+      </p>
     </div>
 
-    <div style="margin-top:24px;padding:16px 22px;background:var(--bg-2);border:1px dashed var(--line);border-left:3px solid var(--obj-color);border-radius:6px;font-size:14px;color:var(--ink-soft);line-height:1.7">
-      <strong style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.08em;color:var(--obj-color);text-transform:uppercase">先分清两件事 · NOT-THE-SAME</strong><br>
-      <strong style="color:var(--ink)">"状态字段长什么样"</strong>——是静态枚举、字典表、还是指向另一张表的动态关联？这件事是字段值域的形状，看 <a href="x10-field-awareness.html" style="color:var(--obj-color);font-weight:600;text-decoration:underline">X10 字段意识</a> 的"取值范围"。<br>
-      <strong style="color:var(--ink)">"状态值之间怎么跳"</strong>——哪些迁移合法、谁能触发、跳完发生什么？这是<strong style="color:var(--obj-color)">状态机</strong>，是本篇的主线。下面 7 个状态，先看它们之间的边。
+    <div class="viz-stage">
+      <div class="x8-split">
+
+        <div class="x8-dropdown">
+          <span class="tag">✗ 设计稿现状</span>
+          <div class="nm">订单状态字段</div>
+          <span class="field-label">订单状态 · ORDER STATUS</span>
+          <div class="field"><span>已支付</span><span class="caret">▾</span></div>
+          <div class="enum-list">未支付<br>已支付<br>已发货<br>已完成<br>已退款</div>
+          <div class="miss">"5 个值就够了"——<strong>但每个状态的页面长什么样？</strong></div>
+        </div>
+
+        <div>
+          <div class="x8-states">
+            <div class="x8-mini">
+              <span class="stt">STATE 01</span>
+              <div class="ttl">未支付</div>
+              <div class="note">大字"还差 1 步"<br>倒计时 14:59</div>
+              <div class="btn-row"><span class="btn p">去支付</span><span class="btn s">取消</span></div>
+            </div>
+            <div class="x8-mini">
+              <span class="stt">STATE 02</span>
+              <div class="ttl">已支付</div>
+              <div class="note">绿色✓<br>"等待发货"</div>
+              <div class="btn-row"><span class="btn s">联系客服</span><span class="btn d">取消</span></div>
+            </div>
+            <div class="x8-mini">
+              <span class="stt">STATE 03</span>
+              <div class="ttl">已发货</div>
+              <div class="note">物流地图<br>预计 06-12 到</div>
+              <div class="btn-row"><span class="btn p">查物流</span><span class="btn s">催发货</span></div>
+            </div>
+            <div class="x8-mini">
+              <span class="stt">STATE 04</span>
+              <div class="ttl">已签收</div>
+              <div class="note">"7 天内可申请退货"<br>评分入口</div>
+              <div class="btn-row"><span class="btn p">评价</span><span class="btn s">申请退款</span></div>
+            </div>
+            <div class="x8-mini">
+              <span class="stt">STATE 05</span>
+              <div class="ttl">已完成</div>
+              <div class="note">归档状态<br>"7 天后不可退"</div>
+              <div class="btn-row"><span class="btn s">查看</span><span class="btn d">退款</span></div>
+            </div>
+            <div class="x8-mini">
+              <span class="stt">STATE 06</span>
+              <div class="ttl">退款中</div>
+              <div class="note">流程图<br>"已申请 2 天"</div>
+              <div class="btn-row"><span class="btn s">催退款</span></div>
+            </div>
+            <div class="x8-mini">
+              <span class="stt">STATE 07</span>
+              <div class="ttl">已退款</div>
+              <div class="note">灰色卡<br>"已退至原账户"</div>
+              <div class="btn-row"><span class="btn s">联系客服</span></div>
+            </div>
+            <div class="x8-mini" style="border-style:dashed;border-color:var(--accent)">
+              <span class="stt" style="color:var(--accent)">⚠ 漏</span>
+              <div class="ttl">超时关闭</div>
+              <div class="note" style="color:var(--accent)">还要画 1 张<br>(没付钱关单)</div>
+              <div class="btn-row"><span class="btn s">重新下单</span></div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+      <p class="viz-hint">1 个下拉框 = <strong>7 张稿 + 9 条迁移</strong> · 中间还有"超时关闭"漏画的</p>
+    </div>
+
+    <div class="sticky-wrap">
+      <div class="sticky">
+        <div class="sticky-pin"></div>
+        "状态字段"是字段意识（X10）。<br>
+        <strong>"状态之间怎么跳" 才是状态机</strong><br>
+        <span style="font-size:12px;color:var(--ink-soft);font-family:'Noto Serif SC',serif">本篇讲后者</span>
+      </div>
     </div>
   </div>
 </section>
@@ -543,18 +652,80 @@
   </div>
 </section>
 
-<!-- Section 04: 幕三 · 再做 -->
+<!-- Section 04: 幕三 · 看更多 -->
 <section id="make">
   <div class="wrap">
     <div class="section-head">
       <div>
-        <span class="act-tag make">幕三 · 再做</span>
-        <div class="section-num"><strong>04</strong> / 再做</div>
-        <h2 class="section-title">轮到你——<br>给「<span class="em">请假申请</span>」<br>画状态机。</h2>
+        <span class="act-tag make">幕三 · 看更多</span>
+        <div class="section-num"><strong>04</strong> / 看更多</div>
+        <h2 class="section-title">「<span class="em">请假申请</span>」状态机——<br>看完整版长什么样。</h2>
       </div>
-      <p class="section-sub">状态池里有 8 个候选，操作池里有 10 个候选—— 其中各有几个<strong>陷阱</strong>。先选状态进画布，再选操作连边。</p>
+      <p class="section-sub">6 个状态 + 8 条迁移 + 守卫条件。下面直接给你完整图 + 每条边的<strong>触发 / 守卫 / 副作用</strong>。</p>
     </div>
-    <div class="builder-stage">
+
+    <div class="demo-x8">
+      <h3>请假申请 · LEAVE REQUEST · 状态机</h3>
+      <p class="sub">实线 = 用户主动；虚线 = 系统自动；标红 = 终态不可逆。</p>
+
+      <div class="sm-graph">
+        <div class="sm-row">
+          <div class="sm-node start">drafting</div>
+          <div class="sm-arr">→<span class="label">submit</span></div>
+          <div class="sm-node">submitted</div>
+          <div class="sm-arr">→<span class="label">approve</span></div>
+          <div class="sm-node">approved</div>
+          <div class="sm-arr">→<span class="label">start (auto)</span></div>
+          <div class="sm-node">in_progress</div>
+          <div class="sm-arr">→<span class="label">finish (auto)</span></div>
+          <div class="sm-node end">completed</div>
+        </div>
+        <div class="sm-row" style="margin-top:18px">
+          <div style="width:120px;text-align:right;font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--ink-mute)">分支：</div>
+          <div class="sm-node">submitted</div>
+          <div class="sm-arr" style="color:var(--accent)">→<span class="label">reject</span></div>
+          <div class="sm-node" style="border-color:var(--accent)">rejected</div>
+          <div class="sm-arr" style="color:var(--accent)">→<span class="label">resubmit</span></div>
+          <div class="sm-node start">drafting</div>
+        </div>
+        <div class="sm-row" style="margin-top:14px">
+          <div style="width:120px;text-align:right;font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--ink-mute)">取消：</div>
+          <div class="sm-node">submitted / approved</div>
+          <div class="sm-arr" style="color:var(--accent)">→<span class="label">withdraw / cancel</span></div>
+          <div class="sm-node end" style="background:var(--accent-soft);border-color:var(--accent);color:var(--accent)">cancelled</div>
+        </div>
+      </div>
+
+      <table class="demo-x8-tbl">
+        <thead>
+          <tr>
+            <th>迁移</th>
+            <th>触发方</th>
+            <th>守卫条件 (Guard)</th>
+            <th>副作用</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td class="lbl">submit</td><td>员工</td><td>必填项齐 + 余额够</td><td>发邮件给主管 + 锁定假期余额</td></tr>
+          <tr><td class="lbl">approve</td><td>主管</td><td>员工身份有效</td><td>发邮件给员工 + 创建日历事件</td></tr>
+          <tr><td class="lbl">reject</td><td>主管</td><td>必填驳回理由</td><td>发邮件给员工 + 解锁余额</td></tr>
+          <tr><td class="lbl">withdraw</td><td>员工</td><td><strong>必须在主管未审批前</strong></td><td>解锁余额 + 通知主管</td></tr>
+          <tr><td class="lbl">cancel</td><td>员工 / 主管</td><td>批准后 + 假期未开始</td><td>解锁余额 + 删日历事件 + 通知双方</td></tr>
+          <tr><td class="lbl">start (auto)</td><td>系统 cron</td><td>到达开始日期</td><td>状态变化 + 邮件提醒 + 同步到 HR 系统</td></tr>
+          <tr><td class="lbl">finish (auto)</td><td>系统 cron</td><td>到达结束日期</td><td>归档 + 同步考勤记录</td></tr>
+          <tr><td class="lbl">resubmit</td><td>员工</td><td>已 rejected</td><td>带回原数据，版本号 +1，回 drafting</td></tr>
+        </tbody>
+      </table>
+
+      <div style="margin-top:18px;padding:14px 18px;background:var(--accent-soft);border-left:3px solid var(--accent);border-radius:4px;font-size:13px;color:var(--ink-soft);line-height:1.7">
+        <strong style="color:var(--accent)">⚠ 3 个最容易漏的：</strong><br>
+        ① 没有 "<code style="font-family:'JetBrains Mono',monospace;font-size:11px;background:white;padding:1px 5px;border-radius:3px">saved</code>" 状态——保存是动作不是状态，对应的状态是 <strong>drafting</strong>。<br>
+        ② <strong>withdraw 的守卫</strong> 容易漏——审批后撤回 ≠ 撤回，那是 cancel。<br>
+        ③ <strong>cancel 的副作用</strong> 容易写"解锁余额" 就结束——但日历事件不删，HR 同步不撤，几周后看到"鬼假期"。
+      </div>
+    </div>
+
+    <div style="display:none" class="builder-stage">
       <div class="builder-head">
         <h3 class="builder-title">请假申请 · <span class="em">画一张完整状态机</span></h3>
         <div class="builder-progress">状态 <span class="done" id="bNodeCount">0</span> · 边 <span class="done" id="bEdgeCount">0</span></div>
@@ -880,277 +1051,6 @@
   });
 })();
 
-// ===== Game 3: builder =====
-(function(){
-  const NODE_DEFS = {
-    drafting:    { label:'drafting',    correct:true,  why:'员工填表中。是独立状态。' },
-    submitted:   { label:'submitted',   correct:true,  why:'已提交、等审批。明确状态。' },
-    approved:    { label:'approved',    correct:true,  why:'审批通过，等假期开始。' },
-    rejected:    { label:'rejected',    correct:true,  why:'驳回。可重新修改重提。' },
-    in_progress: { label:'in_progress', correct:true,  why:'正在休假中。' },
-    completed:   { label:'completed',   correct:true,  why:'假期结束，终态之一。' },
-    cancelled:   { label:'cancelled',   correct:true,  why:'提前结束。终态之二。' },
-    saved:       { label:'saved',       correct:false, why:'陷阱 · "保存"是动作，对应 drafting 状态，不是独立状态。' }
-  };
-  const EDGE_DEFS = {
-    submit:       { label:'提交',     correct:true,  from:'drafting',    to:'submitted',   why:'drafting → submitted，用户触发。' },
-    approve:      { label:'同意',     correct:true,  from:'submitted',   to:'approved',    why:'submitted → approved，审批人触发。' },
-    reject:       { label:'驳回',     correct:true,  from:'submitted',   to:'rejected',    why:'submitted → rejected，审批人触发。' },
-    withdraw:     { label:'撤回',     correct:true,  from:'submitted',   to:'drafting',    why:'submitted → drafting，用户在审批前撤回。' },
-    resubmit:     { label:'修改重提', correct:true,  from:'rejected',    to:'submitted',   why:'rejected → submitted，被驳回后改完再交。' },
-    start:        { label:'假期开始', correct:true,  from:'approved',    to:'in_progress', why:'approved → in_progress，系统自动（到日期）。' },
-    finish:       { label:'假期结束', correct:true,  from:'in_progress', to:'completed',   why:'in_progress → completed，系统自动。' },
-    cancel:       { label:'提前取消', correct:true,  from:'approved',    to:'cancelled',   why:'approved → cancelled，用户主动。' },
-    view_history: { label:'看历史',   correct:false, why:'陷阱 · "查看"不改状态——是读操作，不是迁移。' },
-    reassign:     { label:'转交',     correct:false, why:'陷阱 · "转交审批人"改的是字段，不是状态——审批状态没变。' }
-  };
-  const REQUIRED_NODES = ['drafting','submitted','approved','rejected','in_progress','completed','cancelled'];
-  const REQUIRED_EDGES = ['submit','approve','reject','withdraw','resubmit','start','finish','cancel'];
-
-  const nodes = [], edges = [];
-  let pickedKind = null, pickedKey = null, edgeStart = null;
-  let nodeIdSeq = 1, edgeIdSeq = 1;
-
-  const svg = document.getElementById('bSvg');
-  const canvasEmpty = document.getElementById('bCanvasEmpty');
-  const pickerLabel = document.getElementById('pickerLabel');
-  const modePill = document.getElementById('bModePill');
-  const modeText = document.getElementById('bModeText');
-  const judgeEl = document.getElementById('bJudge');
-
-  function reflowNodes(){
-    nodes.forEach((n, idx) => {
-      const cols = 4, cellW = 720 / cols, cellH = 110;
-      const col = idx % cols, row = Math.floor(idx / cols);
-      n.x = col * cellW + cellW / 2;
-      n.y = row * cellH + 60;
-    });
-  }
-  function getNode(id){ return nodes.find(n => n.id === id); }
-  function render(){
-    Array.from(svg.querySelectorAll('g.b-node, g.b-edge-group')).forEach(el => el.remove());
-    edges.forEach(e => {
-      const from = getNode(e.fromId), to = getNode(e.toId);
-      if (!from || !to) return;
-      const def = EDGE_DEFS[e.key];
-      const dx = to.x - from.x, dy = to.y - from.y;
-      const len = Math.sqrt(dx*dx + dy*dy) || 1;
-      const ux = dx / len, uy = dy / len;
-      const sx = from.x + ux * 50, sy = from.y + uy * 20;
-      const ex = to.x - ux * 50, ey = to.y - uy * 20;
-      const mx = (sx + ex) / 2, my = (sy + ey) / 2;
-      const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
-      g.classList.add('b-edge-group');
-      g.dataset.edgeId = e.id;
-      g.innerHTML = `<line class="b-edge is-removable" x1="${sx}" y1="${sy}" x2="${ex}" y2="${ey}" marker-end="url(#b-arrow)"/>
-        <rect class="b-edge-bg" x="${mx-30}" y="${my-9}" width="60" height="16"/>
-        <text class="b-edge-label" x="${mx}" y="${my+3}" text-anchor="middle">${def.label}</text>
-        <circle class="b-node-remove" cx="${mx+32}" cy="${my-2}" r="6" data-remove-edge="${e.id}"/>
-        <text x="${mx+32}" y="${my+1}" text-anchor="middle" fill="white" font-size="9" font-weight="700" style="pointer-events:none">×</text>`;
-      svg.appendChild(g);
-    });
-    nodes.forEach(n => {
-      const def = NODE_DEFS[n.key];
-      const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
-      g.classList.add('b-node');
-      if (edgeStart === n.id) g.classList.add('is-source');
-      g.dataset.nodeId = n.id;
-      g.setAttribute('transform', `translate(${n.x - 45},${n.y - 16})`);
-      g.innerHTML = `<rect width="90" height="32"/>
-        <text x="45" y="20" text-anchor="middle">${def.label}</text>
-        <circle class="b-node-remove" cx="84" cy="-4" r="7" data-remove-node="${n.id}"/>
-        <text x="84" y="-1" text-anchor="middle" fill="white" font-size="11" font-weight="700" style="pointer-events:none">×</text>`;
-      svg.appendChild(g);
-    });
-    document.querySelectorAll('#bNodePool .builder-chip').forEach(chip => {
-      chip.classList.toggle('is-used', nodes.some(n => n.key === chip.dataset.key));
-    });
-    document.querySelectorAll('#bEdgePool .builder-chip').forEach(chip => {
-      chip.classList.toggle('is-used', edges.some(e => e.key === chip.dataset.key));
-    });
-    document.getElementById('bNodeCount').textContent = nodes.length;
-    document.getElementById('bEdgeCount').textContent = edges.length;
-    document.getElementById('bNodeStat').textContent = nodes.length;
-    document.getElementById('bEdgeStat').textContent = edges.length;
-    canvasEmpty.classList.toggle('is-hidden', nodes.length > 0 || edges.length > 0);
-    updateModePill();
-  }
-  function updateModePill(){
-    modePill.className = 'builder-mode-pill';
-    if (pickedKind === 'node') {
-      modePill.classList.add('is-active-add');
-      modeText.textContent = `准备落节点: ${NODE_DEFS[pickedKey].label} · 点画布空白处放置`;
-    } else if (pickedKind === 'edge' && !edgeStart) {
-      modePill.classList.add('is-active-edge');
-      modeText.textContent = `准备连边: ${EDGE_DEFS[pickedKey].label} · 先点起点状态`;
-    } else if (pickedKind === 'edge' && edgeStart) {
-      const start = getNode(edgeStart);
-      modePill.classList.add('is-active-edge');
-      modeText.textContent = `起点 ${start ? NODE_DEFS[start.key].label : ''} · 再点终点状态`;
-    } else {
-      modeText.textContent = '未选中——先从候选池点一个';
-    }
-  }
-  function pickChip(kind, key){
-    if (pickedKind === kind && pickedKey === key) { clearPick(); return; }
-    pickedKind = kind; pickedKey = key; edgeStart = null;
-    document.querySelectorAll('.builder-chip').forEach(c => c.classList.remove('is-active'));
-    const chip = document.querySelector(`[data-kind="${kind}"][data-key="${key}"]`);
-    if (chip) chip.classList.add('is-active');
-    pickerLabel.classList.add('show');
-    if (kind === 'node') pickerLabel.innerHTML = `已选状态 <strong>${NODE_DEFS[key].label}</strong>——点画布空白处落点 <span class="esc">Esc</span> 取消`;
-    else pickerLabel.innerHTML = `已选操作 <strong>${EDGE_DEFS[key].label}</strong>——点画布上两个状态（起 → 终）<span class="esc">Esc</span> 取消`;
-    updateModePill();
-  }
-  function clearPick(){
-    pickedKind = null; pickedKey = null; edgeStart = null;
-    document.querySelectorAll('.builder-chip').forEach(c => c.classList.remove('is-active'));
-    pickerLabel.classList.remove('show');
-    document.querySelectorAll('.b-node').forEach(n => n.classList.remove('is-source'));
-    updateModePill();
-  }
-  function placeNode(){
-    if (!pickedKey) return;
-    if (nodes.some(n => n.key === pickedKey)) {
-      pickerLabel.innerHTML = `状态 <strong>${NODE_DEFS[pickedKey].label}</strong> 已在画布上——选别的`;
-      return;
-    }
-    nodes.push({ id: nodeIdSeq++, key: pickedKey });
-    reflowNodes(); clearPick(); render();
-  }
-  function selectAsEdgeStart(node){
-    edgeStart = node.id;
-    document.querySelectorAll('.b-node').forEach(n => n.classList.toggle('is-source', n.dataset.nodeId == node.id));
-    updateModePill();
-  }
-  function selectAsEdgeEnd(node){
-    if (edgeStart === node.id) { pickerLabel.innerHTML = `起点和终点不能是同一个 · 重选`; return; }
-    if (edges.some(e => e.key === pickedKey)) {
-      pickerLabel.innerHTML = `操作 <strong>${EDGE_DEFS[pickedKey].label}</strong> 已存在——选别的`;
-      return;
-    }
-    edges.push({ id: edgeIdSeq++, key: pickedKey, fromId: edgeStart, toId: node.id });
-    clearPick(); render();
-  }
-  function removeNode(id){
-    const idx = nodes.findIndex(n => n.id === id);
-    if (idx < 0) return;
-    nodes.splice(idx, 1);
-    for (let i = edges.length - 1; i >= 0; i--) {
-      if (edges[i].fromId === id || edges[i].toId === id) edges.splice(i, 1);
-    }
-    reflowNodes(); render();
-  }
-  function removeEdge(id){
-    const idx = edges.findIndex(e => e.id === id);
-    if (idx < 0) return;
-    edges.splice(idx, 1); render();
-  }
-  document.querySelectorAll('#bNodePool .builder-chip').forEach(chip => {
-    chip.addEventListener('click', e => {
-      e.stopPropagation();
-      if (nodes.some(n => n.key === chip.dataset.key)) return;
-      pickChip('node', chip.dataset.key);
-    });
-  });
-  document.querySelectorAll('#bEdgePool .builder-chip').forEach(chip => {
-    chip.addEventListener('click', e => {
-      e.stopPropagation();
-      if (edges.some(ed => ed.key === chip.dataset.key)) return;
-      pickChip('edge', chip.dataset.key);
-    });
-  });
-  svg.addEventListener('click', e => {
-    const rmEdge = e.target.closest('[data-remove-edge]');
-    if (rmEdge) { removeEdge(parseInt(rmEdge.getAttribute('data-remove-edge'), 10)); return; }
-    const rmNode = e.target.closest('[data-remove-node]');
-    if (rmNode) { removeNode(parseInt(rmNode.getAttribute('data-remove-node'), 10)); return; }
-    const nodeG = e.target.closest('.b-node');
-    if (nodeG) {
-      const n = getNode(parseInt(nodeG.dataset.nodeId, 10));
-      if (pickedKind === 'edge') {
-        if (!edgeStart) selectAsEdgeStart(n);
-        else selectAsEdgeEnd(n);
-      }
-      return;
-    }
-    if (pickedKind === 'node') placeNode();
-  });
-  document.addEventListener('keydown', e => { if (e.key === 'Escape') clearPick(); });
-
-  document.getElementById('bSubmit').addEventListener('click', () => {
-    const placedNodeKeys = new Set(nodes.map(n => n.key));
-    const placedEdgeKeys = new Set(edges.map(e => e.key));
-    const correctNodes = [], wrongNodes = [], missingNodes = [];
-    placedNodeKeys.forEach(k => {
-      const def = NODE_DEFS[k];
-      if (def.correct) correctNodes.push(k); else wrongNodes.push(k);
-    });
-    REQUIRED_NODES.forEach(k => { if (!placedNodeKeys.has(k)) missingNodes.push(k); });
-    const correctEdges = [], wrongEdgeOps = [], wrongDir = [], missingEdges = [];
-    edges.forEach(e => {
-      const def = EDGE_DEFS[e.key];
-      const from = getNode(e.fromId), to = getNode(e.toId);
-      if (!def.correct) { wrongEdgeOps.push(e.key); return; }
-      if (!from || !to) return;
-      if (from.key === def.from && to.key === def.to) correctEdges.push(e.key);
-      else wrongDir.push({ key: e.key, actualFrom: from.key, actualTo: to.key, expectedFrom: def.from, expectedTo: def.to });
-    });
-    REQUIRED_EDGES.forEach(k => { if (!placedEdgeKeys.has(k)) missingEdges.push(k); });
-
-    const totalRequired = REQUIRED_NODES.length + REQUIRED_EDGES.length;
-    const totalCorrect = correctNodes.length + correctEdges.length;
-    const totalWrong = wrongNodes.length + wrongEdgeOps.length + wrongDir.length;
-    const lines = [];
-
-    lines.push(`<h5>状态 · NODES</h5>`);
-    if (correctNodes.length > 0) lines.push(`<ul><li><span class="ok">✓ 命中</span> ${correctNodes.length} / 7：<code>${correctNodes.join(', ')}</code></li></ul>`);
-    if (missingNodes.length > 0) lines.push(`<ul><li><span class="bad">✗ 缺</span>：<code>${missingNodes.join(', ')}</code><br><span class="why">↳ ${missingNodes.map(k => NODE_DEFS[k].why).join(' · ')}</span></li></ul>`);
-    if (wrongNodes.length > 0) lines.push(`<ul>${wrongNodes.map(k => `<li><span class="bad">✗ 陷阱</span>：<code>${k}</code><br><span class="why">↳ ${NODE_DEFS[k].why}</span></li>`).join('')}</ul>`);
-    if (correctNodes.length === 0 && missingNodes.length === REQUIRED_NODES.length) lines.push(`<ul><li>还没放状态——先从「状态池」点一个进画布</li></ul>`);
-
-    lines.push(`<h5>迁移 · EDGES</h5>`);
-    if (correctEdges.length > 0) lines.push(`<ul><li><span class="ok">✓ 命中</span> ${correctEdges.length} / 8：<code>${correctEdges.map(k => EDGE_DEFS[k].label).join(', ')}</code></li></ul>`);
-    if (missingEdges.length > 0) lines.push(`<ul><li><span class="bad">✗ 缺</span>：<code>${missingEdges.map(k => EDGE_DEFS[k].label).join(', ')}</code><br><span class="why">↳ 没有这些边，对象会卡在中间状态走不动。</span></li></ul>`);
-    if (wrongDir.length > 0) {
-      const lis = wrongDir.map(w => {
-        const def = EDGE_DEFS[w.key];
-        return `<li><span class="bad">✗ 方向错</span>：<code>${def.label}</code> 你画的 <code>${w.actualFrom} → ${w.actualTo}</code>，应是 <code>${w.expectedFrom} → ${w.expectedTo}</code><br><span class="why">↳ ${def.why}</span></li>`;
-      }).join('');
-      lines.push(`<ul>${lis}</ul>`);
-    }
-    if (wrongEdgeOps.length > 0) {
-      const lis = wrongEdgeOps.map(k => `<li><span class="bad">✗ 陷阱</span>：<code>${EDGE_DEFS[k].label}</code><br><span class="why">↳ ${EDGE_DEFS[k].why}</span></li>`).join('');
-      lines.push(`<ul>${lis}</ul>`);
-    }
-    if (correctEdges.length === 0 && missingEdges.length === REQUIRED_EDGES.length && wrongDir.length === 0 && wrongEdgeOps.length === 0) {
-      lines.push(`<ul><li>还没连边——先在画布上放状态，再从「操作池」选一个连两个状态</li></ul>`);
-    }
-
-    let verdictClass, verdictLabel, headline;
-    const perfect = correctNodes.length === REQUIRED_NODES.length && correctEdges.length === REQUIRED_EDGES.length && wrongNodes.length === 0 && wrongDir.length === 0 && wrongEdgeOps.length === 0;
-    if (perfect) {
-      verdictClass='win'; verdictLabel='完美'; headline='你已经能把对象的「一生」画出来了——状态机思维上线。';
-    } else if (totalCorrect >= totalRequired - 2 && totalWrong <= 1) {
-      verdictClass='win'; verdictLabel='基本对了'; headline='主干已经成图——差一两条边 / 一个陷阱，离完整只剩一步。';
-    } else if (totalCorrect >= 8) {
-      verdictClass='partial'; verdictLabel='还差一点'; headline='骨架在，但漏了关键迁移——对象会卡住。把缺的边补上。';
-    } else {
-      verdictClass='fail'; verdictLabel='再想想'; headline='状态 / 迁移没分清——"保存"和"看历史"这种是陷阱，不进状态机。';
-    }
-    judgeEl.innerHTML = `<span class="verdict ${verdictClass}">${verdictLabel}</span><span class="judge-score">命中 <strong>${totalCorrect}</strong> / ${totalRequired}</span><h4>${headline}</h4>${lines.join('')}`;
-    judgeEl.classList.add('show');
-    judgeEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
-  });
-
-  document.getElementById('bReset').addEventListener('click', () => {
-    nodes.length = 0; edges.length = 0;
-    nodeIdSeq = 1; edgeIdSeq = 1;
-    clearPick(); judgeEl.classList.remove('show'); render();
-  });
-
-  render();
-})();
 </script>
 
 </body>
