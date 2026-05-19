@@ -91,6 +91,39 @@
   .problem-card p { margin: 0; color: var(--ink-soft); font-size: 14px; line-height: 1.55; }
   .problem-card p + p { margin-top: 10px; }
 
+  /* ====== Visual-first opening: task flow strip ====== */
+  .viz-stage { background: var(--paper); border: 1px solid var(--line); border-radius: 12px; padding: 28px; margin-top: 16px; position: relative; }
+  .viz-hint { text-align: center; font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--ink-mute); margin: 18px 0 0; letter-spacing: 0.04em; }
+  .viz-hint strong { color: var(--obj-color); }
+  .flow-strip { display: grid; grid-template-columns: repeat(5, 1fr) 24px; gap: 4px; align-items: stretch; }
+  @media (max-width: 980px) { .flow-strip { grid-template-columns: 1fr; gap: 12px; } .flow-arr { display: none; } }
+  .flow-step { background: white; border: 1.5px solid var(--line); border-radius: 8px; padding: 12px 12px 14px; display: flex; flex-direction: column; gap: 6px; position: relative; min-height: 150px; }
+  .flow-step.drawn { border-color: var(--obj-color); }
+  .flow-step.invisible { border-style: dashed; background: var(--bg-2); opacity: 0.85; }
+  .flow-step .ftag { font-family: 'JetBrains Mono', monospace; font-size: 9px; letter-spacing: 0.08em; color: var(--ink-mute); }
+  .flow-step.drawn .ftag { color: var(--obj-color); font-weight: 700; }
+  .flow-step.invisible .ftag { color: var(--accent); }
+  .flow-step .fnum { position: absolute; top: -8px; left: 8px; background: var(--ink); color: var(--bg); width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; }
+  .flow-step.drawn .fnum { background: var(--obj-color); }
+  .flow-step.invisible .fnum { background: var(--accent); }
+  .flow-step .fname { font-family: 'Noto Serif SC', serif; font-weight: 700; font-size: 14px; color: var(--ink); margin-top: 4px; }
+  .flow-step .fdesc { font-size: 11px; color: var(--ink-soft); line-height: 1.5; flex: 1; }
+  .flow-step .fdesc code { font-family: 'JetBrains Mono', monospace; font-size: 10px; background: var(--bg-2); padding: 0 4px; border-radius: 3px; color: var(--ink); }
+  .flow-step .fmark { margin-top: auto; padding-top: 8px; border-top: 1px dashed var(--line); font-family: 'JetBrains Mono', monospace; font-size: 9px; letter-spacing: 0.04em; }
+  .flow-step.drawn .fmark { color: var(--obj-color); }
+  .flow-step.invisible .fmark { color: var(--accent); }
+  .flow-arr { display: flex; align-items: center; justify-content: center; color: var(--ink-mute); font-family: 'JetBrains Mono', monospace; font-size: 14px; }
+
+  .sticky-wrap { margin-top: 28px; display: flex; gap: 22px; align-items: center; flex-wrap: wrap; justify-content: center; }
+  .sticky { background: #fff8c4; border: 1px solid #e5d98a; border-radius: 3px; padding: 16px 22px 18px; position: relative; transform: rotate(-1.5deg); box-shadow: 0 6px 14px rgba(22,22,29,0.12), 0 1px 3px rgba(22,22,29,0.08); font-size: 14px; color: var(--ink); line-height: 1.65; max-width: 360px; text-align: center; }
+  .sticky-pin { position: absolute; top: -8px; left: 50%; transform: translateX(-50%); width: 14px; height: 14px; background: var(--accent); border-radius: 50%; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+  .sticky strong { display: block; margin-top: 4px; font-family: 'Noto Serif SC', serif; font-size: 17px; color: var(--accent); line-height: 1.4; }
+
+  /* Section 04 demo */
+  .demo-card-x5 { background: var(--paper); border: 1px solid var(--line); border-left: 3px solid var(--obj-color); border-radius: 10px; padding: 26px 28px 24px; margin-top: 24px; }
+  .demo-card-x5 h3 { font-family: 'Noto Serif SC', serif; font-size: 20px; font-weight: 700; margin: 0 0 12px; }
+  .demo-card-x5 .sub { font-size: 13px; color: var(--ink-soft); margin: 0 0 18px; line-height: 1.6; }
+
   /* GAME 1: form factors */
   .factor-stage { background: var(--paper); border: 1px solid var(--line); border-radius: 8px; padding: 32px 28px 28px; position: relative; overflow: hidden; }
   .factor-stage::before { content: ''; position: absolute; inset: 0; background-image: linear-gradient(to right, var(--line-soft) 1px, transparent 1px), linear-gradient(to bottom, var(--line-soft) 1px, transparent 1px); background-size: 24px 24px; opacity: 0.4; pointer-events: none; }
@@ -360,9 +393,8 @@
           是<span class="purple">任务流</span>。
         </h1>
         <p class="lede">
-          用户不是来浏览页面的。<br>
-          用户是来"完成一件事"——提交、查询、审批、退款……<br>
-          页面只是任务流里的取景框。
+          你画了 <strong>3 张</strong>稿——填表 / 确认 / 成功。<br>
+          工程师做的是 <strong style="color:var(--obj-color)">5 步任务流</strong>——其中 2 步你根本没画。
         </p>
       </div>
       <div class="hero-side">
@@ -375,36 +407,80 @@
   </div>
 </header>
 
-<!-- Section 01: 问题 -->
+<!-- Section 01: 看见 -->
 <section id="problem">
   <div class="wrap">
     <div class="section-head">
       <div>
-        <div class="section-num"><strong>01</strong> / 问题</div>
-        <h2 class="section-title">为什么"3 个页面"<br>变成"10 个<span class="em">边界情况</span>"？</h2>
+        <div class="section-num"><strong>01</strong> / 看见</div>
+        <h2 class="section-title">先看图。</h2>
       </div>
       <p class="section-sub">
-        因为你在用<strong>页面数量</strong>描述用户行为。
-        但工程师要的是：<strong>任务有几步、每步进入/退出的条件、按钮按下去后端做什么</strong>。
-        语言对不上，每个状态、每个回退都要来回 ping 你。
+        "提交申请" 你画了 <strong style="color:var(--obj-color)">3 张稿</strong>，工程师做的是 <strong>5 步任务</strong>——
+        <strong style="color:var(--accent)">中间 2 步"没有页面"，但每一步都决定数据死活</strong>。
       </p>
     </div>
 
-    <div class="problem-grid">
-      <div class="problem-card bad">
-        <span class="tag">页面思维 · PAGE</span>
-        <h3>"提交申请要 3 个页面"</h3>
-        <p>稿子里画了 3 张：信息填写页、确认页、成功页。流程箭头从左往右拉到尾。</p>
-        <p><strong>工程师追问：</strong>如果用户回退会怎样？数据存哪？校验在哪一页做？什么时候真正生成记录？关掉浏览器再打开能续上吗？</p>
-        <p style="color:var(--accent)"><strong>你：</strong>呃……我只画了 3 张图。</p>
-      </div>
+    <div class="viz-stage">
+      <div class="flow-strip">
 
-      <div class="problem-card good">
-        <span class="tag">任务思维 · TASK</span>
-        <h3>"任务有 5 步"</h3>
-        <p>稿子里给的是：任务"提交申请"5 步——开始 → 填表 → 校验 → 提交 → 反馈。3 个页面只承载"填表 + 确认 + 成功"，校验是步骤不是页面，提交后存数据库才算真完成。</p>
-        <p><strong>工程师收到：</strong>任务流图 + 状态迁移图 + 每步的副作用清单。</p>
-        <p style="color:var(--obj-color)"><strong>结果：</strong>追问 → 0 次。</p>
+        <div class="flow-step drawn">
+          <div class="fnum">1</div>
+          <div class="ftag">✓ 你画了</div>
+          <div class="fname">开始</div>
+          <div class="fdesc">列表页 "申请记录"，<br>右上角按钮 <code>+ 新建申请</code></div>
+          <div class="fmark">PAGE · 已交付</div>
+        </div>
+
+        <div class="flow-arr">→</div>
+
+        <div class="flow-step drawn">
+          <div class="fnum">2</div>
+          <div class="ftag">✓ 你画了</div>
+          <div class="fname">填表</div>
+          <div class="fdesc">表单页，10+ 字段。<br>底部 <code>下一步</code> 按钮</div>
+          <div class="fmark">PAGE · 已交付</div>
+        </div>
+
+        <div class="flow-arr">→</div>
+
+        <div class="flow-step invisible">
+          <div class="fnum">3</div>
+          <div class="ftag">✗ 你没画</div>
+          <div class="fname">校验</div>
+          <div class="fdesc">提交前发生：必填检查、格式校验、<br><strong>跨字段冲突</strong>（开始 &gt; 结束 等）</div>
+          <div class="fmark">⚠ 错误态 = 缺稿</div>
+        </div>
+
+        <div class="flow-arr">→</div>
+
+        <div class="flow-step invisible">
+          <div class="fnum">4</div>
+          <div class="ftag">✗ 你没画</div>
+          <div class="fname">提交</div>
+          <div class="fdesc">写入数据库瞬间：<br>loading / 网络错 / 重复点 / 关页面</div>
+          <div class="fmark">⚠ 异常态 = 缺稿</div>
+        </div>
+
+        <div class="flow-arr">→</div>
+
+        <div class="flow-step drawn">
+          <div class="fnum">5</div>
+          <div class="ftag">✓ 你画了</div>
+          <div class="fname">成功</div>
+          <div class="fdesc">成功页，<code>查看记录</code> /<br><code>再提交一份</code> 两个去向</div>
+          <div class="fmark">PAGE · 已交付</div>
+        </div>
+
+      </div>
+      <p class="viz-hint">实线框 <strong>3 个</strong> 你已交付 · 虚线框 <strong style="color:var(--accent)">2 个</strong> 工程师没看到稿子，靠猜</p>
+    </div>
+
+    <div class="sticky-wrap">
+      <div class="sticky">
+        <div class="sticky-pin"></div>
+        3 张稿 ≠ 完整任务。<br>
+        <strong>校验态 + 提交异常态 = 漏的 2 张稿</strong>
       </div>
     </div>
   </div>
@@ -605,99 +681,83 @@
   </div>
 </section>
 
-<!-- Section 04: 幕三 · 再做 -->
+<!-- Section 04: 幕三 · 看更多 -->
 <section id="make">
   <div class="wrap">
     <div class="section-head">
       <div>
-        <span class="act-tag make">幕三 · 再做</span>
-        <div class="section-num"><strong>04</strong> / 再做</div>
-        <h2 class="section-title">轮到你——<br>给「<span class="em">新员工入职</span>」任务流，<br>填 5 个步骤。</h2>
+        <span class="act-tag make">幕三 · 看更多</span>
+        <div class="section-num"><strong>04</strong> / 看更多</div>
+        <h2 class="section-title">「<span class="em">新员工入职</span>」任务流，<br>看人家怎么拆 5 步。</h2>
       </div>
       <p class="section-sub">
-        HR 要做"新员工入职"流程。给你流程图骨架 + 候选行动池，你来选每一步的<strong>行动</strong>，
-        再回答两个关键的<strong>副作用 / 退出条件</strong>问题。
+        HR 要做"新员工入职"流程。下面直接给你 <strong>5 步 + 行动 + 副作用 + 退出条件</strong>——
+        每一步说明<strong>"谁做、做什么、做完触发什么"</strong>。
       </p>
     </div>
 
-    <div class="builder-stage">
-      <div class="builder-head">
-        <h3 class="builder-title">配置「新员工入职」任务流 · 5 步</h3>
-        <div class="builder-progress">已配置 <span class="done" id="builderDone">0</span> / 5 步</div>
-      </div>
+    <div class="demo-card-x5">
+      <h3>新员工入职 · ONBOARDING · 5 步任务流</h3>
+      <p class="sub">已经填好——重点在<strong>每一步的"谁做 / 副作用 / 退出条件"</strong>。</p>
 
-      <div class="builder-grid">
-        <div class="builder-pool">
-          <h5>候选行动池 · 12 个</h5>
-          <p class="builder-pool-hint">点一个行动 → 点目标步骤的"行动"槽位放进去。<br>注意有<strong style="color:var(--accent)">陷阱选项</strong>——副作用 ≠ 行动。Esc 取消选中。</p>
-          <div class="builder-pool-list" id="builderPool">
-            <div class="builder-chip" data-field="hr_create">HR 创建入职单 <span class="chip-add">+</span></div>
-            <div class="builder-chip" data-field="emp_fill">新员工填表 <span class="chip-add">+</span></div>
-            <div class="builder-chip" data-field="emp_upload">新员工上传证件 <span class="chip-add">+</span></div>
-            <div class="builder-chip" data-field="mgr_approve">主管审批 <span class="chip-add">+</span></div>
-            <div class="builder-chip" data-field="it_account">IT 自动建账号 <span class="chip-add">+</span></div>
-            <div class="builder-chip builder-chip-trap" data-field="hr_account">HR 自动建账号 <span class="chip-add">+</span></div>
-            <div class="builder-chip builder-chip-trap" data-field="emp_self_create">新员工自己创建入职单 <span class="chip-add">+</span></div>
-            <div class="builder-chip builder-chip-trap" data-field="mgr_create">主管创建入职单 <span class="chip-add">+</span></div>
-            <div class="builder-chip builder-chip-trap" data-field="upload_anytime">上传随时 <span class="chip-add">+</span></div>
-            <div class="builder-chip builder-chip-trap" data-field="check_date">校验入职日期 <span class="chip-add">+</span></div>
-            <div class="builder-chip builder-chip-trap" data-field="send_email">发送欢迎邮件 <span class="chip-add">+</span></div>
-            <div class="builder-chip builder-chip-trap" data-field="lock_id">锁定工号 <span class="chip-add">+</span></div>
-          </div>
+      <div class="flow-strip" style="margin-top:18px">
+
+        <div class="flow-step drawn">
+          <div class="fnum">1</div>
+          <div class="ftag">HR 操作</div>
+          <div class="fname">创建入职单</div>
+          <div class="fdesc"><strong>行动：</strong>HR 在系统里录入新员工基本信息（姓名/部门/入职日期/工号）。<br><strong>副作用：</strong>系统<code>不</code>发邮件、<code>不</code>建账号——这只是<strong>占位记录</strong>。</div>
+          <div class="fmark">退出 = 单子保存</div>
         </div>
 
-        <div class="builder-flow">
+        <div class="flow-arr">→</div>
 
-          <div class="builder-step" data-step="1">
-            <div class="builder-step-head"><span class="builder-step-num">1</span><span class="builder-step-name">开始 · 创建入职单</span><span class="builder-step-status" id="status1">未配</span></div>
-            <div class="builder-slot-action" data-target="1"><span class="slot-label">行动 →</span></div>
-            <div class="builder-quiz" data-quiz="1">
-              <div class="builder-quiz-q">这一步的<strong>副作用</strong>是什么？</div>
-              <div class="builder-quiz-opts" data-quiz-opts="1">
-                <span class="builder-quiz-opt" data-opt="auto_account">自动建账号</span>
-                <span class="builder-quiz-opt" data-opt="welcome_email">自动发邀请邮件</span>
-                <span class="builder-quiz-opt" data-opt="none">不发任何东西</span>
-              </div>
-            </div>
-          </div>
-
-          <div class="builder-step" data-step="2">
-            <div class="builder-step-head"><span class="builder-step-num">2</span><span class="builder-step-name">填写资料</span><span class="builder-step-status" id="status2">未配</span></div>
-            <div class="builder-slot-action" data-target="2"><span class="slot-label">行动 →</span></div>
-          </div>
-
-          <div class="builder-step" data-step="3">
-            <div class="builder-step-head"><span class="builder-step-num">3</span><span class="builder-step-name">上传材料</span><span class="builder-step-status" id="status3">未配</span></div>
-            <div class="builder-slot-action" data-target="3"><span class="slot-label">行动 →</span></div>
-          </div>
-
-          <div class="builder-step" data-step="4">
-            <div class="builder-step-head"><span class="builder-step-num">4</span><span class="builder-step-name">审批</span><span class="builder-step-status" id="status4">未配</span></div>
-            <div class="builder-slot-action" data-target="4"><span class="slot-label">行动 →</span></div>
-            <div class="builder-quiz" data-quiz="4">
-              <div class="builder-quiz-q">这一步的<strong>退出条件</strong>是什么？</div>
-              <div class="builder-quiz-opts" data-quiz-opts="4">
-                <span class="builder-quiz-opt" data-opt="mgr_click">主管点同意</span>
-                <span class="builder-quiz-opt" data-opt="received_email">收到邮件</span>
-                <span class="builder-quiz-opt" data-opt="date_reached">入职日期到了</span>
-              </div>
-            </div>
-          </div>
-
-          <div class="builder-step" data-step="5">
-            <div class="builder-step-head"><span class="builder-step-num">5</span><span class="builder-step-name">完成 · 通知 IT 开权限</span><span class="builder-step-status" id="status5">未配</span></div>
-            <div class="builder-slot-action" data-target="5"><span class="slot-label">行动 →</span></div>
-          </div>
-
+        <div class="flow-step drawn">
+          <div class="fnum">2</div>
+          <div class="ftag">新员工操作</div>
+          <div class="fname">填写资料</div>
+          <div class="fdesc"><strong>行动：</strong>新员工收到链接，填学历 / 银行卡 / 紧急联系人。<br><strong>副作用：</strong>每填一栏自动 autosave，关页面不丢。</div>
+          <div class="fmark">退出 = 必填全填</div>
         </div>
+
+        <div class="flow-arr">→</div>
+
+        <div class="flow-step drawn">
+          <div class="fnum">3</div>
+          <div class="ftag">新员工操作</div>
+          <div class="fname">上传材料</div>
+          <div class="fdesc"><strong>行动：</strong>上传身份证 / 学历证书 / 体检报告 PDF。<br><strong>副作用：</strong>OCR 自动识别 + 提示"是否一致"。</div>
+          <div class="fmark">退出 = 全部上传 ✓</div>
+        </div>
+
+        <div class="flow-arr">→</div>
+
+        <div class="flow-step drawn">
+          <div class="fnum">4</div>
+          <div class="ftag">主管操作</div>
+          <div class="fname">审批</div>
+          <div class="fdesc"><strong>行动：</strong>直接主管收到通知，看资料 → 同意 / 驳回 / 补材料。<br><strong>副作用：</strong>同意 → 锁定工号 + 发欢迎邮件。</div>
+          <div class="fmark">退出 = <strong>主管点同意</strong></div>
+        </div>
+
+        <div class="flow-arr">→</div>
+
+        <div class="flow-step drawn">
+          <div class="fnum">5</div>
+          <div class="ftag">系统自动</div>
+          <div class="fname">开权限</div>
+          <div class="fdesc"><strong>行动：</strong>系统调用 IT API，建邮箱 / VPN / OA 账号。<br><strong>副作用：</strong>账号信息发给员工 + HR 看板状态变"已入职"。</div>
+          <div class="fmark">退出 = 自动 · 无人触发</div>
+        </div>
+
       </div>
 
-      <div class="builder-actions">
-        <button class="builder-btn primary" id="builderSubmit">提交打分</button>
-        <button class="builder-btn" id="builderReset">清空</button>
+      <div style="margin-top:20px;padding:14px 18px;background:var(--accent-soft);border-left:3px solid var(--accent);border-radius:4px;font-size:13px;color:var(--ink-soft);line-height:1.7">
+        <strong style="color:var(--accent)">⚠ 容易踩 3 个坑：</strong><br>
+        <strong>① 第 1 步就建账号</strong>——HR 一录信息就开邮箱权限，员工还没审批通过就有了账号 → <strong>泄密风险</strong>。账号要等审批后才建。<br>
+        <strong>② 第 4 步退出条件搞错</strong>——以为"入职日期到了"就算审批通过 → 主管没点同意也走完流程。退出条件 = <strong>主管显式点同意</strong>，不是时间。<br>
+        <strong>③ 第 5 步没标"系统自动"</strong>——工程师以为还要 HR 手动点一下 → 多做一个按钮 + 一遍审批 UI。<strong>"系统自动"是一种步骤类型</strong>，要标出来。
       </div>
-
-      <div class="builder-judge" id="builderJudge"></div>
     </div>
   </div>
 </section>
@@ -935,239 +995,6 @@
   });
 })();
 
-// ===== Game 3: builder (onboarding flow with traps + quizzes) =====
-(function(){
-  const ACTIONS = {
-    hr_create: 'HR 创建入职单', emp_fill: '新员工填表', emp_upload: '新员工上传证件',
-    mgr_approve: '主管审批', it_account: 'IT 自动建账号',
-    hr_account: 'HR 自动建账号', emp_self_create: '新员工自己创建入职单', mgr_create: '主管创建入职单',
-    upload_anytime: '上传随时', check_date: '校验入职日期', send_email: '发送欢迎邮件', lock_id: '锁定工号'
-  };
-  const STEP_IDEAL = { 1: 'hr_create', 2: 'emp_fill', 3: 'emp_upload', 4: 'mgr_approve', 5: 'it_account' };
-
-  const TRAPS = {
-    hr_account: { step: 5, reason: 'IT 系统是新账号的负责人；HR 系统通常只是发起方。' },
-    emp_self_create: { step: 1, reason: '在没有账号的情况下，新员工不可能登录系统建单。自助通常 HR 才能创建。' },
-    mgr_create: { step: 1, reason: '主管不是入职流程的发起人，只是审批者。' },
-    upload_anytime: { step: 3, reason: '上传材料是流程里的一步，不能"随时"——脱离序列会破坏审批前置条件。' },
-    check_date: { step: null, reason: '校验入职日期是副作用（系统自动跑），不是用户的行动。' },
-    send_email: { step: null, reason: '发邮件是副作用（系统自动发），不是用户的行动。' },
-    lock_id: { step: null, reason: '锁定工号是副作用（创建账号触发），不是用户的行动。' }
-  };
-
-  const QUIZ_IDEAL = { 1: 'welcome_email', 4: 'mgr_click' };
-  const QUIZ_EXPLAIN = {
-    1: {
-      welcome_email: '✓ 正确。HR 建单的副作用通常是给新员工发"准备入职"的邀请邮件 + 创建一份待填表单的链接。',
-      auto_account: '✗ 太早了。这时新员工还没填表 / 没传材料 / 没审批通过，账号不该建。',
-      none: '✗ 不发任何东西，新员工怎么知道下一步去哪填表？'
-    },
-    4: {
-      mgr_click: '✓ 正确。审批的退出条件是"审批人作出决策"——主管点同意（或驳回）。',
-      received_email: '✗ 收到邮件只是<strong>通知</strong>，不是退出条件。"收到"和"行动"是两件事。',
-      date_reached: '✗ 入职日期到了 ≠ 审批通过。日期是另一个分支（时间触发），和这一步无关。'
-    }
-  };
-
-  const slots = { 1: null, 2: null, 3: null, 4: null, 5: null };
-  const quizPicks = { 1: null, 4: null };
-  let picked = null;
-
-  const pickerLabel = document.getElementById('pickerLabel');
-  const slotEls = document.querySelectorAll('.builder-slot-action');
-  const chips = document.querySelectorAll('.builder-chip');
-  const quizOptEls = document.querySelectorAll('.builder-quiz-opt');
-  const judge = document.getElementById('builderJudge');
-
-  function renderSlot(t) {
-    const slotArea = document.querySelector(`.builder-slot-action[data-target="${t}"]`);
-    if (!slotArea) return;
-    slotArea.innerHTML = '<span class="slot-label">行动 →</span>';
-    if (slots[t]) {
-      const slot = document.createElement('span');
-      slot.className = 'builder-slot';
-      slot.innerHTML = `${ACTIONS[slots[t]]} <button data-target="${t}" aria-label="remove">×</button>`;
-      slotArea.appendChild(slot);
-    }
-
-    const status = document.getElementById('status' + t);
-    if (slots[t]) {
-      status.textContent = '已选';
-      status.className = 'builder-step-status ok';
-    } else {
-      status.textContent = '未配';
-      status.className = 'builder-step-status';
-    }
-  }
-
-  function renderAll() {
-    [1,2,3,4,5].forEach(t => renderSlot(t));
-    // update chips used state
-    chips.forEach(chip => {
-      const f = chip.dataset.field;
-      const used = Object.values(slots).includes(f);
-      chip.classList.toggle('is-used', used);
-    });
-    const done = [1,2,3,4,5].filter(t => slots[t]).length;
-    document.getElementById('builderDone').textContent = done;
-  }
-
-  function showPicker(field) {
-    picked = field;
-    pickerLabel.innerHTML = `已选 <strong style="color:var(--accent);margin:0 4px">${ACTIONS[field]}</strong>——点目标步骤的"行动"槽 <span class="esc">Esc</span> 取消`;
-    pickerLabel.classList.add('show');
-    chips.forEach(c => c.classList.toggle('is-active', c.dataset.field === field));
-    slotEls.forEach(el => {
-      const t = el.dataset.target;
-      const can = !slots[t];
-      el.classList.toggle('is-target', can);
-    });
-  }
-
-  function clearPicker() {
-    picked = null;
-    pickerLabel.classList.remove('show');
-    chips.forEach(c => c.classList.remove('is-active'));
-    slotEls.forEach(el => el.classList.remove('is-target'));
-  }
-
-  function setSlot(field, t) {
-    if (slots[t]) return false;
-    // remove field from any other slot (just in case)
-    Object.keys(slots).forEach(k => { if (slots[k] === field) slots[k] = null; });
-    slots[t] = field;
-    renderAll();
-    return true;
-  }
-
-  function removeSlot(t) {
-    slots[t] = null;
-    renderAll();
-  }
-
-  chips.forEach(chip => {
-    chip.addEventListener('click', e => {
-      e.stopPropagation();
-      if (chip.classList.contains('is-used')) return;
-      const field = chip.dataset.field;
-      if (picked === field) clearPicker();
-      else showPicker(field);
-    });
-  });
-
-  slotEls.forEach(slotArea => {
-    slotArea.addEventListener('click', e => {
-      const rm = e.target.closest('button[data-target]');
-      if (rm) {
-        removeSlot(rm.dataset.target);
-        return;
-      }
-      if (!picked) return;
-      const t = slotArea.dataset.target;
-      if (setSlot(picked, t)) clearPicker();
-    });
-  });
-
-  // quiz options
-  quizOptEls.forEach(opt => {
-    opt.addEventListener('click', () => {
-      const quizGroup = opt.closest('.builder-quiz-opts');
-      const quizId = quizGroup.dataset.quizOpts;
-      const optKey = opt.dataset.opt;
-      quizPicks[quizId] = optKey;
-      quizGroup.querySelectorAll('.builder-quiz-opt').forEach(o => {
-        o.classList.toggle('selected', o === opt);
-      });
-    });
-  });
-
-  document.addEventListener('keydown', e => {
-    if (e.key === 'Escape' && picked) clearPicker();
-  });
-
-  document.getElementById('builderSubmit').addEventListener('click', () => {
-    const lines = [];
-    let perfect = 0;
-    let trapsHit = [];
-    let wrongs = [];
-    let missing = [];
-
-    [1,2,3,4,5].forEach(t => {
-      const f = slots[t];
-      if (!f) {
-        missing.push(t);
-        lines.push(`<li><strong>步骤 ${t}</strong>：还没选行动 — 试一下，每一步都有最优解。</li>`);
-        return;
-      }
-      if (f === STEP_IDEAL[t]) {
-        perfect++;
-        lines.push(`<li>✓ <strong>步骤 ${t} · ${ACTIONS[f]}</strong> — 完美。</li>`);
-      } else if (TRAPS[f]) {
-        trapsHit.push({ step: t, field: f });
-        lines.push(`<li><span class="trap-tag">陷阱命中 ·</span> <strong>步骤 ${t}</strong> 选了 <code style="color:#ff8a6e">${ACTIONS[f]}</code><br><span class="why">↳ ${TRAPS[f].reason}</span></li>`);
-      } else {
-        wrongs.push({ step: t, field: f });
-        const ideal = STEP_IDEAL[t];
-        lines.push(`<li><strong>步骤 ${t}</strong>：选了 <code style="color:#ffd166">${ACTIONS[f]}</code>，应该是 <strong>${ACTIONS[ideal]}</strong>。<br><span class="why">↳ 把"谁主动做"和"按谁的身份触发"分开看。</span></li>`);
-      }
-    });
-
-    // quizzes
-    [1, 4].forEach(q => {
-      const pick = quizPicks[q];
-      if (!pick) {
-        lines.push(`<li><strong>步骤 ${q} · ${q === 1 ? '副作用' : '退出条件'}</strong>：还没答 — 这两个题决定了你是不是真把任务流读透了。</li>`);
-        return;
-      }
-      const ideal = QUIZ_IDEAL[q];
-      const explain = QUIZ_EXPLAIN[q][pick];
-      if (pick === ideal) {
-        lines.push(`<li>✓ <strong>步骤 ${q} 的 ${q === 1 ? '副作用' : '退出条件'}</strong> — ${explain}</li>`);
-      } else {
-        lines.push(`<li><strong>步骤 ${q} 的 ${q === 1 ? '副作用' : '退出条件'}</strong>：<br><span class="why">↳ ${explain}</span></li>`);
-      }
-    });
-
-    // verdict
-    let verdictClass, verdictLabel, headline;
-    const quizOk = (quizPicks[1] === QUIZ_IDEAL[1] ? 1 : 0) + (quizPicks[4] === QUIZ_IDEAL[4] ? 1 : 0);
-
-    if (perfect === 5 && quizOk === 2 && trapsHit.length === 0) {
-      verdictClass = 'win';
-      verdictLabel = '完美';
-      headline = '你已经看到任务流 5 个槽位的样子了。';
-      lines.unshift(`<li style="list-style:none;margin-left:-20px;color:#d4ecdb"><strong>需求评审时直接问"每一步的副作用和退出条件是什么"</strong>——这一问能省下一周返工。</li>`);
-    } else if (trapsHit.length > 0) {
-      verdictClass = 'trap';
-      verdictLabel = '陷阱命中';
-      headline = '陷阱命中：副作用混进了行动。';
-      lines.unshift(`<li style="list-style:none;margin-left:-20px;color:#ff8a6e"><strong>关键问题：</strong>问自己——这件事是"<strong style="color:white">谁主动做</strong>"还是"<strong style="color:white">触发后系统自己做</strong>"？前者是行动、后者是副作用。</li>`);
-    } else if (perfect >= 3 && quizOk >= 1) {
-      verdictClass = 'win';
-      verdictLabel = '基本对了';
-      headline = '差一两个 — 但你已经在用任务流的语言思考了。';
-    } else {
-      verdictClass = 'partial';
-      verdictLabel = '再看一遍';
-      headline = '换个角度——任务流不是"页面跳转的顺序"，是"事情按什么顺序发生 + 谁在做"。';
-    }
-
-    judge.innerHTML = `<span class="verdict ${verdictClass}">${verdictLabel}</span><h4>${headline}</h4><ul>${lines.join('')}</ul>`;
-    judge.classList.add('show');
-    judge.scrollIntoView({ behavior: 'smooth', block: 'center' });
-  });
-
-  document.getElementById('builderReset').addEventListener('click', () => {
-    [1,2,3,4,5].forEach(t => slots[t] = null);
-    quizPicks[1] = null; quizPicks[4] = null;
-    quizOptEls.forEach(o => o.classList.remove('selected'));
-    renderAll();
-    judge.classList.remove('show');
-    clearPicker();
-  });
-
-  renderAll();
-})();
 </script>
 
 </body>
