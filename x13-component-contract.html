@@ -150,6 +150,95 @@
   .problem-card .code-snippet .cc { color: #9aa0a8; font-style: italic; }
   .problem-card .code-snippet .cn { color: #8be9fd; }
 
+  /* ====== Visual-first opening ====== */
+  .viz-stage { background: var(--paper); border: 1px solid var(--line); border-radius: 12px; padding: 28px; margin-top: 16px; position: relative; }
+  .viz-hint { text-align: center; font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--ink-mute); margin: 18px 0 0; letter-spacing: 0.04em; }
+  .viz-hint strong { color: var(--obj-color); }
+
+  /* X13: three mini contexts → one contract */
+  .x13-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; align-items: stretch; }
+  @media (max-width: 880px) { .x13-row { grid-template-columns: 1fr; } }
+  .x13-mock { background: white; border: 1px solid var(--line); border-radius: 8px; padding: 14px 14px 16px; position: relative; min-height: 220px; display: flex; flex-direction: column; }
+  .x13-mock-lbl { position: absolute; top: -10px; left: 12px; background: var(--ink); color: var(--bg); font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.08em; padding: 2px 10px; border-radius: 100px; text-transform: uppercase; }
+  .x13-mock h5 { font-family: 'Noto Serif SC', serif; font-size: 13px; margin: 6px 0 10px; font-weight: 700; color: var(--ink); }
+  .x13-mock-body { font-size: 11px; color: var(--ink-soft); line-height: 1.5; flex: 1; display: flex; flex-direction: column; gap: 6px; }
+  /* row mock (list) */
+  .x13-listrow { display: flex; align-items: center; gap: 8px; padding: 6px 8px; border: 1px dashed var(--line-soft); border-radius: 4px; font-size: 11px; }
+  .x13-listrow + .x13-listrow { margin-top: 2px; }
+  .x13-listrow .name { flex: 1; color: var(--ink); font-weight: 500; }
+  .x13-listrow .meta { color: var(--ink-mute); font-family: 'JetBrains Mono', monospace; font-size: 10px; }
+  /* detail mock */
+  .x13-detail-title { font-family: 'Noto Serif SC', serif; font-size: 14px; font-weight: 700; color: var(--ink); margin-bottom: 6px; }
+  .x13-detail-meta { font-size: 10px; color: var(--ink-mute); font-family: 'JetBrains Mono', monospace; margin-bottom: 10px; }
+  /* dialog mock */
+  .x13-dialog { background: var(--bg); border: 1px solid var(--line); border-radius: 6px; padding: 10px 12px 12px; box-shadow: 0 8px 20px rgba(0,0,0,0.08); margin-top: 6px; }
+  .x13-dialog-title { font-family: 'Noto Serif SC', serif; font-size: 12px; font-weight: 700; color: var(--ink); margin-bottom: 4px; }
+  .x13-dialog-text { font-size: 10px; color: var(--ink-soft); line-height: 1.5; margin-bottom: 10px; }
+
+  /* the highlighted button instances */
+  .x13-btn { display: inline-flex; align-items: center; gap: 4px; padding: 6px 12px; border-radius: 6px; font-family: 'Geist', sans-serif; font-size: 12px; font-weight: 600; cursor: default; outline: 2px dashed transparent; transition: outline 0.2s; line-height: 1.2; }
+  .x13-btn.primary { background: var(--obj-color); color: white; }
+  .x13-btn.secondary { background: white; color: var(--ink); border: 1px solid var(--line); }
+  .x13-btn.danger { background: var(--accent); color: white; }
+  .x13-btn.sm { padding: 3px 8px; font-size: 10.5px; }
+  .x13-btn.lg { padding: 9px 18px; font-size: 13px; }
+  .x13-btn.loading::before { content: '◐'; font-size: 11px; margin-right: 2px; opacity: 0.9; }
+  .x13-btn.is-pinned { outline-color: var(--yellow); box-shadow: 0 0 0 4px rgba(255,207,61,0.18); }
+
+  /* pin chip pointing from mock to contract */
+  .x13-pin { position: absolute; right: 8px; top: 8px; background: var(--yellow); color: var(--ink); font-family: 'JetBrains Mono', monospace; font-size: 9px; padding: 2px 6px; border-radius: 3px; letter-spacing: 0.05em; font-weight: 700; }
+
+  /* the contract card (bottom) */
+  .x13-arrow-row { display: flex; justify-content: space-around; margin: 10px 0; font-family: 'JetBrains Mono', monospace; font-size: 14px; color: var(--obj-color); }
+  .x13-arrow-row span { display: inline-block; }
+  .x13-contract { background: var(--ink); color: var(--bg); border-radius: 10px; padding: 22px 24px; position: relative; }
+  .x13-contract::before { content: 'ONE CONTRACT · ButtonProps'; position: absolute; top: -10px; left: 18px; background: var(--obj-color); color: white; font-family: 'JetBrains Mono', monospace; font-size: 10px; padding: 3px 12px; border-radius: 100px; letter-spacing: 0.08em; }
+  .x13-contract-body { font-family: 'JetBrains Mono', monospace; font-size: 12.5px; line-height: 1.8; color: #e0e0ea; padding-top: 6px; }
+  .x13-contract-body .ck { color: #ff9bd2; }
+  .x13-contract-body .cs { color: #ffd166; }
+  .x13-contract-body .cc { color: #7a7a88; font-style: italic; }
+  .x13-contract-body .cn { color: #8be9fd; }
+  .x13-contract-body .cv { color: #ff9b7a; }
+  .x13-contract-body .cf { color: #9bff97; }
+  .x13-contract-body .hot { background: rgba(255,207,61,0.16); padding: 1px 4px; border-radius: 3px; }
+
+  /* sticky-note */
+  .sticky-wrap { margin-top: 28px; display: flex; gap: 22px; align-items: center; flex-wrap: wrap; justify-content: center; }
+  .sticky { background: #fff8c4; border: 1px solid #e5d98a; border-radius: 3px; padding: 16px 22px 18px; position: relative; transform: rotate(-1.5deg); box-shadow: 0 6px 14px rgba(22,22,29,0.12), 0 1px 3px rgba(22,22,29,0.08); font-size: 14px; color: var(--ink); line-height: 1.65; max-width: 380px; text-align: center; }
+  .sticky-pin { position: absolute; top: -8px; left: 50%; transform: translateX(-50%); width: 14px; height: 14px; background: var(--accent); border-radius: 50%; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+  .sticky strong { display: block; margin-top: 4px; font-family: 'Noto Serif SC', serif; font-size: 17px; color: var(--accent); line-height: 1.4; }
+
+  /* Section 04 demo cards (Button contract showcase) */
+  .demo-stage { background: var(--paper); border: 1px solid var(--line); border-left: 3px solid var(--obj-color); border-radius: 10px; padding: 26px 28px; margin-top: 24px; }
+  .demo-stage h3.demo-h { font-family: 'Noto Serif SC', serif; font-size: 18px; font-weight: 700; margin: 0 0 6px; color: var(--ink); }
+  .demo-stage p.demo-sub { font-size: 13px; color: var(--ink-soft); margin: 0 0 18px; line-height: 1.6; }
+
+  .demo-suit { background: white; border: 1px solid var(--line); border-radius: 8px; margin-bottom: 16px; overflow: hidden; }
+  .demo-suit-head { display: flex; align-items: baseline; gap: 10px; padding: 12px 18px; background: var(--bg); border-bottom: 1px dashed var(--line); }
+  .demo-suit-tag { font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; padding: 2px 8px; border-radius: 100px; }
+  .demo-suit-tag.props { background: var(--blue-soft); color: var(--blue); }
+  .demo-suit-tag.events { background: var(--obj-soft); color: var(--obj-color); }
+  .demo-suit-tag.slots { background: var(--proj-soft); color: var(--proj-color); }
+  .demo-suit-tag.no { background: var(--accent-soft); color: var(--accent); }
+  .demo-suit-title { font-family: 'Noto Serif SC', serif; font-size: 15px; font-weight: 700; color: var(--ink); }
+  .demo-suit-sub { font-size: 12px; color: var(--ink-mute); margin-left: auto; }
+  .demo-rows { padding: 14px 18px 16px; display: flex; flex-direction: column; gap: 10px; }
+  .demo-row { display: grid; grid-template-columns: 160px 1fr; gap: 14px; align-items: baseline; padding: 8px 0; border-bottom: 1px dashed var(--line-soft); }
+  .demo-row:last-child { border-bottom: none; }
+  @media (max-width: 720px) { .demo-row { grid-template-columns: 1fr; gap: 4px; } }
+  .demo-row .k { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--ink); font-weight: 600; }
+  .demo-row .k .t { color: var(--ink-mute); font-weight: 400; font-size: 11px; }
+  .demo-row .why { font-size: 12.5px; color: var(--ink-soft); line-height: 1.6; }
+  .demo-row .why strong { color: var(--ink); }
+  .demo-row.no .k { color: var(--accent); text-decoration: line-through; text-decoration-color: rgba(255,77,46,0.4); }
+  .demo-row.no .why { color: var(--ink-soft); }
+
+  .demo-trap-grid { margin-top: 22px; display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  @media (max-width: 720px) { .demo-trap-grid { grid-template-columns: 1fr; } }
+  .demo-trap { background: var(--accent-soft); border-left: 3px solid var(--accent); border-radius: 4px; padding: 14px 16px; font-size: 13px; color: var(--ink-soft); line-height: 1.65; }
+  .demo-trap strong { display: block; color: var(--accent); font-family: 'Noto Serif SC', serif; font-size: 14px; margin-bottom: 4px; }
+  .demo-trap code { background: white; padding: 1px 5px; border-radius: 3px; font-family: 'JetBrains Mono', monospace; font-size: 11.5px; color: var(--ink); }
+
   /* GAME 1: contract preview (split screen) */
   .contract-stage { background: var(--paper); border: 1px solid var(--line); border-radius: 8px; padding: 32px; position: relative; overflow: hidden; }
   .contract-stage::before { content: ''; position: absolute; inset: 0; background-image: linear-gradient(to right, var(--line-soft) 1px, transparent 1px), linear-gradient(to bottom, var(--line-soft) 1px, transparent 1px); background-size: 24px 24px; opacity: 0.35; pointer-events: none; }
@@ -439,14 +528,12 @@
     <div class="hero-grid">
       <div>
         <h1>
-          组件不是<br>
-          <span class="display-cn">图层</span>——<br>
-          是一份<span class="purple">契约</span>。
+          你画了 <span class="display-cn">1 个按钮</span>。<br>
+          工程师要做 <span class="purple">1 份合同</span>。
         </h1>
         <p class="lede">
-          Figma 里一个组件 = 一组图层 + variants。<br>
-          代码里一个组件 = 一份合同：能接什么 props、会发什么 events、给哪些 slots、状态闭环在哪。<br>
-          看图层 ≠ 看契约。
+          <strong>你画的</strong>：5 个 variant + 3 个 size + hover 态。<br>
+          <strong>工程师要的</strong>：能接什么 props、会发什么 events、给哪些 slots——一份能直接 copy 成 TypeScript 的合同。
         </p>
       </div>
       <div class="hero-side">
@@ -464,36 +551,81 @@
   <div class="wrap">
     <div class="section-head">
       <div>
-        <div class="section-num"><strong>01</strong> / 问题</div>
-        <h2 class="section-title">为什么"看起来一样"的组件，<br>到了代码里<span class="em">不能复用</span>？</h2>
+        <div class="section-num"><strong>01</strong> / 看见</div>
+        <h2 class="section-title">先看图。<br>3 个按钮——<span class="em">同一个组件</span>。</h2>
       </div>
       <p class="section-sub">
-        因为设计师在描述<strong>视觉单元</strong>（图层 + 变体），
-        工程师在写一份<strong>合同</strong>。可复用与好不好看无关——只看契约稳不稳。
+        列表行 / 详情页 / 弹窗底部，<strong style="color:var(--accent)">看起来 3 个不同按钮</strong>——
+        其实是<strong style="color:var(--obj-color)">同一段代码</strong>，靠 props 切换。
       </p>
     </div>
 
-    <div class="problem-grid">
-      <div class="problem-card bad">
-        <span class="tag">图层思维 · LAYERS</span>
-        <h3>"我做了一个 Button 组件"</h3>
-        <p>5 个 variant、3 个 size、有 hover 态。看起来完整——可工程师还在追问。</p>
-        <p><strong>工程师追问：</strong>禁用怎么写？loading 态有吗？图标 + 文字怎么传？点击事件叫什么？是不是受控？icon 自由插还是固定 prop？</p>
-        <p style="color:var(--accent)"><strong>你：</strong>呃……我画了视觉，<br>没写"它能接什么"。</p>
+    <div class="viz-stage">
+      <div class="x13-row">
+        <div class="x13-mock">
+          <span class="x13-mock-lbl">列表行</span>
+          <span class="x13-pin">size=sm</span>
+          <h5>客户管理 / Table</h5>
+          <div class="x13-mock-body">
+            <div class="x13-listrow"><span class="name">星河科技</span><button class="x13-btn secondary sm is-pinned">编辑</button></div>
+            <div class="x13-listrow"><span class="name">蓝海能源</span><button class="x13-btn secondary sm is-pinned">编辑</button></div>
+            <div class="x13-listrow"><span class="name">云图传媒</span><button class="x13-btn secondary sm is-pinned">编辑</button></div>
+          </div>
+        </div>
+
+        <div class="x13-mock">
+          <span class="x13-mock-lbl">详情页</span>
+          <span class="x13-pin">variant=primary</span>
+          <h5>项目详情 / Detail</h5>
+          <div class="x13-mock-body">
+            <div class="x13-detail-title">2026 春季营销计划</div>
+            <div class="x13-detail-meta">客户：星河科技 · 状态：跟进中</div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:auto">
+              <button class="x13-btn primary lg is-pinned">提交审批</button>
+              <button class="x13-btn secondary lg">保存草稿</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="x13-mock">
+          <span class="x13-mock-lbl">弹窗</span>
+          <span class="x13-pin">variant=danger · loading</span>
+          <h5>Modal · 确认操作</h5>
+          <div class="x13-mock-body">
+            <div class="x13-dialog">
+              <div class="x13-dialog-title">删除这个项目？</div>
+              <div class="x13-dialog-text">删除后无法恢复。</div>
+              <div style="display:flex;gap:6px;justify-content:flex-end">
+                <button class="x13-btn secondary sm">取消</button>
+                <button class="x13-btn danger sm loading is-pinned">删除中</button>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
-      <div class="problem-card good">
-        <span class="tag">契约思维 · CONTRACT</span>
-        <h3>"我交付了一份 Button 契约"</h3>
-        <p>视觉只是合同附录。真正交付的是一份 <strong>props / events / slots / state</strong> 清单，工程师直接落 TypeScript interface。</p>
-        <div class="code-snippet"><span class="cc">// 一眼可以变成 type</span>
-<span class="ck">interface</span> <span class="cn">ButtonProps</span> {
-  <span class="cf">variant</span>: <span class="cs">'primary' | 'secondary'</span> | …;
+      <div class="x13-arrow-row"><span>↓</span><span>↓</span><span>↓</span></div>
+
+      <div class="x13-contract">
+        <div class="x13-contract-body"><span class="ck">interface</span> <span class="cn">ButtonProps</span> {
+  <span class="cf">variant</span>: <span class="hot"><span class="cs">'primary'</span></span> | <span class="cs">'secondary'</span> | <span class="hot"><span class="cs">'danger'</span></span>;
+  <span class="cf">size</span>: <span class="hot"><span class="cs">'sm'</span></span> | <span class="cs">'md'</span> | <span class="hot"><span class="cs">'lg'</span></span>;
   <span class="cf">disabled</span>?: <span class="cn">boolean</span>;
-  <span class="cf">loading</span>?: <span class="cn">boolean</span>;
+  <span class="cf">loading</span>?: <span class="hot"><span class="cn">boolean</span></span>;
+  <span class="cf">leftIcon</span>?: <span class="cn">ReactNode</span>;
   <span class="cf">onClick</span>: <span class="cv">(e) =&gt; void</span>;
+  <span class="cf">children</span>: <span class="cn">ReactNode</span>;
 }</div>
-        <p style="color:var(--obj-color);margin-top:14px"><strong>追问 → 0 次。</strong></p>
+      </div>
+
+      <p class="viz-hint">3 个 mockup → <strong>1 份契约</strong> · variant / size / loading 都是同一份 props 的不同取值</p>
+    </div>
+
+    <div class="sticky-wrap">
+      <div class="sticky">
+        <div class="sticky-pin"></div>
+        图层用 3 次 = 3 份代码。<br>
+        <strong>组件用 3 次 = 1 份代码 + 3 套 props。</strong>
       </div>
     </div>
   </div>
@@ -765,126 +897,142 @@
   </div>
 </section>
 
-<!-- Section 04: 幕三 · 再做 -->
+<!-- Section 04: 幕三 · 看更多 -->
 <section id="make">
   <div class="wrap">
     <div class="section-head">
       <div>
-        <span class="act-tag make">幕三 · 再做</span>
-        <div class="section-num"><strong>04</strong> / 再做</div>
-        <h2 class="section-title">轮到你——<br>给 <span class="em">Tag 组件</span><br>写契约。</h2>
+        <span class="act-tag make">幕三 · 看更多</span>
+        <div class="section-num"><strong>04</strong> / 看更多</div>
+        <h2 class="section-title">完整的 <span class="em">Button 契约</span>——<br>看人家是怎么填的。</h2>
       </div>
       <p class="section-sub">
-        下面是一个 Tag 组件的 5 类视觉表现。
-        你来填它的 <strong>props / events / slots / state boundary</strong>——多选混入了干扰项，挑出最少必要的合同条款。
+        把 props / events / slots 全部预填好——重点看 <strong style="color:var(--accent)">⚠ 标的几条</strong>，是设计师最容易踩的坑。
       </p>
     </div>
 
-    <div class="tag-stage">
-      <div class="tag-head">
-        <h3 class="tag-title">给 Tag 组件写一份契约</h3>
-        <div class="tag-progress">已勾选 <strong id="tagPicked">0</strong> 条契约 · 完成度 <strong id="tagFill">0%</strong></div>
-      </div>
+    <div class="demo-stage">
+      <h3 class="demo-h">Button 组件 · 完整契约</h3>
+      <p class="demo-sub">这就是 Section 01 那张合同的展开版——每一条都附"为什么"。</p>
 
-      <div class="tag-preview">
-        <span class="tag-preview-lbl">Tag 视觉规格</span>
-
-        <div class="tag-rows">
-          <div class="tag-row">
-            <span class="tag-row-lbl">颜色</span>
-            <span class="vt vt-red"><span class="vt-dot"></span>danger</span>
-            <span class="vt vt-green"><span class="vt-dot"></span>active</span>
-            <span class="vt vt-blue"><span class="vt-dot"></span>info</span>
-            <span class="vt vt-gray"><span class="vt-dot"></span>neutral</span>
-            <span class="vt vt-yellow"><span class="vt-dot"></span>warning</span>
-            <span class="vt vt-purple"><span class="vt-dot"></span>vip</span>
+      <div class="demo-suit">
+        <div class="demo-suit-head">
+          <span class="demo-suit-tag props">PROPS</span>
+          <span class="demo-suit-title">能从外面接什么</span>
+          <span class="demo-suit-sub">7 条</span>
+        </div>
+        <div class="demo-rows">
+          <div class="demo-row">
+            <span class="k">variant <span class="t">: 'primary' | 'secondary' | 'danger'</span></span>
+            <span class="why">颜色风格——决定主次。<strong>由意图驱动</strong>，不是 <code>bgColor</code>。</span>
           </div>
-          <div class="tag-row">
-            <span class="tag-row-lbl">大小</span>
-            <span class="vt vt-blue vt-sm">sm</span>
-            <span class="vt vt-blue vt-md">md</span>
-            <span class="vt vt-blue">lg</span>
+          <div class="demo-row">
+            <span class="k">size <span class="t">: 'sm' | 'md' | 'lg'</span></span>
+            <span class="why">3 档枚举——<strong>padding / font-size 都跟着 size 推导</strong>，不要单独传字号。</span>
           </div>
-          <div class="tag-row">
-            <span class="tag-row-lbl">图标</span>
-            <span class="vt vt-green"><span class="vt-dot"></span>有 dot</span>
-            <span class="vt vt-green"><span class="vt-icon">★</span>有 icon</span>
-            <span class="vt vt-green">仅文字</span>
+          <div class="demo-row">
+            <span class="k">disabled <span class="t">?: boolean</span></span>
+            <span class="why">由外部传——组件不自管"启用 / 禁用"。</span>
           </div>
-          <div class="tag-row">
-            <span class="tag-row-lbl">关闭</span>
-            <span class="vt vt-purple">可关 <span class="vt-close">×</span></span>
-            <span class="vt vt-purple">不可关</span>
+          <div class="demo-row">
+            <span class="k">loading <span class="t">?: boolean</span></span>
+            <span class="why">异步态——传 true 自动转圈 + 阻止点击。<strong>设计稿里"灰着 + 转圈"那张稿就是这一条。</strong></span>
           </div>
-          <div class="tag-row">
-            <span class="tag-row-lbl">点击</span>
-            <span class="vt vt-blue" style="cursor:pointer;text-decoration:underline">可点击</span>
-            <span class="vt vt-gray">不可点击（展示）</span>
+          <div class="demo-row">
+            <span class="k">leftIcon <span class="t">?: ReactNode</span></span>
+            <span class="why">前置图标——<strong>slot 不是 prop</strong>，外部塞任意 React 节点。</span>
+          </div>
+          <div class="demo-row">
+            <span class="k">rightIcon <span class="t">?: ReactNode</span></span>
+            <span class="why">后置图标——通常是 "→" 或 caret。</span>
+          </div>
+          <div class="demo-row">
+            <span class="k">type <span class="t">?: 'button' | 'submit' | 'reset'</span></span>
+            <span class="why">原生 HTML 类型——表单里要用 submit。<strong>默认 button</strong>，避免意外 submit。</span>
           </div>
         </div>
       </div>
 
-      <div class="tag-form-grid">
-
-        <div class="form-group" data-group="props">
-          <h4>Props · 接入数据</h4>
-          <p class="help">挑出"组件需要从外面接受的输入"。多选——但每多选一个错的会扣分。</p>
-          <div class="form-options" id="optsProps">
-            <label class="opt-row" data-key="color"><input type="checkbox" data-correct="1"><span class="opt-name">color</span><span class="opt-hint">enum 红绿蓝灰黄紫</span></label>
-            <label class="opt-row" data-key="size"><input type="checkbox" data-correct="1"><span class="opt-name">size</span><span class="opt-hint">'sm' | 'md' | 'lg'</span></label>
-            <label class="opt-row" data-key="closable"><input type="checkbox" data-correct="1"><span class="opt-name">closable</span><span class="opt-hint">boolean 是否显示 ✕</span></label>
-            <label class="opt-row" data-key="dot"><input type="checkbox" data-correct="1"><span class="opt-name">dot</span><span class="opt-hint">boolean 是否显示色点</span></label>
-            <label class="opt-row" data-key="value"><input type="checkbox" data-correct="0"><span class="opt-name">value</span><span class="opt-hint">⚠ 这是 Input 的属性</span></label>
-            <label class="opt-row" data-key="onClose-prop"><input type="checkbox" data-correct="0"><span class="opt-name">onClose</span><span class="opt-hint">⚠ on* 应该在 events</span></label>
-            <label class="opt-row" data-key="children-prop"><input type="checkbox" data-correct="0"><span class="opt-name">children</span><span class="opt-hint">⚠ children 是 slot 不是 prop</span></label>
-            <label class="opt-row" data-key="active"><input type="checkbox" data-correct="0"><span class="opt-name">active</span><span class="opt-hint">⚠ Tag 没有"选中态"概念</span></label>
+      <div class="demo-suit">
+        <div class="demo-suit-head">
+          <span class="demo-suit-tag events">EVENTS</span>
+          <span class="demo-suit-title">会向外发什么</span>
+          <span class="demo-suit-sub">3 条</span>
+        </div>
+        <div class="demo-rows">
+          <div class="demo-row">
+            <span class="k">onClick <span class="t">: (e: MouseEvent) =&gt; void</span></span>
+            <span class="why"><strong>必填</strong>——按钮的灵魂。命名固定 <code>onClick</code>——不叫 <code>onPress</code> / <code>handleClick</code> / <code>submit</code>。</span>
+          </div>
+          <div class="demo-row">
+            <span class="k">onFocus <span class="t">?: (e) =&gt; void</span></span>
+            <span class="why">可选——只有需要追踪键盘导航时才传。</span>
+          </div>
+          <div class="demo-row">
+            <span class="k">onBlur <span class="t">?: (e) =&gt; void</span></span>
+            <span class="why">可选——失焦回调，少用。</span>
           </div>
         </div>
-
-        <div class="form-group" data-group="events">
-          <h4>Events · 发出反馈</h4>
-          <p class="help">挑出"组件要向外发出的通知"。命名以 <code style="background:var(--bg-2);padding:1px 4px;border-radius:2px">on*</code> 开头。</p>
-          <div class="form-options" id="optsEvents">
-            <label class="opt-row" data-key="onClose"><input type="checkbox" data-correct="1"><span class="opt-name">onClose</span><span class="opt-hint">closable 时必填</span></label>
-            <label class="opt-row" data-key="onClick"><input type="checkbox" data-correct="1"><span class="opt-name">onClick</span><span class="opt-hint">可点击时需要</span></label>
-            <label class="opt-row" data-key="onFocus"><input type="checkbox" data-correct="0"><span class="opt-name">onFocus</span><span class="opt-hint">⚠ Tag 不可聚焦</span></label>
-            <label class="opt-row" data-key="onChange"><input type="checkbox" data-correct="0"><span class="opt-name">onChange</span><span class="opt-hint">⚠ Tag 没有"值"会变</span></label>
-            <label class="opt-row" data-key="onHover"><input type="checkbox" data-correct="0"><span class="opt-name">onHover</span><span class="opt-hint">⚠ hover 是 CSS 不是事件</span></label>
-            <label class="opt-row" data-key="onSubmit"><input type="checkbox" data-correct="0"><span class="opt-name">onSubmit</span><span class="opt-hint">⚠ Tag 不是表单元素</span></label>
-          </div>
-        </div>
-
-        <div class="form-group" data-group="slots">
-          <h4>Slots · 可插内容</h4>
-          <p class="help">挑出"组件留给消费方自由塞内容的洞"。这里要严格——给一个 slot 等于让出主权。</p>
-          <div class="form-options" id="optsSlots">
-            <label class="opt-row" data-key="children"><input type="checkbox" data-correct="1"><span class="opt-name">children</span><span class="opt-hint">标签文字本体</span></label>
-            <label class="opt-row" data-key="leftIcon"><input type="checkbox" data-correct="1"><span class="opt-name">leftIcon</span><span class="opt-hint">前置图标可自由插</span></label>
-            <label class="opt-row" data-key="closeIcon"><input type="checkbox" data-correct="0"><span class="opt-name">closeIcon</span><span class="opt-hint">⚠ ✕ 应内置，不该让消费方插</span></label>
-            <label class="opt-row" data-key="trailingAction"><input type="checkbox" data-correct="0"><span class="opt-name">trailingAction</span><span class="opt-hint">⚠ Tag 不应承担"操作"</span></label>
-            <label class="opt-row" data-key="header"><input type="checkbox" data-correct="0"><span class="opt-name">header</span><span class="opt-hint">⚠ Tag 没有"头部"概念</span></label>
-            <label class="opt-row" data-key="footer"><input type="checkbox" data-correct="0"><span class="opt-name">footer</span><span class="opt-hint">⚠ Tag 没有"尾部"概念</span></label>
-          </div>
-        </div>
-
-        <div class="form-group state" data-group="state">
-          <h4>State boundary · 状态边界</h4>
-          <p class="help">单选——Tag 内部需要管自己的状态吗？想想"用户点 ✕ 之后，Tag 自己消失还是要等外部告诉它"。</p>
-          <div class="form-options" id="optsState">
-            <label class="opt-row" data-key="controlled"><input type="radio" name="state" data-correct="0"><span class="opt-name">受控</span><span class="opt-hint">value + onChange 由外部驱动</span></label>
-            <label class="opt-row" data-key="uncontrolled"><input type="radio" name="state" data-correct="0"><span class="opt-name">非受控</span><span class="opt-hint">defaultValue 组件自管</span></label>
-            <label class="opt-row" data-key="stateless"><input type="radio" name="state" data-correct="1"><span class="opt-name">无状态（纯展示）</span><span class="opt-hint">Tag 是展示组件 · ✓ 多数情况</span></label>
-          </div>
-        </div>
-
       </div>
 
-      <div class="tag-actions">
-        <button class="tag-btn primary" id="tagSubmit">提交契约</button>
-        <button class="tag-btn" id="tagReset">清空</button>
+      <div class="demo-suit">
+        <div class="demo-suit-head">
+          <span class="demo-suit-tag slots">SLOTS</span>
+          <span class="demo-suit-title">中间留口给消费方</span>
+          <span class="demo-suit-sub">1 条</span>
+        </div>
+        <div class="demo-rows">
+          <div class="demo-row">
+            <span class="k">children <span class="t">: ReactNode</span></span>
+            <span class="why">按钮里的文字——<strong>不是 <code>label: string</code> prop</strong>。给 slot 等于"内容你管，我只管壳"。</span>
+          </div>
+        </div>
       </div>
 
-      <div class="tag-judge" id="tagJudge"></div>
+      <div class="demo-suit">
+        <div class="demo-suit-head">
+          <span class="demo-suit-tag no">不该是 PROPS</span>
+          <span class="demo-suit-title">这些放进去，组件就坏</span>
+          <span class="demo-suit-sub">反向清单</span>
+        </div>
+        <div class="demo-rows">
+          <div class="demo-row no">
+            <span class="k">fontSize <span class="t">: number</span></span>
+            <span class="why">字号应该由 <code>size</code> 推导，<strong>不该独立传</strong>。否则一份组件可以画出 100 种字号的奇怪 Button。</span>
+          </div>
+          <div class="demo-row no">
+            <span class="k">bgColor <span class="t">: string</span></span>
+            <span class="why">颜色由 <code>variant</code> 决定。直接传色值 = 把<strong>设计系统拆穿了</strong>——再也回不去统一了。</span>
+          </div>
+          <div class="demo-row no">
+            <span class="k">paddingX / paddingY <span class="t">: number</span></span>
+            <span class="why">间距由 <code>size</code> 推导。任何能从其他 prop 推出来的值都不该独立做 prop。</span>
+          </div>
+          <div class="demo-row no">
+            <span class="k">hovered <span class="t">: boolean</span></span>
+            <span class="why">hover 是 CSS <code>:hover</code> 自动触发的——<strong>不是 prop</strong>。设计稿里画的 hover 态是给 CSS 看，不是给 props 看。</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="demo-trap-grid">
+        <div class="demo-trap">
+          <strong>⚠ 把 onClick 改名</strong>
+          很多设计稿写"点击 → handleClick" / "onPress" / "submit"——命名不一致工程师就要在每个组件查文档。<strong><code>on*</code> 是行业惯例</strong>，<code>onClick / onClose / onChange</code> 永远叫这个。
+        </div>
+        <div class="demo-trap">
+          <strong>⚠ 把 children 写成 label</strong>
+          稿子标注 "label: 提交"——工程师只能传字符串，传不进 <code>&lt;Icon /&gt; + 文字</code>。改成 <code>children: ReactNode</code>，<strong>立刻能塞图标 + 文字 + emoji</strong>。
+        </div>
+        <div class="demo-trap">
+          <strong>⚠ 把 variant 拆成 isDanger / isPrimary</strong>
+          看起来直观——但<strong>两个 boolean 能勾出 4 种组合</strong>（包含"既 primary 又 danger"这种不合法态）。enum 强制单选，永远只有 3 种合法态。
+        </div>
+        <div class="demo-trap">
+          <strong>⚠ 把 disabled 和 loading 混用</strong>
+          它们是<strong>两件事</strong>——loading 是"按钮自己在干活"（异步），disabled 是"外部说你不能点"（权限 / 校验）。<strong>UI 表现一样但语义不同</strong>，两个 prop 都要留。
+        </div>
+      </div>
     </div>
   </div>
 </section>
@@ -1042,186 +1190,6 @@
   });
 })();
 
-// ===== Game 3: tag contract builder =====
-(function(){
-  const pickedEl = document.getElementById('tagPicked');
-  const fillEl = document.getElementById('tagFill');
-  const judge = document.getElementById('tagJudge');
-
-  const allOpts = document.querySelectorAll('.opt-row input');
-  const allRows = document.querySelectorAll('.opt-row');
-
-  // Total correct count for "完成度" tracking
-  const CORRECT_COUNT = Array.from(allOpts).filter(i => i.dataset.correct === '1').length;
-
-  function refresh() {
-    let picked = 0;
-    let correctPicked = 0;
-    let wrongPicked = 0;
-    allOpts.forEach(input => {
-      const row = input.closest('.opt-row');
-      if (input.checked) {
-        picked++;
-        row.classList.add('is-checked');
-        if (input.dataset.correct === '1') correctPicked++;
-        else wrongPicked++;
-      } else {
-        row.classList.remove('is-checked');
-      }
-    });
-    pickedEl.textContent = picked;
-    const pct = Math.max(0, Math.round(((correctPicked - wrongPicked * 0.5) / CORRECT_COUNT) * 100));
-    fillEl.textContent = Math.min(100, pct) + '%';
-  }
-
-  allOpts.forEach(input => {
-    input.addEventListener('change', refresh);
-  });
-  allRows.forEach(row => {
-    row.addEventListener('click', e => {
-      // let the actual input handle change
-    });
-  });
-
-  // Explanations for wrong picks
-  const EXPLAIN = {
-    'value': '<code>value</code> 是 Input / Slider 这种"有值"的组件的属性。Tag 没有"值"——它只是个标签。',
-    'onClose-prop': '<code>onClose</code> 是事件——以 <code>on</code> 开头的都该归到 events，不是 props。Props 是数据，events 是反馈。',
-    'children-prop': '<code>children</code> 是 React 的 slot 机制——能塞任意 ReactNode 进来。它不是普通字符串 prop。',
-    'active': 'Tag 是展示组件，没有"被选中"的概念。你想要的可能是<code>color</code>变化——那是 prop。',
-    'onFocus': 'Tag 默认不可聚焦（不在 tab 序列里）。除非你做的是 chip 输入框的标签，否则 <code>onFocus</code> 多余。',
-    'onChange': 'Tag 没有"值会变"——它不维护数据。<code>onChange</code> 只属于 Input、Select 这种有值的组件。',
-    'onHover': 'hover 反馈应该用 CSS <code>:hover</code> 实现，不需要 event。外部代码不需要"知道"用户在 hover。',
-    'onSubmit': 'Tag 不是表单元素，没有"提交"动作。',
-    'closeIcon': '✕ 是 closable 状态下的内置 affordance，应该由组件提供。让消费方自由插会破坏一致性。',
-    'trailingAction': '给 Tag 加 "trailing action" slot 会让它承担"操作"职责——那是 Button 或 Chip 该做的事，不是 Tag。',
-    'header': 'Tag 是单行内联元素，没有头部尾部概念。给 header slot 会鼓励错误用法。',
-    'footer': '同上——Tag 不该有 footer。',
-    'controlled': 'Tag 是<strong>展示组件</strong>——它不维护"值"，所以根本不需要 value/onChange 这套受控机制。点 ✕ 时由消费方决定要不要从数据里删，组件只发 onClose。',
-    'uncontrolled': 'Tag 内部没有值需要"自管"——它不是 Input，没有可输入的内容。defaultValue 在这里没有意义。'
-  };
-
-  // The "perfect" set
-  const PERFECT = {
-    props: new Set(['color', 'size', 'closable', 'dot']),
-    events: new Set(['onClose', 'onClick']),
-    slots: new Set(['children', 'leftIcon']),
-    state: 'stateless'
-  };
-
-  function getPicked(group) {
-    const arr = [];
-    document.querySelectorAll(`.form-group[data-group="${group}"] .opt-row`).forEach(row => {
-      const input = row.querySelector('input');
-      if (input.checked) arr.push(row.dataset.key);
-    });
-    return arr;
-  }
-
-  document.getElementById('tagSubmit').addEventListener('click', () => {
-    const propsPicked = getPicked('props');
-    const eventsPicked = getPicked('events');
-    const slotsPicked = getPicked('slots');
-    const statePicked = getPicked('state')[0] || null;
-
-    let totalCorrect = 0;
-    let totalIdeal = 0;
-    let wrongs = [];
-    let missings = [];
-
-    function check(group, picked, ideal) {
-      const setI = ideal instanceof Set ? ideal : new Set([ideal]);
-      const setP = new Set(picked);
-      let correct = 0;
-      setI.forEach(k => { if (setP.has(k)) correct++; });
-      totalCorrect += correct;
-      totalIdeal += setI.size;
-      const wrong = [...setP].filter(k => !setI.has(k));
-      const missing = [...setI].filter(k => !setP.has(k));
-      return { correct, wrong, missing };
-    }
-
-    const rProps = check('props', propsPicked, PERFECT.props);
-    const rEvents = check('events', eventsPicked, PERFECT.events);
-    const rSlots = check('slots', slotsPicked, PERFECT.slots);
-    const rState = check('state', statePicked ? [statePicked] : [], new Set([PERFECT.state]));
-
-    const lines = [];
-
-    function fmtLine(label, r, groupName) {
-      const labelMap = {
-        'props': '<code>color</code> / <code>size</code> / <code>closable</code> / <code>dot</code>',
-        'events': '<code>onClose</code> / <code>onClick</code>',
-        'slots': '<code>children</code> / <code>leftIcon</code>',
-        'state': '<code>无状态</code>（纯展示）'
-      };
-      if (r.wrong.length === 0 && r.missing.length === 0) {
-        lines.push(`<li><strong>${label}</strong>：完美命中 — ${labelMap[groupName]}</li>`);
-      } else {
-        let line = `<strong>${label}</strong>：`;
-        if (r.missing.length > 0) {
-          const miss = r.missing.map(k => `<code style="color:#ffd166">${k.replace('-prop','').replace('stateless','无状态')}</code>`).join(' / ');
-          line += `缺 ${miss}；`;
-        }
-        if (r.wrong.length > 0) {
-          const extra = r.wrong.map(k => `<code style="color:#ff8a6e">${k.replace('-prop','').replace('-event','')}</code>`).join(' / ');
-          line += `多了 ${extra}`;
-        }
-        if (r.wrong.length > 0) {
-          const why = r.wrong.map(k => EXPLAIN[k]).filter(Boolean)[0];
-          if (why) line += `<br><span class="why">↳ ${why}</span>`;
-        }
-        lines.push(`<li>${line}</li>`);
-      }
-    }
-
-    fmtLine('Props', rProps, 'props');
-    fmtLine('Events', rEvents, 'events');
-    fmtLine('Slots', rSlots, 'slots');
-    fmtLine('State boundary', rState, 'state');
-
-    const totalWrong = rProps.wrong.length + rEvents.wrong.length + rSlots.wrong.length + rState.wrong.length;
-    let verdictClass, verdictLabel, headline;
-
-    if (totalCorrect === totalIdeal && totalWrong === 0) {
-      verdictClass = 'win';
-      verdictLabel = '完美';
-      headline = '<span class="em">契约思维 unlock</span>。下次可以直接写 TS interface 了。';
-    } else if (totalCorrect >= totalIdeal - 1 && totalWrong <= 1) {
-      verdictClass = 'win';
-      verdictLabel = '基本对了';
-      headline = '差一两条——但你已经在用合同的语言描述组件。';
-    } else {
-      verdictClass = 'partial';
-      verdictLabel = '还差一点';
-      headline = '换个角度看：每一条契约都对应"工程师可能问的一个问题"。';
-    }
-
-    const finalCode = `<div class="tj-code"><span class="cc">// Tag 组件的契约（参考）</span>
-<span class="ck">interface</span> <span class="cn">TagProps</span> {
-  <span class="cf">color</span>: <span class="cs">'red' | 'green' | 'blue' | 'gray' | 'yellow' | 'purple'</span>;
-  <span class="cf">size</span>?: <span class="cs">'sm' | 'md' | 'lg'</span>;
-  <span class="cf">dot</span>?: <span class="cn">boolean</span>;
-  <span class="cf">closable</span>?: <span class="cn">boolean</span>;
-  <span class="cf">leftIcon</span>?: <span class="cn">ReactNode</span>;<span class="cc">  // slot</span>
-  <span class="cf">children</span>: <span class="cn">ReactNode</span>;<span class="cc">    // slot - 标签文字</span>
-  <span class="cf">onClick</span>?: <span class="cv">(e</span>: <span class="cn">MouseEvent</span><span class="cv">) =&gt; void</span>;
-  <span class="cf">onClose</span>?: <span class="cv">() =&gt; void</span>;<span class="cc">  // closable 时必填</span>
-}</div>`;
-
-    judge.innerHTML = `<span class="verdict ${verdictClass}">${verdictLabel}</span><h4>${headline}</h4><ul>${lines.join('')}</ul>${finalCode}`;
-    judge.classList.add('show');
-    judge.scrollIntoView({ behavior: 'smooth', block: 'center' });
-  });
-
-  document.getElementById('tagReset').addEventListener('click', () => {
-    allOpts.forEach(i => { i.checked = false; });
-    refresh();
-    judge.classList.remove('show');
-  });
-
-  refresh();
-})();
 </script>
 
 </body>

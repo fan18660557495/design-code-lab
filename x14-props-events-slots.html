@@ -136,6 +136,84 @@
   .problem-card p + p { margin-top: 10px; }
   .problem-card code { font-family: 'JetBrains Mono', monospace; font-size: 12px; background: rgba(22,22,29,0.06); padding: 1px 5px; border-radius: 3px; color: var(--ink); }
 
+  /* ====== Visual-first opening ====== */
+  .viz-stage { background: var(--paper); border: 1px solid var(--line); border-radius: 12px; padding: 28px; margin-top: 16px; position: relative; }
+  .viz-hint { text-align: center; font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--ink-mute); margin: 18px 0 0; letter-spacing: 0.04em; }
+  .viz-hint strong { color: var(--obj-color); }
+
+  /* X14: one modal mockup + 4 pinned doors */
+  .x14-stage { display: grid; grid-template-columns: 1.05fr 1fr; gap: 28px; align-items: center; }
+  @media (max-width: 980px) { .x14-stage { grid-template-columns: 1fr; } }
+  .x14-modal-wrap { background: linear-gradient(180deg, #2c2c38 0%, #1a1a23 100%); border-radius: 10px; padding: 28px 22px; position: relative; min-height: 360px; display: flex; align-items: center; justify-content: center; }
+  .x14-modal-wrap::before { content: 'COMPONENT · MODAL'; position: absolute; top: 10px; left: 14px; font-family: 'JetBrains Mono', monospace; font-size: 9px; letter-spacing: 0.15em; color: rgba(255,255,255,0.3); }
+  .x14-modal { background: white; border-radius: 8px; width: 260px; box-shadow: 0 20px 50px rgba(0,0,0,0.4); position: relative; }
+  .x14-modal-head { padding: 14px 16px 10px; border-bottom: 1px solid var(--line-soft); position: relative; }
+  .x14-modal-title { font-family: 'Noto Serif SC', serif; font-size: 14px; font-weight: 700; color: var(--ink); margin: 0; }
+  .x14-modal-close { position: absolute; top: 10px; right: 10px; width: 22px; height: 22px; background: var(--bg); border: 1px solid var(--line); border-radius: 4px; font-size: 12px; color: var(--ink-soft); display: flex; align-items: center; justify-content: center; cursor: default; }
+  .x14-modal-body { padding: 12px 16px; font-size: 12px; color: var(--ink-soft); line-height: 1.55; border-bottom: 1px solid var(--line-soft); }
+  .x14-modal-body .input-mock { margin-top: 8px; padding: 7px 10px; background: var(--bg); border: 1px solid var(--line); border-radius: 4px; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ink); }
+  .x14-modal-foot { padding: 10px 16px; display: flex; justify-content: flex-end; gap: 6px; }
+  .x14-modal-btn { padding: 5px 12px; border-radius: 4px; font-size: 11.5px; font-weight: 600; font-family: 'Geist', sans-serif; cursor: default; line-height: 1.2; }
+  .x14-modal-btn.cancel { background: white; color: var(--ink); border: 1px solid var(--line); }
+  .x14-modal-btn.confirm { background: var(--obj-color); color: white; }
+
+  /* dotted lines + pins */
+  .x14-pin { position: absolute; background: var(--yellow); color: var(--ink); font-family: 'JetBrains Mono', monospace; font-size: 9.5px; padding: 3px 7px; border-radius: 100px; font-weight: 700; letter-spacing: 0.04em; box-shadow: 0 4px 10px rgba(0,0,0,0.25); white-space: nowrap; }
+  .x14-pin.props { top: 18px; left: -18px; }
+  .x14-pin.events { bottom: 12px; right: -18px; }
+  .x14-pin.slots { top: 50%; transform: translateY(-50%); left: -22px; }
+  .x14-pin.state { bottom: 70px; left: -22px; }
+  @media (max-width: 980px) { .x14-pin { position: static; display: inline-block; transform: none; margin: 0 4px 4px 0; } }
+
+  /* the 4 doors legend (right column) */
+  .x14-doors { display: flex; flex-direction: column; gap: 10px; }
+  .x14-door { background: white; border: 1px solid var(--line); border-radius: 8px; padding: 12px 14px 14px; display: grid; grid-template-columns: 32px 1fr; gap: 12px; align-items: start; }
+  .x14-door-dot { width: 26px; height: 26px; border-radius: 50%; background: var(--yellow); color: var(--ink); font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center; }
+  .x14-door h5 { font-family: 'Noto Serif SC', serif; font-size: 14px; margin: 0 0 4px; font-weight: 700; color: var(--ink); }
+  .x14-door h5 .en { font-family: 'JetBrains Mono', monospace; font-size: 10.5px; color: var(--ink-mute); font-weight: 400; letter-spacing: 0.04em; margin-left: 6px; }
+  .x14-door p { margin: 0; font-size: 12px; color: var(--ink-soft); line-height: 1.55; }
+  .x14-door p code { background: var(--bg); padding: 1px 5px; border-radius: 3px; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ink); }
+  .x14-door[data-d="props"] .x14-door-dot { background: var(--blue-soft); color: var(--blue); }
+  .x14-door[data-d="events"] .x14-door-dot { background: var(--obj-soft); color: var(--obj-color); }
+  .x14-door[data-d="slots"] .x14-door-dot { background: var(--proj-soft); color: var(--proj-color); }
+  .x14-door[data-d="state"] .x14-door-dot { background: #fff3cc; color: #b88500; }
+
+  /* sticky-note */
+  .sticky-wrap { margin-top: 28px; display: flex; gap: 22px; align-items: center; flex-wrap: wrap; justify-content: center; }
+  .sticky { background: #fff8c4; border: 1px solid #e5d98a; border-radius: 3px; padding: 16px 22px 18px; position: relative; transform: rotate(-1.5deg); box-shadow: 0 6px 14px rgba(22,22,29,0.12), 0 1px 3px rgba(22,22,29,0.08); font-size: 14px; color: var(--ink); line-height: 1.65; max-width: 380px; text-align: center; }
+  .sticky-pin { position: absolute; top: -8px; left: 50%; transform: translateX(-50%); width: 14px; height: 14px; background: var(--accent); border-radius: 50%; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+  .sticky strong { display: block; margin-top: 4px; font-family: 'Noto Serif SC', serif; font-size: 17px; color: var(--accent); line-height: 1.4; }
+
+  /* Section 04 Modal contract demo */
+  .demo-stage { background: var(--paper); border: 1px solid var(--line); border-left: 3px solid var(--obj-color); border-radius: 10px; padding: 26px 28px; margin-top: 24px; }
+  .demo-stage h3.demo-h { font-family: 'Noto Serif SC', serif; font-size: 18px; font-weight: 700; margin: 0 0 6px; color: var(--ink); }
+  .demo-stage p.demo-sub { font-size: 13px; color: var(--ink-soft); margin: 0 0 18px; line-height: 1.6; }
+
+  .demo-suit { background: white; border: 1px solid var(--line); border-radius: 8px; margin-bottom: 16px; overflow: hidden; }
+  .demo-suit-head { display: flex; align-items: baseline; gap: 10px; padding: 12px 18px; background: var(--bg); border-bottom: 1px dashed var(--line); }
+  .demo-suit-tag { font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; padding: 2px 8px; border-radius: 100px; }
+  .demo-suit-tag.props { background: var(--blue-soft); color: var(--blue); }
+  .demo-suit-tag.events { background: var(--obj-soft); color: var(--obj-color); }
+  .demo-suit-tag.slots { background: var(--proj-soft); color: var(--proj-color); }
+  .demo-suit-tag.state { background: #fff3cc; color: #b88500; }
+  .demo-suit-title { font-family: 'Noto Serif SC', serif; font-size: 15px; font-weight: 700; color: var(--ink); }
+  .demo-suit-sub { font-size: 12px; color: var(--ink-mute); margin-left: auto; }
+  .demo-rows { padding: 14px 18px 16px; display: flex; flex-direction: column; gap: 10px; }
+  .demo-row { display: grid; grid-template-columns: 180px 1fr; gap: 14px; align-items: baseline; padding: 8px 0; border-bottom: 1px dashed var(--line-soft); }
+  .demo-row:last-child { border-bottom: none; }
+  @media (max-width: 720px) { .demo-row { grid-template-columns: 1fr; gap: 4px; } }
+  .demo-row .k { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--ink); font-weight: 600; }
+  .demo-row .k .t { color: var(--ink-mute); font-weight: 400; font-size: 11px; }
+  .demo-row .why { font-size: 12.5px; color: var(--ink-soft); line-height: 1.6; }
+  .demo-row .why strong { color: var(--ink); }
+  .demo-row .why code { background: var(--bg); padding: 1px 5px; border-radius: 3px; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ink); }
+
+  .demo-trap-grid { margin-top: 22px; display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  @media (max-width: 720px) { .demo-trap-grid { grid-template-columns: 1fr; } }
+  .demo-trap { background: var(--accent-soft); border-left: 3px solid var(--accent); border-radius: 4px; padding: 14px 16px; font-size: 13px; color: var(--ink-soft); line-height: 1.65; }
+  .demo-trap strong { display: block; color: var(--accent); font-family: 'Noto Serif SC', serif; font-size: 14px; margin-bottom: 4px; }
+  .demo-trap code { background: white; padding: 1px 5px; border-radius: 3px; font-family: 'JetBrains Mono', monospace; font-size: 11.5px; color: var(--ink); }
+
   /* GAME 1: Modal Lab */
   .modal-stage {
     background: var(--paper);
@@ -992,13 +1070,12 @@
     <div class="hero-grid">
       <div>
         <h1>
-          <span class="display-cn">4 件套</span>，<br>
-          每件都有<br>
-          <span class="purple">设计语言</span>。
+          你画了 <span class="display-cn">1 个弹窗</span>。<br>
+          它有 <span class="purple">4 道门</span>。
         </h1>
         <p class="lede">
-          Props 是"你能改什么"。Events 是"我会告诉你啥"。Slots 是"你能插啥进来"。State boundary 是"谁管哪部分"。<br>
-          4 件套各有讲究——错一个，组件就难用 / 难复用 / 难测试。
+          <strong>你画的</strong>：标题 + 正文 + 取消 / 确认按钮。<br>
+          <strong>工程师要的</strong>：哪些数据从外面进来、哪些事件出去、哪些位置留给消费方塞、哪些状态归谁管——<strong>4 道门，每道都要画清</strong>。
         </p>
       </div>
       <div class="hero-side">
@@ -1016,30 +1093,78 @@
   <div class="wrap">
     <div class="section-head">
       <div>
-        <div class="section-num"><strong>01</strong> / 问题</div>
-        <h2 class="section-title">组件契约 ≠ <br><span class="em">一份 props 列表</span>。</h2>
+        <div class="section-num"><strong>01</strong> / 看见</div>
+        <h2 class="section-title">先看图。<br>1 个 Modal——<span class="em">4 道清晰的门</span>。</h2>
       </div>
       <p class="section-sub">
-        设计师以为"组件契约 = 一份 props 列表"。其实 4 件套各有<strong>独立的设计原则</strong>——
-        props 的命名 / 默认值 / 受控；events 的载荷；slots 的边界；state 的内外划分。
+        组件不是黑盒——它是 <strong style="color:var(--obj-color)">4 道门</strong>：
+        props 进来 / events 出去 / slots 留口 / state 划线。<strong>画错一道，组件就难用。</strong>
       </p>
     </div>
 
-    <div class="problem-grid">
-      <div class="problem-card bad">
-        <span class="tag">揉成一团 · MIXED</span>
-        <h3>"把所有契约揉成 props"</h3>
-        <p>一个 <code>Modal</code> 组件 props 写了 <code>isOpen</code>, <code>title</code>, <code>content</code>, <code>onClose</code>, <code>footer</code>, …14 个 props。"内容"用 prop 传字符串。</p>
-        <p><strong>工程师追问：</strong>富文本怎么传？复杂 footer 怎么放？<code>isOpen</code> 是受控还是非受控？<code>onClose</code> 算 prop 还是 event？</p>
-        <p style="color:var(--accent)"><strong>结果：</strong>难用，难复用，难测试。</p>
-      </div>
+    <div class="viz-stage">
+      <div class="x14-stage">
+        <div class="x14-modal-wrap">
+          <div class="x14-modal">
+            <span class="x14-pin props">PROPS · isOpen / title 进来</span>
+            <span class="x14-pin slots">SLOTS · 中间 body 留口</span>
+            <span class="x14-pin state">STATE · isOpen 谁管</span>
+            <span class="x14-pin events">EVENTS · onConfirm / onCancel 出去</span>
 
-      <div class="problem-card good">
-        <span class="tag">4 件套清晰 · LAYERED</span>
-        <h3>"4 件套清晰分工"</h3>
-        <p><strong>Props</strong> (<code>isOpen / size / closable</code>) + <strong>Events</strong> (<code>onClose / onConfirm</code>) + <strong>Slots</strong> (<code>title / children / footer</code>) + <strong>State</strong> (受控 by <code>isOpen</code>)。</p>
-        <p><strong>工程师收到：</strong>清晰的 4 张契约表。富文本进 slot，回调进 events，开关进 props，状态边界画清楚。</p>
-        <p style="color:var(--obj-color)"><strong>结果：</strong>好用、好复用、好测试。</p>
+            <div class="x14-modal-head">
+              <h4 class="x14-modal-title">请确认这次操作</h4>
+              <div class="x14-modal-close">×</div>
+            </div>
+            <div class="x14-modal-body">
+              删除后无法恢复，是否继续？
+              <div class="input-mock">输入项目名以确认</div>
+            </div>
+            <div class="x14-modal-foot">
+              <div class="x14-modal-btn cancel">取消</div>
+              <div class="x14-modal-btn confirm">确认删除</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="x14-doors">
+          <div class="x14-door" data-d="props">
+            <div class="x14-door-dot">P</div>
+            <div>
+              <h5>Props <span class="en">从外面进来</span></h5>
+              <p><code>isOpen</code> 控开关 · <code>title</code> 标题 · <code>size</code> 尺寸——<strong>父级告诉组件长啥样</strong>。</p>
+            </div>
+          </div>
+          <div class="x14-door" data-d="events">
+            <div class="x14-door-dot">E</div>
+            <div>
+              <h5>Events <span class="en">向外发出</span></h5>
+              <p><code>onConfirm</code> · <code>onCancel</code> · <code>onClose</code>——用户做了啥，<strong>组件喊一声让父级听</strong>。</p>
+            </div>
+          </div>
+          <div class="x14-door" data-d="slots">
+            <div class="x14-door-dot">S</div>
+            <div>
+              <h5>Slots <span class="en">留口给父级填</span></h5>
+              <p>中间正文 / 自定义 footer——<strong>这块内容组件不管</strong>，父级想塞啥塞啥。</p>
+            </div>
+          </div>
+          <div class="x14-door" data-d="state">
+            <div class="x14-door-dot">B</div>
+            <div>
+              <h5>State 边界 <span class="en">谁管哪部分</span></h5>
+              <p>Modal 是<strong>受控的</strong>——开关由父级管。里面输入框是受控还是非受控？<strong>由父级决定。</strong></p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <p class="viz-hint">1 个 Modal mockup → <strong>4 道边界</strong> · 每道都要在设计稿上标清楚</p>
+    </div>
+
+    <div class="sticky-wrap">
+      <div class="sticky">
+        <div class="sticky-pin"></div>
+        组件不是黑盒。<br>
+        <strong>组件是 3 道清晰的门 + 1 条状态线。</strong>
       </div>
     </div>
   </div>
@@ -1614,206 +1739,138 @@ onChange={v =&gt; setValue(v)}</pre></div>
   </div>
 </section>
 
-<!-- Section 04: 幕三 · 再做 -->
+<!-- Section 04: 幕三 · 看更多 -->
 <section id="make">
   <div class="wrap">
     <div class="section-head">
       <div>
-        <span class="act-tag make">幕三 · 再做</span>
-        <div class="section-num"><strong>04</strong> / 再做</div>
-        <h2 class="section-title">轮到你——<br>给 <span class="em">Dropdown 组件</span><br>填 4 件套。</h2>
+        <span class="act-tag make">幕三 · 看更多</span>
+        <div class="section-num"><strong>04</strong> / 看更多</div>
+        <h2 class="section-title">完整的 <span class="em">Modal 契约</span>——<br>看人家是怎么填的。</h2>
       </div>
       <p class="section-sub">
-        下面 4 张 contract 表（props / events / slots / state）。每张 4-7 个候选——
-        <strong>你选哪些进契约</strong>，哪些是陷阱。提交后逐题点评。
+        把 4 道门全部预填好——重点看 <strong style="color:var(--accent)">⚠ 标的几条</strong>，是设计师最容易踩的状态边界坑。
       </p>
     </div>
 
-    <div class="contract-stage">
-      <div class="contract-head">
-        <h3 class="contract-title">为 Dropdown 设计 4 件套契约</h3>
-        <div class="contract-progress">已选择 <span class="done" id="contractDone">0</span> 项</div>
+    <div class="demo-stage">
+      <h3 class="demo-h">Modal 组件 · 完整契约</h3>
+      <p class="demo-sub">这就是 Section 01 那个 Modal 的展开版——每一道门都附"为什么"。</p>
+
+      <div class="demo-suit">
+        <div class="demo-suit-head">
+          <span class="demo-suit-tag props">PROPS</span>
+          <span class="demo-suit-title">从外面进来</span>
+          <span class="demo-suit-sub">5 条</span>
+        </div>
+        <div class="demo-rows">
+          <div class="demo-row">
+            <span class="k">isOpen <span class="t">: boolean</span></span>
+            <span class="why"><strong>必填 / 受控</strong>——Modal 自己不存"开 / 关"状态，由父级用 <code>isOpen</code> 驱动。<strong>这是受控组件的核心</strong>。</span>
+          </div>
+          <div class="demo-row">
+            <span class="k">title <span class="t">?: string</span></span>
+            <span class="why">标题文字——简单场景用 string prop。复杂场景（要传 JSX）改用 <code>header</code> slot（见下方）。</span>
+          </div>
+          <div class="demo-row">
+            <span class="k">size <span class="t">: 'sm' | 'md' | 'lg' | 'full'</span></span>
+            <span class="why">4 档枚举——决定 max-width。<strong>不传 <code>width: number</code></strong>——把布局责任揽给组件就回不去。</span>
+          </div>
+          <div class="demo-row">
+            <span class="k">closeOnEsc <span class="t">?: boolean</span></span>
+            <span class="why">默认 true。按 Esc 触发 <code>onClose</code>。<strong>"删除确认"这种关键操作可以设 false</strong>，防止误关。</span>
+          </div>
+          <div class="demo-row">
+            <span class="k">closeOnOverlay <span class="t">?: boolean</span></span>
+            <span class="why">默认 true。点蒙层触发 <code>onClose</code>。同上——关键操作可以设 false。</span>
+          </div>
+        </div>
       </div>
 
-      <div class="dropdown-preview-wrap">
-        <div class="dropdown-mock" id="ddTrigger">
-          <span id="ddLabel">选择城市</span>
-          <span class="caret">›</span>
+      <div class="demo-suit">
+        <div class="demo-suit-head">
+          <span class="demo-suit-tag events">EVENTS</span>
+          <span class="demo-suit-title">向外发出</span>
+          <span class="demo-suit-sub">3 条</span>
         </div>
-        <div class="dropdown-popover" id="ddPopover">
-          <div class="opt">北京</div>
-          <div class="opt">上海</div>
-          <div class="opt">深圳</div>
-          <div class="opt">杭州</div>
+        <div class="demo-rows">
+          <div class="demo-row">
+            <span class="k">onClose <span class="t">: (reason) =&gt; void</span></span>
+            <span class="why"><strong>必填</strong>——任何关闭动作（Esc / 蒙层 / × 按钮 / 取消按钮）都喊它，<strong>父级根据 reason 决定下一步</strong>。reason: <code>'esc' | 'overlay' | 'button' | 'cancel'</code>。</span>
+          </div>
+          <div class="demo-row">
+            <span class="k">onConfirm <span class="t">?: () =&gt; void | Promise</span></span>
+            <span class="why">主操作——确认按钮触发。返回 Promise 时 Modal 自动转 loading 等异步完成。</span>
+          </div>
+          <div class="demo-row">
+            <span class="k">onCancel <span class="t">?: () =&gt; void</span></span>
+            <span class="why">取消按钮专用——<strong>和 onClose 是两件事</strong>。onCancel = "用户主动放弃"，onClose = "Modal 关上了"。</span>
+          </div>
         </div>
       </div>
 
-      <div class="contract-tables">
-
-        <!-- PROPS table -->
-        <div class="contract-table" data-suit="props">
-          <div class="contract-table-head">
-            <span class="contract-table-name">Props · 形态开关</span>
-            <span class="contract-table-info">已选 <span class="now" id="cntProps">0</span></span>
+      <div class="demo-suit">
+        <div class="demo-suit-head">
+          <span class="demo-suit-tag slots">SLOTS</span>
+          <span class="demo-suit-title">留口给父级填</span>
+          <span class="demo-suit-sub">3 条</span>
+        </div>
+        <div class="demo-rows">
+          <div class="demo-row">
+            <span class="k">header <span class="t">?: ReactNode</span></span>
+            <span class="why">可选——传了就覆盖默认 title 渲染。父级想加 icon / badge / 副标题，都从这道口塞进去。</span>
           </div>
-          <div class="candidate-list" data-suit="props">
-            <div class="candidate" data-key="value" data-correct="1">
-              <div class="cand-main"><span class="cand-name">value</span><span class="cand-sub">: string | string[] · 当前选中</span></div>
-              <span class="cand-check"></span>
-            </div>
-            <div class="candidate" data-key="options" data-correct="1">
-              <div class="cand-main"><span class="cand-name">options</span><span class="cand-sub">: Option[] · 下拉选项</span></div>
-              <span class="cand-check"></span>
-            </div>
-            <div class="candidate" data-key="placeholder" data-correct="1">
-              <div class="cand-main"><span class="cand-name">placeholder</span><span class="cand-sub">: string · 空时提示</span></div>
-              <span class="cand-check"></span>
-            </div>
-            <div class="candidate" data-key="disabled" data-correct="1">
-              <div class="cand-main"><span class="cand-name">disabled</span><span class="cand-sub">: boolean</span></div>
-              <span class="cand-check"></span>
-            </div>
-            <div class="candidate" data-key="loading" data-correct="1">
-              <div class="cand-main"><span class="cand-name">loading</span><span class="cand-sub">: boolean · 加载态</span></div>
-              <span class="cand-check"></span>
-            </div>
-            <div class="candidate" data-key="multiple" data-correct="1">
-              <div class="cand-main"><span class="cand-name">multiple</span><span class="cand-sub">: boolean · 多选</span></div>
-              <span class="cand-check"></span>
-            </div>
-            <div class="candidate" data-key="searchable" data-correct="1">
-              <div class="cand-main"><span class="cand-name">searchable</span><span class="cand-sub">: boolean · 可搜索</span></div>
-              <span class="cand-check"></span>
-            </div>
-            <div class="candidate" data-key="clearable" data-correct="1">
-              <div class="cand-main"><span class="cand-name">clearable</span><span class="cand-sub">: boolean · 可清空</span></div>
-              <span class="cand-check"></span>
-            </div>
-            <div class="candidate trap" data-key="width" data-correct="0" data-trap="实现细节——宽度应该 CSS 控制，prop 化等于把布局责任揽给组件">
-              <div class="cand-main"><span class="cand-name">width</span><span class="cand-sub">: number · 宽度（陷阱）</span></div>
-              <span class="cand-check"></span>
-            </div>
-            <div class="candidate trap" data-key="onChange" data-correct="0" data-trap="onChange 是 event 不是 prop——这张表是 props，回调放到 events 表里">
-              <div class="cand-main"><span class="cand-name">onChange</span><span class="cand-sub">: fn · 选中回调（陷阱）</span></div>
-              <span class="cand-check"></span>
-            </div>
+          <div class="demo-row">
+            <span class="k">children <span class="t">: ReactNode</span></span>
+            <span class="why"><strong>必填 / 主内容</strong>——Modal 不规定中间放啥。表单、富文本、列表，父级想塞啥塞啥。</span>
+          </div>
+          <div class="demo-row">
+            <span class="k">footer <span class="t">?: ReactNode</span></span>
+            <span class="why">可选——<strong>不传时回退到默认的"取消 + 确认"按钮</strong>。传了就完全替换（比如要加"保留草稿"按钮）。</span>
           </div>
         </div>
-
-        <!-- EVENTS table -->
-        <div class="contract-table" data-suit="events">
-          <div class="contract-table-head">
-            <span class="contract-table-name">Events · 消息通道</span>
-            <span class="contract-table-info">已选 <span class="now" id="cntEvents">0</span></span>
-          </div>
-          <div class="candidate-list" data-suit="events">
-            <div class="candidate" data-key="onChange" data-correct="1">
-              <div class="cand-main"><span class="cand-name">onChange</span><span class="cand-sub">(value, item, e) · 选中变化</span></div>
-              <span class="cand-check"></span>
-            </div>
-            <div class="candidate" data-key="onOpen" data-correct="1">
-              <div class="cand-main"><span class="cand-name">onOpen</span><span class="cand-sub">() · popover 打开</span></div>
-              <span class="cand-check"></span>
-            </div>
-            <div class="candidate" data-key="onClose" data-correct="1">
-              <div class="cand-main"><span class="cand-name">onClose</span><span class="cand-sub">() · popover 关闭</span></div>
-              <span class="cand-check"></span>
-            </div>
-            <div class="candidate" data-key="onSearch" data-correct="1">
-              <div class="cand-main"><span class="cand-name">onSearch</span><span class="cand-sub">(q) · 搜索关键词变化</span></div>
-              <span class="cand-check"></span>
-            </div>
-            <div class="candidate" data-key="onFocus" data-correct="1">
-              <div class="cand-main"><span class="cand-name">onFocus</span><span class="cand-sub">() · 触发器获得焦点</span></div>
-              <span class="cand-check"></span>
-            </div>
-            <div class="candidate trap" data-key="onMount" data-correct="0" data-trap="生命周期不是事件——组件挂载是 React/Vue 的事，不该通过 events 暴露">
-              <div class="cand-main"><span class="cand-name">onMount</span><span class="cand-sub">() · 组件挂载（陷阱）</span></div>
-              <span class="cand-check"></span>
-            </div>
-            <div class="candidate trap" data-key="onHover" data-correct="0" data-trap="太底层——hover 是 DOM 行为，组件不该把每个 hover 抛出去。如果真要，监听 onMouseEnter 就好">
-              <div class="cand-main"><span class="cand-name">onHover</span><span class="cand-sub">() · 鼠标悬停（陷阱）</span></div>
-              <span class="cand-check"></span>
-            </div>
-          </div>
-        </div>
-
-        <!-- SLOTS table -->
-        <div class="contract-table" data-suit="slots">
-          <div class="contract-table-head">
-            <span class="contract-table-name">Slots · 定制点</span>
-            <span class="contract-table-info">已选 <span class="now" id="cntSlots">0</span></span>
-          </div>
-          <div class="candidate-list" data-suit="slots">
-            <div class="candidate" data-key="optionTemplate" data-correct="1">
-              <div class="cand-main"><span class="cand-name">optionTemplate</span><span class="cand-sub">· 定制 item 渲染</span></div>
-              <span class="cand-check"></span>
-            </div>
-            <div class="candidate" data-key="emptyState" data-correct="1">
-              <div class="cand-main"><span class="cand-name">emptyState</span><span class="cand-sub">· 无数据时的空态</span></div>
-              <span class="cand-check"></span>
-            </div>
-            <div class="candidate" data-key="trigger" data-correct="1">
-              <div class="cand-main"><span class="cand-name">trigger</span><span class="cand-sub">· 自定义触发器</span></div>
-              <span class="cand-check"></span>
-            </div>
-            <div class="candidate" data-key="header" data-correct="1">
-              <div class="cand-main"><span class="cand-name">header</span><span class="cand-sub">· 列表上方区</span></div>
-              <span class="cand-check"></span>
-            </div>
-            <div class="candidate trap" data-key="icon" data-correct="0" data-trap="icon 应该是 prop（传一个图标名/组件），不是 slot——slot 是给"内容"的，icon 是"配置"">
-              <div class="cand-main"><span class="cand-name">icon</span><span class="cand-sub">· 触发器图标（陷阱）</span></div>
-              <span class="cand-check"></span>
-            </div>
-            <div class="candidate trap" data-key="placeholder" data-correct="0" data-trap="placeholder 是字符串 prop——只是文案，不该用 slot 占带宽">
-              <div class="cand-main"><span class="cand-name">placeholder</span><span class="cand-sub">· 空时文案（陷阱）</span></div>
-              <span class="cand-check"></span>
-            </div>
-          </div>
-        </div>
-
-        <!-- STATE BOUNDARY table -->
-        <div class="contract-table" data-suit="state">
-          <div class="contract-table-head">
-            <span class="contract-table-name">State · 谁管什么</span>
-            <span class="contract-table-info">已选 <span class="now" id="cntState">0</span></span>
-          </div>
-          <div class="state-options" data-suit="state">
-            <div class="state-option" data-key="controlled" data-correct="1">
-              <span class="so-check"></span>
-              <span class="so-text">受控选中（value + onChange）<span class="so-sub">消费方在意"选了啥"——必须受控</span></span>
-            </div>
-            <div class="state-option" data-key="uncontrolled" data-correct="0">
-              <span class="so-check"></span>
-              <span class="so-text">完全非受控（defaultValue）<span class="so-sub">defaultValue 可以作为备选——但选中必须能受控</span></span>
-            </div>
-            <div class="state-option" data-key="popover-internal" data-correct="1">
-              <span class="so-check"></span>
-              <span class="so-text">popover 显隐由内部管<span class="so-sub">大多场景下消费方不在意——内部状态</span></span>
-            </div>
-            <div class="state-option" data-key="anim-internal" data-correct="1">
-              <span class="so-check"></span>
-              <span class="so-text">动画态由内部管<span class="so-sub">enter / leave 是实现细节——绝不 leak</span></span>
-            </div>
-            <div class="state-option" data-key="all-internal" data-correct="0">
-              <span class="so-check"></span>
-              <span class="so-text">全部内部（不暴露任何状态）<span class="so-sub">那 value 怎么读？这条全错——选了它说明没分清边界</span></span>
-            </div>
-            <div class="state-option" data-key="scroll-external" data-correct="0">
-              <span class="so-check"></span>
-              <span class="so-text">scrollTop 暴露给外部<span class="so-sub">scrollTop 是实现细节——不该 leak（陷阱）</span></span>
-            </div>
-          </div>
-        </div>
-
       </div>
 
-      <div class="contract-actions">
-        <button class="contract-btn primary" id="contractSubmit">提交打分</button>
-        <button class="contract-btn" id="contractReset">清空</button>
+      <div class="demo-suit">
+        <div class="demo-suit-head">
+          <span class="demo-suit-tag state">STATE 边界</span>
+          <span class="demo-suit-title">谁管哪部分</span>
+          <span class="demo-suit-sub">3 条</span>
+        </div>
+        <div class="demo-rows">
+          <div class="demo-row">
+            <span class="k">isOpen <span class="t">→ 受控</span></span>
+            <span class="why"><strong>父级管</strong>——Modal 不存自己的"开 / 关"。这条不商量——所有 Modal 都该是受控的。</span>
+          </div>
+          <div class="demo-row">
+            <span class="k">中间输入框 <span class="t">→ 父级决定</span></span>
+            <span class="why">Modal 是<strong>容器</strong>——里面的输入框是 controlled 还是 uncontrolled，<strong>由调用方决定</strong>。Modal 不应预设。</span>
+          </div>
+          <div class="demo-row">
+            <span class="k">focusLock / scrollLock / animationPhase <span class="t">→ 内部</span></span>
+            <span class="why">焦点锁、滚动锁、动画阶段——<strong>实现细节</strong>。永远不 leak 给父级，父级也不该在意。</span>
+          </div>
+        </div>
       </div>
 
-      <div class="contract-judge" id="contractJudge"></div>
+      <div class="demo-trap-grid">
+        <div class="demo-trap">
+          <strong>⚠ 用 defaultOpen 让 Modal 自己管开关</strong>
+          稿子写"Modal 默认关着，点按钮打开"——很直觉。但<strong>父级丢失了控制权</strong>：路由切换时 Modal 不会自动关 / 表单成功后没法编程关闭。<strong>永远用 <code>isOpen</code> + <code>onClose</code></strong>，开关存父级。
+        </div>
+        <div class="demo-trap">
+          <strong>⚠ 把 content 写成 string prop</strong>
+          稿子写 <code>content: "删除后无法恢复"</code>——只能传纯文本。下次需要"加粗 + 红字 + 链接"就要重做 prop。<strong>用 <code>children: ReactNode</code> slot</strong>，富文本直接塞 JSX。
+        </div>
+        <div class="demo-trap">
+          <strong>⚠ 把 footer 锁成 prop</strong>
+          稿子写 <code>confirmText / cancelText</code> 两个 string prop——99% 场景能用，但<strong>1% 的"保留草稿"按钮就要返工</strong>。<strong>footer 留 slot，默认 fallback 取消 / 确认</strong>，灵活性 + 一致性两头都有。
+        </div>
+        <div class="demo-trap">
+          <strong>⚠ onClose 和 onCancel 合并成一个</strong>
+          看起来都是"关掉"——其实<strong>语义不同</strong>。Esc / 蒙层 / × 是 onClose（"组件关了"），取消按钮是 onCancel（"用户主动放弃"）。<strong>合并 = 父级再也分不清来源</strong>，埋日志的时候哭。
+        </div>
+      </div>
     </div>
   </div>
 </section>
@@ -2169,142 +2226,6 @@ onChange={v =&gt; setValue(v)}</pre></div>
   });
 })();
 
-// ===== Game 3: contract builder =====
-(function(){
-  const SUITS = ['props', 'events', 'slots', 'state'];
-  const selected = { props: new Set(), events: new Set(), slots: new Set(), state: new Set() };
-  const traps = {};
-  const correctSets = {};
-
-  SUITS.forEach(suit => {
-    correctSets[suit] = new Set();
-    document.querySelectorAll(`.candidate-list[data-suit="${suit}"] .candidate, .state-options[data-suit="${suit}"] .state-option`).forEach(el => {
-      if (el.dataset.correct === '1') correctSets[suit].add(el.dataset.key);
-      if (el.dataset.trap) traps[suit + ':' + el.dataset.key] = el.dataset.trap;
-    });
-  });
-
-  function updateCount(suit) {
-    const map = { props: 'cntProps', events: 'cntEvents', slots: 'cntSlots', state: 'cntState' };
-    document.getElementById(map[suit]).textContent = selected[suit].size;
-    let total = 0;
-    SUITS.forEach(s => total += selected[s].size);
-    document.getElementById('contractDone').textContent = total;
-  }
-
-  document.querySelectorAll('.candidate').forEach(c => {
-    c.addEventListener('click', () => {
-      const suit = c.parentElement.dataset.suit;
-      const key = c.dataset.key;
-      if (selected[suit].has(key)) {
-        selected[suit].delete(key);
-        c.classList.remove('selected');
-      } else {
-        selected[suit].add(key);
-        c.classList.add('selected');
-      }
-      updateCount(suit);
-    });
-  });
-
-  document.querySelectorAll('.state-option').forEach(c => {
-    c.addEventListener('click', () => {
-      const suit = c.parentElement.dataset.suit;
-      const key = c.dataset.key;
-      if (selected[suit].has(key)) {
-        selected[suit].delete(key);
-        c.classList.remove('selected');
-      } else {
-        selected[suit].add(key);
-        c.classList.add('selected');
-      }
-      updateCount(suit);
-    });
-  });
-
-  const judge = document.getElementById('contractJudge');
-
-  document.getElementById('contractSubmit').addEventListener('click', () => {
-    let totalHits = 0, totalIdeal = 0, totalTraps = 0, totalMisses = 0;
-    const lines = [];
-    const SUIT_NAMES = {
-      props: 'Props',
-      events: 'Events',
-      slots: 'Slots',
-      state: 'State boundary'
-    };
-    SUITS.forEach(suit => {
-      const sel = selected[suit];
-      const ideal = correctSets[suit];
-      const hits = [...sel].filter(k => ideal.has(k));
-      const missed = [...ideal].filter(k => !sel.has(k));
-      const trapsHit = [...sel].filter(k => !ideal.has(k));
-
-      totalHits += hits.length;
-      totalIdeal += ideal.size;
-      totalMisses += missed.length;
-      totalTraps += trapsHit.length;
-
-      if (sel.size === 0) {
-        lines.push(`<li><strong>${SUIT_NAMES[suit]}</strong>：还没选 — 每张表都有最优解，试试。</li>`);
-      } else if (trapsHit.length === 0 && missed.length === 0) {
-        lines.push(`<li>✓ <strong>${SUIT_NAMES[suit]}</strong>：完美 — 全部命中，没踩陷阱。</li>`);
-      } else {
-        let line = `<strong>${SUIT_NAMES[suit]}</strong>：`;
-        if (missed.length > 0) line += `缺 <code>${missed.join(' / ')}</code>；`;
-        if (trapsHit.length > 0) line += `多了 <code>${trapsHit.join(' / ')}</code>；`;
-        // explain each trap hit
-        const explains = trapsHit.filter(k => traps[suit + ':' + k]).map(k => `<span class="why">↳ <strong>${k}</strong> 是陷阱：${traps[suit + ':' + k]}</span>`);
-        if (explains.length > 0) line += '<br>' + explains.join('<br>');
-        lines.push(`<li>${line}</li>`);
-      }
-    });
-
-    let verdictClass, verdictLabel, headline;
-    if (totalHits === totalIdeal && totalTraps === 0) {
-      verdictClass = 'win';
-      verdictLabel = '完美';
-      headline = '你已经会按 4 件套设计组件了。';
-    } else if (totalHits >= totalIdeal - 1 && totalTraps <= 1) {
-      verdictClass = 'win';
-      verdictLabel = '基本对了';
-      headline = '差一两个——但 4 张表的分工你已经理解了。';
-    } else {
-      verdictClass = 'partial';
-      verdictLabel = '还差一点';
-      headline = '陷阱踩了几个——换个角度：每件套问"消费方在意吗""是配置还是内容""是属性还是动作"。';
-    }
-
-    judge.innerHTML = `<span class="verdict ${verdictClass}">${verdictLabel}</span><h4>${headline}</h4><ul>${lines.join('')}</ul>`;
-    judge.classList.add('show');
-    judge.scrollIntoView({ behavior: 'smooth', block: 'center' });
-  });
-
-  document.getElementById('contractReset').addEventListener('click', () => {
-    SUITS.forEach(suit => {
-      selected[suit].clear();
-      updateCount(suit);
-    });
-    document.querySelectorAll('.candidate.selected, .state-option.selected').forEach(el => el.classList.remove('selected'));
-    judge.classList.remove('show');
-  });
-
-  // dropdown preview demo
-  const ddTrigger = document.getElementById('ddTrigger');
-  const ddPopover = document.getElementById('ddPopover');
-  const ddLabel = document.getElementById('ddLabel');
-  ddTrigger.addEventListener('click', () => {
-    ddTrigger.classList.toggle('is-open');
-    ddPopover.classList.toggle('is-open');
-  });
-  ddPopover.querySelectorAll('.opt').forEach(opt => {
-    opt.addEventListener('click', () => {
-      ddLabel.textContent = opt.textContent;
-      ddTrigger.classList.remove('is-open');
-      ddPopover.classList.remove('is-open');
-    });
-  });
-})();
 </script>
 
 </body>

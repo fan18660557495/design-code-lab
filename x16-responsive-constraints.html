@@ -75,6 +75,93 @@
   .problem-card h3 { font-family: 'Noto Serif SC', serif; font-size: 22px; margin: 0 0 12px; font-weight: 700; }
   .problem-card p { margin: 0; color: var(--ink-soft); font-size: 14px; line-height: 1.55; }
   .problem-card p + p { margin-top: 10px; }
+
+  /* Visual stage + sticky note (Section 01 hook) */
+  .viz-stage { background: var(--paper); border: 1px solid var(--line); border-radius: 12px; padding: 28px; margin-top: 16px; position: relative; }
+  .viz-hint { text-align: center; font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--ink-mute); margin: 18px 0 0; letter-spacing: 0.04em; }
+  .viz-hint strong { color: var(--obj-color); }
+  .sticky-wrap { margin-top: 28px; display: flex; gap: 22px; align-items: center; flex-wrap: wrap; justify-content: center; }
+  .sticky { background: #fff8c4; border: 1px solid #e5d98a; border-radius: 3px; padding: 16px 22px 18px; position: relative; transform: rotate(-1.5deg); box-shadow: 0 6px 14px rgba(22,22,29,0.12), 0 1px 3px rgba(22,22,29,0.08); font-size: 14px; color: var(--ink); line-height: 1.65; max-width: 380px; text-align: center; }
+  .sticky-pin { position: absolute; top: -8px; left: 50%; transform: translateX(-50%); width: 14px; height: 14px; background: var(--accent); border-radius: 50%; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+  .sticky strong { display: block; margin-top: 4px; font-family: 'Noto Serif SC', serif; font-size: 17px; color: var(--accent); line-height: 1.4; }
+
+  /* x16 — 3 breakpoints side-by-side */
+  .x16-bps { display: grid; grid-template-columns: 1.5fr 1fr 0.7fr; gap: 18px; align-items: end; }
+  @media (max-width: 980px) { .x16-bps { grid-template-columns: 1fr; align-items: stretch; } }
+  .x16-bp { display: flex; flex-direction: column; gap: 10px; }
+  .x16-bp-cap { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ink-mute); letter-spacing: 0.06em; text-align: center; padding-top: 8px; border-top: 1px dashed var(--line); }
+  .x16-bp-cap strong { color: var(--obj-color); display: block; font-family: 'Noto Serif SC', serif; font-size: 13px; margin-bottom: 2px; }
+  .x16-browser { background: white; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; box-shadow: 0 4px 14px rgba(22,22,29,0.08); display: flex; flex-direction: column; }
+  .x16-browser-head { padding: 6px 10px; background: var(--bg); border-bottom: 1px solid var(--line-soft); display: flex; align-items: center; gap: 6px; font-family: 'JetBrains Mono', monospace; font-size: 9px; color: var(--ink-mute); }
+  .x16-browser-head .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--line); }
+  .x16-browser-head .url { margin-left: auto; }
+  .x16-browser-body { padding: 8px; flex: 1; min-height: 320px; display: flex; flex-direction: column; gap: 6px; background: var(--paper); }
+  /* table view (desktop) */
+  .x16-tbl { width: 100%; border-collapse: collapse; font-size: 9px; background: white; border: 1px solid var(--line-soft); border-radius: 4px; overflow: hidden; }
+  .x16-tbl th { background: var(--bg-2); padding: 4px 5px; text-align: left; font-family: 'JetBrains Mono', monospace; font-size: 8px; color: var(--ink-soft); letter-spacing: 0.04em; text-transform: uppercase; font-weight: 600; }
+  .x16-tbl td { padding: 4px 5px; border-top: 1px dashed var(--line-soft); color: var(--ink-soft); }
+  .x16-tbl td.amt { color: var(--ink); font-family: 'JetBrains Mono', monospace; font-weight: 600; }
+  .x16-tbl td.s-on { color: var(--green); font-weight: 600; }
+  .x16-tbl td.s-off { color: var(--ink-mute); }
+  .x16-tbl td.trunc { max-width: 70px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  /* card view (tablet/mobile) */
+  .x16-card-list { display: flex; flex-direction: column; gap: 5px; }
+  .x16-card { background: white; border: 1px solid var(--line-soft); border-radius: 4px; padding: 6px 8px; display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+  .x16-card .nm { font-weight: 600; font-size: 10px; line-height: 1.3; }
+  .x16-card .sub { font-size: 8px; color: var(--ink-mute); margin-top: 1px; }
+  .x16-card .right { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--obj-color); font-weight: 600; flex-shrink: 0; text-align: right; }
+  .x16-card .right .s { display: block; font-size: 8px; margin-top: 1px; }
+  .x16-card .s-on { color: var(--green); }
+  .x16-card .s-off { color: var(--ink-mute); }
+  /* annotation tags */
+  .x16-tag { display: inline-block; padding: 1px 6px; font-family: 'JetBrains Mono', monospace; font-size: 9px; letter-spacing: 0.04em; border-radius: 100px; background: var(--obj-soft); color: var(--obj-color); margin-bottom: 2px; }
+  .x16-tag.blue { background: var(--blue-soft); color: var(--blue); }
+  .x16-tag.green { background: var(--green-soft); color: var(--green); }
+  /* legend strip below mockups */
+  .x16-bp-rules { margin-top: 12px; background: var(--ink); color: #d4d4d4; border-radius: 8px; padding: 14px 18px; font-family: 'JetBrains Mono', monospace; font-size: 11px; line-height: 1.65; }
+  .x16-bp-rules .rl { display: flex; gap: 10px; align-items: center; padding: 3px 0; }
+  .x16-bp-rules .rl .k { color: #ff8a4a; min-width: 90px; font-size: 10px; letter-spacing: 0.04em; text-transform: uppercase; }
+  .x16-bp-rules .rl .v { color: white; }
+  .x16-bp-rules .rl + .rl { border-top: 1px dashed #333; }
+
+  /* Section 04 demo · responsive plan */
+  .x16-demo { background: var(--paper); border: 1px solid var(--line); border-left: 3px solid var(--obj-color); border-radius: 10px; padding: 28px; margin-top: 16px; }
+  .x16-demo-head { display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 12px; margin-bottom: 18px; }
+  .x16-demo-head h5 { font-family: 'Noto Serif SC', serif; font-size: 18px; margin: 0; font-weight: 700; }
+  .x16-demo-head .tag { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--obj-color); padding: 3px 10px; border: 1px solid var(--obj-color); border-radius: 100px; letter-spacing: 0.06em; }
+  .x16-plan-wrap { overflow-x: auto; }
+  .x16-plan { width: 100%; border-collapse: separate; border-spacing: 0 6px; min-width: 760px; }
+  .x16-plan thead th { padding: 8px 10px; background: var(--ink); color: var(--bg); font-family: 'JetBrains Mono', monospace; font-size: 9px; letter-spacing: 0.06em; text-transform: uppercase; text-align: left; font-weight: 500; }
+  .x16-plan thead th:first-child { border-radius: 4px 0 0 4px; }
+  .x16-plan thead th:last-child { border-radius: 0 4px 4px 0; }
+  .x16-plan tbody td { padding: 10px 12px; background: white; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); vertical-align: top; font-size: 12px; color: var(--ink-soft); line-height: 1.55; }
+  .x16-plan tbody td:first-child { border-left: 1px solid var(--line); border-radius: 4px 0 0 4px; }
+  .x16-plan tbody td:last-child { border-right: 1px solid var(--line); border-radius: 0 4px 4px 0; }
+  .x16-plan tbody td.col-name { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ink); }
+  .x16-plan tbody td.col-name strong { color: var(--ink); font-family: 'Noto Serif SC', serif; font-size: 13px; display: block; margin-bottom: 2px; }
+  .x16-plan tbody td.col-name .prio { display: inline-block; padding: 1px 6px; font-size: 9px; border-radius: 100px; letter-spacing: 0.04em; }
+  .x16-plan tbody td.col-name .prio.p1 { background: var(--accent); color: white; }
+  .x16-plan tbody td.col-name .prio.p2 { background: var(--obj-soft); color: var(--obj-color); border: 1px solid var(--obj-color); }
+  .x16-plan tbody td.col-name .prio.p3 { background: var(--bg-2); color: var(--ink-mute); border: 1px solid var(--line); }
+  .x16-plan tbody td .bv { display: inline-block; padding: 2px 7px; font-family: 'JetBrains Mono', monospace; font-size: 10px; border-radius: 100px; }
+  .x16-plan tbody td .bv.show { background: var(--green-soft); color: var(--green); }
+  .x16-plan tbody td .bv.trunc { background: rgba(199,159,30,0.18); color: #8a6a1e; }
+  .x16-plan tbody td .bv.hide { background: var(--bg-2); color: var(--ink-mute); }
+  .x16-plan tbody td .bv.morph { background: var(--blue-soft); color: var(--blue); }
+  .x16-plan tbody td.warn { background: var(--accent-soft); }
+  .x16-plan tbody tr.warn td { background: var(--accent-soft); border-top-color: var(--accent); border-bottom-color: var(--accent); }
+  .x16-plan tbody tr.warn td:first-child { border-left-color: var(--accent); }
+  .x16-plan tbody tr.warn td:last-child { border-right-color: var(--accent); }
+  .x16-plan tbody tr.warn .col-name strong::before { content: '⚠ '; color: var(--accent); }
+  .x16-plan tbody td.why { color: var(--ink-soft); font-size: 11px; }
+  .x16-plan tbody td.why strong { color: var(--ink); }
+
+  .x16-pits { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 18px; }
+  @media (max-width: 720px) { .x16-pits { grid-template-columns: 1fr; } }
+  .x16-pit { background: var(--accent-soft); border-left: 3px solid var(--accent); border-radius: 4px; padding: 14px 18px; font-size: 13px; color: var(--ink-soft); line-height: 1.65; }
+  .x16-pit strong { color: var(--accent); display: block; margin-bottom: 4px; font-family: 'Noto Serif SC', serif; font-size: 14px; }
+  .x16-pit code { font-family: 'JetBrains Mono', monospace; font-size: 11px; background: white; padding: 1px 5px; border-radius: 3px; color: var(--ink); border: 1px solid var(--line); }
+
   /* GAME 1: viewport slider + responsive mock */
   .vp-stage { background: var(--paper); border: 1px solid var(--line); border-radius: 8px; padding: 32px 28px; position: relative; overflow: hidden; }
   .vp-stage::before { content: ''; position: absolute; inset: 0; background-image: linear-gradient(to right, var(--line-soft) 1px, transparent 1px), linear-gradient(to bottom, var(--line-soft) 1px, transparent 1px); background-size: 24px 24px; opacity: 0.4; pointer-events: none; }
@@ -331,13 +418,14 @@
     <div class="hero-grid">
       <div>
         <h1>
-          屏幕变小，<br>
-          <span class="display-cn">不是缩比例</span>——<br>
-          是<span class="purple">3 个决策</span>。
+          你画了 <span class="em">1 张</span>稿。<br>
+          工程师要做<br>
+          <span class="purple">3 张</span>——<br>
+          桌面 · 平板 · 手机。
         </h1>
         <p class="lede">
-          换布局（4 列变 1 列）、截断（…）、溢出（更多菜单 / 横滚 / 抽屉）。<br>
-          每个内容块都要选其中一种——不选就是默认（坏体验）。
+          你画的是 <strong>1280 宽的桌面稿</strong>。<br>
+          工程师做的是<strong>3 套布局</strong> + 列优先级 + 截断规则 + 溢出策略——不标，他猜。
         </p>
       </div>
       <div class="hero-side">
@@ -349,33 +437,124 @@
     </div>
   </div>
 </header>
-<!-- Section 01: 问题 -->
+<!-- Section 01: 看见 -->
 <section id="problem">
   <div class="wrap">
     <div class="section-head">
       <div>
-        <div class="section-num"><strong>01</strong> / 问题</div>
-        <h2 class="section-title">"按比例缩小"<br>不是响应式，<br>是<span class="em">默认坏体验</span>。</h2>
+        <div class="section-num"><strong>01</strong> / 看见</div>
+        <h2 class="section-title">先看图。</h2>
       </div>
       <p class="section-sub">
-        设计师以为响应式 = "桌面稿 + 移动稿"。其实响应式是<strong>每个组件 / 每个内容块的小屏行为决策</strong>——换布局、截断、溢出三选一。
-        不选就是浏览器默认（不可读 / 重叠 / 横滚条）。
+        同一份"客户列表"，<strong style="color:var(--accent)">3 个屏幕宽度</strong>，长得<strong style="color:var(--obj-color)">完全不一样</strong>——不是缩小，是<strong>重布局</strong>。
       </p>
     </div>
-    <div class="problem-grid">
-      <div class="problem-card bad">
-        <span class="tag">缩小思维 · SHRINK</span>
-        <h3>"桌面稿做好了，<br>工程师按比例缩小"</h3>
-        <p>4 列卡片在 375 宽屏上挤成 4 列豆腐块，每个只剩 80px。表格的 12 列横滚到地平线。导航全收进 hamburger 后，主操作要点 3 下。</p>
-        <p><strong>结果：</strong>每个 card 文字断行 / 表格横滚 / 导航被折叠后看不见入口 / 主操作埋深。</p>
-        <p style="color:var(--accent)"><strong>用户：</strong>这页在手机上没法用，转去桌面再试。</p>
+
+    <div class="viz-stage">
+      <div class="x16-bps">
+
+        <!-- DESKTOP -->
+        <div class="x16-bp">
+          <div class="x16-browser">
+            <div class="x16-browser-head">
+              <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+              <span class="url">≥ 1024 px</span>
+            </div>
+            <div class="x16-browser-body">
+              <span class="x16-tag">表格 · 7 列全显</span>
+              <table class="x16-tbl">
+                <thead><tr><th>姓名</th><th>公司</th><th>职位</th><th>状态</th><th>跟进</th><th>金额</th><th>最近</th></tr></thead>
+                <tbody>
+                  <tr><td>张明</td><td>星河科技</td><td>CTO</td><td class="s-on">活跃</td><td>李华</td><td class="amt">¥480k</td><td>3 天前</td></tr>
+                  <tr><td>王芳</td><td>蓝湾资本</td><td>VP</td><td class="s-on">活跃</td><td>李华</td><td class="amt">¥320k</td><td>1 周前</td></tr>
+                  <tr><td>陈晨</td><td>云栖软件</td><td>CEO</td><td class="s-off">休眠</td><td>赵磊</td><td class="amt">¥180k</td><td>1 月前</td></tr>
+                  <tr><td>刘洋</td><td>星瀚集团</td><td>采购总监</td><td class="s-on">活跃</td><td>赵磊</td><td class="amt">¥920k</td><td>昨天</td></tr>
+                  <tr><td>赵宇</td><td>红枫资本</td><td>合伙人</td><td class="s-off">沉默</td><td>李华</td><td class="amt">¥75k</td><td>3 月前</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+          <div class="x16-bp-cap"><strong>桌面 · DESKTOP</strong>≥ 1024 px</div>
+        </div>
+
+        <!-- TABLET -->
+        <div class="x16-bp">
+          <div class="x16-browser">
+            <div class="x16-browser-head">
+              <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+              <span class="url">768 – 1023 px</span>
+            </div>
+            <div class="x16-browser-body">
+              <span class="x16-tag blue">表格 · 截到 4 列 + …</span>
+              <table class="x16-tbl">
+                <thead><tr><th>姓名</th><th>公司</th><th>状态</th><th>金额</th></tr></thead>
+                <tbody>
+                  <tr><td class="trunc">张明</td><td class="trunc">星河科技</td><td class="s-on">活跃</td><td class="amt">¥480k</td></tr>
+                  <tr><td class="trunc">王芳</td><td class="trunc">蓝湾资本</td><td class="s-on">活跃</td><td class="amt">¥320k</td></tr>
+                  <tr><td class="trunc">陈晨</td><td class="trunc">云栖软件</td><td class="s-off">休眠</td><td class="amt">¥180k</td></tr>
+                  <tr><td class="trunc">刘洋</td><td class="trunc">星瀚集团</td><td class="s-on">活跃</td><td class="amt">¥920k</td></tr>
+                  <tr><td class="trunc">赵宇</td><td class="trunc">红枫资本</td><td class="s-off">沉默</td><td class="amt">¥75k</td></tr>
+                </tbody>
+              </table>
+              <div style="font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--ink-mute);text-align:right;margin-top:2px">职位 / 跟进 / 最近 → "更多" ⋯</div>
+            </div>
+          </div>
+          <div class="x16-bp-cap"><strong>平板 · TABLET</strong>768 – 1023 px</div>
+        </div>
+
+        <!-- MOBILE -->
+        <div class="x16-bp">
+          <div class="x16-browser" style="max-width:220px;margin:0 auto">
+            <div class="x16-browser-head">
+              <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+              <span class="url">&lt; 768</span>
+            </div>
+            <div class="x16-browser-body">
+              <span class="x16-tag green">卡片 · 1 列</span>
+              <div class="x16-card-list">
+                <div class="x16-card">
+                  <div><div class="nm">张明</div><div class="sub">星河科技</div></div>
+                  <div class="right">¥480k<span class="s s-on">活跃</span></div>
+                </div>
+                <div class="x16-card">
+                  <div><div class="nm">王芳</div><div class="sub">蓝湾资本</div></div>
+                  <div class="right">¥320k<span class="s s-on">活跃</span></div>
+                </div>
+                <div class="x16-card">
+                  <div><div class="nm">陈晨</div><div class="sub">云栖软件</div></div>
+                  <div class="right">¥180k<span class="s s-off">休眠</span></div>
+                </div>
+                <div class="x16-card">
+                  <div><div class="nm">刘洋…</div><div class="sub">星瀚集团</div></div>
+                  <div class="right">¥920k<span class="s s-on">活跃</span></div>
+                </div>
+                <div class="x16-card">
+                  <div><div class="nm">赵宇</div><div class="sub">红枫资本</div></div>
+                  <div class="right">¥75k<span class="s s-off">沉默</span></div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="x16-bp-cap"><strong>手机 · MOBILE</strong>&lt; 768 px</div>
+        </div>
+
       </div>
-      <div class="problem-card good">
-        <span class="tag">决策思维 · DECIDE</span>
-        <h3>"桌面 → 移动<br>每个区块单独决策"</h3>
-        <p>导航换 hamburger；多列卡片堆成单列；表格非主列截断 + … hover；ActionBar 收进 ⋯ 更多菜单。每个块都<strong>有意识地选了一种行为</strong>。</p>
-        <p><strong>工程师收到：</strong>每个区块的 mobile 行为标签——breakpoint 触发 reflow / truncate / overflow，明确边界。</p>
-        <p style="color:var(--obj-color)"><strong>结果：</strong>移动版每个区块都能用，没有"被压扁"的感觉。</p>
+
+      <div class="x16-bp-rules">
+        <div class="rl"><span class="k">列优先级</span><span class="v">姓名 / 金额 / 状态 = P1（永远显示）· 公司 = P2 · 职位 / 跟进 / 最近 = P3（窄屏先消失）</span></div>
+        <div class="rl"><span class="k">截断规则</span><span class="v">姓名 / 公司 = 单行 ellipsis · "刘洋…"</span></div>
+        <div class="rl"><span class="k">溢出规则</span><span class="v">金额 ≥ 10 位 → 缩字号（不换行）· P3 列 → "更多" ⋯ 抽屉</span></div>
+        <div class="rl"><span class="k">布局切换</span><span class="v">≥ 1024 表格 · 768–1023 表格瘦身 · &lt; 768 整体 morph 成卡片</span></div>
+      </div>
+
+      <p class="viz-hint">同一份数据 · <strong>3 套布局</strong> · 不是 zoom out，是 重新组织</p>
+    </div>
+
+    <div class="sticky-wrap">
+      <div class="sticky">
+        <div class="sticky-pin"></div>
+        1 张稿 ≠ 响应式<br>
+        <strong>3 个断点 = 3 张稿</strong>
       </div>
     </div>
   </div>
@@ -642,152 +821,127 @@
     </div>
   </div>
 </section>
-<!-- Section 04: 幕三 · 再做 -->
+<!-- Section 04: 幕三 · 看更多 -->
 <section id="make">
   <div class="wrap">
     <div class="section-head">
       <div>
-        <span class="act-tag make">幕三 · 再做</span>
-        <div class="section-num"><strong>04</strong> / 再做</div>
-        <h2 class="section-title">轮到你——<br>给 <span class="em">仪表盘</span><br>定 8 区块的<br>移动行为。</h2>
+        <span class="act-tag make">幕三 · 看更多</span>
+        <div class="section-num"><strong>04</strong> / 看更多</div>
+        <h2 class="section-title">「<span class="em">客户列表</span>」3 断点——<br>看人家填的行为表。</h2>
       </div>
       <p class="section-sub">
-        下面 8 个区块。每个有 3 个 radio（换布局 / 截断 / 溢出）+ 1 个具体方案 dropdown。<strong>你来选</strong>。
-        提交后会给你打分——不是看选了几个，看判断方向对不对。
+        7 列 + 标题 + 操作。每行预填好了：桌面 / 平板 / 手机各显示什么、怎么截、超了怎么办。<strong style="color:var(--accent)">⚠ 标的行</strong>是设计师最容易漏标的地方。
       </p>
     </div>
-    <div class="builder-stage">
-      <div class="builder-head">
-        <h3 class="builder-title">8 区块 · mobile 行为决策</h3>
-        <div class="builder-progress">已配置 <span class="done" id="builderDone">0</span> / 8 区块</div>
+
+    <div class="x16-demo">
+      <div class="x16-demo-head">
+        <h5>客户列表 · 响应式行为表（交给工程师的"列优先级 + 截断 + 溢出"规格）</h5>
+        <span class="tag">7 列 · 3 断点</span>
       </div>
-      <div class="builder-block-grid" id="builderBlocks">
-        <div class="builder-block" data-block="nav" data-ideal-mode="overflow" data-ideal-plan="hamburger">
-          <div class="builder-block-head">
-            <span class="builder-block-name">1 · 顶部导航 (5 项)</span>
-            <span class="builder-block-tag">block-01</span>
-          </div>
-          <div class="builder-radios" data-radios>
-            <button class="builder-radio" data-mode="reflow">换布局</button>
-            <button class="builder-radio" data-mode="truncate">截断</button>
-            <button class="builder-radio" data-mode="overflow">溢出</button>
-          </div>
-          <select class="builder-select" data-plan disabled>
-            <option value="">先选行为方式</option>
-          </select>
-          <div class="builder-explain"></div>
+
+      <div class="x16-plan-wrap">
+        <table class="x16-plan">
+          <thead>
+            <tr>
+              <th>列 / 区块</th>
+              <th>桌面 ≥ 1024</th>
+              <th>平板 768–1023</th>
+              <th>手机 &lt; 768</th>
+              <th>规则 / 为什么</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="col-name"><strong>姓名</strong> · name<br><span class="prio p1">P1</span></td>
+              <td><span class="bv show">显示</span></td>
+              <td><span class="bv show">显示</span></td>
+              <td><span class="bv show">卡片主标题</span></td>
+              <td class="why">永远显示。<strong>单行截断 + ellipsis</strong>，最多 12 字。"刘洋…" 用户能识别就行——hover 看全。</td>
+            </tr>
+            <tr>
+              <td class="col-name"><strong>公司</strong> · company<br><span class="prio p2">P2</span></td>
+              <td><span class="bv show">显示</span></td>
+              <td><span class="bv trunc">截断 ellipsis</span></td>
+              <td><span class="bv show">卡片副标题</span></td>
+              <td class="why">第二重要字段。平板宽度不够，<strong>截到 10 字 + …</strong>。手机做卡片副标题，独立一行。</td>
+            </tr>
+            <tr>
+              <td class="col-name"><strong>职位</strong> · title<br><span class="prio p3">P3</span></td>
+              <td><span class="bv show">显示</span></td>
+              <td><span class="bv hide">隐藏 → "详情"</span></td>
+              <td><span class="bv hide">隐藏</span></td>
+              <td class="why">辅助信息。<strong>平板就开始消失</strong>——点开行/卡片才看到。</td>
+            </tr>
+            <tr>
+              <td class="col-name"><strong>状态</strong> · status<br><span class="prio p1">P1</span></td>
+              <td><span class="bv show">徽章显示</span></td>
+              <td><span class="bv show">徽章显示</span></td>
+              <td><span class="bv show">卡片右下角小字</span></td>
+              <td class="why">决策字段——用户靠它判断"要不要联系"。<strong>永远不省略，只换样式</strong>。</td>
+            </tr>
+            <tr class="warn">
+              <td class="col-name"><strong>跟进人</strong> · owner<br><span class="prio p3">P3</span></td>
+              <td><span class="bv show">显示</span></td>
+              <td><span class="bv hide">隐藏 → "详情"</span></td>
+              <td><span class="bv hide">隐藏</span></td>
+              <td class="why">辅助信息。<strong>注意：销售本人视角时，owner 升级为 P1</strong>——他要看哪些归自己。响应式规则可能因角色变化。</td>
+            </tr>
+            <tr class="warn">
+              <td class="col-name"><strong>合作金额</strong> · deal<br><span class="prio p1">P1</span></td>
+              <td><span class="bv show">右对齐 mono</span></td>
+              <td><span class="bv show">右对齐 mono</span></td>
+              <td><span class="bv show">卡片右上角</span></td>
+              <td class="why">永远显示。<strong>金额 ≥ 10 位（¥4,800,000,000）→ 缩字号 + 单位"亿"</strong>，不要换行——换行后表格行高崩。</td>
+            </tr>
+            <tr>
+              <td class="col-name"><strong>最近联系</strong> · lastTouch<br><span class="prio p3">P3</span></td>
+              <td><span class="bv show">显示</span></td>
+              <td><span class="bv hide">隐藏 → "详情"</span></td>
+              <td><span class="bv hide">隐藏</span></td>
+              <td class="why">辅助信息。<strong>显示时用相对时间</strong>（3 天前 / 1 周前），不要绝对日期。</td>
+            </tr>
+            <tr class="warn">
+              <td class="col-name"><strong>整体布局</strong> · layout</td>
+              <td><span class="bv show">表格 7 列</span></td>
+              <td><span class="bv trunc">表格 4 列 + ⋯</span></td>
+              <td><span class="bv morph">卡片视图 morph</span></td>
+              <td class="why"><strong>手机不是缩小表格</strong>——是换组件：表格 → 卡片列表，每张卡 2-3 个字段。</td>
+            </tr>
+            <tr class="warn">
+              <td class="col-name"><strong>页面标题</strong> · title</td>
+              <td><span class="bv show">"客户管理 · 仪表盘"</span></td>
+              <td><span class="bv show">完整显示</span></td>
+              <td><span class="bv trunc">截 2 行 · clamp-2</span></td>
+              <td class="why">长标题用 <code>line-clamp: 2</code>，<strong>不能单行截到看不懂</strong>。"客户管…" 用户不知道是什么页。</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="x16-pits">
+        <div class="x16-pit">
+          <strong>⚠ 没标"列优先级" = 工程师瞎砍</strong>
+          稿子上 7 列你只画了桌面态——窄屏时工程师不知道哪几列先消失。结果：他可能把"金额"砍了留"职位"。<strong>P1 / P2 / P3 必须在稿子上写</strong>。
         </div>
-        <div class="builder-block" data-block="kpi" data-ideal-mode="reflow" data-ideal-plan="col1">
-          <div class="builder-block-head">
-            <span class="builder-block-name">2 · KPI 卡片 (6 个)</span>
-            <span class="builder-block-tag">block-02</span>
-          </div>
-          <div class="builder-radios" data-radios>
-            <button class="builder-radio" data-mode="reflow">换布局</button>
-            <button class="builder-radio" data-mode="truncate">截断</button>
-            <button class="builder-radio" data-mode="overflow">溢出</button>
-          </div>
-          <select class="builder-select" data-plan disabled>
-            <option value="">先选行为方式</option>
-          </select>
-          <div class="builder-explain"></div>
+        <div class="x16-pit">
+          <strong>⚠ 金额超 10 位</strong>
+          桌面看着 ¥480k 没事——但客户里有人是 ¥4,800,000,000 万亿大单。<strong>溢出规则要在稿子上演示一次</strong>："超 8 位 → 改 ¥48 亿 + 缩字号"。
         </div>
-        <div class="builder-block" data-block="chart" data-ideal-mode="reflow" data-ideal-plan="stack">
-          <div class="builder-block-head">
-            <span class="builder-block-name">3 · 图表区</span>
-            <span class="builder-block-tag">block-03</span>
-          </div>
-          <div class="builder-radios" data-radios>
-            <button class="builder-radio" data-mode="reflow">换布局</button>
-            <button class="builder-radio" data-mode="truncate">截断</button>
-            <button class="builder-radio" data-mode="overflow">溢出</button>
-          </div>
-          <select class="builder-select" data-plan disabled>
-            <option value="">先选行为方式</option>
-          </select>
-          <div class="builder-explain"></div>
+        <div class="x16-pit">
+          <strong>⚠ 手机不是"缩小表格"</strong>
+          很多人画 mobile 稿时还画表格——只是更窄。错了。<strong>手机要 morph 成卡片</strong>——一行 = 1 张卡，2-3 个字段。表格本身不适合 375 宽。
         </div>
-        <div class="builder-block" data-block="table" data-ideal-mode="truncate" data-ideal-plan="hide-cols">
-          <div class="builder-block-head">
-            <span class="builder-block-name">4 · 数据表格 (12 列)</span>
-            <span class="builder-block-tag">block-04</span>
-          </div>
-          <div class="builder-radios" data-radios>
-            <button class="builder-radio" data-mode="reflow">换布局</button>
-            <button class="builder-radio" data-mode="truncate">截断</button>
-            <button class="builder-radio" data-mode="overflow">溢出</button>
-          </div>
-          <select class="builder-select" data-plan disabled>
-            <option value="">先选行为方式</option>
-          </select>
-          <div class="builder-explain"></div>
-        </div>
-        <div class="builder-block" data-block="filter" data-ideal-mode="overflow" data-ideal-plan="drawer">
-          <div class="builder-block-head">
-            <span class="builder-block-name">5 · 筛选条 (10 项)</span>
-            <span class="builder-block-tag">block-05</span>
-          </div>
-          <div class="builder-radios" data-radios>
-            <button class="builder-radio" data-mode="reflow">换布局</button>
-            <button class="builder-radio" data-mode="truncate">截断</button>
-            <button class="builder-radio" data-mode="overflow">溢出</button>
-          </div>
-          <select class="builder-select" data-plan disabled>
-            <option value="">先选行为方式</option>
-          </select>
-          <div class="builder-explain"></div>
-        </div>
-        <div class="builder-block" data-block="sidenav" data-ideal-mode="overflow" data-ideal-plan="hamburger">
-          <div class="builder-block-head">
-            <span class="builder-block-name">6 · 侧边导航</span>
-            <span class="builder-block-tag">block-06</span>
-          </div>
-          <div class="builder-radios" data-radios>
-            <button class="builder-radio" data-mode="reflow">换布局</button>
-            <button class="builder-radio" data-mode="truncate">截断</button>
-            <button class="builder-radio" data-mode="overflow">溢出</button>
-          </div>
-          <select class="builder-select" data-plan disabled>
-            <option value="">先选行为方式</option>
-          </select>
-          <div class="builder-explain"></div>
-        </div>
-        <div class="builder-block" data-block="customer" data-ideal-mode="truncate" data-ideal-plan="single-line">
-          <div class="builder-block-head">
-            <span class="builder-block-name">7 · 客户列表项</span>
-            <span class="builder-block-tag">block-07</span>
-          </div>
-          <div class="builder-radios" data-radios>
-            <button class="builder-radio" data-mode="reflow">换布局</button>
-            <button class="builder-radio" data-mode="truncate">截断</button>
-            <button class="builder-radio" data-mode="overflow">溢出</button>
-          </div>
-          <select class="builder-select" data-plan disabled>
-            <option value="">先选行为方式</option>
-          </select>
-          <div class="builder-explain"></div>
-        </div>
-        <div class="builder-block" data-block="statusbar" data-ideal-mode="truncate" data-ideal-plan="hide-time">
-          <div class="builder-block-head">
-            <span class="builder-block-name">8 · 底部状态栏</span>
-            <span class="builder-block-tag">block-08</span>
-          </div>
-          <div class="builder-radios" data-radios>
-            <button class="builder-radio" data-mode="reflow">换布局</button>
-            <button class="builder-radio" data-mode="truncate">截断</button>
-            <button class="builder-radio" data-mode="overflow">溢出</button>
-          </div>
-          <select class="builder-select" data-plan disabled>
-            <option value="">先选行为方式</option>
-          </select>
-          <div class="builder-explain"></div>
+        <div class="x16-pit">
+          <strong>⚠ 同一列在不同角色下优先级不同</strong>
+          "跟进人"对管理员是 P3（辅助）；对销售本人是 P1（核心）。<strong>响应式行为可能因角色而变</strong>——稿子上记得标"哪个角色看的"。
         </div>
       </div>
-      <div class="builder-actions">
-        <button class="builder-btn primary" id="builderSubmit">提交打分</button>
-        <button class="builder-btn" id="builderReset">清空</button>
-      </div>
-      <div class="builder-judge" id="builderJudge"></div>
+    </div>
+
+    <div style="display:none" class="qz-stage">
+      <!-- legacy quiz container — kept for safe removal -->
     </div>
   </div>
 </section>
@@ -1050,6 +1204,11 @@
     });
   });
 })();
+// ===== builder quiz removed — Section 04 is now a static demo =====
+(function(){
+  // no-op placeholder — section 04 is now a static demo
+})();
+/* ===== legacy builder code below intentionally removed =====
 (function(){
   const PLANS = {
     reflow: [
@@ -1277,6 +1436,7 @@
     document.getElementById('builderJudge').classList.remove('show');
   });
 })();
+===== end legacy ===== */
 </script>
 </body>
 </html>
