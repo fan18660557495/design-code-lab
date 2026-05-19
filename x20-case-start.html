@@ -135,6 +135,116 @@
   .problem-card p { margin: 0; color: var(--ink-soft); font-size: 14px; line-height: 1.55; }
   .problem-card p + p { margin-top: 10px; }
 
+  /* ===== Shared: viz-stage + sticky note ===== */
+  .viz-stage { background: var(--paper); border: 1px solid var(--line); border-radius: 12px; padding: 28px; margin-top: 16px; position: relative; }
+  .viz-hint { text-align: center; font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--ink-mute); margin: 18px 0 0; letter-spacing: 0.04em; }
+  .viz-hint strong { color: var(--obj-color); }
+  .sticky-wrap { margin-top: 28px; display: flex; gap: 22px; align-items: center; flex-wrap: wrap; justify-content: center; }
+  .sticky { background: #fff8c4; border: 1px solid #e5d98a; border-radius: 3px; padding: 16px 22px 18px; position: relative; transform: rotate(-1.5deg); box-shadow: 0 6px 14px rgba(22,22,29,0.12), 0 1px 3px rgba(22,22,29,0.08); font-size: 14px; color: var(--ink); line-height: 1.65; max-width: 380px; text-align: center; }
+  .sticky-pin { position: absolute; top: -8px; left: 50%; transform: translateX(-50%); width: 14px; height: 14px; background: var(--accent); border-radius: 50%; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+  .sticky strong { display: block; margin-top: 4px; font-family: 'Noto Serif SC', serif; font-size: 17px; color: var(--accent); line-height: 1.4; }
+
+  /* ===== X20 Section 01: 3 lenses on one screen ===== */
+  .lens-grid { display: grid; grid-template-columns: 1fr 1.4fr 1fr; gap: 18px; align-items: center; }
+  @media (max-width: 980px) { .lens-grid { grid-template-columns: 1fr; } }
+  .lens-screen { background: white; border: 1px solid var(--line); border-radius: 8px; box-shadow: 0 6px 22px rgba(22,22,29,0.1); overflow: hidden; min-height: 320px; }
+  .lens-screen-head { padding: 8px 12px; background: var(--bg-2); border-bottom: 1px solid var(--line); display: flex; align-items: center; gap: 6px; font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--ink-mute); }
+  .lens-screen-head .dot { width: 8px; height: 8px; background: #ddd; border-radius: 50%; }
+  .lens-screen-head .dot.r { background: #ff6258; }
+  .lens-screen-head .dot.y { background: #ffbd2e; }
+  .lens-screen-head .dot.g { background: #28ca42; }
+  .lens-screen-head .url { margin-left: 8px; font-size: 10px; }
+  .lens-screen-body { padding: 14px 16px; }
+  .lens-mini-head { display: flex; align-items: center; gap: 10px; padding-bottom: 10px; border-bottom: 1px solid var(--line); margin-bottom: 10px; }
+  .lens-mini-head .av { width: 32px; height: 32px; border-radius: 50%; background: var(--obj-color); color: white; display: flex; align-items: center; justify-content: center; font-family: 'Noto Serif SC', serif; font-weight: 700; font-size: 14px; }
+  .lens-mini-head .nm { font-weight: 700; font-size: 13px; }
+  .lens-mini-head .co { font-size: 10px; color: var(--ink-mute); }
+  .lens-mini-head .chip { margin-left: auto; padding: 2px 8px; border-radius: 100px; background: var(--green-soft); color: var(--green); font-size: 10px; font-weight: 600; }
+  .lens-mini-section { font-family: 'JetBrains Mono', monospace; font-size: 9px; color: var(--ink-mute); letter-spacing: 0.06em; text-transform: uppercase; margin: 8px 0 4px; }
+  .lens-mini-field { display: flex; justify-content: space-between; font-size: 11px; padding: 2px 0; }
+  .lens-mini-field .k { color: var(--ink-mute); }
+  .lens-mini-field .v { font-weight: 500; }
+  .lens-mini-tabs { display: flex; gap: 4px; margin: 10px 0 8px; border-bottom: 1px solid var(--line); padding-bottom: 6px; }
+  .lens-mini-tabs span { font-size: 10px; padding: 2px 6px; color: var(--ink-mute); }
+  .lens-mini-tabs span.act { color: var(--accent); font-weight: 600; border-bottom: 1px solid var(--accent); }
+  .lens-mini-row { display: flex; justify-content: space-between; font-size: 10px; padding: 4px 6px; background: var(--bg-2); border-radius: 3px; margin-bottom: 3px; }
+  .lens-mini-actions { display: flex; gap: 4px; margin-top: 10px; padding-top: 8px; border-top: 1px dashed var(--line); }
+  .lens-mini-btn { padding: 3px 8px; border-radius: 3px; font-size: 9px; background: var(--bg-2); color: var(--ink-soft); }
+  .lens-mini-btn.primary { background: var(--ink); color: white; }
+
+  .lens-bubble { padding: 18px 16px; border-radius: 14px; position: relative; font-size: 12.5px; line-height: 1.55; }
+  .lens-bubble.left { background: var(--accent-soft); border: 1px solid var(--accent); }
+  .lens-bubble.right { background: var(--proj-soft); border: 1px solid var(--proj-color); }
+  .lens-bubble.mid { background: var(--obj-soft); border: 1px solid var(--obj-color); }
+  .lens-bubble-tag { font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; display: inline-block; padding: 2px 8px; border-radius: 100px; margin-bottom: 8px; font-weight: 600; }
+  .lens-bubble.left .lens-bubble-tag { background: var(--accent); color: white; }
+  .lens-bubble.right .lens-bubble-tag { background: var(--proj-color); color: white; }
+  .lens-bubble.mid .lens-bubble-tag { background: var(--obj-color); color: white; }
+  .lens-bubble h4 { margin: 0 0 8px; font-family: 'Noto Serif SC', serif; font-size: 16px; font-weight: 700; line-height: 1.3; }
+  .lens-bubble ul { margin: 0; padding-left: 18px; color: var(--ink-soft); font-size: 12px; line-height: 1.7; }
+  .lens-bubble ul li { margin-bottom: 2px; }
+  .lens-bubble ul li strong { color: var(--ink); }
+  .lens-bubble::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    width: 14px;
+    height: 14px;
+    transform: translateY(-50%) rotate(45deg);
+    background: inherit;
+    border: 1px solid;
+    border-color: inherit;
+  }
+  .lens-bubble.left::after { right: -8px; border-color: var(--accent); border-left: none; border-bottom: none; background: var(--accent-soft); }
+  .lens-bubble.right::after { left: -8px; border-color: var(--proj-color); border-right: none; border-top: none; background: var(--proj-soft); }
+  .lens-bubble.mid::after { display: none; }
+  @media (max-width: 980px) {
+    .lens-bubble::after { display: none; }
+  }
+
+  /* ===== X20 Section 04: 5 demo cards ===== */
+  .demo-grid { display: grid; grid-template-columns: 1fr; gap: 18px; margin-top: 16px; }
+  .demo-card { background: var(--paper); border: 1px solid var(--line); border-left: 3px solid var(--obj-color); border-radius: 8px; padding: 22px 24px; }
+  .demo-card-head { display: grid; grid-template-columns: 140px 1fr; gap: 18px; align-items: center; padding-bottom: 14px; margin-bottom: 14px; border-bottom: 1px dashed var(--line); }
+  @media (max-width: 720px) { .demo-card-head { grid-template-columns: 1fr; } }
+  .demo-zoom {
+    background: white;
+    border: 1px dashed var(--line);
+    border-radius: 6px;
+    padding: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 80px;
+    position: relative;
+  }
+  .demo-zoom-label {
+    position: absolute;
+    top: -10px;
+    left: 8px;
+    background: var(--paper);
+    padding: 1px 8px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    color: var(--ink-mute);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  .demo-q-num { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--obj-color); letter-spacing: 0.08em; text-transform: uppercase; font-weight: 600; }
+  .demo-q-title { font-family: 'Noto Serif SC', serif; font-size: 20px; font-weight: 700; margin: 4px 0 6px; line-height: 1.3; }
+  .demo-q-sub { font-size: 13px; color: var(--ink-soft); margin: 0; }
+  .demo-answer { background: white; border: 1px solid var(--line); border-radius: 6px; padding: 14px 16px; margin-top: 0; }
+  .demo-answer-row { display: grid; grid-template-columns: 86px 1fr; gap: 12px; padding: 6px 0; border-bottom: 1px dashed var(--line); font-size: 13px; line-height: 1.55; }
+  .demo-answer-row:last-child { border-bottom: none; }
+  .demo-answer-row .lbl { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--ink-mute); letter-spacing: 0.06em; text-transform: uppercase; padding-top: 2px; }
+  .demo-answer-row .val { color: var(--ink-soft); }
+  .demo-answer-row .val strong { color: var(--ink); }
+  .demo-answer-row .val code { background: var(--bg-2); padding: 1px 5px; border-radius: 3px; font-family: 'JetBrains Mono', monospace; font-size: 11px; }
+  .demo-pit { background: var(--accent-soft); border-left: 3px solid var(--accent); border-radius: 4px; padding: 12px 14px; margin-top: 12px; font-size: 13px; color: var(--ink-soft); line-height: 1.55; }
+  .demo-pit strong { color: var(--accent); }
+  .demo-ref { display: inline-block; margin-top: 8px; padding: 2px 8px; background: var(--bg-2); border-radius: 3px; font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--ink-soft); letter-spacing: 0.04em; }
+  .demo-ref strong { color: var(--obj-color); }
+
   /* ===== GAME 1: full CRM mock ===== */
   .mock-stage {
     background: var(--paper);
@@ -1061,13 +1171,13 @@
     <div class="hero-grid">
       <div>
         <h1>
-          一张<br>
-          <span class="display-cn">客户详情页</span>——<br>
-          背后藏着<span class="purple">50 个决策</span>。
+          你画了<br>
+          <span class="display-cn">1 张稿</span>。<br>
+          工程师做<span class="purple">9 张</span>。
         </h1>
         <p class="lede">
-          看起来普通的一张稿——头像、字段、tabs、操作。<br>
-          每一个元素都对应前 19 篇里的某个设计能力。这一篇，先把它们认出来。
+          你画的：一张客户详情页。<br>
+          工程师做的：<strong>对象 / 字段 / 角色 / 状态 / 流程 / 异常 / 权限 / 接口 / 演进</strong>——9 张稿。
         </p>
       </div>
       <div class="hero-side">
@@ -1080,35 +1190,101 @@
   </div>
 </header>
 
-<!-- Section 01: 问题 -->
+<!-- Section 01: 看见 -->
 <section id="problem">
   <div class="wrap">
     <div class="section-head">
       <div>
-        <div class="section-num"><strong>01</strong> / 问题</div>
-        <h2 class="section-title">看到一张稿，<br>你的第一反应<span class="em">是什么</span>？</h2>
+        <div class="section-num"><strong>01</strong> / 看见</div>
+        <h2 class="section-title">同一张稿，<br><span class="em">3 个人</span>看到 3 件事。</h2>
       </div>
       <p class="section-sub">
-        看图说话 → 画组件 → 漏掉 50 个隐藏决策 → 上线一个月返工。
-        看稿先识别 10 个维度 → 每个维度对应一份子规格 → 实现一次到位。
+        中间是<strong>你画的稿</strong>。两边是<strong>工程师 / 架构师</strong>同时在想的事——你不标，他们就猜。
       </p>
     </div>
 
-    <div class="problem-grid">
-      <div class="problem-card bad">
-        <span class="tag">看图说话 · LITERAL</span>
-        <h3>"拿到稿子直接画 React 组件"</h3>
-        <p>头像 div + 名字 h3 + tabs 切换 + 表格 map ……一晚上写完，看起来跑通了。</p>
-        <p><strong>第 4 周返工：</strong>客服反映"看不到内部备注"；财务怒"为什么不显示成本"；移动端崩溃"金额返回 null"。</p>
-        <p style="color:var(--accent)"><strong>原因：</strong>漏字段 / 漏状态 / 漏角色——没把"稿子背后的决策"识别出来。</p>
+    <div class="viz-stage">
+      <div class="lens-grid">
+
+        <div class="lens-bubble left">
+          <span class="lens-bubble-tag">设计师 · LITERAL</span>
+          <h4>"卡片 + 间距 + 对齐"</h4>
+          <ul>
+            <li>头像圆形 <strong>32px</strong></li>
+            <li>chip 圆角 <strong>100px · #28ca42</strong></li>
+            <li>侧栏间距 <strong>16 / 8 / 4</strong></li>
+            <li>tabs 用主题色下划线</li>
+            <li>移动端怎么折？</li>
+          </ul>
+        </div>
+
+        <div class="lens-screen">
+          <div class="lens-screen-head">
+            <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
+            <span class="url mono">/customers/123</span>
+          </div>
+          <div class="lens-screen-body">
+            <div class="lens-mini-head">
+              <div class="av">张</div>
+              <div>
+                <div class="nm">张明</div>
+                <div class="co">星河科技 · CTO</div>
+              </div>
+              <span class="chip">活跃</span>
+            </div>
+            <div class="lens-mini-section">联系方式</div>
+            <div class="lens-mini-field"><span class="k">电话</span><span class="v">138****1234</span></div>
+            <div class="lens-mini-field"><span class="k">邮箱</span><span class="v">zm@xinghe.com</span></div>
+            <div class="lens-mini-tabs">
+              <span class="act">商机 · 3</span><span>合同 · 2</span><span>活动 · 28</span>
+            </div>
+            <div class="lens-mini-row"><span>2026 春季合作</span><span style="color:var(--obj-color);font-weight:600">¥ 480k</span></div>
+            <div class="lens-mini-row"><span>AI 系统升级</span><span>¥ 220k</span></div>
+            <div class="lens-mini-actions">
+              <span class="lens-mini-btn primary">新建</span>
+              <span class="lens-mini-btn">编辑</span>
+              <span class="lens-mini-btn" style="color:var(--accent)">删除</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="lens-bubble right">
+          <span class="lens-bubble-tag">工程师 · LITERAL</span>
+          <h4>"几个接口？什么字段？"</h4>
+          <ul>
+            <li>chip 颜色——硬编码还是 token？</li>
+            <li>电话脱敏——前端做还是后端？</li>
+            <li>"商机 · 3" 同一接口还是分开拉？</li>
+            <li>"新建" 哪些角色能看？</li>
+            <li>"删除" 软删还是硬删？</li>
+          </ul>
+        </div>
+
       </div>
 
-      <div class="problem-card good">
-        <span class="tag">全栈识别 · DECOMPOSED</span>
-        <h3>"看稿先识别 10 个维度"</h3>
-        <p>对象 / 关系 / 角色 / 任务流 / 状态 / 字段 / 组件 / 一致性 / 演进 / 交付——每个都问一句"这块这维度是怎么处理的"。</p>
-        <p><strong>工程师收到：</strong>不是 1 张稿，是 10 份子规格的合集。能直接落 schema、路由、状态机、权限。</p>
-        <p style="color:var(--obj-color)"><strong>结果：</strong>1 次评审，0 次返工。</p>
+      <div class="viz-stage" style="margin-top:18px;background:var(--bg);border:1px dashed var(--line)">
+        <div class="lens-bubble mid" style="margin:0">
+          <span class="lens-bubble-tag">Code-thinking 设计师</span>
+          <h4>"这页背后是 5 件事——对象 / 字段 / 引用 / 角色 / 状态"</h4>
+          <ul style="columns:2;column-gap:32px">
+            <li><strong>对象</strong>：客户主体 + 4 个邻居（联系人 / 商机 / 合同 / 活动）</li>
+            <li><strong>字段</strong>：每个字段 5 维度——必填 / 空值 / 值域 / 可改 / 计算</li>
+            <li><strong>引用</strong>：商机列表 = 反向引用（1:N），不是字段</li>
+            <li><strong>角色</strong>：销售 / 财务 / 客服 / 客户本人——4 张稿</li>
+            <li><strong>状态</strong>：active / dormant / lost · 状态机 5 个节点</li>
+            <li><strong>流程</strong>：编辑 / 删除 / 转分配——每个是一条任务流</li>
+          </ul>
+        </div>
+      </div>
+
+      <p class="viz-hint">同 1 张稿 · 工程师在想 <strong>5 件事</strong> · 你不标 → 他猜 → 猜错 → 返工</p>
+    </div>
+
+    <div class="sticky-wrap">
+      <div class="sticky">
+        <div class="sticky-pin"></div>
+        看到一张稿，第一反应<br>
+        <strong>说明你的设计层级</strong>
       </div>
     </div>
   </div>
@@ -1639,22 +1815,149 @@
   </div>
 </section>
 
-<!-- Section 04: 幕三 · 再做 -->
+<!-- Section 04: 幕三 · 看更多 -->
 <section id="make">
   <div class="wrap">
     <div class="section-head">
       <div>
-        <span class="act-tag make">幕三 · 再做</span>
-        <div class="section-num"><strong>04</strong> / 再做</div>
-        <h2 class="section-title">轮到你——<br>给 <span class="em">张明详情页</span><br>识别 5 个隐藏决策。</h2>
+        <span class="act-tag make">幕三 · 看更多</span>
+        <div class="section-num"><strong>04</strong> / 看更多</div>
+        <h2 class="section-title">5 个"看起来没问题"<br>的区域——<span class="em">每个</span>都藏一个决策。</h2>
       </div>
       <p class="section-sub">
-        下面 5 个"你以为没问题"的区域——其实每个都暗藏一个设计决策。
-        猜对了 + 选出对应能力 = 你已经在用设计师→架构师的眼光看稿了。
+        每张卡：放大那一小块 → 标准答案 → <strong style="color:var(--accent)">⚠ 最容易踩的坑</strong> → 涉及前 19 篇哪一节。
       </p>
     </div>
 
-    <div class="quiz-stage">
+    <div class="demo-grid">
+
+      <div class="demo-card">
+        <div class="demo-card-head">
+          <div class="demo-zoom">
+            <span class="demo-zoom-label">区域 1</span>
+            <span style="padding:4px 12px;background:var(--green-soft);color:var(--green);border-radius:100px;font-size:12px;font-weight:600">活跃</span>
+          </div>
+          <div>
+            <span class="demo-q-num">Q1 / 5 · 一致性 · 字段</span>
+            <h3 class="demo-q-title">"活跃" chip 的颜色 / 文案 / 阈值</h3>
+            <p class="demo-q-sub">这个 chip 的颜色、文案、"活跃"的阈值是谁定的？</p>
+          </div>
+        </div>
+        <div class="demo-answer">
+          <div class="demo-answer-row"><span class="lbl">颜色</span><span class="val">来自 <strong>design token</strong>——<code>color/success/500</code>。不是设计师拍脑袋选的绿色。</span></div>
+          <div class="demo-answer-row"><span class="lbl">组件</span><span class="val">来自 <strong>design system</strong>——<code>&lt;StatusBadge variant="success" /&gt;</code>。所有"活跃"用同一个组件。</span></div>
+          <div class="demo-answer-row"><span class="lbl">阈值</span><span class="val">来自 <strong>业务字典</strong>——"30 天内有过交互 = 活跃"。这条规则写在业务字典，不是组件里。</span></div>
+        </div>
+        <div class="demo-pit">
+          <strong>⚠ 陷阱：</strong>设计师在 Figma 里直接选了 <code>#28ca42</code> → 工程师写死在组件 CSS → 主题切换时整个 UI 错乱 / 业务说"改成 60 天活跃"时全站漏改。
+        </div>
+        <span class="demo-ref">涉及：<strong>X18 一致性</strong> · <strong>X10 字段意识</strong></span>
+      </div>
+
+      <div class="demo-card">
+        <div class="demo-card-head">
+          <div class="demo-zoom">
+            <span class="demo-zoom-label">区域 2</span>
+            <div style="text-align:center">
+              <div style="font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--ink-mute);letter-spacing:0.06em">电话</div>
+              <div style="font-family:'JetBrains Mono',monospace;font-size:16px;font-weight:600;margin-top:2px">138****1234</div>
+            </div>
+          </div>
+          <div>
+            <span class="demo-q-num">Q2 / 5 · 角色 · 字段</span>
+            <h3 class="demo-q-title">电话脱敏 138****1234</h3>
+            <p class="demo-q-sub">"中间 4 位打码"在哪一层决定？格式由谁定？</p>
+          </div>
+        </div>
+        <div class="demo-answer">
+          <div class="demo-answer-row"><span class="lbl">脱敏</span><span class="val"><strong>后端</strong>——返回时根据当前用户角色决定要不要打码。前端拿到的就是 <code>138****1234</code>，不是完整号码。</span></div>
+          <div class="demo-answer-row"><span class="lbl">显示格式</span><span class="val"><strong>UI 层</strong>决定空格 / 连字符——但<strong>不</strong>决定打不打码。</span></div>
+          <div class="demo-answer-row"><span class="lbl">规则</span><span class="val">销售看完整 · 客服看打码 · 客户本人看完整——<strong>同一字段 3 种返回值</strong>。</span></div>
+        </div>
+        <div class="demo-pit">
+          <strong>⚠ 陷阱：</strong>设计师只画"打码态"+ 写一句"电话脱敏" → 工程师在前端用 <code>str.replace</code> 写正则 → 抓包能看到完整号码 → 合规事故。脱敏必须发生在后端。
+        </div>
+        <span class="demo-ref">涉及：<strong>X4 角色权限</strong> · <strong>X10 字段意识</strong></span>
+      </div>
+
+      <div class="demo-card">
+        <div class="demo-card-head">
+          <div class="demo-zoom">
+            <span class="demo-zoom-label">区域 3</span>
+            <div style="text-align:left;font-size:11px;width:100%">
+              <div style="font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--ink-mute);letter-spacing:0.06em;margin-bottom:3px">商机 (3)</div>
+              <div style="padding:3px 6px;background:var(--bg-2);border-radius:3px;margin-bottom:2px">春季合作 ¥480k</div>
+              <div style="padding:3px 6px;background:var(--bg-2);border-radius:3px;margin-bottom:2px">AI 升级 ¥220k</div>
+              <div style="padding:3px 6px;background:var(--bg-2);border-radius:3px">数据中台 ¥80k</div>
+            </div>
+          </div>
+          <div>
+            <span class="demo-q-num">Q3 / 5 · 对象 · 引用</span>
+            <h3 class="demo-q-title">关联商机列表</h3>
+            <p class="demo-q-sub">这 3 条商机是<strong>客户</strong>的字段吗？</p>
+          </div>
+        </div>
+        <div class="demo-answer">
+          <div class="demo-answer-row"><span class="lbl">不是字段</span><span class="val">商机是<strong>独立对象</strong>，不是客户上的 <code>opportunities: []</code> 字段。</span></div>
+          <div class="demo-answer-row"><span class="lbl">关系</span><span class="val"><strong>1:N</strong>——1 个客户对应多个商机；每个商机有自己的 <code>customer_id</code> 反向挂回来。</span></div>
+          <div class="demo-answer-row"><span class="lbl">接口</span><span class="val">详情页拉客户主对象时<strong>不</strong>一起拉商机——分页拉 <code>GET /opportunities?customer_id=123</code>，否则 1 个超级客户能拖死页面。</span></div>
+        </div>
+        <div class="demo-pit">
+          <strong>⚠ 陷阱：</strong>设计师把"商机列表"画成客户卡里的一个字段 → 工程师真的在 customer 表加 JSON 字段 → 改一条商机要更新整个客户对象 → 数据漂移 + 性能崩盘。
+        </div>
+        <span class="demo-ref">涉及：<strong>X1 对象不是页面</strong> · <strong>X2 字段·关系·引用</strong></span>
+      </div>
+
+      <div class="demo-card">
+        <div class="demo-card-head">
+          <div class="demo-zoom">
+            <span class="demo-zoom-label">区域 4</span>
+            <span style="padding:4px 12px;background:var(--ink);color:white;border-radius:4px;font-size:11px;font-weight:600">+ 新建商机</span>
+          </div>
+          <div>
+            <span class="demo-q-num">Q4 / 5 · 角色 · 任务流</span>
+            <h3 class="demo-q-title">"+ 新建商机" 按钮</h3>
+            <p class="demo-q-sub">谁能看到这个按钮？点了之后去哪？</p>
+          </div>
+        </div>
+        <div class="demo-answer">
+          <div class="demo-answer-row"><span class="lbl">可见性</span><span class="val"><strong>仅 Sales 角色 + 客户为 active 状态</strong>。客服 / 财务看不到；客户 dormant 时按钮 disabled。</span></div>
+          <div class="demo-answer-row"><span class="lbl">权限来源</span><span class="val">后端返回 <code>actions: ["create_opp"]</code> 数组；前端按数组渲染——<strong>不</strong>是前端硬编码 <code>if (user.role === 'sales')</code>。</span></div>
+          <div class="demo-answer-row"><span class="lbl">跳转</span><span class="val">点击 → 跳 <code>/customers/123/opportunities/new</code>，URL 里带 customer_id 预填——<strong>不</strong>是 modal。</span></div>
+        </div>
+        <div class="demo-pit">
+          <strong>⚠ 陷阱：</strong>设计师写"管理员能看" → 工程师在前端写 <code>if (role === 'admin')</code> → 加新角色时全站漏改 + 抓包能看到所有按钮。权限永远是<strong>后端下发的能力列表</strong>。
+        </div>
+        <span class="demo-ref">涉及：<strong>X4 角色权限</strong> · <strong>X5 任务流</strong></span>
+      </div>
+
+      <div class="demo-card">
+        <div class="demo-card-head">
+          <div class="demo-zoom">
+            <span class="demo-zoom-label">区域 5</span>
+            <span style="padding:4px 12px;background:var(--accent-soft);color:var(--accent);border-radius:4px;font-size:11px;font-weight:600;border:1px solid var(--accent)">删除</span>
+          </div>
+          <div>
+            <span class="demo-q-num">Q5 / 5 · 状态 · 异常 · 演进</span>
+            <h3 class="demo-q-title">"删除" 按钮</h3>
+            <p class="demo-q-sub">点了之后真的"删掉"客户吗？关联商机怎么办？</p>
+          </div>
+        </div>
+        <div class="demo-answer">
+          <div class="demo-answer-row"><span class="lbl">可见性</span><span class="val">仅 Admin 角色，且客户必须是 <strong>archived</strong> 状态（active 客户不能删）。</span></div>
+          <div class="demo-answer-row"><span class="lbl">交互</span><span class="val">点击 → 二次确认 modal「输入客户名确认」——<strong>不能</strong>用普通 confirm() 一键删。</span></div>
+          <div class="demo-answer-row"><span class="lbl">数据</span><span class="val"><strong>软删除</strong>——置 <code>deleted_at = now()</code>，不真删行。审计日志保留 5 年。</span></div>
+          <div class="demo-answer-row"><span class="lbl">级联</span><span class="val">关联商机 / 合同 / 活动<strong>不删</strong>，标记 <code>customer_deleted = true</code>，用于历史查询和报表。</span></div>
+        </div>
+        <div class="demo-pit">
+          <strong>⚠ 陷阱：</strong>设计师只画一个"删除"按钮 + tooltip"删除客户" → 工程师写 <code>DELETE /customers/123</code> 硬删 → 客户删了，商机变孤儿，财务报表对不上去——删除是<strong>状态机迁移</strong>，不是物理删。
+        </div>
+        <span class="demo-ref">涉及：<strong>X4 + X7 异常 + X8 状态机 + X19 交付</strong></span>
+      </div>
+
+    </div>
+
+    <div class="quiz-stage" style="display:none">
       <div class="quiz-grid" id="quizGrid">
 
         <div class="quiz-card" data-quiz="1" data-correct="B">
@@ -1936,100 +2239,6 @@
   });
 })();
 
-// ===== Game 3: quiz =====
-(function(){
-  const cards = document.querySelectorAll('.quiz-card');
-  const summary = document.getElementById('quizSummary');
-  const submitBtn = document.getElementById('quizSubmit');
-  const resetBtn = document.getElementById('quizReset');
-  const picks = {};
-  const TOTAL = cards.length;
-
-  cards.forEach(card => {
-    const qid = card.dataset.quiz;
-    const opts = card.querySelectorAll('.quiz-opt');
-    opts.forEach(opt => {
-      opt.addEventListener('click', () => {
-        if (card.classList.contains('is-answered') || card.classList.contains('is-wrong')) return;
-        opts.forEach(o => o.classList.remove('is-correct', 'is-wrong'));
-        picks[qid] = opt.dataset.opt;
-        opt.style.borderColor = 'var(--ink)';
-        opt.style.background = 'var(--bg-2)';
-        opts.forEach(o => {
-          if (o !== opt) {
-            o.style.borderColor = '';
-            o.style.background = '';
-          }
-        });
-      });
-    });
-  });
-
-  submitBtn.addEventListener('click', () => {
-    let hits = 0;
-    let answered = 0;
-    cards.forEach(card => {
-      const qid = card.dataset.quiz;
-      const correct = card.dataset.correct;
-      const pick = picks[qid];
-      if (!pick) return;
-      answered++;
-      const opts = card.querySelectorAll('.quiz-opt');
-      opts.forEach(o => {
-        o.style.borderColor = '';
-        o.style.background = '';
-        o.classList.add('is-disabled');
-        if (o.dataset.opt === correct) o.classList.add('is-correct');
-        if (o.dataset.opt === pick && pick !== correct) o.classList.add('is-wrong');
-      });
-      if (pick === correct) {
-        card.classList.add('is-answered');
-        hits++;
-      } else {
-        card.classList.add('is-wrong');
-      }
-      card.querySelector('.quiz-explain').classList.add('show');
-    });
-
-    let v, headline, body;
-    if (answered === 0) {
-      v = 'partial';
-      headline = '一题没答';
-      body = '点一下每道题的 A/B/C/D，再按提交。';
-    } else if (hits === TOTAL) {
-      v = 'win';
-      headline = '5/5 满分 · 你已经在 1 张稿里识别全部 10 维度的决策了。';
-      body = '这是设计师 → 架构师的标志能力——稿子之外，看到的是规格。下一篇 X21 教你把这些识别拆成 4 张图。';
-    } else if (hits >= 3) {
-      v = 'win';
-      headline = hits + '/5 · 基本对了，方向没问题。';
-      body = '错的几题看下解释里的 ↳ 引用章节——回去翻一下，下次再做就 5/5 了。';
-    } else {
-      v = 'partial';
-      headline = hits + '/5 · 看图说话的惯性还在。';
-      body = '别灰心——这正是 X20-X22 三部曲的训练目标。再把幕二的 10 个维度卡片点一遍，你会发现这些"陷阱"其实都在前 19 篇讲过。';
-    }
-
-    summary.innerHTML = `<span class="v-tag ${v}">${v === 'win' ? '完成' : '还在路上'}</span><h4>${headline}</h4><p>${body}</p>`;
-    summary.classList.add('show');
-    summary.scrollIntoView({ behavior: 'smooth', block: 'center' });
-  });
-
-  resetBtn.addEventListener('click', () => {
-    cards.forEach(card => {
-      card.classList.remove('is-answered', 'is-wrong');
-      card.querySelector('.quiz-explain').classList.remove('show');
-      card.querySelectorAll('.quiz-opt').forEach(o => {
-        o.classList.remove('is-correct', 'is-wrong', 'is-disabled');
-        o.style.borderColor = '';
-        o.style.background = '';
-      });
-    });
-    Object.keys(picks).forEach(k => delete picks[k]);
-    summary.classList.remove('show');
-    summary.innerHTML = '';
-  });
-})();
 </script>
 
 </body>
